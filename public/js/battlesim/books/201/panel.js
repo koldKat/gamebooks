@@ -1,10 +1,10 @@
-import { POTIONS, MAX_PROVISIONS, PROVISIONS_HEAL, SIDE_WOUND_DMG, HEALING_BROOCH_HEAL, LIZARDINE_FIRE_DMG } from './definition.js';
+import { POTIONS, MAX_PROVISIONS, PROVISIONS_HEAL, SIDE_WOUND_DMG, HEALING_BROOCH_HEAL, LIZARDINE_FIRE_DMG, CITY_RULES } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, HEALING_BROOCH_HEAL, LIZARDINE_FIRE_DMG, MAX_PROVISIONS, POTIONS, PROVISIONS_HEAL, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _eatProvisions, _effectiveSkill, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderItemsHtml, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _sideEnemyNameSafe, _skipLuck, _testLuck, _usePotion, apiFetch, closeSim201, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim201, openSim201, registerPanelShortcut, renderSim201, saveState, setSim201Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ CITY_RULES, ALL_PANEL_OVERLAY_IDS, HEALING_BROOCH_HEAL, LIZARDINE_FIRE_DMG, MAX_PROVISIONS, POTIONS, PROVISIONS_HEAL, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _eatProvisions, _effectiveSkill, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderItemsHtml, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _sideEnemyNameSafe, _skipLuck, _testLuck, _usePotion, apiFetch, closeSim201, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim201, openSim201, registerPanelShortcut, renderSim201, saveState, setSim201Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _effectiveSkill, _resetEncounterKnobs, _runRound, _testLuck, _skipLuck, _resetBattle } = createCombat(simulatorContext);
 const { _eatProvisions, _usePotion } = createEffects(simulatorContext);

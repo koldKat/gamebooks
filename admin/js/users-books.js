@@ -1,7 +1,7 @@
 // User/book drill-down views and the shared gift dialog.
 
 import {
-  api, el, badge, mkBtn, mkEditBtn, appendCell, emptyRow, mkLevelCell, mkGeoCell, addMetaItem, addStatCard,
+  api, el, badge, mkBtn, mkEditBtn, appendCell, emptyRow, mkLevelCell, mkJobLevelCell, mkGeoCell, addMetaItem, addStatCard,
   fmtDate, fmtDateTime, fmtBytes, pdfUrl, esc, adminBadge, authorBadge, contributorBadge, moderatorBadge, squireBadge,
   daysInactiveClass, fmtDaysInactive, flashSaved, showAlert, showConfirm,
   storeData, getSorted, getFiltered, foldForSearch, naturalCompare, naturalCompareByName, _tableData,
@@ -306,7 +306,8 @@ function renderUserRow(tbody, u) {
     const link = el('span', 'link', u.username);
     link.addEventListener('click', () => loadUserDetail(u.id));
     nameCell.appendChild(link);
-    requestAnimationFrame(() => { if (link.scrollWidth > link.clientWidth) link.dataset.tooltip = u.username; });
+    link.dataset.tooltip = u.username;
+    link._adminProgress = u;
     if (u.is_admin) nameCell.insertAdjacentHTML('beforeend', adminBadge(true));
     if (u.is_author) nameCell.insertAdjacentHTML('beforeend', authorBadge(true));
     if (u.is_contributor) nameCell.insertAdjacentHTML('beforeend', contributorBadge(true));
@@ -332,9 +333,6 @@ function renderUserRow(tbody, u) {
     if (u.wins    > 0) winsCell.style.color    = '#4ade80';
     if (u.deaths  > 0) deathsCell.style.color  = '#f87171';
     if (u.battles > 0) battlesCell.style.color = '#fb923c';
-
-    const lvlCell = tr.insertCell();
-    lvlCell.appendChild(mkLevelCell(u));
 
     const earnedCell = tr.insertCell();
     if (u.coinsEarned > 0) {
@@ -725,6 +723,15 @@ export async function loadUserDetail(userId, edit = false) {
     }
     lvlMeta.appendChild(lvlVal);
     metaBar.appendChild(lvlMeta);
+
+    const jobMeta = el('div', 'meta-item');
+    jobMeta.appendChild(el('div', 'label', 'Job Level'));
+    jobMeta.appendChild(mkJobLevelCell(user));
+    const jobProgress = el('div', 'muted');
+    const nextJobXp = 1000*(user.jobLevel+1)*(user.jobLevel+2)/2;
+    jobProgress.textContent = `${user.jobXp.toLocaleString()} / ${nextJobXp.toLocaleString()} Job XP`;
+    jobMeta.appendChild(jobProgress);
+    metaBar.appendChild(jobMeta);
 
     const currencies = el('div', 'user-shop-purchases user-currency-grid');
     const currencyColumns = new Map();

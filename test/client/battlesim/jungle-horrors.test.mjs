@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
+const rosterEntries = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/436.json', import.meta.url), 'utf8')).enemies.map(row => row.stats.entry);
+
 function fixture(saved) {
   const pt = saved ? { sim436: structuredClone(saved) } : {};
   const source = readFileSync(new URL('../../../public/js/battlesim/battlesim436.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
   const math = Object.create(Math);
   math.random = () => .2;
-  const context = vm.createContext({ Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, t: (key, args) => key === 'battlesim436.ui.second_vordak' ? 'Вордак 2 §' + args.section : key, escapeHtml: value => value });
+  const context = vm.createContext({ createRosterLoader: (_id, _dataset, install) => { install(structuredClone(rosterEntries)); return async () => {}; }, Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, t: (key, args) => key === 'battlesim436.ui.second_vordak' ? 'Вордак 2 §' + args.section : key, escapeHtml: value => value });
   vm.runInContext(source + '\n_renderAll = () => {}; globalThis.sim = { data: _data, potion: _usePotion, reset: _resetBattle, capture: _captureFightEffects, skill: _effectiveSkill, round: _runRound, escape: _escape, escapeRoute: _escapeRoute };', context);
   return { sim: context.sim, data: context.sim.data(), math };
 }
@@ -250,4 +252,18 @@ test('escape windows require three completed rounds and apply player-only damage
 test('click event arguments do not accidentally trigger escape', () => {
   const { sim, data } = combat(233);
   sim.round({ type: 'click' }); assert.equal(data.enemy.endurance, 96);
+});
+
+
+test('renamed encounter uses metadata for pre-round loss and timed stop', () => {
+  const entry = rosterEntries.find(entry => entry.section === 30);
+  const original = structuredClone(entry);
+  try {
+    entry.section = 900; entry.rules.preRoundLoss = {amount:3,unless:'shield'};
+    entry.rules.stopBeforeRound = {completedRounds:1,route:901};
+    const { sim, data } = combat(900);
+    sim.round(); assert.equal(data.endurance, 93);
+    sim.round(); assert.equal(data.combatEffects.route, 901);
+    assert.equal(data.roundsThisBattle, 1);
+  } finally { Object.assign(entry, original); }
 });

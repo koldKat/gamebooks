@@ -1,8 +1,9 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
-import { ENCOUNTERS } from '../../../public/js/battlesim/books/718/definition.js';
+import { ENCOUNTERS, DEEP_RULES } from '../../../public/js/battlesim/books/718/definition.js';
 import { newCharacter, startFight, targets, round, resolveWound, escapeFight, freeFoot, decideMercy }
   from '../../../public/js/battlesim/books/718/combat.js';
 import { eat, restoreStrength, restoreFortune, sauna, testLuck }
@@ -10,6 +11,8 @@ import { eat, restoreStrength, restoreFortune, sauna, testLuck }
 import { createState } from '../../../public/js/battlesim/books/718/state.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim718.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim718.js';
+
+await loadFixtureRoster(718);
 
 test('718: both languages cover all named source encounters and combatants', () => {
   assert.deepEqual(Object.keys(en).sort(), Object.keys(bg).sort());
@@ -37,6 +40,10 @@ test('718: actual backend awards each win/loss once and excludes abandoned fight
     get: () => ({id: 718, total_sections: 400, is_container: 0})})};
   const context = {module: {exports: {}}, events, require(name) {
     if (name === './connection') return {db};
+    if (name === './diamonds') return {diamondInfoForUser: () => ({})};
+    if (name === './rubies') return {rubyInfoForUser: () => ({}), createRubyCompletionChecker: () => () => 0};
+    if (name === './heartbeat-coins') return {advanceHeartbeatCoins: () => 0};
+    if (name === './job-xp') return {getJobTitle: () => ''};
     if (name === './auth') return {generateToken: () => 'test-only'};
     if (name === '../impersonation-context') return {isImpersonatingContext: () => false};
     if (name === '../clean-run') return {isCleanRun: () => false};
@@ -239,4 +246,35 @@ test('718: trapped-foot, mercy, no-wound escape and fatal escape decisions', () 
   assert.equal(dead.destination, 309);
   assert.equal(dead.player.dead, true);
   assert.throws(() => startFight(69, dead.player), /living/);
+});
+
+
+test('718: ogre, kraken and training settings are metadata driven', () => {
+  const before=structuredClone(DEEP_RULES);
+  try {
+    DEEP_RULES.ogreRecovery=7;
+    assert.equal(startFight(109,character(),{previousOgreStamina:5}).enemies[0].stamina,12);
+    DEEP_RULES.kraken={axeStamina:3,sawStamina:7,sawSkill:1};
+    const kraken=startFight(253,character(),{axeFish:true,sawFish:true});
+    assert.equal(kraken.enemies[0].stamina,20);assert.equal(kraken.enemies[0].skill,9);
+    DEEP_RULES.training.recovery=4;DEEP_RULES.training.minimumStamina=12;
+    assert.equal(startFight(22,character({stamina:7})).player.stamina,12);
+  } finally {Object.assign(DEEP_RULES,before);}
+});
+
+test('718: curse and trap effects use metadata without changing saved inputs', () => {
+  const before=structuredClone(DEEP_RULES);
+  try {
+    DEEP_RULES.curse={minimum:6,skillMaximum:6,skillLoss:3,luckLoss:4,damage:5};
+    const original=startFight(254,character({skill:1,stamina:17,luck:8}));
+    const cursed=round(original,0,rolls(1,1,6,6,6));
+    assert.equal(cursed.player.skill,0);assert.equal(cursed.player.stamina,17);
+    assert.equal(original.player.skill,1);
+    DEEP_RULES.trap.freeDamage=5;
+    const trapped=startFight(123,character({stamina:17,luck:8}),{preWoundApplied:true});
+    trapped.extension={keep:true};
+    const freed=freeFoot(JSON.parse(JSON.stringify(trapped)));
+    assert.equal(freed.pending[0].damage,5);assert.equal(freed.trapped,false);
+    assert.deepEqual(freed.extension,{keep:true});assert.equal(trapped.trapped,true);
+  } finally {Object.assign(DEEP_RULES,before);}
 });

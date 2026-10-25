@@ -3,7 +3,9 @@ const test = require('node:test');
 const fs = require('node:fs');
 const { readFileSync: readSimulatorSource } = require('./client/battlesim/simulator-source.mjs');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../public/js/battlesim/engines/tetiva.js'), 'utf8');
-const engine = import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
+const entries = require('../data/simulator-rosters/753.json').enemies.map(row=>row.stats.entry);
+const rules = Object.fromEntries(entries.map(entry=>[entry.section,entry.effects]));
+const engine = import('data:text/javascript;base64,' + Buffer.from(source).toString('base64')).then(module=>({...module,rawTetivaEncounter:module.tetivaEncounter,tetivaEncounter:section=>module.tetivaEncounter(section,rules)}));
 function state(section = 0) {
   return {player:{attack:0,defense:20,damage:0,speed:8},enemy:{attack:8,defense:20,hitsNeeded:2,hitsLanded:0,strikesPerRound:1},kobaldiMode:false,combatEffects:null,section};
 }
@@ -55,14 +57,25 @@ test('ties miss and a completed fight does not roll again', async () => {
 });
 test('opening saved fights preserves rules; resetting opts into printed encounter rules', async () => {
   const vm=require('node:vm');
-  const {tetivaEncounter,tetivaRound}=await engine;
+  const {tetivaEncounter,tetivaRound,rawTetivaEncounter}=await engine;
   const old=state(119);delete old.combatEffects;delete old.section;
   Object.assign(old,{enemy:{...old.enemy,name:'Дуъргар (звяр) §119'},roundsThisBattle:3,log:[],history:[]});
   const pt={sim753:old};
   const controller=readSimulatorSource(require('node:path').join(__dirname,'../public/js/battlesim/battlesim753.js'),'utf8').replace(/^import .*;$/gm,'').replaceAll('export function','function');
-  const context=vm.createContext({currentPlaythrough:()=>pt,saveState:()=>{},t:key=>key,escapeHtml:x=>x,tetivaEncounter,tetivaRound,console});
-  vm.runInContext(controller+'\n_renderAll=()=>{}; globalThis.subject={data:_data,reset:_resetBattle,round:_runRound};',context);
+  const context=vm.createContext({createRosterLoader:(_id,_dataset,install)=>()=>install(entries),resolveTetivaEncounter:rawTetivaEncounter,currentPlaythrough:()=>pt,saveState:()=>{},t:key=>key,escapeHtml:x=>x,tetivaEncounter,tetivaRound,console});
+  vm.runInContext(controller+'\nloadRoster(); _renderAll=()=>{}; globalThis.subject={data:_data,reset:_resetBattle,round:_runRound};',context);
   const snapshot=JSON.stringify(old);
   context.subject.data();assert.equal(JSON.stringify(old),snapshot);
   context.subject.reset();assert.equal(old.printedRules,1);assert.equal(old.encounterSection,119);assert.equal(old.combatEffects.enemyFirst,true);assert.equal(old.combatEffects.variableDefense,true);
+});
+
+
+test('generic encounter lookup follows installed section data and returns fresh default flags', async () => {
+  const {rawTetivaEncounter}=await engine;
+  const configured={900:{enemyFirst:true,kobaldi:true}};
+  assert.equal(rawTetivaEncounter(900,configured).enemyFirst,true);
+  assert.equal(rawTetivaEncounter(119,configured).enemyFirst,false);
+  assert.equal(rawTetivaEncounter('900',configured).enemyFirst,false,'original numeric section matching is strict');
+  const first=rawTetivaEncounter(900,configured);first.enemyFirst=false;
+  assert.equal(rawTetivaEncounter(900,configured).enemyFirst,true,'saved/manual flags never alias installed settings');
 });

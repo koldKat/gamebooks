@@ -1,7 +1,9 @@
 const checks = [], saves = [];
+const rosterSeed = ROSTER_SEEDS[728];
 let imageAccessGranted = false;
 const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
 window.fetch = async (url, options = {}) => {
+  if (url === '/api/books/728/enemies' && !options.method) return new Response(JSON.stringify(rosterSeed), {status: 200});
   if (url === '/api/books/728/reading-matter' && !options.method) {
     imageAccessGranted = true; return new Response('{}', { status: 200 });
   }

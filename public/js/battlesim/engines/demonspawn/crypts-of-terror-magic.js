@@ -1,5 +1,6 @@
 import { FIRE_WOLF_SPELLS, castFireWolfSpell, createFireWolfMagicSection } from './fire-wolf-magic.js';
 import { checkCryptsOutcome, cryptsEnemyActive, finishCryptsFight } from './crypts-of-terror.js';
+import { CRYPTS_RULES } from './crypts-of-terror-roster.js';
 
 export function createCryptsMagicSection(section, player, enemies = []) {
   const magic = createFireWolfMagicSection(section,player,enemies[0]);
@@ -99,7 +100,7 @@ export function castCryptsEnemySpell(fight, target, spell, random = Math.random)
     if (fight.encounter.rule === 'wizard-duel') {
       if (result.avoidCombat || magic.invisible || result.destination != null) result.manualEffect=true;
     } else if (result.avoidCombat) {
-      if (fight.encounter.rule === 'manticore') fight.paralysedPlayerRounds=3;
+      if (fight.encounter.rule === 'manticore') fight.paralysedPlayerRounds=CRYPTS_RULES.manticoreParalysisRounds;
       else enemy.escaped=true;
     }
     if (fight.encounter.rule !== 'wizard-duel' && (magic.invisible || result.destination != null && !result.rerollCharacter)) enemy.escaped=true;
@@ -115,7 +116,7 @@ export function castCryptsEnemySpell(fight, target, spell, random = Math.random)
 
 export function useCryptsRosewoodBox(fight) {
   if (fight.outcome || fight.pending || fight.encounter.noArtifacts || !fight.player.rosewoodBox) return false;
-  const targets = fight.enemies.filter((e,i)=>e.name==='Alchiller' && cryptsEnemyActive(fight,i)).slice(0,4);
+  const targets = fight.enemies.filter((e,i)=>e.name===CRYPTS_RULES.box.enemyName && cryptsEnemyActive(fight,i)).slice(0,CRYPTS_RULES.box.limit);
   if (!targets.length) return false;
   fight.player.rosewoodBox=false;targets.forEach(e=>e.paralysed=true);checkCryptsOutcome(fight);
   record(fight,{kind:'rosewood-box',targets:targets.length});return true;
@@ -124,14 +125,14 @@ export function useCryptsRosewoodBox(fight) {
 export function tryCryptsOrb(fight, random = Math.random) {
   if (fight.outcome || fight.pending || fight.encounter.noArtifacts || !fight.options.orb || fight.orbTested) return null;
   fight.orbTested=true;
-  if (fight.encounter.section === 144) {
+  if (fight.encounter.section === CRYPTS_RULES.orb.possessionSection) {
     fight.enemies.forEach(enemy => { enemy.escaped=true; });
     checkCryptsOutcome(fight);
     record(fight,{kind:'orb',success:true,possessionOnly:true});
     return true;
   }
   const roll = Math.floor(random()*6)+1+Math.floor(random()*6)+1;
-  const success = roll>=11;
+  const success = roll>=CRYPTS_RULES.orb.minRoll;
   fight.options.orbActive=success;
   record(fight,{kind:'orb',roll,success});return success;
 }

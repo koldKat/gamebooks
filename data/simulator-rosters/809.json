@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "bookId": 809,
+  "family": "lone-wolf",
+  "source": "All three Dawn of the Darklords profiles with original unarmed condition, escape round limits, explicit null escape limit and exact string destinations. Original database fields and IDs retained.",
+  "enemies": [
+    {
+      "key": "encounter:44",
+      "name": "Старият Тадеус",
+      "attack": 18,
+      "defense": null,
+      "hp": 18,
+      "pb": null,
+      "adopt": {
+        "name": "Старият Тадеус",
+        "attack": 18,
+        "defense": null,
+        "hp": 18,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 44,
+          "displayName": "Старият Тадеус",
+          "skill": 18,
+          "stamina": 18,
+          "unarmed": true,
+          "escapeAfter": 3,
+          "escapeDestination": "15",
+          "destination": "5"
+        },
+        "part": {
+          "section": 44,
+          "displayName": "Старият Тадеус",
+          "skill": 18,
+          "stamina": 18,
+          "unarmed": true,
+          "escapeAfter": 3,
+          "escapeDestination": "15",
+          "destination": "5"
+        }
+      }
+    },
+    {
+      "key": "encounter:50",
+      "name": "Гиаки",
+      "attack": 16,
+      "defense": null,
+      "hp": 18,
+      "pb": null,
+      "adopt": {
+        "name": "Гиаки",
+        "attack": 16,
+        "defense": null,
+        "hp": 18,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 50,
+          "displayName": "Гиаки",
+          "skill": 16,
+          "stamina": 18,
+          "escapeAfter": 3,
+          "escapeDestination": "70",
+          "destination": "47"
+        },
+        "part": {
+          "section": 50,
+          "displayName": "Гиаки",
+          "skill": 16,
+          "stamina": 18,
+          "escapeAfter": 3,
+          "escapeDestination": "70",
+          "destination": "47"
+        }
+      }
+    },
+    {
+      "key": "encounter:64",
+      "name": "Хелгаст",
+      "attack": 21,
+      "defense": null,
+      "hp": 28,
+      "pb": null,
+      "adopt": {
+        "name": "Хелгаст",
+        "attack": 21,
+        "defense": null,
+        "hp": 28,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 64,
+          "displayName": "Хелгаст",
+          "skill": 21,
+          "stamina": 28,
+          "escapeAfter": null,
+          "destination": "34"
+        },
+        "part": {
+          "section": 64,
+          "displayName": "Хелгаст",
+          "skill": 21,
+          "stamina": 28,
+          "escapeAfter": null,
+          "destination": "34"
+        }
+      }
+    }
+  ]
+}

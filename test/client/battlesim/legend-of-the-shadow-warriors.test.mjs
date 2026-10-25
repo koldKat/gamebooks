@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
+const roster=JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/240.json',import.meta.url),'utf8'));
 
 const source = readFileSync(new URL('../../../public/js/battlesim/battlesim240.js', import.meta.url), 'utf8')
   .replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
@@ -9,7 +10,7 @@ const source = readFileSync(new URL('../../../public/js/battlesim/battlesim240.j
 function fixture(saved) {
   const pt = saved ? { sim240: structuredClone(saved) } : {};
   let saves = 0;
-  const context = vm.createContext({ currentPlaythrough: () => pt, saveState() { saves++; }, t: k => k, escapeHtml: s => s });
+  const context = vm.createContext({ currentPlaythrough: () => pt, saveState() { saves++; }, t: k => k, escapeHtml: s => s, createRosterLoader: (_id,dataset,install)=>{install(roster.enemies.filter(row=>row.stats.dataset===dataset).map(row=>row.stats.entry));return ()=>Promise.resolve();} });
   vm.runInContext(source + '\n_renderAll = () => {};', context);
   const run = s => vm.runInContext(s, context);
   return { d: run('_data()'), run, saves: () => saves };
@@ -134,3 +135,54 @@ test('resetting a fight does not grant or remove provisions', () => {
     assert.equal(d.player.provisionsLeft, count);
   }
 });
+
+for(const legacy of [false,true]){
+  for(const method of ['_runRound','_rollForSkull','_empowerSpear','_useSpearAutoWin']){
+    test(`pending Luck blocks ${method} (${legacy?'legacy':'current'})`,()=>{
+      const {d,run}=combat(legacy);d.pendingLuckQueue=[{kind:'player-hit',extension:true}];d.immuneToWounds=d.voivodDefensive=true;
+      Object.assign(d.player,{hasSpear:true,spearLifeForce:10,spearRolled:true});run('_roll1d6=()=>6');
+      const saved=JSON.stringify(d);run(method+'()');assert.equal(JSON.stringify(d),saved);
+    });
+  }
+  test(`skipping Luck persists the remaining queue (${legacy?'legacy':'current'})`,()=>{
+    const {d,run,saves}=combat(legacy);d.pendingLuckQueue=[{kind:'player-hit'},{kind:'enemy-hit',extension:true}];
+    const before=saves();run('_skipLuck()');assert.equal(saves(),before+1);assert.equal(d.pendingLuckQueue.length,1);assert.equal(d.pendingLuckQueue[0].extension,true);
+  });
+  test(`obsolete outgoing Luck cannot resurrect completed target (${legacy?'legacy':'current'})`,()=>{
+    const {d,run}=combat(legacy);d.enemy.stamina=0;d.player.luck=1;d.history.push({outcome:'win',ts:1});
+    d.pendingLuckQueue=[{kind:'player-hit',extension:true},{kind:'enemy-hit',extension:true}];run('_testLuck()');
+    assert.equal(d.enemy.stamina,0);assert.equal(d.player.luck,1);assert.equal(d.history.length,1);assert.equal(d.pendingLuckQueue.length,0);
+  });
+  test(`Luck cannot revive an already defeated player (${legacy?'legacy':'current'})`,()=>{
+    const {d,run}=combat(legacy);d.player.stamina=0;d.history.push({outcome:'loss',ts:1});d.pendingLuckQueue=[{kind:'enemy-hit'}];run('_testLuck()');
+    assert.equal(d.player.stamina,0);assert.equal(d.player.luck,12);assert.equal(d.history.length,1);assert.equal(d.pendingLuckQueue.length,0);
+  });
+  test(`fatal side damage clears obsolete outgoing choices (${legacy?'legacy':'current'})`,()=>{
+    const {d,run}=combat(legacy);d.player.stamina=1;d.enemy.skill=0;d.groupFight=true;d.sideEnemies=[{name:'Side',skill:99}];run('_runRound()');
+    assert.equal(d.player.stamina,0);assert.equal(d.history.length,1);assert.equal(d.history[0].outcome,'loss');assert.equal(d.pendingLuckQueue.length,0);
+  });
+}
+
+test('all six skull faces retain their result and metadata controls the winning face',()=>{
+  for(let face=1;face<=6;face++){
+    const {d,run}=combat();d.immuneToWounds=true;run('_roll1d6=()=>'+face+'; _rollForSkull()');
+    assert.equal(d.enemy.stamina,face===6?0:20);assert.equal(d.history.length,face===6?1:0);
+  }
+  const {d,run}=combat();d.immuneToWounds=true;run('SHADOW_RULES.skullWinFace=2; _roll1d6=()=>2; _rollForSkull()');assert.equal(d.enemy.stamina,0);assert.equal(d.history.length,1);
+});
+
+for(const legacy of [false,true])for(const field of ['weapon','armour']){
+  test(`pending Luck locks ${field} selection (${legacy?'legacy':'current'})`,()=>{
+    const {d,run}=combat(legacy);d.player.armour='chainmail';d.player.armourHitsLeft=1;d.pendingLuckQueue=[{kind:'player-hit'}];
+    const handler=source.match(new RegExp("document\\.getElementById\\('sim240-"+field+"'\\)\\.addEventListener\\('change', e => \\{([\\s\\S]*?)\\n  \\}\\);"))[1];
+    run('_renderInputs=()=>{}');const saved=JSON.stringify(d);run('(function(e){'+handler+'})({target:{value:"'+(field==='weapon'?'sword':'plate')+'"}})');assert.equal(JSON.stringify(d),saved);
+  });
+}
+
+for(const legacy of [false,true]){
+  test(`pending Luck preserves Voivod damage-refund mode (${legacy?'legacy':'current'})`,()=>{
+    const {d,run}=combat(legacy);d.voivodThrives=true;d.pendingLuckQueue=[{kind:'enemy-hit',damage:2,luckyDamage:1,unluckyDamage:3}];
+    const handler=source.match(/document\.getElementById\('sim240-voivod-thrives'\)\.addEventListener\('change', e => \{([\s\S]*?)\n  \}\);/)[1];
+    run('_renderInputs=()=>{}');const saved=JSON.stringify(d);run('(function(e){'+handler+'})({target:{checked:false}})');assert.equal(JSON.stringify(d),saved);
+  });
+}

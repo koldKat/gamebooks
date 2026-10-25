@@ -1,5 +1,6 @@
 import { createFireWolfFight, fireWolfDamage, fireWolfHitThreshold, resolveFireWolfDeathLuck, FIRE_WOLF_WEAPONS } from './fire-wolf.js';
 import { cryptsChase } from './crypts-of-terror-encounters.js';
+import { CRYPTS_RULES } from './crypts-of-terror-roster.js';
 
 const die = random => Math.floor(random() * 6) + 1;
 const dice = random => die(random) + die(random);
@@ -36,11 +37,11 @@ function log(fight, event) {
 export function cryptsEnemyActive(fight, index) {
   const e = fight.enemies[index];
   if (!e || e.lifePoints <= 0 || e.escaped || e.paralysed) return false;
-  if (fight.encounter.rule === 'chase' && fight.enemyDamage[index] > 150) return false;
-  if (fight.encounter.rule === 'flee-20' && e.lifePoints < 20) return false;
-  if (fight.encounter.rule === 'knockout-10' && e.lifePoints < 10) return false;
-  if (fight.encounter.rule === 'prince-joins' && e.name === 'Harkaan Prince') {
-    return fight.enemies.filter(e => e.name === 'Demonspawn' && e.lifePoints <= 0).length >= 2;
+  if (fight.encounter.rule === 'chase' && fight.enemyDamage[index] > CRYPTS_RULES.chaseStop) return false;
+  if (fight.encounter.rule === 'flee-20' && e.lifePoints < CRYPTS_RULES.fleeStop) return false;
+  if (fight.encounter.rule === 'knockout-10' && e.lifePoints < CRYPTS_RULES.knockoutStop) return false;
+  if (fight.encounter.rule === 'prince-joins' && e.name === CRYPTS_RULES.prince.name) {
+    return fight.enemies.filter(e => e.name === CRYPTS_RULES.prince.guardName && e.lifePoints <= 0).length >= CRYPTS_RULES.prince.deadGuards;
   }
   return true;
 }
@@ -88,14 +89,14 @@ export function checkCryptsOutcome(fight) {
   }
   if (rule === 'knockout-10' && fight.enemies.some(e => e.lifePoints <= 0)) return finish(fight, 'loss');
   if (rule === 'first-blood') {
-    if (fight.playerDamage >= 100 || fight.player.lifePoints <= 0) return finish(fight, 'defeat');
-    if (fight.enemyDamage[0] >= 100 || fight.enemy.lifePoints <= 0) return finish(fight, 'win');
+    if (fight.playerDamage >= CRYPTS_RULES.firstBloodDamage || fight.player.lifePoints <= 0) return finish(fight, 'defeat');
+    if (fight.enemyDamage[0] >= CRYPTS_RULES.firstBloodDamage || fight.enemy.lifePoints <= 0) return finish(fight, 'win');
   }
   if (rule === 'nonfatal-50') {
-    if (fight.player.lifePoints < 50) return finish(fight, 'defeat');
-    if (fight.enemy.lifePoints < 50) return finish(fight, 'win');
+    if (fight.player.lifePoints < CRYPTS_RULES.nonfatalStop) return finish(fight, 'defeat');
+    if (fight.enemy.lifePoints < CRYPTS_RULES.nonfatalStop) return finish(fight, 'win');
   }
-  if (rule === 'chase' && fight.playerDamage >= 150) return finish(fight, 'defeat');
+  if (rule === 'chase' && fight.playerDamage >= CRYPTS_RULES.chaseStop) return finish(fight, 'defeat');
   if (fight.player.lifePoints <= 0) {
     if (fight.luckUsed) finish(fight, 'loss');
     else fight.pending = 'death-luck';
@@ -103,7 +104,7 @@ export function checkCryptsOutcome(fight) {
   }
   if (fight.enemies.every((e,i) => !cryptsEnemyActive(fight,i))) {
     // An inactive Prince still has to be defeated after his guards.
-    if (rule === 'prince-joins' && fight.enemies.some(e => e.name === 'Harkaan Prince' && e.lifePoints > 0)) return;
+    if (rule === 'prince-joins' && fight.enemies.some(e => e.name === CRYPTS_RULES.prince.name && e.lifePoints > 0)) return;
     finish(fight, fight.enemies.some(e => e.escaped || e.paralysed) ? 'avoided' : 'win');
   }
 }
@@ -161,14 +162,14 @@ export function rollCryptsAttack(fight, side = fight.turn, target = 0, random = 
     }
   } else {
     fight.playerDamage += damage;enemyTurn(fight);
-    if (fight.encounter.rule === 'vampire') enemy.lifePoints += damage / 2;
+    if (fight.encounter.rule === 'vampire') enemy.lifePoints += damage / CRYPTS_RULES.vampireHealDivisor;
     if (fight.encounter.rule === 'rat') {
       fight.ratHits = roll >= threshold ? fight.ratHits + 1 : 0;
-      if (fight.ratHits >= 3) fight.player.ratDisease = true;
+      if (fight.ratHits >= CRYPTS_RULES.ratHits) fight.player.ratDisease = true;
     }
   }
   const event = { kind: 'attack', side, target, roll, threshold, damage };log(fight,event);
-  if (fight.encounter.rule === 'first-blood' && roll === 12) finish(fight,side === 'player' ? 'win' : 'defeat');
+  if (fight.encounter.rule === 'first-blood' && roll === CRYPTS_RULES.firstBloodRoll) finish(fight,side === 'player' ? 'win' : 'defeat');
   else checkCryptsOutcome(fight);
   fight.turn = side === 'player' ? 'enemy' : 'player';
   return event;
@@ -183,21 +184,21 @@ export function advanceCryptsRound(fight) {
 
 export function applyCryptsWightHit(fight, damage) {
   if (fight.outcome || fight.pending || fight.encounter.rule !== 'wights' || !Number.isFinite(damage) || damage < 0) return false;
-  const p = fight.player, keys = ['strength','speed','courage'];
+  const p = fight.player, keys = CRYPTS_RULES.wight.attributes;
   if (keys.some(key => p[key] <= 0)) p.lifePoints = 0;
   else {
     p.lifePoints -= damage;
-    for (const key of keys) p[key] = Math.max(0,p[key] - 5);
+    for (const key of keys) p[key] = Math.max(0,p[key] - CRYPTS_RULES.wight.penalty);
   }
   fight.playerDamage += damage;enemyTurn(fight);checkCryptsOutcome(fight);
   log(fight,{kind:'wight-hit',damage});return true;
 }
 
 export function addCryptsReinforcements(fight, enemies) {
-  if (fight.encounter.rule !== 'reinforcements' || fight.outcome !== 'win' || !Array.isArray(enemies) || enemies.length !== 2) return false;
+  if (fight.encounter.rule !== 'reinforcements' || fight.outcome !== 'win' || !Array.isArray(enemies) || enemies.length !== CRYPTS_RULES.reinforcements.count) return false;
   const incoming = structuredClone(enemies);
-  if (incoming.some(e => e.name !== 'Fortress Guard' || !Number.isFinite(e.lifePoints) || e.lifePoints <= 0)) return false;
-  fight.enemies.push(...incoming);fight.enemyDamage.push(0,0);fight.outcome = null;
+  if (incoming.some(e => e.name !== CRYPTS_RULES.reinforcements.enemyName || !Number.isFinite(e.lifePoints) || e.lifePoints <= 0)) return false;
+  fight.enemies.push(...incoming);fight.enemyDamage.push(...incoming.map(() => 0));fight.outcome = null;
   // These guards continue the encounter; each completed combat earns its stated Skill.
   fight.skillAwarded = false;
   return true;

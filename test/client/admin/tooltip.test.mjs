@@ -16,3 +16,26 @@ test('admin tooltip keeps a readable width and stays inside the right and bottom
   const css=readFileSync('public/css/admin.css','utf8');
   assert.match(css,/#admin-tooltip\s*\{[^}]*width: max-content;[^}]*max-width: min\(360px, calc\(100vw - 24px\)\)/);
 });
+
+test('user hover shows escaped normal and Job progression with independent progress bars', () => {
+  const core=readFileSync('admin/js/core.js','utf8');
+  const helper=runInNewContext(core.slice(core.indexOf('export function userProgressTooltipHtml'),core.indexOf('const _countryNames')).replace('export ','')+'\nuserProgressTooltipHtml', {
+    esc: value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'),
+  });
+  const user={username:'<Reader>',level:3,title:'<Ranger>',xp:8000,levelXp:6000,nextLevelXp:10000,
+    jobLevel:1,jobTitle:'Digger',jobXp:1500,jobLevelCap:8,xpBoostPct:12.5};
+  const html=helper(user);
+  assert.match(html,/&lt;Reader&gt;/);assert.match(html,/&lt;Ranger&gt;/);assert.ok(!html.includes('<Reader>'));
+  assert.match(html,/Level 3/);assert.match(html,/Job Level 1/);assert.match(html,/Digger/);
+  assert.match(html,/width:50%/);assert.match(html,/width:25%/);
+  assert.match(html,/8,000 \/ 10,000 XP/);assert.match(html,/1,500 \/ 3,000 XP/);
+  assert.match(html,/XP boost: 12.5%/);assert.match(html,/Job cap: 8/);
+  assert.ok(!helper({}).includes('NaN'));
+  const handlers={},tip={style:{},offsetWidth:300,offsetHeight:180};
+  const source=readFileSync('admin/js/boot.js','utf8');
+  runInNewContext(source.slice(source.indexOf('(function () {'),source.indexOf('// ── Tabs')),
+    {userProgressTooltipHtml:helper,document:{getElementById:()=>tip,addEventListener:(event,fn)=>{handlers[event]=fn;}},window:{innerWidth:390,innerHeight:700}});
+  handlers.mouseover({target:{closest:()=>({dataset:{tooltip:user.username},_adminProgress:user})},clientX:380,clientY:690});
+  assert.equal(tip.innerHTML,html);assert.equal(tip.style.left,'78px');assert.equal(tip.style.top,'508px');
+  handlers.mouseleave();assert.equal(tip.style.display,'none');
+});

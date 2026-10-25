@@ -9,41 +9,16 @@ export const BLOOD_DARK_DEFAULTS = Object.freeze({ rank: 3, stamina: 16, shards:
   professions: BLOOD_DARK_PROFESSIONS, abilityCurse: false });
 
 export let BLOOD_DARK_FIGHTS = [];
-export const loadRoster = createRosterLoader(676, 'FIGHTS', rows => { BLOOD_DARK_FIGHTS = rows; });
-import { fabledDie, fabledInteger, validateFabledCharacter } from './character.js';
-
-const storm = (destinations, blessingDestination, bounds = [4, 6]) => ({ kind: 'storm', destinations, blessingDestination, bounds });
-const escape = (caught, safe, bound = 6, cargoPenalty = false) => ({ kind: 'escape', destinations: [caught, safe], bounds: [bound], cargoPenalty });
-const naval = (destinations, bounds = [4, 9, 13, 17]) => ({ kind: 'naval', destinations, bounds, damageDice: [null, 2, 1, 0, 0] });
-
-export const BLOOD_DARK_SEA_CHECKS = Object.freeze({
-  83: storm([103, 581, 60], 41), 139: storm([157, 581, 98], 154, [5, 7]),
-  174: storm([212, 670, 227], 209), 193: storm([249, 670, 81], 61),
-  213: storm([249, 231, 246], 155), 248: storm([212, 670, 263], 245),
-  285: storm([6, 231, 337], 320), 355: storm([486, 718, 262], 648),
-  491: storm([157, 670, 42], 24), 544: storm([634, 616, 13], 311),
-  562: storm([634, 616, 311], 13), 580: storm([634, 616, 13], 32),
-  598: storm([634, 670, 9], 50),
-  194: escape(214, 61, 5), 268: escape(201, 322, 6, true),
-  324: escape(286, 24), 418: escape(474, 13), 529: escape(565, 32),
-  672: escape(361, 311), 684: escape(392, 648),
-  201: naval([123, 435, 416, 101, 307], [3, 8, 12, 16]),
-  214: naval([123, 140, 250, 245, 232], [3, 8, 12, 16]),
-  286: naval([123, 435, 416, 101, 267]), 361: naval([123, 435, 416, 311, 379]),
-  392: naval([123, 435, 416, 648, 412]), 474: naval([123, 435, 416, 13, 492]),
-  565: naval([123, 435, 416, 32, 583]),
-  523: { kind: 'naval', destinations: [123, 613, 300, 559], bounds: [4, 15, 17], damageDice: [null, 2, 0, 0] },
-  397: { kind: 'tavern', destinations: [123, 454, 455], bounds: [7, 12], damageDice: [null, 0, 0] },
-  465: { kind: 'kraken', destinations: [592, 610, 135], bounds: [9, 15] },
-  647: { kind: 'hydras', destinations: [123, 700, 118, 448], bounds: [3, 6, 9], damageDice: [null, 0, 0, 0] },
-  541: { kind: 'ram', destinations: [523, 577, 595], bounds: [6, 10] },
-  384: { kind: 'overloaded', destinations: [486, 366], bounds: [2] },
-  403: { kind: 'magicStorm', destinations: [486, 468], bounds: [6] },
-  142: { kind: 'survival', destinations: [123, 152], bounds: [7], damageDice: [null, 0] },
-  168: { kind: 'lightning', destinations: [212, 135, 123], bounds: [4, 10], blessingDestination: 352,
-    damageDice: [0, 0, null] },
-  186: { kind: 'raiders', destinations: [123, 206, 352], bounds: [3, 12], damageDice: [null, 0, 0] },
+export let BLOOD_DARK_SEA_CHECKS = Object.freeze({});
+export const BLOOD_DARK_RULES = {};
+export const loadRoster = createRosterLoader(676, 'FIGHTS', rows => {
+  const support = rows.find(row => row.support)?.support;
+  if (!support?.seaChecks || !support.rules) throw new Error('Incomplete Blood-Dark Sea settings');
+  BLOOD_DARK_FIGHTS = rows.map(({support, ...row}) => row);
+  BLOOD_DARK_SEA_CHECKS = Object.freeze(support.seaChecks);
+  Object.assign(BLOOD_DARK_RULES, support.rules);
 });
+import { fabledDie, fabledInteger, validateFabledCharacter } from './character.js';
 
 export function bloodDarkSeaCheck(section, input, options = {}, roll) {
   validateFabledCharacter(input, true);
@@ -54,27 +29,23 @@ export function bloodDarkSeaCheck(section, input, options = {}, roll) {
     || typeof safetyFromStorms !== 'boolean') throw new RangeError('Invalid ship settings');
   const spec = BLOOD_DARK_SEA_CHECKS[section], character = structuredClone(input);
   if (safetyFromStorms) {
-    if (!['storm', 'lightning'].includes(spec.kind) || !character.stormsBlessing) throw new RangeError('Storm blessing unavailable');
+    if (!BLOOD_DARK_RULES.blessingKinds.includes(spec.kind) || !character.stormsBlessing) throw new RangeError('Storm blessing unavailable');
     character.stormsBlessing = false;
     return { character, total: null, damage: 0, destination: spec.blessingDestination,
       status: 'safe', usedBlessing: true };
   }
-  const shipDice = ['barque', 'brigantine', 'galleon'].indexOf(ship) + 1;
-  const count = ['storm', 'kraken'].includes(spec.kind) ? shipDice
-    : ['naval', 'tavern', 'raiders'].includes(spec.kind) && character.profession === 'warrior' ? 3
-      : spec.kind === 'survival' ? character.profession === 'wayfarer' ? 2 : 1
-      : spec.kind === 'overloaded' ? 1 : 2;
-  const modifiers = spec.kind === 'storm' ? { poor: -1, average: 0, good: 0, excellent: 1 }
-    : spec.kind === 'naval' ? { poor: -2, average: 0, good: 2, excellent: 3 }
-      : spec.kind === 'tavern' ? { poor: 0, average: 0, good: 0, excellent: 2 }
-        : spec.kind === 'hydras' ? { poor: -2, average: 0, good: 1, excellent: 2 }
-          : ['escape', 'ram'].includes(spec.kind) ? { poor: 0, average: 1, good: 2, excellent: 3 }
-            : { poor: 0, average: 0, good: 0, excellent: 0 };
+  const shipDice = BLOOD_DARK_RULES.shipDice[ship];
+  const count = BLOOD_DARK_RULES.shipDiceKinds.includes(spec.kind) ? shipDice
+    : BLOOD_DARK_RULES.warriorDiceKinds.includes(spec.kind) && character.profession === 'warrior' ? BLOOD_DARK_RULES.warriorDice
+      : spec.kind === 'survival' ? character.profession === 'wayfarer' ? BLOOD_DARK_RULES.survivalDice.wayfarer : BLOOD_DARK_RULES.survivalDice.other
+      : BLOOD_DARK_RULES.singleDieKinds.includes(spec.kind) ? BLOOD_DARK_RULES.singleDie : BLOOD_DARK_RULES.otherDice;
+  const modifiers = Object.hasOwn(BLOOD_DARK_RULES.crewModifiers, spec.kind)
+    ? BLOOD_DARK_RULES.crewModifiers[spec.kind] : BLOOD_DARK_RULES.defaultCrewModifiers;
   let total = modifiers[crew];
-  if (['naval', 'tavern', 'kraken', 'escape', 'ram', 'survival', 'raiders'].includes(spec.kind)) total += character.rank;
-  if (spec.kind === 'lightning' && character.copperOre) total++;
-  if (['overloaded', 'magicStorm'].includes(spec.kind)) total += shipDice - 2;
-  if (spec.cargoPenalty && character.hasCargo) total--;
+  if (BLOOD_DARK_RULES.rankKinds.includes(spec.kind)) total += character.rank;
+  if (spec.kind === 'lightning' && character.copperOre) total += BLOOD_DARK_RULES.copperOreBonus;
+  if (BLOOD_DARK_RULES.shipAdjustmentKinds.includes(spec.kind)) total += shipDice - BLOOD_DARK_RULES.shipAdjustmentBase;
+  if (spec.cargoPenalty && character.hasCargo) total -= BLOOD_DARK_RULES.cargoPenalty;
   for (let index = 0; index < count; index++) total += fabledDie(roll);
   fabledInteger(total, -1000);
   const index = spec.bounds.findIndex(bound => total <= bound);
@@ -83,10 +54,12 @@ export function bloodDarkSeaCheck(section, input, options = {}, roll) {
   if (spec.damageDice?.[outcome] === null) damage = character.stamina;
   else for (let index = 0; index < (spec.damageDice?.[outcome] ?? 0); index++) damage += fabledDie(roll);
   character.stamina = Math.max(0, character.stamina - damage);
-  const isBattle = ['naval', 'tavern', 'hydras'].includes(spec.kind);
-  return { character, total, damage, kind: spec.kind, destination: character.stamina ? spec.destinations[outcome] : 123,
+  const isBattle = BLOOD_DARK_RULES.battleKinds.includes(spec.kind);
+  const degraded = Object.hasOwn(BLOOD_DARK_RULES.crewDegradation, spec.kind)
+    && BLOOD_DARK_RULES.crewDegradation[spec.kind].includes(outcome);
+  return { character, total, damage, kind: spec.kind, destination: character.stamina ? spec.destinations[outcome] : BLOOD_DARK_RULES.deathDestination,
     status: isBattle ? outcome === spec.bounds.length ? 'win'
       : spec.kind === 'naval' && outcome === spec.bounds.length - 1 ? 'draw' : 'loss' : 'story',
-    crew: (spec.kind === 'hydras' && outcome === 2) || (spec.kind === 'lightning' && outcome === 1) ? 'poor' : crew,
+    crew: degraded ? BLOOD_DARK_RULES.degradedCrew : crew,
     usedBlessing: false };
 }

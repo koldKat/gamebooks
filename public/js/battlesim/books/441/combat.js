@@ -32,6 +32,11 @@ function _enemyNameSafe(d) {
   const { _enemyName, escapeHtml } = getContext();
  return escapeHtml(_enemyName(d)); }
 
+function _rulesFor(section) {
+  const { ENCOUNTER_RULES } = getContext();
+  return ENCOUNTER_RULES[section] ?? {};
+}
+
 function _captureFightEffects(d) {
   const { _effectiveSkill } = getContext();
 
@@ -46,14 +51,16 @@ function _captureFightEffects(d) {
 }
 
 function _effectiveSkill(d) {
+  const { _rulesFor } = getContext();
 
   let skill = d.combatSkill + (d.attackModifier || 0);
   const effects = d.combatEffects;
   if (!effects) return skill;
-  if (effects.section === 57 || (effects.section === 322 && effects.weapon !== 'staff')) skill -= effects.dagger ? 6 : 8;
+  const rules = _rulesFor(effects.section), penalty = rules.weaponPenalty;
+  if (penalty && (!penalty.unlessStaff || effects.weapon !== 'staff')) skill -= effects.dagger ? penalty.dagger : penalty.none;
   else if (effects.weapon === 'none') skill -= 8;
   else if (effects.weapon !== 'staff' || !(d.willpower >= 1)) skill -= 6;
-  if (effects.section === 188 && effects.tanith) skill += 2;
+  if (rules.companionBonus && effects[rules.companionBonus.option]) skill += rules.companionBonus.amount;
   return skill;
 }
 
@@ -66,22 +73,22 @@ function _stopFight(d, routes) {
 }
 
 function _escapeRoute(d) {
-
+  const { _rulesFor } = getContext();
   const effects = d.combatEffects;
   if (!effects || effects.finished) return null;
-  if (effects.section === 97) return 61;
-  if (effects.section === 243) return 218;
-  if ([57,322].includes(effects.section) && d.roundsThisBattle >= 3 && d.endurance > d.enemy.endurance) return 99;
-  return null;
+  const escape = _rulesFor(effects.section).escape;
+  return escape && d.roundsThisBattle >= escape.afterRounds
+    && (!escape.requireEnduranceAdvantage || d.endurance > d.enemy.endurance) ? escape.route : null;
 }
 
 function _runRound() {
-  const { COMBAT_TABLE, DEADLINES, _appendLog, _captureFightEffects, _checkBattleEnd, _data, _effectiveSkill, _enemyNameSafe, _pick10, _pickRow, _ratioCol, _renderAll, _stopFight, saveState, t } = getContext();
+  const { COMBAT_TABLE, DEADLINES, _appendLog, _captureFightEffects, _checkBattleEnd, _data, _effectiveSkill, _enemyNameSafe, _pick10, _pickRow, _ratioCol, _renderAll, _stopFight, _rulesFor, saveState, t } = getContext();
 
   const d = _data();
   if (!d || !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0 || d.combatEffects?.finished) return;
   if (d.printedRules === 1 && !d.combatEffects) _captureFightEffects(d);
   const effects = d.combatEffects;
+  const rules = effects ? _rulesFor(effects.section) : {};
   if (effects) d.ratio = _effectiveSkill(d) - d.enemy.skill;
   d.roundsThisBattle++;
 
@@ -91,7 +98,7 @@ function _runRound() {
   _appendLog(d, t('battlesim441.log.round', { round: d.roundsThisBattle, ratio: d.ratio, pick }));
 
   let spent = 0;
-  if (effects?.weapon === 'staff' && effects.section !== 57 && d.willpower >= 1) {
+  if (effects?.weapon === 'staff' && !rules.disableStaffCost && d.willpower >= 1) {
     spent = Math.min(effects.willSpend, Math.floor(d.willpower));
     d.willpower -= spent;
     _appendLog(d, t('battlesim441.log.will', { spent, will: d.willpower }));
@@ -99,7 +106,7 @@ function _runRound() {
   const damage = enemyLoss === 'K' ? enemyLoss : enemyLoss * Math.max(1, spent);
   if (damage === 'K') d.enemy.endurance = 0;
   else d.enemy.endurance = Math.max(0, d.enemy.endurance - damage);
-  const playerLoss = effects?.section === 97 ? 0 : lwLoss;
+  const playerLoss = rules.noPlayerLoss ? 0 : lwLoss;
   if (playerLoss === 'K') d.endurance = 0;
   else d.endurance = Math.max(0, d.endurance - playerLoss);
 
@@ -121,13 +128,14 @@ function _runRound() {
 }
 
 function _checkBattleEnd(d) {
-  const { SVG_SKULL, SVG_TROPHY, VICTORY_ROUTES, _appendLog, _enemyNameSafe, _recordOutcome, _stopFight, t } = getContext();
+  const { SVG_SKULL, SVG_TROPHY, VICTORY_ROUTES, _appendLog, _enemyNameSafe, _recordOutcome, _stopFight, _rulesFor, t } = getContext();
 
+  const rules = d.combatEffects ? _rulesFor(d.combatEffects.section) : {};
   if (d.combatEffects && d.endurance <= 0) {
     _recordOutcome(d, 'loss');
-    if (d.combatEffects.section === 243) {
-      _appendLog(d, t('battlesim441.log.jahksa_rescue'));
-      _stopFight(d, [350]);
+    if (rules.rescue) {
+      _appendLog(d, t(rules.rescue.logKey));
+      _stopFight(d, [rules.rescue.route]);
     } else {
       d.combatEffects.finished = true;
       _appendLog(d, t('battlesim441.log.fallen', { skull: SVG_SKULL }));
@@ -138,7 +146,7 @@ function _checkBattleEnd(d) {
     _appendLog(d, t('battlesim441.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
     if (d.combatEffects) {
-      if (d.combatEffects.section === 243) _appendLog(d, t('battlesim441.log.jahksa_warning'));
+      if (rules.victoryWarning) _appendLog(d, t(rules.victoryWarning));
       _stopFight(d, VICTORY_ROUTES[d.combatEffects.section] || []);
     }
   } else if (d.endurance <= 0) {
@@ -174,5 +182,5 @@ function _resetBattle() {
 }
 
 // END EXTRACTED RULES
-  return { _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _effectiveSkill, _stopFight, _escapeRoute, _runRound, _checkBattleEnd, _stopByChoice, _resetBattle };
+  return { _rulesFor, _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _effectiveSkill, _stopFight, _escapeRoute, _runRound, _checkBattleEnd, _stopByChoice, _resetBattle };
 }

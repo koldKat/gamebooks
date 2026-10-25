@@ -38,6 +38,27 @@
             ],
             "win": 105,
             "entryCost": 1
+          },
+          "support": {
+            "rules": {
+              "recovery": {
+                "afterRound": 4,
+                "oddSkill": 4,
+                "evenSkill": 8
+              },
+              "sting": {
+                "minRoll": 5,
+                "damage": 6,
+                "luckyDamage": 1
+              },
+              "night": {
+                "modifiers": [
+                  0,
+                  2
+                ],
+                "maxPreviousSection": 456
+              }
+            }
           }
         },
         "part": {

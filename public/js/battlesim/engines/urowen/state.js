@@ -1,4 +1,5 @@
 import {createUrowenCharacter} from './core.js';
+import {UROWEN_RULES} from './roster.js';
 import {createUrowenTransformation,createUrowenPossession,createUrowenMission,createUrowenAppendages} from './forms.js';
 
 const clone=value=>structuredClone(value);
@@ -30,7 +31,7 @@ export function prepareUrowenEncounter(state,spec,{missionAttribute='SK',unarmed
   const next=clone(state),mode=spec.rules;
   if(mode.temporaryPossession) {
     if(next.temporary?.stage!=='possession')next.temporary=createUrowenPossession(next.character);
-  } else if([115,126].includes(spec.section)) {
+  } else if(UROWEN_RULES.possession.sections.includes(spec.section)) {
     if(next.temporary?.stage!=='possession')next.temporary=createUrowenPossession(next.character);
   } else if(mode.curseStage) {
     if(next.temporary?.stage!==mode.curseStage)next.temporary=createUrowenTransformation(next.character,mode.curseStage);

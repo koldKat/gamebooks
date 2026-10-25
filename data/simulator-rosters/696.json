@@ -1,0 +1,692 @@
+{
+  "schemaVersion": 1,
+  "bookId": 696,
+  "family": "standalone",
+  "source": "All eighteen original creature strength/reflex supplements. Legacy attack, defence, life and endurance attributes, IDs and existing saved-fight exchange rules remain unchanged.",
+  "enemies": [
+    {
+      "key": "creature:Обикновен човек",
+      "name": "Обикновен човек",
+      "attack": 2,
+      "defense": 2,
+      "hp": 15,
+      "pb": 3,
+      "adopt": {
+        "name": "Обикновен човек",
+        "attack": 2,
+        "defense": 2,
+        "hp": 15,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Обикновен човек",
+          "attributes": [
+            3,
+            2
+          ]
+        },
+        "part": {
+          "name": "Обикновен човек",
+          "attributes": [
+            3,
+            2
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Полуджентри",
+      "name": "Полуджентри",
+      "attack": 4,
+      "defense": 4,
+      "hp": 25,
+      "pb": 3,
+      "adopt": {
+        "name": "Полуджентри",
+        "attack": 4,
+        "defense": 4,
+        "hp": 25,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Полуджентри",
+          "attributes": [
+            3,
+            3
+          ]
+        },
+        "part": {
+          "name": "Полуджентри",
+          "attributes": [
+            3,
+            3
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Джентри",
+      "name": "Джентри",
+      "attack": 4,
+      "defense": 4,
+      "hp": 50,
+      "pb": 6,
+      "adopt": {
+        "name": "Джентри",
+        "attack": 4,
+        "defense": 4,
+        "hp": 50,
+        "pb": 6
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Джентри",
+          "attributes": [
+            5,
+            5
+          ]
+        },
+        "part": {
+          "name": "Джентри",
+          "attributes": [
+            5,
+            5
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Обикновен вампир",
+      "name": "Обикновен вампир",
+      "attack": 3,
+      "defense": 3,
+      "hp": 30,
+      "pb": 6,
+      "adopt": {
+        "name": "Обикновен вампир",
+        "attack": 3,
+        "defense": 3,
+        "hp": 30,
+        "pb": 6
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Обикновен вампир",
+          "attributes": [
+            4,
+            3
+          ]
+        },
+        "part": {
+          "name": "Обикновен вампир",
+          "attributes": [
+            4,
+            3
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Архвампир",
+      "name": "Архвампир",
+      "attack": 5,
+      "defense": 5,
+      "hp": 60,
+      "pb": 6,
+      "adopt": {
+        "name": "Архвампир",
+        "attack": 5,
+        "defense": 5,
+        "hp": 60,
+        "pb": 6
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Архвампир",
+          "attributes": [
+            6,
+            6
+          ]
+        },
+        "part": {
+          "name": "Архвампир",
+          "attributes": [
+            6,
+            6
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Естер",
+      "name": "Естер",
+      "attack": 3,
+      "defense": 2,
+      "hp": 15,
+      "pb": 3,
+      "adopt": {
+        "name": "Естер",
+        "attack": 3,
+        "defense": 2,
+        "hp": 15,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Естер",
+          "attributes": [
+            3,
+            2
+          ]
+        },
+        "part": {
+          "name": "Естер",
+          "attributes": [
+            3,
+            2
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Гном",
+      "name": "Гном",
+      "attack": 2,
+      "defense": 4,
+      "hp": 40,
+      "pb": 4,
+      "adopt": {
+        "name": "Гном",
+        "attack": 2,
+        "defense": 4,
+        "hp": 40,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Гном",
+          "attributes": [
+            3,
+            2
+          ]
+        },
+        "part": {
+          "name": "Гном",
+          "attributes": [
+            3,
+            2
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Полугном",
+      "name": "Полугном",
+      "attack": 2,
+      "defense": 3,
+      "hp": 35,
+      "pb": 4,
+      "adopt": {
+        "name": "Полугном",
+        "attack": 2,
+        "defense": 3,
+        "hp": 35,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Полугном",
+          "attributes": [
+            3,
+            2
+          ]
+        },
+        "part": {
+          "name": "Полугном",
+          "attributes": [
+            3,
+            2
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Верволф (таласъм-вълк)",
+      "name": "Верволф (таласъм-вълк)",
+      "attack": 3,
+      "defense": 3,
+      "hp": 45,
+      "pb": 4,
+      "adopt": {
+        "name": "Верволф (таласъм-вълк)",
+        "attack": 3,
+        "defense": 3,
+        "hp": 45,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Верволф (таласъм-вълк)",
+          "attributes": [
+            4,
+            3
+          ]
+        },
+        "part": {
+          "name": "Верволф (таласъм-вълк)",
+          "attributes": [
+            4,
+            3
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Верфокс (таласъм-лисица)",
+      "name": "Верфокс (таласъм-лисица)",
+      "attack": 3,
+      "defense": 2,
+      "hp": 35,
+      "pb": 3,
+      "adopt": {
+        "name": "Верфокс (таласъм-лисица)",
+        "attack": 3,
+        "defense": 2,
+        "hp": 35,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Верфокс (таласъм-лисица)",
+          "attributes": [
+            3,
+            3
+          ]
+        },
+        "part": {
+          "name": "Верфокс (таласъм-лисица)",
+          "attributes": [
+            3,
+            3
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Вербьор (таласъм-мечка)",
+      "name": "Вербьор (таласъм-мечка)",
+      "attack": 3,
+      "defense": 3,
+      "hp": 65,
+      "pb": 6,
+      "adopt": {
+        "name": "Вербьор (таласъм-мечка)",
+        "attack": 3,
+        "defense": 3,
+        "hp": 65,
+        "pb": 6
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Вербьор (таласъм-мечка)",
+          "attributes": [
+            5,
+            2
+          ]
+        },
+        "part": {
+          "name": "Вербьор (таласъм-мечка)",
+          "attributes": [
+            5,
+            2
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Русалка (воден дух)",
+      "name": "Русалка (воден дух)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 20,
+      "pb": 6,
+      "adopt": {
+        "name": "Русалка (воден дух)",
+        "attack": 2,
+        "defense": 2,
+        "hp": 20,
+        "pb": 6
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Русалка (воден дух)",
+          "attributes": [
+            2,
+            2
+          ]
+        },
+        "part": {
+          "name": "Русалка (воден дух)",
+          "attributes": [
+            2,
+            2
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Вълк",
+      "name": "Вълк",
+      "attack": 2,
+      "defense": 2,
+      "hp": 15,
+      "pb": 3,
+      "adopt": {
+        "name": "Вълк",
+        "attack": 2,
+        "defense": 2,
+        "hp": 15,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Вълк",
+          "attributes": [
+            2,
+            2
+          ]
+        },
+        "part": {
+          "name": "Вълк",
+          "attributes": [
+            2,
+            2
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Мечка",
+      "name": "Мечка",
+      "attack": 3,
+      "defense": 3,
+      "hp": 30,
+      "pb": 4,
+      "adopt": {
+        "name": "Мечка",
+        "attack": 3,
+        "defense": 3,
+        "hp": 30,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Мечка",
+          "attributes": [
+            5,
+            1
+          ]
+        },
+        "part": {
+          "name": "Мечка",
+          "attributes": [
+            5,
+            1
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Глиган",
+      "name": "Глиган",
+      "attack": 2,
+      "defense": 2,
+      "hp": 15,
+      "pb": 3,
+      "adopt": {
+        "name": "Глиган",
+        "attack": 2,
+        "defense": 2,
+        "hp": 15,
+        "pb": 3
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Глиган",
+          "attributes": [
+            3,
+            2
+          ]
+        },
+        "part": {
+          "name": "Глиган",
+          "attributes": [
+            3,
+            2
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Грифон",
+      "name": "Грифон",
+      "attack": 4,
+      "defense": 3,
+      "hp": 65,
+      "pb": 5,
+      "adopt": {
+        "name": "Грифон",
+        "attack": 4,
+        "defense": 3,
+        "hp": 65,
+        "pb": 5
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Грифон",
+          "attributes": [
+            5,
+            4
+          ]
+        },
+        "part": {
+          "name": "Грифон",
+          "attributes": [
+            5,
+            4
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Барс",
+      "name": "Барс",
+      "attack": 4,
+      "defense": 4,
+      "hp": 20,
+      "pb": 4,
+      "adopt": {
+        "name": "Барс",
+        "attack": 4,
+        "defense": 4,
+        "hp": 20,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Барс",
+          "attributes": [
+            3,
+            3
+          ]
+        },
+        "part": {
+          "name": "Барс",
+          "attributes": [
+            3,
+            3
+          ]
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "creature:Еднорог",
+      "name": "Еднорог",
+      "attack": 3,
+      "defense": 2,
+      "hp": 50,
+      "pb": 5,
+      "adopt": {
+        "name": "Еднорог",
+        "attack": 3,
+        "defense": 2,
+        "hp": 50,
+        "pb": 5
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "CREATURE_ATTRIBUTES",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Еднорог",
+          "attributes": [
+            3,
+            4
+          ]
+        },
+        "part": {
+          "name": "Еднорог",
+          "attributes": [
+            3,
+            4
+          ]
+        },
+        "count": 1
+      }
+    }
+  ]
+}

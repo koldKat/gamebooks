@@ -40,6 +40,7 @@ function _renderStatus() {
   else if (hasEnemy && d.enemy.life <= 0)          el.innerHTML = t('battlesim218.status.victory', { trophy: SVG_TROPHY });
   else                                             el.innerHTML = '';
   const over = notReady || _activeLife(d) <= 0 || (hasEnemy && d.enemy.life <= 0);
+  document.getElementById('sim218-mode').disabled = !!d.pendingLuckQueue.length;
   document.getElementById('sim218-round').disabled = over || !!d.pendingLuckQueue.length;
   document.getElementById('sim218-luck-yes').disabled = notReady || !d.pendingLuckQueue.length || d.player.luck <= 0;
   document.getElementById('sim218-luck-no').disabled  = notReady || !d.pendingLuckQueue.length;
@@ -242,7 +243,7 @@ export function initSim218() {
             <div class="bsim-side-title">${t('battlesim218.ui.you')}</div>
             <div class="inv-edit-row">
               <span class="inv-edit-label bsim-stat-label">${t('battlesim218.ui.mode')}</span>
-              <select id="sim218-mode" class="bsim-select">
+              <select id="sim218-mode" class="inv-edit-input bsim-select">
                 <option value="personal">${t('battlesim218.ui.mode_personal')}</option>
                 <option value="robot">${t('battlesim218.ui.mode_robot')}</option>
               </select>
@@ -267,7 +268,7 @@ export function initSim218() {
               ${_numField(t('battlesim218.ui.combat_bonus'), 'sim218-player-combatbonus')}
               <div class="inv-edit-row">
                 <span class="inv-edit-label bsim-stat-label">${t('battlesim218.ui.your_speed')}</span>
-                <select id="sim218-player-speed" class="bsim-select">${_speedOptions()}</select>
+                <select id="sim218-player-speed" class="inv-edit-input bsim-select">${_speedOptions()}</select>
               </div>
             </div>
           </div>
@@ -285,13 +286,13 @@ export function initSim218() {
             ${_numField(t('battlesim218.ui.life_max'), 'sim218-enemy-lifemax')}
             <div class="inv-edit-row">
               <span class="inv-edit-label bsim-stat-label">${t('battlesim218.ui.enemy_speed')}</span>
-              <select id="sim218-enemy-speed" class="bsim-select">${_speedOptions()}</select>
+              <select id="sim218-enemy-speed" class="inv-edit-input bsim-select">${_speedOptions()}</select>
             </div>
             ${_numField(t('battlesim218.ui.wound_dmg'), 'sim218-enemy-wounddmg')}
             ${_numField(t('battlesim218.ui.win_after_hits'), 'sim218-enemy-winhits')}
             <div class="inv-edit-row">
               <span class="inv-edit-label bsim-stat-label">${t('battlesim218.ui.paired')}</span>
-              <input id="sim218-paired" type="checkbox">
+              <input id="sim218-paired" class="inv-edit-check" type="checkbox">
             </div>
             <div id="sim218-side-fields">
               <div class="inv-edit-row">
@@ -354,6 +355,10 @@ export function initSim218() {
   document.getElementById('sim218-mode').addEventListener('change', e => {
     const d = _data();
     if (!d) return;
+    if (d.pendingLuckQueue.length) {
+      e.target.value = d.mode;
+      return;
+    }
     d.mode = e.target.value === 'robot' ? 'robot' : 'personal';
     saveState();
     _renderInputs();

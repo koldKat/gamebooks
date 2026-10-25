@@ -1,6 +1,10 @@
 export let DEMONDOOM_ROSTER = Object.freeze([]);
+export const DEMONDOOM_RULES = {};
 
 export function installDemondoomRoster(rows) {
+  const rules = rows.find(row => row.support)?.support.rules;
+  if (!rules) throw new Error('Missing Demondoom encounter settings');
+  Object.assign(DEMONDOOM_RULES, rules);
   DEMONDOOM_ROSTER = Object.freeze(rows.filter(row => row.kind === 'fixed').map(row => Object.freeze(row.enemy)));
 }
 

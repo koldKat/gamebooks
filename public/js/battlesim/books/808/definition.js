@@ -15,4 +15,10 @@ export const MECHS = Object.freeze({
   mycenae: { weapons: 4, armour: 4 },
 });
 export let ENCOUNTERS = [];
-export const loadRoster = createRosterLoader(808, 'ENCOUNTERS', rows => { ENCOUNTERS = rows; });
+export const ZENDARI_RULES = {};
+export const loadRoster = createRosterLoader(808, 'ENCOUNTERS', rows => {
+  const rules = rows.find(row => row.support)?.support.rules;
+  if (!rules) throw new Error('Incomplete Zendari settings');
+  Object.assign(ZENDARI_RULES, rules);
+  ENCOUNTERS = rows.map(({support,...entry}) => entry);
+});

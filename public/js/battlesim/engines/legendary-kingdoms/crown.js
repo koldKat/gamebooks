@@ -1,4 +1,4 @@
-import { installCrownRoster } from './crown-roster.js';
+import { installCrownRoster, CROWN_SETTINGS } from './crown-roster.js';
 import { installCrownStrategy } from './crown-strategy.js';
 import { createRosterLoader } from '../../roster-data.js';
 import { legendaryInteger, legendarySkill } from './character.js';
@@ -14,8 +14,10 @@ function freezeCatalog(value) {
   return value;
 }
 export const loadRoster = createRosterLoader(690, 'CATALOG', entries => {
+  const settings = entries.find(entry => entry.support)?.support.rules;
+  if (!settings) throw new Error('Incomplete Crown settings');
   const fights = entries.filter(entry => entry.kind === 'fight').map(entry => entry.spec);
-  installCrownRoster(fights.flatMap(fight => fight.enemies));
+  installCrownRoster(fights.flatMap(fight => fight.enemies), settings);
   CROWN_FIGHTS = freezeCatalog(fights);
   installCrownStrategy(
     freezeCatalog(Object.fromEntries(entries.filter(entry => entry.kind === 'army').map(entry => [entry.section, entry.spec]))),
@@ -30,6 +32,7 @@ export function startCrownFight(party, section, { participants, codes = [], ogre
   heroZones, pitVictim, abbessSlain = false, goddessCaress = false, controlledMember } = {}) {
   legendaryInteger(section, 1);
   const battle = CROWN_FIGHTS.find(fight => fight.section === section);
+  const settings = CROWN_SETTINGS, sections = settings.sections;
   if (!battle || !Array.isArray(party) || !Array.isArray(codes) || codes.some(code => typeof code !== 'string'))
     throw new RangeError('Choose a Crown & Tower encounter and party');
   // Unfinished rules must never silently become ordinary fights.
@@ -47,42 +50,40 @@ export function startCrownFight(party, section, { participants, codes = [], ogre
   legendaryInteger(assassinationSuccesses);
   if (!Array.isArray(defeatedEnemies) || defeatedEnemies.some(name =>
     !battle.enemies.some(enemy => enemy.name === name)) ||
-    (defeatedEnemies.length && ![136,911].includes(section)))
+    (defeatedEnemies.length && !settings.defeated.sections.includes(section)))
     throw new RangeError('Choose only opponents already defeated on this approach');
-  if (section === 136 && defeatedEnemies.some(name => !['Sir Walter','Sar Lidia'].includes(name)))
+  if (section === sections.priorDuel && defeatedEnemies.some(name => !settings.defeated.restrictedNames.includes(name)))
     throw new RangeError('Only Sir Walter and Sar Lidia can have been defeated on this approach');
   const enemies = battle.enemies.filter(enemy => !defeatedEnemies.includes(enemy.name) &&
-    !(section === 738 && ((enemy.name === 'Sly Ogre' && ogreVisits === 0) ||
-      (enemy.name === 'Wild Ogre' && ogreVisits < 2))) &&
-    !(section === 880 && ((codes.includes('B3') && enemy.name === 'Flanking Rioters') ||
-      (codes.includes('B4') && enemy.name === 'Angry Rioters'))) &&
-    !(section === 94 && guardApproach === 'assassination' &&
-      assassinationSuccesses >= ({'Lief of Joria':2,'Robyn Spyre':4,'Krea Brocas':6,'Quinn Marshall':8}[enemy.name] ?? Infinity)))
+    !(section === sections.ogres && settings.ogres.some(rule=>enemy.name===rule.name && ogreVisits<rule.minimumVisits)) &&
+    !(section === sections.rioters && settings.rioters.some(rule=>codes.includes(rule.code) && enemy.name===rule.name)) &&
+    !(section === sections.guards && guardApproach === 'assassination' &&
+      assassinationSuccesses >= (settings.guards.assassination[enemy.name] ?? Infinity)))
     .map(enemy => ({ ...enemy }));
   const { enemies: unused, ...rules } = battle;
   rules.healingPotionAction = true;
   if (typeof goddessCaress !== 'boolean') throw new RangeError('Choose whether the goddess caressed the party');
-  if (section === 399 && controlledMember !== undefined) {
-    if (!selected.includes(controlledMember) || selected.length < 2)
+  if (section === sections.controlled && controlledMember !== undefined) {
+    if (!selected.includes(controlledMember) || selected.length < settings.controlled.minimumParticipants)
       throw new RangeError('Choose the controlled hero from a party with other living heroes');
-    rules.controlledMember = controlledMember;rules.controllerIndex = 0;
+    rules.controlledMember = controlledMember;rules.controllerIndex = settings.controlled.controllerIndex;
     enemies.push({name:party[controlledMember].name,attack:legendarySkill(party[controlledMember],'fighting'),
-      threshold:4,defence:4,health:party[controlledMember].health,attackType:'dice',partyMember:controlledMember});
+      threshold:settings.controlled.threshold,defence:settings.controlled.defence,health:party[controlledMember].health,attackType:'dice',partyMember:controlledMember});
   }
   if (typeof abbessSlain !== 'boolean') throw new RangeError('Choose whether the Abbess was already slain');
-  if (section === 469 && party.some((hero,index) => hero.health > 0 && !selected.includes(index))) rules.loss = 760;
-  if (section === 695) {
+  if (section === sections.abbess && party.some((hero,index) => hero.health > 0 && !selected.includes(index))) rules.loss = settings.abbess.reserveLoss;
+  if (section === sections.walkway) {
     if (!Array.isArray(heroZones) || heroZones.length !== party.length ||
         selected.some(index => !['walkway','pool'].includes(heroZones[index])))
       throw new RangeError('Choose whether each participating hero is on the walkway or in the pool');
     rules.initialZones = [...heroZones];
   }
-  if (section === 762) {
+  if (section === sections.pit) {
     if (!selected.includes(pitVictim)) throw new RangeError('Choose the hero who fell into the sewer pit');
     rules.initialZones = party.map((_,index) => index === pitVictim ? 'pool' : 'outside');
   }
   if (rules.halveSilverOnLoss) rules.startingSilver = legendaryInteger(silver);
-  if (section === 621) {
+  if (section === sections.grapple) {
     if (!Array.isArray(grappleRolls) || grappleRolls.length !== party.length ||
         selected.length !== party.filter(hero => hero.health > 0).length)
       throw new RangeError('Roll once for each party member before the tentacle attack');
@@ -97,30 +98,30 @@ export function startCrownFight(party, section, { participants, codes = [], ogre
     rules.armourParts = {};
     for (const index of selected) rules.armourParts[index] = legendaryArmourParts(party[index], armourParts?.[index]);
   }
-  if (section === 468) {
+  if (section === sections.doors) {
     const doorHolders = party.flatMap((hero,index) => hero.health > 0 && !selected.includes(index) ? [index] : []);
-    if (![1,2].includes(selected.length) || doorHolders.length + selected.length !== 4)
+    if (!settings.doors.participants.includes(selected.length) || doorHolders.length + selected.length !== settings.doors.partySize)
       throw new RangeError('Assign two or three of the four heroes to hold the doors after the skill check');
     rules.defeatOnLoss = doorHolders;
   }
   if (typeof spareBryce !== 'boolean') throw new RangeError('Choose whether to spare Sir Bryce');
   let grappledTasha;
-  if (section === 1185) {
+  if (section === sections.rescue) {
     if (typeof boyFreed !== 'boolean') throw new RangeError('Choose the result of the rescue check');
-    grappledTasha = selected.find(index => party[index].profileId === 'tasha');
+    grappledTasha = selected.find(index => party[index].profileId === settings.rescue.profile);
     if (grappledTasha === undefined) throw new RangeError('Tasha must participate in the rescue');
     if (!boyFreed) {
       rules.disabledParticipants = [grappledTasha];
-      rules.winGroups = [[1,2,3]];
-      rules.defeatOnVictory = [0];
+      rules.winGroups = structuredClone(settings.rescue.winGroups);
+      rules.defeatOnVictory = [...settings.rescue.defeatOnVictory];
     }
   }
-  if (section === 240 && rooftopAssassin !== undefined) {
+  if (section === sections.rooftop && rooftopAssassin !== undefined) {
     if (!selected.includes(rooftopAssassin)) throw new RangeError('Choose the assassin from the participating party');
-    rules.heroArrivalRounds = party.map((_, index) => index === rooftopAssassin ? 1 : 2);
+    rules.heroArrivalRounds = party.map((_, index) => settings.rooftopRounds[index === rooftopAssassin ? 0 : 1]);
   }
-  if (section === 94) {
-    if (!['ordinary','walls','basement','assassination'].includes(guardApproach))
+  if (section === sections.guards) {
+    if (!settings.guards.approaches.includes(guardApproach))
       throw new RangeError('Choose the manor guard approach');
     if (guardApproach === 'walls') {
       if (!Array.isArray(heroArrivalOrder) || heroArrivalOrder.length !== selected.length ||
@@ -131,148 +132,48 @@ export function startCrownFight(party, section, { participants, codes = [], ogre
       rules.heroArrivalRounds = party.map((_, index) => selected.includes(index) ? heroArrivalOrder.indexOf(index) + 1 : 1);
       for (const enemy of enemies) enemy.arrivalRound = guardArrivalOrder.indexOf(enemy.name) + 1;
     } else if (guardApproach === 'basement') {
-      for (const enemy of enemies) enemy.arrivalRound = enemy.name === 'Sir Barda' ? 1 : 2;
+      for (const enemy of enemies) enemy.arrivalRound = settings.guards.basementRounds[enemy.name === settings.guards.basementFirst ? 0 : 1];
     }
   }
   if ([entryDamageAlreadyApplied,skipFirstEnemyTurn,wizardWounded,titanEyesHit].some(value => typeof value !== 'boolean'))
     throw new RangeError('Choose explicit entry-wound and surprise options');
-  if (section === 932) rules.skipFirstEnemyTurn = skipFirstEnemyTurn;
-  if (section === 182) rules.thresholdReactions = [{ enemyIndex:1,
-    checks:[{index:0,below:20},{index:1,below:10}], hits:3, recipients:2, noArmour:true }];
-  if (section === 611) rules.thresholdReactions = [{ enemyIndex:0,
-    checks:[{index:0,atMost:25}], hits:4, recipients:2, noArmour:true }];
-  if (section === 1146) {
-    const lowest = Math.min(...selected.map(index => legendarySkill(party[index], 'survival')));
-    const candidates = selected.filter(index => legendarySkill(party[index], 'survival') === lowest);
+  if (section === sections.surprise) rules.skipFirstEnemyTurn = skipFirstEnemyTurn;
+  if (Object.hasOwn(settings.reactions,section)) rules.thresholdReactions = structuredClone(settings.reactions[section]);
+  if (section === sections.trapped) {
+    const lowest = Math.min(...selected.map(index => legendarySkill(party[index], settings.trap.ability)));
+    const candidates = selected.filter(index => legendarySkill(party[index], settings.trap.ability) === lowest);
     trappedHero ??= candidates.length === 1 ? candidates[0] : undefined;
     if (!candidates.includes(trappedHero)) throw new RangeError('Choose the trapped hero with the lowest Survival');
     rules.disabledParticipants = [trappedHero];
   }
-  if (section === 1193) {
-    if (!['cog','carrack'].includes(vesselType)) throw new RangeError('Choose the pirate ship being boarded');
-    rules.win = vesselType === 'cog' ? 704 : 99;
+  if (section === sections.pirates) {
+    if (typeof vesselType!=='string' || !Object.hasOwn(settings.pirates.wins,vesselType)) throw new RangeError('Choose the pirate ship being boarded');
+    rules.win = settings.pirates.wins[vesselType];
   }
+  const flags = {goddessCaress,wizardWounded,titanEyesHit,spareBryce,boyFreed};
+  const effects = settings.enemyEffects.filter(effect=>effect.section===section);
   for (const enemy of enemies) {
     enemy.maxHealth = enemy.health;
-    if (section === 399 && enemy.name === 'Narakath') {
-      enemy.magicOnly = true;
-      if (!goddessCaress) enemy.spellPlan = {mode:'round',entries:[
-        {min:1,max:1,name:'Vulnerability',effects:[{type:'vulnerabilityTarget',attackerIndex:1,threshold:2}]},
-        {min:2,max:2,name:'Dazing Lights',effects:[{type:'setDefence',value:6}]},
-        {min:3,max:3,name:'Stingtail Rune',effects:[{type:'damageParty',hits:3}]},
-      ],fallback:{name:'Spectral Dagger',effects:[{type:'ordinary'}]}};
+    for (const effect of effects) {
+      if (!effect.names.includes(enemy.name) || effect.when && flags[effect.when.flag]!==effect.when.value) continue;
+      Object.assign(enemy,structuredClone(effect.properties));
+      if (effect.healthLoss) enemy.health-=effect.healthLoss;
     }
-    if (section === 469 && enemy.name === 'The Abbess') {
-      enemy.weaponGuard = {indices:[0,1,2,3],minimum:1};
-      enemy.spellPlan = {mode:'roll',entries:[
-        {min:1,max:2,name:'Tendrils of Terror',effects:[{type:'stunStrongest',count:2}]},
-        {min:3,max:4,name:'Bolt of Sacrifice',effects:[{type:'sacrificeOthers'}]},
-        {min:5,max:5,name:'Bloody Restoration',effects:[{type:'healOthers',amount:3}]},
-        {min:6,max:6,name:'Manic Stabbing',effects:[{type:'weaponOpening'},{type:'ordinary'}]},
-      ]};
-    }
-    if (section === 695) enemy.zone = enemy.name === 'Tentacled Horror' ? 'pool' : 'walkwayOrPool';
-    if (section === 762) { enemy.zone = 'pool';enemy.attackEveryoneInZone = true;enemy.outsideSpellsAllowed = true; }
-    if (section === 114) enemy.spellPlan = {
-      mode:'roll',entries:[
-        {min:1,max:4,name:'Claws',effects:[{type:'ordinary'}]},
-        {min:5,max:6,name:'Burning Blood',effects:[{type:'damageParty',hits:2,unpreventable:true},
-          {type:'halveFightingNextTurn'}]},
-      ],
-    };
-    if (section === 954 && spareBryce && enemy.name === 'Sir Bryce') {
-      enemy.nonlethal = true;enemy.spellTargetForbidden = true;
-    }
-    if (section === 949 && enemy.name === 'Gareth Mulgate') {
-      enemy.weaponGuard = {indices:[0,1,2,3],minimum:2};
-      enemy.undamagedAttack = {hits:3};
-    }
-    if (section === 1185 && !boyFreed) {
-      if (enemy.name === 'Lead Thug') { enemy.inactive = true;enemy.untargetable = true; }
-      if (enemy.name === 'Fast Thug') enemy.forcedDamage = {hits:4,forcedMember:grappledTasha};
-    }
-    if (section === 94 && enemy.name === 'Robyn Spyre') enemy.spellPlan = {
-      mode:'round',entries:[
-        {min:1,max:1,name:'Poison Spray',effects:[{type:'attack',count:5,recipients:2}]},
-        {min:2,max:2,name:'Ice Bolt',effects:[{type:'attack',count:8}]},
-        {min:3,max:3,name:'Wither',effects:[{type:'damageParty',hits:1,noArmour:true}]},
-      ],fallback:{name:'Attack',effects:[{type:'ordinary'}]},
-    };
-    if (section === 543 && wizardWounded) enemy.health -= 3;
-    if (section === 318) {
-      enemy.retaliationDamage = 1;
-      if (titanEyesHit) { enemy.health -= 5;enemy.threshold = 5;enemy.automaticDamage = 0; }
-    }
-    if (section === 417) enemy.counterattack = true;
-    if (section === 611) enemy.attacksPerTurn = 2;
-    if (section === 626) { enemy.attacksPerTurn = 2;enemy.undamagedHeroAura = 2; }
-    if (section === 240 && enemy.name === 'Keraknorn the Wise')
-      enemy.weaponGuard = {indices:[1],minimum:1};
-    if (section === 33 && enemy.name === 'Roof Goblins') {
-      enemy.weaponGuard = { indices: [1], minimum: 1 };
-      enemy.automaticDamageGuard = 1;
-    }
-    if (section === 243 && /Archer/.test(enemy.name)) {
-      enemy.weaponGuard = { indices: [0,1,2], minimum: 2 };
-      enemy.undamagedAttack = { hits: 3 };
-    }
-    if ([265,546,980].includes(section) && /Archers/.test(enemy.name))
-      enemy.undamagedAttack = { hits: 2, recipients: 2, noArmour: true };
-    if ([600,1165].includes(section) && /Archer/.test(enemy.name)) enemy.undamagedAttack = { hits: 3 };
-    if (section === 350) enemy.extraDamageOnSix = 1;
-    if (section === 351 && enemy.name === 'Lord Luthor Swan') enemy.weaponGuard = { indices: [0], minimum: 1 };
-    if (section === 421) enemy.extraAttacksOnTriple = true;
-    if (section === 447) enemy.halveAttackAtHalfHealth = true;
-    if (section === 1193 && enemy.name === 'Pirate Netter') enemy.netWhileOthersAlive = true;
-    if (section === 1139) enemy.iceBoltDefence = 2;
-    if (section === 1146) enemy.beforeAttackDamage = { hits: 1, forcedMember: trappedHero, unpreventable: true };
-    if (section === 1126 && enemy.name === 'Hell Drone') enemy.endRoundPartyDamage = 1;
-    if (section === 1126 && enemy.name === 'Shaddish Ooze') enemy.ignoreArmour = true;
-    if ([254,905].includes(section)) enemy.spellPlan = {
-      mode:'roll',afterAttack:true,entries:[
-        {min:1,max:2,name:section===254?'Invigorate':'Soothing Touch',effects:[{type:'healSelf',amount:section===254?8:5}]},
-        {min:3,max:4,name:'Stingtail Rune',effects:[{type:'damageParty',hits:3}]},
-        {min:5,max:6,name:'Ice Bolt',effects:[{type:'attack',count:8}]},
-      ],
-    };
-    if (section === 381 && enemy.name === 'Skeleton') enemy.spellPlan = {
-      mode:'roll',entries:[
-        {min:1,max:2,name:'Deathly Armour',effects:[{type:'setDefence',value:6}]},
-        {min:3,max:4,name:'Poison Stream',effects:[{type:'attack',count:5,recipients:2}]},
-        {min:5,max:6,name:'Orb of Annihilation',effects:[{type:'attack',count:13}]},
-      ],
-    };
-    if (section === 543 || (section === 240 && enemy.name === 'Keraknorn the Wise')) enemy.spellPlan = {
-      mode:'roll',entries:[
-        {min:1,max:2,name:'Ice Bolt',effects:[{type:'attack',count:8}]},
-        {min:3,max:5,name:'Flame Jet',effects:[{type:'attack',count:5,recipients:3}]},
-        {min:6,max:6,name:'Soothing Touch',effects:[{type:'healSelf',amount:5,
-          ...(section === 240 ? {maximum:11,rerollIfFull:true} : {})}]},
-      ],
-    };
-    if (section === 740) enemy.spellPlan = {
-      mode:'roll',entries:[
-        {min:1,max:4,name:'Bite',effects:[{type:'ordinary'}]},
-        {min:5,max:6,name:'Poison Gas',effects:[{type:'damage',hits:3,recipients:2,noArmour:true}]},
-      ],
-    };
-    if (section === 691) enemy.spellPlan = {
-      mode:'roll',entries:[
-        {min:1,max:2,name:'Ice Bolt',effects:[{type:'attack',count:8}]},
-        {min:3,max:5,name:'Flame Jet',effects:[{type:'attack',count:5}]},
-        {min:6,max:6,name:'Recharge',effects:[{type:'skip'}]},
-      ],
-    };
+    if (section===sections.rescue && !boyFreed && enemy.name===settings.rescue.fastThug)
+      enemy.forcedDamage={hits:settings.rescue.damage,forcedMember:grappledTasha};
+    if (section===sections.trapped) enemy.beforeAttackDamage={hits:settings.trap.damage,
+      forcedMember:trappedHero,unpreventable:settings.trap.unpreventable};
   }
   let fight = startLegendaryFight(party, enemies, rules, selected);
-  if (section === 469 && abbessSlain) fight.enemies.find(enemy => enemy.name === 'The Abbess').health = 0;
-  if (section === 762 && !entryDamageAlreadyApplied) fight = legendaryEntryDamage(fight, [pitVictim], 2);
+  if (section === sections.abbess && abbessSlain) fight.enemies.find(enemy => enemy.name === settings.abbess.name).health = 0;
+  if (section === sections.pit && !entryDamageAlreadyApplied) fight = legendaryEntryDamage(fight, [pitVictim], settings.pit.entryDamage);
   if (rules.grappleEscape && !rules.initialGrappled.length) {
     fight.status = 'won';fight.phase = 'ended';fight.destination = rules.win;
   }
-  if (!entryDamageAlreadyApplied && [256,931,1072].includes(section)) {
-    if (section === 256 && !selected.includes(entryDamageHero)) throw new RangeError('Choose the hero clawed on entry');
-    fight = legendaryEntryDamage(fight, section === 931 ? selected : [section === 256 ? entryDamageHero : selected[0]], section === 1072 ? 1 : 2);
+  if (!entryDamageAlreadyApplied && Object.hasOwn(settings.entryDamage,section)) {
+    const entry=settings.entryDamage[section];
+    if (entry.recipient==='chosen' && !selected.includes(entryDamageHero)) throw new RangeError('Choose the hero clawed on entry');
+    fight = legendaryEntryDamage(fight, entry.recipient==='all'?selected:[entry.recipient==='chosen'?entryDamageHero:selected[0]], entry.hits);
   }
   return fight;
 }

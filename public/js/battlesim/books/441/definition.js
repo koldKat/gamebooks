@@ -1,3 +1,5 @@
+import { createRosterLoader } from '../../roster-data.js';
+
 // Book identity and declarative defaults; no DOM or saved-state access.
 export const definition = Object.freeze({
   "id": 441,
@@ -22,6 +24,9 @@ export const COMBAT_TABLE = [
   [[6,0],   [7,0],   [8,0], [9,0], [10,0], [11,0], [12,0], [14,0], [16,0], [18,0], ['K',0], ['K',0], ['K',0]],
 ];
 
-export const VICTORY_ROUTES = { 17: [250], 57: [107], 64: [133], 87: [150], 97: [124], 108: [133], 123: [117], 137: [186], 178: [106], 188: [205], 194: [51], 243: [286], 296: [106], 322: [107] };
-
-export const DEADLINES = { 87: [3,150], 123: [3,117], 194: [2,51], 296: [3,287] };
+export let VICTORY_ROUTES = {}, DEADLINES = {}, ENCOUNTER_RULES = {};
+export const loadRoster = createRosterLoader(441, 'ENCOUNTER_RULES', entries => {
+  ENCOUNTER_RULES = Object.fromEntries(entries.map(entry => [entry.section, entry.rules]));
+  VICTORY_ROUTES = Object.fromEntries(entries.filter(entry => entry.rules.victoryRoutes).map(entry => [entry.section, entry.rules.victoryRoutes]));
+  DEADLINES = Object.fromEntries(entries.filter(entry => entry.rules.deadline).map(entry => [entry.section, entry.rules.deadline]));
+});

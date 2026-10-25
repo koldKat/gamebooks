@@ -1,0 +1,3067 @@
+{
+  "schemaVersion": 1,
+  "bookId": 904,
+  "family": "fighting-fantasy",
+  "source": "All original Bulgarian Talisman encounters, actor variants, floor and damage rules, skill drain, opening injuries, group/target order, stop conditions, special dice, Luck destinations, capture and interruptions. Each complete encounter is owned once by its first canonical actor; every existing canonical profile retains its legacy ID and fields.",
+  "enemies": [
+    {
+      "key": "profile:Трицератопс|8|30",
+      "name": "Трицератопс",
+      "attack": 8,
+      "defense": null,
+      "hp": 30,
+      "pb": null,
+      "adopt": {
+        "name": "Трицератопс",
+        "attack": 8,
+        "defense": null,
+        "hp": 30,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Трицератопс",
+            "skill": 8,
+            "stamina": 30
+          },
+          "variants": [
+            {
+              "order": 0,
+              "spec": {
+                "section": 4,
+                "name": "Трицератопс",
+                "enemies": [
+                  {
+                    "displayName": "Трицератопс",
+                    "skill": 8,
+                    "stamina": 30
+                  }
+                ],
+                "win": null,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "roundLimit": 3,
+                "endLuck": [
+                  40,
+                  25
+                ]
+              }
+            }
+          ],
+          "support": {
+            "rules": {
+              "skillDrainAmount": 1
+            }
+          }
+        },
+        "part": {
+          "displayName": "Трицератопс",
+          "skill": 8,
+          "stamina": 30
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Птица Рух|10|16",
+      "name": "Птица Рух",
+      "attack": 10,
+      "defense": null,
+      "hp": 16,
+      "pb": null,
+      "adopt": {
+        "name": "Птица Рух",
+        "attack": 10,
+        "defense": null,
+        "hp": 16,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Птица Рух",
+            "skill": 10,
+            "stamina": 16
+          },
+          "variants": [
+            {
+              "order": 1,
+              "spec": {
+                "section": 9,
+                "name": "Птица Рух",
+                "enemies": [
+                  {
+                    "displayName": "Птица Рух",
+                    "skill": 10,
+                    "stamina": 16
+                  }
+                ],
+                "win": 84,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "hitDie": {
+                  "face": 1,
+                  "destination": 55
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Птица Рух",
+          "skill": 10,
+          "stamina": 16
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Червен дракон|12|20",
+      "name": "Червен дракон",
+      "attack": 12,
+      "defense": null,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Червен дракон",
+        "attack": 12,
+        "defense": null,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Червен дракон",
+            "skill": 12,
+            "stamina": 20,
+            "floor": 5
+          },
+          "variants": [
+            {
+              "order": 2,
+              "spec": {
+                "section": 10,
+                "name": "Червен дракон",
+                "enemies": [
+                  {
+                    "displayName": "Червен дракон",
+                    "skill": 12,
+                    "stamina": 20,
+                    "floor": 5
+                  }
+                ],
+                "win": 29,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            },
+            {
+              "order": 8,
+              "spec": {
+                "section": 51,
+                "name": "Червен дракон",
+                "enemies": [
+                  {
+                    "displayName": "Червен дракон",
+                    "skill": 12,
+                    "stamina": 20,
+                    "floor": 5
+                  }
+                ],
+                "win": 29,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "playerDamage": 5
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Червен дракон",
+          "skill": 12,
+          "stamina": 20,
+          "floor": 5
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Барман|7|8",
+      "name": "Барман",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Барман",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Барман",
+            "skill": 7,
+            "stamina": 8,
+            "floor": 4
+          },
+          "variants": [
+            {
+              "order": 3,
+              "spec": {
+                "section": 11,
+                "name": "Барман / Първи главорез",
+                "enemies": [
+                  {
+                    "displayName": "Барман",
+                    "skill": 7,
+                    "stamina": 8,
+                    "floor": 4
+                  },
+                  {
+                    "displayName": "Първи главорез",
+                    "skill": 8,
+                    "stamina": 9,
+                    "floor": 5
+                  }
+                ],
+                "win": null,
+                "groups": [
+                  [
+                    0,
+                    1
+                  ]
+                ],
+                "endLuck": [
+                  200,
+                  181
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Барман",
+          "skill": 7,
+          "stamina": 8,
+          "floor": 4
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Първи главорез|8|9",
+      "name": "Първи главорез",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Първи главорез",
+        "attack": 8,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Първи главорез",
+            "skill": 8,
+            "stamina": 9,
+            "floor": 5
+          },
+          "variants": []
+        },
+        "part": {
+          "displayName": "Първи главорез",
+          "skill": 8,
+          "stamina": 9,
+          "floor": 5
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Тиранозавър|11|18",
+      "name": "Тиранозавър",
+      "attack": 11,
+      "defense": null,
+      "hp": 18,
+      "pb": null,
+      "adopt": {
+        "name": "Тиранозавър",
+        "attack": 11,
+        "defense": null,
+        "hp": 18,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Тиранозавър",
+            "skill": 11,
+            "stamina": 18
+          },
+          "variants": [
+            {
+              "order": 4,
+              "spec": {
+                "section": 25,
+                "name": "Тиранозавър",
+                "enemies": [
+                  {
+                    "displayName": "Тиранозавър",
+                    "skill": 11,
+                    "stamina": 18
+                  }
+                ],
+                "win": 14,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Тиранозавър",
+          "skill": 11,
+          "stamina": 18
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Ястребина|9|6",
+      "name": "Ястребина",
+      "attack": 9,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Ястребина",
+        "attack": 9,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Ястребина",
+            "skill": 9,
+            "stamina": 6
+          },
+          "variants": [
+            {
+              "order": 5,
+              "spec": {
+                "section": 31,
+                "name": "Ястребина",
+                "enemies": [
+                  {
+                    "displayName": "Ястребина",
+                    "skill": 9,
+                    "stamina": 6
+                  }
+                ],
+                "win": 54,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Ястребина",
+          "skill": 9,
+          "stamina": 6
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Чудна върба|8|20",
+      "name": "Чудна върба",
+      "attack": 8,
+      "defense": null,
+      "hp": 20,
+      "pb": null,
+      "adopt": {
+        "name": "Чудна върба",
+        "attack": 8,
+        "defense": null,
+        "hp": 20,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Чудна върба",
+            "skill": 8,
+            "stamina": 20
+          },
+          "variants": [
+            {
+              "order": 6,
+              "spec": {
+                "section": 36,
+                "name": "Чудна върба",
+                "enemies": [
+                  {
+                    "displayName": "Чудна върба",
+                    "skill": 8,
+                    "stamina": 20
+                  }
+                ],
+                "win": 26,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "winHits": 4
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Чудна върба",
+          "skill": 8,
+          "stamina": 20
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Ястребина|12|14",
+      "name": "Ястребина",
+      "attack": 12,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Ястребина",
+        "attack": 12,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Ястребина",
+            "skill": 12,
+            "stamina": 14
+          },
+          "variants": [
+            {
+              "order": 7,
+              "spec": {
+                "section": 50,
+                "name": "Ястребина",
+                "enemies": [
+                  {
+                    "displayName": "Ястребина",
+                    "skill": 12,
+                    "stamina": 14
+                  }
+                ],
+                "win": 44,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            },
+            {
+              "order": 11,
+              "spec": {
+                "section": 76,
+                "name": "Ястребина",
+                "enemies": [
+                  {
+                    "displayName": "Ястребина",
+                    "skill": 12,
+                    "stamina": 14
+                  }
+                ],
+                "win": 44,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "openingStamina": 2
+              }
+            },
+            {
+              "order": 14,
+              "spec": {
+                "section": 87,
+                "name": "Ястребина",
+                "enemies": [
+                  {
+                    "displayName": "Ястребина",
+                    "skill": 12,
+                    "stamina": 14
+                  }
+                ],
+                "win": 44,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "skillBonus": 2
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Ястребина",
+          "skill": 12,
+          "stamina": 14
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Ястребина|12|6",
+      "name": "Ястребина",
+      "attack": 12,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Ястребина",
+        "attack": 12,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Ястребина",
+            "skill": 12,
+            "stamina": 6
+          },
+          "variants": [
+            {
+              "order": 9,
+              "spec": {
+                "section": 59,
+                "name": "Ястребина",
+                "enemies": [
+                  {
+                    "displayName": "Ястребина",
+                    "skill": 12,
+                    "stamina": 6
+                  }
+                ],
+                "win": 44,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Ястребина",
+          "skill": 12,
+          "stamina": 6
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Първи крадец|6|7",
+      "name": "Първи крадец",
+      "attack": 6,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Първи крадец",
+        "attack": 6,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Първи крадец",
+            "skill": 6,
+            "stamina": 7
+          },
+          "variants": [
+            {
+              "order": 10,
+              "spec": {
+                "section": 66,
+                "name": "Първи крадец / Втори крадец",
+                "enemies": [
+                  {
+                    "displayName": "Първи крадец",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "displayName": "Втори крадец",
+                    "skill": 5,
+                    "stamina": 6
+                  }
+                ],
+                "win": 320,
+                "groups": [
+                  [
+                    0,
+                    1
+                  ]
+                ],
+                "stopEnemy": 0
+              }
+            },
+            {
+              "order": 34,
+              "spec": {
+                "section": 245,
+                "name": "Първи крадец / Втори крадец",
+                "enemies": [
+                  {
+                    "displayName": "Първи крадец",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "displayName": "Втори крадец",
+                    "skill": 7,
+                    "stamina": 6
+                  }
+                ],
+                "win": 329,
+                "groups": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ]
+                ]
+              }
+            },
+            {
+              "order": 39,
+              "spec": {
+                "section": 286,
+                "name": "Първи крадец / Втори крадец",
+                "enemies": [
+                  {
+                    "displayName": "Първи крадец",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "displayName": "Втори крадец",
+                    "skill": 5,
+                    "stamina": 6
+                  }
+                ],
+                "win": 299,
+                "groups": [
+                  [
+                    0,
+                    1
+                  ]
+                ],
+                "stopAny": true
+              }
+            },
+            {
+              "order": 48,
+              "spec": {
+                "section": 364,
+                "name": "Първи крадец / Втори крадец",
+                "enemies": [
+                  {
+                    "displayName": "Първи крадец",
+                    "skill": 6,
+                    "stamina": 7
+                  },
+                  {
+                    "displayName": "Втори крадец",
+                    "skill": 5,
+                    "stamina": 6
+                  }
+                ],
+                "win": 391,
+                "groups": [
+                  [
+                    0,
+                    1
+                  ]
+                ],
+                "stopAny": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Първи крадец",
+          "skill": 6,
+          "stamina": 7
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Втори крадец|5|6",
+      "name": "Втори крадец",
+      "attack": 5,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Втори крадец",
+        "attack": 5,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Втори крадец",
+            "skill": 5,
+            "stamina": 6
+          },
+          "variants": []
+        },
+        "part": {
+          "displayName": "Втори крадец",
+          "skill": 5,
+          "stamina": 6
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Любимец на Смъртта|7|7",
+      "name": "Любимец на Смъртта",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Любимец на Смъртта",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Любимец на Смъртта",
+            "skill": 7,
+            "stamina": 7,
+            "skillDrain": true
+          },
+          "variants": [
+            {
+              "order": 12,
+              "spec": {
+                "section": 81,
+                "name": "Любимец на Смъртта",
+                "enemies": [
+                  {
+                    "displayName": "Любимец на Смъртта",
+                    "skill": 7,
+                    "stamina": 7,
+                    "skillDrain": true
+                  }
+                ],
+                "win": 175,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "openingStamina": 2,
+                "openingSkill": 1
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Любимец на Смъртта",
+          "skill": 7,
+          "stamina": 7,
+          "skillDrain": true
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Птеранодон|7|15",
+      "name": "Птеранодон",
+      "attack": 7,
+      "defense": null,
+      "hp": 15,
+      "pb": null,
+      "adopt": {
+        "name": "Птеранодон",
+        "attack": 7,
+        "defense": null,
+        "hp": 15,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Птеранодон",
+            "skill": 7,
+            "stamina": 15
+          },
+          "variants": [
+            {
+              "order": 13,
+              "spec": {
+                "section": 86,
+                "name": "Птеранодон",
+                "enemies": [
+                  {
+                    "displayName": "Птеранодон",
+                    "skill": 7,
+                    "stamina": 15
+                  }
+                ],
+                "win": 4,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Птеранодон",
+          "skill": 7,
+          "stamina": 15
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Рицар на Смъртта|10|15",
+      "name": "Рицар на Смъртта",
+      "attack": 10,
+      "defense": null,
+      "hp": 15,
+      "pb": null,
+      "adopt": {
+        "name": "Рицар на Смъртта",
+        "attack": 10,
+        "defense": null,
+        "hp": 15,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Рицар на Смъртта",
+            "skill": 10,
+            "stamina": 15
+          },
+          "variants": [
+            {
+              "order": 15,
+              "spec": {
+                "section": 91,
+                "name": "Рицар на Смъртта",
+                "enemies": [
+                  {
+                    "displayName": "Рицар на Смъртта",
+                    "skill": 10,
+                    "stamina": 15
+                  }
+                ],
+                "win": 62,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "playerFloor": 6,
+                "interruption": 193
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Рицар на Смъртта",
+          "skill": 10,
+          "stamina": 15
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Любимец на Смъртта|7|5",
+      "name": "Любимец на Смъртта",
+      "attack": 7,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Любимец на Смъртта",
+        "attack": 7,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Любимец на Смъртта",
+            "skill": 7,
+            "stamina": 5,
+            "skillDrain": true
+          },
+          "variants": [
+            {
+              "order": 16,
+              "spec": {
+                "section": 96,
+                "name": "Любимец на Смъртта",
+                "enemies": [
+                  {
+                    "displayName": "Любимец на Смъртта",
+                    "skill": 7,
+                    "stamina": 5,
+                    "skillDrain": true
+                  }
+                ],
+                "win": 175,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Любимец на Смъртта",
+          "skill": 7,
+          "stamina": 5,
+          "skillDrain": true
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Човекоядец|8|10",
+      "name": "Човекоядец",
+      "attack": 8,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Човекоядец",
+        "attack": 8,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Човекоядец",
+            "skill": 8,
+            "stamina": 10
+          },
+          "variants": [
+            {
+              "order": 17,
+              "spec": {
+                "section": 107,
+                "name": "Човекоядец",
+                "enemies": [
+                  {
+                    "displayName": "Човекоядец",
+                    "skill": 8,
+                    "stamina": 10
+                  }
+                ],
+                "win": 74,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "openingStamina": 2
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Човекоядец",
+          "skill": 8,
+          "stamina": 10
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Духът на Ястребина|10|12",
+      "name": "Духът на Ястребина",
+      "attack": 10,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Духът на Ястребина",
+        "attack": 10,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Духът на Ястребина",
+            "skill": 10,
+            "stamina": 12
+          },
+          "variants": [
+            {
+              "order": 18,
+              "spec": {
+                "section": 116,
+                "name": "Духът на Ястребина",
+                "enemies": [
+                  {
+                    "displayName": "Духът на Ястребина",
+                    "skill": 10,
+                    "stamina": 12
+                  }
+                ],
+                "win": 108,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "loss": 23
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Духът на Ястребина",
+          "skill": 10,
+          "stamina": 12
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Див елф|8|8",
+      "name": "Див елф",
+      "attack": 8,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Див елф",
+        "attack": 8,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Див елф",
+            "skill": 8,
+            "stamina": 8
+          },
+          "variants": [
+            {
+              "order": 19,
+              "spec": {
+                "section": 126,
+                "name": "Див елф",
+                "enemies": [
+                  {
+                    "displayName": "Див елф",
+                    "skill": 8,
+                    "stamina": 8
+                  }
+                ],
+                "win": 249,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Див елф",
+          "skill": 8,
+          "stamina": 8
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Храмова стража|7|8",
+      "name": "Храмова стража",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Храмова стража",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Храмова стража",
+            "skill": 7,
+            "stamina": 8
+          },
+          "variants": [
+            {
+              "order": 20,
+              "spec": {
+                "section": 140,
+                "name": "Храмова стража",
+                "enemies": [
+                  {
+                    "displayName": "Храмова стража",
+                    "skill": 7,
+                    "stamina": 8
+                  }
+                ],
+                "win": 113,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "roundLimit": 5,
+                "interruption": 124
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Храмова стража",
+          "skill": 7,
+          "stamina": 8
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Крилат череп|7|6",
+      "name": "Крилат череп",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Крилат череп",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Крилат череп",
+            "skill": 7,
+            "stamina": 6
+          },
+          "variants": [
+            {
+              "order": 21,
+              "spec": {
+                "section": 144,
+                "name": "Крилат череп",
+                "enemies": [
+                  {
+                    "displayName": "Крилат череп",
+                    "skill": 7,
+                    "stamina": 6
+                  }
+                ],
+                "win": 396,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Крилат череп",
+          "skill": 7,
+          "stamina": 6
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Коварен удар|6|6",
+      "name": "Коварен удар",
+      "attack": 6,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Коварен удар",
+        "attack": 6,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Коварен удар",
+            "skill": 6,
+            "stamina": 6
+          },
+          "variants": [
+            {
+              "order": 22,
+              "spec": {
+                "section": 167,
+                "name": "Коварен удар / Белязаният / Втори главорез",
+                "enemies": [
+                  {
+                    "displayName": "Коварен удар",
+                    "skill": 6,
+                    "stamina": 6
+                  },
+                  {
+                    "displayName": "Белязаният",
+                    "skill": 7,
+                    "stamina": 9,
+                    "floor": 5
+                  },
+                  {
+                    "displayName": "Втори главорез",
+                    "skill": 7,
+                    "stamina": 8
+                  }
+                ],
+                "win": 259,
+                "groups": [
+                  [
+                    0,
+                    1,
+                    2
+                  ]
+                ],
+                "openingStamina": 6,
+                "stopConditions": [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    5
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Коварен удар",
+          "skill": 6,
+          "stamina": 6
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Белязаният|7|9",
+      "name": "Белязаният",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Белязаният",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Белязаният",
+            "skill": 7,
+            "stamina": 9,
+            "floor": 5
+          },
+          "variants": []
+        },
+        "part": {
+          "displayName": "Белязаният",
+          "skill": 7,
+          "stamina": 9,
+          "floor": 5
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Втори главорез|7|8",
+      "name": "Втори главорез",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Втори главорез",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Втори главорез",
+            "skill": 7,
+            "stamina": 8
+          },
+          "variants": []
+        },
+        "part": {
+          "displayName": "Втори главорез",
+          "skill": 7,
+          "stamina": 8
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Вивисект|8|12",
+      "name": "Вивисект",
+      "attack": 8,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Вивисект",
+        "attack": 8,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Вивисект",
+            "skill": 8,
+            "stamina": 12
+          },
+          "variants": [
+            {
+              "order": 23,
+              "spec": {
+                "section": 189,
+                "name": "Вивисект",
+                "enemies": [
+                  {
+                    "displayName": "Вивисект",
+                    "skill": 8,
+                    "stamina": 12
+                  }
+                ],
+                "win": 176,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "consultation": 158
+              }
+            },
+            {
+              "order": 25,
+              "spec": {
+                "section": 201,
+                "name": "Вивисект",
+                "enemies": [
+                  {
+                    "displayName": "Вивисект",
+                    "skill": 8,
+                    "stamina": 12
+                  }
+                ],
+                "win": 176,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "consultation": 158
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Вивисект",
+          "skill": 8,
+          "stamina": 12
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Леден демон|8|10",
+      "name": "Леден демон",
+      "attack": 8,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Леден демон",
+        "attack": 8,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Леден демон",
+            "skill": 8,
+            "stamina": 10
+          },
+          "variants": [
+            {
+              "order": 24,
+              "spec": {
+                "section": 195,
+                "name": "Леден демон",
+                "enemies": [
+                  {
+                    "displayName": "Леден демон",
+                    "skill": 8,
+                    "stamina": 10
+                  }
+                ],
+                "win": 61,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "openingStamina": 3
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Леден демон",
+          "skill": 8,
+          "stamina": 10
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Невидим сталкер|9|8",
+      "name": "Невидим сталкер",
+      "attack": 9,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Невидим сталкер",
+        "attack": 9,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Невидим сталкер",
+            "skill": 9,
+            "stamina": 8
+          },
+          "variants": [
+            {
+              "order": 26,
+              "spec": {
+                "section": 208,
+                "name": "Невидим сталкер",
+                "enemies": [
+                  {
+                    "displayName": "Невидим сталкер",
+                    "skill": 9,
+                    "stamina": 8
+                  }
+                ],
+                "win": 250,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "openingStamina": 2
+              }
+            },
+            {
+              "order": 41,
+              "spec": {
+                "section": 297,
+                "name": "Невидим сталкер",
+                "enemies": [
+                  {
+                    "displayName": "Невидим сталкер",
+                    "skill": 9,
+                    "stamina": 8
+                  }
+                ],
+                "win": 250,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "openingStamina": 2
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Невидим сталкер",
+          "skill": 9,
+          "stamina": 8
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Тютчев|10|12",
+      "name": "Тютчев",
+      "attack": 10,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Тютчев",
+        "attack": 10,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 27,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Тютчев",
+            "skill": 10,
+            "stamina": 12,
+            "floor": 4
+          },
+          "variants": [
+            {
+              "order": 27,
+              "spec": {
+                "section": 210,
+                "name": "Тютчев / Касандра",
+                "enemies": [
+                  {
+                    "displayName": "Тютчев",
+                    "skill": 10,
+                    "stamina": 12,
+                    "floor": 4
+                  },
+                  {
+                    "displayName": "Касандра",
+                    "skill": 9,
+                    "stamina": 10,
+                    "floor": 4,
+                    "damage": 3
+                  }
+                ],
+                "win": 355,
+                "groups": [
+                  [
+                    0,
+                    1
+                  ]
+                ],
+                "targetOrder": [
+                  1,
+                  0
+                ]
+              }
+            },
+            {
+              "order": 35,
+              "spec": {
+                "section": 265,
+                "name": "Тютчев",
+                "enemies": [
+                  {
+                    "displayName": "Тютчев",
+                    "skill": 10,
+                    "stamina": 12
+                  }
+                ],
+                "win": 301,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "winHits": 1
+              }
+            },
+            {
+              "order": 45,
+              "spec": {
+                "section": 342,
+                "name": "Тютчев",
+                "enemies": [
+                  {
+                    "displayName": "Тютчев",
+                    "skill": 10,
+                    "stamina": 12,
+                    "floor": 4
+                  }
+                ],
+                "win": 355,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            },
+            {
+              "order": 49,
+              "spec": {
+                "section": 368,
+                "name": "Тютчев / Касандра",
+                "enemies": [
+                  {
+                    "displayName": "Тютчев",
+                    "skill": 10,
+                    "stamina": 12,
+                    "floor": 4
+                  },
+                  {
+                    "displayName": "Касандра",
+                    "skill": 9,
+                    "stamina": 10,
+                    "floor": 4,
+                    "damage": 3
+                  }
+                ],
+                "win": 353,
+                "groups": [
+                  [
+                    0,
+                    1
+                  ]
+                ],
+                "targetOrder": [
+                  1,
+                  0
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Тютчев",
+          "skill": 10,
+          "stamina": 12,
+          "floor": 4
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Касандра|9|10",
+      "name": "Касандра",
+      "attack": 9,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Касандра",
+        "attack": 9,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 28,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Касандра",
+            "skill": 9,
+            "stamina": 10,
+            "floor": 4,
+            "damage": 3
+          },
+          "variants": [
+            {
+              "order": 30,
+              "spec": {
+                "section": 223,
+                "name": "Касандра",
+                "enemies": [
+                  {
+                    "displayName": "Касандра",
+                    "skill": 9,
+                    "stamina": 10,
+                    "floor": 4,
+                    "damage": 3
+                  }
+                ],
+                "win": 342,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Касандра",
+          "skill": 9,
+          "stamina": 10,
+          "floor": 4,
+          "damage": 3
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Дух-двойник|9|10",
+      "name": "Дух-двойник",
+      "attack": 9,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Дух-двойник",
+        "attack": 9,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 29,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Дух-двойник",
+            "skill": 9,
+            "stamina": 10,
+            "skillDrain": true
+          },
+          "variants": [
+            {
+              "order": 28,
+              "spec": {
+                "section": 219,
+                "name": "Дух-двойник",
+                "enemies": [
+                  {
+                    "displayName": "Дух-двойник",
+                    "skill": 9,
+                    "stamina": 10,
+                    "skillDrain": true
+                  }
+                ],
+                "win": 174,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "openingStamina": 2
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Дух-двойник",
+          "skill": 9,
+          "stamina": 10,
+          "skillDrain": true
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Пратеник на Смъртта|8|6",
+      "name": "Пратеник на Смъртта",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Пратеник на Смъртта",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 30,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Пратеник на Смъртта",
+            "skill": 8,
+            "stamina": 6,
+            "skillDrain": true
+          },
+          "variants": [
+            {
+              "order": 29,
+              "spec": {
+                "section": 220,
+                "name": "Пратеник на Смъртта",
+                "enemies": [
+                  {
+                    "displayName": "Пратеник на Смъртта",
+                    "skill": 8,
+                    "stamina": 6,
+                    "skillDrain": true
+                  }
+                ],
+                "win": 254,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "openingStamina": 2,
+                "openingSkill": 1
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Пратеник на Смъртта",
+          "skill": 8,
+          "stamina": 6,
+          "skillDrain": true
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Грендел|8|9",
+      "name": "Грендел",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Грендел",
+        "attack": 8,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 31,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Грендел",
+            "skill": 8,
+            "stamina": 9
+          },
+          "variants": [
+            {
+              "order": 31,
+              "spec": {
+                "section": 230,
+                "name": "Грендел",
+                "enemies": [
+                  {
+                    "displayName": "Грендел",
+                    "skill": 8,
+                    "stamina": 9
+                  }
+                ],
+                "win": 65,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Грендел",
+          "skill": 8,
+          "stamina": 9
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Бяла вълчица|8|9",
+      "name": "Бяла вълчица",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Бяла вълчица",
+        "attack": 8,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 32,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Бяла вълчица",
+            "skill": 8,
+            "stamina": 9
+          },
+          "variants": [
+            {
+              "order": 32,
+              "spec": {
+                "section": 232,
+                "name": "Бяла вълчица",
+                "enemies": [
+                  {
+                    "displayName": "Бяла вълчица",
+                    "skill": 8,
+                    "stamina": 9
+                  }
+                ],
+                "win": 199,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Бяла вълчица",
+          "skill": 8,
+          "stamina": 9
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Храмова стража|6|8",
+      "name": "Храмова стража",
+      "attack": 6,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Храмова стража",
+        "attack": 6,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 33,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Храмова стража",
+            "skill": 6,
+            "stamina": 8
+          },
+          "variants": [
+            {
+              "order": 33,
+              "spec": {
+                "section": 234,
+                "name": "Храмова стража",
+                "enemies": [
+                  {
+                    "displayName": "Храмова стража",
+                    "skill": 6,
+                    "stamina": 8
+                  }
+                ],
+                "win": 255,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Храмова стража",
+          "skill": 6,
+          "stamina": 8
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Втори крадец|7|6",
+      "name": "Втори крадец",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Втори крадец",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 34,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Втори крадец",
+            "skill": 7,
+            "stamina": 6
+          },
+          "variants": []
+        },
+        "part": {
+          "displayName": "Втори крадец",
+          "skill": 7,
+          "stamina": 6
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Пратеник на Смъртта|8|4",
+      "name": "Пратеник на Смъртта",
+      "attack": 8,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Пратеник на Смъртта",
+        "attack": 8,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 35,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Пратеник на Смъртта",
+            "skill": 8,
+            "stamina": 4,
+            "skillDrain": true
+          },
+          "variants": [
+            {
+              "order": 36,
+              "spec": {
+                "section": 271,
+                "name": "Пратеник на Смъртта",
+                "enemies": [
+                  {
+                    "displayName": "Пратеник на Смъртта",
+                    "skill": 8,
+                    "stamina": 4,
+                    "skillDrain": true
+                  }
+                ],
+                "win": 254,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Пратеник на Смъртта",
+          "skill": 8,
+          "stamina": 4,
+          "skillDrain": true
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Върколак|7|8",
+      "name": "Върколак",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Върколак",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 36,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Върколак",
+            "skill": 7,
+            "stamina": 8
+          },
+          "variants": [
+            {
+              "order": 37,
+              "spec": {
+                "section": 274,
+                "name": "Върколак",
+                "enemies": [
+                  {
+                    "displayName": "Върколак",
+                    "skill": 7,
+                    "stamina": 8
+                  }
+                ],
+                "win": 343,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "roundLimit": 5,
+                "interruption": 298
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Върколак",
+          "skill": 7,
+          "stamina": 8
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Първи орк|5|6",
+      "name": "Първи орк",
+      "attack": 5,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Първи орк",
+        "attack": 5,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 37,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Първи орк",
+            "skill": 5,
+            "stamina": 6
+          },
+          "variants": [
+            {
+              "order": 38,
+              "spec": {
+                "section": 282,
+                "name": "Първи орк / Втори орк / Орк-водач",
+                "enemies": [
+                  {
+                    "displayName": "Първи орк",
+                    "skill": 5,
+                    "stamina": 6
+                  },
+                  {
+                    "displayName": "Втори орк",
+                    "skill": 5,
+                    "stamina": 4
+                  },
+                  {
+                    "displayName": "Орк-водач",
+                    "skill": 7,
+                    "stamina": 7
+                  }
+                ],
+                "win": 111,
+                "groups": [
+                  [
+                    0
+                  ],
+                  [
+                    1
+                  ],
+                  [
+                    2
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Първи орк",
+          "skill": 5,
+          "stamina": 6
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Втори орк|5|4",
+      "name": "Втори орк",
+      "attack": 5,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Втори орк",
+        "attack": 5,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 38,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Втори орк",
+            "skill": 5,
+            "stamina": 4
+          },
+          "variants": []
+        },
+        "part": {
+          "displayName": "Втори орк",
+          "skill": 5,
+          "stamina": 4
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Орк-водач|7|7",
+      "name": "Орк-водач",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Орк-водач",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 39,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Орк-водач",
+            "skill": 7,
+            "stamina": 7
+          },
+          "variants": []
+        },
+        "part": {
+          "displayName": "Орк-водач",
+          "skill": 7,
+          "stamina": 7
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Монах от Алената Богомолка|9|8",
+      "name": "Монах от Алената Богомолка",
+      "attack": 9,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Монах от Алената Богомолка",
+        "attack": 9,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 40,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Монах от Алената Богомолка",
+            "skill": 9,
+            "stamina": 8
+          },
+          "variants": [
+            {
+              "order": 40,
+              "spec": {
+                "section": 288,
+                "name": "Монах от Алената Богомолка",
+                "enemies": [
+                  {
+                    "displayName": "Монах от Алената Богомолка",
+                    "skill": 9,
+                    "stamina": 8
+                  }
+                ],
+                "win": 325,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "enemyDie": {
+                  "min": 5,
+                  "destination": 366
+                }
+              }
+            },
+            {
+              "order": 42,
+              "spec": {
+                "section": 311,
+                "name": "Монах от Алената Богомолка",
+                "enemies": [
+                  {
+                    "displayName": "Монах от Алената Богомолка",
+                    "skill": 9,
+                    "stamina": 8
+                  }
+                ],
+                "win": 325,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "enemyDie": {
+                  "min": 5,
+                  "destination": 366
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Монах от Алената Богомолка",
+          "skill": 9,
+          "stamina": 8
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Грифон|8|14",
+      "name": "Грифон",
+      "attack": 8,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Грифон",
+        "attack": 8,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 41,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Грифон",
+            "skill": 8,
+            "stamina": 14,
+            "floor": 6
+          },
+          "variants": [
+            {
+              "order": 43,
+              "spec": {
+                "section": 313,
+                "name": "Грифон",
+                "enemies": [
+                  {
+                    "displayName": "Грифон",
+                    "skill": 8,
+                    "stamina": 14,
+                    "floor": 6
+                  }
+                ],
+                "win": 94,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "openingStamina": 2
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Грифон",
+          "skill": 8,
+          "stamina": 14,
+          "floor": 6
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Чудна върба|8|12",
+      "name": "Чудна върба",
+      "attack": 8,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Чудна върба",
+        "attack": 8,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 42,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Чудна върба",
+            "skill": 8,
+            "stamina": 12
+          },
+          "variants": [
+            {
+              "order": 44,
+              "spec": {
+                "section": 319,
+                "name": "Чудна върба",
+                "enemies": [
+                  {
+                    "displayName": "Чудна върба",
+                    "skill": 8,
+                    "stamina": 12
+                  }
+                ],
+                "win": 26,
+                "groups": [
+                  [
+                    0
+                  ]
+                ],
+                "winHits": 4,
+                "openingStamina": 4
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Чудна върба",
+          "skill": 8,
+          "stamina": 12
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Невидим сталкер|7|8",
+      "name": "Невидим сталкер",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Невидим сталкер",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 43,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Невидим сталкер",
+            "skill": 7,
+            "stamina": 8
+          },
+          "variants": [
+            {
+              "order": 46,
+              "spec": {
+                "section": 348,
+                "name": "Невидим сталкер",
+                "enemies": [
+                  {
+                    "displayName": "Невидим сталкер",
+                    "skill": 7,
+                    "stamina": 8
+                  }
+                ],
+                "win": 250,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Невидим сталкер",
+          "skill": 7,
+          "stamina": 8
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Водачката|8|10",
+      "name": "Водачката",
+      "attack": 8,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Водачката",
+        "attack": 8,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 44,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Водачката",
+            "skill": 8,
+            "stamina": 10
+          },
+          "variants": [
+            {
+              "order": 47,
+              "spec": {
+                "section": 362,
+                "name": "Водачката / Елвира",
+                "enemies": [
+                  {
+                    "displayName": "Водачката",
+                    "skill": 8,
+                    "stamina": 10
+                  },
+                  {
+                    "displayName": "Елвира",
+                    "skill": 6,
+                    "stamina": 8
+                  }
+                ],
+                "win": 376,
+                "groups": [
+                  [
+                    0,
+                    1
+                  ]
+                ],
+                "capture": {
+                  "enemy": 0,
+                  "attack": 10,
+                  "destination": 393
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Водачката",
+          "skill": 8,
+          "stamina": 10
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Елвира|6|8",
+      "name": "Елвира",
+      "attack": 6,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Елвира",
+        "attack": 6,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 45,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Елвира",
+            "skill": 6,
+            "stamina": 8
+          },
+          "variants": []
+        },
+        "part": {
+          "displayName": "Елвира",
+          "skill": 6,
+          "stamina": 8
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Мумия|9|10",
+      "name": "Мумия",
+      "attack": 9,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Мумия",
+        "attack": 9,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 46,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Мумия",
+            "skill": 9,
+            "stamina": 10
+          },
+          "variants": [
+            {
+              "order": 50,
+              "spec": {
+                "section": 387,
+                "name": "Мумия",
+                "enemies": [
+                  {
+                    "displayName": "Мумия",
+                    "skill": 9,
+                    "stamina": 10
+                  }
+                ],
+                "win": 371,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Мумия",
+          "skill": 9,
+          "stamina": 10
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Мумия|8|10",
+      "name": "Мумия",
+      "attack": 8,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Мумия",
+        "attack": 8,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 47,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Мумия",
+            "skill": 8,
+            "stamina": 10
+          },
+          "variants": [
+            {
+              "order": 51,
+              "spec": {
+                "section": 395,
+                "name": "Мумия",
+                "enemies": [
+                  {
+                    "displayName": "Мумия",
+                    "skill": 8,
+                    "stamina": 10
+                  }
+                ],
+                "win": 350,
+                "groups": [
+                  [
+                    0
+                  ]
+                ]
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Мумия",
+          "skill": 8,
+          "stamina": 10
+        },
+        "count": 1
+      }
+    }
+  ]
+}

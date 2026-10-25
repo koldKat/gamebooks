@@ -5,14 +5,17 @@ import vm from 'node:vm';
 import { loadFixtureRoster } from './roster-fixtures.mjs';
 import { ROSTER } from '../../../public/js/battlesim/books/412/definition.js';
 await loadFixtureRoster(412);
+const rosterEntries = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/412.json', import.meta.url), 'utf8')).enemies.map(row => row.stats.entry);
 
-function fixture(saved) {
+function fixture(saved, bonus = 5) {
+  const entries = structuredClone(rosterEntries);
+  entries.find(entry => entry.companionRules).companionRules.alvian.strengthBonus = bonus;
   const pt = saved ? { sim412: structuredClone(saved) } : {};
   const strip = source => source.replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
   const engine = strip(readFileSync(new URL('../../../public/js/battlesim/engines/alkiria.js', import.meta.url), 'utf8'));
   const source = strip(readFileSync(new URL('../../../public/js/battlesim/battlesim412.js', import.meta.url), 'utf8'));
   const context = vm.createContext({ currentPlaythrough: () => pt, saveState() {}, t: key => key, escapeHtml: value => value,
-    createRosterLoader:(_id,_dataset,install)=>{install(structuredClone(ROSTER));return async()=>{};} });
+    createRosterLoader:(_id,_dataset,install)=>{install(entries);return async()=>{};} });
   vm.runInContext(engine + '\n' + source + '\n_renderAll = () => {}; globalThis.sim = { data: _data, start: _startBattle, strike: _strikeOnce, end: _checkEnd, pick: _pickEnemy, resolve: resolveStrike };', context);
   return { sim: context.sim, data: context.sim.data(), context };
 }
@@ -59,6 +62,20 @@ test('strength bonus remains independent of changing LIFE tiers', () => {
     assert.equal(sim.resolve(lp, 14, 4).playerStr, strength);
     assert.equal(sim.resolve(lp, 14, 4, 5).playerStr, strength + 5);
   }
+});
+
+test('companion metadata controls new fights while saved captures keep their original bonus', () => {
+  const {sim, data} = fixture(undefined, 9);
+  data.nextCompanionBonus = true;
+  sim.start();
+  assert.equal(data.companionBonus, 9);
+  assert.equal(data.player.lp, 58);
+  assert.equal(sim.resolve(58, 14, 4, data.companionBonus).playerStr, 16);
+  const saved = {...structuredClone(data), companionBonus: 5};
+  const resumed = fixture(saved, 9);
+  assert.deepEqual(JSON.parse(JSON.stringify(resumed.data)), JSON.parse(JSON.stringify(saved)));
+  assert.equal(resumed.data.companionBonus, 5);
+  assert.ok(ROSTER.every(entry => !Object.hasOwn(entry, 'companionRules')));
 });
 
 test('opening legacy fights does not migrate settings or character values', () => {

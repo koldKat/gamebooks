@@ -133,3 +133,17 @@ test('legacy load/reset keeps old highest-only rule and Lucky extra one; new enc
   const updated = JSON.parse(JSON.stringify(d));
   assert.deepEqual(JSON.parse(JSON.stringify(fixture(updated).d)), updated);
 });
+
+for(const legacy of [false,true])for(const paired of [false,true]){
+  test(`fatal incoming Luck records one defeat (${legacy?'legacy':'current'}, ${paired?'paired':'single'})`,()=>{
+    const saved=JSON.parse(JSON.stringify(fixture().d));if(legacy)delete saved.correctedCombatRules;
+    saved.player.stamina=1;saved.player.luck=1;saved.secondEnemy.active=paired;
+    saved.roundsThisBattle=5;saved.pendingLuckQueue=[{kind:'enemy-hit',extension:true}];saved.extension={kept:true};
+    const {d,run}=fixture(saved);run('_testLuck()');
+    assert.equal(d.player.stamina,0);assert.equal(d.player.luck,0);assert.equal(d.history.length,1);
+    assert.equal(d.history[0].outcome,'loss');assert.equal(d.log.filter(line=>line==='battlesim239.log.fallen').length,1);
+    assert.equal(d.pendingLuckQueue.length,0);assert.equal(d.roundsThisBattle,5);assert.equal(d.extension.kept,true);
+    assert.equal(d.correctedCombatRules,legacy?undefined:true);
+    const lost=JSON.stringify(d);run('_testLuck(); _runRound()');assert.equal(JSON.stringify(d),lost);
+  });
+}

@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
+const rosterEntries = [...new Map(JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/438.json', import.meta.url), 'utf8')).enemies.map(row => [row.stats.entryIndex, row.stats.entry])).values()];
+
 function fixture(saved) {
   const pt = saved ? { sim438: structuredClone(saved) } : {};
   const source = readFileSync(new URL('../../../public/js/battlesim/battlesim438.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
   const math = Object.create(Math);
   math.random = () => .2;
-  const context = vm.createContext({ Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, t: key => key === 'battlesim438.ui.second_enemy' ? 'Second swordsman §274' : key, escapeHtml: value => value });
+  const context = vm.createContext({ createRosterLoader: (_id, _dataset, install) => { install(structuredClone(rosterEntries)); return async () => {}; }, Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, t: key => key === 'battlesim438.ui.second_enemy' ? 'Second swordsman §274' : key, escapeHtml: value => value });
   vm.runInContext(source + '\n_renderAll = () => {}; globalThis.sim = { data: _data, potion: _usePotion, reset: _resetBattle, capture: _captureFightEffects, skill: _effectiveSkill, round: _runRound, escape: _escape, escapeRoute: _escapeRoute };', context);
   return { sim: context.sim, data: context.sim.data(), math };
 }
@@ -199,4 +201,17 @@ test('death on escape records loss without routing to safety', () => {
 test('click event is not interpreted as an escape', () => {
   const { sim, data } = combat(2);
   sim.round({ type: 'click' }); assert.equal(data.enemy.endurance, 96);
+});
+
+test('supplied encounter modifiers and deadlines work under a different section number', () => {
+  const entry = rosterEntries.find(entry => entry.section === 41), original = structuredClone(entry);
+  try {
+    entry.section = 900;
+    entry.rules.skillAdjustments = [{amount: 5}];
+    entry.rules.deadline = {rounds: 1, route: 901};
+    const {sim, data} = combat(900);
+    assert.equal(sim.skill(data), 25);
+    sim.round();
+    assert.equal(data.combatEffects.route, 901);
+  } finally {Object.assign(entry, original);}
 });

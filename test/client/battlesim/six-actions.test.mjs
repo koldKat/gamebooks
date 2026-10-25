@@ -6,7 +6,7 @@ import { readFileSync } from './simulator-source.mjs';
 import { runInNewContext } from 'node:vm';
 import { newSixActionsCharacter, sixActionsBonus, sixActionsCheck, startSixActionsFight,
   sixActionsRound, sixActionsPostCheck } from '../../../public/js/battlesim/engines/six-actions/core.js';
-import { SIX_ACTIONS_FIGHTS, SIX_ACTIONS_CHECKS } from '../../../public/js/battlesim/engines/six-actions/roster.js';
+import { SIX_ACTIONS_FIGHTS, SIX_ACTIONS_CHECKS, SIX_ACTIONS_RULES } from '../../../public/js/battlesim/engines/six-actions/roster.js';
 
 const character = changes => newSixActionsCharacter(changes);
 const dice = (...values) => () => {
@@ -28,6 +28,7 @@ test('backend awards simulator outcomes once and ignores cancelled/check results
     if (name === './diamonds') return { diamondInfoForUser: () => ({}) };
     if (name === './rubies') return { rubyInfoForUser: () => ({}), createRubyCompletionChecker: () => () => 0 };
     if (name === './heartbeat-coins') return { advanceHeartbeatCoins: () => 0 };
+    if (name === './job-xp') return { getJobTitle: () => 'test' };
     throw new Error('Unexpected real dependency: ' + name);
   } };
   const source = readFileSync(new URL('../../../server/db/xp.js', import.meta.url), 'utf8');
@@ -283,4 +284,33 @@ test('invalid dice and finished encounters cannot mutate saved state', () => {
   assert.deepEqual(f, before);
   const ended = { ...f, status: 'win' };
   assert.throws(() => sixActionsRound(ended, {}, constant(1)), RangeError);
+});
+
+test('database settings control initial groups, second opponent timing and the post-combat threshold', () => {
+  const saved=structuredClone(SIX_ACTIONS_RULES);
+  try {
+    SIX_ACTIONS_RULES.groups={armour:1,jeep:2};SIX_ACTIONS_RULES.knifeSecondRound=2;
+    assert.deepEqual(startSixActionsFight(character(),114).groups,{armour:1,jeep:2});
+    const knife=startSixActionsFight(character(),9);knife.round=2;
+    assert.deepEqual(sixActionsRound(knife,{},constant(1)).enemy.map(e=>e.target),[0,1]);
+    const check=startSixActionsFight(character(),44);check.status='post-check';
+    SIX_ACTIONS_RULES.postCheckLower=6;
+    assert.equal(sixActionsPostCheck(check,constant(1)).fight.section,56);
+    SIX_ACTIONS_RULES.postCheckLower=7;
+    assert.equal(sixActionsPostCheck(check,constant(1)).fight.section,8);
+  } finally {Object.assign(SIX_ACTIONS_RULES,saved);}
+});
+
+test('serialized group combat preserves existing counts, wounds, ammunition and extension fields', () => {
+  const original=startSixActionsFight(character({wounds:1,bombs:3,grenades:4}),114);
+  original.groups={armour:1,jeep:1};original.remaining=2;original.killed=5;original.round=6;
+  original.extension={keep:['saved']};const saved=JSON.stringify(original),rules=structuredClone(SIX_ACTIONS_RULES);
+  try {
+    SIX_ACTIONS_RULES.groups={armour:99,jeep:99};
+    const restored=JSON.parse(saved),result=sixActionsRound(restored,{group:'armour',enemyShots:0},constant(6)).fight;
+    assert.deepEqual(result.groups,{armour:0,jeep:1});assert.equal(result.remaining,1);
+    assert.equal(result.killed,6);assert.equal(result.round,7);
+    assert.deepEqual(result.character,original.character);assert.deepEqual(result.extension,original.extension);
+    assert.equal(JSON.stringify(restored),saved);
+  } finally {Object.assign(SIX_ACTIONS_RULES,rules);}
 });

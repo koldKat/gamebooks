@@ -166,6 +166,355 @@
           ],
           "openingRules": {
             "winOnSuccess": true
+          },
+          "support": {
+            "checks": [
+              {
+                "section": 2,
+                "name": "quarryGrapple",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 6,
+                "success": 12,
+                "failure": 33,
+                "actor": "enemy"
+              },
+              {
+                "section": 18,
+                "name": "madmanThrow",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 7,
+                "success": 40,
+                "failure": 107
+              },
+              {
+                "section": 32,
+                "name": "slimeHold",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 12,
+                "success": 53,
+                "failure": 159
+              },
+              {
+                "section": 52,
+                "name": "quarryMutantHit",
+                "kind": "enemyAttribute",
+                "attribute": "dexterity",
+                "rating": 5,
+                "success": 33,
+                "failure": 33,
+                "successDamage": {
+                  "stamina": 2
+                },
+                "death": 85
+              },
+              {
+                "section": 130,
+                "name": "madmanGrapple",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 9,
+                "success": 107,
+                "failure": 61,
+                "actor": "enemy"
+              },
+              {
+                "section": 153,
+                "name": "madmanEscape",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 7,
+                "success": 178,
+                "failure": 198,
+                "successDamage": {
+                  "stamina": 1
+                }
+              },
+              {
+                "section": 159,
+                "name": "lurkerKnockdown",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 10,
+                "success": 170,
+                "failure": 32,
+                "actor": "enemy"
+              },
+              {
+                "section": 183,
+                "name": "truckThrow",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 7,
+                "success": 327,
+                "failure": 268
+              },
+              {
+                "section": 186,
+                "name": "mouthClub",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 10,
+                "success": 245,
+                "failure": 157,
+                "actor": "enemy",
+                "defenderRating": 7
+              },
+              {
+                "section": 208,
+                "name": "driverThrow",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 7,
+                "success": 189,
+                "failure": 169,
+                "modifier": 2
+              },
+              {
+                "section": 212,
+                "name": "mouthJam",
+                "kind": "opposed",
+                "attribute": "dexterity",
+                "rating": 10,
+                "success": 186,
+                "failure": 278
+              },
+              {
+                "section": 217,
+                "name": "tentacleHold",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 6,
+                "success": null,
+                "failure": 232
+              },
+              {
+                "section": 228,
+                "name": "driverGrapple",
+                "kind": "opposed",
+                "attribute": "dexterity",
+                "rating": 7,
+                "success": 208,
+                "failure": 330
+              },
+              {
+                "section": 230,
+                "name": "salamanderHypnosis",
+                "kind": "opposed",
+                "attribute": "mentality",
+                "rating": 10,
+                "success": 252,
+                "failure": 262,
+                "actor": "enemy"
+              },
+              {
+                "section": 232,
+                "name": "tentaclePull",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 6,
+                "success": 259,
+                "failure": 217,
+                "actor": "enemy"
+              },
+              {
+                "section": 239,
+                "name": "changelingHold",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": "player",
+                "success": 257,
+                "failure": 316
+              },
+              {
+                "section": 252,
+                "name": "salamanderResistance",
+                "kind": "opposed",
+                "attribute": "mentality",
+                "rating": 10,
+                "success": 262,
+                "failure": 281,
+                "failureMentality": 2
+              },
+              {
+                "section": 253,
+                "name": "truckThrow",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 7,
+                "success": 327,
+                "failure": 268
+              },
+              {
+                "section": 277,
+                "name": "driverDagger",
+                "kind": "opposed",
+                "attribute": "dexterity",
+                "rating": 7,
+                "success": 247,
+                "failure": 330
+              },
+              {
+                "section": 278,
+                "name": "mouthCharge",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 10,
+                "success": 245,
+                "failure": null,
+                "actor": "enemy",
+                "failureDamage": {
+                  "stamina": 2
+                }
+              },
+              {
+                "section": 281,
+                "name": "salamanderHypnosis",
+                "kind": "opposed",
+                "attribute": "mentality",
+                "rating": 10,
+                "success": 351,
+                "failure": 372,
+                "actor": "enemy"
+              },
+              {
+                "section": 295,
+                "name": "mattockWrestle",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 7,
+                "success": 317,
+                "failure": 268
+              },
+              {
+                "section": 300,
+                "name": "mindFlail",
+                "kind": "opposed",
+                "attribute": "mentality",
+                "rating": 10,
+                "success": null,
+                "failure": null,
+                "actor": "enemy",
+                "successDamage": {
+                  "endurance": 6
+                }
+              },
+              {
+                "section": 316,
+                "name": "changelingTalons",
+                "kind": "enemyAttribute",
+                "attribute": "dexterity",
+                "rating": "player",
+                "success": 239,
+                "failure": 239,
+                "successDamage": {
+                  "stamina": 2
+                },
+                "death": 275
+              },
+              {
+                "section": 321,
+                "name": "tentacleHold",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 6,
+                "success": null,
+                "failure": 345
+              },
+              {
+                "section": 327,
+                "name": "truckGrip",
+                "kind": "opposed",
+                "attribute": "strength",
+                "rating": 7,
+                "success": 350,
+                "failure": 366
+              },
+              {
+                "section": 352,
+                "name": "mindFlail",
+                "kind": "opposed",
+                "attribute": "mentality",
+                "rating": 10,
+                "success": null,
+                "failure": null,
+                "actor": "enemy",
+                "successDamage": {
+                  "endurance": 6
+                }
+              },
+              {
+                "section": 364,
+                "name": "driverGun",
+                "kind": "opposed",
+                "attribute": "dexterity",
+                "rating": 7,
+                "success": 356,
+                "failure": 330
+              },
+              {
+                "section": 119,
+                "name": "energyBolt",
+                "kind": "enemyAttribute",
+                "attribute": "mentality",
+                "rating": 7,
+                "success": 201,
+                "failure": null
+              },
+              {
+                "section": 205,
+                "name": "mattockAttack",
+                "kind": "enemyAttribute",
+                "attribute": "dexterity",
+                "rating": 6,
+                "success": 105,
+                "failure": 73
+              },
+              {
+                "section": 250,
+                "name": "mattockAttack",
+                "kind": "enemyAttribute",
+                "attribute": "dexterity",
+                "rating": 6,
+                "success": 229,
+                "failure": 229,
+                "successDamage": {
+                  "stamina": 6
+                },
+                "death": 378
+              },
+              {
+                "section": 330,
+                "name": "spannerAttack",
+                "kind": "enemyAttribute",
+                "attribute": "dexterity",
+                "rating": 7,
+                "success": 310,
+                "failure": null
+              },
+              {
+                "section": 341,
+                "name": "mattockAttack",
+                "kind": "enemyAttribute",
+                "attribute": "dexterity",
+                "rating": 6,
+                "success": 202,
+                "failure": 202,
+                "successDamage": {
+                  "stamina": 6
+                },
+                "death": 378
+              }
+            ],
+            "rules": {
+              "scriptStrikes": 2,
+              "changelingId": 257,
+              "death": 219,
+              "insanity": 233,
+              "disbeliefLoss": 1
+            }
           }
         },
         "part": {

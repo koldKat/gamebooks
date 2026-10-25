@@ -32,8 +32,13 @@ function _enemyNameSafe(d) {
   const { _enemyName, escapeHtml } = getContext();
  return escapeHtml(_enemyName(d)); }
 
+function _rulesFor(section) {
+  const { ENCOUNTER_RULES } = getContext();
+  return ENCOUNTER_RULES[section] ?? {};
+}
+
 function _captureFightEffects(d) {
-  const { _effectiveSkill } = getContext();
+  const { _effectiveSkill, _rulesFor } = getContext();
 
   const section = Number(d.enemy.name.match(/§(\d+)/)?.[1]) || 0;
   d.printedRules = 1;
@@ -44,22 +49,25 @@ function _captureFightEffects(d) {
     mentalSkill: (Number(d.willpower) || 0) + d.endurance,
     initialEnemy: { ...d.enemy },
   };
-  if (section === 101) d.combatEffects.sequence = Math.max(0, Math.min(8, Number(d.enemy.name.match(/Нейджин\s+(\d+)/)?.[1] || 1) - 1));
+  const sequence = _rulesFor(section).sequence;
+  if (sequence) d.combatEffects.sequence = Math.max(0, Math.min(sequence.profiles.length - 1, Number(d.enemy.name.match(new RegExp(sequence.namePattern))?.[1] || 1) - 1));
   d.ratio = _effectiveSkill(d) - d.enemy.skill;
 }
 
 function _effectiveSkill(d) {
+  const { _rulesFor } = getContext();
 
   let skill = d.combatSkill + (d.attackModifier || 0);
   const effects = d.combatEffects;
   if (!effects) return skill;
-  if (effects.section === 259) return effects.mentalSkill + (d.attackModifier || 0);
+  const rules = _rulesFor(effects.section);
+  if (rules.mentalCombat) return effects.mentalSkill + (d.attackModifier || 0);
   if (effects.weapon === 'none') skill -= 8;
   else if (effects.weapon !== 'staff' || !(d.willpower >= 1)) skill -= 6;
   if (effects.dagger && effects.weapon !== 'none') skill++;
-  skill += ({ 99: 4, 120: 3, 189: 3, 203: 4, 205: 5, 231: -2, 243: 4, 281: -1, 308: 4 })[effects.section] || 0;
-  if (effects.section === 101 && effects.spareWeapon) skill += 2;
-  if (effects.section === 309 && d.roundsThisBattle < 2) skill += 4;
+  skill += rules.skillBonus || 0;
+  if (effects.spareWeapon) skill += rules.spareWeaponBonus || 0;
+  if (rules.openingBonus && d.roundsThisBattle < rules.openingBonus.rounds) skill += rules.openingBonus.amount;
   return skill;
 }
 
@@ -72,16 +80,15 @@ function _stopFight(d, routes) {
 }
 
 function _escapeRoute(d) {
-
+  const { _rulesFor } = getContext();
   const effects = d.combatEffects;
   if (!effects || effects.finished) return null;
-  if (effects.section === 133 && d.roundsThisBattle >= 2) return 27;
-  if (effects.section === 154 && d.roundsThisBattle >= 1) return 4;
-  return ({ 205: 163, 309: 137, 321: 137 })[effects.section] || null;
+  const escape = _rulesFor(effects.section).escape;
+  return escape && d.roundsThisBattle >= escape.afterRounds ? escape.route : null;
 }
 
 function _runRound(escape = false) {
-  const { COMBAT_TABLE, DEADLINES, _appendLog, _captureFightEffects, _checkBattleEnd, _data, _effectiveSkill, _enemyNameSafe, _escapeRoute, _pick10, _pickRow, _ratioCol, _renderAll, _stopFight, saveState, t } = getContext();
+  const { COMBAT_TABLE, DEADLINES, _appendLog, _captureFightEffects, _checkBattleEnd, _data, _effectiveSkill, _enemyNameSafe, _escapeRoute, _pick10, _pickRow, _ratioCol, _renderAll, _stopFight, _rulesFor, saveState, t } = getContext();
 
   const d = _data();
   escape = escape === true;
@@ -90,6 +97,7 @@ function _runRound(escape = false) {
   const route = escape ? _escapeRoute(d) : null;
   if (escape && !route) return;
   const effects = d.combatEffects;
+  const rules = effects ? _rulesFor(effects.section) : {};
   if (effects) d.ratio = _effectiveSkill(d) - d.enemy.skill;
   d.roundsThisBattle++;
 
@@ -98,7 +106,7 @@ function _runRound(escape = false) {
   const [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
   _appendLog(d, t('battlesim439.log.round', { round: d.roundsThisBattle, ratio: d.ratio, pick }));
   let spent = 0;
-  if (effects && effects.section !== 259 && effects.weapon === 'staff' && d.willpower > 0) {
+  if (effects && !rules.mentalCombat && effects.weapon === 'staff' && d.willpower > 0) {
     spent = Math.min(effects.willSpend, Math.floor(d.willpower));
     d.willpower -= spent;
     _appendLog(d, t('battlesim439.log.will', { spent, will: d.willpower }));
@@ -110,10 +118,11 @@ function _runRound(escape = false) {
   }
   if (lwLoss === 'K') d.endurance = 0;
   else d.endurance = Math.max(0, d.endurance - lwLoss);
-  if (effects?.section === 149) {
-    d.willpower = (Number(d.willpower) || 0) - 1;
-    d.endurance = Math.max(0, d.endurance - (effects.shield ? 1 : 2));
-    _appendLog(d, t('battlesim439.log.soul', { loss: effects.shield ? 1 : 2, will: d.willpower }));
+  if (rules.drain) {
+    const loss = effects.shield ? rules.drain.withShield : rules.drain.withoutShield;
+    d.willpower = (Number(d.willpower) || 0) - rules.drain.will;
+    d.endurance = Math.max(0, d.endurance - loss);
+    _appendLog(d, t('battlesim439.log.soul', { loss, will: d.willpower }));
   }
 
   _appendLog(d, t('battlesim439.log.result', {
@@ -128,14 +137,14 @@ function _runRound(escape = false) {
   else _checkBattleEnd(d);
   if (effects && !effects.finished) {
     const deadline = DEADLINES[effects.section];
-    if (deadline && d.roundsThisBattle >= deadline[0]) _stopFight(d, [deadline[1] || (d.willpower >= 10 ? 331 : 32)]);
+    if (deadline && d.roundsThisBattle >= deadline[0]) _stopFight(d, [deadline[1] || (d.willpower >= rules.willOutcome.threshold ? rules.willOutcome.atLeast : rules.willOutcome.below)]);
   }
   saveState();
   _renderAll();
 }
 
 function _checkBattleEnd(d) {
-  const { NEIJJIN, SVG_SKULL, SVG_TROPHY, VICTORY_ROUTES, _appendLog, _enemyNameSafe, _recordOutcome, _stopFight, t } = getContext();
+  const { SVG_SKULL, SVG_TROPHY, _appendLog, _enemyNameSafe, _recordOutcome, _stopFight, _rulesFor, t } = getContext();
 
   if (d.combatEffects && d.endurance <= 0) {
     d.combatEffects.finished = true;
@@ -145,20 +154,21 @@ function _checkBattleEnd(d) {
   }
   if (d.enemy.endurance <= 0) {
     const effects = d.combatEffects;
-    if (effects?.section === 101 && effects.sequence < 8) {
+    const rules = effects ? _rulesFor(effects.section) : {};
+    if (rules.sequence && effects.sequence < rules.sequence.profiles.length - 1) {
       effects.sequence++;
-      const [skill, endurance] = NEIJJIN[effects.sequence];
-      d.enemy = { name: t('battlesim439.ui.neijjin', { n: effects.sequence + 1 }), skill, endurance, enduranceMax: endurance };
+      const [skill, endurance] = rules.sequence.profiles[effects.sequence];
+      d.enemy = { name: t(rules.sequence.nameKey, { n: effects.sequence + 1 }), skill, endurance, enduranceMax: endurance };
       _appendLog(d, t('battlesim439.log.next', { enemy: _enemyNameSafe(d) }));
       return;
     }
-    if (effects?.section === 281) {
-      _stopFight(d, [d.willpower >= 10 ? 331 : 32]);
+    if (rules.willOutcome) {
+      _stopFight(d, [d.willpower >= rules.willOutcome.threshold ? rules.willOutcome.atLeast : rules.willOutcome.below]);
       return;
     }
     _appendLog(d, t('battlesim439.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
-    if (effects) _stopFight(d, VICTORY_ROUTES[effects.section] || []);
+    if (effects) _stopFight(d, rules.victoryRoutes || []);
   } else if (d.endurance <= 0) {
     _appendLog(d, t('battlesim439.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
@@ -182,5 +192,5 @@ function _resetBattle() {
 }
 
 // END EXTRACTED RULES
-  return { _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _effectiveSkill, _stopFight, _escapeRoute, _runRound, _checkBattleEnd, _resetBattle };
+  return { _rulesFor, _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _effectiveSkill, _stopFight, _escapeRoute, _runRound, _checkBattleEnd, _resetBattle };
 }

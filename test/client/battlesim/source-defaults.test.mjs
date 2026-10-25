@@ -7,8 +7,12 @@ function fixture(id, saved) {
   const source = readFileSync(new URL(`../../../public/js/battlesim/battlesim${id}.js`, import.meta.url), 'utf8')
     .replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
   const pt = saved ? { [`sim${id}`]: structuredClone(saved) } : {};
-  const context = vm.createContext({ currentPlaythrough: () => pt, saveState: () => {}, structuredClone, t: k => k, escapeHtml: s => s });
-  vm.runInContext(source + '\n_renderAll = () => {};', context);
+  const context = vm.createContext({ createRosterLoader: (bookId, dataset, install) => {
+    const seed = JSON.parse(readFileSync(new URL(`../../../data/simulator-rosters/${bookId}.json`, import.meta.url), 'utf8'));
+    const entries = seed.enemies.map(row => row.stats.entry);
+    return () => install(entries);
+  }, currentPlaythrough: () => pt, saveState: () => {}, structuredClone, t: k => k, escapeHtml: s => s });
+  vm.runInContext(source + '\n_renderAll = () => {};'+ ([267,286].includes(id) ? '\nloadRoster();' : ''), context);
   return { run: s => vm.runInContext(s, context), d: vm.runInContext('_data()', context), source };
 }
 
@@ -139,6 +143,26 @@ test('Legacy Blood Island fights do not acquire special rules merely on load', (
   }
 });
 
+test('Blood Island consumes renamed encounter rules and values from installed metadata', () => {
+  const f = bloodIslandFight('CUSTOM GUARD');
+  f.run(`ENCOUNTER_RULES['CUSTOM GUARD'] = {
+    playerDamageWithoutFlag: {flag:'craggenKnife',damage:3},
+    enemyDamageWithFlag: {flag:'demon283',damage:5},
+    loseAfterEnemyWins:2
+  }; CALDWELL_NAME_RULES = [/^custom zombie$/i]; CALDWELL_RULE = {doublesDamage:6};`);
+  assert.equal(f.run('_isCaldwell("CUSTOM ZOMBIE")'), true);
+  assert.equal(f.run('_isCaldwell("Caldwell")'), false);
+  assert.equal(f.run('_playerDamage(_data())'), 3);
+  f.d.specialRules.demon283 = true;
+  f.run('_runRound(); _skipLuck(); _runRound()');
+  assert.equal(f.d.player.stamina,20);
+  assert.equal(f.d.specialRules.outcome,'loss');
+  f.d.specialRules.outcome = null;
+  f.d.caldwellDoubles = true;
+  f.run('_runRound()');
+  assert.equal(f.d.player.stamina,14);
+});
+
 function labyrinthFight() {
   const f = fixture(286);
   Object.assign(f.d.player, { life: 50, lifeMax: 50, weaponKey: 'glove', gloveBonus: 5 });
@@ -233,4 +257,29 @@ test('286: pending dream blocks combat and gadgets, and stopping before any roll
   assert.equal(f.d.roundsThisBattle, 0);
   assert.equal(f.d.enemy.hp, 5);
   assert.equal(f.d.player.life, 50);
+});
+
+
+test('286: installed dream lion uses its own fixed combat profile, not the active fight or player gear', () => {
+  const caught = labyrinthFight();
+  caught.run('Math.random=()=>0.5; _resolveDream(_data(),6)');
+  assert.equal(caught.d.player.life,50);
+  assert.ok(caught.d.log.some(line=>line.includes('net_catch')));
+  const fight = labyrinthFight();
+  fight.run('var rolls=[0,0]; var index=0; Math.random=()=>index<2?rolls[index++]:0.5; _resolveDream(_data(),6)');
+  assert.equal(fight.d.player.life,44);
+  assert.equal(fight.d.enemy.hp,5,'dream does not overwrite the active opponent');
+  assert.ok(fight.d.log.some(line=>line.includes('dream6.win')));
+  assert.equal(fight.d.history.length,0,'dream victory remains outside ordinary fight history');
+});
+
+test('286: dream profiles and guard count are driven by installed metadata', () => {
+  const f = labyrinthFight();
+  f.run(`DREAM_ENCOUNTERS[6]={opponent:{hp:4,minHit:6},player:{minHit:5,damageReduction:0},netCatchAt:13}; Math.random=()=>0.5; _resolveDream(_data(),6)`);
+  assert.equal(f.d.player.life,48,'configured profile applies two incoming damage before victory');
+  assert.equal(f.d.enemy.hp,5);
+  const guards=labyrinthFight();
+  guards.run(`DREAM_ENCOUNTERS[10]={opponentCount:2}; var n=0; Math.random=()=>n++%2?0:0.999; _resolveDream(_data(),10)`);
+  assert.equal(guards.d.player.life,50,'healing still clamps to max life');
+  assert.equal(guards.d.log.filter(line=>line.includes('dream10.guard_win')).length,2);
 });

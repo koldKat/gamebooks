@@ -4,7 +4,12 @@ const fs = require('node:fs');
 const { readFileSync: readSimulatorSource } = require('./client/battlesim/simulator-source.mjs');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname,'../public/js/battlesim/engines/mutated-flesh.js'),'utf8');
-const engine = import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+const FLESH_RULES = JSON.parse(fs.readFileSync(path.join(__dirname,'../data/simulator-rosters/781.json'),'utf8')).enemies.find(row=>row.stats.entry.support).stats.entry.support.rules;
+const engine = import('data:text/javascript;base64,'+Buffer.from(source).toString('base64')).then(module=>({
+  ...module,
+  mutatedFleshWon:d=>module.mutatedFleshWon(d,FLESH_RULES.victoryFloors),
+  mutatedFleshRound:(d,weapon,defend,roll)=>module.mutatedFleshRound(d,weapon,defend,roll,FLESH_RULES.victoryFloors),
+}));
 const weapons = {
   crowbar:{id:'crowbar',name:'Crowbar',bonus:2,stat:'physique',ammoMax:null},
   axe:{id:'axe',name:'Axe',bonus:4,stat:'physique',ammoMax:null},
@@ -32,6 +37,18 @@ test('Lenova stops at eight LIFE for new fights, not legacy fights',async()=>{
   const {mutatedFleshRound,mutatedFleshWon}=await engine;const d=state();d.enemyId='lenova';d.enemy.life=14;
   mutatedFleshRound(d,weapons.crowbar,false,()=>2);assert.equal(d.enemy.life,8);assert.equal(d.player.life,40);assert.equal(mutatedFleshWon(d),true);
   delete d.rulesVersion;assert.equal(mutatedFleshWon(d),false);
+});
+test('metadata controls stopping thresholds and eligible opponents without adding saved fields',async()=>{
+  const raw=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+  const original=state();original.enemy.life=14;original.extension={keep:true};
+  const d=JSON.parse(JSON.stringify(original)),keys=Object.keys(d).sort();
+  const events=raw.mutatedFleshRound(d,weapons.crowbar,false,()=>2,{doberman:8});
+  assert.equal(d.enemy.life,8);assert.equal(d.player.life,40);assert.equal(events.length,1);
+  assert.equal(raw.mutatedFleshWon(d,{doberman:8}),true);
+  assert.equal(raw.mutatedFleshWon(d,{lenova:8}),false);
+  assert.deepEqual(d.extension,{keep:true});assert.equal(original.enemy.life,14);
+  assert.deepEqual(Object.keys(d).filter(key=>!['started','weaponId'].includes(key)).sort(),keys);
+  delete d.rulesVersion;assert.equal(raw.mutatedFleshWon(d,{doberman:8}),false);
 });
 test('fixed averages and section 99 weapon variants use the printed bonuses',async()=>{
   const {mutatedFleshRound}=await engine;
@@ -61,8 +78,9 @@ test('opening a saved fight leaves it untouched; reset enables corrected rules w
   const vm=require('node:vm');const {mutatedFleshRound,mutatedFleshWon}=await engine;
   const d=state();delete d.rulesVersion;Object.assign(d,{weaponId:'crowbar',started:true,log:[],history:[]});d.ammo.pistol=0;
   const pt={sim781:d};const controller=readSimulatorSource(path.join(__dirname,'../public/js/battlesim/battlesim781.js'),'utf8').replace(/^import .*;$/gm,'').replaceAll('export function','function');
-  const context=vm.createContext({currentPlaythrough:()=>pt,saveState:()=>{},t:key=>key,escapeHtml:x=>x,mutatedFleshRound,mutatedFleshWon});
-  vm.runInContext(controller+'\n_renderAll=()=>{};globalThis.subject={data:_data,reset:_resetBattle,defend:_defend};',context);
+  const fixtureProfiles=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/simulator-rosters/781.json'),'utf8')).enemies.map(row=>{const {support,...profile}=row.stats.entry;return profile;});
+  const context=vm.createContext({currentPlaythrough:()=>pt,saveState:()=>{},t:key=>key,escapeHtml:x=>x,mutatedFleshRound,mutatedFleshWon,fixtureProfiles,fixtureRules:FLESH_RULES});
+  vm.runInContext(controller+'\nROSTER.push(...fixtureProfiles);Object.assign(FLESH_RULES,fixtureRules);_renderAll=()=>{};globalThis.subject={data:_data,reset:_resetBattle,defend:_defend};',context);
   const before=JSON.stringify(d);context.subject.data();assert.equal(JSON.stringify(d),before);
   context.subject.defend();assert.equal(d.enemy.life,38);assert.equal(d.player.life,23);assert.equal(d.rulesVersion,undefined);
   context.subject.reset();assert.equal(d.rulesVersion,1);assert.equal(d.ammo.pistol,0);assert.equal(d.player.life,23);

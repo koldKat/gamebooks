@@ -1,4 +1,4 @@
-import {ABILITIES, RULES_REVISION} from './definition.js';
+import {ABILITIES, RULES_REVISION, MOUNTAIN_RULES} from './definition.js';
 
 export function integer(value, min = 0, max = 1000000) {
   if (value == null || value === '' || !Number.isSafeInteger(Number(value)) || Number(value) < min || Number(value) > max) throw new RangeError('Invalid combat value');
@@ -77,7 +77,7 @@ export function exchange(fight, rolls) {
   next.events = [{kind: 'round', round: next.round, enemy: enemy.displayName, playerRoll, enemyRoll, playerStrength, enemyStrength, playerDamage, enemyDamage}];
   settle(next);
   if (!next.outcome && !next.skillPenaltyApplied && next.rules.skillLossAfterRound && next.round >= next.rules.skillLossAfterRound) {
-    next.player.skill = Math.max(0, next.player.skill - 1);
+    next.player.skill = Math.max(0, next.player.skill - MOUNTAIN_RULES.skillLossAmount);
     next.skillPenaltyApplied = true;
     next.events.push({kind: 'skillLoss'});
   }

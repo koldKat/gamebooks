@@ -54,6 +54,15 @@
               "armour": 0,
               "stopAt": 5,
               "forbiddenOpponent": "Acton"
+            },
+            "rules": {
+              "dragon": {
+                "encounterId": 12,
+                "maxCalls": 3,
+                "oneUseCalls": 1
+              },
+              "ghastFullDiceId": 137,
+              "manualStatsMinLife": 16
             }
           }
         },

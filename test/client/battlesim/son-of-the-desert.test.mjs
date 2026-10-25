@@ -26,6 +26,7 @@ test('706: the real backend rewards battle outcomes once and ignores retreat', (
     if (name === './diamonds') return { diamondInfoForUser: () => ({}) };
     if (name === './rubies') return { rubyInfoForUser: () => ({}), createRubyCompletionChecker: () => () => 0 };
     if (name === './heartbeat-coins') return { advanceHeartbeatCoins: () => 0 };
+    if (name === './job-xp') return { getJobTitle: () => '' };
     if (name === '../impersonation-context') return { isImpersonatingContext: () => false };
     if (name === '../clean-run') return { isCleanRun: () => false };
     throw Error('Unexpected dependency: ' + name);

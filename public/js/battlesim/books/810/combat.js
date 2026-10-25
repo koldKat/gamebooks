@@ -1,4 +1,4 @@
-import { ENCOUNTERS, RULES_REVISION } from './definition.js';
+import { ENCOUNTERS, RULES_REVISION, ESCAPE_RULES } from './definition.js';
 
 const integer = (value, min, max) => {
   if (!Number.isSafeInteger(value) || value < min || value > max) throw new RangeError('Invalid combat value');
@@ -51,8 +51,8 @@ export function escapeFight(fight, die = rollDie()) {
   if (!next.encounter.escape || next.rounds || next.escapeAttempted) throw new RangeError('Escape unavailable');
   next.escapeAttempted = true;
   next.events.push({kind: 'escapeAttempt', die});
-  if (die >= 4) return finish(next, 'escape');
-  next.character.life = Math.max(0, next.character.life - 2);
+  if (die >= ESCAPE_RULES.minimum) return finish(next, 'escape');
+  next.character.life = Math.max(0, next.character.life - ESCAPE_RULES.failureDamage);
   next.events.push({kind: 'escapeFailed', life: next.character.life});
   if (next.character.life <= 0) return finish(next, 'loss');
   return next;

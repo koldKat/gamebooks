@@ -209,6 +209,12 @@
 #books-xp-summary:empty {
   display: none;
 }
+.job-xp-summary { display: flex; flex-direction: column; gap: 0.18rem; margin-top: 0.18rem; font-size: 0.76rem; color: #d1d5db; }
+.job-xp-summary[hidden] { display: none; }
+.job-xp-level-row { display: flex; align-items: baseline; gap: 0.42rem; font-size: 0.8rem; }
+.job-xp-level { color: #c084fc; font-weight: 700; }
+.job-xp-bar { height: 5px; background: #1f2937; border-radius: 3px; overflow: hidden; }
+.job-xp-bar > div { height: 100%; width: 0; background: #c084fc; border-radius: inherit; }
 #books-xp-level-row {
   display: flex;
   align-items: baseline;

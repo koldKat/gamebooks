@@ -1,4 +1,4 @@
-import { WONDERLAND_ENCOUNTERS } from './roster.js';
+import { WONDERLAND_ENCOUNTERS, isWonderlandTeapot } from './roster.js';
 import { createWonderlandCharacter, wonderlandTest, wonderlandInteger } from './random.js';
 import { startWonderlandFight, wonderlandRound, resolveWonderlandInitiative } from './core.js';
 import { createOpponentEditor } from '../../opponents.js';
@@ -112,7 +112,7 @@ export function createWonderlandPanel({ document, t, getRun, getBookId, saveStat
     opponents.fixCount(!row.custom);
     el('initiative').value = row.initiative ?? '';
     el('teapotInjury').checked = false;
-    el('teapotRow').hidden = row.section !== 271;
+    el('teapotRow').hidden = !isWonderlandTeapot(row.section);
     el('pepper').checked = false;
   }
   function render() {
@@ -181,7 +181,7 @@ export function createWonderlandPanel({ document, t, getRun, getBookId, saveStat
     overlay.addEventListener('keydown', event => { if (event.key === 'Escape') { event.stopPropagation(); close(); } });
     registerShortcut({ button: btn, overlay, open, close });
     el('encounter').addEventListener('change', () => preset());
-    el('teapotInjury').addEventListener('change', () => { if (spec()?.section === 271) el('initiative').value = el('teapotInjury').checked ? 'enemy' : 'player'; });
+    el('teapotInjury').addEventListener('change', () => { if (isWonderlandTeapot(spec()?.section)) el('initiative').value = el('teapotInjury').checked ? 'enemy' : 'player'; });
     el('setup').addEventListener('change', () => { if (!busy(data())) action(saveCharacter); });
     el('start').addEventListener('click', () => action(start));
     el('attack').addEventListener('click', () => action(step));

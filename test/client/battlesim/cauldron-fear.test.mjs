@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
+const rosterEntries = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/437.json', import.meta.url), 'utf8')).enemies.map(row => row.stats.entry);
+
 function fixture(saved) {
   const pt = saved ? { sim437: structuredClone(saved) } : {};
   const source = readFileSync(new URL('../../../public/js/battlesim/battlesim437.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
   const math = Object.create(Math);
   math.random = () => .2;
-  const context = vm.createContext({ Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, t: (key, args = {}) => key === 'battlesim437.ui.next_pair' ? `Pair ${args.pair} §${args.section}` : key, escapeHtml: value => value });
+  const context = vm.createContext({ createRosterLoader: (_id, _dataset, install) => { install(structuredClone(rosterEntries)); return async () => {}; }, Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, t: (key, args = {}) => key === 'battlesim437.ui.next_pair' ? `Pair ${args.pair} §${args.section}` : key, escapeHtml: value => value });
   vm.runInContext(source + '\n_renderAll = () => {}; globalThis.sim = { data: _data, potion: _usePotion, reset: _resetBattle, capture: _captureFightEffects, skill: _effectiveSkill, round: _runRound, escape: _escape, escapeRoute: _escapeRoute };', context);
   return { sim: context.sim, data: context.sim.data(), math };
 }
@@ -177,4 +179,18 @@ test('mercenary escape requires one round and incurs only player loss', () => {
 
 test('ordinary click events are not mistaken for escape rounds', () => {
   const { sim, data } = combat(3); sim.round({ type: 'click' }); assert.equal(data.enemy.endurance, 96);
+});
+
+
+test('renamed metadata controls a damage modifier and timed stop', () => {
+  const entry = rosterEntries.find(entry => entry.section === 82);
+  const original = structuredClone(entry);
+  try {
+    entry.section = 900; entry.rules.stop = {completedRounds:1,route:901};
+    const { sim, data } = combat(900);
+    data.nextTracking = true; sim.capture(data);
+    sim.round(); assert.equal(data.endurance, 92);
+    assert.equal(data.combatEffects.route, 901);
+    sim.round(); assert.equal(data.roundsThisBattle, 1);
+  } finally { Object.assign(entry, original); }
 });

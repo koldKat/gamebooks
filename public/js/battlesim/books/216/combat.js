@@ -45,7 +45,7 @@ function _runRound() {
   const { IAIJUTSU_DMG, NTK_ROLL_THRESHOLD, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _effectiveSkill, _enemyFloor, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll2d6, _sideEnemy2NameSafe, _sideEnemyNameSafe, saveState, t } = getContext();
 
   const d = _data();
-  if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
+  if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= _enemyFloor(d) || d.pendingLuckQueue.length) return;
   d.roundsThisBattle++;
 
   const woundDmg = Math.max(1, d.player.enemyWoundDamage || 2);
@@ -132,6 +132,7 @@ function _runRound() {
   }
 
   if (d.enemy.stamina <= floor) {
+    d.pendingLuckQueue = d.pendingLuckQueue.filter(event => event.kind !== 'player-hit');
     _appendLog(d, t('battlesim216.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
   } else if (d.player.stamina <= 0) {
@@ -150,10 +151,16 @@ function _testLuck() {
   const d = _data();
   if (!d || !d.pendingLuckQueue.length || d.player.luck <= 0) return;
   const event = d.pendingLuckQueue.shift();
+  const floor = _enemyFloor(d);
+  if (event.kind === 'player-hit' && d.enemy.stamina <= floor) {
+    d.pendingLuckQueue = d.pendingLuckQueue.filter(pending => pending.kind !== 'player-hit');
+    saveState();
+    _renderAll();
+    return;
+  }
   const roll  = _roll2d6();
   const lucky = roll <= d.player.luck;
   d.player.luck = Math.max(0, d.player.luck - 1);
-  const floor = _enemyFloor(d);
   if (event.kind === 'player-hit') {
     if (lucky) {
       d.enemy.stamina = Math.max(floor, d.enemy.stamina - 2);
@@ -162,7 +169,11 @@ function _testLuck() {
       d.enemy.stamina = Math.min(d.enemy.staminaMax, d.enemy.stamina + 1);
       _appendLog(d, t('battlesim216.log.luck_player_hit_unlucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     }
-    if (d.enemy.stamina <= floor) { _appendLog(d, t('battlesim216.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) })); _recordOutcome(d, 'win'); }
+    if (d.enemy.stamina <= floor) {
+      d.pendingLuckQueue = d.pendingLuckQueue.filter(pending => pending.kind !== 'player-hit');
+      _appendLog(d, t('battlesim216.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
+      _recordOutcome(d, 'win');
+    }
   } else {
     const source = event.kind === 'side-hit' ? _sideEnemyNameSafe(d) : event.kind === 'side2-hit' ? _sideEnemy2NameSafe(d) : _enemyNameSafe(d);
     if (lucky) {

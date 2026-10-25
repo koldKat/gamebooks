@@ -3,11 +3,13 @@ import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
+const rosterEntries = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/440.json', import.meta.url), 'utf8')).enemies.map(row => row.stats.entry);
+
 function fixture(saved) {
   const pt = saved ? { sim440: structuredClone(saved) } : {};
   const source = readFileSync(new URL('../../../public/js/battlesim/battlesim440.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
   const math = Object.create(Math); math.random = () => .2;
-  const context = vm.createContext({ Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, escapeHtml: value => value, t: key => key });
+  const context = vm.createContext({ createRosterLoader: (_id, _dataset, install) => { install(structuredClone(rosterEntries)); return async () => {}; }, Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, escapeHtml: value => value, t: key => key });
   vm.runInContext(source + '\n_renderAll = () => {}; globalThis.sim = { data: _data, capture: _captureFightEffects, skill: _effectiveSkill, round: _runRound, reset: _resetBattle, potion: _usePotion, escapeRoute: _escapeRoute, init: initSim440 };', context);
   return { sim: context.sim, data: context.sim.data(), math, context };
 }
@@ -152,4 +154,16 @@ test('simulator localization contains every referenced static key', () => {
     if (key === 'battlesim440.ui.') continue;
     assert.ok(translations.includes("'" + key + "'"), key);
   }
+});
+
+test('supplied skill, protection and escape rules follow a renamed source section', () => {
+  const entry = rosterEntries.find(entry => entry.section === 99), original = structuredClone(entry);
+  try {
+    entry.section = 900;
+    entry.rules.skillBonus = 7; entry.rules.protectedRound = 2; entry.rules.escapeRoute = 901;
+    const {sim, data} = combat(900);
+    assert.equal(sim.skill(data), 27); assert.equal(sim.escapeRoute(data), 901);
+    sim.round(); const first = data.endurance; assert.ok(first < 100);
+    sim.round(); assert.equal(data.endurance, first);
+  } finally {Object.assign(entry, original);}
 });

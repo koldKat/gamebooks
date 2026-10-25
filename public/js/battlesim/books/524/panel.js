@@ -16,7 +16,7 @@ import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS
 import { t } from "../../../i18n.js";
 import { initialFortune, recoverVitality } from "../.././engines/skyfall-rules.js";
 import { GARDEN_ENCOUNTERS, createGardenFight, rollGardenRound, settleGardenRound,
-  escapeGardenFight, finishGardenFight, takeGardenHalberd } from "../.././engines/skyfall/garden-of-madness.js";
+  escapeGardenFight, finishGardenFight, takeGardenHalberd, gardenSetupRules } from "../.././engines/skyfall/garden-of-madness.js";
 
 const tk = (key, params) => t(`battlesim524.${key}`, params);
 const element = key => document.getElementById(`${ID}-${key}`);
@@ -73,7 +73,7 @@ export function renderSim524() {
   element('escape').hidden = f?.encounter.escapeDamage === undefined;
   element('escape').disabled = !f || f.status !== 'fighting' || Boolean(pending) || f.round < (f.encounter.escapeAfter ?? 0);
   element('escape').textContent = tk('escape', { damage: f?.encounter.escapeDamage ?? 0 });
-  element('halberd').hidden = Number(f?.encounter.section) !== 297;
+  element('halberd').hidden = !GARDEN_ENCOUNTERS.find(entry => String(entry.section) === String(f?.encounter.section))?.fallenWeaponDamage;
   element('halberd').disabled = !f || f.status !== 'fighting' || Boolean(pending) || !f.encounter.foes.some(foe => foe.vitality <= 0);
   element('log').innerHTML = d.log.slice().reverse().map(line => `<div>${escapeHtml(line)}</div>`).join('');
   element('history').innerHTML = d.history.slice(-50).reverse().map(entry =>
@@ -97,7 +97,7 @@ export function initSim524() {
     <div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">
     ${GARDEN_ENCOUNTERS.map(e => `<option value="${e.section}">${escapeHtml(label(e))}</option>`).join('')}</select></label>
     ${options.map(key => `<div id="${ID}-${key}-wrap">${toggle(key)}</div>`).join('')}<label id="${ID}-surprise-wrap" class="inv-edit-row">${tk('surprise')}<select id="${ID}-surprise" class="inv-edit-input"><option value="none">${tk('none')}</option><option value="player">${tk('player_surprise')}</option><option value="enemy">${tk('enemy_surprise')}</option></select></label>
-    <label id="${ID}-companions-wrap" class="inv-edit-row">${tk('companions')}<select id="${ID}-companions" class="inv-edit-input"><option value="3">${tk('princess')}</option><option value="5">${tk('maid')}</option><option value="8">${tk('both')}</option></select></label>
+    <label id="${ID}-companions-wrap" class="inv-edit-row">${tk('companions')}<select id="${ID}-companions" class="inv-edit-input">${gardenSetupRules().companionChoices.map(choice => `<option value="${choice.rounds}">${tk(choice.labelKey)}</option>`).join('')}</select></label>
     <p id="${ID}-source-note"></p><p id="${ID}-disease-note" hidden>${tk('disease_note')}</p>
     <button id="${ID}-start" class="inv-add-btn">${tk('start')}</button><div id="${ID}-foes"></div>
     <label class="inv-edit-row">${tk('target')}<select id="${ID}-target" class="inv-edit-input"></select></label></div>

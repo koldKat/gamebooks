@@ -2,12 +2,11 @@ import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { newThievesCharacter, validateThievesCharacter, startThievesFight,
   thievesTargets, thievesRound, resolveThievesLuck, canEscapeThieves,
   escapeThievesFight, bypassThievesFight, healThievesCharacter, testThievesLuck } from './core.js';
-import { THIEVES_FIGHTS, THIEVES_EQUIPMENT } from './roster.js';
+import { THIEVES_FIGHTS, THIEVES_EQUIPMENT, thievesHasRule, thievesRandomEncounter } from './roster.js';
 
 const ID = 'sim665';
 const stats = ['skill', 'stamina', 'luck'];
 const fields = [...stats.flatMap(key => [key, key + 'Initial']), 'provisions', 'gold', 'potionUses', 'attackModifier'];
-const specialRules = new Set([10, 73, 79, 88, 140, 152, 157, 193, 201, 253, 311, 323, 326, 349, 357, 392]);
 const escape = value => String(value).replace(/[&<>"']/g,
   c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -75,7 +74,7 @@ export function createThievesPanel({ document, t, getRun, getBookId, saveState,
     const context = THIEVES_FIGHTS.find(entry => entry.section === Number(el('context').value));
     el('applyEntry-row').hidden = !context?.entry;
     el('randomEnemy-row').hidden = !context?.randomEnemy;
-    el('contextNote').textContent = context && specialRules.has(context.section) ? tk('rule.' + context.section) : '';
+    el('contextNote').textContent = context && thievesHasRule(context.section) ? tk('rule.' + context.section) : '';
   }
   function render() {
     if (!el('overlay')) return;
@@ -118,9 +117,7 @@ export function createThievesPanel({ document, t, getRun, getBookId, saveState,
     el('escape').disabled = !canEscapeThieves(fight);
     el('cancel').disabled = !busy || !!fight.pending.length;
     el('bypass').hidden = !fight?.config.bypass;
-    el('bypass').disabled = !busy || !!fight.rounds || !!fight.pending.length || !character?.fireRing;
-    const context = Number(el('context').value);
-    el('randomEnemy-row').hidden = context !== 201;
+    el('bypass').disabled = !busy || !!fight.rounds || !!fight.pending.length || !fight.character[fight.config.bypass?.item];
     el('status').textContent = fight ? tk('status.' + fight.status) + '\n'
       + tk('roundCount', { rounds: fight.rounds }) + '\n'
       + fight.enemies.filter((enemy, index) => !fight.config.randomEnemy || fight.config.groups[0].includes(index))
@@ -143,7 +140,7 @@ export function createThievesPanel({ document, t, getRun, getBookId, saveState,
     if (el('overlay')) return;
     const overlay = document.createElement('div');
     overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
-    overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(tk('title'))}</span><button class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div class="bsim-status" id="${ID}-characterStatus"></div>${button('roll')}<details><summary>${escape(tk('character'))}</summary>${fields.map(field).join('')}<label class="inv-edit-row"><span class="inv-edit-label">${escape(tk('potion'))}</span><select class="inv-edit-input" id="${ID}-potion">${['skill', 'strength', 'fortune'].map(key => `<option value="${key}">${escape(tk('potion.' + key))}</option>`).join('')}</select></label><p>${escape(tk('equipmentNote'))}</p>${THIEVES_EQUIPMENT.map(checkbox).join('')}${button('apply')}</details><div class="bsim-btn-row">${button('meal')}${button('drink')}${button('luckTest')}</div><label class="inv-edit-row"><span class="inv-edit-label">${escape(tk('context'))}</span><select class="inv-edit-input" id="${ID}-context">${THIEVES_FIGHTS.map(entry => `<option value="${entry.section}">${escape(tk('context.' + entry.section))} (${entry.section})</option>`).join('')}</select></label>${checkbox('applyEntry')}<label class="inv-edit-row" id="${ID}-randomEnemy-row"><span class="inv-edit-label">${escape(tk('randomEnemy'))}</span><select class="inv-edit-input" id="${ID}-randomEnemy"><option value="0">${escape(tk('randomRoll'))}</option>${THIEVES_FIGHTS.find(entry => entry.section === 201).enemies.map((enemy, index) => `<option value="${index + 1}">${escape(enemyLabel(enemy))}</option>`).join('')}</select></label><p id="${ID}-contextNote"></p>${button('start')}<div class="bsim-status" id="${ID}-status"></div><label class="inv-edit-row" id="${ID}-target-row"><span class="inv-edit-label">${escape(tk('target'))}</span><select class="inv-edit-input" id="${ID}-target"></select></label><div class="bsim-btn-row">${button('step')}${button('escape')}${button('bypass')}${button('cancel')}</div><div id="${ID}-luck-row"><p id="${ID}-pending"></p><div class="bsim-btn-row">${button('luckYes')}${button('luckNo')}</div></div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;
+    overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(tk('title'))}</span><button class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div class="bsim-status" id="${ID}-characterStatus"></div>${button('roll')}<details><summary>${escape(tk('character'))}</summary>${fields.map(field).join('')}<label class="inv-edit-row"><span class="inv-edit-label">${escape(tk('potion'))}</span><select class="inv-edit-input" id="${ID}-potion">${['skill', 'strength', 'fortune'].map(key => `<option value="${key}">${escape(tk('potion.' + key))}</option>`).join('')}</select></label><p>${escape(tk('equipmentNote'))}</p>${THIEVES_EQUIPMENT.map(checkbox).join('')}${button('apply')}</details><div class="bsim-btn-row">${button('meal')}${button('drink')}${button('luckTest')}</div><label class="inv-edit-row"><span class="inv-edit-label">${escape(tk('context'))}</span><select class="inv-edit-input" id="${ID}-context">${THIEVES_FIGHTS.map(entry => `<option value="${entry.section}">${escape(tk('context.' + entry.section))} (${entry.section})</option>`).join('')}</select></label>${checkbox('applyEntry')}<label class="inv-edit-row" id="${ID}-randomEnemy-row"><span class="inv-edit-label">${escape(tk('randomEnemy'))}</span><select class="inv-edit-input" id="${ID}-randomEnemy"><option value="0">${escape(tk('randomRoll'))}</option>${(thievesRandomEncounter()?.enemies ?? []).map((enemy, index) => `<option value="${index + 1}">${escape(enemyLabel(enemy))}</option>`).join('')}</select></label><p id="${ID}-contextNote"></p>${button('start')}<div class="bsim-status" id="${ID}-status"></div><label class="inv-edit-row" id="${ID}-target-row"><span class="inv-edit-label">${escape(tk('target'))}</span><select class="inv-edit-input" id="${ID}-target"></select></label><div class="bsim-btn-row">${button('step')}${button('escape')}${button('bypass')}${button('cancel')}</div><div id="${ID}-luck-row"><p id="${ID}-pending"></p><div class="bsim-btn-row">${button('luckYes')}${button('luckNo')}</div></div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
     customSetup = createCustomOpponentSetup({document, id: ID, t, language: 'bg', selectKey: "context", getRun, getData: data,
       fields: [{key: 'skill', label: tk('skill'), max: 10000}, {key: 'stamina', label: tk('stamina'), min: 1, max: 10000}],

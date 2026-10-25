@@ -129,7 +129,7 @@ export function createZendariPanel({document, t, getRun, getBookId, saveState, s
     editor.element.addEventListener('input', saveOpponent); editor.element.addEventListener('change', saveOpponent);
     const trigger = document.createElement('button'); trigger.id = ID + '-btn'; trigger.style.display = 'none'; trigger.textContent = t('battlesim.title');
     getButtonRow().appendChild(trigger); trigger.addEventListener('click', open);
-    el('count').value = 2; el('range').value = 1; el('chosenDie').value = 1;
+    el('count').value = ENCOUNTERS[0].count; el('range').value = ENCOUNTERS[0].range; el('chosenDie').value = 1;
     el('encounter').addEventListener('change', () => {
       if (active(store.read()?.fight)) return;
       const encounter = ENCOUNTERS.find(row => row.section === Number(el('encounter').value));

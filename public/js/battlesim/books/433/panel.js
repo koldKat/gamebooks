@@ -1,12 +1,12 @@
-import { LAUMSPUR_HEAL, CRT } from './definition.js';
+import { LAUMSPUR_HEAL, CRT, ENCOUNTER_RULES } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, CRT, LAUMSPUR_HEAL, SVG_SKULL, SVG_TROPHY, _appendLog, _battleOver, _captureFightEffects, _crCol, _data, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _playerCS, _playerLost, _playerWon, _recordOutcome, _recoverCombatLoss, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _rollRandomNumber, _runRound, _setRoute, _setupEnemyAutocomplete, _useLaumspur, apiFetch, closeSim433, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim433, openSim433, registerPanelShortcut, renderSim433, saveState, setSim433Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ENCOUNTER_RULES, _rulesFor, CRT, LAUMSPUR_HEAL, SVG_SKULL, SVG_TROPHY, _appendLog, _battleOver, _captureFightEffects, _crCol, _data, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _playerCS, _playerLost, _playerWon, _recordOutcome, _recoverCombatLoss, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _rollRandomNumber, _runRound, _setRoute, _setupEnemyAutocomplete, _useLaumspur, apiFetch, closeSim433, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim433, openSim433, registerPanelShortcut, renderSim433, saveState, setSim433Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _battleOver, _recordOutcome } = createState(simulatorContext);
-const { _crCol, _rollRandomNumber, _playerCS, _enemyName, _enemyNameSafe, _playerLost, _playerWon, _captureFightEffects, _setRoute, _recoverCombatLoss, _runRound, _resetBattle } = createCombat(simulatorContext);
+const { _rulesFor, _crCol, _rollRandomNumber, _playerCS, _enemyName, _enemyNameSafe, _playerLost, _playerWon, _captureFightEffects, _setRoute, _recoverCombatLoss, _runRound, _resetBattle } = createCombat(simulatorContext);
 const { _useLaumspur } = createEffects(simulatorContext);
 // END SIMULATOR WIRING
 // Battle Simulator (Сянка върху пясъка, book 433, Lone Wolf #5)

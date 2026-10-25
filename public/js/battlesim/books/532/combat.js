@@ -2,12 +2,12 @@
 export function createCombat(getContext) {
 // BEGIN EXTRACTED RULES
 function label(id) {
-  const { tk, data, t } = getContext();
+  const { tk, data, t, rules } = getContext();
   if (String(id) === '0' || String(id).startsWith('custom:')) return data()?.fight?.spec.name ?? t('battlesim.editor.custom');
 
   const enemy = tk(`enemy_names.${id}`);
   return String(id).startsWith('dream') ? tk('dream_label', { enemy, number: String(id).slice(5) })
-    : tk('encounter_label', { enemy, section: id === '204-grott' ? 204 : id });
+    : tk('encounter_label', { enemy, section: rules.tombDisplaySection(id) });
 }
 
 function record(d) {

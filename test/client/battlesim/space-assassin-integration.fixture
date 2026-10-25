@@ -1,8 +1,10 @@
 const checks = [], saves = [];
+const rosterSeed = ROSTER_SEEDS[735];
 const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
 Math.random = () => 0;
 let imageAccess = false;
 window.fetch = async (url, options = {}) => {
+  if (url === '/api/books/735/enemies' && !options.method) return new Response(JSON.stringify(rosterSeed), {status: 200});
   if (url === '/api/books/735/reading-matter') { imageAccess = true; return new Response('{}'); }
   assert(url === '/api/books/735/state' && options.method === 'PUT', 'only intercepted state saves');
   saves.push(JSON.parse(options.body)); return new Response('{}');
@@ -11,7 +13,7 @@ const imageSrc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'sr
 Object.defineProperty(HTMLImageElement.prototype, 'src', { ...imageSrc, set(value) {
   const file = String(value).match(/^\/api\/books\/735\/reading-images\/([a-f0-9]{64}\.png)$/);
   if (file) assert(imageAccess, 'map authorized before loading');
-  imageSrc.set.call(this, file ? 'file:///media/koldKat/MediaDrive/.tmp/reading-imports-2026-10-11/735-art-draft/' + file[1] : value);
+  imageSrc.set.call(this, file ? 'REPO/reading-images/735/' + file[1] : value);
 } });
 const app = await import('REPO/public/js/core/state.js');
 const desktop = await import('REPO/public/js/battlesim/loader.js');
@@ -41,7 +43,7 @@ assert(el('start').disabled && !el('loadout').hidden, 'starting weapon required'
 el('buyLoadout').click();
 assert(run.sim735.character.weapon === 'lash' && el('loadout').hidden, 'one-point loadout applied');
 el('stamina').value = 8; el('saveCharacter').click();
-el('start').click();
+choose('encounter', 20); el('start').click();
 assert(run.sim735.fight.player.stamina === 8 && el('encounter').disabled, 'current scores preserved and setup locked');
 el('pill').click();
 assert(run.sim735.fight.player.stamina === 13 && run.sim735.character.pills === 3, 'pill updates active fight once');

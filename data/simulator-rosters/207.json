@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "bookId": 207,
+  "family": "fighting-fantasy",
+  "source": "Existing global skill-drain amount, attached to an unchanged legacy row as a settings carrier. This does not enable skill drain for that opponent; the saved manual toggle is unchanged.",
+  "enemies": [
+    {
+      "key": "talisman-settings",
+      "name": "Triceratops",
+      "attack": 8,
+      "defense": null,
+      "hp": 30,
+      "pb": null,
+      "adopt": {
+        "name": "Triceratops",
+        "attack": 8,
+        "defense": null,
+        "hp": 30,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "TALISMAN_RULES",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "skillDrain": 1
+        },
+        "part": {
+          "name": "Triceratops",
+          "attack": 8,
+          "defense": null,
+          "hp": 30,
+          "pb": null
+        },
+        "count": 1
+      }
+    }
+  ]
+}

@@ -7,7 +7,7 @@ const categories = new Map([
   ...['book_created', 'series_created'].map(type => [type, 'catalog']),
   ...['book_added', 'series_added'].map(type => [type, 'library']),
   ...['run_started', 'run_completed', 'series_run_started', 'series_run_completed'].map(type => [type, 'runs']),
-  ...['level_up', 'all_visited', 'all_discovered', 'first_win', 'first_loss', 'first_battle_death',
+  ...['level_up', 'job_level_up', 'all_visited', 'all_discovered', 'first_win', 'first_loss', 'first_battle_death',
     'won_all_series', 'won_all_anthology', 'visit_all_series', 'discover_all_series',
     'visit_all_anthology', 'discover_all_anthology'].map(type => [type, 'achievements']),
   ...['book_rated', 'series_rated'].map(type => [type, 'ratings']),

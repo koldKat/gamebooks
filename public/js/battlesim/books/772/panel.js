@@ -1,4 +1,4 @@
-import { PLAYER_STAT_KEYS } from './definition.js';
+import { PLAYER_STAT_KEYS, ROSTER } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
@@ -24,112 +24,6 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 
 // Player stat keys (typed in by the reader from their own journal).
 // Labels are i18n keys, resolved via t() at render time.
-
-// Select the enemy action from round/history; resolve NPC defense as aggressive, without player-only drain.
-const ROSTER = [
-  {
-    id: 'park_attackers', name: 'Нападатели в парка',
-    defLeg: 13, atkLeg: null, defHand: 16, atkHand: 22, defComb: 22, atkComb: null,
-    dodge: null,
-    pattern() { return { type: 'attack', move: 'hand' }; },
-  },
-  {
-    id: 'kao_lie', name: 'Као Лье',
-    defLeg: 35, atkLeg: 42, defHand: 36, atkHand: 44, defComb: 50, atkComb: 45,
-    dodge: [1, 2, 4],
-    pattern() { return { type: 'defend', move: 'aggressive' }; },
-  },
-  {
-    id: 'li_xiao', name: 'Ли Сяо',
-    defLeg: 19, atkLeg: 22, defHand: 17, atkHand: 22, defComb: 24, atkComb: 24,
-    dodge: null,
-    pattern(i) {
-      const cycle = ['combined', 'combined', 'leg', 'hand'];
-      return { type: 'attack', move: cycle[i % cycle.length] };
-    },
-  },
-  {
-    id: 'tun_tsin', name: 'Тун Цзин',
-    defLeg: null, atkLeg: null, defHand: null, atkHand: 24, defComb: null, atkComb: 25,
-    dodge: [4],
-    pattern(i) {
-      const cycle = ['hand', 'combined'];
-      return { type: 'attack', move: cycle[i % cycle.length] };
-    },
-  },
-  {
-    id: 'dupont_early', name: 'Жак Дюпон, ранна среща',
-    defLeg: 17, atkLeg: 23, defHand: 16, atkHand: null, defComb: 22, atkComb: null,
-    dodge: null,
-    pattern() {
-      return { type: 'attack', move: 'leg' };
-    },
-  },
-  {
-    id: 'dupont_tournament', name: 'Жак Дюпон, турнир',
-    defLeg: 25, atkLeg: 29, defHand: 23, atkHand: null, defComb: 31, atkComb: null,
-    dodge: null,
-    pattern(i) {
-      return i === 0 ? { type: 'defend', move: 'aggressive' } : { type: 'attack', move: 'leg' };
-    },
-  },
-  {
-    id: 'steve_train', name: 'Стив Трейн',
-    defLeg: null, atkLeg: null, defHand: 30, atkHand: 41, defComb: 41, atkComb: 39,
-    dodge: null,
-    pattern(i) {
-      // First attack is hands (i=0), then alternates hand/combined.
-      return { type: 'attack', move: i % 2 === 0 ? 'hand' : 'combined' };
-    },
-  },
-  {
-    id: 'lin_bao_tournament', name: 'Лин Бао, турнир',
-    defLeg: 33, atkLeg: 38, defHand: 31, atkHand: 40, defComb: 44, atkComb: 42,
-    dodge: [2, 5],
-    pattern(i) {
-      const cycle = ['leg', 'hand', 'combined'];
-      return { type: 'attack', move: cycle[i % cycle.length] };
-    },
-  },
-  {
-    id: 'lin_bao_rescue', name: 'Лин Бао, спасяване',
-    defLeg: 31, atkLeg: null, defHand: 30, atkHand: 37, defComb: null, atkComb: null,
-    dodge: [2, 5],
-    pattern(i) {
-      return i < 2 ? { type: 'attack', move: 'hand' } : { type: 'defend', move: 'aggressive' };
-    },
-  },
-  {
-    id: 'mac_stone', name: 'Мак Стоун',
-    defLeg: 34, atkLeg: 43, defHand: 34, atkHand: 43, defComb: 46, atkComb: 43,
-    dodge: [1, 3, 5],
-    pattern(i) {
-      if (i === 0) return { type: 'defend', move: 'aggressive' };
-      const moves = ['leg', 'hand', 'combined'];
-      return { type: 'attack', move: moves[Math.floor(Math.random() * moves.length)] };
-    },
-  },
-  {
-    id: 'arena_guards', name: 'Охрана на арената',
-    defLeg: 28, atkLeg: null, defHand: 26, atkHand: null, defComb: 36, atkComb: null,
-    dodge: null,
-    pattern() {
-      return { type: 'defend', move: 'passive' };
-    },
-  },
-  {
-    id: 'arena_rescue_guards', name: 'Охрана при спасяването на Бо Дзи',
-    defLeg: 31, atkLeg: null, defHand: 30, atkHand: null, defComb: 38, atkComb: 40,
-    dodge: null,
-    pattern() { return { type: 'defend', move: 'aggressive' }; },
-  },
-  {
-    id: 'arena_melee_guards', name: 'Охрана в мелето на арената',
-    defLeg: 29, atkLeg: null, defHand: 28, atkHand: 38, defComb: 38, atkComb: 36,
-    dodge: null,
-    pattern() { return { type: 'attack', move: 'hand' }; },
-  },
-];
 
 // Count wins: true if 2 consecutive wins, or 3 total wins (non-consecutive
 // counts fine since 2 consecutive is already covered separately).

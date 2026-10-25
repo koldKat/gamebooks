@@ -76,7 +76,14 @@ function _testLuck() {
   const { SVG_SKULL, SVG_TROPHY, _appendLog, _data, _enemyNameSafe, _recordOutcome, _renderAll, _roll2d6, saveState, t } = getContext();
 
   const d = _data();
-  if (!d || !d.pendingLuckQueue.length || d.player.luck <= 0) return;
+  if (!d || !d.pendingLuckQueue.length) return;
+  if (d.player.stamina <= 0 || d.enemy.stamina <= 0) {
+    d.pendingLuckQueue = [];
+    saveState();
+    _renderAll();
+    return;
+  }
+  if (d.player.luck <= 0) return;
   const event = d.pendingLuckQueue.shift();
   const roll  = _roll2d6();
   const lucky = roll <= d.player.luck;

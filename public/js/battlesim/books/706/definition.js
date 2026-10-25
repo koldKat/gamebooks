@@ -9,6 +9,10 @@ export const definition = Object.freeze({
 });
 
 export let POSITIONS = Object.freeze({});
+export const DESERT_RULES = {};
 export const loadRoster = createRosterLoader(706, 'POSITIONS', entries => {
+  const rules = entries.find(entry=>entry.support)?.support.rules;
+  if (!rules) throw new Error('Incomplete Son of the Desert settings');
   POSITIONS = Object.freeze(Object.fromEntries(entries.map(({key, rule}) => [key, rule])));
+  Object.assign(DESERT_RULES,rules);
 });

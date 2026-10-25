@@ -1,11 +1,14 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import * as combat from '../../../public/js/battlesim/books/769/combat.js';
 import * as effects from '../../../public/js/battlesim/books/769/effects.js';
-import { ENCOUNTERS } from '../../../public/js/battlesim/books/769/definition.js';
+import { ENCOUNTERS, DUNGEON_RULES } from '../../../public/js/battlesim/books/769/definition.js';
 import { createState } from '../../../public/js/battlesim/books/769/state.js';
+
+await loadFixtureRoster(769);
 
 const player = changes => ({ ...combat.newCharacter(() => 6), ...changes });
 const sequence = (...values) => () => {
@@ -13,6 +16,25 @@ const sequence = (...values) => () => {
   return values.shift();
 };
 const winRoll = () => sequence(6, 6, 1, 1);
+
+test('Bloodbeast retry uses metadata and the saved destination without changing wounds or extensions', () => {
+  const retryAttempt=DUNGEON_RULES.retryAttempt;
+  try {
+    DUNGEON_RULES.retryAttempt=2;
+    const fight=combat.startFight(225,player({stamina:17,luck:0}));
+    fight.weakPointAttempts=1;fight.rounds=4;fight.enemies[0].stamina=7;
+    fight.config.retry=999;fight.extension={keep:true};fight.pending=[{kind:'weakPoint',enemy:0}];
+    const saved=JSON.parse(JSON.stringify(fight)),snapshot=structuredClone(saved);
+    const retry=combat.resolveLuck(saved,true,()=>6);
+    assert.equal(retry.outcome,'continue');assert.equal(retry.destination,999);assert.equal(retry.weakPointAttempts,2);
+    const resumed=combat.continueWeakPoint(retry);
+    assert.equal(resumed.outcome,null);assert.equal(resumed.character.stamina,17);
+    assert.equal(resumed.enemies[0].stamina,7);assert.equal(resumed.rounds,4);
+    assert.deepEqual(resumed.extension,{keep:true});assert.deepEqual(saved,snapshot);
+    assert.throws(()=>combat.continueWeakPoint({...retry,destination:21}));
+    assert.throws(()=>combat.continueWeakPoint({rulesRevision:1,outcome:'continue',destination:undefined}));
+  } finally {DUNGEON_RULES.retryAttempt=retryAttempt;}
+});
 
 test('initial rolls, single-use potions and meals preserve their inputs and caps', () => {
   const initial = combat.newCharacter(() => 1);

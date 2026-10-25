@@ -6,7 +6,7 @@ import { readFileSync } from './simulator-source.mjs';
 import { runInNewContext } from 'node:vm';
 import { newFreewayCharacter, validateFreewayCharacter, testFreewayLuck, healFreewayCharacter,
   startFreewayFight, freewayRound, freewayContest, startFreewayRace, freewayRaceStep } from '../../../public/js/battlesim/engines/freeway-fighter/core.js';
-import { FREEWAY_FIGHTS, FREEWAY_CONTESTS, FREEWAY_RACES } from '../../../public/js/battlesim/engines/freeway-fighter/roster.js';
+import { FREEWAY_FIGHTS, FREEWAY_CONTESTS, FREEWAY_RACES, FREEWAY_RULES } from '../../../public/js/battlesim/engines/freeway-fighter/roster.js';
 
 const constant = value => () => value;
 const dice = (...values) => () => {
@@ -28,6 +28,7 @@ test('backend registers this simulator and awards each completed outcome only on
     if (name === './diamonds') return { diamondInfoForUser: () => ({}) };
     if (name === './rubies') return { rubyInfoForUser: () => ({}), createRubyCompletionChecker: () => () => 0 };
     if (name === './heartbeat-coins') return { advanceHeartbeatCoins: () => 0 };
+    if (name === './job-xp') return { getJobTitle: () => 'test' };
     throw new Error('Unexpected dependency: ' + name);
   } };
   const source = readFileSync(new URL('../../../server/db/xp.js', import.meta.url), 'utf8');
@@ -256,6 +257,29 @@ test('boosted engine adds one to each player race roll', () => {
   const result = freewayRaceStep(race, dice(1, 2));
   assert.equal(result.race.status, 'win'); assert.equal(result.race.section, 54);
   assert.equal(race.player, 21);
+});
+
+test('database race target controls both finish detection and live progress validation', () => {
+  const target=FREEWAY_RULES.raceTarget;
+  try {
+    FREEWAY_RULES.raceTarget=10;
+    const race=startFreewayRace(210);race.player=8;
+    assert.equal(freewayRaceStep(race,dice(1,1)).race.status,'win');
+    assert.throws(()=>freewayRaceStep({...race,enemy:10},dice(1,1)),RangeError);
+    FREEWAY_RULES.raceTarget=30;
+    const extended={...race,player:24,enemy:23};
+    assert.equal(freewayRaceStep(extended,dice(1,5)).race.player,30);
+    assert.equal(freewayRaceStep(extended,dice(1,5)).race.status,'win');
+  } finally {FREEWAY_RULES.raceTarget=target;}
+});
+
+test('serialized races keep their existing progress, captured destinations and extension fields', () => {
+  const race=startFreewayRace(210);race.player=22;race.enemy=20;race.round=5;
+  race.config.win=777;race.extension={keep:['saved']};
+  const saved=JSON.stringify(race),restored=JSON.parse(saved),next=freewayRaceStep(restored,dice(1,1)).race;
+  assert.equal(next.player,24);assert.equal(next.enemy,21);assert.equal(next.round,6);
+  assert.equal(next.status,'win');assert.equal(next.section,777);
+  assert.deepEqual(next.extension,race.extension);assert.equal(JSON.stringify(restored),saved);
 });
 
 test('Luck loses one point on both successful and failed tests', () => {

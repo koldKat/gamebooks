@@ -6,6 +6,17 @@ import { createRosterLoader } from '../../roster-data.js';
 export let PYRAMID_ENCOUNTERS = [];
 export const loadRoster = createRosterLoader(522, 'PYRAMID_ENCOUNTERS', rows => { PYRAMID_ENCOUNTERS = rows; });
 
+// Older saved encounters predate these fields. Resolve their catalog settings
+// without changing the saved encounter or any already rolled pending result.
+function npcRules(encounter) {
+  return encounter.npcRules ?? PYRAMID_ENCOUNTERS.find(e => String(e.section) === String(encounter.section))?.npcRules ?? {};
+}
+
+export function activePyramidFoeCount(fight) {
+  const rules = npcRules(fight.encounter);
+  return Math.min(rules.maxActiveFoes, fight.round + rules.initialActiveFoes);
+}
+
 export function createPyramidFight(section, player, { openingBonus = false, cuttingWeapon = true, opponents } = {}) {
   const entry = editableSkyfallEncounter(PYRAMID_ENCOUNTERS.find(e => String(e.section) === String(section)),
     section === 'custom' || PYRAMID_ENCOUNTERS.some(e => String(e.section) === String(section)) ? opponents : undefined);
@@ -37,17 +48,17 @@ export function finishPyramidFight(fight) {
     fight.player.expertise += fight.encounter.expertiseReward ?? 0;
     return;
   }
-  if (fight.encounter.mode === 'troll' && fight.player.vitality < 4) fight.encounter.stunning = true;
+  if (fight.encounter.mode === 'troll' && fight.player.vitality < npcRules(fight.encounter).stunningVitalityBelow) fight.encounter.stunning = true;
 }
 
 export function rollPyramidRound(fight, target = 0, random = Math.random) {
   if (fight.status !== 'fighting' || fight.pending) return null;
   const e = fight.encounter;
   if (!fight.prepared) {
-    if (e.mode === 'troll' && fight.regenerating) e.foes[0].vitality = Math.min(e.foes[0].initialVitality, e.foes[0].vitality + 1);
+    if (e.mode === 'troll' && fight.regenerating) e.foes[0].vitality = Math.min(e.foes[0].initialVitality, e.foes[0].vitality + npcRules(e).regeneration);
     fight.prepared = true;
   }
-  const active = e.foes.flatMap((foe, index) => alive(fight, foe) && (e.mode !== 'tendrils' || index < Math.min(10, fight.round + 3)) ? [{ foe, index }] : []);
+  const active = e.foes.flatMap((foe, index) => alive(fight, foe) && (e.mode !== 'tendrils' || index < activePyramidFoeCount(fight)) ? [{ foe, index }] : []);
   if (!active.length) { finishPyramidFight(fight); return null; }
   if (!active.some(row => row.index === target)) target = active[0].index;
   const surprise = fight.surpriseActive ? (fight.surprisePenalty ??= tossCoins(3, random).tails) : 0;
@@ -61,12 +72,12 @@ export function rollPyramidRound(fight, target = 0, random = Math.random) {
   if (e.mode === 'all') lower.forEach(roll => hits.push({ index: roll.index, damage: fight.player.weaponDamage }));
   else if (e.mode === 'tendrils') {
     const hit = lower.find(roll => roll.index === target) ?? lower[0];
-    if (hit) hits.push({ index: hit.index, damage: 1 });
+    if (hit) hits.push({ index: hit.index, damage: npcRules(e).tendrilHitDamage });
   } else if (e.mode === 'lion') {
     if (lower.length === 2) hits.push({ index: 0, damage: fight.player.weaponDamage });
   } else if (lower.some(roll => roll.index === target)) hits.push({ index: target, damage: fight.player.weaponDamage });
   const doubleHit = higher.length === 2 && ['scorpion', 'lion'].includes(e.mode);
-  const enemyDamage = doubleHit ? (e.mode === 'scorpion' && fight.poisoned ? 4 : 6)
+  const enemyDamage = doubleHit ? (e.mode === 'scorpion' && fight.poisoned ? npcRules(e).poisonedDoubleHitDamage : npcRules(e).doubleHitDamage)
     : higher.reduce((total, roll) => total + e.foes[roll.index].damage, 0);
   fight.pending = { player, rolls, hits, enemyDamage, enemyHits: higher.length, doubleHit,
     retry: rolls.every(roll => roll.total === player.total), selection: {} };

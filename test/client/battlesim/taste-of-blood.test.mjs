@@ -1,12 +1,16 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
+import {CREATURE_ATTRIBUTES} from '../../../public/js/battlesim/books/696/definition.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, simulatorFunctions } from './simulator-source.mjs';
+
+await loadFixtureRoster(696);
 
 const source = readFileSync(new URL('../../../public/js/battlesim/battlesim696.js', import.meta.url), 'utf8');
 const roundSource = source.slice(source.indexOf('function _runRound()'), source.indexOf('function _resetBattle()'));
 const resetSource = simulatorFunctions(source,['_resetBattle']);
 const dataSource = source.slice(source.indexOf('function _data()'), source.indexOf('function _appendLog('));
-const attributesSource = source.slice(source.indexOf('const CREATURE_ATTRIBUTES ='), source.indexOf('function _data()'));
+const attributesSource = 'const CREATURE_ATTRIBUTES = ' + JSON.stringify(CREATURE_ATTRIBUTES) + ';';
 const selectSource = source.slice(source.indexOf('  function select(enemy)'), source.indexOf("  dropdown.addEventListener('mousedown'"));
 const fighter = () => ({ sila: 0, refleks: 0, izdrazhlivost: 2, ataka: 0, zashtita: 0, life: 20, lifeMax: 20, lifeInitial: 20 });
 const battle = version => ({ player: fighter(), enemy: fighter(), attackerIsPlayer: true, roundsThisBattle: 0, log: [], history: [], ...(version ? { exchangeRulesVersion: version } : {}) });

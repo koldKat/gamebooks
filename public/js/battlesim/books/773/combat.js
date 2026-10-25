@@ -1,6 +1,6 @@
 import { attackStrength, damageWithLuck, die, integer, rollDice } from '../../engines/sorcery/core.js';
 import { customFightingEncounter } from '../../engines/fighting-fantasy/opponents.js';
-import { encounterFor, RULES_REVISION } from './definition.js';
+import { encounterFor, RULES_REVISION, CHAMPION_RULES } from './definition.js';
 
 export { die, integer, rollDice } from '../../engines/sorcery/core.js';
 
@@ -57,7 +57,7 @@ export function startFight(section, character, options = {}) {
     }
   }
   if (!fight.character.stamina) return lose(fight);
-  if (config.requiresMagicSword && !setup.magicSword) return lose(fight, 55);
+  if (config.requiresMagicSword && !setup.magicSword) return lose(fight, CHAMPION_RULES.swordFailure);
   return fight;
 }
 
@@ -100,7 +100,7 @@ export function round(input, target, roll) {
   if (config.fear) {
     const value = die(roll);
     fight.events.push({ kind: 'fear', roll: value });
-    if (value <= 2) return lose(fight, 265);
+    if (value <= CHAMPION_RULES.fear.maximum) return lose(fight, CHAMPION_RULES.fear.destination);
   }
   const skill = Math.max(0, fight.character.skill + (config.skillModifier ?? 0));
   const player = attackStrength(skill, fight.character.attackModifier, roll);
@@ -115,26 +115,26 @@ export function round(input, target, roll) {
     if (won) fight.playerWins++;
     else if (lost) fight.enemyWins++;
     fight.events.push({ kind: 'tug', player: fight.playerWins, enemy: fight.enemyWins });
-    if (fight.enemyWins === 4) return lose(fight, config.failure);
-    if (fight.playerWins === 4) { fight.outcome = 'win'; fight.destination = config.win; }
+    if (fight.enemyWins === CHAMPION_RULES.tugWins) return lose(fight, config.failure);
+    if (fight.playerWins === CHAMPION_RULES.tugWins) { fight.outcome = 'win'; fight.destination = config.win; }
     return fight;
   }
   if (lost && config.fatalLostRound) return lose(fight, config.fatalLostRound);
   if (won) fight.playerWins++;
   fight.airlessRounds = won ? 0 : fight.airlessRounds + 1;
-  if (config.drowning && fight.airlessRounds >= 3) return lose(fight);
+  if (config.drowning && fight.airlessRounds >= CHAMPION_RULES.drowningRounds) return lose(fight);
   if (won) fight.pending.push({ kind: 'outgoing', enemy: target,
-    damage: config.requiresHammer && !config.hammer ? 1 : 2 });
+    damage: config.requiresHammer && !config.hammer ? CHAMPION_RULES.withoutHammerDamage : 2 });
   for (const { enemy, attack } of attacks) {
     if (attack.total > player.total && !wasBleeding) fight.pending.push({ kind: 'incoming', enemy, damage: 2 });
   }
   if (lost && config.pauseOnLoss) fight.pauseEnemy = target;
   if (lost && config.bleedOnLoss) fight.bleeding = true;
-  let damage = wasBleeding ? 2 : 0;
-  if (config.drainingCompanion && target === 0 && fight.enemies[1]?.stamina > 0) damage++;
+  let damage = wasBleeding ? CHAMPION_RULES.bleedingDamage : 0;
+  if (config.drainingCompanion && target === 0 && fight.enemies[1]?.stamina > 0) damage += CHAMPION_RULES.companionDrain;
   if (config.fire) {
     const value = die(roll);
-    damage += config.fire === 'demon' ? value <= 2 ? 2 : value <= 4 ? 1 : 0 : value <= 2 ? 1 : 0;
+    damage += CHAMPION_RULES.fire[config.fire][value - 1];
     fight.events.push({ kind: 'fire', roll: value });
   }
   if (damage) fight.pending.push({ kind: 'automatic', damage });

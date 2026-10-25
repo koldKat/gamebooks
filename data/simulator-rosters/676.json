@@ -36,7 +36,673 @@
               "defence": 10,
               "stamina": 8
             }
-          ]
+          ],
+          "support": {
+            "seaChecks": {
+              "83": {
+                "kind": "storm",
+                "destinations": [
+                  103,
+                  581,
+                  60
+                ],
+                "blessingDestination": 41,
+                "bounds": [
+                  4,
+                  6
+                ]
+              },
+              "139": {
+                "kind": "storm",
+                "destinations": [
+                  157,
+                  581,
+                  98
+                ],
+                "blessingDestination": 154,
+                "bounds": [
+                  5,
+                  7
+                ]
+              },
+              "142": {
+                "kind": "survival",
+                "destinations": [
+                  123,
+                  152
+                ],
+                "bounds": [
+                  7
+                ],
+                "damageDice": [
+                  null,
+                  0
+                ]
+              },
+              "168": {
+                "kind": "lightning",
+                "destinations": [
+                  212,
+                  135,
+                  123
+                ],
+                "bounds": [
+                  4,
+                  10
+                ],
+                "blessingDestination": 352,
+                "damageDice": [
+                  0,
+                  0,
+                  null
+                ]
+              },
+              "174": {
+                "kind": "storm",
+                "destinations": [
+                  212,
+                  670,
+                  227
+                ],
+                "blessingDestination": 209,
+                "bounds": [
+                  4,
+                  6
+                ]
+              },
+              "186": {
+                "kind": "raiders",
+                "destinations": [
+                  123,
+                  206,
+                  352
+                ],
+                "bounds": [
+                  3,
+                  12
+                ],
+                "damageDice": [
+                  null,
+                  0,
+                  0
+                ]
+              },
+              "193": {
+                "kind": "storm",
+                "destinations": [
+                  249,
+                  670,
+                  81
+                ],
+                "blessingDestination": 61,
+                "bounds": [
+                  4,
+                  6
+                ]
+              },
+              "194": {
+                "kind": "escape",
+                "destinations": [
+                  214,
+                  61
+                ],
+                "bounds": [
+                  5
+                ],
+                "cargoPenalty": false
+              },
+              "201": {
+                "kind": "naval",
+                "destinations": [
+                  123,
+                  435,
+                  416,
+                  101,
+                  307
+                ],
+                "bounds": [
+                  3,
+                  8,
+                  12,
+                  16
+                ],
+                "damageDice": [
+                  null,
+                  2,
+                  1,
+                  0,
+                  0
+                ]
+              },
+              "213": {
+                "kind": "storm",
+                "destinations": [
+                  249,
+                  231,
+                  246
+                ],
+                "blessingDestination": 155,
+                "bounds": [
+                  4,
+                  6
+                ]
+              },
+              "214": {
+                "kind": "naval",
+                "destinations": [
+                  123,
+                  140,
+                  250,
+                  245,
+                  232
+                ],
+                "bounds": [
+                  3,
+                  8,
+                  12,
+                  16
+                ],
+                "damageDice": [
+                  null,
+                  2,
+                  1,
+                  0,
+                  0
+                ]
+              },
+              "248": {
+                "kind": "storm",
+                "destinations": [
+                  212,
+                  670,
+                  263
+                ],
+                "blessingDestination": 245,
+                "bounds": [
+                  4,
+                  6
+                ]
+              },
+              "268": {
+                "kind": "escape",
+                "destinations": [
+                  201,
+                  322
+                ],
+                "bounds": [
+                  6
+                ],
+                "cargoPenalty": true
+              },
+              "285": {
+                "kind": "storm",
+                "destinations": [
+                  6,
+                  231,
+                  337
+                ],
+                "blessingDestination": 320,
+                "bounds": [
+                  4,
+                  6
+                ]
+              },
+              "286": {
+                "kind": "naval",
+                "destinations": [
+                  123,
+                  435,
+                  416,
+                  101,
+                  267
+                ],
+                "bounds": [
+                  4,
+                  9,
+                  13,
+                  17
+                ],
+                "damageDice": [
+                  null,
+                  2,
+                  1,
+                  0,
+                  0
+                ]
+              },
+              "324": {
+                "kind": "escape",
+                "destinations": [
+                  286,
+                  24
+                ],
+                "bounds": [
+                  6
+                ],
+                "cargoPenalty": false
+              },
+              "355": {
+                "kind": "storm",
+                "destinations": [
+                  486,
+                  718,
+                  262
+                ],
+                "blessingDestination": 648,
+                "bounds": [
+                  4,
+                  6
+                ]
+              },
+              "361": {
+                "kind": "naval",
+                "destinations": [
+                  123,
+                  435,
+                  416,
+                  311,
+                  379
+                ],
+                "bounds": [
+                  4,
+                  9,
+                  13,
+                  17
+                ],
+                "damageDice": [
+                  null,
+                  2,
+                  1,
+                  0,
+                  0
+                ]
+              },
+              "384": {
+                "kind": "overloaded",
+                "destinations": [
+                  486,
+                  366
+                ],
+                "bounds": [
+                  2
+                ]
+              },
+              "392": {
+                "kind": "naval",
+                "destinations": [
+                  123,
+                  435,
+                  416,
+                  648,
+                  412
+                ],
+                "bounds": [
+                  4,
+                  9,
+                  13,
+                  17
+                ],
+                "damageDice": [
+                  null,
+                  2,
+                  1,
+                  0,
+                  0
+                ]
+              },
+              "397": {
+                "kind": "tavern",
+                "destinations": [
+                  123,
+                  454,
+                  455
+                ],
+                "bounds": [
+                  7,
+                  12
+                ],
+                "damageDice": [
+                  null,
+                  0,
+                  0
+                ]
+              },
+              "403": {
+                "kind": "magicStorm",
+                "destinations": [
+                  486,
+                  468
+                ],
+                "bounds": [
+                  6
+                ]
+              },
+              "418": {
+                "kind": "escape",
+                "destinations": [
+                  474,
+                  13
+                ],
+                "bounds": [
+                  6
+                ],
+                "cargoPenalty": false
+              },
+              "465": {
+                "kind": "kraken",
+                "destinations": [
+                  592,
+                  610,
+                  135
+                ],
+                "bounds": [
+                  9,
+                  15
+                ]
+              },
+              "474": {
+                "kind": "naval",
+                "destinations": [
+                  123,
+                  435,
+                  416,
+                  13,
+                  492
+                ],
+                "bounds": [
+                  4,
+                  9,
+                  13,
+                  17
+                ],
+                "damageDice": [
+                  null,
+                  2,
+                  1,
+                  0,
+                  0
+                ]
+              },
+              "491": {
+                "kind": "storm",
+                "destinations": [
+                  157,
+                  670,
+                  42
+                ],
+                "blessingDestination": 24,
+                "bounds": [
+                  4,
+                  6
+                ]
+              },
+              "523": {
+                "kind": "naval",
+                "destinations": [
+                  123,
+                  613,
+                  300,
+                  559
+                ],
+                "bounds": [
+                  4,
+                  15,
+                  17
+                ],
+                "damageDice": [
+                  null,
+                  2,
+                  0,
+                  0
+                ]
+              },
+              "529": {
+                "kind": "escape",
+                "destinations": [
+                  565,
+                  32
+                ],
+                "bounds": [
+                  6
+                ],
+                "cargoPenalty": false
+              },
+              "541": {
+                "kind": "ram",
+                "destinations": [
+                  523,
+                  577,
+                  595
+                ],
+                "bounds": [
+                  6,
+                  10
+                ]
+              },
+              "544": {
+                "kind": "storm",
+                "destinations": [
+                  634,
+                  616,
+                  13
+                ],
+                "blessingDestination": 311,
+                "bounds": [
+                  4,
+                  6
+                ]
+              },
+              "562": {
+                "kind": "storm",
+                "destinations": [
+                  634,
+                  616,
+                  311
+                ],
+                "blessingDestination": 13,
+                "bounds": [
+                  4,
+                  6
+                ]
+              },
+              "565": {
+                "kind": "naval",
+                "destinations": [
+                  123,
+                  435,
+                  416,
+                  32,
+                  583
+                ],
+                "bounds": [
+                  4,
+                  9,
+                  13,
+                  17
+                ],
+                "damageDice": [
+                  null,
+                  2,
+                  1,
+                  0,
+                  0
+                ]
+              },
+              "580": {
+                "kind": "storm",
+                "destinations": [
+                  634,
+                  616,
+                  13
+                ],
+                "blessingDestination": 32,
+                "bounds": [
+                  4,
+                  6
+                ]
+              },
+              "598": {
+                "kind": "storm",
+                "destinations": [
+                  634,
+                  670,
+                  9
+                ],
+                "blessingDestination": 50,
+                "bounds": [
+                  4,
+                  6
+                ]
+              },
+              "647": {
+                "kind": "hydras",
+                "destinations": [
+                  123,
+                  700,
+                  118,
+                  448
+                ],
+                "bounds": [
+                  3,
+                  6,
+                  9
+                ],
+                "damageDice": [
+                  null,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "672": {
+                "kind": "escape",
+                "destinations": [
+                  361,
+                  311
+                ],
+                "bounds": [
+                  6
+                ],
+                "cargoPenalty": false
+              },
+              "684": {
+                "kind": "escape",
+                "destinations": [
+                  392,
+                  648
+                ],
+                "bounds": [
+                  6
+                ],
+                "cargoPenalty": false
+              }
+            },
+            "rules": {
+              "shipDice": {
+                "barque": 1,
+                "brigantine": 2,
+                "galleon": 3
+              },
+              "shipDiceKinds": [
+                "storm",
+                "kraken"
+              ],
+              "warriorDiceKinds": [
+                "naval",
+                "tavern",
+                "raiders"
+              ],
+              "warriorDice": 3,
+              "survivalDice": {
+                "wayfarer": 2,
+                "other": 1
+              },
+              "singleDieKinds": [
+                "overloaded"
+              ],
+              "singleDie": 1,
+              "otherDice": 2,
+              "crewModifiers": {
+                "storm": {
+                  "poor": -1,
+                  "average": 0,
+                  "good": 0,
+                  "excellent": 1
+                },
+                "naval": {
+                  "poor": -2,
+                  "average": 0,
+                  "good": 2,
+                  "excellent": 3
+                },
+                "tavern": {
+                  "poor": 0,
+                  "average": 0,
+                  "good": 0,
+                  "excellent": 2
+                },
+                "hydras": {
+                  "poor": -2,
+                  "average": 0,
+                  "good": 1,
+                  "excellent": 2
+                },
+                "escape": {
+                  "poor": 0,
+                  "average": 1,
+                  "good": 2,
+                  "excellent": 3
+                },
+                "ram": {
+                  "poor": 0,
+                  "average": 1,
+                  "good": 2,
+                  "excellent": 3
+                }
+              },
+              "defaultCrewModifiers": {
+                "poor": 0,
+                "average": 0,
+                "good": 0,
+                "excellent": 0
+              },
+              "rankKinds": [
+                "naval",
+                "tavern",
+                "kraken",
+                "escape",
+                "ram",
+                "survival",
+                "raiders"
+              ],
+              "copperOreBonus": 1,
+              "shipAdjustmentKinds": [
+                "overloaded",
+                "magicStorm"
+              ],
+              "shipAdjustmentBase": 2,
+              "cargoPenalty": 1,
+              "deathDestination": 123,
+              "battleKinds": [
+                "naval",
+                "tavern",
+                "hydras"
+              ],
+              "crewDegradation": {
+                "hydras": [
+                  2
+                ],
+                "lightning": [
+                  1
+                ]
+              },
+              "degradedCrew": "poor",
+              "blessingKinds": [
+                "storm",
+                "lightning"
+              ]
+            }
+          }
         },
         "part": {
           "name": "Assassin",

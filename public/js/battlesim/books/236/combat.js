@@ -37,7 +37,7 @@ function _resetEncounterKnobs(d) {
 }
 
 function _runRound() {
-  const { SVG_SKULL, SVG_TROPHY, _appendLog, _data, _effectiveSkill, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll2d6, saveState, t } = getContext();
+  const { MYURR_RULES, SERVANT_NAME_RULES, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _effectiveSkill, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll2d6, saveState, t } = getContext();
 
   const d = _data();
   if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
@@ -56,7 +56,7 @@ function _runRound() {
       const dmg = d.player.thickArmour ? 1 : 2;
       d.enemy.stamina = Math.max(0, d.enemy.stamina - dmg);
       _appendLog(d, t('battlesim236.log.you_wound', { enemy: _enemyNameSafe(d), n: dmg, stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
-      if (d.consecutiveServantHits && /\bdemonic servant\b/i.test(d.enemy.name)) {
+      if (d.consecutiveServantHits && SERVANT_NAME_RULES.some(rule => rule.test(d.enemy.name))) {
         if (d.lastServantHit?.enemy === d.enemy.name && d.lastServantHit.round === d.roundsThisBattle - 1) {
           d.enemy.stamina = 0;
           _appendLog(d, t('battlesim236.log.servant_destroyed', { enemy: _enemyNameSafe(d) }));
@@ -73,7 +73,7 @@ function _runRound() {
 
   // Myurr's four arms let him attack twice per round; only the player's own
   // single attack (handled above) can ever wound him back.
-  if (d.player.myurrFight && d.player.stamina > 0 && d.enemy.stamina > 0) {
+  for (let attack = 0; attack < MYURR_RULES.extraAttacks && d.player.myurrFight && d.player.stamina > 0 && d.enemy.stamina > 0; attack++) {
     const playerAS2 = _roll2d6() + _effectiveSkill(d) + (d.player.attackModifier || 0);
     const enemyAS2  = _roll2d6() + d.enemy.skill;
     _appendLog(d, t('battlesim236.log.myurr_second', { playerAS: playerAS2, enemyAS: enemyAS2 }));

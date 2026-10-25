@@ -3,12 +3,44 @@ await loadFixtureRoster(570);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as core from '../../../public/js/battlesim/engines/virtual-police/core.js';
-import { preparePoliceEnemy, POLICE_ENCOUNTERS } from '../../../public/js/battlesim/engines/virtual-police/roster.js';
+import { preparePoliceEnemy, POLICE_ENCOUNTERS, POLICE_RULES, policeEncounterSetup } from '../../../public/js/battlesim/engines/virtual-police/roster.js';
 import { policeHunt, policeDragonOpening } from '../../../public/js/battlesim/engines/virtual-police/openings.js';
 
 const player = { attack: 12, defence: 12, damage: 12, life: 30, magic: 12 };
 const enemy = { attack: 12, defence: 12, damage: 12, life: 18 };
 const rolls = (...values) => () => { assert.ok(values.length, 'unexpected extra roll'); return values.shift(); };
+
+test('Police arena settings follow metadata and preserve strict identities',()=>{
+  const saved=structuredClone(POLICE_RULES);
+  try{
+    Object.assign(POLICE_RULES.arena,{trollId:'t',dwarfId:'d',heavyWeapons:['otherWeapon'],dwarfRating:7,dualSection:999,dualDefence:3,dualStrikes:1,unarmedDamage:6});
+    assert.throws(()=>policeEncounterSetup({id:'t'},player,'axe'));
+    const dwarf=policeEncounterSetup({id:'d'},player,'otherWeapon');assert.equal(dwarf.player.attack,7);assert.equal(dwarf.player.defence,7);assert.deepEqual(player,{attack:12,defence:12,damage:12,life:30,magic:12});
+    assert.equal(policeEncounterSetup({section:999},player,'swordDagger').player.defence,3);assert.equal(policeEncounterSetup({section:'999'},player,'swordDagger').player.defence,12);
+    assert.equal(policeEncounterSetup({unarmed:true},player,'unarmed').player.damage,6);
+  }finally{Object.assign(POLICE_RULES,saved);}
+});
+test('Police dragon openings and targeting use metadata without replacing captured lines',()=>{
+  const saved=structuredClone(POLICE_RULES);
+  try{
+    const lines=[1,2,3].map(count=>({type:'warrior',count,attack:50,defence:50,damage:3}));
+    const old=core.startPoliceDragon(lines,{attack:0,defence:0,damage:0,life:100});old.lines[2].damage=7;old.extension={keep:true};
+    POLICE_RULES.dragon.targets=[2,2,2,2,2,2];const next=core.policeDragonRound(JSON.parse(JSON.stringify(old)),rolls(1));assert.equal(next.line,3);assert.equal(next.damage,7);assert.deepEqual(next.fight.extension,{keep:true});assert.equal(old.enemy.life,100);
+    POLICE_RULES.dragon.allies={archer:{attack:20,damage:5},mage:{attack:12,damage:3}};
+    assert.equal(policeDragonOpening({attack:30,defence:10,life:100},{kind:'ground',lines:[{type:'archer',count:2},{type:'mage',count:1}]}).damage,13);
+    Object.assign(POLICE_RULES.dragon.harpoon,{shootingMin:3,damage:9,penalty:4});const hit=policeDragonOpening({attack:30,defence:20,life:100},{kind:'harpoon',shooting:3});assert.equal(hit.damage,9);assert.equal(hit.enemy.attack,26);assert.equal(hit.enemy.defence,16);
+    POLICE_RULES.dragon.magicDamage=11;assert.equal(policeDragonOpening({attack:30,defence:20,life:100},{kind:'magic',eligibleSpell:true,spellStrength:2,spellProtection:1}).damage,11);
+  }finally{Object.assign(POLICE_RULES,saved);}
+});
+test('Police ship settings use metadata while captured ammunition and wounds remain intact',()=>{
+  const saved=structuredClone(POLICE_RULES);
+  try{
+    Object.assign(POLICE_RULES.ship,{paReduction:7,counterDamage:4,commandHits:3});
+    const f=core.startPoliceShip({attack:10,shield:0,life:60},{attack:20,defence:5},{targets:5,ammunition:{antiproton:0,atomic:0,pa:1,pb:0},commandHits:2});f.extension={keep:true};
+    const next=core.policeShipRound(JSON.parse(JSON.stringify(f)),{weapon:'pa',command:true},rolls(1));assert.equal(next.fight.base.attack,13);assert.equal(next.damage,4);assert.equal(next.fight.status,'win');assert.equal(next.fight.ammunition.pa,0);assert.deepEqual(next.fight.extension,{keep:true});assert.equal(f.ship.life,60);
+    assert.throws(()=>core.startPoliceShip({attack:10,shield:0,life:60},{attack:20,defence:5},{targets:5,ammunition:1,commandHits:3}));
+  }finally{Object.assign(POLICE_RULES,saved);}
+});
 
 test('dynamic initiative uses two dice and level code; equality does not hit', () => {
   const f = core.startPoliceFight(player, enemy, { level: 2 }, rolls(1, 3));

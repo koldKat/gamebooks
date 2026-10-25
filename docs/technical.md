@@ -204,6 +204,9 @@ gamebooks/
                          getContext; they neither access the DOM nor build HTML. Root battlesimNNN.js files
                          retain compatibility exports, not implementations. Saved-state keys,
                          rule versions, translation keys and element IDs remain unchanged.
+        engines/ringlas-saga.js Pure target-roll combat. Book modules pass loaded opponent
+                         profiles for retreat thresholds, optional starting bonuses, penalties
+                         and companion defaults; existing saved fights keep their state fields.
         engines/sorcery/  Pure Sorcery character, Luck, damage and recovery primitives, plus
                          transactional run-scoped persistence. Book modules own encounter
                          exceptions; stale run/book updates are rejected before saving.
@@ -217,6 +220,8 @@ gamebooks/
                          Active-opponent checks distinguish surrender and reserves from death.
                          Resource and indestructible components retain missing printed attributes;
                          attack proxies supply the actual opponent rolls without inventing stats.
+                         Book adapters reconstruct ordered opponent tables and section-rule maps
+                         from typed metadata; general combat tables and player defaults stay in code.
                          Enemy rosters load from the book enemy API. Optional stats_json metadata
                          preserves typed attributes, source groups and printed nulls alongside legacy
                          columns. Repair seeds retain enemy IDs; adopting a legacy row requires
@@ -227,6 +232,10 @@ gamebooks/
                          A simulator may export loadData; both lazy loaders await it before init.
                          Character transitions copy supplied profiles and deduplicate completed
                          fight IDs; equipment losses require an explicit choice before the next fight.
+        engines/kung-fu.js Interprets database-backed legacy openings, cycles and random choices,
+                         plus revised move schedules, stat corrections and defeat conditions.
+                         Opponent rules contain no fighter-ID branches. Saved rule versions and
+                         cached live opponent stats remain intact across roster loading.
         engines/lucas-grey/ Shared shooting, health tiers, aircraft damage, run-scoped state
                          and panel factory. Per-book definitions own encounter thresholds;
                          saved fights retain their original encounter and rule revision.
@@ -234,6 +243,8 @@ gamebooks/
                          plus a separate STATUS-driven tank engine. Encounter definitions,
                          equipment effects, run-scoped state and DOM wiring stay at the book boundary.
         engines/starship-traveller/ Pure crew, opposed melee, roll-under blaster and ship rules.
+                         Book adapters supply database companion profiles and encounter exceptions;
+                         saved armour encounters resolve missing route metadata from their source profile.
                          Book definitions supply encounters; panels own DOM and run-scoped state.
         books/728/       Naval combat: declarative ship/artillery tables, pure tactical and
                          boarding resolution, transactional run-scoped state and panel wiring.
@@ -2973,6 +2984,12 @@ Authenticated profiles, public profiles, every user-bearing feed event and group
 The XP mining and Lucky Coin system is displayed as **Rubies**, with red icons. Its storage, API routes, profile keys, notification types and JavaScript exports retain their legacy `diamond` identifiers for compatibility. Completion rewards are displayed as **Diamonds**, with teal icons, while retaining legacy `ruby` identifiers. Balances, shared supply, rewards and request IDs stay with their systems. User-facing labels, icons, floaties, notifications and admin statistics resolve to the new names.
 
 Rubies now buy and sell for the player’s current level in GC. The digging upgrade remains; the sell-rate upgrade is retired and rejected by the server. `server/db/gem-rebrand.js` runs one atomic, idempotent settlement: refund the triangular cost of remaining exchange upgrades, verify each historical XP-gem sale against the last recorded level-up at that time, and deduct its old upgrade premium. Original exchange records and request retry results are preserved; `currency_sale_adjustments` records the per-sale correction and `coin_events` records refunds and deductions separately. Missing or inconsistent historical evidence aborts the entire migration. Both affected players receive an explanatory notification. Completion-gem trades need no rate adjustment.
+
+### Job Level and ruby digging
+
+Job Level promotions are stored separately in `job_level_events`, atomically with Job XP, without generating extra XP or coins. The activity feed includes them under Achievements and receives live SSE invalidation; feed privacy settings apply. Existing levels remain visible in admin user lists and details, without inventing historical promotion dates.
+
+Ruby digging uses Job Level for both the automatic bonus and the maximum number of purchased bonuses. Each contributes 0.1% per level or purchase. Purchase number `n` costs `10*n` GC; admin refunds use the same prices. Job XP counts non-heartbeat XP events using the normal triangular 1,000-point level thresholds, with a cap of `floor(user_count/10)` and a buffer ending one point below the next level. Existing levels survive a falling cap. Job XP and player mining advance in one SQLite trigger, so an event reaching a new Job Level uses that level's digging bonus without depending on trigger order. Mining keeps its existing integer carry and changes only future progress. Normal XP continues to determine ruby exchange rates. `job_digging_refunds` records the one-time reimbursement of the original digging upgrade costs; its migration marker prevents another refund or reset of subsequent purchases.
 
 ### Derived opponent values
 

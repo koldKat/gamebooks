@@ -1,35 +1,28 @@
 import { legendaryDie, legendaryInteger } from './character.js';
 import { CROWN_FIGHTS } from './crown.js';
 
-const conditions = [
-  ['ogreVisits','number',[738]],['vesselType','vessel',[1193]],
-  ['trappedHero','hero',[1146]],['entryDamageHero','hero',[256]],
-  ['rooftopAssassin','hero',[240]],['controlledMember','hero',[399]],
-  ['pitVictim','hero',[762]],['freeHero','hero',[621]],['frozenHero','hero',[1175]],
-  ['abbessSlain','check',[469]],['goddessCaress','check',[399]],['titanEyesHit','check',[318]],
-  ['wizardWounded','check',[543]],['skipFirstEnemyTurn','check',[932]],['spareBryce','check',[954]],
-  ['entryDamageAlreadyApplied','check',[256,931,1072,762]],['boyFreed','outcome',[1185]],
-  ['guardApproach','approach',[94]],['assassinationSuccesses','number',[94]],
-  ['defeatedEnemies','opponents',[136,911]],
-];
-const armourSections = [82,370,1175,1191];
+import { CROWN_SETTINGS } from './crown-roster.js';
+
+const conditions = () => CROWN_SETTINGS.conditions;
+const armourSections = () => CROWN_SETTINGS.armourSections;
+const guardCount = () => CROWN_FIGHTS.find(fight=>fight.section===CROWN_SETTINGS.sections.guards).enemies.length;
 const troopTypes = ['infantry','cavalry','missile','longbow'];
 const garrisons = ['beverstone','fosterly','brightsands','highpoint'];
 
 export function mountCrownSetup(api) {
   const {document,ID,el,tk,button,check,field,select,options,render,data} = api;
   const host = document.createElement('div');host.id = ID+'-crownSetup';
-  host.innerHTML = conditions.map(([key,type]) => {
+  host.innerHTML = conditions().map(([key,type]) => {
     if (type === 'check') return check(key);
     if (type === 'number') return field(key);
-    const rows = type === 'vessel' ? [['cog',tk('cog')],['carrack',tk('carrack')]] :
+    const rows = type === 'vessel' ? Object.keys(CROWN_SETTINGS.pirates.wins).map(key=>[key,tk(key)]) :
       type === 'outcome' ? [['',tk('chooseOutcome')],['true',tk('success')],['false',tk('failure')]] :
-      type === 'approach' ? ['ordinary','walls','basement','assassination'].map(value => [value,tk('approach.'+value)]) : [];
+      type === 'approach' ? CROWN_SETTINGS.guards.approaches.map(value => [value,tk('approach.'+value)]) : [];
     return select(key,rows);
   }).join('')+
     `<div id="${ID}-arrivalOrder">`+
     Array.from({length:4},(_,index) => select('heroArrival-'+index)).join('')+
-    Array.from({length:6},(_,index) => select('guardArrival-'+index)).join('')+'</div>'+
+    Array.from({length:guardCount()},(_,index) => select('guardArrival-'+index)).join('')+'</div>'+
     `<div id="${ID}-heroConditions">`+Array.from({length:4},(_,index) =>
       `<fieldset id="${ID}-heroConditions-${index}"><legend id="${ID}-conditionName-${index}"></legend>`+
       field('grappleRoll-'+index,1,1,6)+
@@ -63,33 +56,33 @@ export function mountCrownSetup(api) {
     render(game) {
       const section = Number(el('context').value),active = game.fight?.status === 'active';
       const heroes = game.party.flatMap((hero,index) => hero.health > 0 ? [[index,hero.name]] : []);
-      for (const [key,type,sections] of conditions) {
+      for (const [key,type,sections] of conditions()) {
         show(key,sections.includes(section));
         if (type === 'hero') options(key,[['',tk('none')],...heroes]);
       }
       const encounter = CROWN_FIGHTS.find(fight => fight.section === section);
-      options('defeatedEnemies',(encounter?.enemies ?? []).filter(enemy => section !== 136 ||
-        ['Sir Walter','Sar Lidia'].includes(enemy.name)).map(enemy => [enemy.name,enemy.name]));
-      const walls = section === 94 && el('guardApproach').value === 'walls';
+      options('defeatedEnemies',(encounter?.enemies ?? []).filter(enemy => section !== CROWN_SETTINGS.sections.priorDuel ||
+        CROWN_SETTINGS.defeated.restrictedNames.includes(enemy.name)).map(enemy => [enemy.name,enemy.name]));
+      const walls = section === CROWN_SETTINGS.sections.guards && el('guardApproach').value === 'walls';
       el('arrivalOrder').hidden = !walls;
       for (let index=0;index<4;index++) {
         options('heroArrival-'+index,[['',tk('none')],...heroes]);
         el('heroArrival-'+index).closest('label').hidden = index >= heroes.length;
       }
-      for (let index=0;index<6;index++) options('guardArrival-'+index,
-        section === 94 ? encounter.enemies.map(enemy => [enemy.name,enemy.name]) : []);
-      if (section === 94 && lastGuardSection !== 94)
+      for (let index=0;index<guardCount();index++) options('guardArrival-'+index,
+        section === CROWN_SETTINGS.sections.guards ? encounter.enemies.map(enemy => [enemy.name,enemy.name]) : []);
+      if (section === CROWN_SETTINGS.sections.guards && lastGuardSection !== CROWN_SETTINGS.sections.guards)
         encounter.enemies.forEach((enemy,index) => {el('guardArrival-'+index).value = enemy.name;});
       lastGuardSection = section;
-      const heroConditions = section === 621 || section === 695 || armourSections.includes(section);
+      const heroConditions = section === CROWN_SETTINGS.sections.grapple || section === CROWN_SETTINGS.sections.walkway || armourSections().includes(section);
       el('heroConditions').hidden = !heroConditions;
-      el('rollGrapple').hidden = section !== 621;
+      el('rollGrapple').hidden = section !== CROWN_SETTINGS.sections.grapple;
       for (let index=0;index<4;index++) {
         const hero = game.party[index];
         el('heroConditions-'+index).hidden = !hero;
         el('conditionName-'+index).textContent = hero?.name ?? '';
-        show('grappleRoll-'+index,section === 621);show('heroZone-'+index,section === 695);
-        for (const part of ['body','shield','magic']) show('armour-'+index+'-'+part,armourSections.includes(section));
+        show('grappleRoll-'+index,section === CROWN_SETTINGS.sections.grapple);show('heroZone-'+index,section === CROWN_SETTINGS.sections.walkway);
+        for (const part of ['body','shield','magic']) show('armour-'+index+'-'+part,armourSections().includes(section));
         if (!hero) continue;
         const extras = 'heroExtra-'+index+'-';
         if (!el(extras+'magicalWeapon')) {
@@ -125,7 +118,7 @@ export function mountCrownSetup(api) {
 
 export function readCrownPersonalOptions({game,el,number,selectedIndices}) {
   const section = number('context'),result = {silver:game.silver};
-  for (const [key,type,sections] of conditions) if (sections.includes(section)) {
+  for (const [key,type,sections] of conditions()) if (sections.includes(section)) {
     if (type === 'check') result[key] = el(key).checked;
     else if (type === 'number') result[key] = number(key);
     else if (type === 'hero') result[key] = el(key).value === '' ? undefined : number(key);
@@ -133,20 +126,20 @@ export function readCrownPersonalOptions({game,el,number,selectedIndices}) {
     else if (type === 'outcome') result[key] = el(key).value === '' ? undefined : el(key).value === 'true';
     else result[key] = el(key).value;
   }
-  if (section === 1175 && result.frozenHero !== undefined) {
+  if (section === CROWN_SETTINGS.sections.frozen && result.frozenHero !== undefined) {
     const selected = selectedIndices('members');
     result.participants = (selected.length ? selected : game.party.flatMap((hero,index) => hero.health > 0 ? [index] : []))
       .filter(index => index !== result.frozenHero);
   }
-  if (armourSections.includes(section)) result.armourParts = Object.fromEntries(game.party.map((_,index) =>
+  if (armourSections().includes(section)) result.armourParts = Object.fromEntries(game.party.map((_,index) =>
     [index,Object.fromEntries(['body','shield','magic'].map(part => [part,number('armour-'+index+'-'+part)]))]));
-  if (section === 621) result.grappleRolls = game.party.map((_,index) => number('grappleRoll-'+index));
-  if (section === 695) result.heroZones = game.party.map((_,index) => el('heroZone-'+index).value);
-  if (section === 94 && result.guardApproach === 'walls') {
+  if (section === CROWN_SETTINGS.sections.grapple) result.grappleRolls = game.party.map((_,index) => number('grappleRoll-'+index));
+  if (section === CROWN_SETTINGS.sections.walkway) result.heroZones = game.party.map((_,index) => el('heroZone-'+index).value);
+  if (section === CROWN_SETTINGS.sections.guards && result.guardApproach === 'walls') {
     const selected = selectedIndices('members');
     const count = selected.length || game.party.filter(hero => hero.health > 0).length;
     result.heroArrivalOrder = Array.from({length:count},(_,index) => number('heroArrival-'+index));
-    result.guardArrivalOrder = Array.from({length:6},(_,index) => el('guardArrival-'+index).value);
+    result.guardArrivalOrder = Array.from({length:guardCount()},(_,index) => el('guardArrival-'+index).value);
   }
   return result;
 }

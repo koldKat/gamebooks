@@ -180,6 +180,7 @@ function _renderXpSummary(prefix, data) {
 }
 
 export function renderBooksXpSummary(data, opts = {}) {
+  renderJobXpSummary(data);
   updateDiamondsDisplay(getToken() ? data?.diamondsBalance : null, data);
   updateRubiesDisplay(getToken() ? data?.rubiesBalance : null, data);
   const xp = Math.floor(Number(data?.xp) || 0);
@@ -190,6 +191,29 @@ export function renderBooksXpSummary(data, opts = {}) {
   if (profileHeartbeat) profileHeartbeat.textContent = _hbRateText(data?.bonusHeartbeatXp || 0, data?.bonusHeartbeatXpFree || 0);
   const profileBoost = document.getElementById('profile-xp-boost-earned');
   if (profileBoost) profileBoost.innerHTML = _xpBoostHtml(Number(data?.xpBoostPct) || 0, Math.floor(Number(data?.xpFromBoost) || 0));
+}
+
+// Separate progression: one point per recorded non-heartbeat event, without XP boosts.
+export function renderJobXpSummary(data) {
+  const visible = !!getToken() && Number.isSafeInteger(data?.jobXp);
+  const xp = visible ? Math.max(0, data.jobXp) : 0;
+  const level = Math.floor((-1 + Math.sqrt(1 + 8 * xp / 1000)) / 2);
+  const { levelXp, nextLevelXp } = _xpLevelBounds(xp);
+  for (const prefix of ['books', 'play']) {
+    const wrap = document.getElementById(`${prefix}-job-xp`);
+    if (!wrap) continue;
+    wrap.hidden = !visible;
+    wrap.title = visible ? `Job level cap: ${data.jobLevelCap ?? 0}` : '';
+    const fill = document.getElementById(`${prefix}-job-xp-fill`);
+    if (fill) fill.style.width = `${100 * (xp - levelXp) / (nextLevelXp - levelXp)}%`;
+    const levelEl = document.getElementById(`${prefix}-job-xp-level`);
+    if (levelEl) levelEl.textContent = visible ? `Job Lvl ${level}` : '';
+    const titleEl = document.getElementById(`${prefix}-job-xp-title`);
+    if (titleEl) titleEl.textContent = visible ? t('job.title.' + Math.min(level, 20)) : '';
+    const label = document.getElementById(`${prefix}-job-xp-label`);
+    if (label) label.textContent = visible ? `${xp.toLocaleString()} XP · ${(nextLevelXp - xp).toLocaleString()} to next LVL` : '';
+    wrap.setAttribute('aria-label', visible ? `Job XP: level ${level}, ${xp} of ${nextLevelXp}` : 'Job XP');
+  }
 }
 
 function renderXpBlock(data) {

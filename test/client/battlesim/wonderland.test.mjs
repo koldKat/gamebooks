@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { wonderlandDraw, wonderlandTest, createWonderlandCharacter } from '../../../public/js/battlesim/engines/wonderland/random.js';
 import { startWonderlandFight, wonderlandRound, resolveWonderlandInitiative } from '../../../public/js/battlesim/engines/wonderland/core.js';
-import { WONDERLAND_ENCOUNTERS } from '../../../public/js/battlesim/engines/wonderland/roster.js';
+import { WONDERLAND_ENCOUNTERS, WONDERLAND_RULES, isWonderlandTeapot } from '../../../public/js/battlesim/engines/wonderland/roster.js';
 
 const rolls = (...values) => () => { assert.ok(values.length, 'Unexpected roll'); return values.shift(); };
 const cards = (...indices) => () => { assert.ok(indices.length, 'Unexpected draw'); return (indices.shift() + .1) / 52; };
@@ -12,6 +12,22 @@ const player = { combat: 8, endurance: 20 };
 const enemy = { name: 'Opponent', combat: 8, endurance: 12 };
 const encounter = (extra = {}) => ({ section: 1, initiative: 'none', enemies: [enemy], ...extra });
 const start = (extra = {}, options = {}, actor = player) => startWonderlandFight(actor, encounter(extra), options);
+
+test('Wonderland gardener, scales and strict scene settings follow metadata',()=>{
+  const saved=structuredClone(WONDERLAND_RULES);
+  try{
+    WONDERLAND_RULES.gardeners={active:1,defeated:1};
+    const garden=start({gardeners:true,enemies:[{...enemy,endurance:1},{...enemy},{...enemy}]});assert.deepEqual(garden.active,[0]);
+    const win=wonderlandRound(garden,{roll:rolls(6,6,1,1)}).fight;assert.equal(win.status,'win');assert.equal(win.defeated,1);
+    WONDERLAND_RULES.ironScalesDamage=1;const scales=start({ironScales:true},{weapon:'vorpal'});assert.equal(wonderlandRound(scales,{roll:rolls(6,6,1,1)}).results[0].enemyLoss,1);
+    WONDERLAND_RULES.teapotSection=900;assert.equal(isWonderlandTeapot(900),true);assert.equal(isWonderlandTeapot('900'),false);
+  }finally{Object.assign(WONDERLAND_RULES,saved);}
+});
+test('Wonderland saved gardener progress and fractional wounds are not reconstructed',()=>{
+  const f=startWonderlandFight(player,WONDERLAND_ENCOUNTERS.find(s=>s.section===26));f.defeated=1;f.active=[1,2];f.waiting=3;f.enemies[0].endurance=0;f.enemies[1].endurance=.5;f.enemies[2].endurance=9.5;f.extension={keep:true};
+  const old=JSON.parse(JSON.stringify(f));const result=wonderlandRound(old,{roll:rolls(6,6,1,1,1,1)}).fight;
+  assert.equal(result.status,'win');assert.equal(result.defeated,2);assert.equal(result.enemies[2].endurance,7.5);assert.deepEqual(result.extension,{keep:true});assert.equal(old.enemies[1].endurance,.5);
+});
 
 test('initial attributes allocate all ten points, at most five to each', () => {
   assert.deepEqual(createWonderlandCharacter({ agility: 2, logic: 4, combat: 2, endurance: 2 }),

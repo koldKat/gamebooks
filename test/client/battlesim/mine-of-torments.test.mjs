@@ -191,3 +191,37 @@ test('pending rounds are stable and invalid Fortune choices do not mutate them',
   assert.throws(() => settleMineRound(f, { defensePoints: -1 })); assert.equal(f.pending, pending);
   assert.throws(() => createMineFight(72, player({ vitality: 0 })));
 });
+
+test('renamed metadata controls Phantom embrace and Troll double-hit values', () => {
+  const original = structuredClone(MINE_ENCOUNTERS);
+  try {
+    const phantom = MINE_ENCOUNTERS.find(e => e.mode === 'phantom');
+    phantom.section = 900;
+    phantom.npcRules = { embraceDamage: 5, embraceFortune: 2, embraceExpertiseLoss: 3 };
+    const f = createMineFight(900, player({ expertise: 0 }));
+    const p = rollMineRound(f, 0, coins(0, 0, 0));
+    assert.equal(p.enemyDamage, 5); assert.equal(p.mandatoryFortune, 2);
+    settleMineRound(f);
+    assert.deepEqual(f.player, player({ expertise: -3, vitality: 15, fortune: 8 }));
+    const troll = MINE_ENCOUNTERS.find(e => e.mode === 'troll');
+    troll.section = 901; troll.npcRules = { doubleHitDamage: 7 };
+    assert.equal(rollMineRound(createMineFight(901, player({ expertise: 0 })), 0, coins(0, 0, 0)).enemyDamage, 7);
+  } finally { MINE_ENCOUNTERS.splice(0, MINE_ENCOUNTERS.length, ...original); }
+});
+
+test('old saved Phantom pending results and existing metadata stay captured', () => {
+  const f = createMineFight(69, player({ expertise: 0 }));
+  delete f.encounter.npcRules;
+  rollMineRound(f, 0, coins(0, 0, 0));
+  f.pending.selection = { defensePoints: 2 };
+  const restored = JSON.parse(JSON.stringify(f)), before = structuredClone(restored);
+  assert.equal(rollMineRound(restored), null); assert.deepEqual(restored, before);
+  settleMineRound(restored, restored.pending.selection);
+  assert.deepEqual(restored.player, player({ expertise: -1, vitality: 14, fortune: 4 }));
+  assert.equal(restored.encounter.npcRules, undefined);
+
+  const captured = createMineFight(69, player({ expertise: 0 }));
+  captured.encounter.npcRules.embraceExpertiseLoss = 2;
+  rollMineRound(captured, 0, coins(0, 0, 0)); settleMineRound(captured);
+  assert.equal(captured.player.expertise, -2);
+});

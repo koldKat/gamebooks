@@ -43,7 +43,7 @@ function _allEnemiesDown(d) {
 }
 
 function _runRound() {
-  const { SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _allEnemiesDown, _appendLog, _data, _effectiveSkill, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll1d6, _roll2d6, _sideEnemyNameSafe, saveState, t } = getContext();
+  const { SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, VAMPIRE_RULES, _allEnemiesDown, _appendLog, _data, _effectiveSkill, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll1d6, _roll2d6, _sideEnemyNameSafe, saveState, t } = getContext();
 
   const d = _data();
   if (!d || _notReady(d) || d.player.stamina <= 0 || _allEnemiesDown(d) || d.pendingLuckQueue.length) return;
@@ -51,13 +51,15 @@ function _runRound() {
 
   const woundDmg = Math.max(1, d.player.enemyWoundDamage || 2);
   const playerAS = _roll2d6() + _effectiveSkill(d) + (d.player.attackModifier || 0);
-  const enemyAS  = _roll2d6() + d.enemy.skill;
+  const mainAlive = d.enemy.stamina > 0;
+  const enemyAS = mainAlive ? _roll2d6() + d.enemy.skill : -Infinity;
 
   if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.sideEnemy.stamina > 0) {
     // Three-way roll-off (sec 121/237/295): one shared swing, whoever rolls
     // highest of the three lands the only blow this round.
     const sideAS = _roll2d6() + d.sideEnemy.skill;
-    _appendLog(d, t('battlesim234.log.threeway_round', { playerAS, enemy: _enemyNameSafe(d), enemyAS, side: _sideEnemyNameSafe(d), sideAS }));
+    if (mainAlive) _appendLog(d, t('battlesim234.log.threeway_round', { playerAS, enemy: _enemyNameSafe(d), enemyAS, side: _sideEnemyNameSafe(d), sideAS }));
+    else _appendLog(d, t('battlesim234.log.round', { round: d.roundsThisBattle, playerAS, enemy: _sideEnemyNameSafe(d), enemyAS: sideAS }));
     const top = Math.max(playerAS, enemyAS, sideAS);
     const tiedForTop = [playerAS, enemyAS, sideAS].filter(v => v === top).length > 1;
     if (tiedForTop) {
@@ -65,7 +67,7 @@ function _runRound() {
     } else if (playerAS === top) {
       // Hit the main target while it shields the side target; random-target encounters may redirect a blow.
       let hitSide = d.enemy.stamina <= 0;
-      if (!hitSide && d.randomTarget && d.enemy.stamina > 0) hitSide = _roll1d6() >= 4;
+      if (!hitSide && d.randomTarget && d.enemy.stamina > 0) hitSide = _roll1d6() >= VAMPIRE_RULES.randomTargetSideMin;
       if (hitSide) {
         d.sideEnemy.stamina = Math.max(0, d.sideEnemy.stamina - 2);
         _appendLog(d, t('battlesim234.log.you_wound', { enemy: _sideEnemyNameSafe(d), n: 2, stamina: d.sideEnemy.stamina, staminaMax: d.sideEnemy.staminaMax }));
@@ -73,7 +75,7 @@ function _runRound() {
         d.enemy.stamina = Math.max(0, d.enemy.stamina - 2);
         _appendLog(d, t('battlesim234.log.you_wound', { enemy: _enemyNameSafe(d), n: 2, stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
       }
-      if (d.enemy.stamina > 0 || d.sideEnemy.stamina > 0) d.pendingLuckQueue.push({ kind: 'player-hit', hitSide });
+      if ((hitSide ? d.sideEnemy : d.enemy).stamina > 0) d.pendingLuckQueue.push({ kind: 'player-hit', hitSide });
     } else if (enemyAS === top) {
       d.player.stamina = Math.max(0, d.player.stamina - woundDmg);
       _appendLog(d, t('battlesim234.log.enemy_wounds', { enemy: _enemyNameSafe(d), n: woundDmg, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
@@ -98,11 +100,11 @@ function _runRound() {
     }
   }
 
-  // Continuous drain is either a 1-3-on-1d6 hit or an unconditional fixed loss.
+  // Drain resolves independently after the ordinary exchange.
   if (d.player.drainEffect && d.player.stamina > 0) {
     const roll = _roll1d6();
-    if (roll <= 3) {
-      d.player.stamina = Math.max(0, d.player.stamina - 1);
+    if (roll <= VAMPIRE_RULES.drainHitMax) {
+      d.player.stamina = Math.max(0, d.player.stamina - VAMPIRE_RULES.drainDamage);
       _appendLog(d, t('battlesim234.log.drain_hit', { roll, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
       if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'drain-hit' });
     } else {
@@ -110,13 +112,13 @@ function _runRound() {
     }
   }
 
-  if (_allEnemiesDown(d)) {
-    _appendLog(d, t('battlesim234.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
-    _recordOutcome(d, 'win');
-  } else if (d.player.stamina <= 0) {
+  if (d.player.stamina <= 0) {
     _appendLog(d, t('battlesim234.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
     d.pendingLuckQueue = [];
+  } else if (_allEnemiesDown(d)) {
+    _appendLog(d, t('battlesim234.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
+    _recordOutcome(d, 'win');
   }
 
   saveState();
@@ -127,7 +129,15 @@ function _testLuck() {
   const { SVG_SKULL, SVG_TROPHY, _allEnemiesDown, _appendLog, _data, _enemyNameSafe, _recordOutcome, _renderAll, _roll2d6, _sideEnemyNameSafe, saveState, t } = getContext();
 
   const d = _data();
-  if (!d || !d.pendingLuckQueue.length || d.player.luck <= 0) return;
+  if (!d || !d.pendingLuckQueue.length) return;
+  const pending = d.pendingLuckQueue[0];
+  if (pending.kind === 'player-hit' && (pending.hitSide ? d.sideEnemy : d.enemy).stamina <= 0) {
+    d.pendingLuckQueue.shift();
+    saveState();
+    _renderAll();
+    return;
+  }
+  if (d.player.luck <= 0) return;
   const event = d.pendingLuckQueue.shift();
   const roll  = _roll2d6();
   const lucky = roll <= d.player.luck;

@@ -159,6 +159,7 @@ db.exec(`
 `);
 
 require('./db/diamonds').initializeDiamondBalances(db);
+require('./db/job-xp').initializeJobXp(db);
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS coin_events (
@@ -852,7 +853,7 @@ const {
   getXpAmount, getXpConfig, setXpAmount,
   TITLES, computeLevel, xpForLevel, getTitleForLevel,
   setXpFeedHook, setAppXpHook,
-  awardCoins, awardXp, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc,
+  awardCoins, awardXp, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc, coinBalance,
   getBookCreator, getBookIdentifiers,
   _discoveredSet, _visitedSet, _permanentVisitedCount,
   _checkGroupMilestone, _checkGroupWonAll, processStateXp,
@@ -1003,4 +1004,5 @@ module.exports = {
 require('./db/rubies').initializeRubies(db);
 require('./db/gem-notifications').initializeGemNotifications(db);
 require('./db/gem-rebrand').retireExchangeUpgrade(db);
+require('./db/job-digging').migrateJobDigging(db, coinBalance);
 require('./db/rubies').backfillRubies(db);

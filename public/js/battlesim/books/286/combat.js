@@ -348,7 +348,7 @@ function _sleepAttempt() {
 }
 
 function _resolveDream(d, n) {
-  const { SVG_SKULL, SVG_TROPHY, _appendLog, _recordOutcome, _roll1d6, _roll2d6, t } = getContext();
+  const { DREAM_ENCOUNTERS, SVG_SKULL, SVG_TROPHY, _appendLog, _recordOutcome, _roll1d6, _roll2d6, t } = getContext();
 
   const sleepLife = d.player.life; // life at the moment of falling asleep
   switch (n) {
@@ -383,21 +383,23 @@ function _resolveDream(d, n) {
       break;
     }
     case 6: {
+      const encounter = DREAM_ENCOUNTERS[n];
       const netRoll = _roll2d6();
-      if (netRoll >= 7) {
+      if (netRoll >= encounter.netCatchAt) {
         _appendLog(d, t('battlesim286.dream6.net_catch', { roll: netRoll }));
         break;
       }
       _appendLog(d, t('battlesim286.dream6.net_miss', { roll: netRoll }));
-      let lionHp = 20;
+      let lionHp = encounter.opponent.hp;
       while (lionHp > 0 && d.player.life > 0) {
         const pr = _roll2d6();
-        const pd = pr > 5 ? pr - 5 : 0;
+        const pd = pr > encounter.player.minHit ? pr - encounter.player.minHit : 0;
         lionHp = Math.max(0, lionHp - pd);
         _appendLog(d, pd > 0 ? t('battlesim286.dream6.player_hit', { roll: pr, dmg: pd, lionHp }) : t('battlesim286.dream6.player_miss', { roll: pr }));
         if (lionHp <= 0) break;
         const er = _roll2d6();
-        const ed = er > 6 ? Math.max(0, (er - 6) - 1) : 0;
+        const ed = er > encounter.opponent.minHit
+          ? Math.max(0, er - encounter.opponent.minHit - encounter.player.damageReduction) : 0;
         d.player.life = Math.max(0, d.player.life - ed);
         _appendLog(d, ed > 0 ? t('battlesim286.dream6.lion_hit', { roll: er, dmg: ed, life: d.player.life, lifeMax: d.player.lifeMax }) : t('battlesim286.dream6.lion_miss', { roll: er }));
       }
@@ -427,7 +429,7 @@ function _resolveDream(d, n) {
     }
     case 10: {
       _appendLog(d, t('battlesim286.dream10.intro'));
-      for (let i = 1; i <= 4 && d.player.life > 0; i++) {
+      for (let i = 1; i <= DREAM_ENCOUNTERS[n].opponentCount && d.player.life > 0; i++) {
         const pr = _roll1d6(), gr = _roll1d6();
         if (pr > gr) {
           const gain = pr - gr;

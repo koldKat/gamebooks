@@ -29,7 +29,7 @@ function _resetEncounterKnobs(d) {
 }
 
 function _runRound() {
-  const { ELECTRIC_SHOCK_DMG, FIRE_BREATH_DMG, SVG_SKULL, SVG_TROPHY, WOUND_DAMAGE, _appendLog, _data, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll1d6, _roll2d6, _sideEnemyNameSafe, saveState, t } = getContext();
+  const { TEMPLE_RULES, ELECTRIC_SHOCK_DMG, FIRE_BREATH_DMG, SVG_SKULL, SVG_TROPHY, WOUND_DAMAGE, _appendLog, _data, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll1d6, _roll2d6, _sideEnemyNameSafe, saveState, t } = getContext();
 
   const d = _data();
   if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
@@ -69,7 +69,7 @@ function _runRound() {
   // Fiend breath: each round, 1-2 on 1d6 costs 1 Luck-eligible STAMINA (sec 216).
   if (d.player.fireBreath && d.player.stamina > 0) {
     const fireRoll = _roll1d6();
-    if (fireRoll <= 2) {
+    if (fireRoll <= TEMPLE_RULES.fireHitMax) {
       d.player.stamina = Math.max(0, d.player.stamina - FIRE_BREATH_DMG);
       _appendLog(d, t('battlesim210.log.fire_hit', { roll: fireRoll, n: FIRE_BREATH_DMG, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
       if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'fire-hit' });
@@ -81,7 +81,7 @@ function _runRound() {
   // After a Firefly win (sec 339), 1d6 on 1-3 deals 2 extra, Luck-eligible STAMINA damage.
   if (d.player.electricShock && enemyWonExchange && d.player.stamina > 0) {
     const shockRoll = _roll1d6();
-    if (shockRoll <= 3) {
+    if (shockRoll <= TEMPLE_RULES.shockHitMax) {
       d.player.stamina = Math.max(0, d.player.stamina - ELECTRIC_SHOCK_DMG);
       _appendLog(d, t('battlesim210.log.shock_hit', { roll: shockRoll, n: ELECTRIC_SHOCK_DMG, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
       if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'shock-hit' });

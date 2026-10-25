@@ -49,6 +49,14 @@ function _renderStatus() {
   document.getElementById('sim212-staff-row').style.display  = d.mode === 'person' ? '' : 'none';
 }
 
+function _historyEnemyLabel(name) {
+  for (const [, key] of MODES) {
+    const suffix = ` (${key})`;
+    if (name.endsWith(suffix)) return name.slice(0, -suffix.length) + ` (${t(key)})`;
+  }
+  return name;
+}
+
 function _renderHistory() {
   const d      = _data();
   const sumEl  = document.getElementById('sim212-history-summary');
@@ -64,7 +72,7 @@ function _renderHistory() {
     const result = h.outcome === 'win' ? t('battlesim212.history.won') : t('battlesim212.history.lost');
     const date   = new Date(h.ts).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
     return `<div class="bsim-history-row">
-      <span>${icon} ${escapeHtml(h.enemy)} - ${result}</span>
+      <span>${icon} ${escapeHtml(_historyEnemyLabel(h.enemy))} - ${result}</span>
       <span class="bsim-history-meta">${h.statLabel} ${h.statValue}/${h.statMax} · ${date}</span>
     </div>`;
   }).join('');

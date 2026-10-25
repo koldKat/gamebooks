@@ -1,0 +1,1817 @@
+{
+  "schemaVersion": 1,
+  "bookId": 439,
+  "family": "lone-wolf",
+  "source": "Complete Grey Star section rules: nine Neijjin profiles and sequence identity, skill/weapon modifiers, mental combat, delayed escape, soul drain, willpower outcomes, victory routes and deadlines. Original thirty-four enemy IDs and legacy stats preserved.",
+  "enemies": [
+    {
+      "key": "section:99:0",
+      "name": "Шадакински воини с арбалети §99",
+      "attack": 25,
+      "defense": 0,
+      "hp": 32,
+      "pb": 0,
+      "adopt": {
+        "name": "Шадакински воини с арбалети §99",
+        "attack": 25,
+        "defense": 0,
+        "hp": 32,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 99,
+          "rules": {
+            "victoryRoutes": [
+              88,
+              94
+            ],
+            "skillBonus": 4
+          }
+        },
+        "part": {
+          "name": "Шадакински воини с арбалети §99",
+          "attack": 25,
+          "defense": 0,
+          "hp": 32,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:101:0",
+      "name": "Нейджин 1 §101",
+      "attack": 10,
+      "defense": 0,
+      "hp": 10,
+      "pb": 0,
+      "adopt": {
+        "name": "Нейджин 1 §101",
+        "attack": 10,
+        "defense": 0,
+        "hp": 10,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 9,
+        "entry": {
+          "section": 101,
+          "rules": {
+            "victoryRoutes": [
+              130
+            ],
+            "deadline": [
+              5,
+              130
+            ],
+            "sequence": {
+              "profiles": [
+                [
+                  10,
+                  10
+                ],
+                [
+                  9,
+                  10
+                ],
+                [
+                  10,
+                  10
+                ],
+                [
+                  7,
+                  9
+                ],
+                [
+                  8,
+                  10
+                ],
+                [
+                  10,
+                  12
+                ],
+                [
+                  9,
+                  9
+                ],
+                [
+                  11,
+                  9
+                ],
+                [
+                  10,
+                  9
+                ]
+              ],
+              "namePattern": "Нейджин\\s+(\\d+)",
+              "nameKey": "battlesim439.ui.neijjin"
+            },
+            "spareWeaponBonus": 2
+          }
+        },
+        "part": {
+          "name": "Нейджин 1 §101",
+          "attack": 10,
+          "defense": 0,
+          "hp": 10,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:101:1",
+      "name": "Нейджин 2 §101",
+      "attack": 9,
+      "defense": 0,
+      "hp": 10,
+      "pb": 0,
+      "adopt": {
+        "name": "Нейджин 2 §101",
+        "attack": 9,
+        "defense": 0,
+        "hp": 10,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 1,
+        "slot": 1,
+        "partCount": 9,
+        "entry": {
+          "section": 101,
+          "rules": {
+            "victoryRoutes": [
+              130
+            ],
+            "deadline": [
+              5,
+              130
+            ],
+            "sequence": {
+              "profiles": [
+                [
+                  10,
+                  10
+                ],
+                [
+                  9,
+                  10
+                ],
+                [
+                  10,
+                  10
+                ],
+                [
+                  7,
+                  9
+                ],
+                [
+                  8,
+                  10
+                ],
+                [
+                  10,
+                  12
+                ],
+                [
+                  9,
+                  9
+                ],
+                [
+                  11,
+                  9
+                ],
+                [
+                  10,
+                  9
+                ]
+              ],
+              "namePattern": "Нейджин\\s+(\\d+)",
+              "nameKey": "battlesim439.ui.neijjin"
+            },
+            "spareWeaponBonus": 2
+          }
+        },
+        "part": {
+          "name": "Нейджин 2 §101",
+          "attack": 9,
+          "defense": 0,
+          "hp": 10,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:101:2",
+      "name": "Нейджин 3 §101",
+      "attack": 10,
+      "defense": 0,
+      "hp": 10,
+      "pb": 0,
+      "adopt": {
+        "name": "Нейджин 3 §101",
+        "attack": 10,
+        "defense": 0,
+        "hp": 10,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 1,
+        "slot": 2,
+        "partCount": 9,
+        "entry": {
+          "section": 101,
+          "rules": {
+            "victoryRoutes": [
+              130
+            ],
+            "deadline": [
+              5,
+              130
+            ],
+            "sequence": {
+              "profiles": [
+                [
+                  10,
+                  10
+                ],
+                [
+                  9,
+                  10
+                ],
+                [
+                  10,
+                  10
+                ],
+                [
+                  7,
+                  9
+                ],
+                [
+                  8,
+                  10
+                ],
+                [
+                  10,
+                  12
+                ],
+                [
+                  9,
+                  9
+                ],
+                [
+                  11,
+                  9
+                ],
+                [
+                  10,
+                  9
+                ]
+              ],
+              "namePattern": "Нейджин\\s+(\\d+)",
+              "nameKey": "battlesim439.ui.neijjin"
+            },
+            "spareWeaponBonus": 2
+          }
+        },
+        "part": {
+          "name": "Нейджин 3 §101",
+          "attack": 10,
+          "defense": 0,
+          "hp": 10,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:101:3",
+      "name": "Нейджин 4 §101",
+      "attack": 7,
+      "defense": 0,
+      "hp": 9,
+      "pb": 0,
+      "adopt": {
+        "name": "Нейджин 4 §101",
+        "attack": 7,
+        "defense": 0,
+        "hp": 9,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 1,
+        "slot": 3,
+        "partCount": 9,
+        "entry": {
+          "section": 101,
+          "rules": {
+            "victoryRoutes": [
+              130
+            ],
+            "deadline": [
+              5,
+              130
+            ],
+            "sequence": {
+              "profiles": [
+                [
+                  10,
+                  10
+                ],
+                [
+                  9,
+                  10
+                ],
+                [
+                  10,
+                  10
+                ],
+                [
+                  7,
+                  9
+                ],
+                [
+                  8,
+                  10
+                ],
+                [
+                  10,
+                  12
+                ],
+                [
+                  9,
+                  9
+                ],
+                [
+                  11,
+                  9
+                ],
+                [
+                  10,
+                  9
+                ]
+              ],
+              "namePattern": "Нейджин\\s+(\\d+)",
+              "nameKey": "battlesim439.ui.neijjin"
+            },
+            "spareWeaponBonus": 2
+          }
+        },
+        "part": {
+          "name": "Нейджин 4 §101",
+          "attack": 7,
+          "defense": 0,
+          "hp": 9,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:101:4",
+      "name": "Нейджин 5 §101",
+      "attack": 8,
+      "defense": 0,
+      "hp": 10,
+      "pb": 0,
+      "adopt": {
+        "name": "Нейджин 5 §101",
+        "attack": 8,
+        "defense": 0,
+        "hp": 10,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 1,
+        "slot": 4,
+        "partCount": 9,
+        "entry": {
+          "section": 101,
+          "rules": {
+            "victoryRoutes": [
+              130
+            ],
+            "deadline": [
+              5,
+              130
+            ],
+            "sequence": {
+              "profiles": [
+                [
+                  10,
+                  10
+                ],
+                [
+                  9,
+                  10
+                ],
+                [
+                  10,
+                  10
+                ],
+                [
+                  7,
+                  9
+                ],
+                [
+                  8,
+                  10
+                ],
+                [
+                  10,
+                  12
+                ],
+                [
+                  9,
+                  9
+                ],
+                [
+                  11,
+                  9
+                ],
+                [
+                  10,
+                  9
+                ]
+              ],
+              "namePattern": "Нейджин\\s+(\\d+)",
+              "nameKey": "battlesim439.ui.neijjin"
+            },
+            "spareWeaponBonus": 2
+          }
+        },
+        "part": {
+          "name": "Нейджин 5 §101",
+          "attack": 8,
+          "defense": 0,
+          "hp": 10,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:101:5",
+      "name": "Нейджин 6 §101",
+      "attack": 10,
+      "defense": 0,
+      "hp": 12,
+      "pb": 0,
+      "adopt": {
+        "name": "Нейджин 6 §101",
+        "attack": 10,
+        "defense": 0,
+        "hp": 12,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 1,
+        "slot": 5,
+        "partCount": 9,
+        "entry": {
+          "section": 101,
+          "rules": {
+            "victoryRoutes": [
+              130
+            ],
+            "deadline": [
+              5,
+              130
+            ],
+            "sequence": {
+              "profiles": [
+                [
+                  10,
+                  10
+                ],
+                [
+                  9,
+                  10
+                ],
+                [
+                  10,
+                  10
+                ],
+                [
+                  7,
+                  9
+                ],
+                [
+                  8,
+                  10
+                ],
+                [
+                  10,
+                  12
+                ],
+                [
+                  9,
+                  9
+                ],
+                [
+                  11,
+                  9
+                ],
+                [
+                  10,
+                  9
+                ]
+              ],
+              "namePattern": "Нейджин\\s+(\\d+)",
+              "nameKey": "battlesim439.ui.neijjin"
+            },
+            "spareWeaponBonus": 2
+          }
+        },
+        "part": {
+          "name": "Нейджин 6 §101",
+          "attack": 10,
+          "defense": 0,
+          "hp": 12,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:101:6",
+      "name": "Нейджин 7 §101",
+      "attack": 9,
+      "defense": 0,
+      "hp": 9,
+      "pb": 0,
+      "adopt": {
+        "name": "Нейджин 7 §101",
+        "attack": 9,
+        "defense": 0,
+        "hp": 9,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 1,
+        "slot": 6,
+        "partCount": 9,
+        "entry": {
+          "section": 101,
+          "rules": {
+            "victoryRoutes": [
+              130
+            ],
+            "deadline": [
+              5,
+              130
+            ],
+            "sequence": {
+              "profiles": [
+                [
+                  10,
+                  10
+                ],
+                [
+                  9,
+                  10
+                ],
+                [
+                  10,
+                  10
+                ],
+                [
+                  7,
+                  9
+                ],
+                [
+                  8,
+                  10
+                ],
+                [
+                  10,
+                  12
+                ],
+                [
+                  9,
+                  9
+                ],
+                [
+                  11,
+                  9
+                ],
+                [
+                  10,
+                  9
+                ]
+              ],
+              "namePattern": "Нейджин\\s+(\\d+)",
+              "nameKey": "battlesim439.ui.neijjin"
+            },
+            "spareWeaponBonus": 2
+          }
+        },
+        "part": {
+          "name": "Нейджин 7 §101",
+          "attack": 9,
+          "defense": 0,
+          "hp": 9,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:101:7",
+      "name": "Нейджин 8 §101",
+      "attack": 11,
+      "defense": 0,
+      "hp": 9,
+      "pb": 0,
+      "adopt": {
+        "name": "Нейджин 8 §101",
+        "attack": 11,
+        "defense": 0,
+        "hp": 9,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 1,
+        "slot": 7,
+        "partCount": 9,
+        "entry": {
+          "section": 101,
+          "rules": {
+            "victoryRoutes": [
+              130
+            ],
+            "deadline": [
+              5,
+              130
+            ],
+            "sequence": {
+              "profiles": [
+                [
+                  10,
+                  10
+                ],
+                [
+                  9,
+                  10
+                ],
+                [
+                  10,
+                  10
+                ],
+                [
+                  7,
+                  9
+                ],
+                [
+                  8,
+                  10
+                ],
+                [
+                  10,
+                  12
+                ],
+                [
+                  9,
+                  9
+                ],
+                [
+                  11,
+                  9
+                ],
+                [
+                  10,
+                  9
+                ]
+              ],
+              "namePattern": "Нейджин\\s+(\\d+)",
+              "nameKey": "battlesim439.ui.neijjin"
+            },
+            "spareWeaponBonus": 2
+          }
+        },
+        "part": {
+          "name": "Нейджин 8 §101",
+          "attack": 11,
+          "defense": 0,
+          "hp": 9,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:101:8",
+      "name": "Нейджин 9 §101",
+      "attack": 10,
+      "defense": 0,
+      "hp": 9,
+      "pb": 0,
+      "adopt": {
+        "name": "Нейджин 9 §101",
+        "attack": 10,
+        "defense": 0,
+        "hp": 9,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 1,
+        "slot": 8,
+        "partCount": 9,
+        "entry": {
+          "section": 101,
+          "rules": {
+            "victoryRoutes": [
+              130
+            ],
+            "deadline": [
+              5,
+              130
+            ],
+            "sequence": {
+              "profiles": [
+                [
+                  10,
+                  10
+                ],
+                [
+                  9,
+                  10
+                ],
+                [
+                  10,
+                  10
+                ],
+                [
+                  7,
+                  9
+                ],
+                [
+                  8,
+                  10
+                ],
+                [
+                  10,
+                  12
+                ],
+                [
+                  9,
+                  9
+                ],
+                [
+                  11,
+                  9
+                ],
+                [
+                  10,
+                  9
+                ]
+              ],
+              "namePattern": "Нейджин\\s+(\\d+)",
+              "nameKey": "battlesim439.ui.neijjin"
+            },
+            "spareWeaponBonus": 2
+          }
+        },
+        "part": {
+          "name": "Нейджин 9 §101",
+          "attack": 10,
+          "defense": 0,
+          "hp": 9,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:117:0",
+      "name": "шадакински воини §117",
+      "attack": 15,
+      "defense": 0,
+      "hp": 25,
+      "pb": 0,
+      "adopt": {
+        "name": "шадакински воини §117",
+        "attack": 15,
+        "defense": 0,
+        "hp": 25,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 117,
+          "rules": {
+            "victoryRoutes": [
+              164
+            ]
+          }
+        },
+        "part": {
+          "name": "шадакински воини §117",
+          "attack": 15,
+          "defense": 0,
+          "hp": 25,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:120:0",
+      "name": "Шадакински заден отряд §120",
+      "attack": 25,
+      "defense": 0,
+      "hp": 30,
+      "pb": 0,
+      "adopt": {
+        "name": "Шадакински заден отряд §120",
+        "attack": 25,
+        "defense": 0,
+        "hp": 30,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 120,
+          "rules": {
+            "victoryRoutes": [
+              189
+            ],
+            "deadline": [
+              3,
+              189
+            ],
+            "skillBonus": 3
+          }
+        },
+        "part": {
+          "name": "Шадакински заден отряд §120",
+          "attack": 25,
+          "defense": 0,
+          "hp": 30,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:133:0",
+      "name": "Главорез §133",
+      "attack": 10,
+      "defense": 0,
+      "hp": 12,
+      "pb": 0,
+      "adopt": {
+        "name": "Главорез §133",
+        "attack": 10,
+        "defense": 0,
+        "hp": 12,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 133,
+          "rules": {
+            "victoryRoutes": [
+              71
+            ],
+            "escape": {
+              "route": 27,
+              "afterRounds": 2
+            }
+          }
+        },
+        "part": {
+          "name": "Главорез §133",
+          "attack": 10,
+          "defense": 0,
+          "hp": 12,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:149:0",
+      "name": "Клеаса §149",
+      "attack": 25,
+      "defense": 0,
+      "hp": 30,
+      "pb": 0,
+      "adopt": {
+        "name": "Клеаса §149",
+        "attack": 25,
+        "defense": 0,
+        "hp": 30,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 149,
+          "rules": {
+            "victoryRoutes": [
+              165
+            ],
+            "deadline": [
+              4,
+              165
+            ],
+            "drain": {
+              "will": 1,
+              "withShield": 1,
+              "withoutShield": 2
+            }
+          }
+        },
+        "part": {
+          "name": "Клеаса §149",
+          "attack": 25,
+          "defense": 0,
+          "hp": 30,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:154:0",
+      "name": "Пещерен мантиз §154",
+      "attack": 15,
+      "defense": 0,
+      "hp": 18,
+      "pb": 0,
+      "adopt": {
+        "name": "Пещерен мантиз §154",
+        "attack": 15,
+        "defense": 0,
+        "hp": 18,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 154,
+          "rules": {
+            "victoryRoutes": [
+              103
+            ],
+            "escape": {
+              "route": 4,
+              "afterRounds": 1
+            }
+          }
+        },
+        "part": {
+          "name": "Пещерен мантиз §154",
+          "attack": 15,
+          "defense": 0,
+          "hp": 18,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:189:0",
+      "name": "Шадакински офицер §189",
+      "attack": 25,
+      "defense": 0,
+      "hp": 26,
+      "pb": 0,
+      "adopt": {
+        "name": "Шадакински офицер §189",
+        "attack": 25,
+        "defense": 0,
+        "hp": 26,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 189,
+          "rules": {
+            "victoryRoutes": [
+              215
+            ],
+            "skillBonus": 3
+          }
+        },
+        "part": {
+          "name": "Шадакински офицер §189",
+          "attack": 25,
+          "defense": 0,
+          "hp": 26,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:197:0",
+      "name": "Войник мантиз §197",
+      "attack": 15,
+      "defense": 0,
+      "hp": 10,
+      "pb": 0,
+      "adopt": {
+        "name": "Войник мантиз §197",
+        "attack": 15,
+        "defense": 0,
+        "hp": 10,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 197,
+          "rules": {
+            "victoryRoutes": [
+              213
+            ]
+          }
+        },
+        "part": {
+          "name": "Войник мантиз §197",
+          "attack": 15,
+          "defense": 0,
+          "hp": 10,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:203:0",
+      "name": "шадакински стрелци с арбалети §203",
+      "attack": 15,
+      "defense": 0,
+      "hp": 18,
+      "pb": 0,
+      "adopt": {
+        "name": "шадакински стрелци с арбалети §203",
+        "attack": 15,
+        "defense": 0,
+        "hp": 18,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 203,
+          "rules": {
+            "victoryRoutes": [
+              156
+            ],
+            "skillBonus": 4
+          }
+        },
+        "part": {
+          "name": "шадакински стрелци с арбалети §203",
+          "attack": 15,
+          "defense": 0,
+          "hp": 18,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:205:0",
+      "name": "Шадакински воин §205",
+      "attack": 11,
+      "defense": 0,
+      "hp": 15,
+      "pb": 0,
+      "adopt": {
+        "name": "Шадакински воин §205",
+        "attack": 11,
+        "defense": 0,
+        "hp": 15,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 205,
+          "rules": {
+            "victoryRoutes": [
+              176
+            ],
+            "skillBonus": 5,
+            "escape": {
+              "route": 163,
+              "afterRounds": 0
+            }
+          }
+        },
+        "part": {
+          "name": "Шадакински воин §205",
+          "attack": 11,
+          "defense": 0,
+          "hp": 15,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:224:0",
+      "name": "Шадакински воин §224",
+      "attack": 13,
+      "defense": 0,
+      "hp": 20,
+      "pb": 0,
+      "adopt": {
+        "name": "Шадакински воин §224",
+        "attack": 13,
+        "defense": 0,
+        "hp": 20,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 224,
+          "rules": {
+            "victoryRoutes": [
+              127
+            ]
+          }
+        },
+        "part": {
+          "name": "Шадакински воин §224",
+          "attack": 13,
+          "defense": 0,
+          "hp": 20,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:231:0",
+      "name": "Куоку §231",
+      "attack": 12,
+      "defense": 0,
+      "hp": 30,
+      "pb": 0,
+      "adopt": {
+        "name": "Куоку §231",
+        "attack": 12,
+        "defense": 0,
+        "hp": 30,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 231,
+          "rules": {
+            "victoryRoutes": [
+              256
+            ],
+            "skillBonus": -2
+          }
+        },
+        "part": {
+          "name": "Куоку §231",
+          "attack": 12,
+          "defense": 0,
+          "hp": 30,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:243:0",
+      "name": "Тъмничар §243",
+      "attack": 8,
+      "defense": 0,
+      "hp": 14,
+      "pb": 0,
+      "adopt": {
+        "name": "Тъмничар §243",
+        "attack": 8,
+        "defense": 0,
+        "hp": 14,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 243,
+          "rules": {
+            "victoryRoutes": [
+              125,
+              338,
+              333
+            ],
+            "skillBonus": 4
+          }
+        },
+        "part": {
+          "name": "Тъмничар §243",
+          "attack": 8,
+          "defense": 0,
+          "hp": 14,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:246:0",
+      "name": "Войник мантиз §246",
+      "attack": 14,
+      "defense": 0,
+      "hp": 10,
+      "pb": 0,
+      "adopt": {
+        "name": "Войник мантиз §246",
+        "attack": 14,
+        "defense": 0,
+        "hp": 10,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 246,
+          "rules": {
+            "victoryRoutes": [
+              290
+            ]
+          }
+        },
+        "part": {
+          "name": "Войник мантиз §246",
+          "attack": 14,
+          "defense": 0,
+          "hp": 10,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:255:0",
+      "name": "шадакински воини §255",
+      "attack": 15,
+      "defense": 0,
+      "hp": 25,
+      "pb": 0,
+      "adopt": {
+        "name": "шадакински воини §255",
+        "attack": 15,
+        "defense": 0,
+        "hp": 25,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 255,
+          "rules": {
+            "victoryRoutes": [
+              75
+            ]
+          }
+        },
+        "part": {
+          "name": "шадакински воини §255",
+          "attack": 15,
+          "defense": 0,
+          "hp": 25,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:259:0",
+      "name": "Здрачна стая §259",
+      "attack": 28,
+      "defense": 0,
+      "hp": 30,
+      "pb": 0,
+      "adopt": {
+        "name": "Здрачна стая §259",
+        "attack": 28,
+        "defense": 0,
+        "hp": 30,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 259,
+          "rules": {
+            "victoryRoutes": [
+              296
+            ],
+            "mentalCombat": true
+          }
+        },
+        "part": {
+          "name": "Здрачна стая §259",
+          "attack": 28,
+          "defense": 0,
+          "hp": 30,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:260:0",
+      "name": "войници мантиз §260",
+      "attack": 18,
+      "defense": 0,
+      "hp": 20,
+      "pb": 0,
+      "adopt": {
+        "name": "войници мантиз §260",
+        "attack": 18,
+        "defense": 0,
+        "hp": 20,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 260,
+          "rules": {
+            "victoryRoutes": [
+              213
+            ]
+          }
+        },
+        "part": {
+          "name": "войници мантиз §260",
+          "attack": 18,
+          "defense": 0,
+          "hp": 20,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:265:0",
+      "name": "Шадакински воин §265",
+      "attack": 14,
+      "defense": 0,
+      "hp": 18,
+      "pb": 0,
+      "adopt": {
+        "name": "Шадакински воин §265",
+        "attack": 14,
+        "defense": 0,
+        "hp": 18,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 265,
+          "rules": {
+            "victoryRoutes": [
+              40
+            ]
+          }
+        },
+        "part": {
+          "name": "Шадакински воин §265",
+          "attack": 14,
+          "defense": 0,
+          "hp": 18,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:272:0",
+      "name": "войници мантиз §272",
+      "attack": 20,
+      "defense": 0,
+      "hp": 15,
+      "pb": 0,
+      "adopt": {
+        "name": "войници мантиз §272",
+        "attack": 20,
+        "defense": 0,
+        "hp": 15,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 272,
+          "rules": {
+            "victoryRoutes": [
+              322
+            ],
+            "deadline": [
+              3,
+              315
+            ]
+          }
+        },
+        "part": {
+          "name": "войници мантиз §272",
+          "attack": 20,
+          "defense": 0,
+          "hp": 15,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:281:0",
+      "name": "Огромен куоку §281",
+      "attack": 15,
+      "defense": 0,
+      "hp": 30,
+      "pb": 0,
+      "adopt": {
+        "name": "Огромен куоку §281",
+        "attack": 15,
+        "defense": 0,
+        "hp": 30,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 281,
+          "rules": {
+            "deadline": [
+              1,
+              null
+            ],
+            "skillBonus": -1,
+            "willOutcome": {
+              "threshold": 10,
+              "atLeast": 331,
+              "below": 32
+            }
+          }
+        },
+        "part": {
+          "name": "Огромен куоку §281",
+          "attack": 15,
+          "defense": 0,
+          "hp": 30,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:284:0",
+      "name": "войници мантиз §284",
+      "attack": 20,
+      "defense": 0,
+      "hp": 25,
+      "pb": 0,
+      "adopt": {
+        "name": "войници мантиз §284",
+        "attack": 20,
+        "defense": 0,
+        "hp": 25,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 284,
+          "rules": {
+            "victoryRoutes": [
+              310
+            ]
+          }
+        },
+        "part": {
+          "name": "войници мантиз §284",
+          "attack": 20,
+          "defense": 0,
+          "hp": 25,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:308:0",
+      "name": "Шадакински воини §308",
+      "attack": 20,
+      "defense": 0,
+      "hp": 19,
+      "pb": 0,
+      "adopt": {
+        "name": "Шадакински воини §308",
+        "attack": 20,
+        "defense": 0,
+        "hp": 19,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 308,
+          "rules": {
+            "victoryRoutes": [
+              127
+            ],
+            "skillBonus": 4
+          }
+        },
+        "part": {
+          "name": "Шадакински воини §308",
+          "attack": 20,
+          "defense": 0,
+          "hp": 19,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:309:0",
+      "name": "Шадакинска стража §309",
+      "attack": 12,
+      "defense": 0,
+      "hp": 16,
+      "pb": 0,
+      "adopt": {
+        "name": "Шадакинска стража §309",
+        "attack": 12,
+        "defense": 0,
+        "hp": 16,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 309,
+          "rules": {
+            "victoryRoutes": [
+              171
+            ],
+            "openingBonus": {
+              "rounds": 2,
+              "amount": 4
+            },
+            "escape": {
+              "route": 137,
+              "afterRounds": 0
+            }
+          }
+        },
+        "part": {
+          "name": "Шадакинска стража §309",
+          "attack": 12,
+          "defense": 0,
+          "hp": 16,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:321:0",
+      "name": "Ключар §321",
+      "attack": 8,
+      "defense": 0,
+      "hp": 10,
+      "pb": 0,
+      "adopt": {
+        "name": "Ключар §321",
+        "attack": 8,
+        "defense": 0,
+        "hp": 10,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 321,
+          "rules": {
+            "victoryRoutes": [
+              37
+            ],
+            "escape": {
+              "route": 137,
+              "afterRounds": 0
+            }
+          }
+        },
+        "part": {
+          "name": "Ключар §321",
+          "attack": 8,
+          "defense": 0,
+          "hp": 10,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:337:0",
+      "name": "Ранен куоку §337",
+      "attack": 14,
+      "defense": 0,
+      "hp": 18,
+      "pb": 0,
+      "adopt": {
+        "name": "Ранен куоку §337",
+        "attack": 14,
+        "defense": 0,
+        "hp": 18,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 337,
+          "rules": {
+            "victoryRoutes": [
+              44
+            ]
+          }
+        },
+        "part": {
+          "name": "Ранен куоку §337",
+          "attack": 14,
+          "defense": 0,
+          "hp": 18,
+          "pb": 0
+        },
+        "count": 1
+      }
+    }
+  ]
+}

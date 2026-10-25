@@ -1,4 +1,4 @@
-import {ATTACKERS, DUEL_CHOICES, RITUAL_CHOICES, SPELL_COSTS} from './definition.js';
+import {ATTACKERS, RITUAL_ENEMY, DUEL_CHOICES, RITUAL_CHOICES, SPELL_COSTS} from './definition.js';
 
 const LIMIT = 1000000;
 function integer(value, minimum = 0) {
@@ -25,7 +25,7 @@ export function startFight(kind, input, options = {}) {
   const fight = {kind, ruleVersion: 1, character: character(input), outcome: null, turns: 0, lastDamage: 0};
   if (kind === 'ritual') {
     Object.assign(fight, {section: 55, choices: [...RITUAL_CHOICES[55]], lost: 0, enemyLost: 0,
-      enemy: {attack: 4, mobility: 4, skill: 1, strength: 10, stamina: 120}, lizard: options.lizard === true});
+      enemy: {...RITUAL_ENEMY}, lizard: options.lizard === true});
     fight.character.defence = 0;
   } else if (kind === 'attackers') {
     fight.character.defence = integer(input.armour ?? 0) + integer(input.shield ?? 0);

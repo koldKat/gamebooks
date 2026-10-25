@@ -1,7 +1,9 @@
+const rosterSeed = ROSTER_SEEDS[891];
 const checks = [], saves = [];
 const assert = (value, label) => {if (!value) throw Error(label); checks.push(label);};
 localStorage.setItem('gamebook_lang', 'LANGUAGE');
 window.fetch = async (url, options = {}) => {
+  if (url === '/api/books/891/enemies' && !options.method) return new Response(JSON.stringify(rosterSeed));
   assert(url === '/api/books/891/state' && options.method === 'PUT', 'only intercepted state saves');
   saves.push(JSON.parse(options.body)); return new Response('{}', {headers: {'Content-Type': 'application/json'}});
 };
@@ -13,9 +15,9 @@ const el = key => document.getElementById('sim891-' + key);
 const run = {startedAt: 123, path: [1], sim857: {preserved: true}};
 app.setCurrentBookId(891); app.state.playthroughs = [run]; app.state.activePtIndex = 0;
 assert(!el('overlay') && mobile.hasSim(891), 'registered and lazy');
-const sim = await import('REPO/public/js/battlesim/battlesim891.js');
 if ('MODE' === 'mobile') await mobile.openSimForBook(891);
 else {await desktop.showBattleSimForBook(891); el('btn').click();}
+const sim = await import('REPO/public/js/battlesim/battlesim891.js');
 assert(el('overlay').classList.contains('active'), 'real loader opens');
 assert(el('title').textContent === 'Кибернетични войни', 'Bulgarian source stays Bulgarian in both app languages');
 const game = () => run.sim891;
@@ -60,6 +62,14 @@ el('exchange').click();
 assert(game().fight.enemy.hp === 14 && game().fight.enemy.energy === 45, 'successful hard defence deals four damage');
 assert(game().fight.player.energy === 100 && game().fight.turn === 'player', 'only firing unit spends energy');
 assert(game().history.length === 1 && run.sim857.preserved, 'ongoing fight and unrelated simulator remain unchanged');
+const pending=structuredClone(game().fight);
+Object.assign(pending,{pendingDamage:{winner:'player',loser:'enemy'},turn:'player',exchanges:7,extension:{preserved:true}});
+pending.player.energy=17;pending.player.hp=13;pending.enemy.energy=9;pending.enemy.hp=11;
+run.sim891={...structuredClone(game()),fight:JSON.parse(JSON.stringify(pending))};
+const savedPending=JSON.stringify(run);sim.render();el('close').click();el('btn').click();
+assert(JSON.stringify(run)===savedPending&&el('exchange').disabled&&!el('pending').hidden,'serialized pending damage survives reopen without spending energy or advancing turns');
+el('manualDamage').value=4;el('resolve').click();
+assert(game().fight.enemy.hp===7&&game().fight.player.hp===13&&game().fight.player.energy===17&&game().fight.enemy.energy===9&&game().fight.turn==='enemy'&&game().fight.exchanges===7&&game().fight.player.damage===null&&game().fight.extension.preserved&&game().history.length===1,'saved manual damage keeps energy, null stats, counters, extension and existing history');
 const before = JSON.stringify(run); sim.render(); sim.render();
 assert(JSON.stringify(run) === before, 'renders do not mutate saved state');
 assert(!el('overlay').textContent.includes('battlesim891.'), 'all dynamic labels translated');

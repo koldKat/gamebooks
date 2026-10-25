@@ -12,7 +12,8 @@ function _enemyName(d) {
  return d.enemy.name.trim() || t('battlesim.default_enemy'); }
 
 function _isCaldwell(name) {
- return /^caldwell(?:\s+\(zombie\))?$/i.test(name.trim()); }
+  const { CALDWELL_NAME_RULES } = getContext();
+ return CALDWELL_NAME_RULES.some(rule => rule.test(name.trim())); }
 
 function _startSpecialRules(d) {
 
@@ -21,7 +22,9 @@ function _startSpecialRules(d) {
 
 function _playerDamage(d) {
 
-  return d.specialRules?.enemy === 'BRONZE WARRIOR' && !d.specialRules.craggenKnife ? 1 : 2;
+  const { ENCOUNTER_RULES } = getContext();
+  const rule = ENCOUNTER_RULES[d.specialRules?.enemy]?.playerDamageWithoutFlag;
+  return rule && !d.specialRules[rule.flag] ? rule.damage : 2;
 }
 
 function _enemyNameSafe(d) {
@@ -29,10 +32,11 @@ function _enemyNameSafe(d) {
  return escapeHtml(_enemyName(d)); }
 
 function _runRound() {
-  const { SVG_SKULL, SVG_TROPHY, _appendLog, _data, _enemyNameSafe, _notReady, _playerDamage, _recordOutcome, _renderAll, _roll1d6, _roll2d6, saveState, t } = getContext();
+  const { ENCOUNTER_RULES, CALDWELL_RULE, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _enemyNameSafe, _notReady, _playerDamage, _recordOutcome, _renderAll, _roll1d6, _roll2d6, saveState, t } = getContext();
 
   const d = _data();
   if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.specialRules?.outcome) return;
+  const encounter = ENCOUNTER_RULES[d.specialRules?.enemy];
   d.roundsThisBattle++;
   d.pendingLuck = null;
 
@@ -47,13 +51,15 @@ function _runRound() {
     d.enemy.stamina = Math.max(0, d.enemy.stamina - damage);
     _appendLog(d, t('battlesim267.log.you_wound', { enemy: _enemyNameSafe(d), n: damage, stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     if (d.enemy.stamina > 0) d.pendingLuck = 'player-hit';
-    if (d.specialRules?.enemy === 'DWARF') d.specialRules.outcome = 'win';
+    if (encounter?.stopAfterPlayerWin) d.specialRules.outcome = 'win';
   } else {
-    const damage = d.caldwellDoubles && enemyDice[0] === enemyDice[1] ? 4 : d.specialRules?.enemy === 'HOWLING DEMON' && d.specialRules.demon283 ? 3 : 2;
+    const flagDamage = encounter?.enemyDamageWithFlag;
+    const damage = d.caldwellDoubles && enemyDice[0] === enemyDice[1] ? CALDWELL_RULE.doublesDamage
+      : flagDamage && d.specialRules[flagDamage.flag] ? flagDamage.damage : 2;
     d.player.stamina = Math.max(0, d.player.stamina - damage);
     _appendLog(d, t('battlesim267.log.enemy_wounds', { enemy: _enemyNameSafe(d), n: damage, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     if (d.player.stamina > 0) d.pendingLuck = 'enemy-hit';
-    if (d.specialRules?.enemy === 'GHOUL' && ++d.specialRules.lostRounds >= 3) d.specialRules.outcome = 'loss';
+    if (encounter?.loseAfterEnemyWins && ++d.specialRules.lostRounds >= encounter.loseAfterEnemyWins) d.specialRules.outcome = 'loss';
   }
 
   if (d.specialRules?.outcome) {

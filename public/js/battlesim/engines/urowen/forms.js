@@ -1,4 +1,6 @@
 import {rollUrowenDie,urowenDamage} from './core.js';
+import {UROWEN_RULES,UROWEN_SOURCE} from './roster.js';
+const enemyRules=section=>UROWEN_SOURCE.encounters.find(row=>row.section===section).enemyRules;
 
 const clone = value => structuredClone(value);
 const stages = Object.freeze([
@@ -27,17 +29,14 @@ export function restoreUrowenTransformation(transformation) {
 }
 export function createUrowenPossession(character) {
   const player=clone(character);
-  player.career=null;
-  player.attributes={STR:3,SK:0,MAG:0,PER:0};
-  player.maxLife=30;player.life=30;player.power=0;
-  player.armor=[0,0,0,0,0,0];
-  player.weapon={attribute:'STR',dice:1,bonus:2,reroll:[]};
+  Object.assign(player,clone(UROWEN_RULES.possession.player));
   return {original:clone(character),player,stage:'possession'};
 }
 export function urowenPossessionHit({rawDamage,location}) {
   integer(rawDamage,1,6);integer(location,1,6);
-  return {instantKill:rawDamage===6&&[2,3,4,6].includes(location),
-    bleeding:rawDamage===6&&[1,5].includes(location)?5:0};
+  const rules=UROWEN_RULES.possession;
+  return {instantKill:rawDamage===rules.hitRoll&&rules.killLocations.includes(location),
+    bleeding:rawDamage===rules.hitRoll&&rules.bleedLocations.includes(location)?rules.bleeding:0};
 }
 export function createUrowenMission(character,{weaponAttribute='SK'}={}) {
   if(!['STR','SK','MAG'].includes(weaponAttribute))throw new RangeError('Invalid attribute');
@@ -67,21 +66,24 @@ export function hitUrowenAppendage(appendages,index,damage) {
 export function urowenAppendageDamage(appendages) {
   return appendages.filter(appendage=>appendage.life>0).length;
 }
-export function urowenSisteliumDamage(alive) {
-  integer(alive,0,5);
+export function urowenSisteliumDamage(alive,maximum=enemyRules(UROWEN_RULES.sisteliumSection).copies) {
+  integer(maximum,0);integer(alive,0,maximum);
   return Math.floor(Math.max(0,alive-1)/2);
 }
 export function urowenArdronteSupportDamage(life) {
   integer(Math.abs(life),0);
-  return life>18?1:0;
+  const rules=enemyRules(UROWEN_RULES.ardronteSection).secondHeadRoundEnd;
+  return life>rules.whileLifeAbove?rules.damage:0;
 }
-export function resolveUrowenCharge(roll,{enemy=false}={}) {
+export function resolveUrowenCharge(roll,{enemy=false,charge=null}={}) {
+  const rules=enemy?(charge??enemyRules(UROWEN_RULES.chargeSection).openingCharge):
+    {hitOn:[4,5,6],playerDodgeOn:[6],damageBonus:3,damageDice:4};
   const hit=rollUrowenDie(roll).raw,rolls=[hit];
-  if(hit<(enemy?5:4))return {hit:false,dodged:false,damage:0,rolls};
+  if(!rules.hitOn.includes(hit))return {hit:false,dodged:false,damage:0,rolls};
   const dodge=rollUrowenDie(roll).raw;rolls.push(dodge);
-  if(dodge===6)return {hit:false,dodged:true,damage:0,rolls};
-  let damage=3;
-  for(let index=0;index<(enemy?2:4);index++) {
+  if(rules.playerDodgeOn.includes(dodge))return {hit:false,dodged:true,damage:0,rolls};
+  let damage=rules.damageBonus;
+  for(let index=0;index<rules.damageDice;index++) {
     const value=rollUrowenDie(roll).raw;rolls.push(value);damage+=value;
   }
   return {hit:true,dodged:false,damage,rolls};
@@ -105,10 +107,10 @@ export function damageUrowenChestArmor(armor) {
 export function resolveUrowenCompanionHit(roll,armor) {
   const location=rollUrowenDie(roll).raw,damage=rollUrowenDie(roll).raw;
   return {location,rawDamage:damage,damage:urowenDamage({rawDamage:damage,location,
-    bonus:2+(damage===6?2:0),armor:armor[location-1]})};
+    bonus:UROWEN_RULES.companion.bonus+(damage===UROWEN_RULES.companion.extraRoll?UROWEN_RULES.companion.extra:0),armor:armor[location-1]})};
 }
 export function canUrowenCompanionAttack({life,used}) {
-  return !used&&life>0&&life<6;
+  return !used&&life>0&&life<UROWEN_RULES.companion.belowLife;
 }
 export function startUrowenInvisibility(enemy,{belowLife,powerCost=4,attacks=2}) {
   integer(belowLife,1);integer(powerCost,1);integer(attacks,1,2);

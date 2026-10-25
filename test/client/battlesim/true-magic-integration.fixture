@@ -1,6 +1,8 @@
 const checks=[],saves=[];
+const rosterSeed=ROSTER_SEEDS[757];
 const assert=(value,label)=>{if(!value)throw Error(label);checks.push(label);};
 window.fetch=async(url,options={})=>{
+  if(url==='/api/books/757/enemies'&&!options.method)return new Response(JSON.stringify(rosterSeed),{status:200});
   assert(url==='/api/books/757/state'&&options.method==='PUT','only intercepted state saves');
   saves.push(JSON.parse(options.body));return new Response('{}',{status:200,headers:{'Content-Type':'application/json'}});
 };
@@ -27,7 +29,7 @@ assert(run.sim757.character===null&&el('start').disabled,'explicit character set
 const ids=[...el('overlay').querySelectorAll('[id]')].map(node=>node.id);
 assert(new Set(ids).size===ids.length,'unique controls');
 assert(getComputedStyle(el('btn')).borderTopStyle==='solid','themed simulator button');
-el('apply').click();el('start').click();
+el('advancedRules').open=true;change('encounter','ritual');el('apply').click();el('start').click();
 assert(run.sim757.fight.section===55&&el('apply').disabled,'ritual starts and locks character edits');
 choose(20);el('roll-player').value=10;el('roll-enemy').value=0;choose(45);
 assert(run.sim757.fight.section===52&&el('roll-player').value==='','correct comparison and fresh rolls required');
@@ -38,8 +40,9 @@ el('again').click();el('start').click();choose(78);
 assert(run.sim757.fight.outcome==='draw'&&run.sim757.character.stamina===115,'simultaneous knockdown draw');
 assert(run.sim757.history.length===1,'no draw reward');
 el('again').click();change('encounter','attackers');
-assert(!el('enemy-setup').hidden&&el('enemy-0-stamina').value==='','no invented enemy stamina');
-for(let i=0;i<3;i++){el('enemy-'+i+'-defence').value=0;el('enemy-'+i+'-stamina').value=0;}
+const enemyRows=el('enemy-setup').querySelectorAll('.bsim-opponent-row');
+assert(!el('enemy-setup').hidden&&enemyRows.length===3&&[...enemyRows].every(row=>row.querySelector('[data-stat="stamina"]').value===''),'no invented enemy stamina');
+for(const row of enemyRows)for(const field of ['defence','stamina'])row.querySelector('[data-stat="'+field+'"]').value=0;
 el('start').click();
 for(let i=0;i<3;i++){
   for(const [field,value]of Object.entries({enemyAttack:0,playerDefence:100,playerAttack:100,enemyDefence:0}))el('roll-'+field).value=value;

@@ -1,6 +1,7 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ENCOUNTERS, encounterFor} from '../../../public/js/battlesim/books/904/definition.js';
+import {ENCOUNTERS, encounterFor, TALISMAN_RULES} from '../../../public/js/battlesim/books/904/definition.js';
 import {newCharacter, startFight, round, resolveLuck, recover} from '../../../public/js/battlesim/books/904/combat.js';
 import {createState} from '../../../public/js/battlesim/books/904/state.js';
 
@@ -10,6 +11,8 @@ const rolls = (...values) => () => {
   return values.shift();
 };
 const finishExchange = fight => resolveLuck(fight, false);
+
+await loadFixtureRoster(904);
 
 test('Bulgarian roster retains distinct printed setups and sequential groups', () => {
   assert.equal(new Set(ENCOUNTERS.map(row => row.section)).size, ENCOUNTERS.length);
@@ -111,6 +114,36 @@ test('opening losses are opt-in once per fight and never mutate caller values', 
   assert.equal(fight.character.stamina, 22);
   assert.deepEqual(player, original);
   assert.equal(startFight(81, player).character.stamina, 24);
+});
+
+test('saved skill-draining wounds apply catalog loss once before Luck resolves', () => {
+  const amount = TALISMAN_RULES.skillDrainAmount;
+  try {
+    for (const loss of [amount, 2]) {
+      TALISMAN_RULES.skillDrainAmount = loss;
+      for (const spec of ENCOUNTERS.filter(row => row.enemies.some(enemy => enemy.skillDrain))) {
+        const input = startFight(spec.section, character({skill: 1, extension: {kept: true}}));
+        input.extension = {preserved: true};
+        const original = structuredClone(input);
+        const wounded = round(input, 0, rolls(1, 1, 6, 6));
+        assert.equal(wounded.pending.kind, 'incoming');
+        assert.equal(wounded.character.skill, 0);
+        assert.deepEqual(input, original);
+        const saved = JSON.parse(JSON.stringify(wounded));
+        const resolved = resolveLuck(saved, true, rolls(1, 1));
+        assert.equal(resolved.character.skill, 0);
+        assert.equal(resolved.character.stamina, 23);
+        assert.deepEqual(resolved.extension, {preserved: true});
+        assert.deepEqual(resolved.character.extension, {kept: true});
+        assert.deepEqual(saved, wounded);
+      }
+      const wound = round(startFight(81, character({skill: 5})), 0, rolls(1, 1, 6, 6));
+      assert.equal(wound.character.skill, 5 - loss);
+      assert.equal(resolveLuck(JSON.parse(JSON.stringify(wound)), false).character.skill, 5 - loss);
+    }
+  } finally {
+    TALISMAN_RULES.skillDrainAmount = amount;
+  }
 });
 
 test('one-dose Fortune increases maximum Luck and meals restore four', () => {

@@ -2,7 +2,7 @@ import { getToken } from '../core/state.js';
 
 const KEY = 'reward_snapshot_v1';
 let tokenForDigest = null, digestPromise = null;
-const fields = new Set(['id', 'username', 'xp', 'level', 'title', 'levelXp', 'nextLevelXp',
+const fields = new Set(['id', 'username', 'xp', 'eventXp', 'jobXp', 'jobLevel', 'jobLevelCap', 'level', 'title', 'levelXp', 'nextLevelXp',
   'coinsBalance', 'coinsSpent', 'coinsEarned', 'xpBoostPct', 'xpBoostPurchased', 'xpFromBoost',
   'bonusHeartbeatXp', 'bonusHeartbeatXpFree', 'bonusUndos', 'bonusFastTravels',
   'bronzeBalance', 'silverBalance', 'heartbeatGoldEarned']);

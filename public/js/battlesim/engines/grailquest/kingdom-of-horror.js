@@ -1,6 +1,11 @@
 import { customGrailEncounter } from './opponents.js';
 import { KINGDOM_ENCOUNTERS, KINGDOM_DREAMS, KINGDOM_MAGIC_STOCK,
-  KINGDOM_EQUIPMENT, KINGDOM_SUPPORT } from './kingdom-of-horror-roster.js';
+  KINGDOM_EQUIPMENT, KINGDOM_SUPPORT, KINGDOM_RULES } from './kingdom-of-horror-roster.js';
+export { KINGDOM_RULES } from './kingdom-of-horror-roster.js';
+
+export function kingdomCanCollectWitchLoot(fight) {
+  return fight?.spec?.id === KINGDOM_RULES.witchLoot.encounterId && fight.status === 'win' && !fight.player.witchLootCollected;
+}
 
 const die = random => 1 + Math.floor(random() * 6);
 const dice = random => die(random) + die(random);
@@ -55,7 +60,7 @@ export function kingdomRunning(random = Math.random) {
 
 export function kingdomCourt(random = Math.random) {
   const roll = dice(random);
-  return { roll, result: roll >= 10 ? 'released' : roll >= 7 ? 'penalty' : 'hanged' };
+  return { roll, result: roll >= KINGDOM_RULES.court.releasedAt ? 'released' : roll >= KINGDOM_RULES.court.penaltyAt ? 'penalty' : 'hanged' };
 }
 
 export function kingdomTargets(fight) {
@@ -108,7 +113,7 @@ export function startKingdomFight(character, encounterId, options = {}, random =
     if (integer(p.enemyCounts?.[spec.id], 1)) count = p.enemyCounts[spec.id];
     else {
       const roll = spec.countRoll === 'pack' ? die(random) : dice(random);
-      count = spec.countRoll === 'pack' ? roll + 3 : roll;
+      count = spec.countRoll === 'pack' ? roll + KINGDOM_RULES.packOffset : roll;
       (p.enemyCounts ||= {})[spec.id] = count;
       events.push({ kind: 'enemyCount', roll, count });
     }
@@ -234,7 +239,7 @@ function beginKingdomRound(f) {
   f.attacksLeft = f.playerAttacks;
   f.enemyQueue = f.spec.trial ? [{ index: 0, attacks: 1 }] :
     kingdomTargets(f).map(({ foe, index }) => ({ index, attacks: foe.attacks || 1 }));
-  if (f.rounds === 1 && f.spec.countRoll === 'guards' && f.first === 'enemy') f.enemyQueue = f.enemyQueue.slice(0, 1);
+  if (f.rounds === 1 && f.spec.countRoll === 'guards' && f.first === 'enemy') f.enemyQueue = f.enemyQueue.slice(0, KINGDOM_RULES.guardsOpeningCount);
   f.enemyQueueIndex = 0;
   f.roundStarted = true;
 }
@@ -252,8 +257,8 @@ function finishKingdomTurn(f, random = Math.random) {
   if (f.spec.trial) {
     const damage = damagePlayer(f, Math.max(0, f.trialEnemyDamage - f.trialPlayerDamage));
     f.events.push({ kind: 'trialRound', damage, player: f.trialPlayerDamage, enemy: f.trialEnemyDamage });
-    if (f.player.life < 10 || f.rounds === 4) {
-      f.trialPassed = f.rounds === 4 && f.player.life >= 10;
+    if (f.player.life < KINGDOM_RULES.trial.minLife || f.rounds === KINGDOM_RULES.trial.rounds) {
+      f.trialPassed = f.rounds === KINGDOM_RULES.trial.rounds && f.player.life >= KINGDOM_RULES.trial.minLife;
       f.status = f.trialPassed ? 'win' : 'knockout';
       if (f.trialPassed && !f.rewarded) {
         f.player.experience++;
@@ -334,7 +339,7 @@ export function kingdomEnemyAttack(f, random = Math.random) {
     event = { kind: 'sleeping', index: slot.index };
   } else if (foe.magic === 'dragonfire' && foe.pills > 0) {
     foe.pills--;
-    let damage = foe.psionicThroughRound >= f.rounds ? 17 : 35;
+    let damage = foe.psionicThroughRound >= f.rounds ? KINGDOM_RULES.witchMagic.psionicDragonfire : KINGDOM_RULES.witchMagic.dragonfire;
     if (f.sanctuaryThroughRound >= f.rounds) damage = 0;
     event = { kind: 'dragonfire', damage: damagePlayer(f, damage), index: slot.index };
   } else {
@@ -347,7 +352,7 @@ export function kingdomEnemyAttack(f, random = Math.random) {
       f.playerArmour, { fullDice: foe.fullDice, fixedDamage: foe.fixedDamage });
     if (foe.magic && foe.magic !== 'dragonfire' && !foe.spellsUsed) {
       if (foe.magic === 'thunderbolt') foe.spellsUsed++;
-      result = { hit: !forcedMiss && roll >= 6, damage: 0 };
+      result = { hit: !forcedMiss && roll >= KINGDOM_RULES.witchMagic.hit, damage: 0 };
       if (result.hit && foe.magic === 'thunderbolt') {
         result.damage = Math.floor(f.player.life / 2);
         if (f.player.magic.lightningRod > 0) {
@@ -356,7 +361,7 @@ export function kingdomEnemyAttack(f, random = Math.random) {
           result.absorbed = true;
         }
       }
-      if (result.hit && foe.magic === 'kangling') { f.gelDamage = 10; foe.spellsUsed++; }
+      if (result.hit && foe.magic === 'kangling') { f.gelDamage = KINGDOM_RULES.witchMagic.kangling; foe.spellsUsed++; }
     }
     if (result.hit) {
       foe.hitCount++;
@@ -462,9 +467,9 @@ export function kingdomAllyAttack(f, random = Math.random) {
 export function kingdomBreakBearGrip(f, random = Math.random) {
   if (f.status !== 'fighting' || !f.bearGripped) return null;
   const roll = dice(random);
-  f.bearGripped = roll < 7;
+  f.bearGripped = roll < KINGDOM_RULES.bearGrip.releaseAt;
   const event = { kind: 'bearGrip', roll, freed: !f.bearGripped,
-    damage: f.bearGripped ? damagePlayer(f, 6) : 0 };
+    damage: f.bearGripped ? damagePlayer(f, KINGDOM_RULES.bearGrip.damage) : 0 };
   f.events.push(event);
   settle(f);
   return event;
@@ -502,9 +507,9 @@ export function kingdomCallGnurlbash(f, index = f.target) {
 }
 
 export function kingdomCollectWitchLoot(f) {
-  if (f.spec.id !== 78 || f.status !== 'win' || f.player.witchLootCollected) return false;
+  if (!kingdomCanCollectWitchLoot(f)) return false;
   f.player.witchLootCollected = true;
-  for (const [item, charges] of [['thunderbolt', 1], ['kangling', 2], ['dragonfirePills', 2]]) {
+  for (const { item, charges } of KINGDOM_RULES.witchLoot.rewards) {
     f.player.magic[item] = (f.player.magic[item] || 0) + charges;
   }
   return true;

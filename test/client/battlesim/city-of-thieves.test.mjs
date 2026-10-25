@@ -8,7 +8,7 @@ import { newThievesCharacter, validateThievesCharacter, startThievesFight,
   thievesTargets, thievesRound, resolveThievesLuck, canEscapeThieves,
   escapeThievesFight, bypassThievesFight, healThievesCharacter, testThievesLuck }
   from '../../../public/js/battlesim/engines/city-of-thieves/core.js';
-import { THIEVES_FIGHTS } from '../../../public/js/battlesim/engines/city-of-thieves/roster.js';
+import { THIEVES_FIGHTS, THIEVES_RULES, thievesHasRule, thievesRandomEncounter } from '../../../public/js/battlesim/engines/city-of-thieves/roster.js';
 
 const constant = value => () => value;
 const rolls = (...values) => () => {
@@ -20,6 +20,22 @@ const settle = fight => {
   while (fight.pending.length) fight = resolveThievesLuck(fight, false);
   return fight;
 };
+
+test('panel help and random-opponent lookup follow loaded roster settings', () => {
+  const rules=structuredClone(THIEVES_RULES),first=THIEVES_FIGHTS[0];
+  const hadFlag=Object.hasOwn(first,'randomEnemy'),flag=first.randomEnemy;
+  try {
+    assert.equal(thievesRandomEncounter().section,201);
+    assert.equal(thievesRandomEncounter().enemies.length,6);
+    THIEVES_RULES.ruleSections=[10];
+    assert.equal(thievesHasRule(10),true);assert.equal(thievesHasRule('10'),false);
+    assert.equal(thievesHasRule(73),false);
+    first.randomEnemy=true;assert.equal(thievesRandomEncounter(),first);
+  } finally {
+    Object.assign(THIEVES_RULES,rules);
+    if(hadFlag)first.randomEnemy=flag;else delete first.randomEnemy;
+  }
+});
 
 test('backend registers wins and losses once, without awarding escape, bypass or cancellation', () => {
   const events = [];
@@ -34,6 +50,7 @@ test('backend registers wins and losses once, without awarding escape, bypass or
     if (name === './diamonds') return { diamondInfoForUser: () => ({}) };
     if (name === './rubies') return { rubyInfoForUser: () => ({}), createRubyCompletionChecker: () => () => 0 };
     if (name === './heartbeat-coins') return { advanceHeartbeatCoins: () => 0 };
+    if (name === './job-xp') return { getJobTitle: () => 'test' };
     throw new Error('Unexpected dependency: ' + name);
   } };
   runInNewContext(readFileSync(new URL('../../../server/db/xp.js', import.meta.url), 'utf8')

@@ -51,6 +51,36 @@ function _runRound() {
   _renderAll();
 }
 
+function _resolveRoundEnd(d) {
+  const { FEAR_RULES, HERO_POINT_PENALTY, SVG_SKULL, SVG_TROPHY, _appendLog, _enemyNameSafe, _recordOutcome, t } = getContext();
+
+  if (d.pendingLuckQueue.length) return; // wait for the Luck test to resolve first
+
+  if (d.enemy.stamina <= 0) {
+    // Reduced straight to 0 without ever pausing in the 1-2 surrender
+    // range - the rules treat that as a kill, no choice was ever offered.
+    _appendLog(d, t('battlesim213.log.killed_outright', { enemy: _enemyNameSafe(d), n: HERO_POINT_PENALTY }));
+    d.player.heroPoints -= HERO_POINT_PENALTY;
+    _appendLog(d, t('battlesim213.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
+    _recordOutcome(d, 'win');
+    return;
+  }
+  if (d.enemy.stamina > 0 && d.enemy.stamina <= FEAR_RULES.surrenderStaminaMax) {
+    d.pendingSurrender = true;
+    _appendLog(d, t('battlesim213.log.surrenders', { enemy: _enemyNameSafe(d), stamina: d.enemy.stamina }));
+    return;
+  }
+  if (d.player.stamina <= 0) {
+    _appendLog(d, t('battlesim213.log.fallen', { skull: SVG_SKULL }));
+    _recordOutcome(d, 'loss');
+    return;
+  }
+  // Warn once at the threshold; later rounds remain playable.
+  if (d.player.forceLossAfterRounds > 0 && d.roundsThisBattle === d.player.forceLossAfterRounds) {
+    _appendLog(d, t('battlesim213.log.round_limit'));
+  }
+}
+
 function _captureEnemy() {
   const { SVG_TROPHY, _appendLog, _data, _enemyNameSafe, _recordOutcome, _renderAll, saveState, t } = getContext();
 
@@ -154,8 +184,9 @@ function _attemptEnergyBlast() {
   const { SUPER_POWER_STAMINA_COST, SVG_TROPHY, _appendLog, _data, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll2d6, saveState, showAlert, t } = getContext();
 
   const d = _data();
-  if (!d || _notReady(d) || d.roundsThisBattle > 0) return;
+  if (!d || _notReady(d) || d.roundsThisBattle > 0 || d.player.stamina <= 0 || d.pendingLuckQueue.length || d.pendingSurrender) return;
   if (!d.enemy.staminaMax) { showAlert(t('battlesim213.alert.pick_enemy')); return; }
+  if (d.enemy.stamina <= 0) return;
   d.player.stamina = Math.max(0, d.player.stamina - SUPER_POWER_STAMINA_COST);
   const roll = _roll2d6();
   const hit  = roll <= d.player.skill;
@@ -173,5 +204,5 @@ function _attemptEnergyBlast() {
 }
 
 // END EXTRACTED RULES
-  return { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _resetEncounterKnobs, _runRound, _captureEnemy, _finishEnemy, _continueAttacking, _testLuck, _skipLuck, _resetBattle, _attemptEnergyBlast };
+  return { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _resetEncounterKnobs, _runRound, _resolveRoundEnd, _captureEnemy, _finishEnemy, _continueAttacking, _testLuck, _skipLuck, _resetBattle, _attemptEnergyBlast };
 }

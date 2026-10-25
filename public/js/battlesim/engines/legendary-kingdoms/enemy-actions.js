@@ -1,6 +1,8 @@
 import { legendaryDie } from './character.js';
 import { legendaryAutomaticDamage } from './encounter.js';
 import { legendaryZoneRecipients } from './locations.js';
+import { VALLEY_SETTINGS } from './valley-roster.js';
+import { CROWN_SETTINGS } from './crown-roster.js';
 
 export function activeLegendaryEnemy(fight, index) {
   const enemy = fight.enemies[index];
@@ -15,6 +17,7 @@ function event(fight, entry) {
 export function planLegendaryEnemy(fight, enemyIndex, roll) {
   const enemy = fight.enemies[enemyIndex];
   const special = fight.rules.special;
+  const settings = VALLEY_SETTINGS;
   const attack = (count = enemy.attack, threshold = enemy.threshold, extra = {}) => ({ enemyIndex, count, threshold, ...extra });
   const heroes = fight.participants.filter(index => fight.party[index].health > 0 &&
     (fight.rules.heroArrivalRounds?.[index] ?? 1) <= fight.round);
@@ -35,7 +38,7 @@ export function planLegendaryEnemy(fight, enemyIndex, roll) {
     return [attack(enemy.attack, enemy.threshold, { ...(automaticDamage ? { automaticDamage } : {}) }), cast];
   }
   if (enemy.netWhileOthersAlive && fight.enemies.some((_, index) => index !== enemyIndex && activeLegendaryEnemy(fight, index)))
-    return [attack(1, 3, { stunOnly: true })];
+    return [attack(CROWN_SETTINGS.netAttack.count, CROWN_SETTINGS.netAttack.threshold, { stunOnly: true })];
   if (enemy.undamagedAttack) {
     if (!fight.roundEnemyDamage[enemyIndex]) {
       const { hits, recipients = 1, noArmour = false } = enemy.undamagedAttack;
@@ -44,50 +47,52 @@ export function planLegendaryEnemy(fight, enemyIndex, roll) {
     }
     if (enemy.attack === null) return [];
   }
-  if (special === 'zealotHealer' && enemy.name === 'Zealot Healer' &&
+  if (special === 'zealotHealer' && enemy.name === settings.zealotHealer.name &&
       fight.enemies.some((other,index) => index !== enemyIndex && activeLegendaryEnemy(fight,index))) {
     for (const [index, other] of fight.enemies.entries())
-      if (index !== enemyIndex && activeLegendaryEnemy(fight,index)) other.health += 2;
+      if (index !== enemyIndex && activeLegendaryEnemy(fight,index)) other.health += settings.zealotHealer.healing;
     event(fight, { type: 'zealotHealing', enemyIndex });
     return [];
   }
-  if (special === 'archers' && /Archers/.test(enemy.name))
+  if (special === 'archers' && new RegExp(settings.archers.pattern).test(enemy.name))
     return fight.roundEnemyDamage[enemyIndex] ? [] :
-      [attack(null,null,{hits:2,noArmour:true}),attack(null,null,{hits:2,noArmour:true,distinct:true})];
-  if (special === 'unbraaki' && /Monkey/.test(enemy.name)) {
+      Array.from({length:settings.archers.recipients},(_,index)=>attack(null,null,{hits:settings.archers.hits,noArmour:true,...(index?{distinct:true}:{})}));
+  if (special === 'unbraaki' && new RegExp(settings.monkeys.pattern).test(enemy.name)) {
     const die = legendaryDie(roll);
     event(fight, { type: 'monkeySpell', enemyIndex, die });
-    if (die <= 2) return [attack(8,4)];
-    if (die <= 4) return [attack(null,null,{hits:3})];
-    return [attack(5,4),attack(5,4)];
+    const rules=settings.monkeys,index=die<=rules.bounds[0]?0:die<=rules.bounds[1]?1:2,spec=rules.attacks[index];
+    return Array.from({length:spec.repeat??1},()=>spec.hits!==undefined?attack(null,null,{hits:spec.hits}):attack(spec.count,spec.threshold));
   }
   if (special === 'imopposh') {
-    if (fight.round === 1) return [attack(10),attack(10)];
-    if (fight.round === 2) return [attack(13)];
-    if (fight.round === 3) return heroes.map(forcedMember => attack(3,enemy.threshold,{forcedMember}));
+    const rules=settings.imopposh;
+    if (fight.round === rules.rounds[0]) return Array.from({length:rules.firstRepeats},()=>attack(rules.firstCount));
+    if (fight.round === rules.rounds[1]) return [attack(rules.secondCount)];
+    if (fight.round === rules.rounds[2]) return heroes.map(forcedMember => attack(rules.partyCount,enemy.threshold,{forcedMember}));
   }
-  if (special === 'sorcerer' && enemy.name === 'Sorcerer') {
-    if (fight.round === 1) return [attack(8)];
-    if (fight.round === 2) {
-      fight.playerHitThreshold = 5;
+  if (special === 'sorcerer' && enemy.name === settings.sorcerer.name) {
+    const rules=settings.sorcerer;
+    if (fight.round === rules.rounds[0]) return [attack(rules.firstCount)];
+    if (fight.round === rules.rounds[1]) {
+      fight.playerHitThreshold = rules.playerThreshold;
       event(fight, { type: 'enemyDazingLights', enemyIndex });
       return [];
     }
-    if (fight.round === 3) return heroes.map(forcedMember => attack(3,enemy.threshold,{forcedMember}));
+    if (fight.round === rules.rounds[2]) return heroes.map(forcedMember => attack(rules.partyCount,enemy.threshold,{forcedMember}));
   }
   if (special === 'fastilon') {
-    if (!fight.roundEnemyDamage[enemyIndex] && fight.fastilonSpell < 3) {
+    const rules=settings.fastilon;
+    if (!fight.roundEnemyDamage[enemyIndex] && fight.fastilonSpell < rules.spellLimit) {
       const spell = fight.fastilonSpell++;
       event(fight, { type: 'fastilonSpell', enemyIndex, spell });
-      if (spell === 0) return [attack(null,null,{hits:6})];
-      if (spell === 1) return [attack(null,null,{hits:5}),attack(null,null,{hits:5,distinct:true})];
-      enemy.health = Math.min(40,enemy.health+8);
+      if (spell === 0) return [attack(null,null,{hits:rules.firstHits})];
+      if (spell === 1) return [attack(null,null,{hits:rules.secondHits}),attack(null,null,{hits:rules.secondHits,distinct:true})];
+      enemy.health = Math.min(rules.maximumHealth,enemy.health+rules.healing);
       return [];
     }
     return [attack(),attack(enemy.attack,enemy.threshold,{distinct:true})];
   }
-  if (special === 'backstab' && enemy.name === 'Cursite Assassin' && !fight.roundEnemyDamage[enemyIndex])
-    return [attack(null,null,{hits:4})];
+  if (special === 'backstab' && enemy.name === settings.backstab.name && !fight.roundEnemyDamage[enemyIndex])
+    return [attack(null,null,{hits:settings.backstab.hits})];
   if (enemy.attackType === 'none' || (enemy.attackType === 'special' && special === 'beetles')) return [];
   if (enemy.attackType === 'special') throw new RangeError('This special attack requires its source-specific resolver');
   const automaticDamage = legendaryAutomaticDamage(fight, enemyIndex);
@@ -96,7 +101,7 @@ export function planLegendaryEnemy(fight, enemyIndex, roll) {
   const before = enemy.beforeAttackDamage;
   const prefix = before && fight.party[before.forcedMember]?.health > 0 ?
     [{ enemyIndex, hits: before.hits, forcedMember: before.forcedMember, unpreventable: !!before.unpreventable }] : [];
-  if (enemy.attacksPerTurn === 2 || special === 'doubleAttack' || (special === 'ironKing' && /Malronac/.test(enemy.name)))
+  if (enemy.attacksPerTurn === 2 || special === 'doubleAttack' || (special === 'ironKing' && new RegExp(settings.names.malronacPattern).test(enemy.name)))
     return [...prefix, ordinary(), ordinary({ distinct: true })];
-  return [...prefix, ordinary({lifeSteal:special === 'unbraaki' && enemy.name === 'Unbraaki'})];
+  return [...prefix, ordinary({lifeSteal:special === 'unbraaki' && enemy.name === settings.unbraakiName})];
 }

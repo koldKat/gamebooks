@@ -152,7 +152,8 @@ body.no-feed-glass-cards .feed-day-card--glass::before { display: none !importan
   padding-left: 0.5rem;
   margin-left: -0.5rem;
 }
-.feed-entry--levelup {
+.feed-entry--levelup,
+.feed-entry--joblevel {
   border-left: 2px solid #a78bfa;
   padding-left: 0.5rem;
   margin-left: -0.5rem;
@@ -426,3 +427,6 @@ body.right-collapsed #landing-right { transform: translateX(var(--landing-panel-
 
 .feed-group-toggle .moderator-badge { color: #c084fc; }
 .feed-group-toggle .squire-badge { color: #fb923c; }
+
+.feed-entry--joblevel .feed-level,
+.feed-entry--joblevel .feed-title { color: #c084fc; }

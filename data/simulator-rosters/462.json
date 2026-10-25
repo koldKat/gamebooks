@@ -1,0 +1,2404 @@
+{
+  "schemaVersion": 1,
+  "bookId": 462,
+  "family": "fighting-fantasy",
+  "source": "All original Forest of the Doomed enemy profiles and fixed encounter setup: gremlin and ape-man attack modifiers, fire demon whip and vampire paralysis wound threshold. Generic editable fight settings, shield, paired attacks and Luck algorithms remain unchanged.",
+  "enemies": [
+    {
+      "key": "section:7:slot:0",
+      "name": "Първи рояк ПЧЕЛИ-УБИЙЦИ §7",
+      "attack": 7,
+      "defense": 0,
+      "hp": 3,
+      "pb": 0,
+      "adopt": {
+        "name": "Първи рояк ПЧЕЛИ-УБИЙЦИ §7",
+        "attack": 7,
+        "defense": 0,
+        "hp": 3,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 7,
+          "rules": {}
+        },
+        "part": {
+          "name": "Първи рояк ПЧЕЛИ-УБИЙЦИ §7",
+          "attack": 7,
+          "defense": 0,
+          "hp": 3,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:7:slot:1",
+      "name": "Втори рояк ПЧЕЛИ-УБИЙЦИ §7",
+      "attack": 8,
+      "defense": 0,
+      "hp": 4,
+      "pb": 0,
+      "adopt": {
+        "name": "Втори рояк ПЧЕЛИ-УБИЙЦИ §7",
+        "attack": 8,
+        "defense": 0,
+        "hp": 4,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 0,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 7,
+          "rules": {}
+        },
+        "part": {
+          "name": "Втори рояк ПЧЕЛИ-УБИЙЦИ §7",
+          "attack": 8,
+          "defense": 0,
+          "hp": 4,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:7:slot:2",
+      "name": "Трети рояк ПЧЕЛИ-УБИЙЦИ §7",
+      "attack": 7,
+      "defense": 0,
+      "hp": 4,
+      "pb": 0,
+      "adopt": {
+        "name": "Трети рояк ПЧЕЛИ-УБИЙЦИ §7",
+        "attack": 7,
+        "defense": 0,
+        "hp": 4,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 0,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 7,
+          "rules": {}
+        },
+        "part": {
+          "name": "Трети рояк ПЧЕЛИ-УБИЙЦИ §7",
+          "attack": 7,
+          "defense": 0,
+          "hp": 4,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:9:slot:0",
+      "name": "ТАЛАСЪМ §9",
+      "attack": 5,
+      "defense": 0,
+      "hp": 4,
+      "pb": 0,
+      "adopt": {
+        "name": "ТАЛАСЪМ §9",
+        "attack": 5,
+        "defense": 0,
+        "hp": 4,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 9,
+          "rules": {}
+        },
+        "part": {
+          "name": "ТАЛАСЪМ §9",
+          "attack": 5,
+          "defense": 0,
+          "hp": 4,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:15:slot:0",
+      "name": "ОТРОВЕН ЧЕРВЕЙ §15",
+      "attack": 8,
+      "defense": 0,
+      "hp": 7,
+      "pb": 0,
+      "adopt": {
+        "name": "ОТРОВЕН ЧЕРВЕЙ §15",
+        "attack": 8,
+        "defense": 0,
+        "hp": 7,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 15,
+          "rules": {}
+        },
+        "part": {
+          "name": "ОТРОВЕН ЧЕРВЕЙ §15",
+          "attack": 8,
+          "defense": 0,
+          "hp": 7,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:29:slot:0",
+      "name": "Първи ОРК §29",
+      "attack": 5,
+      "defense": 0,
+      "hp": 5,
+      "pb": 0,
+      "adopt": {
+        "name": "Първи ОРК §29",
+        "attack": 5,
+        "defense": 0,
+        "hp": 5,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 29,
+          "rules": {}
+        },
+        "part": {
+          "name": "Първи ОРК §29",
+          "attack": 5,
+          "defense": 0,
+          "hp": 5,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:29:slot:1",
+      "name": "Втори ОРК §29",
+      "attack": 5,
+      "defense": 0,
+      "hp": 6,
+      "pb": 0,
+      "adopt": {
+        "name": "Втори ОРК §29",
+        "attack": 5,
+        "defense": 0,
+        "hp": 6,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 3,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 29,
+          "rules": {}
+        },
+        "part": {
+          "name": "Втори ОРК §29",
+          "attack": 5,
+          "defense": 0,
+          "hp": 6,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:43:slot:0",
+      "name": "Първи ДИВАК ОТ ХЪЛМА §43",
+      "attack": 7,
+      "defense": 0,
+      "hp": 5,
+      "pb": 0,
+      "adopt": {
+        "name": "Първи ДИВАК ОТ ХЪЛМА §43",
+        "attack": 7,
+        "defense": 0,
+        "hp": 5,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 43,
+          "rules": {}
+        },
+        "part": {
+          "name": "Първи ДИВАК ОТ ХЪЛМА §43",
+          "attack": 7,
+          "defense": 0,
+          "hp": 5,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:43:slot:1",
+      "name": "Втори ДИВАК ОТ ХЪЛМА §43",
+      "attack": 6,
+      "defense": 0,
+      "hp": 4,
+      "pb": 0,
+      "adopt": {
+        "name": "Втори ДИВАК ОТ ХЪЛМА §43",
+        "attack": 6,
+        "defense": 0,
+        "hp": 4,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 4,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 43,
+          "rules": {}
+        },
+        "part": {
+          "name": "Втори ДИВАК ОТ ХЪЛМА §43",
+          "attack": 6,
+          "defense": 0,
+          "hp": 4,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:49:slot:0",
+      "name": "Първи ГРЕМЛИН §49",
+      "attack": 4,
+      "defense": 0,
+      "hp": 3,
+      "pb": 0,
+      "adopt": {
+        "name": "Първи ГРЕМЛИН §49",
+        "attack": 4,
+        "defense": 0,
+        "hp": 3,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 49,
+          "rules": {
+            "attackModifier": -3
+          }
+        },
+        "part": {
+          "name": "Първи ГРЕМЛИН §49",
+          "attack": 4,
+          "defense": 0,
+          "hp": 3,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:49:slot:1",
+      "name": "Втори ГРЕМЛИН §49",
+      "attack": 3,
+      "defense": 0,
+      "hp": 2,
+      "pb": 0,
+      "adopt": {
+        "name": "Втори ГРЕМЛИН §49",
+        "attack": 3,
+        "defense": 0,
+        "hp": 2,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 5,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 49,
+          "rules": {
+            "attackModifier": -3
+          }
+        },
+        "part": {
+          "name": "Втори ГРЕМЛИН §49",
+          "attack": 3,
+          "defense": 0,
+          "hp": 2,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:71:slot:0",
+      "name": "ГРЕМЛИН §71",
+      "attack": 5,
+      "defense": 0,
+      "hp": 5,
+      "pb": 0,
+      "adopt": {
+        "name": "ГРЕМЛИН §71",
+        "attack": 5,
+        "defense": 0,
+        "hp": 5,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 71,
+          "rules": {
+            "attackModifier": -3
+          }
+        },
+        "part": {
+          "name": "ГРЕМЛИН §71",
+          "attack": 5,
+          "defense": 0,
+          "hp": 5,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:79:slot:0",
+      "name": "Първи ПРИЛЕП-ВАМПИР §79",
+      "attack": 5,
+      "defense": 0,
+      "hp": 5,
+      "pb": 0,
+      "adopt": {
+        "name": "Първи ПРИЛЕП-ВАМПИР §79",
+        "attack": 5,
+        "defense": 0,
+        "hp": 5,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 79,
+          "rules": {}
+        },
+        "part": {
+          "name": "Първи ПРИЛЕП-ВАМПИР §79",
+          "attack": 5,
+          "defense": 0,
+          "hp": 5,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:79:slot:1",
+      "name": "Втори ПРИЛЕП-ВАМПИР §79",
+      "attack": 6,
+      "defense": 0,
+      "hp": 5,
+      "pb": 0,
+      "adopt": {
+        "name": "Втори ПРИЛЕП-ВАМПИР §79",
+        "attack": 6,
+        "defense": 0,
+        "hp": 5,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 7,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 79,
+          "rules": {}
+        },
+        "part": {
+          "name": "Втори ПРИЛЕП-ВАМПИР §79",
+          "attack": 6,
+          "defense": 0,
+          "hp": 5,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:79:slot:2",
+      "name": "Трети ПРИЛЕП-ВАМПИР §79",
+      "attack": 5,
+      "defense": 0,
+      "hp": 7,
+      "pb": 0,
+      "adopt": {
+        "name": "Трети ПРИЛЕП-ВАМПИР §79",
+        "attack": 5,
+        "defense": 0,
+        "hp": 7,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 7,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 79,
+          "rules": {}
+        },
+        "part": {
+          "name": "Трети ПРИЛЕП-ВАМПИР §79",
+          "attack": 5,
+          "defense": 0,
+          "hp": 7,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:84:slot:0",
+      "name": "КАНАРА-ЧУДОВИЩЕ §84",
+      "attack": 8,
+      "defense": 0,
+      "hp": 11,
+      "pb": 0,
+      "adopt": {
+        "name": "КАНАРА-ЧУДОВИЩЕ §84",
+        "attack": 8,
+        "defense": 0,
+        "hp": 11,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 84,
+          "rules": {}
+        },
+        "part": {
+          "name": "КАНАРА-ЧУДОВИЩЕ §84",
+          "attack": 8,
+          "defense": 0,
+          "hp": 11,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:96:slot:0",
+      "name": "ЛОВДЖИЙСКО КУЧЕ §96",
+      "attack": 6,
+      "defense": 0,
+      "hp": 6,
+      "pb": 0,
+      "adopt": {
+        "name": "ЛОВДЖИЙСКО КУЧЕ §96",
+        "attack": 6,
+        "defense": 0,
+        "hp": 6,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 5,
+        "entry": {
+          "section": 96,
+          "rules": {}
+        },
+        "part": {
+          "name": "ЛОВДЖИЙСКО КУЧЕ §96",
+          "attack": 6,
+          "defense": 0,
+          "hp": 6,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:96:slot:1",
+      "name": "ЛОВДЖИЙСКО КУЧЕ §96",
+      "attack": 5,
+      "defense": 0,
+      "hp": 6,
+      "pb": 0,
+      "adopt": {
+        "name": "ЛОВДЖИЙСКО КУЧЕ §96",
+        "attack": 5,
+        "defense": 0,
+        "hp": 6,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 9,
+        "slot": 1,
+        "partCount": 5,
+        "entry": {
+          "section": 96,
+          "rules": {}
+        },
+        "part": {
+          "name": "ЛОВДЖИЙСКО КУЧЕ §96",
+          "attack": 5,
+          "defense": 0,
+          "hp": 6,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:96:slot:2",
+      "name": "ЛОВДЖИЙСКО КУЧЕ §96",
+      "attack": 6,
+      "defense": 0,
+      "hp": 5,
+      "pb": 0,
+      "adopt": {
+        "name": "ЛОВДЖИЙСКО КУЧЕ §96",
+        "attack": 6,
+        "defense": 0,
+        "hp": 5,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 9,
+        "slot": 2,
+        "partCount": 5,
+        "entry": {
+          "section": 96,
+          "rules": {}
+        },
+        "part": {
+          "name": "ЛОВДЖИЙСКО КУЧЕ §96",
+          "attack": 6,
+          "defense": 0,
+          "hp": 5,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:96:slot:3",
+      "name": "МАСКИРАН ЧОВЕК §96",
+      "attack": 8,
+      "defense": 0,
+      "hp": 7,
+      "pb": 0,
+      "adopt": {
+        "name": "МАСКИРАН ЧОВЕК §96",
+        "attack": 8,
+        "defense": 0,
+        "hp": 7,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 9,
+        "slot": 3,
+        "partCount": 5,
+        "entry": {
+          "section": 96,
+          "rules": {}
+        },
+        "part": {
+          "name": "МАСКИРАН ЧОВЕК §96",
+          "attack": 8,
+          "defense": 0,
+          "hp": 7,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:96:slot:4",
+      "name": "ЛОВДЖИЙСКО КУЧЕ (водач) §96",
+      "attack": 7,
+      "defense": 0,
+      "hp": 6,
+      "pb": 0,
+      "adopt": {
+        "name": "ЛОВДЖИЙСКО КУЧЕ (водач) §96",
+        "attack": 7,
+        "defense": 0,
+        "hp": 6,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 9,
+        "slot": 4,
+        "partCount": 5,
+        "entry": {
+          "section": 96,
+          "rules": {}
+        },
+        "part": {
+          "name": "ЛОВДЖИЙСКО КУЧЕ (водач) §96",
+          "attack": 7,
+          "defense": 0,
+          "hp": 6,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:104:slot:0",
+      "name": "РАЗБОЙНИЧКА §104",
+      "attack": 8,
+      "defense": 0,
+      "hp": 6,
+      "pb": 0,
+      "adopt": {
+        "name": "РАЗБОЙНИЧКА §104",
+        "attack": 8,
+        "defense": 0,
+        "hp": 6,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 5,
+        "entry": {
+          "section": 104,
+          "rules": {}
+        },
+        "part": {
+          "name": "РАЗБОЙНИЧКА §104",
+          "attack": 8,
+          "defense": 0,
+          "hp": 6,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:104:slot:1",
+      "name": "БАНДИТ А §104",
+      "attack": 7,
+      "defense": 0,
+      "hp": 6,
+      "pb": 0,
+      "adopt": {
+        "name": "БАНДИТ А §104",
+        "attack": 7,
+        "defense": 0,
+        "hp": 6,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 10,
+        "slot": 1,
+        "partCount": 5,
+        "entry": {
+          "section": 104,
+          "rules": {}
+        },
+        "part": {
+          "name": "БАНДИТ А §104",
+          "attack": 7,
+          "defense": 0,
+          "hp": 6,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:104:slot:2",
+      "name": "БАНДИТ Б §104",
+      "attack": 6,
+      "defense": 0,
+      "hp": 4,
+      "pb": 0,
+      "adopt": {
+        "name": "БАНДИТ Б §104",
+        "attack": 6,
+        "defense": 0,
+        "hp": 4,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 10,
+        "slot": 2,
+        "partCount": 5,
+        "entry": {
+          "section": 104,
+          "rules": {}
+        },
+        "part": {
+          "name": "БАНДИТ Б §104",
+          "attack": 6,
+          "defense": 0,
+          "hp": 4,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:104:slot:3",
+      "name": "БАНДИТ А §104",
+      "attack": 7,
+      "defense": 0,
+      "hp": 5,
+      "pb": 0,
+      "adopt": {
+        "name": "БАНДИТ А §104",
+        "attack": 7,
+        "defense": 0,
+        "hp": 5,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 10,
+        "slot": 3,
+        "partCount": 5,
+        "entry": {
+          "section": 104,
+          "rules": {}
+        },
+        "part": {
+          "name": "БАНДИТ А §104",
+          "attack": 7,
+          "defense": 0,
+          "hp": 5,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:104:slot:4",
+      "name": "БАНДИТ Б §104",
+      "attack": 5,
+      "defense": 0,
+      "hp": 6,
+      "pb": 0,
+      "adopt": {
+        "name": "БАНДИТ Б §104",
+        "attack": 5,
+        "defense": 0,
+        "hp": 6,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 10,
+        "slot": 4,
+        "partCount": 5,
+        "entry": {
+          "section": 104,
+          "rules": {}
+        },
+        "part": {
+          "name": "БАНДИТ Б §104",
+          "attack": 5,
+          "defense": 0,
+          "hp": 6,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:107:slot:0",
+      "name": "ОГНЕН ДЕМОН §107",
+      "attack": 10,
+      "defense": 0,
+      "hp": 10,
+      "pb": 0,
+      "adopt": {
+        "name": "ОГНЕН ДЕМОН §107",
+        "attack": 10,
+        "defense": 0,
+        "hp": 10,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 107,
+          "rules": {
+            "whip": true
+          }
+        },
+        "part": {
+          "name": "ОГНЕН ДЕМОН §107",
+          "attack": 10,
+          "defense": 0,
+          "hp": 10,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:117:slot:0",
+      "name": "ТАЛАСЪМ §117",
+      "attack": 5,
+      "defense": 0,
+      "hp": 4,
+      "pb": 0,
+      "adopt": {
+        "name": "ТАЛАСЪМ §117",
+        "attack": 5,
+        "defense": 0,
+        "hp": 4,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 117,
+          "rules": {}
+        },
+        "part": {
+          "name": "ТАЛАСЪМ §117",
+          "attack": 5,
+          "defense": 0,
+          "hp": 4,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:118:slot:0",
+      "name": "ДИВ ГЛИГАН §118",
+      "attack": 6,
+      "defense": 0,
+      "hp": 5,
+      "pb": 0,
+      "adopt": {
+        "name": "ДИВ ГЛИГАН §118",
+        "attack": 6,
+        "defense": 0,
+        "hp": 5,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 118,
+          "rules": {}
+        },
+        "part": {
+          "name": "ДИВ ГЛИГАН §118",
+          "attack": 6,
+          "defense": 0,
+          "hp": 5,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:153:slot:0",
+      "name": "ЖЕНА-КОТКА §153",
+      "attack": 8,
+      "defense": 0,
+      "hp": 5,
+      "pb": 0,
+      "adopt": {
+        "name": "ЖЕНА-КОТКА §153",
+        "attack": 8,
+        "defense": 0,
+        "hp": 5,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 153,
+          "rules": {}
+        },
+        "part": {
+          "name": "ЖЕНА-КОТКА §153",
+          "attack": 8,
+          "defense": 0,
+          "hp": 5,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:165:slot:0",
+      "name": "ГРЕМЛИН §165",
+      "attack": 5,
+      "defense": 0,
+      "hp": 3,
+      "pb": 0,
+      "adopt": {
+        "name": "ГРЕМЛИН §165",
+        "attack": 5,
+        "defense": 0,
+        "hp": 3,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 165,
+          "rules": {
+            "attackModifier": -3
+          }
+        },
+        "part": {
+          "name": "ГРЕМЛИН §165",
+          "attack": 5,
+          "defense": 0,
+          "hp": 3,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:167:slot:0",
+      "name": "ЛЕТЯЩ ДРАКОН §167",
+      "attack": 10,
+      "defense": 0,
+      "hp": 11,
+      "pb": 0,
+      "adopt": {
+        "name": "ЛЕТЯЩ ДРАКОН §167",
+        "attack": 10,
+        "defense": 0,
+        "hp": 11,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 167,
+          "rules": {}
+        },
+        "part": {
+          "name": "ЛЕТЯЩ ДРАКОН §167",
+          "attack": 10,
+          "defense": 0,
+          "hp": 11,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:181:slot:0",
+      "name": "ЧОВЕК-РИБА §181",
+      "attack": 7,
+      "defense": 0,
+      "hp": 6,
+      "pb": 0,
+      "adopt": {
+        "name": "ЧОВЕК-РИБА §181",
+        "attack": 7,
+        "defense": 0,
+        "hp": 6,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 181,
+          "rules": {}
+        },
+        "part": {
+          "name": "ЧОВЕК-РИБА §181",
+          "attack": 7,
+          "defense": 0,
+          "hp": 6,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:186:slot:0",
+      "name": "КЪРВАВА ЗМИОРКА §186",
+      "attack": 5,
+      "defense": 0,
+      "hp": 4,
+      "pb": 0,
+      "adopt": {
+        "name": "КЪРВАВА ЗМИОРКА §186",
+        "attack": 5,
+        "defense": 0,
+        "hp": 4,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 186,
+          "rules": {}
+        },
+        "part": {
+          "name": "КЪРВАВА ЗМИОРКА §186",
+          "attack": 5,
+          "defense": 0,
+          "hp": 4,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:193:slot:0",
+      "name": "ГРЕМЛИН §193",
+      "attack": 4,
+      "defense": 0,
+      "hp": 4,
+      "pb": 0,
+      "adopt": {
+        "name": "ГРЕМЛИН §193",
+        "attack": 4,
+        "defense": 0,
+        "hp": 4,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 193,
+          "rules": {
+            "attackModifier": -3
+          }
+        },
+        "part": {
+          "name": "ГРЕМЛИН §193",
+          "attack": 4,
+          "defense": 0,
+          "hp": 4,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:203:slot:0",
+      "name": "ПРЕВРЪЩАЩ СЕ ЗВЯР §203",
+      "attack": 10,
+      "defense": 0,
+      "hp": 10,
+      "pb": 0,
+      "adopt": {
+        "name": "ПРЕВРЪЩАЩ СЕ ЗВЯР §203",
+        "attack": 10,
+        "defense": 0,
+        "hp": 10,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 203,
+          "rules": {}
+        },
+        "part": {
+          "name": "ПРЕВРЪЩАЩ СЕ ЗВЯР §203",
+          "attack": 10,
+          "defense": 0,
+          "hp": 10,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:212:slot:0",
+      "name": "Първи ВОИН-КЛОН §212",
+      "attack": 5,
+      "defense": 0,
+      "hp": 5,
+      "pb": 0,
+      "adopt": {
+        "name": "Първи ВОИН-КЛОН §212",
+        "attack": 5,
+        "defense": 0,
+        "hp": 5,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "section": 212,
+          "rules": {}
+        },
+        "part": {
+          "name": "Първи ВОИН-КЛОН §212",
+          "attack": 5,
+          "defense": 0,
+          "hp": 5,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:212:slot:1",
+      "name": "Втори ВОИН-КЛОН §212",
+      "attack": 6,
+      "defense": 0,
+      "hp": 4,
+      "pb": 0,
+      "adopt": {
+        "name": "Втори ВОИН-КЛОН §212",
+        "attack": 6,
+        "defense": 0,
+        "hp": 4,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 21,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "section": 212,
+          "rules": {}
+        },
+        "part": {
+          "name": "Втори ВОИН-КЛОН §212",
+          "attack": 6,
+          "defense": 0,
+          "hp": 4,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:212:slot:2",
+      "name": "Трети ВОИН-КЛОН §212",
+      "attack": 5,
+      "defense": 0,
+      "hp": 6,
+      "pb": 0,
+      "adopt": {
+        "name": "Трети ВОИН-КЛОН §212",
+        "attack": 5,
+        "defense": 0,
+        "hp": 6,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 21,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "section": 212,
+          "rules": {}
+        },
+        "part": {
+          "name": "Трети ВОИН-КЛОН §212",
+          "attack": 5,
+          "defense": 0,
+          "hp": 6,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:212:slot:3",
+      "name": "Четвърти ВОИН-КЛОН §212",
+      "attack": 6,
+      "defense": 0,
+      "hp": 5,
+      "pb": 0,
+      "adopt": {
+        "name": "Четвърти ВОИН-КЛОН §212",
+        "attack": 6,
+        "defense": 0,
+        "hp": 5,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 21,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "section": 212,
+          "rules": {}
+        },
+        "part": {
+          "name": "Четвърти ВОИН-КЛОН §212",
+          "attack": 6,
+          "defense": 0,
+          "hp": 5,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:227:slot:0",
+      "name": "ВАМПИР §227",
+      "attack": 9,
+      "defense": 0,
+      "hp": 7,
+      "pb": 0,
+      "adopt": {
+        "name": "ВАМПИР §227",
+        "attack": 9,
+        "defense": 0,
+        "hp": 7,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 227,
+          "rules": {
+            "paralyzeAfter": 4
+          }
+        },
+        "part": {
+          "name": "ВАМПИР §227",
+          "attack": 9,
+          "defense": 0,
+          "hp": 7,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:231:slot:0",
+      "name": "Първи ЯСТРЕБ-УБИЕЦ §231",
+      "attack": 4,
+      "defense": 0,
+      "hp": 4,
+      "pb": 0,
+      "adopt": {
+        "name": "Първи ЯСТРЕБ-УБИЕЦ §231",
+        "attack": 4,
+        "defense": 0,
+        "hp": 4,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 231,
+          "rules": {}
+        },
+        "part": {
+          "name": "Първи ЯСТРЕБ-УБИЕЦ §231",
+          "attack": 4,
+          "defense": 0,
+          "hp": 4,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:231:slot:1",
+      "name": "Втори ЯСТРЕБ-УБИЕЦ §231",
+      "attack": 4,
+      "defense": 0,
+      "hp": 3,
+      "pb": 0,
+      "adopt": {
+        "name": "Втори ЯСТРЕБ-УБИЕЦ §231",
+        "attack": 4,
+        "defense": 0,
+        "hp": 3,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 23,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 231,
+          "rules": {}
+        },
+        "part": {
+          "name": "Втори ЯСТРЕБ-УБИЕЦ §231",
+          "attack": 4,
+          "defense": 0,
+          "hp": 3,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:231:slot:2",
+      "name": "Трети ЯСТРЕБ-УБИЕЦ §231",
+      "attack": 5,
+      "defense": 0,
+      "hp": 4,
+      "pb": 0,
+      "adopt": {
+        "name": "Трети ЯСТРЕБ-УБИЕЦ §231",
+        "attack": 5,
+        "defense": 0,
+        "hp": 4,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 23,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 231,
+          "rules": {}
+        },
+        "part": {
+          "name": "Трети ЯСТРЕБ-УБИЕЦ §231",
+          "attack": 5,
+          "defense": 0,
+          "hp": 4,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:241:slot:0",
+      "name": "МЕЧКА §241",
+      "attack": 7,
+      "defense": 0,
+      "hp": 8,
+      "pb": 0,
+      "adopt": {
+        "name": "МЕЧКА §241",
+        "attack": 7,
+        "defense": 0,
+        "hp": 8,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 241,
+          "rules": {}
+        },
+        "part": {
+          "name": "МЕЧКА §241",
+          "attack": 7,
+          "defense": 0,
+          "hp": 8,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:265:slot:0",
+      "name": "ГОРСКИ ВЕЛИКАН §265",
+      "attack": 9,
+      "defense": 0,
+      "hp": 9,
+      "pb": 0,
+      "adopt": {
+        "name": "ГОРСКИ ВЕЛИКАН §265",
+        "attack": 9,
+        "defense": 0,
+        "hp": 9,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 265,
+          "rules": {}
+        },
+        "part": {
+          "name": "ГОРСКИ ВЕЛИКАН §265",
+          "attack": 9,
+          "defense": 0,
+          "hp": 9,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:276:slot:0",
+      "name": "ЛОВДЖИЙСКО КУЧЕ §276",
+      "attack": 7,
+      "defense": 0,
+      "hp": 6,
+      "pb": 0,
+      "adopt": {
+        "name": "ЛОВДЖИЙСКО КУЧЕ §276",
+        "attack": 7,
+        "defense": 0,
+        "hp": 6,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 5,
+        "entry": {
+          "section": 276,
+          "rules": {}
+        },
+        "part": {
+          "name": "ЛОВДЖИЙСКО КУЧЕ §276",
+          "attack": 7,
+          "defense": 0,
+          "hp": 6,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:276:slot:1",
+      "name": "ЛОВДЖИЙСКО КУЧЕ §276",
+      "attack": 6,
+      "defense": 0,
+      "hp": 6,
+      "pb": 0,
+      "adopt": {
+        "name": "ЛОВДЖИЙСКО КУЧЕ §276",
+        "attack": 6,
+        "defense": 0,
+        "hp": 6,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 26,
+        "slot": 1,
+        "partCount": 5,
+        "entry": {
+          "section": 276,
+          "rules": {}
+        },
+        "part": {
+          "name": "ЛОВДЖИЙСКО КУЧЕ §276",
+          "attack": 6,
+          "defense": 0,
+          "hp": 6,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:276:slot:2",
+      "name": "ЛОВДЖИЙСКО КУЧЕ §276",
+      "attack": 5,
+      "defense": 0,
+      "hp": 6,
+      "pb": 0,
+      "adopt": {
+        "name": "ЛОВДЖИЙСКО КУЧЕ §276",
+        "attack": 5,
+        "defense": 0,
+        "hp": 6,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 26,
+        "slot": 2,
+        "partCount": 5,
+        "entry": {
+          "section": 276,
+          "rules": {}
+        },
+        "part": {
+          "name": "ЛОВДЖИЙСКО КУЧЕ §276",
+          "attack": 5,
+          "defense": 0,
+          "hp": 6,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:276:slot:3",
+      "name": "ЛОВДЖИЙСКО КУЧЕ §276",
+      "attack": 6,
+      "defense": 0,
+      "hp": 5,
+      "pb": 0,
+      "adopt": {
+        "name": "ЛОВДЖИЙСКО КУЧЕ §276",
+        "attack": 6,
+        "defense": 0,
+        "hp": 5,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 26,
+        "slot": 3,
+        "partCount": 5,
+        "entry": {
+          "section": 276,
+          "rules": {}
+        },
+        "part": {
+          "name": "ЛОВДЖИЙСКО КУЧЕ §276",
+          "attack": 6,
+          "defense": 0,
+          "hp": 5,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:276:slot:4",
+      "name": "МАСКИРАН ЧОВЕК §276",
+      "attack": 8,
+      "defense": 0,
+      "hp": 7,
+      "pb": 0,
+      "adopt": {
+        "name": "МАСКИРАН ЧОВЕК §276",
+        "attack": 8,
+        "defense": 0,
+        "hp": 7,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 26,
+        "slot": 4,
+        "partCount": 5,
+        "entry": {
+          "section": 276,
+          "rules": {}
+        },
+        "part": {
+          "name": "МАСКИРАН ЧОВЕК §276",
+          "attack": 8,
+          "defense": 0,
+          "hp": 7,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:285:slot:0",
+      "name": "ВЪРКОЛАК §285",
+      "attack": 10,
+      "defense": 0,
+      "hp": 9,
+      "pb": 0,
+      "adopt": {
+        "name": "ВЪРКОЛАК §285",
+        "attack": 10,
+        "defense": 0,
+        "hp": 9,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 27,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 285,
+          "rules": {}
+        },
+        "part": {
+          "name": "ВЪРКОЛАК §285",
+          "attack": 10,
+          "defense": 0,
+          "hp": 9,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:286:slot:0",
+      "name": "ПРЕВРЪЩАЩ СЕ ЗВЯР §286",
+      "attack": 10,
+      "defense": 0,
+      "hp": 10,
+      "pb": 0,
+      "adopt": {
+        "name": "ПРЕВРЪЩАЩ СЕ ЗВЯР §286",
+        "attack": 10,
+        "defense": 0,
+        "hp": 10,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 28,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 286,
+          "rules": {}
+        },
+        "part": {
+          "name": "ПРЕВРЪЩАЩ СЕ ЗВЯР §286",
+          "attack": 10,
+          "defense": 0,
+          "hp": 10,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:290:slot:0",
+      "name": "ЧОВЕКОЯДЕЦ §290",
+      "attack": 8,
+      "defense": 0,
+      "hp": 12,
+      "pb": 0,
+      "adopt": {
+        "name": "ЧОВЕКОЯДЕЦ §290",
+        "attack": 8,
+        "defense": 0,
+        "hp": 12,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 29,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 290,
+          "rules": {}
+        },
+        "part": {
+          "name": "ЧОВЕКОЯДЕЦ §290",
+          "attack": 8,
+          "defense": 0,
+          "hp": 12,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:298:slot:0",
+      "name": "ПАЯК-ВЕЛИКАН §298",
+      "attack": 7,
+      "defense": 0,
+      "hp": 8,
+      "pb": 0,
+      "adopt": {
+        "name": "ПАЯК-ВЕЛИКАН §298",
+        "attack": 7,
+        "defense": 0,
+        "hp": 8,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 30,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 298,
+          "rules": {}
+        },
+        "part": {
+          "name": "ПАЯК-ВЕЛИКАН §298",
+          "attack": 7,
+          "defense": 0,
+          "hp": 8,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:303:slot:0",
+      "name": "ПТЕРОДАКТИЛ §303",
+      "attack": 7,
+      "defense": 0,
+      "hp": 8,
+      "pb": 0,
+      "adopt": {
+        "name": "ПТЕРОДАКТИЛ §303",
+        "attack": 7,
+        "defense": 0,
+        "hp": 8,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 31,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 303,
+          "rules": {}
+        },
+        "part": {
+          "name": "ПТЕРОДАКТИЛ §303",
+          "attack": 7,
+          "defense": 0,
+          "hp": 8,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:310:slot:0",
+      "name": "ПЕЩЕРЕН ТРОЛ §310",
+      "attack": 8,
+      "defense": 0,
+      "hp": 9,
+      "pb": 0,
+      "adopt": {
+        "name": "ПЕЩЕРЕН ТРОЛ §310",
+        "attack": 8,
+        "defense": 0,
+        "hp": 9,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 32,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 310,
+          "rules": {}
+        },
+        "part": {
+          "name": "ПЕЩЕРЕН ТРОЛ §310",
+          "attack": 8,
+          "defense": 0,
+          "hp": 9,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:330:slot:0",
+      "name": "Първи ВЪЛК §330",
+      "attack": 7,
+      "defense": 0,
+      "hp": 7,
+      "pb": 0,
+      "adopt": {
+        "name": "Първи ВЪЛК §330",
+        "attack": 7,
+        "defense": 0,
+        "hp": 7,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 33,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 330,
+          "rules": {}
+        },
+        "part": {
+          "name": "Първи ВЪЛК §330",
+          "attack": 7,
+          "defense": 0,
+          "hp": 7,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:330:slot:1",
+      "name": "Втори ВЪЛК §330",
+      "attack": 8,
+      "defense": 0,
+      "hp": 7,
+      "pb": 0,
+      "adopt": {
+        "name": "Втори ВЪЛК §330",
+        "attack": 8,
+        "defense": 0,
+        "hp": 7,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 33,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 330,
+          "rules": {}
+        },
+        "part": {
+          "name": "Втори ВЪЛК §330",
+          "attack": 8,
+          "defense": 0,
+          "hp": 7,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:330:slot:2",
+      "name": "Трети ВЪЛК §330",
+      "attack": 7,
+      "defense": 0,
+      "hp": 9,
+      "pb": 0,
+      "adopt": {
+        "name": "Трети ВЪЛК §330",
+        "attack": 7,
+        "defense": 0,
+        "hp": 9,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 33,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 330,
+          "rules": {}
+        },
+        "part": {
+          "name": "Трети ВЪЛК §330",
+          "attack": 7,
+          "defense": 0,
+          "hp": 9,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:347:slot:0",
+      "name": "ДЖУДЖЕ §347",
+      "attack": 8,
+      "defense": 0,
+      "hp": 5,
+      "pb": 0,
+      "adopt": {
+        "name": "ДЖУДЖЕ §347",
+        "attack": 8,
+        "defense": 0,
+        "hp": 5,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 34,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 347,
+          "rules": {}
+        },
+        "part": {
+          "name": "ДЖУДЖЕ §347",
+          "attack": 8,
+          "defense": 0,
+          "hp": 5,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:352:slot:0",
+      "name": "МАЙМУНОЧОВЕК §352",
+      "attack": 8,
+      "defense": 0,
+      "hp": 7,
+      "pb": 0,
+      "adopt": {
+        "name": "МАЙМУНОЧОВЕК §352",
+        "attack": 8,
+        "defense": 0,
+        "hp": 7,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 35,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 352,
+          "rules": {
+            "attackModifier": -2
+          }
+        },
+        "part": {
+          "name": "МАЙМУНОЧОВЕК §352",
+          "attack": 8,
+          "defense": 0,
+          "hp": 7,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:377:slot:0",
+      "name": "ДРЕБОСЪК А §377",
+      "attack": 5,
+      "defense": 0,
+      "hp": 5,
+      "pb": 0,
+      "adopt": {
+        "name": "ДРЕБОСЪК А §377",
+        "attack": 5,
+        "defense": 0,
+        "hp": 5,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 36,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 377,
+          "rules": {}
+        },
+        "part": {
+          "name": "ДРЕБОСЪК А §377",
+          "attack": 5,
+          "defense": 0,
+          "hp": 5,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:377:slot:1",
+      "name": "ДРЕБОСЪК Б §377",
+      "attack": 5,
+      "defense": 0,
+      "hp": 6,
+      "pb": 0,
+      "adopt": {
+        "name": "ДРЕБОСЪК Б §377",
+        "attack": 5,
+        "defense": 0,
+        "hp": 6,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 36,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 377,
+          "rules": {}
+        },
+        "part": {
+          "name": "ДРЕБОСЪК Б §377",
+          "attack": 5,
+          "defense": 0,
+          "hp": 6,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:123:slot:0",
+      "name": "ЖИВО ДЪРВО §123",
+      "attack": 8,
+      "defense": 0,
+      "hp": 8,
+      "pb": 0,
+      "adopt": {
+        "name": "ЖИВО ДЪРВО §123",
+        "attack": 8,
+        "defense": 0,
+        "hp": 8,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 37,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 123,
+          "rules": {}
+        },
+        "part": {
+          "name": "ЖИВО ДЪРВО §123",
+          "attack": 8,
+          "defense": 0,
+          "hp": 8,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:128:slot:0",
+      "name": "ВАРВАРИН §128",
+      "attack": 9,
+      "defense": 0,
+      "hp": 7,
+      "pb": 0,
+      "adopt": {
+        "name": "ВАРВАРИН §128",
+        "attack": 9,
+        "defense": 0,
+        "hp": 7,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 38,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 128,
+          "rules": {}
+        },
+        "part": {
+          "name": "ВАРВАРИН §128",
+          "attack": 9,
+          "defense": 0,
+          "hp": 7,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:317:slot:0",
+      "name": "Първо ДЯВОЛЧЕ §317",
+      "attack": 6,
+      "defense": 0,
+      "hp": 6,
+      "pb": 0,
+      "adopt": {
+        "name": "Първо ДЯВОЛЧЕ §317",
+        "attack": 6,
+        "defense": 0,
+        "hp": 6,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 39,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 317,
+          "rules": {}
+        },
+        "part": {
+          "name": "Първо ДЯВОЛЧЕ §317",
+          "attack": 6,
+          "defense": 0,
+          "hp": 6,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:317:slot:1",
+      "name": "Второ ДЯВОЛЧЕ §317",
+      "attack": 5,
+      "defense": 0,
+      "hp": 7,
+      "pb": 0,
+      "adopt": {
+        "name": "Второ ДЯВОЛЧЕ §317",
+        "attack": 5,
+        "defense": 0,
+        "hp": 7,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 39,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 317,
+          "rules": {}
+        },
+        "part": {
+          "name": "Второ ДЯВОЛЧЕ §317",
+          "attack": 5,
+          "defense": 0,
+          "hp": 7,
+          "pb": 0
+        },
+        "count": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,995 @@
+{
+  "schemaVersion": 1,
+  "bookId": 833,
+  "family": "unique-dice-square",
+  "source": "All twenty-three Last Payment encounter variants on the twenty original actor profiles. Shared rows retain distinct damage multipliers, bonuses, labels, deadlines, survival/threshold rules, security-chip options and exact destinations without duplicates. Legacy attack/defence/pb remain null and all IDs/fields are preserved.",
+  "enemies": [
+    {
+      "key": "actor:0",
+      "name": "Служители на корпорация „Мардук“",
+      "attack": null,
+      "defense": null,
+      "hp": 100,
+      "pb": null,
+      "adopt": {
+        "name": "Служители на корпорация „Мардук“",
+        "attack": null,
+        "defense": null,
+        "hp": 100,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Служители на корпорация „Мардук“",
+            "hp": 100
+          },
+          "variants": [
+            {
+              "order": 0,
+              "spec": {
+                "section": 3,
+                "displayName": "Служители на корпорация „Мардук“",
+                "label": "Последната преграда — сам",
+                "multiplier": 4,
+                "bonus": 0,
+                "hp": 100,
+                "destination": "68"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Служители на корпорация „Мардук“",
+          "hp": 100
+        }
+      }
+    },
+    {
+      "key": "actor:1",
+      "name": "Охранители на Алън",
+      "attack": null,
+      "defense": null,
+      "hp": 100,
+      "pb": null,
+      "adopt": {
+        "name": "Охранители на Алън",
+        "attack": null,
+        "defense": null,
+        "hp": 100,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Охранители на Алън",
+            "hp": 100
+          },
+          "variants": [
+            {
+              "order": 1,
+              "spec": {
+                "section": 6,
+                "displayName": "Охранители на Алън",
+                "label": "Бягство от движещия се влак",
+                "multiplier": 5,
+                "bonus": 0,
+                "hp": 100,
+                "surviveRounds": 3,
+                "destination": "17"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Охранители на Алън",
+          "hp": 100
+        }
+      }
+    },
+    {
+      "key": "actor:2",
+      "name": "Роман Пилснер",
+      "attack": null,
+      "defense": null,
+      "hp": 40,
+      "pb": null,
+      "adopt": {
+        "name": "Роман Пилснер",
+        "attack": null,
+        "defense": null,
+        "hp": 40,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Роман Пилснер",
+            "hp": 40
+          },
+          "variants": [
+            {
+              "order": 2,
+              "spec": {
+                "section": 7,
+                "displayName": "Роман Пилснер",
+                "label": "Роман в солната равнина",
+                "multiplier": 3,
+                "bonus": 0,
+                "hp": 40,
+                "destination": "63"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Роман Пилснер",
+          "hp": 40
+        }
+      }
+    },
+    {
+      "key": "actor:3",
+      "name": "Трикоптер",
+      "attack": null,
+      "defense": null,
+      "hp": 100,
+      "pb": null,
+      "adopt": {
+        "name": "Трикоптер",
+        "attack": null,
+        "defense": null,
+        "hp": 100,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Трикоптер",
+            "hp": 100
+          },
+          "variants": [
+            {
+              "order": 3,
+              "spec": {
+                "section": 13,
+                "displayName": "Трикоптер",
+                "label": "Два рунда до излитането",
+                "multiplier": 6,
+                "bonus": 0,
+                "hp": 100,
+                "threshold": 80,
+                "deadline": 2,
+                "failureDestination": "57",
+                "destination": "4"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Трикоптер",
+          "hp": 100
+        }
+      }
+    },
+    {
+      "key": "actor:4",
+      "name": "Антуражът на Ръш",
+      "attack": null,
+      "defense": null,
+      "hp": 60,
+      "pb": null,
+      "adopt": {
+        "name": "Антуражът на Ръш",
+        "attack": null,
+        "defense": null,
+        "hp": 60,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Антуражът на Ръш",
+            "hp": 60
+          },
+          "variants": [
+            {
+              "order": 4,
+              "spec": {
+                "section": 18,
+                "displayName": "Антуражът на Ръш",
+                "label": "Отказаната оферта на Ръш",
+                "multiplier": 4,
+                "bonus": 0,
+                "hp": 60,
+                "destination": "46"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Антуражът на Ръш",
+          "hp": 60
+        }
+      }
+    },
+    {
+      "key": "actor:5",
+      "name": "Бръснач-бот",
+      "attack": null,
+      "defense": null,
+      "hp": 40,
+      "pb": null,
+      "adopt": {
+        "name": "Бръснач-бот",
+        "attack": null,
+        "defense": null,
+        "hp": 40,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Бръснач-бот",
+            "hp": 40
+          },
+          "variants": [
+            {
+              "order": 5,
+              "spec": {
+                "section": 20,
+                "displayName": "Бръснач-бот",
+                "label": "Бръснач-ботът в коридора",
+                "multiplier": 1,
+                "bonus": 6,
+                "hp": 40,
+                "repeatEnemyOnOne": true,
+                "destination": "81"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Бръснач-бот",
+          "hp": 40
+        }
+      }
+    },
+    {
+      "key": "actor:6",
+      "name": "Служители на корпорация „Мардук“",
+      "attack": null,
+      "defense": null,
+      "hp": 50,
+      "pb": null,
+      "adopt": {
+        "name": "Служители на корпорация „Мардук“",
+        "attack": null,
+        "defense": null,
+        "hp": 50,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Служители на корпорация „Мардук“",
+            "hp": 50
+          },
+          "variants": [
+            {
+              "order": 6,
+              "spec": {
+                "section": 29,
+                "displayName": "Служители на корпорация „Мардук“",
+                "label": "Последната преграда — със съюзник",
+                "multiplier": 3,
+                "bonus": 0,
+                "hp": 50,
+                "destination": "96"
+              }
+            },
+            {
+              "order": 10,
+              "spec": {
+                "section": 38,
+                "displayName": "Служители на корпорация „Мардук“",
+                "label": "Гръб в гръб на ескалатора",
+                "multiplier": 4,
+                "bonus": 0,
+                "hp": 50,
+                "destination": "44"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Служители на корпорация „Мардук“",
+          "hp": 50
+        }
+      }
+    },
+    {
+      "key": "actor:7",
+      "name": "Антуражът на Ръш",
+      "attack": null,
+      "defense": null,
+      "hp": 40,
+      "pb": null,
+      "adopt": {
+        "name": "Антуражът на Ръш",
+        "attack": null,
+        "defense": null,
+        "hp": 40,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Антуражът на Ръш",
+            "hp": 40
+          },
+          "variants": [
+            {
+              "order": 7,
+              "spec": {
+                "section": 30,
+                "displayName": "Антуражът на Ръш",
+                "label": "Фосфатната скала и Ръш",
+                "multiplier": 4,
+                "bonus": 0,
+                "hp": 40,
+                "destination": "46"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Антуражът на Ръш",
+          "hp": 40
+        }
+      }
+    },
+    {
+      "key": "actor:8",
+      "name": "Алън Сейнт Фройд",
+      "attack": null,
+      "defense": null,
+      "hp": 30,
+      "pb": null,
+      "adopt": {
+        "name": "Алън Сейнт Фройд",
+        "attack": null,
+        "defense": null,
+        "hp": 30,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Алън Сейнт Фройд",
+            "hp": 30
+          },
+          "variants": [
+            {
+              "order": 8,
+              "spec": {
+                "section": 32,
+                "displayName": "Алън Сейнт Фройд",
+                "label": "Два рунда преди алармата",
+                "multiplier": 2,
+                "bonus": 0,
+                "hp": 30,
+                "deadline": 2,
+                "fatalDeadline": true,
+                "destination": "45"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Алън Сейнт Фройд",
+          "hp": 30
+        }
+      }
+    },
+    {
+      "key": "actor:9",
+      "name": "Консултант",
+      "attack": null,
+      "defense": null,
+      "hp": 60,
+      "pb": null,
+      "adopt": {
+        "name": "Консултант",
+        "attack": null,
+        "defense": null,
+        "hp": 60,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Консултант",
+            "hp": 60
+          },
+          "variants": [
+            {
+              "order": 9,
+              "spec": {
+                "section": 36,
+                "displayName": "Консултант",
+                "label": "Честният отговор на консултантката",
+                "multiplier": 5,
+                "bonus": 0,
+                "hp": 60,
+                "destination": "12"
+              }
+            },
+            {
+              "order": 15,
+              "spec": {
+                "section": 56,
+                "displayName": "Консултант",
+                "label": "Разобличеният майордом",
+                "multiplier": 5,
+                "bonus": 0,
+                "hp": 60,
+                "destination": "12"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Консултант",
+          "hp": 60
+        }
+      }
+    },
+    {
+      "key": "actor:10",
+      "name": "Охранители на „Парадайн“",
+      "attack": null,
+      "defense": null,
+      "hp": 80,
+      "pb": null,
+      "adopt": {
+        "name": "Охранители на „Парадайн“",
+        "attack": null,
+        "defense": null,
+        "hp": 80,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Охранители на „Парадайн“",
+            "hp": 80
+          },
+          "variants": [
+            {
+              "order": 11,
+              "spec": {
+                "section": 39,
+                "displayName": "Охранители на „Парадайн“",
+                "label": "Охраната в асансьора",
+                "multiplier": 4,
+                "bonus": 0,
+                "hp": 80,
+                "destination": "1"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Охранители на „Парадайн“",
+          "hp": 80
+        }
+      }
+    },
+    {
+      "key": "actor:11",
+      "name": "Антуражът на Алън",
+      "attack": null,
+      "defense": null,
+      "hp": 30,
+      "pb": null,
+      "adopt": {
+        "name": "Антуражът на Алън",
+        "attack": null,
+        "defense": null,
+        "hp": 30,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Антуражът на Алън",
+            "hp": 30
+          },
+          "variants": [
+            {
+              "order": 12,
+              "spec": {
+                "section": 41,
+                "displayName": "Антуражът на Алън",
+                "label": "Три рунда на перона",
+                "multiplier": 5,
+                "bonus": 0,
+                "hp": 30,
+                "deadline": 3,
+                "failureDestination": "23",
+                "destination": "69"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Антуражът на Алън",
+          "hp": 30
+        }
+      }
+    },
+    {
+      "key": "actor:12",
+      "name": "Охранители на корпорация „Мардук“",
+      "attack": null,
+      "defense": null,
+      "hp": 50,
+      "pb": null,
+      "adopt": {
+        "name": "Охранители на корпорация „Мардук“",
+        "attack": null,
+        "defense": null,
+        "hp": 50,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Охранители на корпорация „Мардук“",
+            "hp": 50
+          },
+          "variants": [
+            {
+              "order": 13,
+              "spec": {
+                "section": 49,
+                "displayName": "Охранители на корпорация „Мардук“",
+                "label": "Огън по служебния вход",
+                "multiplier": 4,
+                "bonus": 0,
+                "hp": 50,
+                "destination": "44"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Охранители на корпорация „Мардук“",
+          "hp": 50
+        }
+      }
+    },
+    {
+      "key": "actor:13",
+      "name": "Багер-бот",
+      "attack": null,
+      "defense": null,
+      "hp": 100,
+      "pb": null,
+      "adopt": {
+        "name": "Багер-бот",
+        "attack": null,
+        "defense": null,
+        "hp": 100,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Багер-бот",
+            "hp": 100
+          },
+          "variants": [
+            {
+              "order": 14,
+              "spec": {
+                "section": 51,
+                "displayName": "Багер-бот",
+                "label": "Багерът зад страничната врата",
+                "multiplier": 4,
+                "bonus": 0,
+                "hp": 100,
+                "securityChipOption": true,
+                "destination": "82"
+              }
+            },
+            {
+              "order": 21,
+              "spec": {
+                "section": 97,
+                "displayName": "Багер-бот",
+                "label": "Багерът срещу Омегата",
+                "multiplier": 3,
+                "bonus": 0,
+                "hp": 100,
+                "securityChipOption": true,
+                "destination": "82"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Багер-бот",
+          "hp": 100
+        }
+      }
+    },
+    {
+      "key": "actor:14",
+      "name": "Бодигард на Алън",
+      "attack": null,
+      "defense": null,
+      "hp": 40,
+      "pb": null,
+      "adopt": {
+        "name": "Бодигард на Алън",
+        "attack": null,
+        "defense": null,
+        "hp": 40,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Бодигард на Алън",
+            "hp": 40
+          },
+          "variants": [
+            {
+              "order": 16,
+              "spec": {
+                "section": 58,
+                "displayName": "Бодигард на Алън",
+                "label": "Оцелелите след дерайлирането",
+                "multiplier": 2,
+                "bonus": 0,
+                "hp": 40,
+                "destination": "94"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Бодигард на Алън",
+          "hp": 40
+        }
+      }
+    },
+    {
+      "key": "actor:15",
+      "name": "Мистериозна Аберация",
+      "attack": null,
+      "defense": null,
+      "hp": 60,
+      "pb": null,
+      "adopt": {
+        "name": "Мистериозна Аберация",
+        "attack": null,
+        "defense": null,
+        "hp": 60,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Мистериозна Аберация",
+            "hp": 60
+          },
+          "variants": [
+            {
+              "order": 17,
+              "spec": {
+                "section": 59,
+                "displayName": "Мистериозна Аберация",
+                "label": "Създанието в лабораторията",
+                "multiplier": 1,
+                "bonus": 6,
+                "hp": 60,
+                "destination": "84"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Мистериозна Аберация",
+          "hp": 60
+        }
+      }
+    },
+    {
+      "key": "actor:16",
+      "name": "Банда гиганти",
+      "attack": null,
+      "defense": null,
+      "hp": 60,
+      "pb": null,
+      "adopt": {
+        "name": "Банда гиганти",
+        "attack": null,
+        "defense": null,
+        "hp": 60,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Банда гиганти",
+            "hp": 60
+          },
+          "variants": [
+            {
+              "order": 18,
+              "spec": {
+                "section": 71,
+                "displayName": "Банда гиганти",
+                "label": "Гигантите пред асансьора",
+                "multiplier": 3,
+                "bonus": 0,
+                "hp": 60,
+                "destination": "43"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Банда гиганти",
+          "hp": 60
+        }
+      }
+    },
+    {
+      "key": "actor:17",
+      "name": "Алън Сейнт Фройд и Приятел",
+      "attack": null,
+      "defense": null,
+      "hp": 50,
+      "pb": null,
+      "adopt": {
+        "name": "Алън Сейнт Фройд и Приятел",
+        "attack": null,
+        "defense": null,
+        "hp": 50,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Алън Сейнт Фройд и Приятел",
+            "hp": 50
+          },
+          "variants": [
+            {
+              "order": 19,
+              "spec": {
+                "section": 76,
+                "displayName": "Алън Сейнт Фройд и Приятел",
+                "label": "Кафемашината и двата револвера",
+                "multiplier": 3,
+                "bonus": 0,
+                "hp": 50,
+                "destination": "45"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Алън Сейнт Фройд и Приятел",
+          "hp": 50
+        }
+      }
+    },
+    {
+      "key": "actor:18",
+      "name": "Охранители на корпорация „Мардук“",
+      "attack": null,
+      "defense": null,
+      "hp": 100,
+      "pb": null,
+      "adopt": {
+        "name": "Охранители на корпорация „Мардук“",
+        "attack": null,
+        "defense": null,
+        "hp": 100,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Охранители на корпорация „Мардук“",
+            "hp": 100
+          },
+          "variants": [
+            {
+              "order": 20,
+              "spec": {
+                "section": 80,
+                "displayName": "Охранители на корпорация „Мардук“",
+                "label": "Нападение през главния вход",
+                "multiplier": 5,
+                "bonus": 0,
+                "hp": 100,
+                "destination": "44"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Охранители на корпорация „Мардук“",
+          "hp": 100
+        }
+      }
+    },
+    {
+      "key": "actor:19",
+      "name": "Паравоенни",
+      "attack": null,
+      "defense": null,
+      "hp": 50,
+      "pb": null,
+      "adopt": {
+        "name": "Паравоенни",
+        "attack": null,
+        "defense": null,
+        "hp": 50,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "unique-dice-square",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "profile": {
+            "displayName": "Паравоенни",
+            "hp": 50
+          },
+          "variants": [
+            {
+              "order": 22,
+              "spec": {
+                "section": 98,
+                "displayName": "Паравоенни",
+                "label": "Престрелка на паркинга",
+                "multiplier": 4,
+                "bonus": 0,
+                "hp": 50,
+                "destination": "1"
+              }
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Паравоенни",
+          "hp": 50
+        }
+      }
+    }
+  ]
+}

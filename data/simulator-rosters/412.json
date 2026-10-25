@@ -29,7 +29,12 @@
           "id": "e1",
           "nameKey": "battlesim412.name.e1",
           "str": 14,
-          "hp": 12
+          "hp": 12,
+          "companionRules": {
+            "alvian": {
+              "strengthBonus": 5
+            }
+          }
         },
         "part": {
           "id": "e1",

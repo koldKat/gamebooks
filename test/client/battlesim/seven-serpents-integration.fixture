@@ -1,6 +1,7 @@
 const checks=[],saves=[];
+const rosterSeed=ROSTER_SEEDS[723];
 const assert=(value,label)=>{if(!value)throw Error(label);checks.push(label);};
-window.fetch=async(url,options={})=>{assert(url==='/api/books/723/state'&&options.method==='PUT','only intercepted state saves');saves.push(JSON.parse(options.body));return new Response('{}',{status:200});};
+window.fetch=async(url,options={})=>{if(url==='/api/books/723/enemies'&&!options.method)return new Response(JSON.stringify(rosterSeed),{status:200});assert(url==='/api/books/723/state'&&options.method==='PUT','only intercepted state saves');saves.push(JSON.parse(options.body));return new Response('{}',{status:200});};
 const app=await import('REPO/public/js/core/state.js');
 const desktop=await import('REPO/public/js/battlesim/loader.js');
 const mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
@@ -19,12 +20,12 @@ const cancel=()=>{el('cancel').click();assert(document.getElementById('confirm-o
 await open();assert(el('overlay').classList.contains('active'),'actual lazy entry opens');
 assert(!el('overlay').textContent.includes('battlesim723.'),'translated UI');
 assert(run.sim723.character===null&&el('start').disabled,'opening never rolls a character');
-assert(el('encounter').options.length===77,'all named encounters');
+assert(el('encounter').options.length===78,'all named encounters');
 assert([...el('encounter').options].every(option=>!/^(Section|Епизод)\s+\d/.test(option.textContent)),'descriptive encounter names');
 el('role').value='wizard';
 for(const [key,value] of Object.entries({skill:99,skillInitial:99,stamina:99,staminaInitial:99,luck:12,luckInitial:12,gold:20,provisions:2,mealsToday:0,goblinTeeth:4,giantTeeth:1,pebbles:0,medicines:1,attackModifier:0}))el(key).value=String(value);
 el('apply').click();assert(run.sim723.character.stamina===99,'manual stats saved');
-el('start').click();assert(el('apply').disabled&&el('encounter').disabled,'active fight locks setup');
+change('encounter','27');el('start').click();assert(el('apply').disabled&&el('encounter').disabled,'active fight locks setup');
 for(let n=0;n<4;n++){el('round').click();el('skipLuck').click();}
 assert(run.sim723.fight.outcome==='win'&&run.sim723.fight.destination===106,'ordinary fight victory');
 assert(run.sim723.history.length===1,'victory recorded once');el('round').click();assert(run.sim723.history.length===1,'no repeated victory');

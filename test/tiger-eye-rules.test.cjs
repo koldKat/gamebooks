@@ -2,7 +2,14 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');
 const path = require('node:path');
-const engine = import('data:text/javascript;base64,' + Buffer.from(fs.readFileSync(path.join(__dirname, '../public/js/battlesim/engines/tiger-eye.js'))).toString('base64'));
+const roster = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/simulator-rosters/869.json'))).enemies.map(row => row.stats.entry);
+const settings = Object.fromEntries(roster.map(row => [row.id, row.support]));
+const labels = Object.fromEntries(roster.map(row => [row.id, row.support.labels]));
+const common = roster.find(row => row.support.common).support.common;
+const engine = import('data:text/javascript;base64,' + Buffer.from(fs.readFileSync(path.join(__dirname, '../public/js/battlesim/engines/tiger-eye.js'))).toString('base64')).then(mod => {
+  mod.installTigerRules(settings, labels, common);
+  return mod;
+});
 const entity = (values = {}) => ({ s: 10, e: 20, m: 0, b: 10, sword: 4, shield: 'none', startE: 20, startB: 10, lostE: 0, skillLossExtra: 0, ...values });
 const state = (id = 'dalgren', phase = 1) => ({ rivalId: id, phase, turn: 'opp', player: entity(), opp: entity(), started: true, over: false, options: { magicSpend: 2, enduranceSpend: 1, skillSpend: 0 } });
 const rolls = (...values) => () => { assert.ok(values.length, 'unexpected roll'); return values.shift(); };
@@ -143,4 +150,18 @@ test('low endurance limits later attacks and dirty blows are first-phase only', 
   const { tigerOptions } = await engine; const d = state('dalgren', 2); d.turn = 'player';
   assert.ok(!tigerOptions(d).includes('p.dirty')); d.player.e = 5;
   assert.deepEqual(tigerOptions(d), ['p.std', 'p.feint', 'p.stdmagic']);
+});
+
+test('loaded rival labels, betrayal costs and routes govern a saved phase', async () => {
+  const before = structuredClone(settings.tejbrun.source), oldLabel = labels.tejbrun[1][0];
+  try {
+    Object.assign(settings.tejbrun.source, {truceEndurance:2,truceSkill:1,truceSection:179});
+    labels.tejbrun[1][0] = 'custom.truce';
+    const d = JSON.parse(JSON.stringify({...state('tejbrun', 2), extension:{kept:true}}));
+    assert.equal((await engine).tigerOptions(d)[0], 'custom.truce');
+    await resolve(d, 0);
+    assert.equal(d.player.e, 18); assert.equal(d.player.skillLossExtra, 1);
+    assert.equal(d.manualSection, 179); assert.equal(d.turn, 'manual');
+    assert.deepEqual(d.extension, {kept:true}); assert.equal(d.over, false);
+  } finally { Object.assign(settings.tejbrun.source, before); labels.tejbrun[1][0] = oldLabel; }
 });

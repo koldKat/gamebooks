@@ -1,3 +1,4 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {CHANCE_TABLE, EASY_PRESETS, HARD_PRESETS} from '../../../public/js/battlesim/books/891/definition.js';
@@ -6,6 +7,8 @@ import {createState} from '../../../public/js/battlesim/books/891/state.js';
 
 const fighter = values => ({displayName: 'Робот', attack: 10, defence: 10, damage: 3, hp: 20, ...values});
 const hard = (player = {}, enemy = {}, setup = {}) => startFight(fighter(player), fighter(enemy), {mode: 'hard', ...setup});
+
+await loadFixtureRoster(891);
 
 test('891 samples cells from the original nonuniform 54-cell chance table', () => {
   assert.equal(CHANCE_TABLE.length, 54);

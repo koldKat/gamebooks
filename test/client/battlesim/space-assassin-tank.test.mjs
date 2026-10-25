@@ -1,8 +1,11 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { newCharacter } from '../../../public/js/battlesim/engines/space-assassin/core.js';
 import { startTank, moveTank, resolveTankEncounter } from '../../../public/js/battlesim/engines/space-assassin/tank.js';
 import { tankRules } from '../../../public/js/battlesim/books/735/tank.js';
+
+await loadFixtureRoster(735);
 
 const rules = {
   statusCycle: 16, playerShields: 5, enemyShields: 4, startSection: 223, winSection: 190,
@@ -11,12 +14,23 @@ const rules = {
     331: { routes: [223], encounters: [{ statuses: [2], section: 9 }] },
     349: { routes: [223], encounters: [{ statuses: [2], section: 188 }] },
   },
-  effects: { 9: { kind: 'playerShot' }, 33: { kind: 'enemyFirst' }, 188: { kind: 'unseenHit' } },
+  effects: { 9: { kind: 'playerShot' }, 33: { kind: 'enemyFirst', missRoll: 1 }, 188: { kind: 'unseenHit' } },
 };
 const sequence = (...values) => () => {
   assert.ok(values.length, 'Unexpected die roll');
   return values.shift();
 };
+
+test('enemy tank miss roll comes from metadata and preserves a saved encounter', () => {
+  const definition=structuredClone(tankRules);definition.effects[33].missRoll=6;
+  const state={...startTank(newCharacter(()=>1),definition),phase:'encounter',pendingSection:33,status:3,shields:3,enemyShields:2,extension:{keep:true}};
+  const saved=JSON.parse(JSON.stringify(state)),snapshot=structuredClone(saved);
+  const missed=resolveTankEncounter(saved,definition,sequence(6,6,6));
+  assert.equal(missed.shields,3);assert.equal(missed.enemyShields,2);assert.equal(missed.status,4);
+  assert.deepEqual(missed.extension,{keep:true});assert.deepEqual(saved,snapshot);
+  const hit=resolveTankEncounter(saved,definition,sequence(1,6,6));
+  assert.equal(hit.shields,2);assert.equal(hit.events[0].hit,true);
+});
 
 test('all printed tank positions have valid moves and disjoint STATUS outcomes', () => {
   assert.equal(Object.keys(tankRules.positions).length, 24);

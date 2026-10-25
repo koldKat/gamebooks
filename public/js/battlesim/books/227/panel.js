@@ -310,6 +310,10 @@ export function initSim227() {
               </div>
             </div>
           </div>
+          <details class="bsim-history" open>
+            <summary>${t('battlesim227.ui.items')}</summary>
+            <div id="sim227-item-list" class="bsim-tech-list"></div>
+          </details>
           <div id="sim227-status" class="bsim-status"></div>
           <div id="sim227-luck-prompt" class="inv-edit-row bsim-heal-row" style="display:none">
             <span class="inv-edit-label bsim-stat-label">${t('battlesim227.btn.luck_prompt')}</span>
@@ -322,10 +326,6 @@ export function initSim227() {
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
-          <details class="bsim-history" open>
-            <summary>${t('battlesim227.ui.items')}</summary>
-            <div id="sim227-item-list" class="bsim-tech-list"></div>
-          </details>
           <details class="bsim-history">
             <summary id="sim227-history-summary">${t('battlesim227.history.summary', { n: 0 })}</summary>
             <div id="sim227-history-list" class="bsim-history-list"></div>

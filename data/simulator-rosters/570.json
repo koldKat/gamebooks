@@ -47,6 +47,55 @@
               "base": 6,
               "perLevel": 2
             }
+          },
+          "support": {
+            "rules": {
+              "arena": {
+                "trollId": "arenaTroll",
+                "dwarfId": "arenaDwarf",
+                "heavyWeapons": [
+                  "axe",
+                  "mace"
+                ],
+                "dwarfRating": 4,
+                "dualSection": 139,
+                "dualWeapon": "swordDagger",
+                "dualDefence": 1,
+                "dualStrikes": 2,
+                "unarmedDamage": 10
+              },
+              "dragon": {
+                "targets": [
+                  0,
+                  1,
+                  2,
+                  1,
+                  2,
+                  0
+                ],
+                "allies": {
+                  "archer": {
+                    "attack": 8,
+                    "damage": 8
+                  },
+                  "mage": {
+                    "attack": 6,
+                    "damage": 6
+                  }
+                },
+                "harpoon": {
+                  "shootingMin": 6,
+                  "damage": 36,
+                  "penalty": 12
+                },
+                "magicDamage": 24
+              },
+              "ship": {
+                "paReduction": 4,
+                "counterDamage": 10,
+                "commandHits": 6
+              }
+            }
           }
         },
         "part": {

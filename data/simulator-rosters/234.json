@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "bookId": 234,
+  "family": "fighting-fantasy",
+  "source": "Existing drain chance/damage and random-target die threshold. Unchanged Vampire Mist profile carries global encounter settings; manual toggles and all original opponent columns remain unchanged.",
+  "enemies": [
+    {
+      "key": "vampire-settings",
+      "name": "Vampire Mist",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Vampire Mist",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "VAMPIRE_RULES",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "drainHitMax": 3,
+          "drainDamage": 1,
+          "randomTargetSideMin": 4
+        },
+        "part": {
+          "name": "Vampire Mist",
+          "attack": 7,
+          "defense": null,
+          "hp": 9,
+          "pb": null
+        },
+        "count": 1
+      }
+    }
+  ]
+}

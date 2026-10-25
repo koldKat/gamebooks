@@ -38,12 +38,10 @@ function start() {
       poisonProtected: element('poison').checked,
       opponents: opponentSetup?.read(),
     });
-    if (e.carryEnemyVitality && [342, 363].includes(previous?.encounter.section)) {
+    for (const rule of e.carryFrom ?? []) {
+      if (!rule.sections.includes(previous?.encounter.section) || rule.foeCount !== undefined && fight.encounter.foes.length !== rule.foeCount) continue;
       fight.encounter.foes[0].vitality = previous.encounter.foes[0].vitality;
-      fight.encounter.expertiseModifier = previous.encounter.expertiseModifier ?? 0;
-    }
-    if (e.section === 376 && fight.encounter.foes.length === 6 && previous?.encounter.section === 274) {
-      fight.encounter.foes[0].vitality = previous.encounter.foes[0].vitality;
+      if (rule.expertiseModifier) fight.encounter.expertiseModifier = previous.encounter.expertiseModifier ?? 0;
     }
     d.fight = fight;
     opponentSetup?.save(d);

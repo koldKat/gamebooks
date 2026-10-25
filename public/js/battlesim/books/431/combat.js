@@ -47,7 +47,7 @@ function _captureFightEffects(d) {
 }
 
 function _runRound() {
-  const { COMBAT_TABLE, _appendLog, _checkBattleEnd, _data, _enemyNameSafe, _pick10, _pickRow, _ratioCol, _renderAll, saveState, t } = getContext();
+  const { COMPANION_RULES, COMBAT_TABLE, _appendLog, _checkBattleEnd, _data, _enemyNameSafe, _pick10, _pickRow, _ratioCol, _renderAll, saveState, t } = getContext();
 
   const d = _data();
   if (!d || !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0) return;
@@ -58,7 +58,7 @@ function _runRound() {
   let [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
   const effects = d.combatEffects || {};
   if (effects.doubleDamage && enemyLoss !== 'K') enemyLoss *= 2;
-  if (effects.companionDamage && enemyLoss !== 'K') enemyLoss += 3;
+  if (effects.companionDamage && enemyLoss !== 'K') enemyLoss += COMPANION_RULES.companionDamage.enemyDamage;
   if (effects.firstTwoRoundProtection && d.roundsThisBattle <= 2) lwLoss = 0;
   if (effects.unshieldedMindblast && lwLoss !== 'K') lwLoss += 2;
   _appendLog(d, t('battlesim431.log.round', { round: d.roundsThisBattle, ratio: d.ratio, pick }));

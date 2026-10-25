@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
+const rosterEntries = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/399.json', import.meta.url), 'utf8')).enemies.map(row => row.stats.entry);
+
 function fixture(saved) {
   const pt = saved ? { sim399: structuredClone(saved) } : {};
   const nodes = new Map();
@@ -12,7 +14,7 @@ function fixture(saved) {
   } };
   const source = readFileSync(new URL('../../../public/js/battlesim/battlesim399.js', import.meta.url), 'utf8')
     .replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
-  const context = vm.createContext({ document, currentPlaythrough: () => pt, saveState() {}, t: key => key, escapeHtml: value => value });
+  const context = vm.createContext({ createRosterLoader: (_id, _dataset, install) => { install(structuredClone(rosterEntries)); return async () => {}; }, document, currentPlaythrough: () => pt, saveState() {}, t: key => key, escapeHtml: value => value });
   vm.runInContext(source + '\n_renderAll = () => {}; _roll1d6 = () => 1; globalThis.sim = { data: _data, select: _applyEnemy, reset: _resetBattle, attack: _attack, over: _battleOver, render: _renderInputs };', context);
   return { sim: context.sim, data: context.sim.data(), nodes };
 }
@@ -146,4 +148,18 @@ test('explicit reset starts a corrected fight without replacing character stats'
   assert.equal(data.enemy.enduranceCritical, 0);
   assert.equal(data.player.str, 7);
   assert.equal(data.player.endurance, data.player.enduranceInitial);
+});
+
+test('renamed profile follows its supplied stopping threshold without a name special case', () => {
+  const profile = rosterEntries.find(row => row.stopRule);
+  const original = structuredClone(profile);
+  try {
+    profile.name = 'Database profile'; profile.stopRule.belowEndurance = 9;
+    const {sim, data} = fixture();
+    sim.select(data, {...corporate, name: profile.name});
+    assert.equal(data.stopBelowEndurance, 9);
+    assert.equal(data.enemy.enduranceCritical, 0);
+    data.enemy.endurance = 9; assert.equal(sim.over(data), false);
+    data.enemy.endurance = 8; assert.equal(sim.over(data), true);
+  } finally {Object.assign(profile, original);}
 });

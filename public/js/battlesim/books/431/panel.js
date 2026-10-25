@@ -1,10 +1,10 @@
-import { HEALING_POTION_HEAL, COMBAT_TABLE } from './definition.js';
+import { COMPANION_RULES, HEALING_POTION_HEAL, COMBAT_TABLE } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, COMBAT_TABLE, HEALING_POTION_HEAL, SVG_SKULL, SVG_TROPHY, _appendLog, _captureFightEffects, _checkBattleEnd, _data, _effectiveSkill, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _numField, _pick10, _pickRow, _ratioCol, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _resetBattle, _runRound, _setVal, _setupAutocomplete, _usePotion, apiFetch, closeSim431, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim431, openSim431, registerPanelShortcut, renderSim431, saveState, setSim431Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ COMPANION_RULES, ALL_PANEL_OVERLAY_IDS, COMBAT_TABLE, HEALING_POTION_HEAL, SVG_SKULL, SVG_TROPHY, _appendLog, _captureFightEffects, _checkBattleEnd, _data, _effectiveSkill, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _numField, _pick10, _pickRow, _ratioCol, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _resetBattle, _runRound, _setVal, _setupAutocomplete, _usePotion, apiFetch, closeSim431, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim431, openSim431, registerPanelShortcut, renderSim431, saveState, setSim431Visible, shortcutLabel, showAlert, t });
 const { _data, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _effectiveSkill, _captureFightEffects, _runRound, _checkBattleEnd, _resetBattle } = createCombat(simulatorContext);
 const { _usePotion } = createEffects(simulatorContext);

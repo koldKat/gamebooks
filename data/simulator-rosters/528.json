@@ -100,7 +100,44 @@
                 "hugEvery": 3,
                 "hugBonus": 4
               }
-            ]
+            ],
+            "bookRules": {
+              "invisibilitySections": [
+                78,
+                83,
+                86,
+                88,
+                89,
+                91,
+                93,
+                98,
+                106,
+                118,
+                121,
+                129
+              ],
+              "knightArmourStages": [
+                12,
+                6,
+                4
+              ],
+              "babyFireball": {
+                "section": 76,
+                "damage": 75
+              },
+              "wizardBoltDamage": 2,
+              "companions": {
+                "djinn": {
+                  "sourceSection": 101,
+                  "foeIndex": 1,
+                  "maxCalls": 3
+                },
+                "gnurlbash": {
+                  "sourceSection": "dream7",
+                  "foeIndex": 0
+                }
+              }
+            }
           }
         },
         "part": {
@@ -439,7 +476,10 @@
               }
             ],
             "webCheck": true,
-            "swordPenalty": 1
+            "swordPenalty": 1,
+            "npcRules": {
+              "webFatalAt": 5
+            }
           }
         },
         "part": {
@@ -987,7 +1027,11 @@
                 "armour": 0
               }
             ],
-            "waterChecks": true
+            "waterChecks": true,
+            "npcRules": {
+              "swimFatalMax": 3,
+              "coldFatalMax": 2
+            }
           }
         },
         "part": {
@@ -1036,7 +1080,11 @@
               }
             ],
             "bellCheck": true,
-            "first": "player"
+            "first": "player",
+            "npcRules": {
+              "bellRedirectMax": 3,
+              "bellDestination": 101
+            }
           }
         },
         "part": {

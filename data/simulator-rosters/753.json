@@ -1,0 +1,156 @@
+{
+  "schemaVersion": 1,
+  "bookId": 753,
+  "family": "tetiva",
+  "source": "Original four section-keyed encounter flag sets from the shared Tetiva engine. Adopts exact existing profiles without changing printed stats, procedural round resolution or saved rules.",
+  "enemies": [
+    {
+      "key": "encounter:109",
+      "name": "Дуъргар (огнена сопа) §109",
+      "attack": 10,
+      "defense": 16,
+      "hp": 2,
+      "pb": 1,
+      "adopt": {
+        "name": "Дуъргар (огнена сопа) §109",
+        "attack": 10,
+        "defense": 16,
+        "hp": 2,
+        "pb": 1
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tetiva",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 109,
+          "effects": {
+            "variableDefense": true
+          }
+        },
+        "part": {
+          "section": 109,
+          "effects": {
+            "variableDefense": true
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "encounter:119",
+      "name": "Дуъргар (звяр) §119",
+      "attack": 16,
+      "defense": 12,
+      "hp": 4,
+      "pb": 1,
+      "adopt": {
+        "name": "Дуъргар (звяр) §119",
+        "attack": 16,
+        "defense": 12,
+        "hp": 4,
+        "pb": 1
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tetiva",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 119,
+          "effects": {
+            "enemyFirst": true,
+            "variableDefense": true
+          }
+        },
+        "part": {
+          "section": 119,
+          "effects": {
+            "enemyFirst": true,
+            "variableDefense": true
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "encounter:211",
+      "name": "Войници (силна група) §211",
+      "attack": 10,
+      "defense": 10,
+      "hp": 6,
+      "pb": 2,
+      "adopt": {
+        "name": "Войници (силна група) §211",
+        "attack": 10,
+        "defense": 10,
+        "hp": 6,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tetiva",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 211,
+          "effects": {
+            "initiativeBySpeed": true
+          }
+        },
+        "part": {
+          "section": 211,
+          "effects": {
+            "initiativeBySpeed": true
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "encounter:279",
+      "name": "Кобалди §279",
+      "attack": 8,
+      "defense": 22,
+      "hp": 1,
+      "pb": 1,
+      "adopt": {
+        "name": "Кобалди §279",
+        "attack": 8,
+        "defense": 22,
+        "hp": 1,
+        "pb": 1
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tetiva",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 279,
+          "effects": {
+            "enemyFirst": true,
+            "kobaldi": true
+          }
+        },
+        "part": {
+          "section": 279,
+          "effects": {
+            "enemyFirst": true,
+            "kobaldi": true
+          }
+        },
+        "count": 1
+      }
+    }
+  ]
+}

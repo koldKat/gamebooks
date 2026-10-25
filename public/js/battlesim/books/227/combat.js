@@ -46,7 +46,7 @@ function _runRound() {
   const { SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _effectiveSkill, _enemyFloor, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll2d6, _sideEnemy2NameSafe, _sideEnemyNameSafe, saveState, t } = getContext();
 
   const d = _data();
-  if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
+  if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= _enemyFloor(d) || d.pendingLuckQueue.length) return;
   d.roundsThisBattle++;
   const sourceRules = d.combatRulesVersion === 2;
 

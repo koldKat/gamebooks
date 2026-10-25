@@ -1,0 +1,564 @@
+{
+  "schemaVersion": 1,
+  "bookId": 871,
+  "family": "ringlas-saga",
+  "source": "All thirteen printed opponents and their target, stamina, group mode, optional starting bonus, drunken penalty, companion defaults and retreat/resume conditions. Original IDs and legacy values preserved.",
+  "enemies": [
+    {
+      "key": "opponent:bandit",
+      "name": "Бандит (Батуърк)",
+      "attack": 8,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Бандит (Батуърк)",
+        "attack": 8,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "ringlas-saga",
+        "dataset": "ROSTER",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "bandit",
+          "nameKey": "battlesim871.name.bandit",
+          "target": 8,
+          "stamina": 10,
+          "multi": false,
+          "pause": {
+            "kind": "firstWound",
+            "section": 130,
+            "resumable": true
+          }
+        },
+        "part": {
+          "id": "bandit",
+          "nameKey": "battlesim871.name.bandit",
+          "target": 8,
+          "stamina": 10,
+          "multi": false,
+          "pause": {
+            "kind": "firstWound",
+            "section": 130,
+            "resumable": true
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "opponent:stone",
+      "name": "Каменни чудовища",
+      "attack": 9,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Каменни чудовища",
+        "attack": 9,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "ringlas-saga",
+        "dataset": "ROSTER",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "stone",
+          "nameKey": "battlesim871.name.stone",
+          "target": 9,
+          "stamina": 12,
+          "multi": true
+        },
+        "part": {
+          "id": "stone",
+          "nameKey": "battlesim871.name.stone",
+          "target": 9,
+          "stamina": 12,
+          "multi": true
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "opponent:knight",
+      "name": "Рандовански рицар",
+      "attack": 9,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Рандовански рицар",
+        "attack": 9,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "ringlas-saga",
+        "dataset": "ROSTER",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "knight",
+          "nameKey": "battlesim871.name.knight",
+          "target": 9,
+          "stamina": 6,
+          "multi": false,
+          "pause": {
+            "kind": "enemyStamina",
+            "threshold": 2,
+            "section": 52
+          }
+        },
+        "part": {
+          "id": "knight",
+          "nameKey": "battlesim871.name.knight",
+          "target": 9,
+          "stamina": 6,
+          "multi": false,
+          "pause": {
+            "kind": "enemyStamina",
+            "threshold": 2,
+            "section": 52
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "opponent:waterspirit",
+      "name": "Водни духове",
+      "attack": 4,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Водни духове",
+        "attack": 4,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "ringlas-saga",
+        "dataset": "ROSTER",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "waterspirit",
+          "nameKey": "battlesim871.name.waterspirit",
+          "target": 4,
+          "stamina": 10,
+          "multi": true
+        },
+        "part": {
+          "id": "waterspirit",
+          "nameKey": "battlesim871.name.waterspirit",
+          "target": 4,
+          "stamina": 10,
+          "multi": true
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "opponent:snowwarrior",
+      "name": "Снежни воини",
+      "attack": 7,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Снежни воини",
+        "attack": 7,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "ringlas-saga",
+        "dataset": "ROSTER",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "snowwarrior",
+          "nameKey": "battlesim871.name.snowwarrior",
+          "target": 7,
+          "stamina": 10,
+          "multi": true,
+          "pause": {
+            "kind": "playerLoss",
+            "threshold": 8,
+            "section": 142
+          }
+        },
+        "part": {
+          "id": "snowwarrior",
+          "nameKey": "battlesim871.name.snowwarrior",
+          "target": 7,
+          "stamina": 10,
+          "multi": true,
+          "pause": {
+            "kind": "playerLoss",
+            "threshold": 8,
+            "section": 142
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "opponent:simaut",
+      "name": "Симаут, богът на бурите",
+      "attack": 10,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Симаут, богът на бурите",
+        "attack": 10,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "ringlas-saga",
+        "dataset": "ROSTER",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "simaut",
+          "nameKey": "battlesim871.name.simaut",
+          "target": 10,
+          "stamina": 5,
+          "multi": false,
+          "playerBonus": 5
+        },
+        "part": {
+          "id": "simaut",
+          "nameKey": "battlesim871.name.simaut",
+          "target": 10,
+          "stamina": 5,
+          "multi": false,
+          "playerBonus": 5
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "opponent:mudmonster",
+      "name": "Блатни/глинени чудовища",
+      "attack": 5,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Блатни/глинени чудовища",
+        "attack": 5,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "ringlas-saga",
+        "dataset": "ROSTER",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "mudmonster",
+          "nameKey": "battlesim871.name.mudmonster",
+          "target": 5,
+          "stamina": 10,
+          "multi": true
+        },
+        "part": {
+          "id": "mudmonster",
+          "nameKey": "battlesim871.name.mudmonster",
+          "target": 5,
+          "stamina": 10,
+          "multi": true
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "opponent:armoredknight",
+      "name": "Рицари в брони",
+      "attack": 6,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Рицари в брони",
+        "attack": 6,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "ringlas-saga",
+        "dataset": "ROSTER",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "armoredknight",
+          "nameKey": "battlesim871.name.armoredknight",
+          "target": 6,
+          "stamina": 12,
+          "multi": true,
+          "drunkPenalty": 5,
+          "companion": {
+            "target": 4,
+            "stamina": 6
+          }
+        },
+        "part": {
+          "id": "armoredknight",
+          "nameKey": "battlesim871.name.armoredknight",
+          "target": 6,
+          "stamina": 12,
+          "multi": true,
+          "drunkPenalty": 5,
+          "companion": {
+            "target": 4,
+            "stamina": 6
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "opponent:dragon",
+      "name": "Дракон",
+      "attack": 10,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Дракон",
+        "attack": 10,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "ringlas-saga",
+        "dataset": "ROSTER",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "dragon",
+          "nameKey": "battlesim871.name.dragon",
+          "target": 10,
+          "stamina": 6,
+          "multi": false
+        },
+        "part": {
+          "id": "dragon",
+          "nameKey": "battlesim871.name.dragon",
+          "target": 10,
+          "stamina": 6,
+          "multi": false
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "opponent:icedemon",
+      "name": "Леден демон",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Леден демон",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "ringlas-saga",
+        "dataset": "ROSTER",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "icedemon",
+          "nameKey": "battlesim871.name.icedemon",
+          "target": 8,
+          "stamina": 6,
+          "multi": false
+        },
+        "part": {
+          "id": "icedemon",
+          "nameKey": "battlesim871.name.icedemon",
+          "target": 8,
+          "stamina": 6,
+          "multi": false
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "opponent:wolf",
+      "name": "Вълци",
+      "attack": 6,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Вълци",
+        "attack": 6,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "ringlas-saga",
+        "dataset": "ROSTER",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "wolf",
+          "nameKey": "battlesim871.name.wolf",
+          "target": 6,
+          "stamina": 12,
+          "multi": true
+        },
+        "part": {
+          "id": "wolf",
+          "nameKey": "battlesim871.name.wolf",
+          "target": 6,
+          "stamina": 12,
+          "multi": true
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "opponent:icelion",
+      "name": "Ледени лъвове",
+      "attack": 9,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Ледени лъвове",
+        "attack": 9,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "ringlas-saga",
+        "dataset": "ROSTER",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "icelion",
+          "nameKey": "battlesim871.name.icelion",
+          "target": 9,
+          "stamina": 12,
+          "multi": true,
+          "pause": {
+            "kind": "enemyStamina",
+            "threshold": 4,
+            "section": 215
+          }
+        },
+        "part": {
+          "id": "icelion",
+          "nameKey": "battlesim871.name.icelion",
+          "target": 9,
+          "stamina": 12,
+          "multi": true,
+          "pause": {
+            "kind": "enemyStamina",
+            "threshold": 4,
+            "section": 215
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "opponent:spider",
+      "name": "Вездесъщият паяк",
+      "attack": 7,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Вездесъщият паяк",
+        "attack": 7,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "ringlas-saga",
+        "dataset": "ROSTER",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "spider",
+          "nameKey": "battlesim871.name.spider",
+          "target": 7,
+          "stamina": 10,
+          "multi": false,
+          "pause": {
+            "kind": "enemyStamina",
+            "threshold": 1,
+            "section": 244
+          }
+        },
+        "part": {
+          "id": "spider",
+          "nameKey": "battlesim871.name.spider",
+          "target": 7,
+          "stamina": 10,
+          "multi": false,
+          "pause": {
+            "kind": "enemyStamina",
+            "threshold": 1,
+            "section": 244
+          }
+        },
+        "count": 1
+      }
+    }
+  ]
+}

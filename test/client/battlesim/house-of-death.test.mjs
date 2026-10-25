@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as combat from '../../../public/js/battlesim/books/860/combat.js';
-import {ENCOUNTERS,encounterPreset} from '../../../public/js/battlesim/books/860/definition.js';
+import {ENCOUNTERS,encounterPreset,HOUSE_RULES} from '../../../public/js/battlesim/books/860/definition.js';
 import {createState} from '../../../public/js/battlesim/books/860/state.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim860.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim860.js';
@@ -85,4 +85,35 @@ test('state preserves other data, rejects stale writes and awards no fabricated 
   assert.equal(JSON.stringify(run),before);
   assert.equal(other.sim860,undefined);
   assert.equal(saves,2);
+});
+
+test('heavy-wound eligibility comes from the loaded catalog while retaining strict validation', () => {
+  const source = ENCOUNTERS.find(row => row.heavyWound), before = structuredClone(source);
+  try {
+    source.id = '99'; source.threshold = 9;
+    const encounter = encounterPreset('99');
+    assert.deepEqual(combat.validateEncounter(encounter), encounter);
+    assert.throws(() => combat.validateEncounter({...encounter,id:'31'}));
+    assert.throws(() => combat.validateEncounter({...encounter,threshold:10}));
+    assert.throws(() => combat.validateEncounter({...encounter,damageDice:1}));
+    const result = combat.resolveRound({energy:17,initialEnergy:44}, encounter, {attackDice:[4,5]});
+    assert.equal(result.wounded, true); assert.equal(result.character.energy, 17);
+  } finally { Object.assign(source, before); }
+});
+
+test('loaded wound and accuracy branches preserve character values and input objects', () => {
+  const before = structuredClone(HOUSE_RULES);
+  try {
+    Object.assign(HOUSE_RULES.heavyWound, {wounded:'90',safe:'91'});
+    Object.assign(HOUSE_RULES.accuracy, {specialRoll:2,special:'92',other:'93'});
+    const character = {energy:17,initialEnergy:44,extension:{kept:true}}, enemy = encounterPreset('31');
+    const saved = JSON.stringify({character,enemy});
+    const hit = combat.resolveRound(character, enemy, {attackDice:[5,5]});
+    const safe = combat.resolveRound(character, enemy, {attackDice:[4,5]});
+    assert.equal(hit.destination, '90'); assert.equal(safe.destination, '91');
+    assert.deepEqual(hit.character, character); assert.deepEqual(safe.character, character);
+    assert.equal(JSON.stringify({character,enemy}), saved);
+    assert.deepEqual(combat.rollAccuracy(2), {die:2,destination:'92'});
+    assert.deepEqual(combat.rollAccuracy(1), {die:1,destination:'93'});
+  } finally { Object.assign(HOUSE_RULES, before); }
 });

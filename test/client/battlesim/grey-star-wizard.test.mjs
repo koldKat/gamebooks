@@ -3,11 +3,13 @@ import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
+const rosterEntries = [...new Map(JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/439.json', import.meta.url), 'utf8')).enemies.map(row => [row.stats.entryIndex, row.stats.entry])).values()];
+
 function fixture(saved) {
   const pt = saved ? { sim439: structuredClone(saved) } : {};
   const source = readFileSync(new URL('../../../public/js/battlesim/battlesim439.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
   const math = Object.create(Math); math.random = () => .2;
-  const context = vm.createContext({ Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, escapeHtml: value => value, t: (key, values) => key === 'battlesim439.ui.neijjin' ? `Нейджин ${values.n} §101` : key });
+  const context = vm.createContext({ createRosterLoader: (_id, _dataset, install) => { install(structuredClone(rosterEntries)); return async () => {}; }, Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, escapeHtml: value => value, t: (key, values) => key === 'battlesim439.ui.neijjin' ? `Нейджин ${values.n} §101` : key });
   vm.runInContext(source + '\n_renderAll = () => {}; globalThis.sim = { data: _data, capture: _captureFightEffects, skill: _effectiveSkill, round: _runRound, reset: _resetBattle, potion: _usePotion, escapeRoute: _escapeRoute };', context);
   return { sim: context.sim, data: context.sim.data(), math };
 }
@@ -159,4 +161,17 @@ test('victory destinations include both choices and do not invent single routes'
     const { sim, data } = combat(section); data.enemy.endurance = 1; sim.round();
     assert.deepEqual(Array.from(data.combatEffects.routes), routes);
   }
+});
+
+test('renamed encounter uses its supplied mental-combat rule and escape destination', () => {
+  const entry = rosterEntries.find(entry => entry.section === 259), original = structuredClone(entry);
+  try {
+    entry.section = 900; entry.rules.escape = {route: 901, afterRounds: 0};
+    const {sim, data} = combat(900);
+    assert.equal(sim.skill(data), 130);
+    assert.equal(sim.escapeRoute(data), 901);
+    sim.round(true);
+    assert.equal(data.willpower, 30);
+    assert.equal(data.combatEffects.routes[0], 901);
+  } finally {Object.assign(entry, original);}
 });

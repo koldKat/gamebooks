@@ -4,6 +4,7 @@
 
 const { db, _naturalCompareByName } = require('./connection');
 const { computeLevel, getTitleForLevel, getUserXpInfo, _insertNotif } = require('./xp');
+const { getJobTitle } = require('./job-xp');
 const { getRandomLevelUpTemplate, getRandomJoinTemplate } = require('./content');
 const { _getAggregateRating, _getAuthorRatings, getAnthologyExtraMembers } = require('./books');
 
@@ -417,6 +418,21 @@ function getFeed() {
       userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
       avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
       gainedAbility, newAbilityCount: gainedAbility ? abilitiesNow : null });
+  }
+
+  const jobRows = db.prepare(`SELECT e.level, e.created_at, u.username, u.public_profile,
+    u.avatar_path, u.xp, u.is_author, u.is_contributor, u.is_moderator, u.is_squire, u.display_name
+    FROM job_level_events e JOIN users u ON u.id=e.user_id
+    WHERE e.created_at > ? AND u.hide_from_feed=0`).all(cutoffSec);
+  for (const row of jobRows) {
+    entries.push({ type: 'job_level_up', username: row.username, level: row.level,
+      levelTitle: getJobTitle(row.level), completedAt: row.created_at * 1000,
+      userPublicProfile: row.public_profile === 1,
+      isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1,
+      isModerator: row.is_moderator === 1, isSquire: row.is_squire === 1,
+      displayName: row.display_name || null, userLevel: computeLevel(row.xp || 0),
+      userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
+      avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null });
   }
 
   // ── All-sections-visited milestone ─────────────────────────────────────────
@@ -882,6 +898,7 @@ function getFeedVersion() {
                      'death_run','battle_run','win_run','share_run','run_depth',
                      'won_all_series','won_all_anthology','party_formed')`
   ).get();
+  const jobs = db.prepare('SELECT COUNT(*) AS n, COALESCE(MAX(created_at),0) AS m FROM job_level_events').get();
   const us = db.prepare(
     `SELECT COUNT(*) AS n, COALESCE(MAX(us.added_at), 0) AS m, COALESCE(MAX(s.published_at), 0) AS p
      FROM user_series us JOIN series s ON s.id = us.series_id
@@ -906,7 +923,7 @@ function getFeedVersion() {
   ).get();
   // Include the date in the fingerprint so Today/Yesterday labels refresh after midnight.
   return [
-    xe.n, xe.m, us.n, us.m, us.p, sr.n, sr.s, sr.c,
+    jobs.n, jobs.m, xe.n, xe.m, us.n, us.m, us.p, sr.n, sr.s, sr.c,
     ub.n, ub.m, uu.n, uu.m, an.n, an.m, pin?.id ?? 0,
     new Date().toISOString().slice(0, 10), _squireRevision,
   ].join(':');

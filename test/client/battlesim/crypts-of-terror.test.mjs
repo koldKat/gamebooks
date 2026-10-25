@@ -2,7 +2,7 @@ import { loadFixtureRoster } from './roster-fixtures.mjs';
 await loadFixtureRoster(535);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CRYPTS_ROSTER, cryptsEnemy } from '../../../public/js/battlesim/engines/demonspawn/crypts-of-terror-roster.js';
+import { CRYPTS_ROSTER, cryptsEnemy, CRYPTS_RULES } from '../../../public/js/battlesim/engines/demonspawn/crypts-of-terror-roster.js';
 import { CRYPTS_ENCOUNTERS, rollCryptsCharacter, prepareCryptsEncounter, cryptsChase } from '../../../public/js/battlesim/engines/demonspawn/crypts-of-terror-encounters.js';
 import { createCryptsFight, cryptsEnemyActive, checkCryptsOutcome, rollCryptsAttack,
   advanceCryptsRound, applyCryptsWightHit, addCryptsReinforcements } from '../../../public/js/battlesim/engines/demonspawn/crypts-of-terror.js';
@@ -10,6 +10,29 @@ import { createCryptsFight, cryptsEnemyActive, checkCryptsOutcome, rollCryptsAtt
 const player = extra => ({...rollCryptsCharacter(()=>.4),weapon:'sword',armour:'none',lifePoints:2000,maxLife:2000,...extra});
 const fight = (section,extra={},options={}) => createCryptsFight(prepareCryptsEncounter(section,player(extra),options));
 const low = ()=>0, high = ()=>.999;
+
+test('Crypts encounter limits and identity references follow loaded settings', () => {
+  const saved=structuredClone(CRYPTS_RULES);
+  try {
+    Object.assign(CRYPTS_RULES,{chaseStop:7,fleeStop:8,knockoutStop:6,firstBloodDamage:9,nonfatalStop:12,haroldWarningSection:100});
+    const chase=fight(14,{speed:1,stamina:1});chase.enemyDamage[0]=7;assert.equal(cryptsEnemyActive(chase,0),true);chase.enemyDamage[0]=8;assert.equal(cryptsEnemyActive(chase,0),false);chase.playerDamage=7;checkCryptsOutcome(chase);assert.equal(chase.outcome,'defeat');
+    for(const [section,life]of [[119,8],[145,6]]){const f=fight(section);f.enemies[0].lifePoints=life;assert.equal(cryptsEnemyActive(f,0),true);f.enemies[0].lifePoints--;assert.equal(cryptsEnemyActive(f,0),false);}
+    const first=fight(61);first.enemyDamage[0]=9;checkCryptsOutcome(first);assert.equal(first.outcome,'win');
+    const manual=player();const nonfatal=fight(113,{}, {manual});nonfatal.player.lifePoints=11;checkCryptsOutcome(nonfatal);assert.equal(nonfatal.outcome,'defeat');
+    assert.equal(prepareCryptsEncounter(100,player(),{haroldWarning:true}).options.first,'player');
+    CRYPTS_RULES.prince={name:'Prince',guardName:'Guard',deadGuards:1};const prince=fight(157);prince.enemies[4].name='Prince';prince.enemies[0].name='Guard';assert.equal(cryptsEnemyActive(prince,4),false);prince.enemies[0].lifePoints=0;assert.equal(cryptsEnemyActive(prince,4),true);
+  } finally {Object.assign(CRYPTS_RULES,saved);}
+});
+test('Crypts drain, disease, Wights and reinforcements retain captured state', () => {
+  const saved=structuredClone(CRYPTS_RULES);
+  try {
+    Object.assign(CRYPTS_RULES,{vampireHealDivisor:4,ratHits:2});
+    const vampire=fight(47);vampire.turn='enemy';const life=vampire.enemy.lifePoints,result=rollCryptsAttack(vampire,'enemy',0,high);assert.equal(vampire.enemy.lifePoints,life+result.damage/4);
+    const rat=fight(91);rat.turn='enemy';rat.ratHits=1;rollCryptsAttack(rat,'enemy',0,high);assert.equal(rat.player.ratDisease,true);
+    CRYPTS_RULES.wight={attributes:['luck'],penalty:2};const wight=fight(76);const strength=wight.player.strength,luck=wight.player.luck;applyCryptsWightHit(wight,3);assert.equal(wight.player.luck,luck-2);assert.equal(wight.player.strength,strength);
+    CRYPTS_RULES.reinforcements={count:1,enemyName:'Panther'};const f=fight(136);f.enemies.forEach(e=>e.lifePoints=0);checkCryptsOutcome(f);f.player.lifePoints=120;f.extension={keep:true};const old=JSON.parse(JSON.stringify(f));assert.equal(addCryptsReinforcements(old,[cryptsEnemy('Panther')]),true);assert.equal(old.enemies.length,3);assert.equal(old.enemyDamage.length,3);assert.equal(old.player.lifePoints,120);assert.deepEqual(old.extension,{keep:true});
+  } finally {Object.assign(CRYPTS_RULES,saved);}
+});
 
 test('Crypts creates seven 2d6 x8 attributes with the printed minimum10 Skill and no invented starting Power', () => {
   const p = rollCryptsCharacter(() => 0);

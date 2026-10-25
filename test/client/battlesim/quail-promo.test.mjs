@@ -1,10 +1,28 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as combat from '../../../public/js/battlesim/books/810/combat.js';
-import { ENCOUNTERS } from '../../../public/js/battlesim/books/810/definition.js';
+import { ENCOUNTERS, ESCAPE_RULES } from '../../../public/js/battlesim/books/810/definition.js';
 import { createState } from '../../../public/js/battlesim/books/810/state.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim810.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim810.js';
+
+await loadFixtureRoster(810);
+
+test('escape metadata preserves a saved attempt, wounds and armour exception',()=>{
+  const original=structuredClone(ESCAPE_RULES);
+  try{
+    Object.assign(ESCAPE_RULES,{minimum:6,failureDamage:5});
+    const fight=combat.startFight({...combat.newCharacter(),life:7,armour:true},ENCOUNTERS.find(row=>row.section===8),8);
+    fight.enemy.life=3;fight.extension={keep:true};
+    const saved=JSON.parse(JSON.stringify(fight)),snapshot=structuredClone(saved);
+    const failed=combat.escapeFight(saved,5);
+    assert.equal(failed.character.life,2);assert.equal(failed.escapeAttempted,true);
+    assert.equal(failed.enemy.life,3);assert.deepEqual(failed.extension,{keep:true});assert.deepEqual(saved,snapshot);
+    assert.throws(()=>combat.escapeFight(failed,6));
+    assert.equal(combat.escapeFight(saved,6).outcome,'escape');
+  }finally{Object.assign(ESCAPE_RULES,original);}
+});
 
 test('promo defaults and roster do not inherit full-book combat rules', () => {
   assert.equal(combat.newCharacter().attack, 1);

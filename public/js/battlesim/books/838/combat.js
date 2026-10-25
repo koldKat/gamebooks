@@ -1,4 +1,4 @@
-import { MODES, RULES_REVISION } from './definition.js';
+import { MODES, RULES_REVISION, ISLAND_RULES } from './definition.js';
 
 const integer = (value, min, max = 1000000) => {
   if (!Number.isSafeInteger(value) || value < min || value > max) throw new RangeError('Invalid combat value');
@@ -17,8 +17,8 @@ export function validateCharacter(character) {
 export function startFight(character, opponents, {mode = 'duel', hitAt = 7, encounter = null} = {}) {
   const player = validateCharacter(character);
   if (!player.life || !player.agility || !MODES.includes(mode) || !Array.isArray(opponents)
-      || !opponents.length || opponents.length > 100 || mode === 'pirates' && opponents.length !== 2
-      || mode === 'dogs' && opponents.length < 3) throw new RangeError('Invalid fight');
+      || !opponents.length || opponents.length > 100 || mode === 'pirates' && opponents.length !== ISLAND_RULES.pirates.count
+      || mode === 'dogs' && opponents.length < ISLAND_RULES.dogs.kills) throw new RangeError('Invalid fight');
   integer(hitAt, 2, 12);
   const enemies = opponents.map(opponent => {
     if (!opponent.displayName?.trim()) throw new RangeError('Missing opponent name');
@@ -53,26 +53,26 @@ export function playRound(fight, {target = 0, dice, damageDie} = {}, random = ro
   if (!Array.isArray(rolls) || rolls.length !== 2) throw new RangeError('Two dice required');
   for (const value of rolls) integer(value, 1, 6);
   const sum = rolls[0] + rolls[1];
-  const threshold = next.mode === 'pirates' ? next.singlePirate ? 6 : 8 : next.mode === 'dogs' ? 7 : next.hitAt;
+  const threshold = next.mode === 'pirates' ? next.singlePirate ? ISLAND_RULES.pirates.singleHit : ISLAND_RULES.pirates.pairedHit : next.mode === 'dogs' ? ISLAND_RULES.dogs.hitAt : next.hitAt;
   let damage = 0, dealt = 0, extra = '';
   if (sum >= threshold) {
-    dealt = 3;
+    dealt = ISLAND_RULES.hitDamage;
     next.enemies[target].hp = Math.max(0, next.enemies[target].hp - dealt);
     if (!next.enemies[target].hp) next.kills++;
   } else {
-    damage = 3;
+    damage = ISLAND_RULES.baseDamage;
     if (next.mode === 'octopus') {
       extra = damageDie === undefined ? die(random) : integer(damageDie, 1, 6);
-      damage = extra * 3;
-    } else if (next.mode === 'pirates' && !next.singlePirate && sum <= 3) damage = 6;
-    else if (next.mode === 'dogs') damage = sum === 2 ? 9 : sum === 3 ? 6 : 3;
+      damage = extra * ISLAND_RULES.octopus.damageMultiplier;
+    } else if (next.mode === 'pirates' && !next.singlePirate && sum <= ISLAND_RULES.pirates.doubleDamageMaximum) damage = ISLAND_RULES.pirates.doubleDamage;
+    else if (next.mode === 'dogs') damage = ISLAND_RULES.dogs.damageBySum[sum] ?? ISLAND_RULES.baseDamage;
     next.character.life = Math.max(0, next.character.life - damage);
   }
   next.rounds++;
   next.events.push({kind: 'round', turn: next.rounds, dice: rolls.join(' + '), sum, extra,
     target: next.enemies[target].name, dealt, damage, life: next.character.life, hp: next.enemies[target].hp});
   if (!next.character.life) return finish(next, 'loss');
-  if (next.mode === 'dogs' && next.kills >= 3 || next.enemies.every(enemy => !enemy.hp)) return finish(next, 'win');
+  if (next.mode === 'dogs' && next.kills >= ISLAND_RULES.dogs.kills || next.enemies.every(enemy => !enemy.hp)) return finish(next, 'win');
   if (next.mode === 'pirates' && !next.singlePirate && next.kills === 1) {
     next.singlePirate = true;
     next.events.push({kind: 'survivor', hp: next.enemies.find(enemy => enemy.hp > 0).hp});
@@ -91,5 +91,5 @@ export function checkWhirlpool(value, magicSail) {
   integer(value, 1, 6);
   if (typeof magicSail !== 'boolean') throw new RangeError('Invalid sail');
   const total = value + Number(magicSail);
-  return {total, destination: total >= 3 ? '62' : '47'};
+  return {total, destination: total >= ISLAND_RULES.whirlpool.minimum ? ISLAND_RULES.whirlpool.success : ISLAND_RULES.whirlpool.failure};
 }

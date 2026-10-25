@@ -1,9 +1,9 @@
-import { MODES, ENEMY_MODE, ENEMY_STATS } from './definition.js';
+import { MODES, ENEMY_MODE, ENEMY_STATS, ENEMY_STOP_RULES } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ENEMY_MODE, ENEMY_STATS, MODES, SVG_SKULL, SVG_TROPHY, _appendLog, _applyCritCheck, _applyEnemy, _applyEnemyDefeat, _applyPlayerFall, _attack, _attackSum, _battleOver, _belowStopRule, _captureStopRule, _data, _defenceSum, _emptySide, _enemyDefeated, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _modeSelect, _numField, _orderVal, _playerDefeated, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderSide, _resetBattle, _roll1d6, _setVal, _setupAutocomplete, _sideFields, _strike, apiFetch, closeSim399, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim399, openSim399, registerPanelShortcut, renderSim399, saveState, setSim399Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ENEMY_MODE, ENEMY_STATS, ENEMY_STOP_RULES, MODES, SVG_SKULL, SVG_TROPHY, _appendLog, _applyCritCheck, _applyEnemy, _applyEnemyDefeat, _applyPlayerFall, _attack, _attackSum, _battleOver, _belowStopRule, _captureStopRule, _data, _defenceSum, _emptySide, _enemyDefeated, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _modeSelect, _numField, _orderVal, _playerDefeated, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderSide, _resetBattle, _roll1d6, _setVal, _setupAutocomplete, _sideFields, _strike, apiFetch, closeSim399, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim399, openSim399, registerPanelShortcut, renderSim399, saveState, setSim399Visible, shortcutLabel, showAlert, t });
 const { _data, _appendLog, _battleOver, _recordOutcome } = createState(simulatorContext);
 const { _captureStopRule, _applyEnemy, _emptySide, _roll1d6, _enemyName, _enemyNameSafe, _orderVal, _attackSum, _defenceSum, _applyCritCheck, _belowStopRule, _playerDefeated, _enemyDefeated, _applyEnemyDefeat, _applyPlayerFall, _strike, _attack, _resetBattle, _sideFields } = createCombat(simulatorContext);
 // END SIMULATOR WIRING

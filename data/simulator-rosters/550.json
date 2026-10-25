@@ -59,6 +59,111 @@
               }
             },
             "encounterRules": {}
+          },
+          "support": {
+            "rules": {
+              "possession": {
+                "sections": [
+                  115,
+                  126
+                ],
+                "player": {
+                  "career": null,
+                  "attributes": {
+                    "STR": 3,
+                    "SK": 0,
+                    "MAG": 0,
+                    "PER": 0
+                  },
+                  "maxLife": 30,
+                  "life": 30,
+                  "power": 0,
+                  "armor": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                  ],
+                  "weapon": {
+                    "attribute": "STR",
+                    "dice": 1,
+                    "bonus": 2,
+                    "reroll": []
+                  }
+                },
+                "hitRoll": 6,
+                "killLocations": [
+                  2,
+                  3,
+                  4,
+                  6
+                ],
+                "bleedLocations": [
+                  1,
+                  5
+                ],
+                "bleeding": 5
+              },
+              "companion": {
+                "bonus": 2,
+                "extraRoll": 6,
+                "extra": 2,
+                "belowLife": 6
+              },
+              "sisteliumSection": 224,
+              "ardronteSection": 150,
+              "chargeSection": 360,
+              "horseChargeSection": 123,
+              "scenePenalty": {
+                "section": 135,
+                "amount": 3
+              },
+              "contests": {
+                "point": {
+                  "sections": [
+                    53,
+                    72
+                  ],
+                  "maxStake": 15,
+                  "winPoints": 5,
+                  "opponents": {
+                    "53": 3,
+                    "72": 2
+                  },
+                  "bustAbove": 9
+                },
+                "animal": {
+                  "sections": [
+                    56,
+                    129
+                  ],
+                  "maxStake": 20,
+                  "stakeMultiple": 2,
+                  "count": 2,
+                  "stopAt": {
+                    "56": 3,
+                    "129": 0
+                  },
+                  "profitDivisors": {
+                    "Hurg": 1,
+                    "Grinkot": 2
+                  },
+                  "thiefExtra": 5
+                },
+                "drinking": {
+                  "section": 391,
+                  "resistance": 54,
+                  "playerMultiplier": 2,
+                  "profitMultiplier": 2,
+                  "defaultStake": 30
+                },
+                "fight": {
+                  "section": 262
+                }
+              }
+            }
           }
         },
         "part": {

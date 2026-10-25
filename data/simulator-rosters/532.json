@@ -54,6 +54,34 @@
               "fatalRolls": [
                 12
               ]
+            },
+            "rules": {
+              "rodHumanoidIds": [
+                29,
+                31,
+                41,
+                49,
+                118,
+                141,
+                144,
+                148,
+                151,
+                172,
+                189,
+                "204-grott",
+                209,
+                218,
+                222
+              ],
+              "manualPoison": {
+                "needle": 10,
+                "default": 3
+              },
+              "bees": {
+                "countDice": 2,
+                "multiplier": 2,
+                "damageEach": 2
+              }
             }
           }
         },

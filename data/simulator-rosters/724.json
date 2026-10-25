@@ -1,0 +1,5766 @@
+{
+  "schemaVersion": 1,
+  "bookId": 724,
+  "family": "fighting-fantasy",
+  "source": "All 32 Crown of Kings base encounters and 94 ordered spell variants and labels. All 48 original rows, including the slowed Mucalytic at 715, preserve every field and ID. Five missing base profiles and both summoned allies are explicit typed records. All routes, components, effects, costs and handoff rules retained.",
+  "enemies": [
+    {
+      "key": "encounter:29:0",
+      "name": "Вълк (29)",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Вълк (29)",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 29,
+            "key": "wolf",
+            "win": 209,
+            "enemies": [
+              {
+                "key": "wolf",
+                "skill": 7,
+                "stamina": 7
+              }
+            ],
+            "mode": "sequential"
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "wolf",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:40:0",
+      "name": "Първи страж (40)",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Първи страж (40)",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "encounter": {
+            "section": 40,
+            "key": "gateGuards",
+            "win": 129,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "key": "guard2",
+                "skill": 6,
+                "stamina": 7
+              },
+              {
+                "key": "guard3",
+                "skill": 7,
+                "stamina": 8
+              },
+              {
+                "key": "guard4",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "mode": "group",
+            "activeLimit": 2
+          },
+          "variants": [
+            {
+              "order": 7,
+              "spec": {
+                "section": 599,
+                "base": 40,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {},
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "mindRead"
+            },
+            {
+              "order": 20,
+              "spec": {
+                "section": 636,
+                "base": 40,
+                "entryCost": 1,
+                "component": "coin",
+                "success": {
+                  "consumeCoin": true,
+                  "enemyAttackModifier": -2
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "shield"
+            },
+            {
+              "order": 29,
+              "spec": {
+                "section": 656,
+                "base": 40,
+                "entryCost": 2,
+                "excludeEnemy": true,
+                "scheduledDamage": {
+                  "round": 4,
+                  "damage": 2
+                }
+              },
+              "label": "confuse"
+            },
+            {
+              "order": 60,
+              "spec": {
+                "section": 718,
+                "base": 40,
+                "entryCost": 4,
+                "excludeEnemy": true
+              },
+              "label": "clumsy"
+            },
+            {
+              "order": 81,
+              "spec": {
+                "section": 766,
+                "base": 40,
+                "entryCost": 2,
+                "entryDamage": 2
+              },
+              "label": "darkness"
+            }
+          ]
+        },
+        "part": {
+          "key": "guard1",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:40:1",
+      "name": "Втори страж (40)",
+      "attack": 6,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Втори страж (40)",
+        "attack": 6,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "encounter": {
+            "section": 40,
+            "key": "gateGuards",
+            "win": 129,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "key": "guard2",
+                "skill": 6,
+                "stamina": 7
+              },
+              {
+                "key": "guard3",
+                "skill": 7,
+                "stamina": 8
+              },
+              {
+                "key": "guard4",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "mode": "group",
+            "activeLimit": 2
+          },
+          "variants": [
+            {
+              "order": 7,
+              "spec": {
+                "section": 599,
+                "base": 40,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {},
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "mindRead"
+            },
+            {
+              "order": 20,
+              "spec": {
+                "section": 636,
+                "base": 40,
+                "entryCost": 1,
+                "component": "coin",
+                "success": {
+                  "consumeCoin": true,
+                  "enemyAttackModifier": -2
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "shield"
+            },
+            {
+              "order": 29,
+              "spec": {
+                "section": 656,
+                "base": 40,
+                "entryCost": 2,
+                "excludeEnemy": true,
+                "scheduledDamage": {
+                  "round": 4,
+                  "damage": 2
+                }
+              },
+              "label": "confuse"
+            },
+            {
+              "order": 60,
+              "spec": {
+                "section": 718,
+                "base": 40,
+                "entryCost": 4,
+                "excludeEnemy": true
+              },
+              "label": "clumsy"
+            },
+            {
+              "order": 81,
+              "spec": {
+                "section": 766,
+                "base": 40,
+                "entryCost": 2,
+                "entryDamage": 2
+              },
+              "label": "darkness"
+            }
+          ]
+        },
+        "part": {
+          "key": "guard2",
+          "skill": 6,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:40:2",
+      "name": "Трети страж (40)",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Трети страж (40)",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "encounter": {
+            "section": 40,
+            "key": "gateGuards",
+            "win": 129,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "key": "guard2",
+                "skill": 6,
+                "stamina": 7
+              },
+              {
+                "key": "guard3",
+                "skill": 7,
+                "stamina": 8
+              },
+              {
+                "key": "guard4",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "mode": "group",
+            "activeLimit": 2
+          },
+          "variants": [
+            {
+              "order": 7,
+              "spec": {
+                "section": 599,
+                "base": 40,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {},
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "mindRead"
+            },
+            {
+              "order": 20,
+              "spec": {
+                "section": 636,
+                "base": 40,
+                "entryCost": 1,
+                "component": "coin",
+                "success": {
+                  "consumeCoin": true,
+                  "enemyAttackModifier": -2
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "shield"
+            },
+            {
+              "order": 29,
+              "spec": {
+                "section": 656,
+                "base": 40,
+                "entryCost": 2,
+                "excludeEnemy": true,
+                "scheduledDamage": {
+                  "round": 4,
+                  "damage": 2
+                }
+              },
+              "label": "confuse"
+            },
+            {
+              "order": 60,
+              "spec": {
+                "section": 718,
+                "base": 40,
+                "entryCost": 4,
+                "excludeEnemy": true
+              },
+              "label": "clumsy"
+            },
+            {
+              "order": 81,
+              "spec": {
+                "section": 766,
+                "base": 40,
+                "entryCost": 2,
+                "entryDamage": 2
+              },
+              "label": "darkness"
+            }
+          ]
+        },
+        "part": {
+          "key": "guard3",
+          "skill": 7,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "encounter:40:3",
+      "name": "Четвърти страж (40)",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Четвърти страж (40)",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "encounter": {
+            "section": 40,
+            "key": "gateGuards",
+            "win": 129,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "key": "guard2",
+                "skill": 6,
+                "stamina": 7
+              },
+              {
+                "key": "guard3",
+                "skill": 7,
+                "stamina": 8
+              },
+              {
+                "key": "guard4",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "mode": "group",
+            "activeLimit": 2
+          },
+          "variants": [
+            {
+              "order": 7,
+              "spec": {
+                "section": 599,
+                "base": 40,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {},
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "mindRead"
+            },
+            {
+              "order": 20,
+              "spec": {
+                "section": 636,
+                "base": 40,
+                "entryCost": 1,
+                "component": "coin",
+                "success": {
+                  "consumeCoin": true,
+                  "enemyAttackModifier": -2
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "shield"
+            },
+            {
+              "order": 29,
+              "spec": {
+                "section": 656,
+                "base": 40,
+                "entryCost": 2,
+                "excludeEnemy": true,
+                "scheduledDamage": {
+                  "round": 4,
+                  "damage": 2
+                }
+              },
+              "label": "confuse"
+            },
+            {
+              "order": 60,
+              "spec": {
+                "section": 718,
+                "base": 40,
+                "entryCost": 4,
+                "excludeEnemy": true
+              },
+              "label": "clumsy"
+            },
+            {
+              "order": 81,
+              "spec": {
+                "section": 766,
+                "base": 40,
+                "entryCost": 2,
+                "entryDamage": 2
+              },
+              "label": "darkness"
+            }
+          ]
+        },
+        "part": {
+          "key": "guard4",
+          "skill": 8,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:65:0",
+      "name": "Хидра с глави на боговете (65)",
+      "attack": 17,
+      "defense": null,
+      "hp": 24,
+      "pb": null,
+      "adopt": {
+        "name": "Хидра с глави на боговете (65)",
+        "attack": 17,
+        "defense": null,
+        "hp": 24,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 65,
+            "key": "hydra",
+            "win": null,
+            "enemies": [
+              {
+                "key": "hydra",
+                "skill": 17,
+                "stamina": 24
+              }
+            ],
+            "mode": "hydra",
+            "entryDamage": 1,
+            "playerHitDestination": 458,
+            "enemyHitDestination": 305
+          },
+          "variants": [
+            {
+              "order": 17,
+              "spec": {
+                "section": 623,
+                "base": 65,
+                "entryCost": 4,
+                "resolution": "continue",
+                "destination": 305
+              },
+              "label": "fireball"
+            },
+            {
+              "order": 45,
+              "spec": {
+                "section": 689,
+                "base": 65,
+                "entryCost": 2,
+                "playerAttackModifier": 4
+              },
+              "label": "grow"
+            }
+          ]
+        },
+        "part": {
+          "key": "hydra",
+          "skill": 17,
+          "stamina": 24
+        }
+      }
+    },
+    {
+      "key": "encounter:94:0",
+      "name": "Ягуар (94)",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Ягуар (94)",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 94,
+            "key": "jaguar",
+            "win": 146,
+            "enemies": [
+              {
+                "key": "jaguar",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "mode": "sequential",
+            "mercy": {
+              "floor": 2,
+              "destination": 80
+            }
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "jaguar",
+          "skill": 8,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:107:0",
+      "name": "Демон от долния свят (107)",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Демон от долния свят (107)",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 107,
+            "key": "demon",
+            "win": 351,
+            "enemies": [
+              {
+                "key": "demon",
+                "skill": 7,
+                "stamina": 7
+              }
+            ],
+            "mode": "sequential",
+            "roundLimit": 5,
+            "timeoutDestination": 172,
+            "timeoutFatal": true
+          },
+          "variants": [
+            {
+              "order": 0,
+              "spec": {
+                "section": 582,
+                "base": 107,
+                "entryCost": 4,
+                "resolution": "win",
+                "destination": 351
+              },
+              "label": "fireball"
+            },
+            {
+              "order": 19,
+              "spec": {
+                "section": 628,
+                "base": 107,
+                "entryCost": 1,
+                "component": "holyWater",
+                "success": {
+                  "consume": "holyWater",
+                  "resolution": "loss",
+                  "destination": 172,
+                  "fatal": true
+                },
+                "failure": {
+                  "resolution": "loss",
+                  "destination": 172,
+                  "fatal": true
+                }
+              },
+              "label": "resurrect"
+            },
+            {
+              "order": 42,
+              "spec": {
+                "section": 683,
+                "base": 107,
+                "entryCost": 4,
+                "resolution": "win",
+                "destination": 351
+              },
+              "label": "bolt"
+            },
+            {
+              "order": 59,
+              "spec": {
+                "section": 717,
+                "base": 107,
+                "entryCost": 1,
+                "resolution": "loss",
+                "destination": 172,
+                "fatal": true
+              },
+              "label": "fear"
+            },
+            {
+              "order": 93,
+              "spec": {
+                "section": 798,
+                "base": 107,
+                "entryCost": 1,
+                "component": "amulet",
+                "success": {
+                  "resolution": "loss",
+                  "destination": 540,
+                  "fatal": true
+                },
+                "failure": {
+                  "resolution": "loss",
+                  "destination": 172,
+                  "fatal": true
+                }
+              },
+              "label": "levitate"
+            }
+          ]
+        },
+        "part": {
+          "key": "demon",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:110:0",
+      "name": "Първи Всевиждащ воин (110)",
+      "attack": 7,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Първи Всевиждащ воин (110)",
+        "attack": 7,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 110,
+            "key": "sightmasters",
+            "win": 340,
+            "enemies": [
+              {
+                "key": "sightmaster1",
+                "skill": 7,
+                "stamina": 4
+              },
+              {
+                "key": "sightmaster2",
+                "skill": 6,
+                "stamina": 4
+              },
+              {
+                "key": "sightmaster3",
+                "skill": 6,
+                "stamina": 5
+              }
+            ],
+            "mode": "group"
+          },
+          "variants": [
+            {
+              "order": 2,
+              "spec": {
+                "section": 588,
+                "base": 110,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {
+                  "mindRead": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "mindRead"
+            },
+            {
+              "order": 18,
+              "spec": {
+                "section": 627,
+                "base": 110,
+                "entryCost": 1,
+                "component": "yellowPowder",
+                "success": {
+                  "consume": "yellowPowder",
+                  "playerAttackModifier": 3,
+                  "optionalEscape": 135
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "speed"
+            },
+            {
+              "order": 30,
+              "spec": {
+                "section": 657,
+                "base": 110,
+                "entryCost": 2,
+                "entryDamage": 2
+              },
+              "label": "copies"
+            },
+            {
+              "order": 50,
+              "spec": {
+                "section": 699,
+                "base": 110,
+                "entryCost": 2,
+                "entryDamage": 2
+              },
+              "label": "antiMagic"
+            },
+            {
+              "order": 68,
+              "spec": {
+                "section": 739,
+                "base": 110,
+                "entryCost": 2,
+                "entryDamage": 2
+              },
+              "label": "darkness"
+            },
+            {
+              "order": 87,
+              "spec": {
+                "section": 787,
+                "base": 110,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {
+                  "mindRead": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "mindRead"
+            }
+          ]
+        },
+        "part": {
+          "key": "sightmaster1",
+          "skill": 7,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "encounter:110:1",
+      "name": "Втори Всевиждащ воин (110)",
+      "attack": 6,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Втори Всевиждащ воин (110)",
+        "attack": 6,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 110,
+            "key": "sightmasters",
+            "win": 340,
+            "enemies": [
+              {
+                "key": "sightmaster1",
+                "skill": 7,
+                "stamina": 4
+              },
+              {
+                "key": "sightmaster2",
+                "skill": 6,
+                "stamina": 4
+              },
+              {
+                "key": "sightmaster3",
+                "skill": 6,
+                "stamina": 5
+              }
+            ],
+            "mode": "group"
+          },
+          "variants": [
+            {
+              "order": 2,
+              "spec": {
+                "section": 588,
+                "base": 110,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {
+                  "mindRead": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "mindRead"
+            },
+            {
+              "order": 18,
+              "spec": {
+                "section": 627,
+                "base": 110,
+                "entryCost": 1,
+                "component": "yellowPowder",
+                "success": {
+                  "consume": "yellowPowder",
+                  "playerAttackModifier": 3,
+                  "optionalEscape": 135
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "speed"
+            },
+            {
+              "order": 30,
+              "spec": {
+                "section": 657,
+                "base": 110,
+                "entryCost": 2,
+                "entryDamage": 2
+              },
+              "label": "copies"
+            },
+            {
+              "order": 50,
+              "spec": {
+                "section": 699,
+                "base": 110,
+                "entryCost": 2,
+                "entryDamage": 2
+              },
+              "label": "antiMagic"
+            },
+            {
+              "order": 68,
+              "spec": {
+                "section": 739,
+                "base": 110,
+                "entryCost": 2,
+                "entryDamage": 2
+              },
+              "label": "darkness"
+            },
+            {
+              "order": 87,
+              "spec": {
+                "section": 787,
+                "base": 110,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {
+                  "mindRead": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "mindRead"
+            }
+          ]
+        },
+        "part": {
+          "key": "sightmaster2",
+          "skill": 6,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "encounter:110:2",
+      "name": "Трети Всевиждащ воин (110)",
+      "attack": 6,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Трети Всевиждащ воин (110)",
+        "attack": 6,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 110,
+            "key": "sightmasters",
+            "win": 340,
+            "enemies": [
+              {
+                "key": "sightmaster1",
+                "skill": 7,
+                "stamina": 4
+              },
+              {
+                "key": "sightmaster2",
+                "skill": 6,
+                "stamina": 4
+              },
+              {
+                "key": "sightmaster3",
+                "skill": 6,
+                "stamina": 5
+              }
+            ],
+            "mode": "group"
+          },
+          "variants": [
+            {
+              "order": 2,
+              "spec": {
+                "section": 588,
+                "base": 110,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {
+                  "mindRead": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "mindRead"
+            },
+            {
+              "order": 18,
+              "spec": {
+                "section": 627,
+                "base": 110,
+                "entryCost": 1,
+                "component": "yellowPowder",
+                "success": {
+                  "consume": "yellowPowder",
+                  "playerAttackModifier": 3,
+                  "optionalEscape": 135
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "speed"
+            },
+            {
+              "order": 30,
+              "spec": {
+                "section": 657,
+                "base": 110,
+                "entryCost": 2,
+                "entryDamage": 2
+              },
+              "label": "copies"
+            },
+            {
+              "order": 50,
+              "spec": {
+                "section": 699,
+                "base": 110,
+                "entryCost": 2,
+                "entryDamage": 2
+              },
+              "label": "antiMagic"
+            },
+            {
+              "order": 68,
+              "spec": {
+                "section": 739,
+                "base": 110,
+                "entryCost": 2,
+                "entryDamage": 2
+              },
+              "label": "darkness"
+            },
+            {
+              "order": 87,
+              "spec": {
+                "section": 787,
+                "base": 110,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {
+                  "mindRead": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "mindRead"
+            }
+          ]
+        },
+        "part": {
+          "key": "sightmaster3",
+          "skill": 6,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "encounter:133:0",
+      "name": "Първи страж (133)",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Първи страж (133)",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "encounter": {
+            "section": 133,
+            "key": "gateGuards",
+            "win": 129,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "key": "guard2",
+                "skill": 6,
+                "stamina": 7
+              },
+              {
+                "key": "guard3",
+                "skill": 7,
+                "stamina": 8
+              },
+              {
+                "key": "guard4",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "mode": "sequential"
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "guard1",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:133:1",
+      "name": "Втори страж (133)",
+      "attack": 6,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Втори страж (133)",
+        "attack": 6,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "encounter": {
+            "section": 133,
+            "key": "gateGuards",
+            "win": 129,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "key": "guard2",
+                "skill": 6,
+                "stamina": 7
+              },
+              {
+                "key": "guard3",
+                "skill": 7,
+                "stamina": 8
+              },
+              {
+                "key": "guard4",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "mode": "sequential"
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "guard2",
+          "skill": 6,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:133:2",
+      "name": "Трети страж (133)",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Трети страж (133)",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "encounter": {
+            "section": 133,
+            "key": "gateGuards",
+            "win": 129,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "key": "guard2",
+                "skill": 6,
+                "stamina": 7
+              },
+              {
+                "key": "guard3",
+                "skill": 7,
+                "stamina": 8
+              },
+              {
+                "key": "guard4",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "mode": "sequential"
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "guard3",
+          "skill": 7,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "encounter:133:3",
+      "name": "Четвърти страж (133)",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Четвърти страж (133)",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "encounter": {
+            "section": 133,
+            "key": "gateGuards",
+            "win": 129,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "key": "guard2",
+                "skill": 6,
+                "stamina": 7
+              },
+              {
+                "key": "guard3",
+                "skill": 7,
+                "stamina": 8
+              },
+              {
+                "key": "guard4",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "mode": "sequential"
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "guard4",
+          "skill": 8,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:145:0",
+      "name": "Първи страж (145)",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Първи страж (145)",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 145,
+            "key": "captain",
+            "win": 463,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 8,
+                "stamina": 7
+              },
+              {
+                "key": "guard2",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "key": "captain",
+                "skill": 8,
+                "stamina": 9
+              }
+            ],
+            "mode": "captain",
+            "captainCheckpoints": [
+              6,
+              3
+            ],
+            "mercyDestinations": [
+              347,
+              445
+            ]
+          },
+          "variants": [
+            {
+              "order": 5,
+              "spec": {
+                "section": 593,
+                "base": 145,
+                "entryCost": 1,
+                "component": "greenRing",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 463
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "teleport"
+            },
+            {
+              "order": 24,
+              "spec": {
+                "section": 642,
+                "base": 145,
+                "entryCost": 1,
+                "component": "flute",
+                "success": {
+                  "destroy": "flute"
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "dance"
+            },
+            {
+              "order": 41,
+              "spec": {
+                "section": 679,
+                "base": 145,
+                "entryCost": 2,
+                "disableEnemy": true
+              },
+              "label": "confuse"
+            },
+            {
+              "order": 63,
+              "spec": {
+                "section": 722,
+                "base": 145,
+                "entryCost": 1
+              },
+              "label": "farsight"
+            },
+            {
+              "order": 72,
+              "spec": {
+                "section": 747,
+                "base": 145,
+                "entryCost": 1,
+                "component": "goldJewel",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 301
+                },
+                "failure": {}
+              },
+              "label": "friend"
+            }
+          ],
+          "npcRules": {
+            "captain": {
+              "frontline": [
+                0,
+                1
+              ],
+              "enemyIndex": 2,
+              "stamina": 6,
+              "destination": 391,
+              "mercyDestination": 347
+            }
+          }
+        },
+        "part": {
+          "key": "guard1",
+          "skill": 8,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:145:1",
+      "name": "Втори страж (145)",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Втори страж (145)",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 145,
+            "key": "captain",
+            "win": 463,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 8,
+                "stamina": 7
+              },
+              {
+                "key": "guard2",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "key": "captain",
+                "skill": 8,
+                "stamina": 9
+              }
+            ],
+            "mode": "captain",
+            "captainCheckpoints": [
+              6,
+              3
+            ],
+            "mercyDestinations": [
+              347,
+              445
+            ]
+          },
+          "variants": [
+            {
+              "order": 5,
+              "spec": {
+                "section": 593,
+                "base": 145,
+                "entryCost": 1,
+                "component": "greenRing",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 463
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "teleport"
+            },
+            {
+              "order": 24,
+              "spec": {
+                "section": 642,
+                "base": 145,
+                "entryCost": 1,
+                "component": "flute",
+                "success": {
+                  "destroy": "flute"
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "dance"
+            },
+            {
+              "order": 41,
+              "spec": {
+                "section": 679,
+                "base": 145,
+                "entryCost": 2,
+                "disableEnemy": true
+              },
+              "label": "confuse"
+            },
+            {
+              "order": 63,
+              "spec": {
+                "section": 722,
+                "base": 145,
+                "entryCost": 1
+              },
+              "label": "farsight"
+            },
+            {
+              "order": 72,
+              "spec": {
+                "section": 747,
+                "base": 145,
+                "entryCost": 1,
+                "component": "goldJewel",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 301
+                },
+                "failure": {}
+              },
+              "label": "friend"
+            }
+          ],
+          "npcRules": {
+            "captain": {
+              "frontline": [
+                0,
+                1
+              ],
+              "enemyIndex": 2,
+              "stamina": 6,
+              "destination": 391,
+              "mercyDestination": 347
+            }
+          }
+        },
+        "part": {
+          "key": "guard2",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:145:2",
+      "name": "Капитан на стражите (145)",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Капитан на стражите (145)",
+        "attack": 8,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 145,
+            "key": "captain",
+            "win": 463,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 8,
+                "stamina": 7
+              },
+              {
+                "key": "guard2",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "key": "captain",
+                "skill": 8,
+                "stamina": 9
+              }
+            ],
+            "mode": "captain",
+            "captainCheckpoints": [
+              6,
+              3
+            ],
+            "mercyDestinations": [
+              347,
+              445
+            ]
+          },
+          "variants": [
+            {
+              "order": 5,
+              "spec": {
+                "section": 593,
+                "base": 145,
+                "entryCost": 1,
+                "component": "greenRing",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 463
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "teleport"
+            },
+            {
+              "order": 24,
+              "spec": {
+                "section": 642,
+                "base": 145,
+                "entryCost": 1,
+                "component": "flute",
+                "success": {
+                  "destroy": "flute"
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "dance"
+            },
+            {
+              "order": 41,
+              "spec": {
+                "section": 679,
+                "base": 145,
+                "entryCost": 2,
+                "disableEnemy": true
+              },
+              "label": "confuse"
+            },
+            {
+              "order": 63,
+              "spec": {
+                "section": 722,
+                "base": 145,
+                "entryCost": 1
+              },
+              "label": "farsight"
+            },
+            {
+              "order": 72,
+              "spec": {
+                "section": 747,
+                "base": 145,
+                "entryCost": 1,
+                "component": "goldJewel",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 301
+                },
+                "failure": {}
+              },
+              "label": "friend"
+            }
+          ],
+          "npcRules": {
+            "captain": {
+              "frontline": [
+                0,
+                1
+              ],
+              "enemyIndex": 2,
+              "stamina": 6,
+              "destination": 391,
+              "mercyDestination": 347
+            }
+          }
+        },
+        "part": {
+          "key": "captain",
+          "skill": 8,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:159:0",
+      "name": "Първи Червено око (159)",
+      "attack": 6,
+      "defense": null,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Първи Червено око (159)",
+        "attack": 6,
+        "defense": null,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 159,
+            "key": "redEyes",
+            "win": 425,
+            "enemies": [
+              {
+                "key": "redEye1",
+                "skill": 6,
+                "stamina": 3
+              },
+              {
+                "key": "redEye2",
+                "skill": 5,
+                "stamina": 2
+              },
+              {
+                "key": "redEye3",
+                "skill": 5,
+                "stamina": 3
+              }
+            ],
+            "mode": "red-eyes",
+            "gazeInstruction": 316
+          },
+          "variants": [
+            {
+              "order": 22,
+              "spec": {
+                "section": 639,
+                "base": 159,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {
+                  "resolution": "win",
+                  "destination": 425
+                },
+                "failure": {
+                  "entryDamage": 2,
+                  "resolution": "loss",
+                  "destination": 769,
+                  "fatal": true
+                }
+              },
+              "label": "mindRead"
+            },
+            {
+              "order": 33,
+              "spec": {
+                "section": 664,
+                "base": 159,
+                "entryCost": 1,
+                "component": "pearlRing",
+                "success": {},
+                "failure": {
+                  "entryDamage": 2,
+                  "resolution": "loss",
+                  "destination": 769,
+                  "fatal": true
+                }
+              },
+              "label": "invisible"
+            },
+            {
+              "order": 53,
+              "spec": {
+                "section": 708,
+                "base": 159,
+                "entryCost": 1,
+                "resolution": "loss",
+                "destination": 769,
+                "fatal": true
+              },
+              "label": "resurrect"
+            },
+            {
+              "order": 61,
+              "spec": {
+                "section": 720,
+                "base": 159,
+                "entryCost": 2,
+                "resolution": "loss",
+                "destination": 720,
+                "fatal": true
+              },
+              "label": "slow"
+            },
+            {
+              "order": 73,
+              "spec": {
+                "section": 748,
+                "base": 159,
+                "entryCost": 1,
+                "component": "mirror",
+                "success": {
+                  "mirrorCopies": true
+                },
+                "failure": {
+                  "resolution": "loss",
+                  "destination": 769,
+                  "fatal": true
+                }
+              },
+              "label": "mirror"
+            }
+          ],
+          "npcRules": {
+            "redEyes": {
+              "initialThreshold": 6,
+              "minimumThreshold": 1,
+              "fatalBurns": 2
+            }
+          }
+        },
+        "part": {
+          "key": "redEye1",
+          "skill": 6,
+          "stamina": 3
+        }
+      }
+    },
+    {
+      "key": "encounter:159:1",
+      "name": "Втори Червено око (159)",
+      "attack": 5,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Втори Червено око (159)",
+        "attack": 5,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 159,
+            "key": "redEyes",
+            "win": 425,
+            "enemies": [
+              {
+                "key": "redEye1",
+                "skill": 6,
+                "stamina": 3
+              },
+              {
+                "key": "redEye2",
+                "skill": 5,
+                "stamina": 2
+              },
+              {
+                "key": "redEye3",
+                "skill": 5,
+                "stamina": 3
+              }
+            ],
+            "mode": "red-eyes",
+            "gazeInstruction": 316
+          },
+          "variants": [
+            {
+              "order": 22,
+              "spec": {
+                "section": 639,
+                "base": 159,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {
+                  "resolution": "win",
+                  "destination": 425
+                },
+                "failure": {
+                  "entryDamage": 2,
+                  "resolution": "loss",
+                  "destination": 769,
+                  "fatal": true
+                }
+              },
+              "label": "mindRead"
+            },
+            {
+              "order": 33,
+              "spec": {
+                "section": 664,
+                "base": 159,
+                "entryCost": 1,
+                "component": "pearlRing",
+                "success": {},
+                "failure": {
+                  "entryDamage": 2,
+                  "resolution": "loss",
+                  "destination": 769,
+                  "fatal": true
+                }
+              },
+              "label": "invisible"
+            },
+            {
+              "order": 53,
+              "spec": {
+                "section": 708,
+                "base": 159,
+                "entryCost": 1,
+                "resolution": "loss",
+                "destination": 769,
+                "fatal": true
+              },
+              "label": "resurrect"
+            },
+            {
+              "order": 61,
+              "spec": {
+                "section": 720,
+                "base": 159,
+                "entryCost": 2,
+                "resolution": "loss",
+                "destination": 720,
+                "fatal": true
+              },
+              "label": "slow"
+            },
+            {
+              "order": 73,
+              "spec": {
+                "section": 748,
+                "base": 159,
+                "entryCost": 1,
+                "component": "mirror",
+                "success": {
+                  "mirrorCopies": true
+                },
+                "failure": {
+                  "resolution": "loss",
+                  "destination": 769,
+                  "fatal": true
+                }
+              },
+              "label": "mirror"
+            }
+          ],
+          "npcRules": {
+            "redEyes": {
+              "initialThreshold": 6,
+              "minimumThreshold": 1,
+              "fatalBurns": 2
+            }
+          }
+        },
+        "part": {
+          "key": "redEye2",
+          "skill": 5,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:159:2",
+      "name": "Трети Червено око (159)",
+      "attack": 5,
+      "defense": null,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Трети Червено око (159)",
+        "attack": 5,
+        "defense": null,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 159,
+            "key": "redEyes",
+            "win": 425,
+            "enemies": [
+              {
+                "key": "redEye1",
+                "skill": 6,
+                "stamina": 3
+              },
+              {
+                "key": "redEye2",
+                "skill": 5,
+                "stamina": 2
+              },
+              {
+                "key": "redEye3",
+                "skill": 5,
+                "stamina": 3
+              }
+            ],
+            "mode": "red-eyes",
+            "gazeInstruction": 316
+          },
+          "variants": [
+            {
+              "order": 22,
+              "spec": {
+                "section": 639,
+                "base": 159,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {
+                  "resolution": "win",
+                  "destination": 425
+                },
+                "failure": {
+                  "entryDamage": 2,
+                  "resolution": "loss",
+                  "destination": 769,
+                  "fatal": true
+                }
+              },
+              "label": "mindRead"
+            },
+            {
+              "order": 33,
+              "spec": {
+                "section": 664,
+                "base": 159,
+                "entryCost": 1,
+                "component": "pearlRing",
+                "success": {},
+                "failure": {
+                  "entryDamage": 2,
+                  "resolution": "loss",
+                  "destination": 769,
+                  "fatal": true
+                }
+              },
+              "label": "invisible"
+            },
+            {
+              "order": 53,
+              "spec": {
+                "section": 708,
+                "base": 159,
+                "entryCost": 1,
+                "resolution": "loss",
+                "destination": 769,
+                "fatal": true
+              },
+              "label": "resurrect"
+            },
+            {
+              "order": 61,
+              "spec": {
+                "section": 720,
+                "base": 159,
+                "entryCost": 2,
+                "resolution": "loss",
+                "destination": 720,
+                "fatal": true
+              },
+              "label": "slow"
+            },
+            {
+              "order": 73,
+              "spec": {
+                "section": 748,
+                "base": 159,
+                "entryCost": 1,
+                "component": "mirror",
+                "success": {
+                  "mirrorCopies": true
+                },
+                "failure": {
+                  "resolution": "loss",
+                  "destination": 769,
+                  "fatal": true
+                }
+              },
+              "label": "mirror"
+            }
+          ],
+          "npcRules": {
+            "redEyes": {
+              "initialThreshold": 6,
+              "minimumThreshold": 1,
+              "fatalBurns": 2
+            }
+          }
+        },
+        "part": {
+          "key": "redEye3",
+          "skill": 5,
+          "stamina": 3
+        }
+      }
+    },
+    {
+      "key": "encounter:225:0",
+      "name": "Първо Червено око (225)",
+      "attack": 6,
+      "defense": null,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Първо Червено око (225)",
+        "attack": 6,
+        "defense": null,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "encounter": {
+            "section": 225,
+            "key": "redEyes",
+            "win": 425,
+            "enemies": [
+              {
+                "key": "redEye1",
+                "skill": 6,
+                "stamina": 3
+              },
+              {
+                "key": "redEye2",
+                "skill": 5,
+                "stamina": 2
+              }
+            ],
+            "mode": "red-eyes",
+            "gazeInstruction": 34
+          },
+          "variants": [
+            {
+              "order": 1,
+              "spec": {
+                "section": 584,
+                "base": 225,
+                "entryCost": 1,
+                "component": "greenRing",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 12
+                },
+                "failure": {
+                  "resolution": "loss",
+                  "destination": 769,
+                  "fatal": true
+                }
+              },
+              "label": "teleport"
+            },
+            {
+              "order": 3,
+              "spec": {
+                "section": 590,
+                "base": 225,
+                "entryCost": 1,
+                "component": "pebbles",
+                "success": {
+                  "resolution": "loss",
+                  "destination": 769,
+                  "fatal": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "pebbles"
+            },
+            {
+              "order": 31,
+              "spec": {
+                "section": 660,
+                "base": 225,
+                "entryCost": 4,
+                "resolution": "continue",
+                "destination": 425
+              },
+              "label": "forcefield"
+            },
+            {
+              "order": 48,
+              "spec": {
+                "section": 695,
+                "base": 225,
+                "entryCost": 4,
+                "resolution": "loss",
+                "destination": 769,
+                "fatal": true
+              },
+              "label": "bolt"
+            },
+            {
+              "order": 71,
+              "spec": {
+                "section": 745,
+                "base": 225,
+                "entryCost": 1,
+                "component": "sunJewel",
+                "success": {},
+                "failure": {
+                  "resolution": "loss",
+                  "destination": 769,
+                  "fatal": true
+                }
+              },
+              "label": "light"
+            }
+          ]
+        },
+        "part": {
+          "key": "redEye1",
+          "skill": 6,
+          "stamina": 3
+        }
+      }
+    },
+    {
+      "key": "encounter:225:1",
+      "name": "Второ Червено око (225)",
+      "attack": 5,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Второ Червено око (225)",
+        "attack": 5,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "encounter": {
+            "section": 225,
+            "key": "redEyes",
+            "win": 425,
+            "enemies": [
+              {
+                "key": "redEye1",
+                "skill": 6,
+                "stamina": 3
+              },
+              {
+                "key": "redEye2",
+                "skill": 5,
+                "stamina": 2
+              }
+            ],
+            "mode": "red-eyes",
+            "gazeInstruction": 34
+          },
+          "variants": [
+            {
+              "order": 1,
+              "spec": {
+                "section": 584,
+                "base": 225,
+                "entryCost": 1,
+                "component": "greenRing",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 12
+                },
+                "failure": {
+                  "resolution": "loss",
+                  "destination": 769,
+                  "fatal": true
+                }
+              },
+              "label": "teleport"
+            },
+            {
+              "order": 3,
+              "spec": {
+                "section": 590,
+                "base": 225,
+                "entryCost": 1,
+                "component": "pebbles",
+                "success": {
+                  "resolution": "loss",
+                  "destination": 769,
+                  "fatal": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "pebbles"
+            },
+            {
+              "order": 31,
+              "spec": {
+                "section": 660,
+                "base": 225,
+                "entryCost": 4,
+                "resolution": "continue",
+                "destination": 425
+              },
+              "label": "forcefield"
+            },
+            {
+              "order": 48,
+              "spec": {
+                "section": 695,
+                "base": 225,
+                "entryCost": 4,
+                "resolution": "loss",
+                "destination": 769,
+                "fatal": true
+              },
+              "label": "bolt"
+            },
+            {
+              "order": 71,
+              "spec": {
+                "section": 745,
+                "base": 225,
+                "entryCost": 1,
+                "component": "sunJewel",
+                "success": {},
+                "failure": {
+                  "resolution": "loss",
+                  "destination": 769,
+                  "fatal": true
+                }
+              },
+              "label": "light"
+            }
+          ]
+        },
+        "part": {
+          "key": "redEye2",
+          "skill": 5,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:264:0",
+      "name": "Първи страж (264)",
+      "attack": 7,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Първи страж (264)",
+        "attack": 7,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 264,
+            "key": "drunkenGuards",
+            "win": 387,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 7,
+                "stamina": 2
+              }
+            ],
+            "mode": "sequential",
+            "roundLimit": 2,
+            "winOutcome": "continue",
+            "timeoutDestination": 487,
+            "handoff": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "guard1",
+          "skill": 7,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:270:0",
+      "name": "Огре (270)",
+      "attack": 9,
+      "defense": null,
+      "hp": 11,
+      "pb": null,
+      "adopt": {
+        "name": "Огре (270)",
+        "attack": 9,
+        "defense": null,
+        "hp": 11,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 270,
+            "key": "torturer",
+            "win": 230,
+            "enemies": [
+              {
+                "key": "torturer",
+                "skill": 9,
+                "stamina": 11
+              }
+            ],
+            "mode": "whip",
+            "whipPenalty": 3,
+            "whipDuration": 3
+          },
+          "variants": [
+            {
+              "order": 4,
+              "spec": {
+                "section": 592,
+                "base": 270,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 569
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "mindRead"
+            },
+            {
+              "order": 15,
+              "spec": {
+                "section": 619,
+                "base": 270,
+                "entryCost": 1,
+                "component": "greenRing",
+                "success": {},
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "teleport"
+            },
+            {
+              "order": 27,
+              "spec": {
+                "section": 651,
+                "base": 270,
+                "entryCost": 1,
+                "component": "pebbles",
+                "success": {
+                  "volley": {
+                    "dice": 1,
+                    "damage": 1,
+                    "missLimit": 2
+                  }
+                },
+                "failure": {
+                  "resolution": "continue",
+                  "destination": 452
+                }
+              },
+              "label": "pebbles"
+            },
+            {
+              "order": 39,
+              "spec": {
+                "section": 676,
+                "base": 270,
+                "entryCost": 1,
+                "component": "pebbles",
+                "success": {
+                  "volley": {
+                    "dice": 1,
+                    "damage": 1,
+                    "missLimit": 2
+                  }
+                },
+                "failure": {
+                  "resolution": "continue",
+                  "destination": 557
+                }
+              },
+              "label": "pebbles"
+            },
+            {
+              "order": 47,
+              "spec": {
+                "section": 691,
+                "base": 270,
+                "entryCost": 1,
+                "component": "sunJewel",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 452
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "light"
+            },
+            {
+              "order": 54,
+              "spec": {
+                "section": 709,
+                "base": 270,
+                "entryCost": 1,
+                "smellDamage": 3,
+                "resolution": "continue",
+                "destination": 230
+              },
+              "label": "stench"
+            },
+            {
+              "order": 74,
+              "spec": {
+                "section": 752,
+                "base": 270,
+                "entryCost": 1,
+                "component": "sunJewel",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 251
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "light"
+            },
+            {
+              "order": 82,
+              "spec": {
+                "section": 770,
+                "base": 270,
+                "entryCost": 1,
+                "component": "sunJewel",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 557
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "light"
+            },
+            {
+              "order": 92,
+              "spec": {
+                "section": 794,
+                "base": 270,
+                "entryCost": 1,
+                "component": "pebbles",
+                "success": {
+                  "volley": {
+                    "dice": 1,
+                    "damage": 1,
+                    "missLimit": 2
+                  }
+                },
+                "failure": {
+                  "resolution": "continue",
+                  "destination": 251
+                }
+              },
+              "label": "pebbles"
+            }
+          ]
+        },
+        "part": {
+          "key": "torturer",
+          "skill": 9,
+          "stamina": 11
+        }
+      }
+    },
+    {
+      "key": "encounter:281:0",
+      "name": "Зъл дух (281)",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Зъл дух (281)",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 281,
+            "key": "cook",
+            "win": 448,
+            "enemies": [
+              {
+                "key": "cook",
+                "skill": 7,
+                "stamina": 7
+              }
+            ],
+            "mode": "sequential",
+            "enemyFloor": 3
+          },
+          "variants": [
+            {
+              "order": 8,
+              "spec": {
+                "section": 602,
+                "base": 281,
+                "entryCost": 1,
+                "component": "medicine",
+                "success": {
+                  "healing": 2,
+                  "consumeMedicine": 1,
+                  "enemyStaminaModifier": 4
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "healing"
+            },
+            {
+              "order": 35,
+              "spec": {
+                "section": 668,
+                "base": 281,
+                "entryCost": 1,
+                "component": "boneBracelet",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 448
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "illusion"
+            },
+            {
+              "order": 46,
+              "spec": {
+                "section": 690,
+                "base": 281,
+                "entryCost": 2
+              },
+              "label": "antiMagic"
+            },
+            {
+              "order": 64,
+              "spec": {
+                "section": 726,
+                "base": 281,
+                "entryCost": 2,
+                "consumeItem": true
+              },
+              "label": "treasure"
+            },
+            {
+              "order": 75,
+              "spec": {
+                "section": 755,
+                "base": 281,
+                "entryCost": 1,
+                "component": "mirror",
+                "success": {
+                  "resolution": "loss",
+                  "destination": 629,
+                  "fatal": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "mirror"
+            }
+          ]
+        },
+        "part": {
+          "key": "cook",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:332:0",
+      "name": "Таласъм-мутант (332)",
+      "attack": 8,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Таласъм-мутант (332)",
+        "attack": 8,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 332,
+            "key": "mutant",
+            "win": 497,
+            "enemies": [
+              {
+                "key": "mutant",
+                "skill": 8,
+                "stamina": 8
+              }
+            ],
+            "mode": "sequential",
+            "roundLimit": 6,
+            "timeoutDestination": 128,
+            "timeoutFatal": true
+          },
+          "variants": [
+            {
+              "order": 16,
+              "spec": {
+                "section": 622,
+                "base": 332,
+                "entryCost": 1,
+                "component": "yellowPowder",
+                "success": {
+                  "consume": "yellowPowder"
+                },
+                "failure": {}
+              },
+              "label": "speed"
+            },
+            {
+              "order": 40,
+              "spec": {
+                "section": 677,
+                "base": 332,
+                "entryCost": 2,
+                "resolution": "continue",
+                "destination": 426
+              },
+              "label": "darkness"
+            },
+            {
+              "order": 49,
+              "spec": {
+                "section": 698,
+                "base": 332,
+                "entryCost": 1
+              },
+              "label": "illusion"
+            }
+          ]
+        },
+        "part": {
+          "key": "mutant",
+          "skill": 8,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "encounter:346:0",
+      "name": "Скункс (346)",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 346,
+            "key": "skunk",
+            "win": 558,
+            "enemies": [
+              {
+                "key": "skunk",
+                "skill": 7,
+                "stamina": 6
+              }
+            ],
+            "mode": "skunk",
+            "requiresCarryFrom": [
+              490
+            ],
+            "entrySkillModifier": -2,
+            "optionalEscape": 469
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "skunk",
+          "skill": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:387:0",
+      "name": "Втори страж (387)",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Втори страж (387)",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 387,
+            "key": "secondGuard",
+            "win": 219,
+            "enemies": [
+              {
+                "key": "guard2",
+                "skill": 8,
+                "stamina": 6
+              }
+            ],
+            "mode": "sequential",
+            "requiresCarryFrom": [
+              264
+            ],
+            "carryPlayerOnly": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "guard2",
+          "skill": 8,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:391:0",
+      "name": "Капитан (391)",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 391,
+            "key": "captain",
+            "win": 463,
+            "enemies": [
+              {
+                "key": "captain",
+                "skill": 8,
+                "stamina": 9
+              }
+            ],
+            "mode": "sequential",
+            "requiresCarryFrom": [
+              145
+            ],
+            "carryEnemyIndices": [
+              2
+            ],
+            "carriedStaminaMaximum": [
+              6
+            ],
+            "mercy": {
+              "floor": 3,
+              "destination": 445
+            }
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "captain",
+          "skill": 8,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:394:0",
+      "name": "Страж (394)",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Страж (394)",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 394,
+            "key": "towerGuard",
+            "win": 495,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 8,
+                "stamina": 6
+              }
+            ],
+            "mode": "sequential",
+            "missionFailureAfterVictory": true,
+            "holySpearInstantKill": true
+          },
+          "variants": [
+            {
+              "order": 25,
+              "spec": {
+                "section": 646,
+                "base": 394,
+                "entryCost": 0,
+                "component": "goblinTeeth",
+                "success": {
+                  "summon": "goblin",
+                  "summonCostPer": 1
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "goblins"
+            },
+            {
+              "order": 28,
+              "spec": {
+                "section": 655,
+                "base": 394,
+                "entryCost": 1,
+                "component": "oakStaff",
+                "success": {
+                  "resolution": "win",
+                  "destination": 495
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "freeze"
+            },
+            {
+              "order": 56,
+              "spec": {
+                "section": 712,
+                "base": 394,
+                "entryCost": 2
+              },
+              "label": "fall"
+            },
+            {
+              "order": 62,
+              "spec": {
+                "section": 721,
+                "base": 394,
+                "entryCost": 1,
+                "component": "pearlRing",
+                "success": {
+                  "resolution": "win",
+                  "destination": 495
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "invisible"
+            },
+            {
+              "order": 89,
+              "spec": {
+                "section": 789,
+                "base": 394,
+                "entryCost": 1,
+                "component": "giantTooth",
+                "success": {
+                  "summon": "giant",
+                  "consume": "giantTooth"
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "giant"
+            }
+          ],
+          "supportProfiles": [
+            {
+              "key": "goblin",
+              "skill": 5,
+              "stamina": 5
+            },
+            {
+              "key": "giant",
+              "skill": 8,
+              "stamina": 9
+            }
+          ]
+        },
+        "part": {
+          "key": "guard1",
+          "skill": 8,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "support:goblin",
+      "name": "Призован Таласъм (призован, 394)",
+      "attack": 5,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 394,
+            "key": "towerGuard",
+            "win": 495,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 8,
+                "stamina": 6
+              }
+            ],
+            "mode": "sequential",
+            "missionFailureAfterVictory": true,
+            "holySpearInstantKill": true
+          },
+          "variants": [
+            {
+              "order": 25,
+              "spec": {
+                "section": 646,
+                "base": 394,
+                "entryCost": 0,
+                "component": "goblinTeeth",
+                "success": {
+                  "summon": "goblin",
+                  "summonCostPer": 1
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "goblins"
+            },
+            {
+              "order": 28,
+              "spec": {
+                "section": 655,
+                "base": 394,
+                "entryCost": 1,
+                "component": "oakStaff",
+                "success": {
+                  "resolution": "win",
+                  "destination": 495
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "freeze"
+            },
+            {
+              "order": 56,
+              "spec": {
+                "section": 712,
+                "base": 394,
+                "entryCost": 2
+              },
+              "label": "fall"
+            },
+            {
+              "order": 62,
+              "spec": {
+                "section": 721,
+                "base": 394,
+                "entryCost": 1,
+                "component": "pearlRing",
+                "success": {
+                  "resolution": "win",
+                  "destination": 495
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "invisible"
+            },
+            {
+              "order": 89,
+              "spec": {
+                "section": 789,
+                "base": 394,
+                "entryCost": 1,
+                "component": "giantTooth",
+                "success": {
+                  "summon": "giant",
+                  "consume": "giantTooth"
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "giant"
+            }
+          ],
+          "supportProfiles": [
+            {
+              "key": "goblin",
+              "skill": 5,
+              "stamina": 5
+            },
+            {
+              "key": "giant",
+              "skill": 8,
+              "stamina": 9
+            }
+          ]
+        },
+        "part": {
+          "key": "goblin",
+          "skill": 5,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "support:giant",
+      "name": "Призован Великан (призован, 394)",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 394,
+            "key": "towerGuard",
+            "win": 495,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 8,
+                "stamina": 6
+              }
+            ],
+            "mode": "sequential",
+            "missionFailureAfterVictory": true,
+            "holySpearInstantKill": true
+          },
+          "variants": [
+            {
+              "order": 25,
+              "spec": {
+                "section": 646,
+                "base": 394,
+                "entryCost": 0,
+                "component": "goblinTeeth",
+                "success": {
+                  "summon": "goblin",
+                  "summonCostPer": 1
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "goblins"
+            },
+            {
+              "order": 28,
+              "spec": {
+                "section": 655,
+                "base": 394,
+                "entryCost": 1,
+                "component": "oakStaff",
+                "success": {
+                  "resolution": "win",
+                  "destination": 495
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "freeze"
+            },
+            {
+              "order": 56,
+              "spec": {
+                "section": 712,
+                "base": 394,
+                "entryCost": 2
+              },
+              "label": "fall"
+            },
+            {
+              "order": 62,
+              "spec": {
+                "section": 721,
+                "base": 394,
+                "entryCost": 1,
+                "component": "pearlRing",
+                "success": {
+                  "resolution": "win",
+                  "destination": 495
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "invisible"
+            },
+            {
+              "order": 89,
+              "spec": {
+                "section": 789,
+                "base": 394,
+                "entryCost": 1,
+                "component": "giantTooth",
+                "success": {
+                  "summon": "giant",
+                  "consume": "giantTooth"
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "giant"
+            }
+          ],
+          "supportProfiles": [
+            {
+              "key": "goblin",
+              "skill": 5,
+              "stamina": 5
+            },
+            {
+              "key": "giant",
+              "skill": 8,
+              "stamina": 9
+            }
+          ]
+        },
+        "part": {
+          "key": "giant",
+          "skill": 8,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:396:0",
+      "name": "Страж (396)",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Страж (396)",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 396,
+            "key": "roomGuard",
+            "win": 563,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 8,
+                "stamina": 6
+              }
+            ],
+            "mode": "sequential",
+            "winOutcome": "continue",
+            "handoff": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "guard1",
+          "skill": 8,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:398:0",
+      "name": "Хидра с глави на боговете (398)",
+      "attack": 17,
+      "defense": null,
+      "hp": 24,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 398,
+            "key": "hydra",
+            "win": null,
+            "enemies": [
+              {
+                "key": "hydra",
+                "skill": 17,
+                "stamina": 24
+              }
+            ],
+            "mode": "hydra",
+            "requiresCarryFrom": [
+              458
+            ],
+            "entryDamage": 2,
+            "playerHitDestination": 84,
+            "enemyHitDestination": 305
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "hydra",
+          "skill": 17,
+          "stamina": 24
+        }
+      }
+    },
+    {
+      "key": "encounter:442:0",
+      "name": "Мукалитик (442)",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Мукалитик (442)",
+        "attack": 8,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 442,
+            "key": "mucalytic",
+            "win": 163,
+            "enemies": [
+              {
+                "key": "mucalytic",
+                "skill": 8,
+                "stamina": 9
+              }
+            ],
+            "mode": "sequential",
+            "maximumEnemyWounds": 3,
+            "woundLimitDestination": 576
+          },
+          "variants": [
+            {
+              "order": 10,
+              "spec": {
+                "section": 606,
+                "base": 442,
+                "entryCost": 1,
+                "component": "firewater",
+                "success": {
+                  "consume": "firewater",
+                  "descriptiveStrengthOnly": true
+                },
+                "failure": {
+                  "resolution": "continue",
+                  "destination": 516
+                }
+              },
+              "label": "strength"
+            },
+            {
+              "order": 38,
+              "spec": {
+                "section": 675,
+                "base": 442,
+                "entryCost": 1,
+                "component": "rockDust",
+                "success": {
+                  "consume": "rockDust",
+                  "resolution": "win",
+                  "destination": 51,
+                  "alternateWin": 96
+                },
+                "failure": {}
+              },
+              "label": "petrify"
+            },
+            {
+              "order": 69,
+              "spec": {
+                "section": 740,
+                "base": 442,
+                "entryCost": 1,
+                "component": "sunJewel",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 559
+                },
+                "failure": {}
+              },
+              "label": "light"
+            },
+            {
+              "order": 79,
+              "spec": {
+                "section": 762,
+                "base": 442,
+                "entryCost": 2
+              },
+              "label": "sap"
+            }
+          ]
+        },
+        "part": {
+          "key": "mucalytic",
+          "skill": 8,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:449:0",
+      "name": "Първи страж (449)",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Първи страж (449)",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "encounter": {
+            "section": 449,
+            "key": "courtyardGuards",
+            "win": 401,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 7,
+                "stamina": 8
+              },
+              {
+                "key": "guard2",
+                "skill": 7,
+                "stamina": 7
+              }
+            ],
+            "mode": "sequential",
+            "winOutcome": "continue",
+            "alarmAfterVictory": true
+          },
+          "variants": [
+            {
+              "order": 13,
+              "spec": {
+                "section": 613,
+                "base": 449,
+                "entryCost": 2,
+                "entryDamage": 2
+              },
+              "label": "darkness"
+            },
+            {
+              "order": 36,
+              "spec": {
+                "section": 670,
+                "base": 449,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {},
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "mindRead"
+            },
+            {
+              "order": 55,
+              "spec": {
+                "section": 711,
+                "base": 449,
+                "entryCost": 2
+              },
+              "label": "escape"
+            },
+            {
+              "order": 66,
+              "spec": {
+                "section": 732,
+                "base": 449,
+                "entryCost": 1,
+                "component": "wax",
+                "success": {
+                  "doubleWeaponDamage": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "wax"
+            },
+            {
+              "order": 86,
+              "spec": {
+                "section": 784,
+                "base": 449,
+                "entryCost": 1,
+                "component": "pebbles",
+                "success": {
+                  "volley": {
+                    "dice": 2,
+                    "frightens": true
+                  }
+                },
+                "failure": {}
+              },
+              "label": "pebbles"
+            }
+          ],
+          "npcRules": {
+            "frightenedGuards": {
+              "routes": [
+                {
+                  "minimum": 3,
+                  "destination": 397
+                },
+                {
+                  "minimum": 2,
+                  "destination": 401
+                }
+              ],
+              "excludeAt": 1,
+              "excludeEnemy": 0
+            }
+          }
+        },
+        "part": {
+          "key": "guard1",
+          "skill": 7,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "encounter:449:1",
+      "name": "Втори страж (449)",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Втори страж (449)",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "encounter": {
+            "section": 449,
+            "key": "courtyardGuards",
+            "win": 401,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 7,
+                "stamina": 8
+              },
+              {
+                "key": "guard2",
+                "skill": 7,
+                "stamina": 7
+              }
+            ],
+            "mode": "sequential",
+            "winOutcome": "continue",
+            "alarmAfterVictory": true
+          },
+          "variants": [
+            {
+              "order": 13,
+              "spec": {
+                "section": 613,
+                "base": 449,
+                "entryCost": 2,
+                "entryDamage": 2
+              },
+              "label": "darkness"
+            },
+            {
+              "order": 36,
+              "spec": {
+                "section": 670,
+                "base": 449,
+                "entryCost": 1,
+                "component": "skullcap",
+                "success": {},
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "mindRead"
+            },
+            {
+              "order": 55,
+              "spec": {
+                "section": 711,
+                "base": 449,
+                "entryCost": 2
+              },
+              "label": "escape"
+            },
+            {
+              "order": 66,
+              "spec": {
+                "section": 732,
+                "base": 449,
+                "entryCost": 1,
+                "component": "wax",
+                "success": {
+                  "doubleWeaponDamage": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "wax"
+            },
+            {
+              "order": 86,
+              "spec": {
+                "section": 784,
+                "base": 449,
+                "entryCost": 1,
+                "component": "pebbles",
+                "success": {
+                  "volley": {
+                    "dice": 2,
+                    "frightens": true
+                  }
+                },
+                "failure": {}
+              },
+              "label": "pebbles"
+            }
+          ],
+          "npcRules": {
+            "frightenedGuards": {
+              "routes": [
+                {
+                  "minimum": 3,
+                  "destination": 397
+                },
+                {
+                  "minimum": 2,
+                  "destination": 401
+                }
+              ],
+              "excludeAt": 1,
+              "excludeEnemy": 0
+            }
+          }
+        },
+        "part": {
+          "key": "guard2",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:450:0",
+      "name": "Крилат воин (450)",
+      "attack": 9,
+      "defense": null,
+      "hp": 11,
+      "pb": null,
+      "adopt": {
+        "name": "Крилат воин (450)",
+        "attack": 9,
+        "defense": null,
+        "hp": 11,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 450,
+            "key": "birdman",
+            "win": 543,
+            "enemies": [
+              {
+                "key": "birdman",
+                "skill": 9,
+                "stamina": 11
+              }
+            ],
+            "mode": "sequential"
+          },
+          "variants": [
+            {
+              "order": 6,
+              "spec": {
+                "section": 598,
+                "base": 450,
+                "entryCost": 4,
+                "resolution": "win",
+                "destination": 543
+              },
+              "label": "fireball"
+            },
+            {
+              "order": 32,
+              "spec": {
+                "section": 661,
+                "base": 450,
+                "entryCost": 1,
+                "component": "greenWig",
+                "success": {},
+                "failure": {
+                  "entryDamage": 3
+                }
+              },
+              "label": "beastTalk"
+            },
+            {
+              "order": 51,
+              "spec": {
+                "section": 701,
+                "base": 450,
+                "entryCost": 1,
+                "component": "oakStaff",
+                "success": {},
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "freeze"
+            },
+            {
+              "order": 58,
+              "spec": {
+                "section": 716,
+                "base": 450,
+                "entryCost": 2,
+                "resolution": "continue",
+                "destination": 441
+              },
+              "label": "sap"
+            },
+            {
+              "order": 84,
+              "spec": {
+                "section": 778,
+                "base": 450,
+                "entryCost": 1,
+                "component": "amulet",
+                "success": {},
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "levitate"
+            }
+          ]
+        },
+        "part": {
+          "key": "birdman",
+          "skill": 9,
+          "stamina": 11
+        }
+      }
+    },
+    {
+      "key": "encounter:453:0",
+      "name": "Първи страж (453)",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Първи страж (453)",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "encounter": {
+            "section": 453,
+            "key": "roomGuards",
+            "win": 44,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 8,
+                "stamina": 6
+              },
+              {
+                "key": "guard2",
+                "skill": 7,
+                "stamina": 7
+              }
+            ],
+            "mode": "group",
+            "surpriseChoice": true
+          },
+          "variants": [
+            {
+              "order": 23,
+              "spec": {
+                "section": 641,
+                "base": 453,
+                "entryCost": 1,
+                "entryDamage": 3
+              },
+              "label": "resurrect"
+            },
+            {
+              "order": 44,
+              "spec": {
+                "section": 688,
+                "base": 453,
+                "entryCost": 1,
+                "component": "pearlRing",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 176
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "invisible"
+            },
+            {
+              "order": 67,
+              "spec": {
+                "section": 738,
+                "base": 453,
+                "entryCost": 1,
+                "component": "greenWig",
+                "success": {
+                  "optionalEscape": 176
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "talk"
+            },
+            {
+              "order": 76,
+              "spec": {
+                "section": 756,
+                "base": 453,
+                "entryCost": 1,
+                "component": "glue",
+                "success": {
+                  "consume": "glue"
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "glue"
+            },
+            {
+              "order": 80,
+              "spec": {
+                "section": 765,
+                "base": 453,
+                "entryCost": 1,
+                "component": "wax",
+                "success": {
+                  "doubleWeaponDamage": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "wax"
+            }
+          ],
+          "npcRules": {
+            "roomGuards": {
+              "defaultChoice": "none",
+              "choices": [
+                {
+                  "value": "none",
+                  "label": "noSurprise",
+                  "winsTies": false
+                },
+                {
+                  "value": "446",
+                  "label": "doorSurprise",
+                  "winsTies": true,
+                  "enemyIndex": 0,
+                  "skillLoss": 3
+                },
+                {
+                  "value": "553",
+                  "label": "suddenEntry",
+                  "winsTies": true
+                }
+              ]
+            }
+          }
+        },
+        "part": {
+          "key": "guard1",
+          "skill": 8,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:453:1",
+      "name": "Втори страж (453)",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Втори страж (453)",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "encounter": {
+            "section": 453,
+            "key": "roomGuards",
+            "win": 44,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 8,
+                "stamina": 6
+              },
+              {
+                "key": "guard2",
+                "skill": 7,
+                "stamina": 7
+              }
+            ],
+            "mode": "group",
+            "surpriseChoice": true
+          },
+          "variants": [
+            {
+              "order": 23,
+              "spec": {
+                "section": 641,
+                "base": 453,
+                "entryCost": 1,
+                "entryDamage": 3
+              },
+              "label": "resurrect"
+            },
+            {
+              "order": 44,
+              "spec": {
+                "section": 688,
+                "base": 453,
+                "entryCost": 1,
+                "component": "pearlRing",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 176
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "invisible"
+            },
+            {
+              "order": 67,
+              "spec": {
+                "section": 738,
+                "base": 453,
+                "entryCost": 1,
+                "component": "greenWig",
+                "success": {
+                  "optionalEscape": 176
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "talk"
+            },
+            {
+              "order": 76,
+              "spec": {
+                "section": 756,
+                "base": 453,
+                "entryCost": 1,
+                "component": "glue",
+                "success": {
+                  "consume": "glue"
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "glue"
+            },
+            {
+              "order": 80,
+              "spec": {
+                "section": 765,
+                "base": 453,
+                "entryCost": 1,
+                "component": "wax",
+                "success": {
+                  "doubleWeaponDamage": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "wax"
+            }
+          ],
+          "npcRules": {
+            "roomGuards": {
+              "defaultChoice": "none",
+              "choices": [
+                {
+                  "value": "none",
+                  "label": "noSurprise",
+                  "winsTies": false
+                },
+                {
+                  "value": "446",
+                  "label": "doorSurprise",
+                  "winsTies": true,
+                  "enemyIndex": 0,
+                  "skillLoss": 3
+                },
+                {
+                  "value": "553",
+                  "label": "suddenEntry",
+                  "winsTies": true
+                }
+              ]
+            }
+          }
+        },
+        "part": {
+          "key": "guard2",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:458:0",
+      "name": "Хидра с глави на боговете (458)",
+      "attack": 17,
+      "defense": null,
+      "hp": 24,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 458,
+            "key": "hydra",
+            "win": null,
+            "enemies": [
+              {
+                "key": "hydra",
+                "skill": 17,
+                "stamina": 24
+              }
+            ],
+            "mode": "hydra",
+            "requiresCarryFrom": [
+              65
+            ],
+            "entryDamage": 2,
+            "playerHitDestination": 398,
+            "enemyHitDestination": 305
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "hydra",
+          "skill": 17,
+          "stamina": 24
+        }
+      }
+    },
+    {
+      "key": "encounter:462:0",
+      "name": "Първи Крилат воин (462)",
+      "attack": 8,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Първи Крилат воин (462)",
+        "attack": 8,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 462,
+            "key": "birdmen",
+            "win": 365,
+            "enemies": [
+              {
+                "key": "birdman1",
+                "skill": 8,
+                "stamina": 10
+              },
+              {
+                "key": "birdman2",
+                "skill": 9,
+                "stamina": 8
+              },
+              {
+                "key": "birdman3",
+                "skill": 8,
+                "stamina": 9
+              }
+            ],
+            "mode": "sequential"
+          },
+          "variants": [
+            {
+              "order": 9,
+              "spec": {
+                "section": 605,
+                "base": 462,
+                "entryCost": 1,
+                "component": "sand",
+                "success": {
+                  "resolution": "loss",
+                  "destination": 605,
+                  "fatal": true,
+                  "consume": "sand"
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "quicksand"
+            },
+            {
+              "order": 26,
+              "spec": {
+                "section": 647,
+                "base": 462,
+                "entryCost": 1,
+                "component": "pendulum",
+                "success": {},
+                "failure": {
+                  "resolution": "continue",
+                  "destination": 74
+                }
+              },
+              "label": "sleep"
+            },
+            {
+              "order": 52,
+              "spec": {
+                "section": 707,
+                "base": 462,
+                "entryCost": 1,
+                "component": "goldJewel",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 479
+                },
+                "failure": {
+                  "entryDamage": 3
+                }
+              },
+              "label": "friend"
+            },
+            {
+              "order": 78,
+              "spec": {
+                "section": 758,
+                "base": 462,
+                "entryCost": 1,
+                "component": "pearlRing",
+                "success": {
+                  "entryLuckEscape": 479
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "invisible"
+            },
+            {
+              "order": 90,
+              "spec": {
+                "section": 790,
+                "base": 462,
+                "entryCost": 4,
+                "excludeFirst": true
+              },
+              "label": "clumsy"
+            }
+          ]
+        },
+        "part": {
+          "key": "birdman1",
+          "skill": 8,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "encounter:462:1",
+      "name": "Втори Крилат воин (462)",
+      "attack": 9,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Втори Крилат воин (462)",
+        "attack": 9,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 462,
+            "key": "birdmen",
+            "win": 365,
+            "enemies": [
+              {
+                "key": "birdman1",
+                "skill": 8,
+                "stamina": 10
+              },
+              {
+                "key": "birdman2",
+                "skill": 9,
+                "stamina": 8
+              },
+              {
+                "key": "birdman3",
+                "skill": 8,
+                "stamina": 9
+              }
+            ],
+            "mode": "sequential"
+          },
+          "variants": [
+            {
+              "order": 9,
+              "spec": {
+                "section": 605,
+                "base": 462,
+                "entryCost": 1,
+                "component": "sand",
+                "success": {
+                  "resolution": "loss",
+                  "destination": 605,
+                  "fatal": true,
+                  "consume": "sand"
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "quicksand"
+            },
+            {
+              "order": 26,
+              "spec": {
+                "section": 647,
+                "base": 462,
+                "entryCost": 1,
+                "component": "pendulum",
+                "success": {},
+                "failure": {
+                  "resolution": "continue",
+                  "destination": 74
+                }
+              },
+              "label": "sleep"
+            },
+            {
+              "order": 52,
+              "spec": {
+                "section": 707,
+                "base": 462,
+                "entryCost": 1,
+                "component": "goldJewel",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 479
+                },
+                "failure": {
+                  "entryDamage": 3
+                }
+              },
+              "label": "friend"
+            },
+            {
+              "order": 78,
+              "spec": {
+                "section": 758,
+                "base": 462,
+                "entryCost": 1,
+                "component": "pearlRing",
+                "success": {
+                  "entryLuckEscape": 479
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "invisible"
+            },
+            {
+              "order": 90,
+              "spec": {
+                "section": 790,
+                "base": 462,
+                "entryCost": 4,
+                "excludeFirst": true
+              },
+              "label": "clumsy"
+            }
+          ]
+        },
+        "part": {
+          "key": "birdman2",
+          "skill": 9,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "encounter:462:2",
+      "name": "Трети Крилат воин (462)",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Трети Крилат воин (462)",
+        "attack": 8,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 462,
+            "key": "birdmen",
+            "win": 365,
+            "enemies": [
+              {
+                "key": "birdman1",
+                "skill": 8,
+                "stamina": 10
+              },
+              {
+                "key": "birdman2",
+                "skill": 9,
+                "stamina": 8
+              },
+              {
+                "key": "birdman3",
+                "skill": 8,
+                "stamina": 9
+              }
+            ],
+            "mode": "sequential"
+          },
+          "variants": [
+            {
+              "order": 9,
+              "spec": {
+                "section": 605,
+                "base": 462,
+                "entryCost": 1,
+                "component": "sand",
+                "success": {
+                  "resolution": "loss",
+                  "destination": 605,
+                  "fatal": true,
+                  "consume": "sand"
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "quicksand"
+            },
+            {
+              "order": 26,
+              "spec": {
+                "section": 647,
+                "base": 462,
+                "entryCost": 1,
+                "component": "pendulum",
+                "success": {},
+                "failure": {
+                  "resolution": "continue",
+                  "destination": 74
+                }
+              },
+              "label": "sleep"
+            },
+            {
+              "order": 52,
+              "spec": {
+                "section": 707,
+                "base": 462,
+                "entryCost": 1,
+                "component": "goldJewel",
+                "success": {
+                  "resolution": "continue",
+                  "destination": 479
+                },
+                "failure": {
+                  "entryDamage": 3
+                }
+              },
+              "label": "friend"
+            },
+            {
+              "order": 78,
+              "spec": {
+                "section": 758,
+                "base": 462,
+                "entryCost": 1,
+                "component": "pearlRing",
+                "success": {
+                  "entryLuckEscape": 479
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "invisible"
+            },
+            {
+              "order": 90,
+              "spec": {
+                "section": 790,
+                "base": 462,
+                "entryCost": 4,
+                "excludeFirst": true
+              },
+              "label": "clumsy"
+            }
+          ]
+        },
+        "part": {
+          "key": "birdman3",
+          "skill": 8,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:475:0",
+      "name": "Мукалитик (475)",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Мукалитик (475)",
+        "attack": 8,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "encounter": {
+            "section": 475,
+            "key": "mucalytic",
+            "win": 443,
+            "enemies": [
+              {
+                "key": "mucalytic",
+                "skill": 8,
+                "stamina": 9
+              }
+            ],
+            "mode": "sequential",
+            "maximumEnemyWounds": 3,
+            "woundLimitDestination": 576
+          },
+          "variants": [
+            {
+              "order": 11,
+              "spec": {
+                "section": 609,
+                "base": 475,
+                "entryCost": 2,
+                "entryDamage": 1,
+                "resolution": "loss",
+                "destination": 386,
+                "fatal": true
+              },
+              "label": "confuse"
+            },
+            {
+              "order": 34,
+              "spec": {
+                "section": 665,
+                "base": 475,
+                "entryCost": 1,
+                "resolution": "win",
+                "destination": 443,
+                "smellDamage": 3
+              },
+              "label": "stench"
+            },
+            {
+              "order": 57,
+              "spec": {
+                "section": 715,
+                "base": 475,
+                "entryCost": 2,
+                "enemySkillModifier": -4
+              },
+              "label": "slow"
+            },
+            {
+              "order": 70,
+              "spec": {
+                "section": 744,
+                "base": 475,
+                "entryCost": 1,
+                "component": "mirror",
+                "success": {
+                  "destroy": "mirror"
+                },
+                "failure": {
+                  "entryDamage": 2,
+                  "resolution": "continue",
+                  "destination": 515
+                }
+              },
+              "label": "mirror"
+            },
+            {
+              "order": 85,
+              "spec": {
+                "section": 780,
+                "base": 475,
+                "entryCost": 1,
+                "component": "greenWig",
+                "success": {
+                  "resolution": "loss",
+                  "destination": 386,
+                  "fatal": true
+                },
+                "failure": {
+                  "entryDamage": 2,
+                  "resolution": "continue",
+                  "destination": 515
+                }
+              },
+              "label": "talk"
+            }
+          ],
+          "variantProfiles": [
+            {
+              "section": 715,
+              "profile": {
+                "key": "mucalytic",
+                "skill": 4,
+                "stamina": 9
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "mucalytic",
+          "skill": 8,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "variant:715:1",
+      "name": "Мукалитик (715)",
+      "attack": 4,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Мукалитик (715)",
+        "attack": 4,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 26,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "encounter": {
+            "section": 475,
+            "key": "mucalytic",
+            "win": 443,
+            "enemies": [
+              {
+                "key": "mucalytic",
+                "skill": 8,
+                "stamina": 9
+              }
+            ],
+            "mode": "sequential",
+            "maximumEnemyWounds": 3,
+            "woundLimitDestination": 576
+          },
+          "variants": [
+            {
+              "order": 11,
+              "spec": {
+                "section": 609,
+                "base": 475,
+                "entryCost": 2,
+                "entryDamage": 1,
+                "resolution": "loss",
+                "destination": 386,
+                "fatal": true
+              },
+              "label": "confuse"
+            },
+            {
+              "order": 34,
+              "spec": {
+                "section": 665,
+                "base": 475,
+                "entryCost": 1,
+                "resolution": "win",
+                "destination": 443,
+                "smellDamage": 3
+              },
+              "label": "stench"
+            },
+            {
+              "order": 57,
+              "spec": {
+                "section": 715,
+                "base": 475,
+                "entryCost": 2,
+                "enemySkillModifier": -4
+              },
+              "label": "slow"
+            },
+            {
+              "order": 70,
+              "spec": {
+                "section": 744,
+                "base": 475,
+                "entryCost": 1,
+                "component": "mirror",
+                "success": {
+                  "destroy": "mirror"
+                },
+                "failure": {
+                  "entryDamage": 2,
+                  "resolution": "continue",
+                  "destination": 515
+                }
+              },
+              "label": "mirror"
+            },
+            {
+              "order": 85,
+              "spec": {
+                "section": 780,
+                "base": 475,
+                "entryCost": 1,
+                "component": "greenWig",
+                "success": {
+                  "resolution": "loss",
+                  "destination": 386,
+                  "fatal": true
+                },
+                "failure": {
+                  "entryDamage": 2,
+                  "resolution": "continue",
+                  "destination": 515
+                }
+              },
+              "label": "talk"
+            }
+          ],
+          "variantProfiles": [
+            {
+              "section": 715,
+              "profile": {
+                "key": "mucalytic",
+                "skill": 4,
+                "stamina": 9
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "mucalytic",
+          "skill": 4,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:487:0",
+      "name": "Първи страж (487)",
+      "attack": 7,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 27,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "encounter": {
+            "section": 487,
+            "key": "alarmedGuards",
+            "win": 577,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "key": "guard2",
+                "skill": 8,
+                "stamina": 6
+              }
+            ],
+            "mode": "sequential",
+            "requiresCarryFrom": [
+              264
+            ],
+            "carryEnemyIndices": [
+              0
+            ],
+            "winOutcome": "continue",
+            "alarmAfterVictory": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "guard1",
+          "skill": 7,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:487:1",
+      "name": "Втори страж (487)",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Втори страж (487)",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 27,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "encounter": {
+            "section": 487,
+            "key": "alarmedGuards",
+            "win": 577,
+            "enemies": [
+              {
+                "key": "guard1",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "key": "guard2",
+                "skill": 8,
+                "stamina": 6
+              }
+            ],
+            "mode": "sequential",
+            "requiresCarryFrom": [
+              264
+            ],
+            "carryEnemyIndices": [
+              0
+            ],
+            "winOutcome": "continue",
+            "alarmAfterVictory": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "guard2",
+          "skill": 8,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:490:0",
+      "name": "Скункс (490)",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Скункс (490)",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 28,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 490,
+            "key": "skunk",
+            "win": 558,
+            "enemies": [
+              {
+                "key": "skunk",
+                "skill": 7,
+                "stamina": 6
+              }
+            ],
+            "mode": "skunk",
+            "firstHitEscape": 469,
+            "secondHitDestination": 346,
+            "handoff": true
+          },
+          "variants": [
+            {
+              "order": 12,
+              "spec": {
+                "section": 611,
+                "base": 490,
+                "entryCost": 1,
+                "component": "mirror",
+                "success": {
+                  "entryDamage": 4,
+                  "resolution": "continue",
+                  "destination": 469
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "mirror"
+            },
+            {
+              "order": 21,
+              "spec": {
+                "section": 638,
+                "base": 490,
+                "entryCost": 2,
+                "enemySkillModifier": -3,
+                "optionalEscape": 469
+              },
+              "label": "slow"
+            },
+            {
+              "order": 43,
+              "spec": {
+                "section": 686,
+                "base": 490,
+                "entryCost": 1,
+                "component": "amulet",
+                "success": {
+                  "entryDamage": 2,
+                  "resolution": "continue",
+                  "destination": 469
+                },
+                "failure": {
+                  "entryDamage": 3
+                }
+              },
+              "label": "levitate"
+            },
+            {
+              "order": 77,
+              "spec": {
+                "section": 757,
+                "base": 490,
+                "entryCost": 1,
+                "component": "greenWig",
+                "success": {
+                  "optionalEscape": 469
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "beastTalk"
+            },
+            {
+              "order": 88,
+              "spec": {
+                "section": 788,
+                "base": 490,
+                "entryCost": 2,
+                "consumeItem": true,
+                "entryDamage": 1,
+                "optionalEscape": 469
+              },
+              "label": "treasure"
+            }
+          ]
+        },
+        "part": {
+          "key": "skunk",
+          "skill": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:510:0",
+      "name": "Първи Черен елф (510)",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Първи Черен елф (510)",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 29,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 510,
+            "key": "blackElves",
+            "win": 566,
+            "enemies": [
+              {
+                "key": "blackElf1",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "key": "blackElf2",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "key": "blackElf3",
+                "skill": 6,
+                "stamina": 6
+              }
+            ],
+            "mode": "sequential"
+          },
+          "variants": [
+            {
+              "order": 14,
+              "spec": {
+                "section": 614,
+                "base": 510,
+                "entryCost": 2
+              },
+              "label": "escape"
+            },
+            {
+              "order": 37,
+              "spec": {
+                "section": 671,
+                "base": 510,
+                "entryCost": 1,
+                "smellDamage": 3,
+                "nosePlugsEscape": 566
+              },
+              "label": "stench"
+            },
+            {
+              "order": 65,
+              "spec": {
+                "section": 727,
+                "base": 510,
+                "entryCost": 1,
+                "entryDamage": 2
+              },
+              "label": "sleep"
+            },
+            {
+              "order": 83,
+              "spec": {
+                "section": 775,
+                "base": 510,
+                "entryCost": 1,
+                "component": "pebbles",
+                "success": {
+                  "volley": {
+                    "dice": 2,
+                    "damage": 3
+                  }
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "pebbles"
+            },
+            {
+              "order": 91,
+              "spec": {
+                "section": 793,
+                "base": 510,
+                "entryCost": 2
+              },
+              "label": "antiMagic"
+            }
+          ]
+        },
+        "part": {
+          "key": "blackElf1",
+          "skill": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:510:1",
+      "name": "Втори Черен елф (510)",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Втори Черен елф (510)",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 29,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 510,
+            "key": "blackElves",
+            "win": 566,
+            "enemies": [
+              {
+                "key": "blackElf1",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "key": "blackElf2",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "key": "blackElf3",
+                "skill": 6,
+                "stamina": 6
+              }
+            ],
+            "mode": "sequential"
+          },
+          "variants": [
+            {
+              "order": 14,
+              "spec": {
+                "section": 614,
+                "base": 510,
+                "entryCost": 2
+              },
+              "label": "escape"
+            },
+            {
+              "order": 37,
+              "spec": {
+                "section": 671,
+                "base": 510,
+                "entryCost": 1,
+                "smellDamage": 3,
+                "nosePlugsEscape": 566
+              },
+              "label": "stench"
+            },
+            {
+              "order": 65,
+              "spec": {
+                "section": 727,
+                "base": 510,
+                "entryCost": 1,
+                "entryDamage": 2
+              },
+              "label": "sleep"
+            },
+            {
+              "order": 83,
+              "spec": {
+                "section": 775,
+                "base": 510,
+                "entryCost": 1,
+                "component": "pebbles",
+                "success": {
+                  "volley": {
+                    "dice": 2,
+                    "damage": 3
+                  }
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "pebbles"
+            },
+            {
+              "order": 91,
+              "spec": {
+                "section": 793,
+                "base": 510,
+                "entryCost": 2
+              },
+              "label": "antiMagic"
+            }
+          ]
+        },
+        "part": {
+          "key": "blackElf2",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:510:2",
+      "name": "Трети Черен елф (510)",
+      "attack": 6,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Трети Черен елф (510)",
+        "attack": 6,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 29,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 510,
+            "key": "blackElves",
+            "win": 566,
+            "enemies": [
+              {
+                "key": "blackElf1",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "key": "blackElf2",
+                "skill": 7,
+                "stamina": 7
+              },
+              {
+                "key": "blackElf3",
+                "skill": 6,
+                "stamina": 6
+              }
+            ],
+            "mode": "sequential"
+          },
+          "variants": [
+            {
+              "order": 14,
+              "spec": {
+                "section": 614,
+                "base": 510,
+                "entryCost": 2
+              },
+              "label": "escape"
+            },
+            {
+              "order": 37,
+              "spec": {
+                "section": 671,
+                "base": 510,
+                "entryCost": 1,
+                "smellDamage": 3,
+                "nosePlugsEscape": 566
+              },
+              "label": "stench"
+            },
+            {
+              "order": 65,
+              "spec": {
+                "section": 727,
+                "base": 510,
+                "entryCost": 1,
+                "entryDamage": 2
+              },
+              "label": "sleep"
+            },
+            {
+              "order": 83,
+              "spec": {
+                "section": 775,
+                "base": 510,
+                "entryCost": 1,
+                "component": "pebbles",
+                "success": {
+                  "volley": {
+                    "dice": 2,
+                    "damage": 3
+                  }
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              },
+              "label": "pebbles"
+            },
+            {
+              "order": 91,
+              "spec": {
+                "section": 793,
+                "base": 510,
+                "entryCost": 2
+              },
+              "label": "antiMagic"
+            }
+          ]
+        },
+        "part": {
+          "key": "blackElf3",
+          "skill": 6,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:548:0",
+      "name": "Ягуар (548)",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Ягуар (548)",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 30,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 548,
+            "key": "jaguar",
+            "win": 146,
+            "enemies": [
+              {
+                "key": "jaguar",
+                "skill": 8,
+                "stamina": 7
+              }
+            ],
+            "mode": "sequential",
+            "mercy": {
+              "floor": 2,
+              "destination": 205
+            }
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "jaguar",
+          "skill": 8,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:563:0",
+      "name": "Втори страж (563)",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Втори страж (563)",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 31,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 563,
+            "key": "secondRoomGuard",
+            "win": 44,
+            "enemies": [
+              {
+                "key": "guard2",
+                "skill": 7,
+                "stamina": 7
+              }
+            ],
+            "mode": "sequential",
+            "requiresCarryFrom": [
+              396
+            ],
+            "carryPlayerOnly": true,
+            "alternateWin": 176
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "guard2",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+const checks = [], saves = [], seed = ROSTER_SEEDS[760];
+const assert = (value, label) => {if (!value) throw Error(label); checks.push(label);};
+localStorage.setItem('gamebook_lang', 'LANGUAGE');
+window.fetch = async (url, options = {}) => {
+  if (url === '/api/books/760/enemies' && !options.method) return new Response(JSON.stringify(seed));
+  assert(url === '/api/books/760/state' && options.method === 'PUT', 'only intercepted state saves');
+  saves.push(JSON.parse(options.body)); return new Response('{}');
+};
+const app = await import('REPO/public/js/core/state.js');
+const desktop = await import('REPO/public/js/battlesim/loader.js');
+const mobile = await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const mode = 'MODE', el = key => document.getElementById('sim760-' + key);
+app.setCurrentBookId(760);
+app.state.playthroughs = [{startedAt: 1, path: [1], sim757: {preserved: true}}]; app.state.activePtIndex = 0;
+const open = async () => {
+  if (mode === 'mobile') await mobile.openSimForBook(760);
+  else {await desktop.showBattleSimForBook(760); el('btn').click();}
+};
+const change = (key, value) => {el(key).value = value; el(key).dispatchEvent(new Event('change'));};
+const fields = ['attack', 'defense', 'interactive', 'life'];
+const profiles = seed.map(row => row.stats.entry);
+const matches = (side, profile) => fields.every(field => Number(el(side + '-' + field).value) === profile[field]);
+assert(!el('overlay'), 'panel starts lazy');
+await open();
+assert(el('overlay').classList.contains('active'), 'actual loader opens');
+assert(!el('overlay').textContent.includes('battlesim760.'), 'translated controls');
+assert(getComputedStyle(el('btn')).borderTopStyle === 'solid', 'themed launcher');
+for (const side of ['player', 'enemy']) {
+  assert(el(side + '-pick').options.length === 6, 'six ' + side + ' presets');
+  for (const profile of profiles) {
+    change(side + '-pick', profile.id);
+    assert(matches(side, profile), 'loaded ' + side + ' profile ' + profile.id);
+  }
+}
+change('player-pick', 'chameleon'); change('enemy-pick', '666');
+for (const [key, value] of Object.entries({'player-attack':100, 'player-defense':100, 'player-interactive':100,
+  'player-life':7, 'enemy-life':1, 'enemy-defense':0, 'enemy-interactive':0})) change(key, value);
+Math.random = () => 0;
+el('round').click();
+let data = app.currentPlaythrough().sim760;
+assert(data.enemy.life === 0 && data.player.life === 7 && data.history.length === 1, 'manual stats resolve one win');
+el('round').click(); assert(data.history.length === 1, 'completed fight cannot repeat reward');
+await app.saveState();
+assert(saves.at(-1).playthroughs[0].sim760.history.length === 1, 'actual persistence payload');
+const saved = JSON.stringify(app.currentPlaythrough());
+el('close').click(); app.state.playthroughs = [JSON.parse(saved)]; await open();
+assert(JSON.stringify(app.currentPlaythrough()) === saved, 'restoring fight preserves all health and history');
+el('reset').click(); data = app.currentPlaythrough().sim760;
+assert(matches('player', profiles[0]) && matches('enemy', profiles[5]) && data.history.length === 1, 'reset uses loaded defaults and retains history');
+const previous = JSON.stringify(app.currentPlaythrough());
+el('close').click(); app.state.playthroughs.push({startedAt: 2, path: [1]}); app.state.activePtIndex = 1; await open();
+assert(matches('player', profiles[0]) && matches('enemy', profiles[5]), 'new run receives loaded defaults');
+assert(JSON.stringify(app.state.playthroughs[0]) === previous, 'previous run and other simulator preserved');
+assert(document.documentElement.scrollWidth <= innerWidth + 1, 'no page overflow');
+assert(el('overlay').querySelector('.bsim-modal').getBoundingClientRect().width <= innerWidth + 1, 'modal fits viewport');
+document.body.dataset.test = JSON.stringify({mode, language:'LANGUAGE', width:innerWidth, checks:checks.length,
+  saves:saves.length, productionWrites:0});

@@ -1,12 +1,7 @@
-const LABELS = {
-  dalgren: [['d1.opt1', 'd1.opt2', 'd1.opt3', 'd1.opt4'], ['d2.opt1', 'd2.opt2', 'd2.opt3'], ['d2b.opt1', 'd2b.opt2', 'd2b.opt3']],
-  tindalin: [['t1.opt1', 't1.opt2', 't1.opt3', 't1.opt4'], ['t2.opt1', 't2.opt2', 't2.opt3']],
-  uantor: [['u1.opt1', 'u1.opt2', 'u1.opt3', 'u1.opt4'], ['source.uantor_counter', 'source.uantor_guard', 'u2.opt3', 'u2.opt4']],
-  smajtal: [['s1.opt1', 's1.opt2', 's1.opt3'], ['s2.opt1', 's2.opt2', 's2.opt3', 's2.opt4']],
-  lestor: [['l1.opt1', 'l1.opt2', 'l1.opt3'], ['l2.opt1', 'l2.opt2', 'source.lestor_magic', 'source.lestor_trick']],
-  tejbrun: [['tb1.opt1', 'tb1.opt2', 'tb1.opt3', 'tb1.opt4'], ['tejbrun.truce', 'tejbrun.attack']],
-  matual: [['mt1.opt1', 'mt1.opt2', 'mt1.opt3'], ['matual.water', 'matual.attack', 'matual.sword']],
-};
+let LABELS = {}, RIVAL_RULES = {}, COMMON_RULES = {};
+export function installTigerRules(rivals, labels, common) {
+  RIVAL_RULES = rivals; LABELS = labels; COMMON_RULES = common;
+}
 const ATTACKS = ['std', 'feint', 'combo', 'stdmagic', 'feintmagic', 'dirty', 'suicide'];
 
 export function tigerOptions(d) {
@@ -17,7 +12,7 @@ export function tigerOptions(d) {
     return allowed.map(id => 'p.' + id);
   }
   const lists = LABELS[d.rivalId];
-  return lists[d.phase === 1 ? 0 : d.rivalId === 'dalgren' && d.opp.e < 5 ? 2 : 1];
+  return lists[d.phase === 1 ? 0 : d.rivalId === 'dalgren' && d.opp.e < RIVAL_RULES.dalgren.source.lowEndurance ? 2 : 1];
 }
 
 function loseE(ent, amount) {
@@ -47,9 +42,9 @@ function magicDamage(d, multiplier, absorbed = 0) {
 function guard(p, o, multiplier = 1) {
   loseE(p, Math.max(0, o.e + o.b - p.e - p.b) * multiplier);
 }
-function heavyGuard(p, o, skill = p.b) {
+function heavyGuard(p, o, skill, margin) {
   const diff = p.s + p.e - o.s - o.e;
-  loseE(p, diff >= 0 ? Math.max(0, 6 - diff) : Math.abs(skill - o.b));
+  loseE(p, diff >= 0 ? Math.max(0, margin - diff) : Math.abs(skill - o.b));
 }
 function convertMagic(d) {
   const e = Math.min(Math.max(0, d.player.e - 1), Math.max(0, Math.floor(Number(d.options?.enduranceSpend) || 0)));
@@ -68,73 +63,80 @@ function finish(d) {
   return false;
 }
 
+function rollMany(roll, count) {
+  let total = 0;
+  for (let i = 0; i < count; i++) total += roll();
+  return total;
+}
+
 function opponent(d, index, roll) {
   const p = d.player, o = d.opp, phase = d.phase;
+  const rules = RIVAL_RULES[d.rivalId].source;
   if (phase === 2 && d.rivalId === 'tejbrun') {
-    if (index === 0) { loseE(p, 5); loseB(p, 3); manual(d, 178); }
-    else manual(d, 100);
+    if (index === 0) { loseE(p, rules.truceEndurance); loseB(p, rules.truceSkill); manual(d, rules.truceSection); }
+    else manual(d, rules.attackSection);
     return;
   }
   if (phase === 2 && d.rivalId === 'matual') {
     if (index === 0) p.e = 0;
-    else if (index === 1) manual(d, 100);
+    else if (index === 1) manual(d, rules.attackSection);
     else { d.over = true; d.winner = 'player'; d.spared = true; }
     return;
   }
   switch (d.rivalId) {
     case 'dalgren':
       if (phase === 1) {
-        if (index < 2) loseE(p, roll() + roll());
+        if (index < 2) loseE(p, rollMany(roll, rules.openingDice));
         else if (index === 2) {
-          if (p.b > o.b) loseE(o, 1);
-          else if (p.b < o.b) loseE(p, 1);
+          if (p.b > o.b) loseE(o, rules.deceptiveDamage);
+          else if (p.b < o.b) loseE(p, rules.deceptiveDamage);
         } else {
-          loseE(o, 1);
+          loseE(o, rules.openingDamage);
           const diff = p.e + p.b - o.e - o.b;
-          if (diff > 0) loseE(o, diff); else loseE(p, Math.abs(diff) / 2);
+          if (diff > 0) loseE(o, diff); else loseE(p, Math.abs(diff) / rules.blockedDivisor);
         }
-      } else if (o.e >= 5) {
-        const tempB = p.b + Math.max(0, p.sword - 2) * 2;
+      } else if (o.e >= rules.lowEndurance) {
+        const tempB = p.b + Math.max(0, p.sword - rules.swordBase) * rules.swordMultiplier;
         if (index === 1) {
-          const spend = spendMagic(d, 2);
+          const spend = spendMagic(d, rules.magicMinimum);
           if (!spend) return false;
-          p.m -= spend; loseE(o, spend * 3); loseB(o, spend * 2);
+          p.m -= spend; loseE(o, spend * rules.magicEndurance); loseB(o, spend * rules.magicSkill);
         }
-        if (index === 2 && p.sword < 4) return false;
-        heavyGuard(p, o, index === 2 ? tempB : p.b);
-        if (index === 2 && tempB >= o.b - 2) loseE(o, Math.abs(p.s + p.e - o.s - o.e));
+        if (index === 2 && p.sword < rules.swordMinimum) return false;
+        heavyGuard(p, o, index === 2 ? tempB : p.b, rules.heavyGuardMargin);
+        if (index === 2 && tempB >= o.b - rules.swordMargin) loseE(o, Math.abs(p.s + p.e - o.s - o.e));
       } else {
-        if (index === 2) { magicDamage(d, 3); break; }
-        loseE(p, p.b - o.b >= 3 ? 0 : Math.abs(p.b - o.b));
+        if (index === 2) { magicDamage(d, rules.magicEndurance); break; }
+        loseE(p, p.b - o.b >= rules.blockMargin ? 0 : Math.abs(p.b - o.b));
         if (index === 1) o.e = 0;
-        else manual(d, 155);
+        else manual(d, rules.manualSection);
       }
       break;
     case 'tindalin':
       if (phase === 1) {
         if (index === 2) {
-          const spend = spendMagic(d, 2);
+          const spend = spendMagic(d, rules.magicMinimum);
           if (!spend) return false;
           p.m -= spend;
-          if (p.b > o.b) loseE(o, p.b - o.b); else loseE(p, 2);
+          if (p.b > o.b) loseE(o, p.b - o.b); else loseE(p, rules.failedCounterDamage);
         } else {
-          if (p.shield === 'none') loseE(p, 1);
-          if (index < 2) loseE(p, p.b - o.b >= 3 ? 0 : Math.abs(p.b - o.b));
+          if (p.shield === 'none') loseE(p, rules.unshieldedDamage);
+          if (index < 2) loseE(p, p.b - o.b >= rules.blockMargin ? 0 : Math.abs(p.b - o.b));
           if (index === 0) {
             if (p.s > o.s) loseE(o, p.s - o.s); else loseE(p, o.s - p.s);
-          } else if (index === 1) loseE(p, 2);
-          else if (p.b > o.b) loseE(o, 3);
+          } else if (index === 1) loseE(p, rules.failedCounterDamage);
+          else if (p.b > o.b) loseE(o, rules.successfulCounterDamage);
           else if (p.b < o.b) loseE(p, o.b - p.b);
-          else manual(d, 62);
+          else manual(d, rules.equalSkillSection);
         }
       } else if (index === 2) {
-        if (o.e < 5) o.e = 0;
+        if (o.e < rules.lowEndurance) o.e = 0;
         else {
           const diff = p.b + roll() - o.b;
-          if (diff < 4) loseE(p, Math.abs(diff));
+          if (diff < rules.counterMargin) loseE(p, Math.abs(diff));
         }
       } else {
-        loseE(p, roll() + roll());
+        loseE(p, rollMany(roll, rules.openingDice));
         if (index === 1 && p.e > o.e) loseE(o, roll());
       }
       break;
@@ -142,13 +144,13 @@ function opponent(d, index, roll) {
       if (phase === 1) {
         if (index === 0) {
           const diff = o.e + o.b - p.e - p.b;
-          if (diff > 0) loseE(p, diff <= 6 ? roll() : roll() + roll());
+          if (diff > 0) loseE(p, diff <= rules.blockDiceThreshold ? roll() : rollMany(roll, rules.heavyDice));
         } else if (index === 1) {
           const fail = p.e + p.b < o.e + o.b;
-          if (fail) loseE(p, roll() + roll());
-          if (p.sword >= 3 && p.e >= 5) loseE(o, roll() + roll());
+          if (fail) loseE(p, rollMany(roll, rules.heavyDice));
+          if (p.sword >= rules.swordMinimum && p.e >= rules.minimumEndurance) loseE(o, rollMany(roll, rules.heavyDice));
         } else if (index === 2) {
-          loseE(p, roll() + roll()); loseB(p, 4);
+          loseE(p, rollMany(roll, rules.heavyDice)); loseB(p, rules.firstSkillLoss);
           if (p.e + p.b < o.e + o.b) {
             const damage = roll(), toSkill = Math.min(damage, Math.max(0, d.options?.skillSpend || 0));
             loseE(p, damage - toSkill); loseB(p, toSkill);
@@ -156,84 +158,84 @@ function opponent(d, index, roll) {
         } else {
           if (p.e + p.b < o.e + o.b) loseE(p, roll());
           if (p.m < o.m) loseE(p, roll());
-          else magicDamage(d, 4, 1);
+          else magicDamage(d, rules.magicEndurance, rules.magicAbsorbed);
         }
       } else if (index === 0) {
         if (p.e + p.b < o.e + o.b) loseE(p, roll());
-        loseE(o, Math.max(0, p.s + p.e - o.s - o.e) * 2);
+        loseE(o, Math.max(0, p.s + p.e - o.s - o.e) * rules.counterMultiplier);
         loseE(p, roll());
       } else if (index === 1) {
         const diff = p.s + p.e + p.b - o.s - o.e - o.b;
-        if (diff < 0) { loseE(p, roll() + roll()); loseB(p, 1); }
-        else if (diff < 8) { loseE(p, 8 - diff); loseB(p, Math.floor((8 - diff) / 2)); }
-      } else if (index === 2) { loseE(p, roll() + roll()); loseB(p, 1); }
+        if (diff < 0) { loseE(p, rollMany(roll, rules.heavyDice)); loseB(p, rules.laterSkillLoss); }
+        else if (diff < rules.laterGuardMargin) { loseE(p, rules.laterGuardMargin - diff); loseB(p, Math.floor((rules.laterGuardMargin - diff) / rules.laterSkillDivisor)); }
+      } else if (index === 2) { loseE(p, rollMany(roll, rules.heavyDice)); loseB(p, rules.laterSkillLoss); }
       else {
         if (p.m <= o.m) return false;
         const spend = spendMagic(d), available = Math.max(0, spend - o.m);
         if (!available) return false;
-        p.m -= spend; loseE(o, available * 4); loseB(o, available * 2);
+        p.m -= spend; loseE(o, available * rules.magicEndurance); loseB(o, available * rules.magicSkill);
         if (p.e + p.b <= o.e + o.b) loseE(p, Math.abs(p.e + p.b - o.e - o.b) + Math.abs(p.s - o.s));
       }
       break;
     case 'smajtal':
       if (phase === 1) {
-        if (index === 0 && p.m < 3) return false;
+        if (index === 0 && p.m < rules.magicMinimum) return false;
         if (index === 1) {
           const diff = Math.max(0, p.e + p.b - o.e - o.b);
-          loseE(o, diff * 2);
-          const absorbed = p.m + Math.floor(diff / 2) + (p.shield === 'holy' ? 1 : 0);
-          loseE(p, Math.max(0, o.m - absorbed) * 4);
+          loseE(o, diff * rules.counterMultiplier);
+          const absorbed = p.m + Math.floor(diff / rules.absorbDivisor) + (p.shield === 'holy' ? rules.holyCounterAbsorb : 0);
+          loseE(p, Math.max(0, o.m - absorbed) * rules.magicCounterMultiplier);
         } else {
-          const absorbed = p.m + (p.shield === 'holy' ? 2 : p.shield === 'magic' ? 1 : 0);
-          loseE(p, Math.max(0, o.m - absorbed) * 3);
+          const absorbed = p.m + (rules.shieldAbsorb[p.shield] ?? 0);
+          loseE(p, Math.max(0, o.m - absorbed) * rules.magicMultiplier);
           if (index === 2) {
-            if (p.b >= o.b && p.sword >= 3 && p.e >= 5) {
+            if (p.b >= o.b && p.sword >= rules.swordMinimum && p.e >= rules.minimumEndurance) {
               const n = roll();
-              if (n <= 2) { loseE(o, 3); loseB(o, 4); }
-              else if (n >= 5) manual(d, 100);
+              if (n <= rules.woundRollMaximum) { loseE(o, rules.woundDamage); loseB(o, rules.woundSkill); }
+              else if (n >= rules.disarmMinimum) manual(d, rules.manualSection);
             } else loseE(p, roll());
           }
         }
       } else {
-        if (p.e + p.b < o.e + o.b) { loseE(p, roll()); if (index === 0) loseB(p, 2); }
+        if (p.e + p.b < o.e + o.b) { loseE(p, roll()); if (index === 0) loseB(p, rules.firstLaterSkillLoss); }
         const magic = index < 3 ? convertMagic(d) : p.m;
         const diff = magic - o.m;
-        if (diff < 0) { loseE(p, -diff * 4); loseB(p, -diff * 2); }
-        else { loseE(o, diff * 4); if (index !== 0) loseB(o, diff * 2); }
-        if (index === 1) { loseE(p, roll()); loseB(p, 2); }
-        if (index === 2) { loseE(o, roll() + roll()); loseB(o, roll()); }
+        if (diff < 0) { loseE(p, -diff * rules.magicEndurance); loseB(p, -diff * rules.magicSkill); }
+        else { loseE(o, diff * rules.magicEndurance); if (index !== 0) loseB(o, diff * rules.magicSkill); }
+        if (index === 1) { loseE(p, roll()); loseB(p, rules.firstLaterSkillLoss); }
+        if (index === 2) { loseE(o, rollMany(roll, rules.heavyDice)); loseB(o, roll()); }
       }
       break;
     case 'lestor':
       if (phase === 1) {
-        const bonus = Math.max(0, p.sword - 2) * 2;
+        const bonus = Math.max(0, p.sword - rules.swordBase) * rules.swordMultiplier;
         if (index === 1) {
-          const spend = spendMagic(d, 2);
+          const spend = spendMagic(d, rules.magicMinimum);
           if (!spend) return false;
-          p.m -= spend; loseE(o, spend * 3); loseB(o, spend * 2);
+          p.m -= spend; loseE(o, spend * rules.magicEndurance); loseB(o, spend * rules.magicSkill);
         }
-        if (index === 2 && p.sword < 4) return false;
+        if (index === 2 && p.sword < rules.swordMinimum) return false;
         const tempB = p.b + bonus;
-        heavyGuard(p, o, index === 2 ? tempB : p.b);
-        if (index === 2 && tempB >= o.b - 2) loseE(o, Math.abs(p.s + p.e - o.s - o.e));
+        heavyGuard(p, o, index === 2 ? tempB : p.b, rules.heavyGuardMargin);
+        if (index === 2 && tempB >= o.b - rules.swordMargin) loseE(o, Math.abs(p.s + p.e - o.s - o.e));
       } else if (index <= 2) {
         guard(p, o);
         if (index === 1) {
           const spend = Math.min(p.e - 1, Math.max(0, d.options?.enduranceSpend || 0));
-          if (p.sword >= 3 && o.e <= 6 && p.b + spend >= o.b) { loseE(p, spend); o.e = 0; }
-          else if (p.sword < 3 || p.b < o.b) loseE(p, roll());
+          if (p.sword >= rules.laterSwordMinimum && o.e <= rules.lowEndurance && p.b + spend >= o.b) { loseE(p, spend); o.e = 0; }
+          else if (p.sword < rules.laterSwordMinimum || p.b < o.b) loseE(p, roll());
         } else if (index === 2) {
           const spend = spendMagic(d);
-          p.m -= spend; loseE(o, spend * 4); loseB(o, spend * 2);
+          p.m -= spend; loseE(o, spend * rules.laterMagicEndurance); loseB(o, spend * rules.magicSkill);
         }
       } else {
         loseE(p, Math.max(0, o.s + o.e - p.s - p.e));
-        const bonus = Math.max(0, p.sword - 2) * 2;
-        if (p.b + bonus >= o.b + 2) loseE(o, roll());
+        const bonus = Math.max(0, p.sword - rules.swordBase) * rules.swordMultiplier;
+        if (p.b + bonus >= o.b + rules.swordMargin) loseE(o, roll());
         else {
-          loseE(p, 1);
+          loseE(p, rules.failedTrickDamage);
           const spend = Math.min(p.e - 1, Math.max(0, d.options?.enduranceSpend || 0));
-          if (o.e <= 6 && p.b + bonus + spend >= o.b) { loseE(p, spend); o.e = 0; }
+          if (o.e <= rules.lowEndurance && p.b + bonus + spend >= o.b) { loseE(p, spend); o.e = 0; }
         }
       }
       break;
@@ -241,24 +243,24 @@ function opponent(d, index, roll) {
       if (index < 3) guard(p, o);
       else loseE(p, Math.max(0, o.s + o.e - p.s - p.e));
       if (index === 1) {
-        if (p.sword >= 3 && p.b >= o.b) loseE(o, roll()); else loseE(p, roll());
+        if (p.sword >= rules.swordMinimum && p.b >= o.b) loseE(o, roll()); else loseE(p, roll());
       } else if (index === 2) {
-        if (p.m > o.m) magicDamage(d, 4);
-        else if (p.m < o.m) { loseE(p, 4); o.m = Math.max(0, o.m - 1); }
-        else manual(d, 66);
+        if (p.m > o.m) magicDamage(d, rules.magicEndurance);
+        else if (p.m < o.m) { loseE(p, rules.magicFailureDamage); o.m = Math.max(0, o.m - rules.magicLoss); }
+        else manual(d, rules.magicTieSection);
       } else if (index === 3) {
-        if (p.b + Math.max(0, p.sword - 2) * 2 >= o.b + 2) loseE(o, roll()); else loseE(p, 1);
+        if (p.b + Math.max(0, p.sword - rules.swordBase) * rules.swordMultiplier >= o.b + rules.swordMargin) loseE(o, roll()); else loseE(p, rules.failedTrickDamage);
       }
       break;
     case 'matual':
-      guard(p, o, 2);
+      guard(p, o, rules.guardMultiplier);
       if (index === 0) {
         if (p.s > o.s) loseE(o, p.s - o.s); else loseE(p, o.s - p.s);
       } else if (index === 1) {
-        if (p.b > o.b) loseE(o, (p.b - o.b) * 3); else loseE(p, o.b - p.b);
+        if (p.b > o.b) loseE(o, (p.b - o.b) * rules.counterMultiplier); else loseE(p, o.b - p.b);
       } else {
         if (p.s <= o.s) loseE(p, roll());
-        magicDamage(d, 4, 2);
+        magicDamage(d, rules.magicEndurance, rules.magicAbsorbed);
       }
       break;
   }
@@ -296,7 +298,7 @@ function attack(d, id, roll) {
       const strength = o.b + roll();
       if (strength < 20) { loseE(o, roll() + roll()); loseB(o, roll()); }
       else if (strength > 20) loseE(o, roll());
-      else manual(d, 94);
+      else manual(d, COMMON_RULES.manual.dirtyTie);
     }
   }
   if (id === 'suicide') {
@@ -317,7 +319,7 @@ function defend(d, index, roll) {
   if (index === 0) {
     if (p.b > o.b) { loseE(o, p.b - o.b + roll()); loseE(p, roll()); }
     else if (p.b < o.b) loseE(p, o.b - p.b + roll());
-    else manual(d, 10);
+    else manual(d, COMMON_RULES.manual.counterTie);
   } else {
     if (p.e + p.b + roll() < 22) loseE(p, Math.abs(p.b - o.b));
     if (index === 2) {
@@ -336,7 +338,7 @@ function defend(d, index, roll) {
       if (p.b >= o.b && p.e >= 5) {
         const n = roll();
         if (n <= 2) { loseE(o, 3); loseB(o, 4); }
-        else if (n >= 5) manual(d, 100);
+        else if (n >= 5) manual(d, COMMON_RULES.manual.disarm);
       } else loseE(p, roll());
     }
   }

@@ -1,5 +1,5 @@
 import { die } from '../../engines/sorcery/core.js';
-import { RULES_REVISION } from './definition.js';
+import { RULES_REVISION, OUTCOME_RULES } from './definition.js';
 
 export function validateCharacter(character) {
   if (!character || !Number.isSafeInteger(character.determination) || typeof character.pills !== 'boolean') {
@@ -28,7 +28,7 @@ function requireFight(fight, phase) {
 function finish(fight, outcome, destination) {
   fight.outcome = outcome;
   fight.destination = destination;
-  if (destination === 30) fight.character.pills = false;
+  if (destination === OUTCOME_RULES.pillsLostAt) fight.character.pills = false;
   return fight;
 }
 
@@ -53,7 +53,7 @@ export function rollPlayer(input, roll, reroll = false) {
     fight.character.determination -= cost;
     validateCharacter(fight.character);
     fight.events.push({ kind: 'chronostasis', cost, determination: fight.character.determination });
-    return finish(fight, 'escape', 74);
+    return finish(fight, 'escape', OUTCOME_RULES.escape);
   }
   fight.phase = 'decision';
   return fight;
@@ -65,8 +65,8 @@ export function rollEnemy(input, roll) {
   fight.enemyDice = [die(roll), die(roll)];
   fight.enemyTotal = fight.enemyDice[0] + fight.enemyDice[1];
   fight.events = [{ kind: 'enemyRoll', dice: fight.enemyDice, total: fight.enemyTotal }];
-  if (fight.playerTotal > fight.enemyTotal) return finish(fight, 'win', 11);
-  if (fight.playerTotal < fight.enemyTotal) return finish(fight, 'loss', 30);
+  if (fight.playerTotal > fight.enemyTotal) return finish(fight, 'win', OUTCOME_RULES.win);
+  if (fight.playerTotal < fight.enemyTotal) return finish(fight, 'loss', OUTCOME_RULES.loss);
   fight.phase = 'player';
   fight.events.push({ kind: 'tie' });
   return fight;

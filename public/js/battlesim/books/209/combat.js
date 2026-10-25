@@ -25,11 +25,16 @@ function _foeNameSafe(d) {
   const { _foeName, escapeHtml } = getContext();
  return escapeHtml(_foeName(d)); }
 
+function _handOver(d) {
+  const { HAND_KO_THRESHOLD } = getContext();
+  return d.mode === 'hand' && (d.enemyHandLoss >= HAND_KO_THRESHOLD || d.playerHandLoss >= HAND_KO_THRESHOLD);
+}
+
 function _runRound() {
-  const { _activeSide, _appendLog, _checkOutcome, _data, _foeNameSafe, _notReady, _renderAll, _roll1d6, _roll2d6, saveState, t } = getContext();
+  const { _activeSide, _appendLog, _checkOutcome, _data, _foeNameSafe, _handOver, _notReady, _renderAll, _roll1d6, _roll2d6, saveState, t } = getContext();
 
   const d = _data();
-  if (!d || _notReady(d)) return;
+  if (!d || _notReady(d) || _handOver(d)) return;
   const side = _activeSide(d);
   if (side.self[side.selfHp] <= 0 || side.foe[side.foeHp] <= 0) return;
   d[side.roundsKey]++;
@@ -117,5 +122,5 @@ function _resetBattle() {
 }
 
 // END EXTRACTED RULES
-  return { _roll2d6, _roll1d6, _activeSide, _foeName, _foeNameSafe, _runRound, _checkOutcome, _fireRocket, _resetBattle };
+  return { _roll2d6, _roll1d6, _activeSide, _foeName, _foeNameSafe, _handOver, _runRound, _checkOutcome, _fireRocket, _resetBattle };
 }

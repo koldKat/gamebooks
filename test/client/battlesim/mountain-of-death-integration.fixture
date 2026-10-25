@@ -1,7 +1,9 @@
+const rosterSeed = ROSTER_SEEDS[895];
 const checks = [], saves = [];
 const assert = (value, label) => {if (!value) throw Error(label); checks.push(label);};
 localStorage.setItem('gamebook_lang', 'LANGUAGE');
 window.fetch = async (url, options = {}) => {
+  if (url === '/api/books/895/enemies' && !options.method) return new Response(JSON.stringify(rosterSeed));
   assert(url === '/api/books/895/state' && options.method === 'PUT', 'only intercepted state saves');
   saves.push(JSON.parse(options.body)); return new Response('{}', {headers: {'Content-Type': 'application/json'}});
 };
@@ -13,15 +15,25 @@ const el = key => document.getElementById('sim895-' + key);
 const run = {startedAt: 123, path: [1], sim891: {preserved: true}};
 app.setCurrentBookId(895); app.state.playthroughs = [run]; app.state.activePtIndex = 0;
 assert(!el('overlay') && mobile.hasSim(895), 'registered and lazy');
-const sim = await import('REPO/public/js/battlesim/battlesim895.js');
 if ('MODE' === 'mobile') await mobile.openSimForBook(895);
 else {await desktop.showBattleSimForBook(895); el('btn').click();}
+const sim = await import('REPO/public/js/battlesim/battlesim895.js');
 assert(el('overlay').classList.contains('active'), 'real loader opens');
 assert(el('title').textContent === 'Планината на смъртта', 'Bulgarian source stays Bulgarian in both app languages');
 const game = () => run.sim895;
 const select = id => {el('encounter').value = id; el('encounter').dispatchEvent(new Event('change'));};
 const field = key => el('opponents').querySelector('[data-stat="' + key + '"]');
 const setCharacter = fields => {for (const [key, value] of Object.entries(fields)) el(key).value = value; el('saveCharacter').click();};
+const {ENCOUNTERS}=await import('REPO/public/js/battlesim/books/895/definition.js');
+for(const preset of ENCOUNTERS){select(preset.id);assert(el('archeryKills').disabled===!preset.rules.archery,'loaded archery eligibility '+preset.id);}
+const alternate=ENCOUNTERS.find(row=>row.id==='21'),pristine=JSON.stringify(game());
+try{
+  alternate.rules.archery=true;select('21');
+  assert(!el('archeryKills').disabled,'archery control follows a loaded rule on another encounter');
+  el('start').click();assert(game().fight.rules.archery===true,'archery setup reads the loaded permission');
+}finally{
+  delete alternate.rules.archery;run.sim895=JSON.parse(pristine);el('close').click();el('btn').click();select('');
+}
 for (const ability of ['magic', 'healing', 'invisibility']) el('ability-' + ability).checked = true;
 setCharacter({skill: 20});
 let name = el('opponents').querySelector('[role="combobox"]');
@@ -52,6 +64,16 @@ el('playerRoll').value = 1; el('enemyRoll').value = 1;
 for (let index = 0; index < 6; index++) el('round').click();
 assert(game().character.skill === 8 && game().fight.round === 6 && game().fight.skillPenaltyApplied, 'bat stench applies once after six rounds');
 assert(run.sim891.preserved && game().history.length === 3, 'existing simulator and ongoing fight history preserved');
+const savedPenalty=structuredClone(game().fight);
+Object.assign(savedPenalty,{round:5,skillPenaltyApplied:false,extension:{kept:true}});
+Object.assign(savedPenalty.player,{skill:9,stamina:17,magicUses:2,healingUses:3,arrows:4});savedPenalty.enemies[0].stamina=7;
+run.sim895={...structuredClone(game()),fight:JSON.parse(JSON.stringify(savedPenalty)),character:structuredClone(savedPenalty.player)};
+const savedPenaltyRun=JSON.stringify(run),rules=JSON.stringify(game().fight.rules);sim.render();sim.render();
+assert(JSON.stringify(run)===savedPenaltyRun,'saved delayed-penalty fight renders without changing wounds or resources');
+el('playerRoll').value=1;el('enemyRoll').value=1;el('round').click();
+assert(game().fight.round===6&&game().character.skill===8&&game().fight.skillPenaltyApplied&&game().fight.enemies[0].stamina===7&&game().character.stamina===17&&game().character.magicUses===2&&game().character.healingUses===3&&game().character.arrows===4&&game().fight.extension.kept&&JSON.stringify(game().fight.rules)===rules,'saved delayed penalty preserves captured rules, wounds, resources and extension');
+el('enemyRoll').value=2;el('round').click();
+assert(game().fight.round===7&&game().character.skill===8&&game().fight.enemies[0].stamina===7&&game().history.length===3,'saved penalty applies once and adds no outcome');
 const before = JSON.stringify(run); sim.render(); sim.render();
 assert(JSON.stringify(run) === before, 'renders do not mutate state');
 assert(!el('overlay').textContent.includes('battlesim895.'), 'all dynamic labels translated');

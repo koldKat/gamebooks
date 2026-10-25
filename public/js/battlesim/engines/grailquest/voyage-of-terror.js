@@ -1,6 +1,23 @@
 import { customGrailEncounter } from './opponents.js';
 import { VOYAGE_ENCOUNTERS, VOYAGE_DREAMS, VOYAGE_NAVIGATION,
-  VOYAGE_ARGONAUTS, VOYAGE_SUPPORT } from './voyage-of-terror-roster.js';
+  VOYAGE_ARGONAUTS, VOYAGE_SUPPORT, VOYAGE_RULES } from './voyage-of-terror-roster.js';
+export { VOYAGE_RULES } from './voyage-of-terror-roster.js';
+
+export function voyageCompanionName(role) {
+  return VOYAGE_ARGONAUTS[VOYAGE_RULES.companionRoles[role]].name;
+}
+
+export function voyageCanLeave(spec) {
+  return VOYAGE_RULES.leaveSections.includes(spec?.section);
+}
+
+export function voyageRetainsKeysOnLoss(fight) {
+  return fight?.status === 'loss' && VOYAGE_RULES.retainKeysOnLossSections.includes(fight.spec?.section);
+}
+
+export function voyageEncounter(section) {
+  return VOYAGE_ENCOUNTERS.find(spec => String(spec.section) === String(section));
+}
 
 const die = random => 1 + Math.floor(random() * 6);
 const dice = random => die(random) + die(random);
@@ -92,13 +109,13 @@ function settle(f) {
   const targets = voyageTargets(f);
   if (!combatAlive(f, p) && (!f.spec.argonautBattle || !f.allies.some(a => combatAlive(f, a)))) f.status = 'loss';
   else if (!targets.length) {
-    if (p.life === 0 && f.spec.resurrectWithJason && f.allies.some(a => a.name === 'Jason' && combatAlive(f, a))) {
+    if (p.life === 0 && f.spec.resurrectWithJason && f.allies.some(a => a.name === voyageCompanionName('jason') && combatAlive(f, a))) {
       p.life = p.maxLife;
       f.events.push({ kind: 'resurrection' });
     }
     f.status = combatAlive(f, p) ? 'win' : 'loss';
   }
-  if (f.spec.splitFerrets && f.allies.some(a => a.name === 'Jason' && a.life === 0)) f.status = 'loss';
+  if (f.spec.splitFerrets && f.allies.some(a => a.name === voyageCompanionName('jason') && a.life === 0)) f.status = 'loss';
   if (f.spec.knockoutCaptivity && p.life > 0 && p.life <= 5) f.status = 'captured';
   if (f.spec.knockoutReturn && p.life > 0 && p.life <= 5) {
     f.status = 'redirect'; f.redirect = f.spec.knockoutReturn;
@@ -128,7 +145,7 @@ function roofCheck(f, random) {
   if (!f.spec.roofChecks) return true;
   const roll = dice(random);
   f.events.push({ kind: 'roof', roll });
-  if (roll > 3) return true;
+  if (roll > VOYAGE_RULES.roofFatalMax) return true;
   damagePlayer(f, f.player.life);
   for (const foe of f.foes) foe.life = 0;
   f.status = 'loss';
@@ -181,7 +198,7 @@ export function createVoyageFight(section, player, options = {}, random = Math.r
   if (spec.pig && p.shape !== 'pig') { p.life = 15; p.maxLife = Math.max(p.maxLife, 15); p.shape = 'pig'; }
   if (spec.argonautBattle) f.allies = clone(p.companions ?? []);
   if (spec.jason) {
-    const jason = (p.companions ?? []).find(a => a.name === 'Jason');
+    const jason = (p.companions ?? []).find(a => a.name === voyageCompanionName('jason'));
     if (!jason || !alive(jason)) throw new RangeError('Jason is required');
     f.allies = [clone(jason)];
   }
@@ -236,15 +253,15 @@ function enemyBlow(f, foe, target, random) {
     && f.player.talisman && foe.attacksMade === 1 ? 1 : 0;
   const blocked = !f.spec.dream && target === f.player && f.player.shape === 'beetle' && f.rounds % 2 === 1;
   const armour = protection(f, target);
-  const hitAt = pistol ? 6 : foe.hit;
+  const hitAt = pistol ? VOYAGE_RULES.pistol.hit : foe.hit;
   const strike = voyageStrike(roll, hitAt, foe.bonus, Number.isFinite(armour) ? armour : 0,
     { penalty, fullDice: !!foe.fullDice, multiplier: foe.multiplier ?? 1,
-      fixedDamage: pistol ? 25 : null });
+      fixedDamage: pistol ? VOYAGE_RULES.pistol.damage : null });
   strike.hit &&= !blocked;
   let damage = strike.hit && Number.isFinite(armour) ? strike.damage : 0;
   if (strike.hit && foe.halfCurrentLife) damage = Math.floor(target.life / 2);
-  if (strike.hit && (foe.lethalHit || foe.evilEye && roll === 12)) damage = target.life;
-  if ((f.enemyHalf || foe.halfDamage) && !foe.lethalHit && !(foe.evilEye && roll === 12)) damage = Math.floor(damage / 2);
+  if (strike.hit && (foe.lethalHit || foe.evilEye && roll === VOYAGE_RULES.evilEyeRoll)) damage = target.life;
+  if ((f.enemyHalf || foe.halfDamage) && !foe.lethalHit && !(foe.evilEye && roll === VOYAGE_RULES.evilEyeRoll)) damage = Math.floor(damage / 2);
   if (target === f.player) damagePlayer(f, damage);
   else target.life = Math.max(0, target.life - damage);
   if (target === f.player && strike.hit && foe.mummyPoison && f.mummyPoisonRound === null) f.mummyPoisonRound = f.rounds;
@@ -290,10 +307,10 @@ function enemyTurn(f, target, random, eligible = null) {
   if (eligible) targets = targets.filter(({ index }) => eligible.has(index));
   if (f.spec.alternating) targets = targets.length ? [targets[(f.rounds - 1) % targets.length]] : [];
   else if (f.spec.splitFerrets && targets.some(({ foe }) => foe.phase === 0)) {
-    targets = [targets.find(({ index }) => index < 6), targets.find(({ index }) => index >= 6)].filter(Boolean);
+    targets = [targets.find(({ index }) => index < VOYAGE_RULES.ferretSplit), targets.find(({ index }) => index >= VOYAGE_RULES.ferretSplit)].filter(Boolean);
   } else if (!f.spec.simultaneous && !f.spec.argonautBattle) targets = targets.slice(0, 1);
   for (const { foe, index } of targets) {
-    let recipient = f.spec.splitFerrets && index >= 6 && foe.phase === 0 ? f.allies[0]
+    let recipient = f.spec.splitFerrets && index >= VOYAGE_RULES.ferretSplit && foe.phase === 0 ? f.allies[0]
       : f.spec.argonautBattle ? [f.player, ...f.allies][f.options.assignments?.[index] ?? 0]
         : f.allies.find(ally => ally.temporary && combatAlive(f, ally)) ?? f.player;
     if (!recipient && !f.spec.argonautBattle) throw new RangeError('Invalid enemy assignment');
@@ -314,7 +331,7 @@ function allyTurn(f, random) {
   for (const ally of f.allies) {
     if (!combatAlive(f, ally) || ally.attackEvery && f.rounds % ally.attackEvery !== 0) continue;
     const candidates = voyageTargets(f).filter(({ index, foe }) => !f.spec.splitFerrets
-      || foe.phase === 0 && index >= 6);
+      || foe.phase === 0 && index >= VOYAGE_RULES.ferretSplit);
     const target = candidates.find(({ index }) => f.options.assignments?.[index] === f.allies.indexOf(ally) + 1)
       ?? candidates[0];
     if (!target || f.status !== 'fighting' || !roofCheck(f, random)) continue;
@@ -336,20 +353,20 @@ export function rollVoyageRound(f, target = voyageTargets(f)[0]?.index, random =
   if (f.status !== 'fighting') return true;
   const openingTargets = voyageTargets(f);
   const splitOpening = f.spec.splitFerrets && openingTargets.some(({ foe }) => foe.phase === 0)
-    ? [openingTargets.find(({ index }) => index < 6), openingTargets.find(({ index }) => index >= 6)].filter(Boolean)
+    ? [openingTargets.find(({ index }) => index < VOYAGE_RULES.ferretSplit), openingTargets.find(({ index }) => index >= VOYAGE_RULES.ferretSplit)].filter(Boolean)
     : openingTargets.slice(0, 1);
   const eligible = new Set((f.spec.splitFerrets ? splitOpening : f.spec.simultaneous || f.spec.argonautBattle
     || f.spec.alternating ? openingTargets : openingTargets.slice(0, 1))
     .map(({ index }) => index));
   if (f.mummyPoisonRound !== null && f.mummyPoisonRound < f.rounds) {
-    damagePlayer(f, 5); f.events.push({ kind: 'poison', damage: 5 }); settle(f);
+    damagePlayer(f, VOYAGE_RULES.mummyPoisonDamage); f.events.push({ kind: 'poison', damage: VOYAGE_RULES.mummyPoisonDamage }); settle(f);
     if (f.status !== 'fighting') return true;
   }
   const playerTurn = () => {
     const weapon = playerWeapon(f);
     const rate = f.spec.playerAttacks ?? (weapon.key === 'dagger' || weapon.key === 'rustyDagger'
       ? f.options.enemyWeapon === 'spear' ? 3 : f.options.enemyWeapon === 'sword' ? 2 : 1 : 1);
-    if (!(f.spec.splitFerrets && f.foes[target].phase === 0 && target >= 6)
+    if (!(f.spec.splitFerrets && f.foes[target].phase === 0 && target >= VOYAGE_RULES.ferretSplit)
       && (weapon.key !== 'spearJab' || f.options.enemyWeapon !== 'sword' || f.rounds % 2 === 1)) {
       for (let i = 0; i < rate && f.status === 'fighting'; i++) playerBlow(f, f.foes[target], random);
     }
@@ -474,10 +491,11 @@ export function voyageSowTeeth(f, count, random = Math.random) {
 }
 
 export function voyageGuardChallenge(random = Math.random) {
-  const rolls = Array.from({ length: 6 }, () => die(random));
-  if (rolls.every(roll => roll === 6)) return { rolls, status: 'win' };
+  const rules = VOYAGE_RULES.guardChallenge;
+  const rolls = Array.from({ length: rules.dice }, () => die(random));
+  if (rolls.every(roll => roll === rules.winEach)) return { rolls, status: 'win' };
   const fate = dice(random);
-  return { rolls, fate, status: fate <= 6 ? 'death' : 'captured', section: fate <= 6 ? 14 : 114 };
+  return { rolls, fate, status: fate <= rules.fatalMax ? 'death' : 'captured', section: fate <= rules.fatalMax ? rules.deathDestination : rules.capturedDestination };
 }
 
 export function visitVoyageSection(player, section) {
@@ -486,7 +504,7 @@ export function visitVoyageSection(player, section) {
   }
   if (player.sectionPoison) player.life = Math.max(0, player.life - player.sectionPoison);
   if (player.mongoose) {
-    if (player.gold >= 10) player.gold -= 10;
+    if (player.gold >= VOYAGE_RULES.mongooseUpkeep) player.gold -= VOYAGE_RULES.mongooseUpkeep;
     else player.mongoose = false;
   }
   return { section, life: player.life };
@@ -537,7 +555,7 @@ export function voyageSleepingRex(f, random = Math.random) {
 
 export function voyageLeaveFight(f) {
   if (f.status !== 'fighting' || f.rounds) return false;
-  if (![57, 67, 77, 90].includes(f.spec.section)) return false;
+  if (!voyageCanLeave(f.spec)) return false;
   damagePlayer(f, f.spec.refusalDamage ?? 0);
   f.status = f.player.life === 0 ? 'loss' : 'avoided';
   f.events = [{ kind: 'leave', damage: f.spec.refusalDamage ?? 0 }];

@@ -1,13 +1,16 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
-import { ENCOUNTERS } from '../../../public/js/battlesim/books/710/definition.js';
+import { ENCOUNTERS, TEMPLE_RULES } from '../../../public/js/battlesim/books/710/definition.js';
 import { newCharacter, startFight, targets, round, resolveLuck } from '../../../public/js/battlesim/books/710/combat.js';
 import { eat, castSpell, testLuck } from '../../../public/js/battlesim/books/710/effects.js';
 import { createState } from '../../../public/js/battlesim/books/710/state.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim710.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim710.js';
+
+await loadFixtureRoster(710);
 
 const rolls = (...values) => () => {
   assert.ok(values.length, 'Unexpected extra die');
@@ -155,6 +158,10 @@ test('710: actual backend rewards wins and losses once, never abandoned fights',
     get: () => ({id: 710, total_sections: 400, is_container: 0})})};
   const context = {module: {exports: {}}, events, require(name) {
     if (name === './connection') return {db};
+    if (name === './diamonds') return {diamondInfoForUser: () => ({})};
+    if (name === './rubies') return {rubyInfoForUser: () => ({}), createRubyCompletionChecker: () => () => 0};
+    if (name === './heartbeat-coins') return {advanceHeartbeatCoins: () => 0};
+    if (name === './job-xp') return {getJobTitle: () => ''};
     if (name === './auth') return {generateToken: () => 'test-only'};
     if (name === '../impersonation-context') return {isImpersonatingContext: () => false};
     if (name === '../clean-run') return {isCleanRun: () => false};
@@ -170,4 +177,26 @@ test('710: actual backend rewards wins and losses once, never abandoned fights',
   events.length = 0;
   context.module.exports.processStateXp(1, 710, after, after);
   assert.ok(events.every(e => !e[1].startsWith('battlesim_')));
+});
+
+test('710: metadata settings preserve saved pending wounds', () => {
+  const before = structuredClone(TEMPLE_RULES);
+  try {
+    TEMPLE_RULES.daggerPenalty = 5;
+    const penalty = round(startFight(249, character()), 0, rolls(1, 1, 1, 1));
+    assert.equal(penalty.events[0].playerAttack, 9);
+    TEMPLE_RULES.immunityMinimum = 6;
+    const immune = round(startFight(85, character()), 0, rolls(6, 6, 1, 1, 5));
+    assert.equal(immune.enemies[0].stamina, 10);
+    TEMPLE_RULES.fireBreath = {maximum: 6, damage: 3};
+    const original = startFight(216, character({luck: 8, stamina: 17}));
+    const next = round(original, 0, rolls(1, 1, 6, 6, 6));
+    assert.equal(next.pending.at(-1).damage, 3);
+    next.extension = {keep: true};
+    const resolved = resolveLuck(JSON.parse(JSON.stringify(next)), false);
+    assert.equal(resolved.player.stamina, 15);
+    assert.equal(resolved.pending.at(-1).damage, 3);
+    assert.deepEqual(resolved.extension, {keep: true});
+    assert.equal(original.player.stamina, 17);
+  } finally { Object.assign(TEMPLE_RULES, before); }
 });

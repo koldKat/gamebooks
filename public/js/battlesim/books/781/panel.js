@@ -1,9 +1,9 @@
-import { WEAPONS, ROSTER } from './definition.js';
+import { WEAPONS, ROSTER, FLESH_RULES } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ROSTER, SVG_SKULL, SVG_TROPHY, WEAPONS, _appendLog, _attack, _battleOver, _data, _defaultAmmo, _defend, _enemy, _enemyName, _enemyOptions, _enemyStrike, _finishRound, _numField, _pickEnemy, _playerLost, _playerWon, _printedRound, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _roll1d6, _weapon, closeSim781, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim781, mutatedFleshRound, mutatedFleshWon, openSim781, registerPanelShortcut, renderSim781, saveState, setSim781Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, FLESH_RULES, ROSTER, SVG_SKULL, SVG_TROPHY, WEAPONS, _appendLog, _attack, _battleOver, _data, _defaultAmmo, _defend, _enemy, _enemyName, _enemyOptions, _enemyStrike, _finishRound, _numField, _pickEnemy, _playerLost, _playerWon, _printedRound, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _roll1d6, _weapon, closeSim781, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim781, mutatedFleshRound, mutatedFleshWon, openSim781, registerPanelShortcut, renderSim781, saveState, setSim781Visible, shortcutLabel, showAlert, t });
 const { _data, _appendLog, _battleOver, _recordOutcome } = createState(simulatorContext);
 const { _weapon, _enemy, _defaultAmmo, _roll1d6, _enemyName, _playerWon, _playerLost, _enemyStrike, _attack, _defend, _printedRound, _finishRound, _resetBattle, _pickEnemy } = createCombat(simulatorContext);
 // END SIMULATOR WIRING

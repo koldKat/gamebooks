@@ -52,6 +52,60 @@
               "hit": 6,
               "bonus": 2,
               "expiresOnEnemy": true
+            },
+            "fred": {
+              "name": "Fred",
+              "life": 66,
+              "hit": 4,
+              "bonus": 7,
+              "armour": 0
+            },
+            "rules": {
+              "deathbell": {
+                "enemyMax": 2
+              },
+              "packOffset": 3,
+              "guardsOpeningCount": 1,
+              "trial": {
+                "rounds": 4,
+                "minLife": 10
+              },
+              "bearGrip": {
+                "releaseAt": 7,
+                "damage": 6
+              },
+              "witchMagic": {
+                "hit": 6,
+                "dragonfire": 35,
+                "psionicDragonfire": 17,
+                "kangling": 10
+              },
+              "witchLoot": {
+                "encounterId": 78,
+                "rewards": [
+                  {
+                    "item": "thunderbolt",
+                    "charges": 1
+                  },
+                  {
+                    "item": "kangling",
+                    "charges": 2
+                  },
+                  {
+                    "item": "dragonfirePills",
+                    "charges": 2
+                  }
+                ]
+              },
+              "patrol": {
+                "clearAt": 4,
+                "countDice": 1,
+                "fine": 200
+              },
+              "court": {
+                "releasedAt": 10,
+                "penaltyAt": 7
+              }
             }
           }
         },

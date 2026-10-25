@@ -1,11 +1,30 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as combat from '../../../public/js/battlesim/books/812/combat.js';
-import { ENCOUNTERS } from '../../../public/js/battlesim/books/812/definition.js';
+import { ENCOUNTERS, FOREST_RULES } from '../../../public/js/battlesim/books/812/definition.js';
 import { createState } from '../../../public/js/battlesim/books/812/state.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim812.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim812.js';
+await loadFixtureRoster(812);
+
 const enemy = section => ENCOUNTERS.find(row => row.section === section);
+
+test('Romir metadata controls setup bounds and a saved nonlethal stopping threshold',()=>{
+  const original=FOREST_RULES.knockout;
+  try{
+    FOREST_RULES.knockout=2;
+    assert.throws(()=>combat.startFight({...combat.newCharacter(),life:2},enemy(16),16));
+    assert.throws(()=>combat.startFight({...combat.newCharacter(),life:3},{...enemy(16),life:2},16,'player',false));
+    const fight=combat.startFight({...combat.newCharacter(),life:3},{...enemy(16),life:4},16,'player',false);
+    fight.phase='enemy';fight.turns=4;fight.rounds=2;fight.extension={keep:true};
+    const saved=JSON.parse(JSON.stringify(fight)),snapshot=structuredClone(saved);
+    const result=combat.turn(saved,6,1);
+    assert.equal(result.outcome,'loss');assert.equal(result.character.life,2);
+    assert.equal(result.enemy.life,4);assert.equal(result.turns,5);assert.equal(result.rounds,2);
+    assert.deepEqual(result.extension,{keep:true});assert.deepEqual(saved,snapshot);
+  }finally{FOREST_RULES.knockout=original;}
+});
 
 test('initial attack and defence come from equipment, not invented base bonuses', () => {
   const character = combat.newCharacter();

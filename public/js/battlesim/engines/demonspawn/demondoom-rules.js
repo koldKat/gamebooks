@@ -1,5 +1,6 @@
 import { fireWolfHitThreshold, fireWolfProtection, FIRE_WOLF_WEAPONS } from './fire-wolf.js';
 import { awardDemondoomSkill } from './demondoom-character.js';
+import { DEMONDOOM_RULES } from './demondoom-roster.js';
 
 export function demondoomDamage(attacker, defender, roll, options = {}) {
   if (!Number.isInteger(roll) || roll < 2 || roll > 12) throw new Error('Invalid attack roll');
@@ -49,10 +50,10 @@ export function finishDemondoomFight(fight, outcome) {
 
 export function demondoomRegentWeapon(round, die) {
   if (!Number.isInteger(round) || round < 1) throw new Error('Invalid combat round');
-  if (round % 3 === 1) return 10;
-  if (round % 3 === 2) return 20;
+  const cycle = DEMONDOOM_RULES.regentSword.cycle, position = (round - 1) % (cycle.length + 1);
+  if (position < cycle.length) return cycle[position];
   if (!Number.isInteger(die) || die < 1 || die > 6) throw new Error('Roll one die for the Regent sword');
-  return 20 * die;
+  return DEMONDOOM_RULES.regentSword.dieMultiplier * die;
 }
 
 export function demondoomAlternatingWeapon(round, first, second) {

@@ -1,0 +1,856 @@
+{
+  "schemaVersion": 1,
+  "bookId": 856,
+  "family": "galansia",
+  "source": "All nineteen Rampage opponents, distinct section-45 IDs, strength, damage, HP, gnome/drain/fire/first-hit/demon rules and exact win/flee routes. Original legacy defence values continue to preserve their historical damage mapping; no legacy fields or IDs are changed. Player starting presets remain unchanged.",
+  "enemies": [
+    {
+      "key": "encounter:3",
+      "name": "Тавернджията Вайд Тол",
+      "attack": 1,
+      "defense": 1,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Тавернджията Вайд Тол",
+        "attack": 1,
+        "defense": 1,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "3",
+          "section": 3,
+          "displayName": "Тавернджията Вайд Тол",
+          "strength": 1,
+          "damage": 1,
+          "hp": 1,
+          "win": "22",
+          "flee": "22",
+          "gnome": true,
+          "support": {
+            "rules": {
+              "deathDestination": "13"
+            }
+          }
+        },
+        "part": {
+          "id": "3",
+          "section": 3,
+          "displayName": "Тавернджията Вайд Тол",
+          "strength": 1,
+          "damage": 1,
+          "hp": 1,
+          "win": "22",
+          "flee": "22",
+          "gnome": true
+        }
+      }
+    },
+    {
+      "key": "encounter:4",
+      "name": "Орда от Йобо",
+      "attack": 2,
+      "defense": 1,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Орда от Йобо",
+        "attack": 2,
+        "defense": 1,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "4",
+          "section": 4,
+          "displayName": "Орда от Йобо",
+          "strength": 2,
+          "damage": 1,
+          "hp": 8,
+          "win": "18 / 12",
+          "flee": "12"
+        },
+        "part": {
+          "id": "4",
+          "section": 4,
+          "displayName": "Орда от Йобо",
+          "strength": 2,
+          "damage": 1,
+          "hp": 8,
+          "win": "18 / 12",
+          "flee": "12"
+        }
+      }
+    },
+    {
+      "key": "encounter:5",
+      "name": "Джуджето-ковач Стъбс",
+      "attack": 3,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Джуджето-ковач Стъбс",
+        "attack": 3,
+        "defense": 2,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "5",
+          "section": 5,
+          "displayName": "Джуджето-ковач Стъбс",
+          "strength": 3,
+          "damage": 2,
+          "hp": 4,
+          "win": "19",
+          "flee": "2"
+        },
+        "part": {
+          "id": "5",
+          "section": 5,
+          "displayName": "Джуджето-ковач Стъбс",
+          "strength": 3,
+          "damage": 2,
+          "hp": 4,
+          "win": "19",
+          "flee": "2"
+        }
+      }
+    },
+    {
+      "key": "encounter:9",
+      "name": "Лечителя",
+      "attack": 2,
+      "defense": 2,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Лечителя",
+        "attack": 2,
+        "defense": 2,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "9",
+          "section": 9,
+          "displayName": "Лечителя",
+          "strength": 2,
+          "damage": 2,
+          "hp": 2,
+          "win": "17",
+          "flee": "17",
+          "gnome": true
+        },
+        "part": {
+          "id": "9",
+          "section": 9,
+          "displayName": "Лечителя",
+          "strength": 2,
+          "damage": 2,
+          "hp": 2,
+          "win": "17",
+          "flee": "17",
+          "gnome": true
+        }
+      }
+    },
+    {
+      "key": "encounter:14",
+      "name": "Пътешественичката Вайтара",
+      "attack": 3,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Пътешественичката Вайтара",
+        "attack": 3,
+        "defense": 2,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "14",
+          "section": 14,
+          "displayName": "Пътешественичката Вайтара",
+          "strength": 3,
+          "damage": 2,
+          "hp": 4,
+          "win": "7",
+          "flee": "7"
+        },
+        "part": {
+          "id": "14",
+          "section": 14,
+          "displayName": "Пътешественичката Вайтара",
+          "strength": 3,
+          "damage": 2,
+          "hp": 4,
+          "win": "7",
+          "flee": "7"
+        }
+      }
+    },
+    {
+      "key": "encounter:15",
+      "name": "Статуя на Гоф",
+      "attack": 5,
+      "defense": 3,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Статуя на Гоф",
+        "attack": 5,
+        "defense": 3,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "15",
+          "section": 15,
+          "displayName": "Статуя на Гоф",
+          "strength": 5,
+          "damage": 3,
+          "hp": 4,
+          "win": "44",
+          "flee": "17"
+        },
+        "part": {
+          "id": "15",
+          "section": 15,
+          "displayName": "Статуя на Гоф",
+          "strength": 5,
+          "damage": 3,
+          "hp": 4,
+          "win": "44",
+          "flee": "17"
+        }
+      }
+    },
+    {
+      "key": "encounter:20",
+      "name": "Черноглавия Яда",
+      "attack": 4,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Черноглавия Яда",
+        "attack": 4,
+        "defense": 2,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "20",
+          "section": 20,
+          "displayName": "Черноглавия Яда",
+          "strength": 4,
+          "damage": 2,
+          "hp": 4,
+          "win": "11",
+          "flee": "22",
+          "drain": true
+        },
+        "part": {
+          "id": "20",
+          "section": 20,
+          "displayName": "Черноглавия Яда",
+          "strength": 4,
+          "damage": 2,
+          "hp": 4,
+          "win": "11",
+          "flee": "22",
+          "drain": true
+        }
+      }
+    },
+    {
+      "key": "encounter:26",
+      "name": "Гномски стражи",
+      "attack": 2,
+      "defense": 1,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Гномски стражи",
+        "attack": 2,
+        "defense": 1,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "26",
+          "section": 26,
+          "displayName": "Гномски стражи",
+          "strength": 2,
+          "damage": 1,
+          "hp": 6,
+          "win": "7",
+          "flee": "7",
+          "gnome": true
+        },
+        "part": {
+          "id": "26",
+          "section": 26,
+          "displayName": "Гномски стражи",
+          "strength": 2,
+          "damage": 1,
+          "hp": 6,
+          "win": "7",
+          "flee": "7",
+          "gnome": true
+        }
+      }
+    },
+    {
+      "key": "encounter:28",
+      "name": "Гномска банда",
+      "attack": 2,
+      "defense": 1,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Гномска банда",
+        "attack": 2,
+        "defense": 1,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "28",
+          "section": 28,
+          "displayName": "Гномска банда",
+          "strength": 2,
+          "damage": 1,
+          "hp": 8,
+          "win": "47",
+          "flee": "47",
+          "gnome": true
+        },
+        "part": {
+          "id": "28",
+          "section": 28,
+          "displayName": "Гномска банда",
+          "strength": 2,
+          "damage": 1,
+          "hp": 8,
+          "win": "47",
+          "flee": "47",
+          "gnome": true
+        }
+      }
+    },
+    {
+      "key": "encounter:35",
+      "name": "Полутролът Ръфтъг",
+      "attack": 4,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Полутролът Ръфтъг",
+        "attack": 4,
+        "defense": 2,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "35",
+          "section": 35,
+          "displayName": "Полутролът Ръфтъг",
+          "strength": 4,
+          "damage": 2,
+          "hp": 5,
+          "win": "47",
+          "flee": "47"
+        },
+        "part": {
+          "id": "35",
+          "section": 35,
+          "displayName": "Полутролът Ръфтъг",
+          "strength": 4,
+          "damage": 2,
+          "hp": 5,
+          "win": "47",
+          "flee": "47"
+        }
+      }
+    },
+    {
+      "key": "encounter:38",
+      "name": "Гномска милиция",
+      "attack": 2,
+      "defense": 1,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Гномска милиция",
+        "attack": 2,
+        "defense": 1,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "38",
+          "section": 38,
+          "displayName": "Гномска милиция",
+          "strength": 2,
+          "damage": 1,
+          "hp": 5,
+          "win": "27",
+          "flee": "27",
+          "gnome": true
+        },
+        "part": {
+          "id": "38",
+          "section": 38,
+          "displayName": "Гномска милиция",
+          "strength": 2,
+          "damage": 1,
+          "hp": 5,
+          "win": "27",
+          "flee": "27",
+          "gnome": true
+        }
+      }
+    },
+    {
+      "key": "encounter:39",
+      "name": "Елфът-рейнджър Бука",
+      "attack": 3,
+      "defense": 1,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Елфът-рейнджър Бука",
+        "attack": 3,
+        "defense": 1,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "39",
+          "section": 39,
+          "displayName": "Елфът-рейнджър Бука",
+          "strength": 3,
+          "damage": 1,
+          "hp": 3,
+          "win": "32",
+          "flee": "32"
+        },
+        "part": {
+          "id": "39",
+          "section": 39,
+          "displayName": "Елфът-рейнджър Бука",
+          "strength": 3,
+          "damage": 1,
+          "hp": 3,
+          "win": "32",
+          "flee": "32"
+        }
+      }
+    },
+    {
+      "key": "encounter:40",
+      "name": "Алхимикът Хикобемус",
+      "attack": 2,
+      "defense": 4,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Алхимикът Хикобемус",
+        "attack": 2,
+        "defense": 4,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "40",
+          "section": 40,
+          "displayName": "Алхимикът Хикобемус",
+          "strength": 2,
+          "damage": 4,
+          "hp": 3,
+          "win": "29",
+          "flee": "37",
+          "firstHit": true,
+          "fire": true,
+          "gnome": true
+        },
+        "part": {
+          "id": "40",
+          "section": 40,
+          "displayName": "Алхимикът Хикобемус",
+          "strength": 2,
+          "damage": 4,
+          "hp": 3,
+          "win": "29",
+          "flee": "37",
+          "firstHit": true,
+          "fire": true,
+          "gnome": true
+        }
+      }
+    },
+    {
+      "key": "encounter:41",
+      "name": "Крал Брилиган",
+      "attack": 4,
+      "defense": 4,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Крал Брилиган",
+        "attack": 4,
+        "defense": 4,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "41",
+          "section": 41,
+          "displayName": "Крал Брилиган",
+          "strength": 4,
+          "damage": 4,
+          "hp": 4,
+          "win": "36",
+          "flee": "27",
+          "gnome": true
+        },
+        "part": {
+          "id": "41",
+          "section": 41,
+          "displayName": "Крал Брилиган",
+          "strength": 4,
+          "damage": 4,
+          "hp": 4,
+          "win": "36",
+          "flee": "27",
+          "gnome": true
+        }
+      }
+    },
+    {
+      "key": "encounter:43",
+      "name": "Глутница кучета",
+      "attack": 2,
+      "defense": 1,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Глутница кучета",
+        "attack": 2,
+        "defense": 1,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "43",
+          "section": 43,
+          "displayName": "Глутница кучета",
+          "strength": 2,
+          "damage": 1,
+          "hp": 4,
+          "win": "32",
+          "flee": "32"
+        },
+        "part": {
+          "id": "43",
+          "section": 43,
+          "displayName": "Глутница кучета",
+          "strength": 2,
+          "damage": 1,
+          "hp": 4,
+          "win": "32",
+          "flee": "32"
+        }
+      }
+    },
+    {
+      "key": "encounter:45a",
+      "name": "Стражът Сънроуз",
+      "attack": 3,
+      "defense": 1,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Стражът Сънроуз",
+        "attack": 3,
+        "defense": 1,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "45a",
+          "section": 45,
+          "displayName": "Стражът Сънроуз",
+          "strength": 3,
+          "damage": 1,
+          "hp": 2,
+          "win": "42",
+          "flee": "42",
+          "gnome": true
+        },
+        "part": {
+          "id": "45a",
+          "section": 45,
+          "displayName": "Стражът Сънроуз",
+          "strength": 3,
+          "damage": 1,
+          "hp": 2,
+          "win": "42",
+          "flee": "42",
+          "gnome": true
+        }
+      }
+    },
+    {
+      "key": "encounter:45b",
+      "name": "Стражът Фатбели",
+      "attack": 2,
+      "defense": 1,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Стражът Фатбели",
+        "attack": 2,
+        "defense": 1,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "45b",
+          "section": 45,
+          "displayName": "Стражът Фатбели",
+          "strength": 2,
+          "damage": 1,
+          "hp": 3,
+          "win": "42",
+          "flee": "42",
+          "gnome": true
+        },
+        "part": {
+          "id": "45b",
+          "section": 45,
+          "displayName": "Стражът Фатбели",
+          "strength": 2,
+          "damage": 1,
+          "hp": 3,
+          "win": "42",
+          "flee": "42",
+          "gnome": true
+        }
+      }
+    },
+    {
+      "key": "encounter:45c",
+      "name": "Танцуваща мечка",
+      "attack": 3,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Танцуваща мечка",
+        "attack": 3,
+        "defense": 2,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "45c",
+          "section": 45,
+          "displayName": "Танцуваща мечка",
+          "strength": 3,
+          "damage": 2,
+          "hp": 5,
+          "win": "42",
+          "flee": "42"
+        },
+        "part": {
+          "id": "45c",
+          "section": 45,
+          "displayName": "Танцуваща мечка",
+          "strength": 3,
+          "damage": 2,
+          "hp": 5,
+          "win": "42",
+          "flee": "42"
+        }
+      }
+    },
+    {
+      "key": "encounter:49",
+      "name": "Земен демон",
+      "attack": 4,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Земен демон",
+        "attack": 4,
+        "defense": 2,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "galansia",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "id": "49",
+          "section": 49,
+          "displayName": "Земен демон",
+          "strength": 4,
+          "damage": 2,
+          "hp": 4,
+          "win": "12",
+          "flee": "12",
+          "demon": true
+        },
+        "part": {
+          "id": "49",
+          "section": 49,
+          "displayName": "Земен демон",
+          "strength": 4,
+          "damage": 2,
+          "hp": 4,
+          "win": "12",
+          "flee": "12",
+          "demon": true
+        }
+      }
+    }
+  ]
+}

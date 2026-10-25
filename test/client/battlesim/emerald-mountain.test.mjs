@@ -1,3 +1,4 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as combat from '../../../public/js/battlesim/books/857/combat.js';
@@ -5,6 +6,8 @@ import { ENCOUNTERS, encounterPreset } from '../../../public/js/battlesim/books/
 import { createState } from '../../../public/js/battlesim/books/857/state.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim857.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim857.js';
+
+await loadFixtureRoster(857);
 
 test('both dictionaries have matching keys and placeholders', () => {
   assert.deepEqual(Object.keys(bg).sort(), Object.keys(en).sort());

@@ -26,7 +26,7 @@ function _resetEncounterKnobs(d) {
 }
 
 function _runRound() {
-  const { _appendLog, _data, _enemyNameSafe, _notReady, _renderAll, _resolveRoundEnd, _roll1d6, _roll2d6, saveState, t } = getContext();
+  const { REBEL_RULES, _appendLog, _data, _enemyNameSafe, _notReady, _renderAll, _resolveRoundEnd, _roll1d6, _roll2d6, saveState, t } = getContext();
 
   const d = _data();
   if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
@@ -44,7 +44,7 @@ function _runRound() {
     if (d.enemy.stamina > 0) d.pendingLuckQueue.push({ kind: 'player-hit' });
   } else {
     const woundDmg = d.player.escalatingDamage
-      ? 2 + d.enemyHitStreak
+      ? REBEL_RULES.escalatingBaseDamage + REBEL_RULES.escalatingPerHit * d.enemyHitStreak
       : Math.max(1, d.player.enemyWoundDamage || 2);
     if (d.player.escalatingDamage) d.enemyHitStreak++;
     d.player.stamina = Math.max(0, d.player.stamina - woundDmg);
@@ -55,8 +55,8 @@ function _runRound() {
   // Roll tail attacks independently, regardless of the main exchange's result.
   if (d.player.hasTailAttack && d.player.stamina > 0) {
     const tailRoll = _roll1d6();
-    if (tailRoll >= 5) {
-      d.player.stamina = Math.max(0, d.player.stamina - 2);
+    if (tailRoll >= REBEL_RULES.tailHitMin) {
+      d.player.stamina = Math.max(0, d.player.stamina - REBEL_RULES.tailDamage);
       _appendLog(d, t('battlesim214.log.tail_hit', { roll: tailRoll, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     } else {
       _appendLog(d, t('battlesim214.log.tail_miss', { roll: tailRoll }));

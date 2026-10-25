@@ -1,10 +1,10 @@
-import { MAX_PROVISIONS, PROVISIONS_HEAL, WEAPONS, ARMOURS, SIDE_WOUND_DMG, DISARM_MARGIN, MAX_SIDE_ENEMIES } from './definition.js';
+import { MAX_PROVISIONS, PROVISIONS_HEAL, WEAPONS, ARMOURS, SIDE_WOUND_DMG, DISARM_MARGIN, MAX_SIDE_ENEMIES, SHADOW_RULES } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ARMOURS, DISARM_MARGIN, MAX_PROVISIONS, MAX_SIDE_ENEMIES, PROVISIONS_HEAL, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, WEAPONS, _absorbHit, _addSideEnemy, _appendLog, _data, _eatProvisions, _effectiveSkill, _empowerSpear, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _removeSideEnemy, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderSideEnemiesHtml, _renderStatus, _resetBattle, _roll1d6, _roll2d6, _rollForSkull, _rollSpearLifeForce, _runRound, _setupEnemyAutocomplete, _sideEnemyNameSafe, _skipLuck, _testLuck, _useSpearAutoWin, _woundValues, apiFetch, closeSim240, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim240, openSim240, registerPanelShortcut, renderSim240, saveState, setSim240Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, SHADOW_RULES, ARMOURS, DISARM_MARGIN, MAX_PROVISIONS, MAX_SIDE_ENEMIES, PROVISIONS_HEAL, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, WEAPONS, _absorbHit, _addSideEnemy, _appendLog, _data, _eatProvisions, _effectiveSkill, _empowerSpear, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _removeSideEnemy, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderSideEnemiesHtml, _renderStatus, _resetBattle, _roll1d6, _roll2d6, _rollForSkull, _rollSpearLifeForce, _runRound, _setupEnemyAutocomplete, _sideEnemyNameSafe, _skipLuck, _testLuck, _useSpearAutoWin, _woundValues, apiFetch, closeSim240, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim240, openSim240, registerPanelShortcut, renderSim240, saveState, setSim240Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _effectiveSkill, _woundValues, _absorbHit, _runRound, _testLuck, _skipLuck, _resetBattle, _rollForSkull, _rollSpearLifeForce, _empowerSpear, _addSideEnemy, _removeSideEnemy } = createCombat(simulatorContext);
 const { _useSpearAutoWin, _eatProvisions } = createEffects(simulatorContext);
@@ -130,7 +130,9 @@ function _renderInputs() {
   rollBtn.textContent = d.rolled ? t('battlesim240.btn.rolled') : t('battlesim240.btn.roll');
 
   document.getElementById('sim240-weapon').value = d.player.weapon;
+  document.getElementById('sim240-weapon').disabled = !!d.pendingLuckQueue.length;
   document.getElementById('sim240-armour').value = d.player.armour;
+  document.getElementById('sim240-armour').disabled = !!d.pendingLuckQueue.length;
   document.getElementById('sim240-armour-hits').textContent =
     d.player.armour === 'none' ? '' : t('battlesim240.ui.armour_hits_left', { n: d.player.armourHitsLeft, max: ARMOURS[d.player.armour].hitsMax });
 
@@ -146,6 +148,7 @@ function _renderInputs() {
   document.getElementById('sim240-disarm-mode').checked = d.disarmMode;
   document.getElementById('sim240-immune').checked = d.immuneToWounds;
   document.getElementById('sim240-voivod-thrives').checked = d.voivodThrives;
+  document.getElementById('sim240-voivod-thrives').disabled = !!d.pendingLuckQueue.length;
   document.getElementById('sim240-voivod-defensive').checked = d.voivodDefensive;
 
   document.getElementById('sim240-spear-lifeforce').textContent =
@@ -433,6 +436,7 @@ export function initSim240() {
   document.getElementById('sim240-weapon').addEventListener('change', e => {
     const d = _data();
     if (!d) return;
+    if (d.pendingLuckQueue.length) { _renderInputs(); return; }
     d.player.weapon = e.target.value;
     saveState();
     _renderInputs();
@@ -441,6 +445,7 @@ export function initSim240() {
   document.getElementById('sim240-armour').addEventListener('change', e => {
     const d = _data();
     if (!d) return;
+    if (d.pendingLuckQueue.length) { _renderInputs(); return; }
     d.player.armour = e.target.value;
     d.player.armourHitsLeft = ARMOURS[e.target.value].hitsMax;
     saveState();
@@ -473,6 +478,7 @@ export function initSim240() {
   document.getElementById('sim240-voivod-thrives').addEventListener('change', e => {
     const d = _data();
     if (!d) return;
+    if (d.pendingLuckQueue.length) { _renderInputs(); return; }
     d.voivodThrives = e.target.checked;
     saveState();
   });

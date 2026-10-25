@@ -1,4 +1,4 @@
-import { SHAMUTANTI_FIGHTS, SHAMUTANTI_NIGHT_ENEMIES } from './roster.js';
+import { SHAMUTANTI_FIGHTS, SHAMUTANTI_NIGHT_ENEMIES, SHAMUTANTI_RULES } from './roster.js';
 import { customFightingEncounter } from '../fighting-fantasy/opponents.js';
 
 const clone = value => structuredClone(value);
@@ -56,9 +56,9 @@ export function startShamutantiFight(section, character, options = {}, roll) {
     fight.events.push({ kind: 'carriedWounds', stamina: fight.enemies[0].stamina });
   }
   if (spec.night) {
-    integer(previousSection, 1, 456);
-    integer(nightModifier, 0, 2);
-    if (![0, 2].includes(nightModifier)) throw new RangeError('Invalid night modifier');
+    integer(previousSection, 1, SHAMUTANTI_RULES.night.maxPreviousSection);
+    integer(nightModifier, 0, Math.max(...SHAMUTANTI_RULES.night.modifiers));
+    if (!SHAMUTANTI_RULES.night.modifiers.includes(nightModifier)) throw new RangeError('Invalid night modifier');
     if (nightResult !== null) integer(nightResult, 1, 6);
     const result = (nightResult ?? die(roll)) + nightModifier;
     const foe = SHAMUTANTI_NIGHT_ENEMIES[result - 1];
@@ -124,7 +124,7 @@ function applyHit(fight, hit, lucky = null) {
   let amount = hit.damage;
   if (lucky !== null) {
     if (hit.direction === 'outgoing') amount += lucky ? 2 : -1;
-    else amount = hit.poison && lucky ? 1 : amount + (lucky ? -1 : 1);
+    else amount = hit.poison && lucky ? SHAMUTANTI_RULES.sting.luckyDamage : amount + (lucky ? -1 : 1);
   }
   if (hit.direction === 'outgoing') {
     if (!hit.ally && fight.config.wax) amount *= 2;
@@ -148,9 +148,9 @@ export function shamutantiRound(input, roll) {
   let enemySkill = foe.skill;
   const manualEnemy = fight.enemySkillOverride != null && fight.enemySkillOverrideEnemy === fight.enemy;
   if (spec.temporaryEnemySkill && fight.rounds <= spec.temporaryEnemySkill.rounds) enemySkill = spec.temporaryEnemySkill.skill;
-  if (spec.recoveringWeapon && fight.rounds > 4 && !manualEnemy) {
+  if (spec.recoveringWeapon && fight.rounds > SHAMUTANTI_RULES.recovery.afterRound && !manualEnemy) {
     const recovery = die(roll);
-    enemySkill = recovery % 2 ? 4 : 8;
+    enemySkill = recovery % 2 ? SHAMUTANTI_RULES.recovery.oddSkill : SHAMUTANTI_RULES.recovery.evenSkill;
     fight.events.push({ kind: 'weaponRecovery', roll: recovery, skill: enemySkill });
   }
   if (manualEnemy) enemySkill = fight.enemySkillOverride;
@@ -164,9 +164,9 @@ export function shamutantiRound(input, roll) {
     damage: outgoing && !ally && fight.character.weapon === 'specialSword' ? 3 : 2 };
   if (!outgoing && spec.sting) {
     const sting = die(roll);
-    hit.poison = sting >= 5;
+    hit.poison = sting >= SHAMUTANTI_RULES.sting.minRoll;
     if (hit.poison) {
-      hit.damage = 6;
+      hit.damage = SHAMUTANTI_RULES.sting.damage;
       hit.fatal = !!ally && !!spec.goblinStingFatal;
     }
     fight.events.push({ kind: 'sting', roll: sting, poison: hit.poison });

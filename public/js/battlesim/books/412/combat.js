@@ -42,7 +42,7 @@ function _checkEnd(d) {
 }
 
 function _startBattle() {
-  const { _appendLog, _checkEnd, _data, _enemy, _enemyName, _renderAll, escapeHtml, saveState, t } = getContext();
+  const { COMPANION_RULES, _appendLog, _checkEnd, _data, _enemy, _enemyName, _renderAll, escapeHtml, saveState, t } = getContext();
 
   const d = _data();
   if (!d || d.started && !d.over) return;
@@ -53,11 +53,11 @@ function _startBattle() {
     d.timedEncounter.strikes = 0;
   }
   d.printedCombatRules = 1;
-  d.companionBonus = d.nextCompanionBonus === true ? 5 : 0;
+  d.companionBonus = d.nextCompanionBonus === true ? COMPANION_RULES.alvian.strengthBonus : 0;
   d.over = false; d.winner = null; d.started = true;
   if (d.log.length) _appendLog(d, t('battlesim412.log.reset_sep'));
   _appendLog(d, t('battlesim412.log.start', { name: escapeHtml(_enemyName(d)) }));
-  if (d.companionBonus) _appendLog(d, t('battlesim412.log.companion'));
+  if (d.companionBonus) _appendLog(d, t('battlesim412.log.companion', {bonus:d.companionBonus}));
   _checkEnd(d);
   saveState();
   _renderAll();

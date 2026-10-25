@@ -1,3 +1,5 @@
+import { createRosterLoader } from '../../roster-data.js';
+
 // Book identity and declarative defaults; no DOM or saved-state access.
 export const definition = Object.freeze({
   "id": 286,
@@ -41,3 +43,9 @@ export const TECH_ITEMS = [
   { key: 'raygun',      kind: 'direct', maxUses: 2,  damage: 75, charged: true },
   { key: 'dehronator',  kind: 'revive', maxUses: 1, cost: 15 },
 ];
+
+export let DREAM_ENCOUNTERS = {};
+export const loadRoster = createRosterLoader(286, 'DREAM_ENCOUNTERS', entries => {
+  DREAM_ENCOUNTERS = Object.fromEntries(entries.flatMap(entry => entry.encounters)
+    .map(encounter => [encounter.dream, encounter]));
+});

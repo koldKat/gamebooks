@@ -1,4 +1,5 @@
 import { dice, die, integer, newCharacter, RULES_REVISION, validateCharacter } from '../../engines/space-assassin/core.js';
+import { SPACE_RULES } from './definition.js';
 
 export function rollCharacter(roll = die) {
   return { ...newCharacter(roll), equipmentBudget: dice(1, roll), loadoutPurchased: false,
@@ -33,10 +34,10 @@ function precombat(original, sections) {
 }
 
 export function useNerveGas(original, roll = die) {
-  const fight = precombat(original, [108, 312]);
+  const fight = precombat(original, SPACE_RULES.nerveGas.sections);
   integer(fight.player.nerveGas, 1);
   fight.player.nerveGas--;
-  if (fight.encounterSection === 312) {
+  if (SPACE_RULES.nerveGas.ineffectiveSections.includes(fight.encounterSection)) {
     fight.events.push({ kind: 'gas', failed: true, damage: 0 });
   } else {
     const damage = dice(1, roll);
@@ -49,7 +50,7 @@ export function useNerveGas(original, roll = die) {
 }
 
 export function useGravityBomb(original) {
-  const fight = precombat(original, [267]);
+  const fight = precombat(original, SPACE_RULES.gravityBombSections);
   integer(fight.player.gravityBombs, 1);
   fight.player.gravityBombs--;
   for (const enemy of fight.enemies) enemy.stamina = 0;

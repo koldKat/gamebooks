@@ -51,7 +51,7 @@ function _enemyFloor(d) {
  return Math.max(0, d.player.enemyStaminaFloor || 0); }
 
 function _runRound() {
-  const { SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _effectiveSkill, _enemyFloor, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll2d6, _sideEnemy2NameSafe, _sideEnemyNameSafe, saveState, t } = getContext();
+  const { TALISMAN_RULES, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _effectiveSkill, _enemyFloor, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll2d6, _sideEnemy2NameSafe, _sideEnemyNameSafe, saveState, t } = getContext();
 
   const d = _data();
   if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
@@ -83,7 +83,7 @@ function _runRound() {
     d.player.stamina = Math.max(0, d.player.stamina - woundDmg);
     // skillDrain reduces the wounded player's SKILL, not enemy damage.
     if (d.player.skillDrain && d.player.skill > 0) {
-      d.player.skill = Math.max(0, d.player.skill - 1);
+      d.player.skill = Math.max(0, d.player.skill - TALISMAN_RULES.skillDrain);
       _appendLog(d, t('battlesim207.log.enemy_wounds_drain', { enemy: _enemyNameSafe(d), n: woundDmg, skill: d.player.skill, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     } else {
       _appendLog(d, t('battlesim207.log.enemy_wounds', { enemy: _enemyNameSafe(d), n: woundDmg, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));

@@ -98,7 +98,14 @@
           "id": "lenova",
           "name": "Д-р Ленова",
           "dmg": 19,
-          "life": 38
+          "life": 38,
+          "support": {
+            "rules": {
+              "victoryFloors": {
+                "lenova": 8
+              }
+            }
+          }
         },
         "part": {
           "id": "lenova",

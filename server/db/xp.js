@@ -9,6 +9,7 @@ const { isCleanRun } = require('../clean-run');
 const { diamondInfoForUser } = require('./diamonds');
 const { rubyInfoForUser, createRubyCompletionChecker } = require('./rubies');
 let _rubyCompletionChecker;
+const { getJobTitle } = require('./job-xp');
 const { advanceHeartbeatCoins } = require('./heartbeat-coins');
 
 // ── Impersonation tokens ──────────────────────────────────────────────────────
@@ -393,13 +394,20 @@ const _awardXpTx = db.transaction((userId, event, ref, amount) => {
 function awardXp(userId, event, ref, amountOverride = null) {
   if (isImpersonatingContext()) return false;
   const amount = amountOverride ?? getXpAmount(event);
-  const beforeDiamonds = _appXpHook && event !== 'idle_heartbeat'
-    ? db.prepare('SELECT diamonds_earned FROM user_diamonds WHERE user_id=?').get(userId)?.diamonds_earned || 0 : null;
+  // Reuse the mining snapshot for feed changes, including a main level-up event
+  // awarded during a heartbeat. Job events themselves never award XP or coins.
+  const snapshot = () => db.prepare(`SELECT
+    COALESCE((SELECT diamonds_earned FROM user_diamonds WHERE user_id=?),0) AS earned,
+    COALESCE((SELECT xp FROM user_job_xp WHERE user_id=?),0) AS jobXp`).get(userId, userId);
+  const before = (_xpFeedHook || (_appXpHook && event !== 'idle_heartbeat')) ? snapshot() : null;
   const awarded = _awardXpTx(userId, event, String(ref), amount);
-  if (awarded && beforeDiamonds !== null) {
-    const afterDiamonds = db.prepare('SELECT diamonds_earned FROM user_diamonds WHERE user_id=?').get(userId)?.diamonds_earned || 0;
-    if (afterDiamonds > beforeDiamonds) {
-      try { _appXpHook?.({ userId, diamondDelta: afterDiamonds - beforeDiamonds }); } catch (_) {}
+  if (awarded && before) {
+    const after = snapshot();
+    if (after.earned > before.earned) {
+      try { _appXpHook?.({ userId, diamondDelta: after.earned - before.earned }); } catch (_) {}
+    }
+    if (computeLevel(after.jobXp) > computeLevel(before.jobXp)) {
+      try { _xpFeedHook?.({ type: 'feed_changed', entity: 'profile', action: 'job_level_up', id: userId }); } catch (_) {}
     }
   }
   return awarded;
@@ -452,6 +460,9 @@ function getUserXpInfo(userId) {
     bonus_heartbeat_xp, bonus_coins, admin_gifted_coins, xp_from_boost,
     bonus_gc_chance_purchased, bonus_gc_mint_purchased, pending_bonus_gc,
     bonus_diamond_dig_purchased, bonus_diamond_exchange_purchased,
+    COALESCE((SELECT qualifying_events FROM user_diamonds WHERE user_id = users.id), 0) AS event_xp,
+    COALESCE((SELECT xp FROM user_job_xp WHERE user_id = users.id), 0) AS job_xp,
+    COALESCE((SELECT user_count/10 FROM job_xp_policy WHERE id=1), 0) AS job_level_cap,
     COALESCE((SELECT diamonds_earned FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_earned,
     COALESCE((SELECT diamonds_spent FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_spent,
     COALESCE((SELECT diamonds_bought FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_bought,
@@ -461,7 +472,9 @@ function getUserXpInfo(userId) {
   const bonusGcClaimed = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE user_id = ? AND event = 'bonus_gc_claim'").get(userId).n;
   const info = userXpInfoFromRow(row, bonusGcClaimed);
   const heartbeats = row?.heartbeat_count || 0;
-  return { ...info, bronzeBalance: heartbeats % 100, silverBalance: Math.floor(heartbeats / 100) % 100,
+  return { ...info, eventXp: row?.event_xp || 0, jobXp: row?.job_xp || 0, jobLevelCap: row?.job_level_cap || 0,
+    jobLevel: computeLevel(row?.job_xp || 0),
+    bronzeBalance: heartbeats % 100, silverBalance: Math.floor(heartbeats / 100) % 100,
     heartbeatGoldEarned: Math.floor(heartbeats / 10000), ...diamondInfoForUser(userId, row, info.level), ...rubyInfoForUser(db, userId) };
 }
 
@@ -471,7 +484,9 @@ function getAllUsersXpInfo() {
     WHERE event = 'bonus_gc_claim' GROUP BY user_id`).all().map(row => [row.user_id, row.n]));
   return new Map(db.prepare(`SELECT id, xp, coins_spent, xp_boost_pct, bonus_undos,
     bonus_fast_travels, bonus_heartbeat_xp, bonus_coins, admin_gifted_coins,
-    xp_from_boost, bonus_gc_chance_purchased, bonus_gc_mint_purchased, pending_bonus_gc
+    xp_from_boost, bonus_gc_chance_purchased, bonus_gc_mint_purchased, pending_bonus_gc,
+    COALESCE((SELECT xp FROM user_job_xp WHERE user_id=users.id),0) AS job_xp,
+    COALESCE((SELECT user_count/10 FROM job_xp_policy WHERE id=1),0) AS job_level_cap
     FROM users`).all().map(row => [row.id, userXpInfoFromRow(row, claims.get(row.id) || 0)]));
 }
 
@@ -484,6 +499,10 @@ function userXpInfoFromRow(row, bonusGcClaimed) {
     xp,
     level,
     title:             getTitleForLevel(level),
+    jobXp: row?.job_xp || 0,
+    jobLevel: computeLevel(row?.job_xp || 0),
+    jobTitle: getJobTitle(computeLevel(row?.job_xp || 0)),
+    jobLevelCap: row?.job_level_cap || 0,
     levelXp:           xpForLevel(level),
     nextLevelXp:       level < 100 ? xpForLevel(level + 1) : null,
     coinsEarned,

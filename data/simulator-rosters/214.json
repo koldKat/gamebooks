@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "bookId": 214,
+  "family": "fighting-fantasy",
+  "source": "Existing escalating wound and independent tail-attack settings. An unchanged Street Fighter row carries global settings; saved manual encounter toggles and all original opponent columns remain unchanged.",
+  "enemies": [
+    {
+      "key": "rebel-settings",
+      "name": "Street Fighter robot (sec 190, escalating damage 2/3/4...; side-branch: 2d6 vs SKILL to find weakness first)",
+      "attack": 9,
+      "defense": null,
+      "hp": 16,
+      "pb": null,
+      "adopt": {
+        "name": "Street Fighter robot (sec 190, escalating damage 2/3/4...; side-branch: 2d6 vs SKILL to find weakness first)",
+        "attack": 9,
+        "defense": null,
+        "hp": 16,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "REBEL_RULES",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "escalatingBaseDamage": 2,
+          "escalatingPerHit": 1,
+          "tailHitMin": 5,
+          "tailDamage": 2
+        },
+        "part": {
+          "name": "Street Fighter robot (sec 190, escalating damage 2/3/4...; side-branch: 2d6 vs SKILL to find weakness first)",
+          "attack": 9,
+          "defense": null,
+          "hp": 16,
+          "pb": null
+        },
+        "count": 1
+      }
+    }
+  ]
+}

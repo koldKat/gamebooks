@@ -1,3 +1,5 @@
+import { createRosterLoader } from '../../roster-data.js';
+
 // Book identity and declarative defaults; no DOM or saved-state access.
 export const definition = Object.freeze({
   "id": 439,
@@ -22,8 +24,10 @@ export const COMBAT_TABLE = [
   [[6,0],   [7,0],   [8,0], [9,0], [10,0], [11,0], [12,0], [14,0], [16,0], [18,0], ['K',0], ['K',0], ['K',0]],
 ];
 
-export const NEIJJIN = [[10,10],[9,10],[10,10],[7,9],[8,10],[10,12],[9,9],[11,9],[10,9]];
-
-export const VICTORY_ROUTES = { 99: [88,94], 101: [130], 117: [164], 120: [189], 133: [71], 149: [165], 154: [103], 189: [215], 197: [213], 203: [156], 205: [176], 224: [127], 231: [256], 243: [125,338,333], 246: [290], 255: [75], 259: [296], 260: [213], 265: [40], 272: [322], 284: [310], 308: [127], 309: [171], 321: [37], 337: [44] };
-
-export const DEADLINES = { 101: [5,130], 120: [3,189], 149: [4,165], 272: [3,315], 281: [1,null] };
+export let NEIJJIN = [], VICTORY_ROUTES = {}, DEADLINES = {}, ENCOUNTER_RULES = {};
+export const loadRoster = createRosterLoader(439, 'ENCOUNTER_RULES', entries => {
+  ENCOUNTER_RULES = Object.fromEntries(entries.map(entry => [entry.section, entry.rules]));
+  NEIJJIN = entries.find(entry => entry.rules.sequence).rules.sequence.profiles;
+  VICTORY_ROUTES = Object.fromEntries(entries.filter(entry => entry.rules.victoryRoutes).map(entry => [entry.section, entry.rules.victoryRoutes]));
+  DEADLINES = Object.fromEntries(entries.filter(entry => entry.rules.deadline).map(entry => [entry.section, entry.rules.deadline]));
+});

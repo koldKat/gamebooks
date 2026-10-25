@@ -1,3 +1,4 @@
+import { RIVAL_RULES } from './definition.js';
 // Combat rules and resolution; UI and persistence callbacks are injected.
 export function createCombat(getContext) {
 // BEGIN EXTRACTED RULES
@@ -51,13 +52,13 @@ function _loseB(ent, amt) {
   return amt;
 }
 
-function _magicExchange(attacker, defender) {
+function _magicExchange(attacker, defender, multiplier = 3) {
   const { _shieldAbsorb } = getContext();
 
   // Return net magic damage after shield reduction and reflected magic.
   const absorb = _shieldAbsorb(defender.shield) + defender.m;
   const leak = Math.max(0, attacker.m - absorb);
-  return leak * 3;
+  return leak * multiplier;
 }
 
 function _kill(ent) {
@@ -65,28 +66,29 @@ function _kill(ent) {
 
 function _dalgrenR1(player, opp) {
   const { _dN, _loseE, gt, t } = getContext();
+  const rules = RIVAL_RULES.dalgren.legacy;
 
   return [
     { label: t('battlesim869.d1.opt1'), run: () => {
-      const dmg = _dN(2);
+      const dmg = _dN(rules.openingDice);
       _loseE(player, dmg);
       return t('battlesim869.d1.msg1', { dmg });
     }},
     { label: t('battlesim869.d1.opt2'), run: () => {
-      const dmg = _dN(2);
+      const dmg = _dN(rules.openingDice);
       _loseE(player, dmg);
       return t('battlesim869.d1.msg2', { dmg });
     }},
     { label: t('battlesim869.d1.opt3'), run: () => {
-      if (player.b > opp.b) { const d = 1; _loseE(opp, d); return t('battlesim869.d1.msg3_win', { d }); }
-      const d = 1; _loseE(player, d); return gt('lose_e', { d });
+      if (player.b > opp.b) { const d = rules.deceptiveDamage; _loseE(opp, d); return t('battlesim869.d1.msg3_win', { d }); }
+      const d = rules.deceptiveDamage; _loseE(player, d); return gt('lose_e', { d });
     }},
     { label: t('battlesim869.d1.opt4'), run: () => {
       let msg = t('battlesim869.d1.msg4_open');
-      _loseE(opp, 1);
+      _loseE(opp, rules.openingDamage);
       const diff = (player.e + player.b) - (opp.e + opp.b);
       if (diff > 0) { _loseE(opp, diff); msg += t('battlesim869.d1.msg4_counter_win', { diff }); }
-      else { const d = Math.floor(Math.abs(diff) / 2); _loseE(player, d); msg += gt('blocked_hurt', { d }); }
+      else { const d = Math.floor(Math.abs(diff) / rules.blockedDivisor); _loseE(player, d); msg += gt('blocked_hurt', { d }); }
       return msg;
     }},
   ];
@@ -94,22 +96,23 @@ function _dalgrenR1(player, opp) {
 
 function _dalgrenR2(player, opp) {
   const { _dalgrenBlockOnly, _kill, _loseB, _loseE, gt, t } = getContext();
+  const rules = RIVAL_RULES.dalgren.legacy;
 
-  if (opp.e >= 5) {
+  if (opp.e >= rules.lowEndurance) {
     return [
       { label: t('battlesim869.d2.opt1'), run: () => _dalgrenBlockOnly(player, opp) },
       { label: t('battlesim869.d2.opt2'), run: () => {
-        if (player.m < 2) return gt('no_magic_n', { n: 2 }) + ' ' + _dalgrenBlockOnly(player, opp);
+        if (player.m < rules.magicMinimum) return gt('no_magic_n', { n: rules.magicMinimum }) + ' ' + _dalgrenBlockOnly(player, opp);
         const spend = player.m;
-        _loseE(opp, spend * 3); _loseB(opp, spend * 2);
+        _loseE(opp, spend * rules.magicEndurance); _loseB(opp, spend * rules.magicSkill);
         const base = _dalgrenBlockOnly(player, opp);
-        return t('battlesim869.d2.msg2', { spend, d: spend * 3, d2: spend * 2 }) + ' ' + base;
+        return t('battlesim869.d2.msg2', { spend, d: spend * rules.magicEndurance, d2: spend * rules.magicSkill }) + ' ' + base;
       }},
       { label: t('battlesim869.d2.opt3'), run: () => {
-        if (player.sword < 4) return gt('no_sword_n', { n: 4 }) + ' ' + _dalgrenBlockOnly(player, opp);
-        const tempB = player.b + Math.max(0, (player.sword - 2) * 2);
+        if (player.sword < rules.swordMinimum) return gt('no_sword_n', { n: rules.swordMinimum }) + ' ' + _dalgrenBlockOnly(player, opp);
+        const tempB = player.b + Math.max(0, (player.sword - rules.swordBase) * rules.swordMultiplier);
         const base = _dalgrenBlockOnly(player, opp);
-        if (tempB >= opp.b - 2) {
+        if (tempB >= opp.b - rules.swordMargin) {
           const diff = Math.abs((player.s + player.e) - (opp.s + opp.e));
           _loseE(opp, diff);
           return base + ' ' + t('battlesim869.d2.msg3_win', { diff });
@@ -121,13 +124,13 @@ function _dalgrenR2(player, opp) {
   return [
     { label: t('battlesim869.d2b.opt1'), run: () => {
       const diff = player.b - opp.b;
-      if (diff >= 3) return gt('block_perfect');
+      if (diff >= rules.blockMargin) return gt('block_perfect');
       const d = Math.abs(diff); _loseE(player, d);
       return gt('block_fail', { d });
     }},
     { label: t('battlesim869.d2b.opt2'), run: () => {
       const diff = player.b - opp.b;
-      if (diff >= 3) {
+      if (diff >= rules.blockMargin) {
         if ((player.s + player.e) > (opp.s + opp.e)) { _kill(opp); return t('battlesim869.d2b.msg2_kill'); }
         return gt('counter_fail_blocked');
       }
@@ -135,34 +138,36 @@ function _dalgrenR2(player, opp) {
       return gt('block_fail', { d });
     }},
     { label: t('battlesim869.d2b.opt3'), run: () => {
-      if (player.m < 1) return gt('no_magic');
+      if (player.m < rules.lowMagicMinimum) return gt('no_magic');
       const spend = player.m;
-      _loseE(opp, spend * 3);
-      return t('battlesim869.d2b.msg3', { d: spend * 3 });
+      _loseE(opp, spend * rules.magicEndurance);
+      return t('battlesim869.d2b.msg3', { d: spend * rules.magicEndurance });
     }},
   ];
 }
 
 function _dalgrenBlockOnly(player, opp) {
   const { _loseE, gt, t } = getContext();
+  const rules = RIVAL_RULES.dalgren.legacy;
 
   const diff = (player.s + player.e) - (opp.s + opp.e);
-  if (diff >= 6) return gt('block_perfect');
-  if (diff >= 0) { const d = 6 - diff; _loseE(player, d); return gt('block_effort', { d }); }
+  if (diff >= rules.heavyGuardMargin) return gt('block_perfect');
+  if (diff >= 0) { const d = rules.heavyGuardMargin - diff; _loseE(player, d); return gt('block_effort', { d }); }
   const d = Math.max(0, opp.b - player.b); _loseE(player, d);
   return t('battlesim869.d1.opp_stronger', { d });
 }
 
 function _tindalinR1(player, opp) {
   const { _loseE, gt, t } = getContext();
+  const rules = RIVAL_RULES.tindalin.legacy;
 
   const magicNote = () => {
-    if (player.shield === 'none') { _loseE(player, 1); return gt('no_magic_shield') + ' '; }
+    if (player.shield === 'none') { _loseE(player, rules.unshieldedDamage); return gt('no_magic_shield') + ' '; }
     return '';
   };
   const blockCheck = () => {
     const diff = player.b - opp.b;
-    if (diff >= 3) return gt('block_good') + ' ';
+    if (diff >= rules.blockMargin) return gt('block_good') + ' ';
     const d = Math.abs(diff); _loseE(player, d);
     return gt('block_fail', { d }) + ' ';
   };
@@ -176,20 +181,20 @@ function _tindalinR1(player, opp) {
     }},
     { label: t('battlesim869.t1.opt2'), run: () => {
       let msg = magicNote() + blockCheck();
-      const d = 2; _loseE(player, d);
+      const d = rules.failedCounterDamage; _loseE(player, d);
       msg += t('battlesim869.t1.msg2', { d });
       return msg;
     }},
     { label: t('battlesim869.t1.opt3'), run: () => {
       let msg = magicNote() + blockCheck();
-      if (player.m >= 2) { const diff = player.b - opp.b; if (diff > 0) { _loseE(opp, diff); msg += t('battlesim869.t1.msg3_win', { diff }); return msg; } }
-      const d = 2; _loseE(player, d); msg += t('battlesim869.t1.msg3_lose', { d });
+      if (player.m >= rules.magicMinimum) { const diff = player.b - opp.b; if (diff > 0) { _loseE(opp, diff); msg += t('battlesim869.t1.msg3_win', { diff }); return msg; } }
+      const d = rules.failedCounterDamage; _loseE(player, d); msg += t('battlesim869.t1.msg3_lose', { d });
       return msg;
     }},
     { label: t('battlesim869.t1.opt4'), run: () => {
       let msg = magicNote();
       const diff = player.b - opp.b;
-      if (diff > 0) { const d = 3; _loseE(opp, d); msg += t('battlesim869.t1.msg4_win', { d }); }
+      if (diff > 0) { const d = rules.successfulCounterDamage; _loseE(opp, d); msg += t('battlesim869.t1.msg4_win', { d }); }
       else { const d = Math.abs(diff); _loseE(player, d); msg += t('battlesim869.t1.msg4_lose', { d }); }
       return msg;
     }},
@@ -198,24 +203,25 @@ function _tindalinR1(player, opp) {
 
 function _tindalinR2Real(player, opp) {
   const { _d6, _dN, _kill, _loseE, gt, t } = getContext();
+  const rules = RIVAL_RULES.tindalin.legacy;
 
   return [
     { label: t('battlesim869.t2.opt1'), run: () => {
-      const d = _dN(2); _loseE(player, d);
+      const d = _dN(rules.openingDice); _loseE(player, d);
       return t('battlesim869.t2.msg1', { d });
     }},
     { label: t('battlesim869.t2.opt2'), run: () => {
-      const d = _dN(2); _loseE(player, d);
+      const d = _dN(rules.openingDice); _loseE(player, d);
       let msg = gt('lose_e', { d }) + ' ';
-      if (player.e > opp.e) { const d2 = 1; _loseE(opp, d2); msg += t('battlesim869.t2.msg2_win', { d: d2 }); }
+      if (player.e > opp.e) { const d2 = rules.laterCounterDamage; _loseE(opp, d2); msg += t('battlesim869.t2.msg2_win', { d: d2 }); }
       else msg += gt('counter_fail');
       return msg;
     }},
     { label: t('battlesim869.t2.opt3'), run: () => {
-      if (opp.e < 5) { _kill(opp); return t('battlesim869.t2.msg3_kill'); }
+      if (opp.e < rules.lowEndurance) { _kill(opp); return t('battlesim869.t2.msg3_kill'); }
       const roll = player.b + _d6();
-      if (roll >= opp.b + 4) return gt('block_good_full');
-      const d = Math.abs(roll - (opp.b + 4)); _loseE(player, d);
+      if (roll >= opp.b + rules.counterMargin) return gt('block_good_full');
+      const d = Math.abs(roll - (opp.b + rules.counterMargin)); _loseE(player, d);
       return gt('block_fail', { d });
     }},
   ];
@@ -223,24 +229,25 @@ function _tindalinR2Real(player, opp) {
 
 function _uantorR1(player, opp) {
   const { _d6, _dN, _loseB, _loseE, gt, t } = getContext();
+  const rules = RIVAL_RULES.uantor.legacy;
 
   return [
     { label: t('battlesim869.u1.opt1'), run: () => {
       const diff = (player.b + player.e) - opp.b;
       if (diff >= 0) return gt('block_good_full');
-      const d = Math.abs(diff) <= 6 ? _d6() : _dN(2);
+      const d = Math.abs(diff) <= rules.blockDiceThreshold ? _d6() : _dN(rules.heavyDice);
       _loseE(player, d);
       return gt('block_fail', { d });
     }},
     { label: t('battlesim869.u1.opt2'), run: () => {
       const diff = (player.b + player.e) - opp.b;
-      if (diff < 0) { const d = _dN(2); _loseE(player, d); return gt('block_fail', { d }); }
-      if (player.sword >= 3 && player.e >= 5) { const d = _dN(2); _loseE(opp, d); return t('battlesim869.u1.msg2_win', { d }); }
+      if (diff < 0) { const d = _dN(rules.heavyDice); _loseE(player, d); return gt('block_fail', { d }); }
+      if (player.sword >= rules.swordMinimum && player.e >= rules.minimumEndurance) { const d = _dN(rules.heavyDice); _loseE(opp, d); return t('battlesim869.u1.msg2_win', { d }); }
       return gt('block_ok_no_gear');
     }},
     { label: t('battlesim869.u1.opt3'), run: () => {
-      const d = _dN(2);
-      _loseE(player, d); _loseB(player, 4);
+      const d = _dN(rules.heavyDice);
+      _loseE(player, d); _loseB(player, rules.firstSkillLoss);
       let msg = t('battlesim869.u1.msg3', { d }) + ' ';
       if ((player.e + player.b) < opp.b) { const d2 = _d6(); _loseE(player, d2); msg += t('battlesim869.u1.msg3_extra', { d: d2 }); }
       return msg;
@@ -250,8 +257,8 @@ function _uantorR1(player, opp) {
       let msg = '';
       if (diff < 0) { const d = _d6(); _loseE(player, d); msg += gt('lose_e', { d }) + ' '; }
       if (player.m < opp.m) { const d = _d6(); _loseE(player, d); msg += gt('lose_e_more', { d }); return msg; }
-      const extra = player.m - opp.m - 1;
-      if (extra > 0) { _loseE(opp, extra * 4); msg += t('battlesim869.u1.msg4_win', { d: extra * 4 }); }
+      const extra = player.m - opp.m - rules.magicAbsorbed;
+      if (extra > 0) { _loseE(opp, extra * rules.magicEndurance); msg += t('battlesim869.u1.msg4_win', { d: extra * rules.magicEndurance }); }
       else msg += t('battlesim869.u1.msg4_absorbed');
       return msg;
     }},
@@ -260,21 +267,22 @@ function _uantorR1(player, opp) {
 
 function _uantorR2(player, opp) {
   const { _dN, _loseB, _loseE, gt, t } = getContext();
+  const rules = RIVAL_RULES.uantor.legacy;
 
   return [
     { label: t('battlesim869.u2.opt1'), run: () => {
-      const diff = (player.s + player.e + player.b) - (opp.s + opp.e + opp.b) - 8;
+      const diff = (player.s + player.e + player.b) - (opp.s + opp.e + opp.b) - rules.laterGuardMargin;
       if (diff >= 0) return gt('block_perfect_full');
-      if (diff >= -8) { const d = Math.abs(diff); _loseE(player, d); _loseB(player, Math.floor(d / 2)); return gt('lose_e', { d }); }
-      const d = _dN(2); _loseE(player, d); _loseB(player, 1); return t('battlesim869.u2.msg1_hard', { d });
+      if (diff >= -rules.laterGuardMargin) { const d = Math.abs(diff); _loseE(player, d); _loseB(player, Math.floor(d / rules.laterSkillDivisor)); return gt('lose_e', { d }); }
+      const d = _dN(rules.heavyDice); _loseE(player, d); _loseB(player, rules.laterSkillLoss); return t('battlesim869.u2.msg1_hard', { d });
     }},
     { label: t('battlesim869.u2.opt2'), run: () => {
       const diff = (player.b + player.e) - opp.b;
-      if (diff < 0) { const d = _dN(2); _loseE(player, d); return gt('block_fail', { d }); }
+      if (diff < 0) { const d = _dN(rules.heavyDice); _loseE(player, d); return gt('block_fail', { d }); }
       return gt('block_good_combo');
     }},
     { label: t('battlesim869.u2.opt3'), run: () => {
-      const d = _dN(2); _loseE(player, d); _loseB(player, 1);
+      const d = _dN(rules.heavyDice); _loseE(player, d); _loseB(player, rules.laterSkillLoss);
       return t('battlesim869.u2.msg3', { d });
     }},
     { label: t('battlesim869.u2.opt4'), run: () => {
@@ -286,26 +294,27 @@ function _uantorR2(player, opp) {
 
 function _smajtalR1(player, opp) {
   const { _d6, _loseB, _loseE, _magicExchange, gt, t } = getContext();
+  const rules = RIVAL_RULES.smajtal.legacy;
 
   return [
     { label: t('battlesim869.s1.opt1'), run: () => {
-      if (player.m < 3) return gt('no_magic_n', { n: 3 });
-      const leak = _magicExchange(opp, player);
+      if (player.m < rules.magicMinimum) return gt('no_magic_n', { n: rules.magicMinimum });
+      const leak = _magicExchange(opp, player, rules.magicMultiplier);
       if (leak > 0) { _loseE(player, leak); return t('battlesim869.s1.msg1_leak', { d: leak }); }
       return gt('magic_reflected_full');
     }},
     { label: t('battlesim869.s1.opt2'), run: () => {
       const diff = (player.e + player.b) - opp.b;
-      if (diff > 0) { const d = diff * 2; _loseE(opp, d); return t('battlesim869.s1.msg2_win', { d }); }
+      if (diff > 0) { const d = diff * rules.counterMultiplier; _loseE(opp, d); return t('battlesim869.s1.msg2_win', { d }); }
       return gt('counter_fail');
     }},
     { label: t('battlesim869.s1.opt3'), run: () => {
-      const leak = _magicExchange(opp, player);
+      const leak = _magicExchange(opp, player, rules.magicMultiplier);
       let msg = leak > 0 ? gt('magic_leak', { d: leak }) + ' ' : gt('magic_no_effect') + ' ';
-      if (player.b >= opp.b && player.sword >= 3 && player.e >= 5) {
+      if (player.b >= opp.b && player.sword >= rules.swordMinimum && player.e >= rules.minimumEndurance) {
         const roll = _d6();
-        if (roll <= 2) { const d1 = 3, d2 = 4; _loseE(opp, d1); _loseB(opp, d2); msg += t('battlesim869.s1.msg3_wound', { d1, d2 }); }
-        else if (roll <= 4) msg += gt('strike_fails');
+        if (roll <= rules.woundRollMaximum) { const d1 = rules.woundDamage, d2 = rules.woundSkill; _loseE(opp, d1); _loseB(opp, d2); msg += t('battlesim869.s1.msg3_wound', { d1, d2 }); }
+        else if (roll < rules.disarmMinimum) msg += gt('strike_fails');
         else msg += gt('disarm');
       } else { const d = _d6(); _loseE(player, d); msg += gt('blocked_shoulder', { d }); }
       return msg;
@@ -315,21 +324,22 @@ function _smajtalR1(player, opp) {
 
 function _smajtalR2(player, opp) {
   const { _d6, _dN, _loseB, _loseE, _magicExchange, gt, t } = getContext();
+  const rules = RIVAL_RULES.smajtal.legacy;
 
   return [
     { label: t('battlesim869.s2.opt1'), run: () => {
       let msg = '';
-      if (player.e + player.b < opp.e + opp.b) { const d = _d6(); _loseE(player, d); _loseB(player, 2); msg += gt('lose_e_b', { d, d2: 2 }) + ' '; }
-      const leak = _magicExchange(opp, player);
+      if (player.e + player.b < opp.e + opp.b) { const d = _d6(); _loseE(player, d); _loseB(player, rules.firstLaterSkillLoss); msg += gt('lose_e_b', { d, d2: rules.firstLaterSkillLoss }) + ' '; }
+      const leak = _magicExchange(opp, player, rules.magicMultiplier);
       if (leak > 0) { _loseE(player, leak); msg += t('battlesim869.s2.msg1_leak', { d: leak }); } else msg += gt('magic_reflected');
       return msg;
     }},
     { label: t('battlesim869.s2.opt2'), run: () => {
       let msg = '';
       if (player.e + player.b < opp.e + opp.b) { const d = _d6(); _loseE(player, d); msg += gt('lose_e', { d }) + ' '; }
-      const leak = _magicExchange(opp, player);
-      if (leak > 0) { _loseE(player, leak); _loseB(player, Math.floor(leak / 2)); msg += t('battlesim869.s2.msg2_leak', { d: leak }) + ' '; }
-      const d = _dN(2); _loseE(opp, d); _loseB(opp, 1); msg += t('battlesim869.s2.msg2_win', { d });
+      const leak = _magicExchange(opp, player, rules.magicMultiplier);
+      if (leak > 0) { _loseE(player, leak); _loseB(player, Math.floor(leak / rules.laterSkillDivisor)); msg += t('battlesim869.s2.msg2_leak', { d: leak }) + ' '; }
+      const d = _dN(rules.heavyDice); _loseE(opp, d); _loseB(opp, rules.laterFixedSkillLoss); msg += t('battlesim869.s2.msg2_win', { d });
       return msg;
     }},
     { label: t('battlesim869.s2.opt3'), run: () => {
@@ -341,8 +351,8 @@ function _smajtalR2(player, opp) {
     { label: t('battlesim869.s2.opt4'), run: () => {
       let msg = '';
       if (player.e + player.b < opp.e + opp.b) { const d = _d6(); _loseE(player, d); msg += gt('lose_e', { d }) + ' '; }
-      if (player.m > opp.m) { const d = (player.m - opp.m) * 4; const d2 = (player.m - opp.m) * 2; _loseE(opp, d); _loseB(opp, d2); msg += t('battlesim869.s2.msg4_win', { d, d2 }); }
-      else { const d = (opp.m - player.m) * 4; const d2 = (opp.m - player.m) * 2; _loseE(player, d); _loseB(player, d2); msg += t('battlesim869.s2.msg4_lose', { d, d2 }); }
+      if (player.m > opp.m) { const d = (player.m - opp.m) * rules.magicEndurance; const d2 = (player.m - opp.m) * rules.magicSkill; _loseE(opp, d); _loseB(opp, d2); msg += t('battlesim869.s2.msg4_win', { d, d2 }); }
+      else { const d = (opp.m - player.m) * rules.magicEndurance; const d2 = (opp.m - player.m) * rules.magicSkill; _loseE(player, d); _loseB(player, d2); msg += t('battlesim869.s2.msg4_lose', { d, d2 }); }
       return msg;
     }},
   ];
@@ -350,25 +360,26 @@ function _smajtalR2(player, opp) {
 
 function _lestorR1(player, opp) {
   const { _loseB, _loseE, gt, t } = getContext();
+  const rules = RIVAL_RULES.lestor.legacy;
 
   const guard = () => {
     const diff = (player.s + player.e) - opp.s - opp.e;
-    if (diff >= 6) return { ok: true, msg: '' };
-    const d = Math.abs(6 - diff); _loseE(player, d);
+    if (diff >= rules.heavyGuardMargin) return { ok: true, msg: '' };
+    const d = Math.abs(rules.heavyGuardMargin - diff); _loseE(player, d);
     return { ok: false, msg: gt('lose_e', { d }) + ' ' };
   };
   return [
     { label: t('battlesim869.l1.opt1'), run: () => { const g = guard(); return g.msg || gt('no_loss_full'); } },
     { label: t('battlesim869.l1.opt2'), run: () => {
-      if (player.m < 2) return gt('no_magic');
-      const spend = player.m; _loseE(opp, spend * 3); _loseB(opp, spend * 2);
+      if (player.m < rules.magicMinimum) return gt('no_magic');
+      const spend = player.m; _loseE(opp, spend * rules.magicEndurance); _loseB(opp, spend * rules.magicSkill);
       const g = guard();
-      return g.msg + t('battlesim869.l1.msg2', { d: spend * 3, d2: spend * 2 });
+      return g.msg + t('battlesim869.l1.msg2', { d: spend * rules.magicEndurance, d2: spend * rules.magicSkill });
     }},
     { label: t('battlesim869.l1.opt3'), run: () => {
-      if (player.sword < 4) return gt('no_sword_n', { n: 4 });
-      const tempB = player.b + (player.sword - 2) * 2;
-      if (tempB >= opp.b - 2) { const d = Math.abs((player.s + player.e) - (opp.s + opp.e)); _loseE(opp, d); return t('battlesim869.l1.msg3_win', { d }); }
+      if (player.sword < rules.swordMinimum) return gt('no_sword_n', { n: rules.swordMinimum });
+      const tempB = player.b + (player.sword - rules.swordBase) * rules.swordMultiplier;
+      if (tempB >= opp.b - rules.swordMargin) { const d = Math.abs((player.s + player.e) - (opp.s + opp.e)); _loseE(opp, d); return t('battlesim869.l1.msg3_win', { d }); }
       return gt('counter_fail');
     }},
   ];
@@ -376,6 +387,7 @@ function _lestorR1(player, opp) {
 
 function _lestorR2(player, opp) {
   const { _kill, _loseE, gt, t } = getContext();
+  const rules = RIVAL_RULES.lestor.legacy;
 
   return [
     { label: t('battlesim869.l2.opt1'), run: () => {
@@ -387,8 +399,8 @@ function _lestorR2(player, opp) {
       let msg = '';
       const diff = player.b - opp.b;
       if (diff < 0) { const d = Math.abs(diff); _loseE(player, d); msg += gt('lose_e', { d }) + ' '; }
-      if (player.sword >= 3 && player.b >= opp.b) {
-        if (opp.e <= 6) { _kill(opp); return msg + t('battlesim869.l2.msg2_kill'); }
+      if (player.sword >= rules.laterSwordMinimum && player.b >= opp.b) {
+        if (opp.e <= rules.lowEndurance) { _kill(opp); return msg + t('battlesim869.l2.msg2_kill'); }
         return msg + gt('counter_fail_partial');
       }
       return msg + gt('no_gear_for_counter');
@@ -398,6 +410,7 @@ function _lestorR2(player, opp) {
 
 function _tejbrunR1(player, opp) {
   const { _d6, _loseB, _loseE, gt, t } = getContext();
+  const rules = RIVAL_RULES.tejbrun.legacy;
 
   const guard = () => {
     const diff = (player.b + player.e) - opp.b;
@@ -409,21 +422,21 @@ function _tejbrunR1(player, opp) {
     { label: t('battlesim869.tb1.opt1'), run: () => { const g = guard(); return g.msg || gt('block_good_full'); } },
     { label: t('battlesim869.tb1.opt2'), run: () => {
       const g = guard();
-      if (player.sword >= 3 && player.b >= opp.b) { const d = _d6(); _loseE(opp, d); return g.msg + t('battlesim869.tb1.msg2_win', { d }); }
+      if (player.sword >= rules.swordMinimum && player.b >= opp.b) { const d = _d6(); _loseE(opp, d); return g.msg + t('battlesim869.tb1.msg2_win', { d }); }
       const d = _d6(); _loseE(player, d); return g.msg + t('battlesim869.tb1.msg2_lose', { d });
     }},
     { label: t('battlesim869.tb1.opt3'), run: () => {
       const g = guard();
-      if (player.m > opp.m) { const d = (player.m - opp.m) * 4; const d2 = (player.m - opp.m) * 2; _loseE(opp, d); _loseB(opp, d2); return g.msg + t('battlesim869.tb1.msg3_win', { d, d2 }); }
-      const d = (opp.m - player.m) * 4; const d2 = (opp.m - player.m) * 2; _loseE(player, d); _loseB(player, d2); return g.msg + t('battlesim869.tb1.msg3_lose', { d, d2 });
+      if (player.m > opp.m) { const d = (player.m - opp.m) * rules.magicEndurance; const d2 = (player.m - opp.m) * rules.magicSkill; _loseE(opp, d); _loseB(opp, d2); return g.msg + t('battlesim869.tb1.msg3_win', { d, d2 }); }
+      const d = (opp.m - player.m) * rules.magicEndurance; const d2 = (opp.m - player.m) * rules.magicSkill; _loseE(player, d); _loseB(player, d2); return g.msg + t('battlesim869.tb1.msg3_lose', { d, d2 });
     }},
     { label: t('battlesim869.tb1.opt4'), run: () => {
       const gDiff = (player.s + player.e) - opp.s - opp.e;
       let msg = '';
       if (gDiff < 0) { const d = Math.abs(gDiff); _loseE(player, d); msg += gt('lose_e', { d }) + ' '; }
-      const tempB = player.b + Math.max(0, (player.sword - 2) * 2);
-      if (tempB - opp.b >= 2) { const d = _d6(); _loseE(opp, d); msg += t('battlesim869.tb1.msg4_win', { d }); }
-      else { const d = 1; _loseE(player, d); msg += t('battlesim869.tb1.msg4_lose', { d }); }
+      const tempB = player.b + Math.max(0, (player.sword - rules.swordBase) * rules.swordMultiplier);
+      if (tempB - opp.b >= rules.swordMargin) { const d = _d6(); _loseE(opp, d); msg += t('battlesim869.tb1.msg4_win', { d }); }
+      else { const d = rules.failedTrickDamage; _loseE(player, d); msg += t('battlesim869.tb1.msg4_lose', { d }); }
       return msg;
     }},
   ];
@@ -431,11 +444,12 @@ function _tejbrunR1(player, opp) {
 
 function _matualR1(player, opp) {
   const { _d6, _loseE, gt, t } = getContext();
+  const rules = RIVAL_RULES.matual.legacy;
 
   const guard = () => {
     const diff = (player.b + player.e) - opp.b;
     if (diff >= 0) return { ok: true, msg: '' };
-    const d = Math.abs(diff) * 2; _loseE(player, d);
+    const d = Math.abs(diff) * rules.guardMultiplier; _loseE(player, d);
     return { ok: false, msg: t('battlesim869.mt1.guard_fail', { d }) + ' ' };
   };
   return [
@@ -447,15 +461,15 @@ function _matualR1(player, opp) {
     }},
     { label: t('battlesim869.mt1.opt2'), run: () => {
       const g = guard();
-      if (player.b > opp.b) { const d = (player.b - opp.b) * 3; _loseE(opp, d); return g.msg + t('battlesim869.mt1.msg2_win', { d }); }
+      if (player.b > opp.b) { const d = (player.b - opp.b) * rules.counterMultiplier; _loseE(opp, d); return g.msg + t('battlesim869.mt1.msg2_win', { d }); }
       const d = opp.b - player.b; _loseE(player, d); return g.msg + t('battlesim869.mt1.msg2_lose', { d });
     }},
     { label: t('battlesim869.mt1.opt3'), run: () => {
       const g = guard();
       if (player.s <= opp.s) { const d = _d6(); _loseE(player, d); return g.msg + t('battlesim869.mt1.msg3_pierced', { d }); }
-      if (player.m < 2) return g.msg + gt('no_magic_n', { n: 2 });
-      const extra = player.m - 2;
-      if (extra > 0) { const d = extra * 4; _loseE(opp, d); return g.msg + t('battlesim869.mt1.msg3_win', { d }); }
+      if (player.m < rules.magicMinimum) return g.msg + gt('no_magic_n', { n: rules.magicMinimum });
+      const extra = player.m - rules.magicAbsorbed;
+      if (extra > 0) { const d = extra * rules.magicEndurance; _loseE(opp, d); return g.msg + t('battlesim869.mt1.msg3_win', { d }); }
       return g.msg + t('battlesim869.mt1.msg3_absorbed');
     }},
   ];

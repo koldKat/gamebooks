@@ -34,9 +34,13 @@ module.exports = async function checkBrowser({ file, profile, root, width, chrom
       socket.addEventListener('error', reject, { once: true });
     });
     const pending = new Map();
-    let next = 0;
+    let next = 0, runtimeFailure = "";
     socket.addEventListener('message', event => {
       const message = JSON.parse(event.data), handler = pending.get(message.id);
+      if (message.method === 'Runtime.exceptionThrown') {
+        const details = message.params.exceptionDetails;
+        runtimeFailure = details.exception?.description || `${details.text} at ${details.url}:${details.lineNumber + 1}`;
+      }
       if (!handler) return;
       pending.delete(message.id);
       if (message.error) handler.reject(Error(JSON.stringify(message.error))); else handler.resolve(message.result);
@@ -59,7 +63,7 @@ module.exports = async function checkBrowser({ file, profile, root, width, chrom
         returnByValue: true,
       }, sessionId);
       last = result.value;
-      if (last?.failure) throw Error('Browser assertion: ' + last.failure);
+      if (last?.failure) throw Error('Browser assertion: ' + last.failure + (runtimeFailure ? '\n' + runtimeFailure : ''));
       if (last?.test) {
         if (screenshotPath) {
           const capture = await send('Page.captureScreenshot', {format:'jpeg',quality:75,captureBeyondViewport:false}, sessionId);

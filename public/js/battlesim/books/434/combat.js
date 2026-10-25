@@ -1,6 +1,11 @@
 // Combat rules and resolution; UI and persistence callbacks are injected.
 export function createCombat(getContext) {
 // BEGIN EXTRACTED RULES
+function _rulesFor(section) {
+  const { ENCOUNTER_RULES } = getContext();
+  return ENCOUNTER_RULES[section] || {};
+}
+
 function _ratioCol(ratio) {
 
   if (ratio <= -11) return 0;
@@ -33,10 +38,11 @@ function _enemyNameSafe(d) {
  return escapeHtml(_enemyName(d)); }
 
 function _captureFightEffects(d) {
-  const { _effectiveSkill } = getContext();
+  const { _effectiveSkill, _rulesFor } = getContext();
 
   d.printedRules = 1;
   const section = Number(d.enemy.name.match(/§(\d+)/)?.[1]) || 0;
+  const rules = _rulesFor(section);
   d.combatEffects = {
     captured: true, section,
     psychic: d.nextPsychic || 'none',
@@ -44,30 +50,31 @@ function _captureFightEffects(d) {
     sommerwerd: !!d.nextSommerwerd,
     bowMastery: !!d.nextBowMastery, jackan: !!d.nextJackan,
     bowModifier: Number(d.nextBowModifier) || 0,
-    ...(section === 26 ? { targetPoints: 50 } : {}),
+    ...(rules.archery ? { targetPoints: rules.archery.targetPoints } : {}),
   };
-  if (section === 26) d.enemy.endurance = d.enemy.enduranceMax = 50;
+  if (rules.archery) d.enemy.endurance = d.enemy.enduranceMax = rules.archery.targetPoints;
   d.ratio = _effectiveSkill(d) - d.enemy.skill;
 }
 
 function _health(d) {
- return d.combatEffects?.section === 26 ? d.combatEffects.targetPoints : d.endurance; }
+  const { _rulesFor } = getContext();
+ return _rulesFor(d.combatEffects?.section).archery ? d.combatEffects.targetPoints : d.endurance; }
 
 function _effectiveSkill(d) {
 
   const effects = d.combatEffects;
   if (!effects?.captured) return d.combatSkill + (d.attackModifier || 0);
-  const section = effects.section;
-  if (section === 26) return d.combatSkill + effects.bowModifier + (effects.bowMastery ? 3 : 0) - (effects.jackan ? 2 : 0);
+  const { _rulesFor } = getContext();
+  const rules = _rulesFor(effects.section);
+  if (rules.archery) return d.combatSkill + effects.bowModifier + (effects.bowMastery ? rules.archery.masteryBonus : 0) - (effects.jackan ? rules.archery.jackanPenalty : 0);
   let skill = d.combatSkill + (d.attackModifier || 0);
-  if (effects.psychic === 'blast' && ![77,270,344].includes(section)) skill += 2;
-  if (effects.psychic === 'surge' && d.endurance > 6 && ![270,344].includes(section)) skill += 4;
-  if (section === 114 && d.roundsThisBattle === 0) skill += 2;
-  if (section === 155 && d.roundsThisBattle === 0) skill -= 4;
-  if (section === 254 && d.roundsThisBattle === 0 && !effects.tracking) skill -= 2;
-  if (section === 270 && d.roundsThisBattle < 2 && !effects.tracking) skill -= 2;
-  if (effects.animal && [71,194].includes(section)) skill += 2;
-  if (effects.animal && [164,283].includes(section)) skill++;
+  if (effects.psychic === 'blast' && !rules.blastImmune) skill += 2;
+  if (effects.psychic === 'surge' && d.endurance > 6 && !rules.surgeImmune) skill += 4;
+  for (const adjustment of rules.skillAdjustments || []) {
+    if (d.roundsThisBattle >= adjustment.maxRounds || adjustment.whenFalse && effects[adjustment.whenFalse]) continue;
+    skill += adjustment.amount;
+  }
+  if (effects.animal) skill += rules.animalBonus || 0;
   return skill;
 }
 
@@ -81,25 +88,19 @@ function _setRoute(d, section) {
 
 function _escapeRoute(d) {
 
-  const section = d.combatEffects?.section;
-  if ([12,343].includes(section)) return section === 12 || d.roundsThisBattle >= 3 ? 305 : 0;
-  if (section === 155) return d.roundsThisBattle >= 4 ? 305 : 0;
-  if ([37,71,208].includes(section)) return 279;
-  if (section === 42) return 70;
-  if (section === 92) return 286;
-  if (section === 215) return d.roundsThisBattle >= 2 ? 286 : 0;
-  if (section === 194) return 289;
-  if (section === 116 && d.roundsThisBattle === 0) return 105;
-  if (section === 337 && d.roundsThisBattle === 0) return 191;
+  const { _rulesFor } = getContext();
+  const rule = _rulesFor(d.combatEffects?.section).escape;
+  if (rule && !rule.immediate && d.roundsThisBattle >= (rule.minRounds || 0) && (rule.maxRounds === undefined || d.roundsThisBattle <= rule.maxRounds)) return rule.route;
   return 0;
 }
 
 function _escape() {
-  const { _battleOver, _data, _escapeRoute, _health, _renderAll, _runRound, _setRoute, saveState } = getContext();
+  const { _battleOver, _data, _escapeRoute, _health, _renderAll, _rulesFor, _runRound, _setRoute, saveState } = getContext();
 
   const d = _data();
   if (!d || _battleOver(d)) return;
-  if (d.combatEffects?.section === 156) { _setRoute(d, 339); saveState(); _renderAll(); return; }
+  const immediate = _rulesFor(d.combatEffects?.section).escape;
+  if (immediate?.immediate) { _setRoute(d, immediate.route); saveState(); _renderAll(); return; }
   const route = _escapeRoute(d);
   if (!route) return;
   _runRound(true);
@@ -109,35 +110,36 @@ function _escape() {
 }
 
 function _runRound(escaping = false) {
-  const { COMBAT_TABLE, _appendLog, _battleOver, _checkBattleEnd, _data, _effectiveSkill, _enemyNameSafe, _health, _pick10, _pickRow, _ratioCol, _renderAll, _setRoute, saveState, t } = getContext();
+  const { COMBAT_TABLE, _appendLog, _battleOver, _checkBattleEnd, _data, _effectiveSkill, _enemyNameSafe, _health, _pick10, _pickRow, _ratioCol, _renderAll, _rulesFor, _setRoute, saveState, t } = getContext();
 
   const d = _data();
   if (!d || _battleOver(d)) return;
   const effects = d.combatEffects || {};
+  const rules = _rulesFor(effects.section);
   // Click handlers pass an Event, not the explicit escape flag.
   escaping = escaping === true;
   const ratio = effects.captured ? _effectiveSkill(d) - d.enemy.skill : d.ratio;
   d.roundsThisBattle++;
 
   const pick = _pick10();
-  if (effects.section === 26 && effects.jackan && pick === 0) {
-    _setRoute(d, 335); saveState(); _renderAll(); return;
+  if (rules.archery && effects.jackan && pick === rules.archery.breakPick) {
+    _setRoute(d, rules.archery.breakRoute); saveState(); _renderAll(); return;
   }
   const col = _ratioCol(ratio);
   let [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
   if (escaping) enemyLoss = 0;
-  if (effects.section === 12 && d.roundsThisBattle <= 2) lwLoss = 0;
-  if (effects.section === 270 && effects.sommerwerd && enemyLoss !== 'K') enemyLoss *= 2;
+  if (d.roundsThisBattle <= (rules.protectedRounds || 0)) lwLoss = 0;
+  if (rules.sommerwerdMultiplier && effects.sommerwerd && enemyLoss !== 'K') enemyLoss *= rules.sommerwerdMultiplier;
   _appendLog(d, t('battlesim434.log.round', { round: d.roundsThisBattle, ratio, pick }));
 
   if (enemyLoss === 'K') d.enemy.endurance = 0;
   else d.enemy.endurance = Math.max(0, d.enemy.endurance - enemyLoss);
-  if (effects.section === 26) effects.targetPoints = lwLoss === 'K' ? 0 : Math.max(0, effects.targetPoints - lwLoss);
+  if (rules.archery) effects.targetPoints = lwLoss === 'K' ? 0 : Math.max(0, effects.targetPoints - lwLoss);
   else {
     if (lwLoss === 'K') d.endurance = 0;
     else d.endurance = Math.max(0, d.endurance - lwLoss);
-    const extra = (effects.section === 270 && !effects.nexus ? 2 : 0) +
-      (effects.captured && effects.psychic === 'surge' && ![270,344].includes(effects.section) && d.endurance + (lwLoss === 'K' ? 0 : lwLoss) > 6 ? 2 : 0);
+    const extra = (!effects.nexus ? (rules.nexusLoss || 0) : 0) +
+      (effects.captured && effects.psychic === 'surge' && !rules.surgeImmune && d.endurance + (lwLoss === 'K' ? 0 : lwLoss) > 6 ? 2 : 0);
     if (extra && d.endurance > 0) {
       d.endurance = Math.max(0, d.endurance - extra);
       _appendLog(d, t('battlesim434.log.extra_loss', { n: extra }));
@@ -149,7 +151,7 @@ function _runRound(escaping = false) {
     enemyLoss: enemyLoss === 'K' ? t('battlesim434.log.k_word') : enemyLoss,
     enemyEndurance: d.enemy.endurance, enemyEnduranceMax: d.enemy.enduranceMax,
     lwLoss: lwLoss === 'K' ? t('battlesim434.log.k_word') : lwLoss,
-    endurance: _health(d), enduranceMax: effects.section === 26 ? 50 : d.enduranceInitial,
+    endurance: _health(d), enduranceMax: rules.archery ? rules.archery.targetPoints : d.enduranceInitial,
   }));
 
   _checkBattleEnd(d);
@@ -158,23 +160,22 @@ function _runRound(escaping = false) {
 }
 
 function _checkBattleEnd(d) {
-  const { SVG_SKULL, SVG_TROPHY, _appendLog, _enemyNameSafe, _health, _recordOutcome, _setRoute, t } = getContext();
+  const { SVG_SKULL, SVG_TROPHY, _appendLog, _enemyNameSafe, _health, _recordOutcome, _rulesFor, _setRoute, t } = getContext();
 
   const effects = d.combatEffects || {};
+  const rules = _rulesFor(effects.section);
   if (d.printedRules && _health(d) <= 0) {
     _appendLog(d, t('battlesim434.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
-    if (effects.section === 26) _setRoute(d, 183);
-  } else if (effects.section === 78 && d.enemy.endurance <= 11) {
-    _setRoute(d, 180);
-  } else if (effects.section === 344 && d.enemy.endurance <= 25) {
-    _setRoute(d, 310);
+    if (rules.archery) _setRoute(d, rules.archery.lossRoute);
+  } else if (rules.stop && d.enemy.endurance <= rules.stop.endurance) {
+    _setRoute(d, rules.stop.route);
   } else if (d.enemy.endurance <= 0) {
     _appendLog(d, t('battlesim434.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
     if (effects.captured) {
-      const timed = { 92: [77,215], 201: [15,87] }[effects.section];
-      const route = timed ? timed[d.roundsThisBattle <= 3 ? 0 : 1] : {26:252,78:180,156:200,344:310}[effects.section];
+      const victory = rules.victory;
+      const route = victory?.rounds !== undefined ? (d.roundsThisBattle <= victory.rounds ? victory.early : victory.late) : victory?.route;
       if (route) _setRoute(d, route);
     }
   } else if (d.endurance <= 0) {
@@ -199,5 +200,5 @@ function _resetBattle() {
 }
 
 // END EXTRACTED RULES
-  return { _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _health, _effectiveSkill, _setRoute, _escapeRoute, _escape, _runRound, _checkBattleEnd, _resetBattle };
+  return { _rulesFor, _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _health, _effectiveSkill, _setRoute, _escapeRoute, _escape, _runRound, _checkBattleEnd, _resetBattle };
 }

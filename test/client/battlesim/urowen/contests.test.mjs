@@ -1,3 +1,5 @@
+import { loadFixtureRoster } from '../roster-fixtures.mjs';
+await loadFixtureRoster(550);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as contests from '../../../../public/js/battlesim/engines/urowen/contests.js';

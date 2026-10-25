@@ -9,6 +9,8 @@ import { resolveLegendaryEnemySpell } from './enemy-spells.js';
 import { legendaryPlayerReactions, queueLegendaryReactions, resumeLegendaryPlayer } from './reactions.js';
 import { legendaryCombatHero, restoreLegendaryCombatGear, erodeLegendaryArmour } from './equipment.js';
 import { legendaryCanReach } from './locations.js';
+import { VALLEY_SETTINGS } from './valley-roster.js';
+import { CROWN_SETTINGS } from './crown-roster.js';
 
 function enemyValid(enemy) {
   if (!enemy || typeof enemy.name !== 'string' || !enemy.name.trim())
@@ -81,8 +83,8 @@ export function legendaryCompanionAttack(input, targetIndex, roll) {
 
 function noteEnemyDamage(fight, targetIndex, memberIndex, damage) {
   if (damage > 0 && fight.rules.special === 'fastilon' && !fight.roundEnemyDamage[targetIndex]) {
-    fight.stunnedRound[memberIndex] = fight.round + 1;
-    record(fight, { type: 'stunned', memberIndex, stunnedRound: fight.round + 1 });
+    fight.stunnedRound[memberIndex] = fight.round + VALLEY_SETTINGS.fastilon.stunRounds;
+    record(fight, { type: 'stunned', memberIndex, stunnedRound: fight.round + VALLEY_SETTINGS.fastilon.stunRounds });
   }
   fight.roundEnemyDamage[targetIndex] += damage;
   if (fight.enemies[targetIndex].partyMember !== undefined)
@@ -123,7 +125,7 @@ function conclude(fight) {
     for (const index of fight.rules.defeatOnVictory ?? []) fight.enemies[index].health = 0;
     if (fight.rules.knockout && fight.rules.cursedMember !== undefined) {
       const hero=fight.party[fight.rules.cursedMember];
-      hero.health=Math.min(2,hero.maxHealth);
+      hero.health=Math.min(VALLEY_SETTINGS.cursed.knockoutHealth,hero.maxHealth);
     }
   } else return false;
   fight.phase = 'ended';
@@ -132,7 +134,7 @@ function conclude(fight) {
   if (fight.status==='won' && fight.rules.special==='guardWeapon') {
     for (const [index,armed] of fight.guardWeapons.entries()) if (armed) {
       fight.party[index].armed=true;
-      fight.party[index].weaponBonus=Math.max(fight.party[index].weaponBonus??0,1);
+      fight.party[index].weaponBonus=Math.max(fight.party[index].weaponBonus??0,VALLEY_SETTINGS.guardWeaponBonus);
     }
   }
   fight.party.forEach(hero => { hero.invulnerable = false; });
@@ -353,7 +355,7 @@ export function legendaryPlayerAttack(input, memberIndex, targetIndex, { focus =
   if (fight.rules.unarmed !== undefined) options.unarmed = !!fight.rules.unarmed;
   let hero=legendaryCombatHero(fight, memberIndex);
   if (fight.rules.rage) hero={...hero,skills:{...hero.skills,fighting:hero.skills.fighting+1}};
-  if (fight.guardWeapons[memberIndex]) {hero={...hero,armed:true,weaponBonus:1,stonecutterSword:false};options.excludeWeapon=false;options.unarmed=false;}
+  if (fight.guardWeapons[memberIndex]) {hero={...hero,armed:true,weaponBonus:VALLEY_SETTINGS.guardWeaponBonus,stonecutterSword:false};options.excludeWeapon=false;options.unarmed=false;}
   if (fight.rules.excludeTwoHanded && hero.twoHanded) {options.excludeWeapon=true;options.unarmed=true;}
   if (fight.enemies[targetIndex].nonlethal) {options.excludeWeapon=true;options.unarmed=true;}
   const attack = legendaryAttack(hero, fight.playerHitThreshold ?? fight.enemies[targetIndex].defence, options, roll);
@@ -370,14 +372,14 @@ export function legendaryPlayerAttack(input, memberIndex, targetIndex, { focus =
     record(fight,{type:'surpriseAttack',memberIndex,targetIndex,dice:extra.dice,damage:extraDamage});
   }
   if (fight.rules.special==='yuYan' && enemy.health>0) {
-    const ally=legendaryPool(5,enemy.defence,roll);
+    const ally=legendaryPool(VALLEY_SETTINGS.yuYanAttack,enemy.defence,roll);
     const allyDamage=Math.min(enemy.health,ally.successes);
     enemy.health-=allyDamage;
     noteEnemyDamage(fight,targetIndex,memberIndex,allyDamage);
     record(fight,{type:'yuYanAttack',targetIndex,dice:ally.dice,damage:allyDamage});
   }
   fight.roundAttacks++;
-  if (fight.rules.special === 'jungle') fight.party[memberIndex].health = Math.max(0, fight.party[memberIndex].health - 1);
+  if (fight.rules.special === 'jungle') fight.party[memberIndex].health = Math.max(0, fight.party[memberIndex].health - VALLEY_SETTINGS.jungleAttackDamage);
   fight.acted.push(memberIndex);
   record(fight, { type: 'playerAttack', memberIndex, targetIndex, dice: attack.dice, damage });
   if (!queueLegendaryReactions(fight, legendaryPlayerReactions(fight, memberIndex, targetIndex, damage))) finishPlayerAction(fight, roll);
@@ -415,7 +417,7 @@ export function legendaryMoveHero(input, memberIndex, destination) {
   if (fight.rules.locationBattle === 'pit') {
     if (origin !== 'outside' || destination !== 'pool') throw new RangeError('Heroes may only jump into this pit');
     fight.zones[memberIndex] = 'pool';
-    fight.party[memberIndex] = protectLegendaryHero(fight.party[memberIndex], 1, {combat:false,attack:false}).character;
+    fight.party[memberIndex] = protectLegendaryHero(fight.party[memberIndex], CROWN_SETTINGS.pit.moveDamage, {combat:false,attack:false}).character;
   } else if (fight.rules.locationBattle === 'walkway') {
     const blockers = fight.enemies.filter(enemy => destination === 'pool' ? enemy.zone === 'walkwayOrPool' : enemy.zone === 'pool');
     if (!['pool','walkway'].includes(destination) || destination === origin || blockers.some(enemy => enemy.health > 0))
@@ -761,15 +763,20 @@ export function legendaryTakeGuardWeapon(input, memberIndex) {
   fight.guardWeaponsTaken++;
   if (fight.status==='won') {
     fight.party[memberIndex].armed=true;
-    fight.party[memberIndex].weaponBonus=Math.max(fight.party[memberIndex].weaponBonus??0,1);
+    fight.party[memberIndex].weaponBonus=Math.max(fight.party[memberIndex].weaponBonus??0,VALLEY_SETTINGS.guardWeaponBonus);
   }
   record(fight,{type:'guardWeapon',memberIndex});
   return fight;
 }
 
+export function legendaryTommulRewardAvailable(input) {
+  const settings=VALLEY_SETTINGS.tommul;
+  return !!(settings && input && input.rulesVersion===1 && input.rules.section===settings.section && input.round<=settings.lastRound &&
+    !input.tommulRewardTaken && input.enemies[settings.enemyIndex].health===0 && living(input).length);
+}
+
 export function legendaryTommulReward(input, roll) {
-  if (!input || input.rulesVersion!==1 || input.rules.section!==239 || input.round>3 ||
-      input.tommulRewardTaken || input.enemies[0].health!==0 || !living(input).length)
+  if (!legendaryTommulRewardAvailable(input))
     throw new RangeError('Tommul must be defeated before the guards arrive');
   const fight=structuredClone(input);
   const memberIndex=fight.participants[0];

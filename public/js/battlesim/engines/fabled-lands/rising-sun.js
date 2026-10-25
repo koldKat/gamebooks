@@ -7,7 +7,15 @@ export const RISING_PROFESSIONS = Object.freeze({ priest: [6,4,5,8,6,2], troubad
 export const RISING_DEFAULTS = Object.freeze({ rank: 6, stamina: 27, shards: 0, armour: 0,
   professions: RISING_PROFESSIONS });
 export let RISING_FIGHTS = [];
-export const loadRoster = createRosterLoader(679, 'FIGHTS', rows => { RISING_FIGHTS = rows; });
+export let RISING_SEA_CHECKS = Object.freeze({});
+export const RISING_RULES = {};
+export const loadRoster = createRosterLoader(679, 'FIGHTS', rows => {
+  const support = rows.find(row => row.support)?.support;
+  if (!support?.seaChecks || !support.rules) throw new Error('Incomplete Rising Sun settings');
+  RISING_FIGHTS = rows.map(({support, ...row}) => row);
+  RISING_SEA_CHECKS = Object.freeze(support.seaChecks);
+  Object.assign(RISING_RULES, support.rules);
+});
 
 function end(fight, status) {
   fight.status = status;
@@ -20,7 +28,7 @@ function end(fight, status) {
     } else {
       fight.character.stamina = 0;
       fight.status = 'loss';
-      fight.destination = 140;
+      fight.destination = fight.config.loss;
     }
   }
 }
@@ -63,11 +71,11 @@ export function startRisingFight(config, character, options = {}, roll) {
   if (config.unarmoured) fight.defence = character.combat+character.rank;
   if (config.special==='sanctityDefence') fight.defence = character.sanctity;
   if (config.special==='magicDefence') fight.defence = character.magic+character.rank;
-  if (config.special==='darkness' && !light) fight.attackModifier -= 2;
+  if (config.special==='darkness' && !light) fight.attackModifier -= RISING_RULES.darknessPenalty;
   if (config.special==='subdue' && subdue) {
-    fight.attackModifier -= weaponBonus+1;
+    fight.attackModifier -= weaponBonus+RISING_RULES.subdue.penalty;
     fight.defence = Math.max(1,fight.defence-weaponBonus);
-    fight.config.win = 463;
+    fight.config.win = RISING_RULES.subdue.win;
   }
   if (config.special==='exchangedWeapon') {
     fight.enemies[0].combat += exchangedWeaponBonus;
@@ -126,7 +134,7 @@ export function risingRound(input, options = {}, roll) {
     }
     const total = dice+combat;
     let amount = Math.max(0,total-defence);
-    if (direction==='enemy' && fight.config.special==='thunder') amount = Math.max(0,amount-Math.floor(fight.character.shards/1000));
+    if (direction==='enemy' && fight.config.special==='thunder') amount = Math.max(0,amount-Math.floor(fight.character.shards/RISING_RULES.thunderShardsDivisor));
     fight.events.push({kind:'attack',direction,enemy:foe.name,dice,total,defence,damage:amount,
       ...(foe.displayName?{enemyDisplayName:foe.displayName}:{})});
     return amount;
@@ -166,40 +174,40 @@ export function fleeRisingFight(input, roll) {
   return fight;
 }
 
-export const RISING_SEA_CHECKS = Object.freeze({27:{kind:'passage'},52:{kind:'shipwreck'},126:{kind:'shipwreck'},222:{kind:'storm'}});
 export function risingSeaCheck(section, input, options = {}, roll) {
   validateFabledCharacter(input,true);
-  if (!RISING_SEA_CHECKS[section]) throw new RangeError('Invalid sea check');
+  if (!Object.hasOwn(RISING_SEA_CHECKS,section)) throw new RangeError('Invalid sea check');
   const {ship='barque',crew='average',safetyFromStorms=false} = options;
   if (!['barque','brigantine','galleon'].includes(ship) || !['poor','average','good','excellent'].includes(crew)
     || typeof safetyFromStorms!=='boolean' || safetyFromStorms&&!input.stormsBlessing&&!input.permanentStorms) throw new RangeError('Invalid ship setting');
   const character = structuredClone(input);
+  const rules = RISING_RULES.sea;
   let total = 0, destination, status = 'story', usedBlessing = false;
-  if (section===27) {
+  if (section===rules.passageSection) {
     total = fabledDie(roll);
-    destination = total===1 ? 241 : 612;
-    if (total===2) {
+    destination = total===rules.passage.specialRoll ? rules.passage.specialDestination : rules.passage.arrival;
+    if (total===rules.passage.illnessRoll) {
       if (character.diseaseBlessing) character.diseaseBlessing = false;
       else {
-        character.staminaInitial = Math.max(1,character.staminaInitial-2);
-        character.stamina = Math.max(0,character.stamina-2);
-        if (!character.stamina) {status='loss';destination=140;}
+        character.staminaInitial = Math.max(1,character.staminaInitial-rules.passage.illnessDamage);
+        character.stamina = Math.max(0,character.stamina-rules.passage.illnessDamage);
+        if (!character.stamina) {status='loss';destination=rules.death;}
       }
     }
-  } else if (section===222) {
+  } else if (section===rules.stormSection) {
     if (safetyFromStorms) {
       usedBlessing = true;
       if (!character.permanentStorms) character.stormsBlessing = false;
-      destination = 580;
+      destination = rules.storm.blessingDestination;
     } else {
-      for (let i=0;i<({barque:1,brigantine:2,galleon:3})[ship];i++) total += fabledDie(roll);
-      total += ({poor:0,average:0,good:1,excellent:2})[crew];
-      destination = total<=3 ? 126 : 6;
+      for (let i=0;i<rules.storm.shipDice[ship];i++) total += fabledDie(roll);
+      total += rules.storm.crewBonus[crew];
+      destination = rules.storm.destinations[total<=rules.storm.threshold?0:1];
     }
   } else {
     total = fabledDice(roll)+character.scouting;
-    const success = total>(section===52?15:14);
-    destination = success ? 241 : 140;
+    const success = total>(section===rules.hardWreckSection?rules.shipwreck.hardDifficulty:rules.shipwreck.difficulty);
+    destination = success ? rules.shipwreck.success : rules.death;
     if (!success) {character.stamina=0;status='loss';}
   }
   return {character,total,destination,status,kind:RISING_SEA_CHECKS[section].kind,

@@ -142,12 +142,12 @@ export function initSim532() {
   el('weapon').addEventListener('change', () => action(d => { if (!rules.tombEquip(character(d), el('weapon').value)) throw new RangeError('Unavailable weapon'); }));
   el('poison').addEventListener('change', () => action(d => {
     if (!active(d)) character(d).poison = el('poison').value
-      ? { kind: el('poison').value, amount: el('poison').value === 'needle' ? 10 : 3 } : null;
+      ? { kind: el('poison').value, amount: rules.tombManualPoisonAmount(el('poison').value) } : null;
   }));
   el('companion_life').addEventListener('change', () => action(d => {
     const p = character(d), value = Number(el('companion_life').value);
     if (active(d) || !p.companion) return;
-    if (!Number.isFinite(value) || value < 0 || value > 50) throw new RangeError('Invalid companion');
+    if (!Number.isFinite(value) || value < 0 || value > rules.TOMB_COMPANION.life) throw new RangeError('Invalid companion');
     p.companion.life = value;
   }));
   el('recruit').addEventListener('click', () => action(d => { if (!active(d) && !character(d).companion) rules.tombRecruitVampire(character(d)); }));
@@ -165,7 +165,7 @@ export function initSim532() {
   el('start').addEventListener('click', () => {
     const id = el('encounter').value, options = Object.fromEntries(settings.map(key => [key, el('option-' + key).checked]));
     if (el('enemyCount').value !== '') options.enemyCount = Number(el('enemyCount').value);
-    const apply = d => { start(d, id === '204-grott' ? id : Number(id), options); d.dream = null; d.sleepDream = false; };
+    const apply = d => { start(d, rules.tombEncounterId(id), options); d.dream = null; d.sleepDream = false; };
     if (active(data())) confirm(tk('replace_fight'), apply); else action(apply);
   });
   const combat = (key, apply) => el(key).addEventListener('click', () => action(d => { if (active(d)) log(d, apply(d.fight, Number(el('target').value))); }));

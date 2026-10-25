@@ -1,10 +1,20 @@
 import { customGrailEncounter } from './opponents.js';
-import { DEN_ENCOUNTERS, DEN_DREAM_FIGHTS } from './den-of-dragons-roster.js';
+import { DEN_ENCOUNTERS, DEN_DREAM_FIGHTS, DEN_RULES } from './den-of-dragons-roster.js';
 
 const die = random => 1 + Math.floor(random() * 6);
 const dice = random => die(random) + die(random);
 const copy = value => JSON.parse(JSON.stringify(value));
 const integer = (value, minimum = 0) => Number.isSafeInteger(value) && value >= minimum;
+
+export function denInvisibilityAllowed(spec) {
+  return DEN_RULES.invisibilitySections.includes(spec?.section);
+}
+
+// Old fights keep their captured wounds, counters and events. Read missing
+// encounter settings from the catalog without rewriting their saved spec.
+function npcRules(spec) {
+  return spec.npcRules ?? [...DEN_ENCOUNTERS, ...DEN_DREAM_FIGHTS].find(entry => String(entry.section) === String(spec.section))?.npcRules ?? {};
+}
 
 export function createDenCharacter() {
   return { life: 0, maxLife: 0, hit: 4, bonus: 5, armour: 0, permanent: 0, experience: 0,
@@ -82,7 +92,7 @@ export function createDenFight(section, player, options = {}, random = Math.rand
   if (spec.openingEvasion) {
     const roll = dice(random);
     fight.events.push({ kind: 'evasion', roll });
-    if (roll >= 9) p.life = 0;
+    if (roll >= npcRules(spec).openingEvasionFatalAt) p.life = 0;
   }
   settle(fight);
   return fight;
@@ -123,7 +133,7 @@ function enemyTurn(fight, random) {
     fight.events.push({ kind: 'enemy', index, roll, hit, damage });
     if (hit && spec.disease) fight.player.disease = true;
     if (hit && spec.lethalHit) fight.player.life = 0;
-    if (spec.petrifyHits && foe.consecutiveHits >= spec.petrifyHits + (invisible ? 1 : 0)) fight.player.life = 0;
+    if (spec.petrifyHits && foe.consecutiveHits >= spec.petrifyHits + (invisible ? npcRules(spec).invisiblePetrifyExtraHits : 0)) fight.player.life = 0;
     if (spec.poisonHits && foe.consecutiveHits >= spec.poisonHits && !fight.player.poisonProtected) {
       fight.poisonPending = true;
       break;
@@ -141,21 +151,22 @@ function playerTurn(fight, target, random) {
       const roll = dice(random) + (spec.playerRollModifier ?? 0);
       if (foe.globBlows > 0) foe.globBlows--;
       const arrow = spec.arrows && fight.arrows > 0;
-      const threshold = arrow ? 7 : spec.playerHit ?? (spec.unarmed || spec.dream ? 6 : fight.player.hit);
+      const threshold = arrow ? npcRules(spec).arrowHit : spec.playerHit ?? (spec.unarmed || spec.dream ? 6 : fight.player.hit);
       const hit = roll >= threshold;
       const armour = spec.magicWeaponArmour ?? foe.armour ?? spec.armour;
       const bonus = spec.playerBonus ?? (spec.unarmed || spec.dream ? 0 : spec.dragon && fight.player.dragonEJ ? 10 : fight.player.bonus);
       const immune = spec.magicOnly || spec.magicWeaponArmour !== undefined && !fight.player.magicalWeapon;
-      const damage = immune ? 0 : arrow ? (hit ? 10 : 0) : denDamage(roll, threshold, bonus + fight.nextBonus, armour);
+      const damage = immune ? 0 : arrow ? (hit ? npcRules(spec).arrowDamage : 0) : denDamage(roll, threshold, bonus + fight.nextBonus, armour);
       if (arrow) fight.arrows--;
       if (hit && !immune && !spec.dream) { fight.nextBonus = 0; fight.player.pendingWallop = 0; }
       hurtEnemy(fight, foe, damage);
       fight.events.push({ kind: 'player', index, roll, hit, damage, arrow });
       if (spec.shapes && foe.life > 0) {
-        fight.player.life = Math.max(0, fight.player.life - 15);
-        fight.playerLoss += 15;
+        const damage = npcRules(spec).blendDamage;
+        fight.player.life = Math.max(0, fight.player.life - damage);
+        fight.playerLoss += damage;
         foe.life = 0;
-        fight.events.push({ kind: 'blend', index, damage: 15 });
+        fight.events.push({ kind: 'blend', index, damage });
       }
       settle(fight);
     }
@@ -167,10 +178,10 @@ export function rollDenRound(fight, target = 0, random = Math.random) {
   if (!fight.spec.shapes && !active(fight).some(entry => entry.index === target)) throw new RangeError('Invalid target');
   fight.rounds++;
   fight.events = [];
-  const ranged = fight.spec.arrows && fight.rounds <= 8;
+  const ranged = fight.spec.arrows && fight.rounds <= npcRules(fight.spec).rangedRounds;
   if (fight.first === 'enemy' && !ranged) enemyTurn(fight, random);
   if (fight.status === 'fighting' && !fight.poisonPending) playerTurn(fight, target, random);
-  if (fight.status === 'fighting' && !fight.poisonPending && (fight.first === 'player' || ranged) && !(fight.spec.arrows && fight.rounds < 8)) enemyTurn(fight, random);
+  if (fight.status === 'fighting' && !fight.poisonPending && (fight.first === 'player' || ranged) && !(fight.spec.arrows && fight.rounds < npcRules(fight.spec).rangedRounds)) enemyTurn(fight, random);
   if (fight.status === 'fighting' && fight.spec.roundLimit && fight.rounds >= fight.spec.roundLimit) { fight.player.life = 0; settle(fight); }
   return fight.events;
 }
@@ -180,11 +191,12 @@ export function resolveDenPoison(fight, random = Math.random) {
   const roll = dice(random);
   fight.poisonPending = false;
   fight.foes[0].consecutiveHits = 0;
-  if (roll <= 4) fight.player.life = 0;
-  else if (roll <= 8) fight.player.poisonProtected = true;
-  else if (roll === 9) fight.foes[0].life = 0;
+  const rules = DEN_RULES.poisonResults;
+  if (roll <= rules.fatalMax) fight.player.life = 0;
+  else if (roll <= rules.protectedMax) fight.player.poisonProtected = true;
+  else if (roll === rules.enemyDiesAt) fight.foes[0].life = 0;
   else {
-    fight.player.life = Math.floor(fight.player.life / 2);
+    fight.player.life = Math.floor(fight.player.life / rules.escapeLifeDivisor);
     fight.status = 'escaped';
   }
   settle(fight);
@@ -198,7 +210,7 @@ export function castDenSpell(fight, spell, target = 0, random = Math.random) {
   const p = fight.player;
   const limit = spell === 'invisibility' ? 1 : 3;
   if ((p.spellUses[spell] ?? 0) >= limit || p.spellCharged[spell]) return null;
-  if (spell === 'invisibility' && ![98, 130, 136, 137, 172].includes(fight.spec.section)) return null;
+  if (spell === 'invisibility' && !denInvisibilityAllowed(fight.spec)) return null;
   if (['pad', 'pill'].includes(spell) && !active(fight).some(entry => entry.index === target)) return null;
   const cost = spell === 'invisibility' ? 15 : 3;
   p.spellUses[spell] = (p.spellUses[spell] ?? 0) + 1;

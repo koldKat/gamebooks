@@ -1,8 +1,9 @@
+import { REBEL_RULES } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, SVG_SKULL, SVG_TROPHY, _appendLog, _checkField, _data, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _resolveRoundEnd, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _skipLuck, _testLuck, apiFetch, closeSim214, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim214, openSim214, registerPanelShortcut, renderSim214, saveState, setSim214Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ REBEL_RULES, ALL_PANEL_OVERLAY_IDS, SVG_SKULL, SVG_TROPHY, _appendLog, _checkField, _data, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _resolveRoundEnd, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _skipLuck, _testLuck, apiFetch, closeSim214, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim214, openSim214, registerPanelShortcut, renderSim214, saveState, setSim214Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _resetEncounterKnobs, _runRound, _resolveRoundEnd, _testLuck, _skipLuck, _resetBattle } = createCombat(simulatorContext);
 // END SIMULATOR WIRING

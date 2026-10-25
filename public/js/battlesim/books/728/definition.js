@@ -1,3 +1,5 @@
+import { createRosterLoader } from '../../roster-data.js';
+
 export const definition = Object.freeze({
   id: 728, title: 'Златния галеон срещу Веселия Роджър',
   family: 'golden-galleon', stateKey: 'sim728', i18nPrefix: 'battlesim728',
@@ -16,7 +18,10 @@ export const ARCS = Object.freeze({
   aft: { power: [18, 12, 8], range: [8, 6, 6], cost: 1 },
   stern: { power: [8, 6, 4], range: [6, 4, 4], cost: 1 },
 });
-export const PIRATES = Object.freeze({ A: { durability: 60 }, B: { durability: 30 } });
+export let PIRATES = Object.freeze({});
+export const loadRoster = createRosterLoader(728, 'PIRATES', entries => {
+  PIRATES = Object.freeze(Object.fromEntries(entries.map(({key, profile}) => [key, profile])));
+});
 export const DIAGRAMS = Object.freeze({
   56: '82c8196999db22496c2fccc1b00ac59bcc812699535780f7171ad1c84146c65e',
   57: 'b6a511057dc9ff32938f6edbf06cd2f3c883874f922c177aa614436e8abaa2ca',

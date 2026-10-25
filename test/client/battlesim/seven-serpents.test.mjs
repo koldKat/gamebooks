@@ -1,21 +1,65 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
-import { ENCOUNTERS, SPELL_ENCOUNTERS, encounterFor } from '../../../public/js/battlesim/books/723/definition.js';
+import { ENCOUNTERS, SPELL_ENCOUNTERS, SERPENT_RULES, encounterFor } from '../../../public/js/battlesim/books/723/definition.js';
 import * as rules from '../../../public/js/battlesim/books/723/combat.js';
 import * as effects from '../../../public/js/battlesim/books/723/effects.js';
 import { createState } from '../../../public/js/battlesim/books/723/state.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim723.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim723.js';
 
+await loadFixtureRoster(723);
+
 const rolls = (...values) => () => { assert.ok(values.length, 'Unexpected die'); return values.shift(); };
 const hero = changes => ({ ...rules.newCharacter('wizard', () => 6), ...changes });
+
+test('723: extra arrow, acid and Earth Serpent effects read metadata and preserve saved wounds', () => {
+  const original=structuredClone(SERPENT_RULES);
+  try {
+    SERPENT_RULES.extraArrow={hitMaximum:4,damage:5};
+    const arrows=rules.startFight(445,hero(),{},rolls(4,6,6,6));
+    assert.equal(arrows.player.stamina,17);
+    SERPENT_RULES.acid.damageByRoll[1]=7;SERPENT_RULES.acid.skillLoss=2;
+    const fight=rules.startFight(286,hero(),{applyEntry:false});
+    fight.acidStarted=true;fight.rounds=4;fight.enemies[0].stamina=7;
+    fight.pending=[{kind:'player-hit',enemy:0,damage:2}];fight.extension={keep:true};
+    const saved=JSON.parse(JSON.stringify(fight)),snapshot=structuredClone(saved);
+    const resolved=rules.resolveLuck(saved,false,rolls(2));
+    assert.equal(resolved.player.stamina,17);assert.equal(resolved.player.skill,8);
+    assert.equal(resolved.enemies[0].stamina,5);assert.equal(resolved.rounds,4);
+    assert.deepEqual(resolved.extension,{keep:true});assert.deepEqual(saved,snapshot);
+    SERPENT_RULES.earthLift={damage:7,destination:999};
+    assert.equal(effects.liftEarthSerpent(hero({luck:1}),false,rolls(6,6)).character.stamina,17);
+    assert.equal(effects.liftEarthSerpent(hero(),false,rolls(1,1,1,1)).destination,999);
+  } finally { Object.assign(SERPENT_RULES,original); }
+});
+
+test('723: fire-fox route, elemental eligibility and air-serpent damage read metadata', () => {
+  const original=structuredClone(SERPENT_RULES);
+  try {
+    SERPENT_RULES.fireFoxNotice=999;
+    let fight=rules.startFight(256,hero(),{applyEntry:false});
+    fight.pending=[{kind:'player-hit',enemy:0,damage:2}];
+    assert.equal(rules.resolveLuck(fight,false).noticeDestination,999);
+    SERPENT_RULES.elementalStaff={enemies:['wildBear'],penalty:4};
+    fight=rules.startFight(139,hero({elementalStaff:true}),{applyEntry:false});
+    assert.equal(rules.round(fight,0,()=>1).events[0].enemyAS,6);
+    fight=rules.startFight(261,hero({skill:0}),{applyEntry:false});
+    fight.config.enemyStreakDamage=[2,6,18,54];fight.enemyStreak=4;
+    assert.equal(rules.round(fight,0,()=>1).pending[0].damage,162);
+  } finally { Object.assign(SERPENT_RULES,original); }
+});
 
 test('723: backend rewards each fresh combat outcome once, never cancelled or redirected fights', () => {
   const events=[],db={exec(){},transaction:fn=>()=>fn(),prepare:()=>({run(){},all:()=>[],get:()=>({id:723,total_sections:498,is_container:0})})};
   const scope={module:{exports:{}},events,require(name){
     if(name==='./connection')return{db};
+    if(name==='./diamonds')return{diamondInfoForUser:()=>({})};
+    if(name==='./rubies')return{rubyInfoForUser:()=>({}),createRubyCompletionChecker:()=>()=>0};
+    if(name==='./heartbeat-coins')return{advanceHeartbeatCoins:()=>0};
+    if(name==='./job-xp')return{getJobTitle:()=>''};
     if(name==='./auth')return{generateToken:()=> 'test-only'};
     if(name==='../impersonation-context')return{isImpersonatingContext:()=>false};
     if(name==='../clean-run')return{isCleanRun:()=>false};

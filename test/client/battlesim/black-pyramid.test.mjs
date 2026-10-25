@@ -2,7 +2,7 @@ import { loadFixtureRoster } from './roster-fixtures.mjs';
 await loadFixtureRoster(522);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { PYRAMID_ENCOUNTERS, createPyramidFight, rollPyramidRound, settlePyramidRound, escapePyramidFight, treatPyramidBites } from '../../../public/js/battlesim/engines/skyfall/black-pyramid.js';
+import { PYRAMID_ENCOUNTERS, createPyramidFight, rollPyramidRound, settlePyramidRound, escapePyramidFight, treatPyramidBites, activePyramidFoeCount } from '../../../public/js/battlesim/engines/skyfall/black-pyramid.js';
 
 const player = overrides => ({ expertise: 12, vitality: 20, fortune: 10, weaponDamage: 2, ...overrides });
 const sequence = (...values) => { let i = 0; return () => { assert.ok(i < values.length, 'Unexpected coin toss'); return values[i++]; }; };
@@ -151,4 +151,56 @@ test('pending Fortune choices survive serialization and refuse a second roll', (
   assert.equal(rollPyramidRound(reopened), null);
   settlePyramidRound(reopened, reopened.pending.selection);
   assert.equal(reopened.player.vitality, 20);
+});
+
+test('renamed creature metadata controls damage, regeneration and active tendrils', () => {
+  const originals = structuredClone(PYRAMID_ENCOUNTERS);
+  try {
+    const scorpion = PYRAMID_ENCOUNTERS.find(e => e.mode === 'scorpion');
+    scorpion.section = 900;
+    scorpion.npcRules = { doubleHitDamage: 9, poisonedDoubleHitDamage: 2 };
+    const f = createPyramidFight(900, player({ expertise: 0 }));
+    assert.equal(rollPyramidRound(f, 0, coins(0, 0, 0)).enemyDamage, 9);
+    settlePyramidRound(f);
+    assert.equal(rollPyramidRound(f, 0, coins(0, 0, 0)).enemyDamage, 2);
+
+    const troll = PYRAMID_ENCOUNTERS.find(e => e.mode === 'troll');
+    troll.section = 901;
+    troll.npcRules = { stunningVitalityBelow: 8, regeneration: 3 };
+    const g = createPyramidFight(901, player({ expertise: 30, vitality: 7 }));
+    assert.equal(g.encounter.stunning, true);
+    g.regenerating = true; g.encounter.foes[0].vitality = 1;
+    rollPyramidRound(g, 0, coins(0, 0));
+    assert.equal(g.encounter.foes[0].vitality, 4);
+
+    const tendrils = PYRAMID_ENCOUNTERS.find(e => e.mode === 'tendrils');
+    tendrils.section = 902;
+    tendrils.npcRules = { initialActiveFoes: 1, maxActiveFoes: 2, tendrilHitDamage: 3 };
+    const h = createPyramidFight(902, player({ expertise: 30 }));
+    assert.equal(activePyramidFoeCount(h), 1);
+    assert.equal(rollPyramidRound(h, 0, coins(0, 0)).hits[0].damage, 3);
+    h.round = 10;
+    assert.equal(activePyramidFoeCount(h), 2);
+  } finally { PYRAMID_ENCOUNTERS.splice(0, PYRAMID_ENCOUNTERS.length, ...originals); }
+});
+
+test('old saved encounters resolve metadata without replacing pending results or mutating on lookup', () => {
+  const f = createPyramidFight(241, player({ expertise: 0 }));
+  delete f.encounter.npcRules;
+  rollPyramidRound(f, 0, coins(0, 0, 0));
+  f.pending.selection = { defensePoints: 2 };
+  const saved = JSON.parse(JSON.stringify(f)), before = structuredClone(saved);
+  assert.equal(rollPyramidRound(saved), null);
+  assert.deepEqual(saved, before);
+  settlePyramidRound(saved, saved.pending.selection);
+  assert.equal(saved.player.vitality, 16);
+  assert.equal(saved.poisoned, true);
+  assert.equal(saved.encounter.npcRules, undefined);
+  assert.equal(rollPyramidRound(saved, 0, coins(0, 0, 0)).enemyDamage, 4);
+
+  const tendrils = createPyramidFight(250, player());
+  delete tendrils.encounter.npcRules;
+  const serialized = JSON.stringify(tendrils);
+  assert.equal(activePyramidFoeCount(tendrils), 3);
+  assert.equal(JSON.stringify(tendrils), serialized);
 });

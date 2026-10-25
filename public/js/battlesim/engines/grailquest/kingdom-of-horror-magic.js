@@ -1,6 +1,7 @@
 import { kingdomTargets, prepareKingdomMagic, finishKingdomMagic,
   damageKingdomPlayer, damageKingdomEnemy, settleKingdomFight }
   from './kingdom-of-horror.js';
+import { KINGDOM_RULES, KINGDOM_FRED } from './kingdom-of-horror-roster.js';
 
 const die = random => 1 + Math.floor(random() * 6);
 const dice = random => die(random) + die(random);
@@ -68,9 +69,9 @@ export function kingdomCast(f, item, index, settings = {}, random = Math.random)
     case 'xerox': f.xerox = true; break;
     case 'deathbell': {
       event.roll = die(random);
-      const fred = { name: 'Fred', life: 66, maxLife: 66, hit: 4, bonus: 7,
-        armour: 0, hitCount: 0, bypassed: false, sleepRounds: 0, spellsUsed: 0 };
-      if (event.roll <= 2) {
+      const fred = { ...KINGDOM_FRED, maxLife: KINGDOM_FRED.life,
+        hitCount: 0, bypassed: false, sleepRounds: 0, spellsUsed: 0 };
+      if (event.roll <= KINGDOM_RULES.deathbell.enemyMax) {
         f.enemyAlly = true;
         f.foes.push(fred);
       } else f.ally = { ...fred, expiresAfterFight: true };

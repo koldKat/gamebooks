@@ -1,9 +1,9 @@
-import { FIRESPRITE_LUCKY_DMG, FIRESPRITE_UNLUCKY_DMG, FIRESPRITE_BASELINE_DMG, GHOUL_PARALYSIS_THRESHOLD } from './definition.js';
+import { FIRESPRITE_LUCKY_DMG, FIRESPRITE_UNLUCKY_DMG, FIRESPRITE_BASELINE_DMG, GHOUL_PARALYSIS_THRESHOLD, KRIS_KNIFE_RULES } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, FIRESPRITE_BASELINE_DMG, FIRESPRITE_LUCKY_DMG, FIRESPRITE_UNLUCKY_DMG, GHOUL_PARALYSIS_THRESHOLD, SVG_SKULL, SVG_TROPHY, _appendLog, _checkGhoulParalysis, _data, _effectiveSkill, _enemyFloor, _enemyList, _enemyName, _enemyNameSafe, _krisBonus, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderItemsHtml, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _skipLuck, _testLuck, apiFetch, closeSim206, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim206, openSim206, registerPanelShortcut, renderSim206, saveState, setSim206Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, KRIS_KNIFE_RULES, FIRESPRITE_BASELINE_DMG, FIRESPRITE_LUCKY_DMG, FIRESPRITE_UNLUCKY_DMG, GHOUL_PARALYSIS_THRESHOLD, SVG_SKULL, SVG_TROPHY, _appendLog, _checkGhoulParalysis, _data, _effectiveSkill, _enemyFloor, _enemyList, _enemyName, _enemyNameSafe, _krisBonus, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderItemsHtml, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _skipLuck, _testLuck, apiFetch, closeSim206, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim206, openSim206, registerPanelShortcut, renderSim206, saveState, setSim206Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _krisBonus, _effectiveSkill, _resetEncounterKnobs, _enemyFloor, _runRound, _checkGhoulParalysis, _testLuck, _skipLuck, _resetBattle } = createCombat(simulatorContext);
 // END SIMULATOR WIRING

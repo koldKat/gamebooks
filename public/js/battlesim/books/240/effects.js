@@ -6,7 +6,7 @@ function _useSpearAutoWin() {
 
   const d = _data();
   if (!d || _notReady(d) || !d.player.hasSpear || d.player.spearLifeForce <= 0) return;
-  if (d.player.stamina <= 0 || d.enemy.stamina <= 0) return;
+  if (d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
   d.player.spearLifeForce--;
   d.enemy.stamina = 0;
   _appendLog(d, t('battlesim240.log.spear_autowin', { enemy: _enemyNameSafe(d), n: d.player.spearLifeForce }));

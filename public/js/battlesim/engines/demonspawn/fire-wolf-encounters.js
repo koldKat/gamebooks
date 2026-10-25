@@ -8,9 +8,10 @@ export let FIRE_WOLF_ENCOUNTERS = Object.freeze([]);
 export const loadRoster = createRosterLoader(534, 'BOOK_DATA', rows => {
   const enemies = rows.filter(row => row.kind === 'fixed').map(row => row.enemy);
   const encounters = rows.flatMap(row => row.encounters).sort((a,b) => a.index-b.index);
-  if (!enemies.length || !encounters.length || new Set(encounters.map(row => row.index)).size !== encounters.length) throw new Error('Incomplete Fire*Wolf catalog');
+  const rules = rows.find(row => row.support)?.support.rules;
+  if (!enemies.length || !encounters.length || !rules?.regent || new Set(encounters.map(row => row.index)).size !== encounters.length) throw new Error('Incomplete Fire*Wolf catalog');
   const presets = Object.freeze(encounters.map(({spec}) => Object.freeze({...spec, enemies: Object.freeze(spec.enemies)})));
-  installFireWolfRoster(enemies);
+  installFireWolfRoster(enemies, rules);
   FIRE_WOLF_ENCOUNTERS = presets;
 });
 

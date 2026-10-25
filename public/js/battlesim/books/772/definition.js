@@ -1,3 +1,6 @@
+import { createRosterLoader } from '../../roster-data.js';
+import { kungFuLegacyAction } from '../../engines/kung-fu.js';
+
 // Book identity and declarative defaults; no DOM or saved-state access.
 export const definition = Object.freeze({
   "id": 772,
@@ -17,3 +20,10 @@ export const PLAYER_STAT_KEYS = [
   ['reflex',   'battlesim772.stat.reflex'],
   ['speed',    'battlesim772.stat.speed'],
 ];
+
+export let ROSTER = [];
+export const loadRoster = createRosterLoader(772, 'ROSTER', entries => {
+  ROSTER = entries.map(profile => ({...profile, pattern(round) {
+    return kungFuLegacyAction(profile, round);
+  }}));
+});

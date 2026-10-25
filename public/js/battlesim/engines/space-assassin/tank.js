@@ -80,7 +80,7 @@ export function resolveTankEncounter(original, definition, roll = die) {
     return finish();
   }
   if (effect.kind === 'enemyFirst') {
-    const value = dice(1, roll), hit = value !== 1;
+    const value = dice(1, roll), hit = value !== effect.missRoll;
     if (hit) state.shields--;
     state.status = nextStatus(state.status, definition);
     state.events.push({ kind: 'enemyShot', roll: value, hit, shields: state.shields });

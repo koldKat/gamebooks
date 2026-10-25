@@ -36,7 +36,169 @@
               "defence": 10,
               "stamina": 12
             }
-          ]
+          ],
+          "support": {
+            "seaChecks": {
+              "11": {
+                "kind": "storm",
+                "destinations": [
+                  135,
+                  106,
+                  236
+                ],
+                "blessingDestination": 236
+              },
+              "135": {
+                "kind": "shipwreck",
+                "destinations": [
+                  7,
+                  436
+                ]
+              },
+              "161": {
+                "kind": "storm",
+                "destinations": [
+                  314,
+                  386,
+                  296
+                ],
+                "blessingDestination": 296
+              },
+              "288": {
+                "kind": "shipwreck",
+                "destinations": [
+                  7,
+                  67
+                ]
+              },
+              "314": {
+                "kind": "shipwreck",
+                "destinations": [
+                  7,
+                  524
+                ]
+              },
+              "338": {
+                "kind": "naval",
+                "bounds": [
+                  15,
+                  18
+                ],
+                "destinations": [
+                  282,
+                  240,
+                  149
+                ]
+              },
+              "392": {
+                "kind": "naval",
+                "bounds": [
+                  10,
+                  15
+                ],
+                "destinations": [
+                  282,
+                  240,
+                  149
+                ]
+              },
+              "451": {
+                "kind": "escape",
+                "destinations": [
+                  419,
+                  236
+                ]
+              },
+              "512": {
+                "kind": "storm",
+                "destinations": [
+                  540,
+                  453,
+                  438
+                ],
+                "blessingDestination": 438
+              },
+              "540": {
+                "kind": "shipwreck",
+                "destinations": [
+                  7,
+                  585
+                ]
+              },
+              "608": {
+                "kind": "shipwreck",
+                "destinations": [
+                  7,
+                  549
+                ]
+              },
+              "642": {
+                "kind": "storm",
+                "destinations": [
+                  608,
+                  489,
+                  580
+                ],
+                "blessingDestination": 580
+              },
+              "645": {
+                "kind": "storm",
+                "destinations": [
+                  288,
+                  358,
+                  533
+                ],
+                "blessingDestination": 533
+              }
+            },
+            "rules": {
+              "shipDice": {
+                "barque": 1,
+                "brigantine": 2,
+                "galleon": 3
+              },
+              "warriorNavalDice": 3,
+              "otherDice": 2,
+              "crewModifiers": {
+                "naval": {
+                  "poor": -2,
+                  "average": 0,
+                  "good": 2,
+                  "excellent": 3
+                },
+                "storm": {
+                  "poor": 0,
+                  "average": 0,
+                  "good": 1,
+                  "excellent": 2
+                },
+                "escape": {
+                  "poor": 0,
+                  "average": 0,
+                  "good": 1,
+                  "excellent": 2
+                }
+              },
+              "rankKinds": [
+                "naval",
+                "escape"
+              ],
+              "thresholds": {
+                "storm": [
+                  3,
+                  5
+                ],
+                "escape": [
+                  10
+                ]
+              },
+              "wreckDamageDice": 1,
+              "wreckSurvivorOutcome": 1,
+              "deathDestination": 7,
+              "navalWinOutcome": 2,
+              "navalLossOutcome": 0
+            }
+          }
         },
         "part": {
           "name": "Faery Hound",

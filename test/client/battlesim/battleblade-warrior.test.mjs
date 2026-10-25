@@ -10,7 +10,7 @@ function fixture(saved) {
   const pt = saved ? {sim227:structuredClone(saved)} : {};
   const dice = [];
   const context = vm.createContext({
-    currentPlaythrough:()=>pt, saveState:()=>{}, escapeHtml:v=>v,
+    currentPlaythrough:()=>pt, saveState:()=>{}, showAlert:()=>{}, escapeHtml:v=>v,
     t:(key,params)=>JSON.stringify({key,params}),
     Math:Object.assign(Object.create(Math),{random:()=>{
       assert.ok(dice.length,'unexpected dice roll');
@@ -81,3 +81,22 @@ test('ties and configured main-enemy wounds remain unchanged',()=>{
   f.roll(1,1,6,6);
   assert.equal(f.d.player.stamina,17);
 });
+
+for (const legacy of [false,true]) {
+  test(`nonlethal victory blocks further combat (${legacy?'legacy':'source'})`,()=>{
+    const saved=ready(fixture()).d;if(legacy)delete saved.combatRulesVersion;
+    saved.player.enemyStaminaFloor=4;saved.enemy.stamina=4;saved.roundsThisBattle=5;
+    saved.history.push({enemy:'Main',outcome:'win',ts:1});
+    const f=fixture(saved),before=JSON.stringify(f.d);
+    f.run('_runRound()');assert.equal(JSON.stringify(f.d),before);
+  });
+  test(`meal is available after nonlethal victory (${legacy?'legacy':'source'})`,()=>{
+    const saved=ready(fixture()).d;if(legacy)delete saved.combatRulesVersion;
+    Object.assign(saved.player,{enemyStaminaFloor:4,stamina:10,provisions:2,hitsLandedThisFight:3});
+    saved.enemy.stamina=4;saved.roundsThisBattle=5;saved.extension={kept:true};
+    const f=fixture(saved);f.run('_eatMeal()');
+    assert.equal(f.d.player.stamina,14);assert.equal(f.d.player.provisions,1);
+    assert.equal(f.d.enemy.stamina,4);assert.equal(f.d.roundsThisBattle,5);
+    assert.equal(f.d.player.hitsLandedThisFight,3);assert.equal(f.d.extension.kept,true);
+  });
+}

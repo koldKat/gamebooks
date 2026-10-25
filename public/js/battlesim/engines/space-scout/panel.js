@@ -1,7 +1,8 @@
 import { spaceScoutLoadout, spaceScoutPersonalEquipment, startSpaceScoutEncounter,
   spaceScoutDuelRound, spaceScoutDuelMissile, spaceScoutFleetOpening,
   spaceScoutFleetMissiles, spaceScoutFleetManeuver, spaceScoutCruiserAttack,
-  spaceScoutTorpedo, SPACE_SCOUT_DUEL_ENEMIES } from './core.js';
+  spaceScoutTorpedo, SPACE_SCOUT_DUEL_ENEMIES, SPACE_SCOUT_ENCOUNTERS, SPACE_SCOUT_RULES,
+  spaceScoutSpecial, spaceScoutRoute, spaceScoutFleetAllocation } from './core.js';
 import { createOpponentEditor } from '../../opponents.js';
 
 const ID = 'sim648';
@@ -9,7 +10,6 @@ const weapons = ['laser', 'plasma', 'ion', 'phaser'];
 const shields = ['small', 'medium', 'large'];
 const utilities = ['targeting', 'decoder', 'scanner', 'amplifier', 'jammer'];
 const gear = ['suit', 'armour', 'protection', 'blaster', 'launcher', 'bazooka', 'battery', 'bazookaBattery', 'grenade', 'medkit'];
-const encounters = ['manual', '12', '22', '30', '32', '36', '42', '49', '66', '24', '28', '34', '91'];
 const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 export function createSpaceScoutPanel({ document, t, getRun, getBookId, saveState,
@@ -85,14 +85,15 @@ export function createSpaceScoutPanel({ document, t, getRun, getBookId, saveStat
     const context = el('context').value;
     d.manualDice = el('manualDice').checked;
     snapshot(d); d.encounter = context === 'manual' ? opponents.read().map(enemy => enemy.displayName || t('battlesim.editor.bg.name')).join(' / ') : tk('context.' + context);
-    if (['24', '28', '34', '91'].includes(context)) {
+    if (spaceScoutSpecial(Number(context))) {
       d.special = Number(context); d.fight = null;
       d.log.push(tk('specialReady')); return;
     }
     d.special = null;
+    const route = spaceScoutRoute(Number(context));
     d.fight = startSpaceScoutEncounter(d.character, context === 'manual' ? context : Number(context), {
-      roll: dice(d), missiles: context === '30' ? openingMissiles() : [],
-      openingDamage: context === '32' ? number('openingDamage') : undefined,
+      roll: dice(d), missiles: route?.opening === 'missiles' ? openingMissiles() : [],
+      openingDamage: route?.opening === 'manual' ? number('openingDamage') : undefined,
       enemies: context === 'manual' ? opponents.read().map(enemy => ({name: enemy.displayName || t('battlesim.editor.bg.name'), attack: enemy.attack, shields: enemy.shields})) : undefined,
       shields: context === 'manual' ? number('remainingShields') : undefined,
     });
@@ -116,7 +117,7 @@ export function createSpaceScoutPanel({ document, t, getRun, getBookId, saveStat
     if (stage === 'headon') report(d, spaceScoutFleetOpening(d.fight, dice(d)));
     else if (stage === 'missiles-two' || stage === 'missiles-three') report(d, spaceScoutFleetMissiles(d.fight, shots()));
     else if (stage === 'maneuver') {
-      const count = d.fight.speed * d.fight.manoeuvre === 110 ? 1 : 2;
+      const count = spaceScoutFleetAllocation(d.fight).beams;
       report(d, spaceScoutFleetManeuver(d.fight,
         Array.from({ length: count }, (_, i) => number('beamTarget' + i, 2)), shots(), dice(d)));
     } else report(d, spaceScoutDuelRound(d.fight, dice(d)));
@@ -148,6 +149,8 @@ export function createSpaceScoutPanel({ document, t, getRun, getBookId, saveStat
       }]);
     }
     const active = busy(d), f = d.fight, c = d.character, context = el('context').value;
+    const route = spaceScoutRoute(Number(context)), special = spaceScoutSpecial(Number(context));
+    const fleetAllocation = spaceScoutFleetAllocation(f);
     opponents.lock(active);
     for (const field of el('setup').querySelectorAll('input,select,button')) field.disabled = active;
     el('configure').disabled = active;
@@ -155,17 +158,17 @@ export function createSpaceScoutPanel({ document, t, getRun, getBookId, saveStat
     el('attack').disabled = !active;
     el('cancel').disabled = !active;
     el('manualOpponent').hidden = context !== 'manual';
-    el('openingDamageRow').hidden = context !== '32';
-    el('openingMissiles').hidden = !['30', '24', '28', '34'].includes(context);
+    el('openingDamageRow').hidden = route?.opening !== 'manual';
+    el('openingMissiles').hidden = route?.opening !== 'missiles' && special?.missileLimit === undefined;
     el('dice').hidden = !(active ? d.manualDice : el('manualDice').checked);
     el('special').hidden = !d.special;
-    el('cruiserAttack').disabled = !d.special || d.special === 91;
+    el('cruiserAttack').disabled = !d.special || spaceScoutSpecial(d.special)?.missileLimit === undefined;
     el('torpedo').disabled = !d.special || !c?.inventory.torpedoes;
     const allocation = active && ['missiles-two', 'missiles-three', 'maneuver'].includes(f.stage);
     el('allocations').hidden = !allocation;
     el('beams').hidden = !active || f.stage !== 'maneuver';
-    el('beam1Row').hidden = !active || f.speed * f.manoeuvre === 110;
-    const shotLimit = f?.stage === 'maneuver' ? (f.speed * f.manoeuvre === 110 ? 2 : 1) : 3;
+    el('beam1Row').hidden = !active || fleetAllocation.beams < 2;
+    const shotLimit = fleetAllocation.missiles;
     for (const i of [0, 1, 2]) {
       el('shot' + i + 'Row').hidden = allocation && i >= shotLimit;
       if (i >= shotLimit) el('shot' + i).value = '';
@@ -194,6 +197,8 @@ export function createSpaceScoutPanel({ document, t, getRun, getBookId, saveStat
   const select = (key, values, target = false) => `<select class="inv-edit-input" id="${ID}-${key}" aria-label="${escape(tk(target ? 'target' : key.startsWith('shot') ? 'missileType' : key))}"${target ? ' data-target' : ''}>${values.map(value => `<option value="${value}">${escape(target ? tk('targetNumber', { n: Number(value) + 1 }) : tk(value ? key === 'context' ? 'context.' + value : value : 'none'))}</option>`).join('')}</select>`;
   function init() {
     if (el('overlay')) return;
+    const encounters = ['manual', ...SPACE_SCOUT_ENCOUNTERS.map(row => String(row.section)),
+      ...SPACE_SCOUT_RULES.specials.map(row => String(row.section))];
     const overlay = document.createElement('div');
     overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
     overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(tk('title'))}</span><button class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div id="${ID}-setup"><details><summary>${escape(tk('loadout'))}</summary><label class="inv-edit-row">${escape(tk('ship'))}${select('ship', ['centurion', 'morningstar', 'ghost'])}</label><div class="bsim-side">${weapons.map(key => input(key, key === 'laser' ? 2 : 0, 4)).join('')}${shields.map(key => input(key, key === 'small' ? 1 : 0, 3)).join('')}${utilities.map(check).join('')}${['krotal', 'leech'].map(key => input('mount-' + key, 0, 6)).join('')}</div><details><summary>${escape(tk('personalGear'))}</summary>${gear.map(key => input('gear-' + key, key === 'suit' ? 1 : 0, 10000)).join('')}</details>${button('configure')}</details><label class="inv-edit-row">${escape(tk('context'))}${select('context', encounters)}</label><div id="${ID}-manualOpponent">${input('enemyAttack', 50)}${input('enemyShields', 300)}${input('remainingShields', 100)}</div>${input('openingDamage')}<div id="${ID}-openingMissiles">${input('opening-krotal', 0, 12)}${input('opening-leech', 0, 12)}</div>${check('manualDice')}</div><div class="bsim-status" id="${ID}-character"></div><details id="${ID}-inventoryEdit"><summary>${escape(tk('inventoryEdit'))}</summary><p>${escape(tk('inventoryNote'))}</p>${['krotal', 'leech', 'torpedoes'].map(key => input('inventory-' + key, 0, 12)).join('')}${button('updateInventory')}</details><div class="bsim-btn-row">${button('start')}${button('cancel')}${button('attack')}</div><div id="${ID}-dice">${input('die1', 1, 6)}${input('die2', 1, 6)}</div><div id="${ID}-allocations"><p>${escape(tk('allocationNote'))}</p><div id="${ID}-beams">${[0, 1].map(i => `<label class="inv-edit-row" id="${ID}-beam${i}Row">${escape(tk('beamNumber', { n: i + 1 }))}${select('beamTarget' + i, ['0', '1', '2'], true)}</label>`).join('')}</div>${[0, 1, 2].map(i => `<div class="inv-edit-row" id="${ID}-shot${i}Row"><span>${escape(tk('missileNumber', { n: i + 1 }))}</span>${select('shot' + i, ['', 'krotal', 'leech'])}${select('shotTarget' + i, ['0', '1', '2'], true)}</div>`).join('')}</div><div id="${ID}-missileRow" class="bsim-btn-row">${select('missileType', ['krotal', 'leech'])}${button('fireMissile')}</div><div id="${ID}-special" class="bsim-btn-row">${button('cruiserAttack')}${button('torpedo')}</div><div class="bsim-status" id="${ID}-status"></div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;

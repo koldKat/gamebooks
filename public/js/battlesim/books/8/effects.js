@@ -5,8 +5,9 @@ function _usePotion() {
   const { POTION_HEAL_BONUS, _appendLog, _data, _renderInputs, _renderLog, saveState, t } = getContext();
 
   const d = _data();
+  if (!d) return;
   const inBattle = d.round > 1 && d.player.life > 0 && d.enemy.life > 0;
-  if (!d || inBattle || !d.items?.potion || d.player.life <= 0 || d.player.life >= d.player.lifeMax) return;
+  if (inBattle || !d.items?.potion || d.player.life <= 0 || d.player.life >= d.player.lifeMax) return;
 
   const roll  = 1 + Math.floor(Math.random() * 6);
   const heal  = roll + POTION_HEAL_BONUS;

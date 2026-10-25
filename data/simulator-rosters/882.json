@@ -26,7 +26,24 @@
               "sila": 5,
               "izdr": 5
             }
-          ]
+          ],
+          "support": {
+            "priorDamage": true,
+            "priorDamageOptions": [
+              {
+                "value": 0,
+                "key": "none"
+              },
+              {
+                "value": 4,
+                "key": "bottle"
+              },
+              {
+                "value": 6,
+                "key": "chair"
+              }
+            ]
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.rosario",
@@ -2384,7 +2401,34 @@
               "sila": 3,
               "izdr": 5
             }
-          ]
+          ],
+          "support": {
+            "removed": true,
+            "variants": [
+              {
+                "id": "village_middle",
+                "nameKey": "battlesim882.name.village_middle",
+                "type": "shpagi",
+                "start": 3,
+                "end": 8
+              },
+              {
+                "id": "village_last",
+                "nameKey": "battlesim882.name.village_last",
+                "type": "shpagi",
+                "start": 8
+              },
+              {
+                "id": "village_whip",
+                "nameKey": "battlesim882.name.village_whip",
+                "type": "shpagi",
+                "start": 9,
+                "settings": {
+                  "removed": true
+                }
+              }
+            ]
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier1",
@@ -2520,7 +2564,34 @@
               "sila": 3,
               "izdr": 5
             }
-          ]
+          ],
+          "support": {
+            "removed": true,
+            "variants": [
+              {
+                "id": "village_middle",
+                "nameKey": "battlesim882.name.village_middle",
+                "type": "shpagi",
+                "start": 3,
+                "end": 8
+              },
+              {
+                "id": "village_last",
+                "nameKey": "battlesim882.name.village_last",
+                "type": "shpagi",
+                "start": 8
+              },
+              {
+                "id": "village_whip",
+                "nameKey": "battlesim882.name.village_whip",
+                "type": "shpagi",
+                "start": 9,
+                "settings": {
+                  "removed": true
+                }
+              }
+            ]
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier2",
@@ -2656,7 +2727,34 @@
               "sila": 3,
               "izdr": 5
             }
-          ]
+          ],
+          "support": {
+            "removed": true,
+            "variants": [
+              {
+                "id": "village_middle",
+                "nameKey": "battlesim882.name.village_middle",
+                "type": "shpagi",
+                "start": 3,
+                "end": 8
+              },
+              {
+                "id": "village_last",
+                "nameKey": "battlesim882.name.village_last",
+                "type": "shpagi",
+                "start": 8
+              },
+              {
+                "id": "village_whip",
+                "nameKey": "battlesim882.name.village_whip",
+                "type": "shpagi",
+                "start": 9,
+                "settings": {
+                  "removed": true
+                }
+              }
+            ]
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier3",
@@ -2792,7 +2890,34 @@
               "sila": 3,
               "izdr": 5
             }
-          ]
+          ],
+          "support": {
+            "removed": true,
+            "variants": [
+              {
+                "id": "village_middle",
+                "nameKey": "battlesim882.name.village_middle",
+                "type": "shpagi",
+                "start": 3,
+                "end": 8
+              },
+              {
+                "id": "village_last",
+                "nameKey": "battlesim882.name.village_last",
+                "type": "shpagi",
+                "start": 8
+              },
+              {
+                "id": "village_whip",
+                "nameKey": "battlesim882.name.village_whip",
+                "type": "shpagi",
+                "start": 9,
+                "settings": {
+                  "removed": true
+                }
+              }
+            ]
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier4",
@@ -2928,7 +3053,34 @@
               "sila": 3,
               "izdr": 5
             }
-          ]
+          ],
+          "support": {
+            "removed": true,
+            "variants": [
+              {
+                "id": "village_middle",
+                "nameKey": "battlesim882.name.village_middle",
+                "type": "shpagi",
+                "start": 3,
+                "end": 8
+              },
+              {
+                "id": "village_last",
+                "nameKey": "battlesim882.name.village_last",
+                "type": "shpagi",
+                "start": 8
+              },
+              {
+                "id": "village_whip",
+                "nameKey": "battlesim882.name.village_whip",
+                "type": "shpagi",
+                "start": 9,
+                "settings": {
+                  "removed": true
+                }
+              }
+            ]
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier5",
@@ -3064,7 +3216,34 @@
               "sila": 3,
               "izdr": 5
             }
-          ]
+          ],
+          "support": {
+            "removed": true,
+            "variants": [
+              {
+                "id": "village_middle",
+                "nameKey": "battlesim882.name.village_middle",
+                "type": "shpagi",
+                "start": 3,
+                "end": 8
+              },
+              {
+                "id": "village_last",
+                "nameKey": "battlesim882.name.village_last",
+                "type": "shpagi",
+                "start": 8
+              },
+              {
+                "id": "village_whip",
+                "nameKey": "battlesim882.name.village_whip",
+                "type": "shpagi",
+                "start": 9,
+                "settings": {
+                  "removed": true
+                }
+              }
+            ]
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier6",
@@ -3200,7 +3379,34 @@
               "sila": 3,
               "izdr": 5
             }
-          ]
+          ],
+          "support": {
+            "removed": true,
+            "variants": [
+              {
+                "id": "village_middle",
+                "nameKey": "battlesim882.name.village_middle",
+                "type": "shpagi",
+                "start": 3,
+                "end": 8
+              },
+              {
+                "id": "village_last",
+                "nameKey": "battlesim882.name.village_last",
+                "type": "shpagi",
+                "start": 8
+              },
+              {
+                "id": "village_whip",
+                "nameKey": "battlesim882.name.village_whip",
+                "type": "shpagi",
+                "start": 9,
+                "settings": {
+                  "removed": true
+                }
+              }
+            ]
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier7",
@@ -3336,7 +3542,34 @@
               "sila": 3,
               "izdr": 5
             }
-          ]
+          ],
+          "support": {
+            "removed": true,
+            "variants": [
+              {
+                "id": "village_middle",
+                "nameKey": "battlesim882.name.village_middle",
+                "type": "shpagi",
+                "start": 3,
+                "end": 8
+              },
+              {
+                "id": "village_last",
+                "nameKey": "battlesim882.name.village_last",
+                "type": "shpagi",
+                "start": 8
+              },
+              {
+                "id": "village_whip",
+                "nameKey": "battlesim882.name.village_whip",
+                "type": "shpagi",
+                "start": 9,
+                "settings": {
+                  "removed": true
+                }
+              }
+            ]
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier8",
@@ -3472,7 +3705,34 @@
               "sila": 3,
               "izdr": 5
             }
-          ]
+          ],
+          "support": {
+            "removed": true,
+            "variants": [
+              {
+                "id": "village_middle",
+                "nameKey": "battlesim882.name.village_middle",
+                "type": "shpagi",
+                "start": 3,
+                "end": 8
+              },
+              {
+                "id": "village_last",
+                "nameKey": "battlesim882.name.village_last",
+                "type": "shpagi",
+                "start": 8
+              },
+              {
+                "id": "village_whip",
+                "nameKey": "battlesim882.name.village_whip",
+                "type": "shpagi",
+                "start": 9,
+                "settings": {
+                  "removed": true
+                }
+              }
+            ]
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier9",
@@ -3608,7 +3868,34 @@
               "sila": 3,
               "izdr": 5
             }
-          ]
+          ],
+          "support": {
+            "removed": true,
+            "variants": [
+              {
+                "id": "village_middle",
+                "nameKey": "battlesim882.name.village_middle",
+                "type": "shpagi",
+                "start": 3,
+                "end": 8
+              },
+              {
+                "id": "village_last",
+                "nameKey": "battlesim882.name.village_last",
+                "type": "shpagi",
+                "start": 8
+              },
+              {
+                "id": "village_whip",
+                "nameKey": "battlesim882.name.village_whip",
+                "type": "shpagi",
+                "start": 9,
+                "settings": {
+                  "removed": true
+                }
+              }
+            ]
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier10",
@@ -3744,7 +4031,34 @@
               "sila": 3,
               "izdr": 5
             }
-          ]
+          ],
+          "support": {
+            "removed": true,
+            "variants": [
+              {
+                "id": "village_middle",
+                "nameKey": "battlesim882.name.village_middle",
+                "type": "shpagi",
+                "start": 3,
+                "end": 8
+              },
+              {
+                "id": "village_last",
+                "nameKey": "battlesim882.name.village_last",
+                "type": "shpagi",
+                "start": 8
+              },
+              {
+                "id": "village_whip",
+                "nameKey": "battlesim882.name.village_whip",
+                "type": "shpagi",
+                "start": 9,
+                "settings": {
+                  "removed": true
+                }
+              }
+            ]
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier11",
@@ -3880,7 +4194,34 @@
               "sila": 3,
               "izdr": 5
             }
-          ]
+          ],
+          "support": {
+            "removed": true,
+            "variants": [
+              {
+                "id": "village_middle",
+                "nameKey": "battlesim882.name.village_middle",
+                "type": "shpagi",
+                "start": 3,
+                "end": 8
+              },
+              {
+                "id": "village_last",
+                "nameKey": "battlesim882.name.village_last",
+                "type": "shpagi",
+                "start": 8
+              },
+              {
+                "id": "village_whip",
+                "nameKey": "battlesim882.name.village_whip",
+                "type": "shpagi",
+                "start": 9,
+                "settings": {
+                  "removed": true
+                }
+              }
+            ]
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier12",
@@ -4744,7 +5085,10 @@
               "sila": 4,
               "izdr": 2
             }
-          ]
+          ],
+          "support": {
+            "removed": true
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier1",
@@ -4808,7 +5152,10 @@
               "sila": 4,
               "izdr": 2
             }
-          ]
+          ],
+          "support": {
+            "removed": true
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier2",
@@ -4872,7 +5219,10 @@
               "sila": 4,
               "izdr": 2
             }
-          ]
+          ],
+          "support": {
+            "removed": true
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier3",
@@ -4936,7 +5286,10 @@
               "sila": 4,
               "izdr": 2
             }
-          ]
+          ],
+          "support": {
+            "removed": true
+          }
         },
         "part": {
           "nameKey": "battlesim882.enemy.soldier4",

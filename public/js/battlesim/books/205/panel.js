@@ -1,10 +1,10 @@
-import { POTIONS, MAX_PROVISIONS, PROVISIONS_HEAL, ICE_DEMON_GAS_DMG, WHITE_DRAGON_BREATH_DMG, SIDE_WOUND_DMG } from './definition.js';
+import { POTIONS, MAX_PROVISIONS, PROVISIONS_HEAL, ICE_DEMON_GAS_DMG, WHITE_DRAGON_BREATH_DMG, SIDE_WOUND_DMG, SNOW_RULES } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ICE_DEMON_GAS_DMG, MAX_PROVISIONS, POTIONS, PROVISIONS_HEAL, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, WHITE_DRAGON_BREATH_DMG, _appendLog, _bansheeCheck, _data, _eatProvisions, _effectiveSkill, _enemyFloor, _enemyList, _enemyName, _enemyNameSafe, _extraRoundEffects, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderItemsHtml, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _sideEnemyNameSafe, _skipLuck, _testLuck, _usePotion, apiFetch, closeSim205, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim205, openSim205, registerPanelShortcut, renderSim205, saveState, setSim205Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ SNOW_RULES, ALL_PANEL_OVERLAY_IDS, ICE_DEMON_GAS_DMG, MAX_PROVISIONS, POTIONS, PROVISIONS_HEAL, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, WHITE_DRAGON_BREATH_DMG, _appendLog, _bansheeCheck, _data, _eatProvisions, _effectiveSkill, _enemyFloor, _enemyList, _enemyName, _enemyNameSafe, _extraRoundEffects, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderItemsHtml, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _sideEnemyNameSafe, _skipLuck, _testLuck, _usePotion, apiFetch, closeSim205, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim205, openSim205, registerPanelShortcut, renderSim205, saveState, setSim205Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _effectiveSkill, _resetEncounterKnobs, _enemyFloor, _bansheeCheck, _extraRoundEffects, _runRound, _testLuck, _skipLuck, _resetBattle } = createCombat(simulatorContext);
 const { _eatProvisions, _usePotion } = createEffects(simulatorContext);

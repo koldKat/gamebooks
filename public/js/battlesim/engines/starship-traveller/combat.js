@@ -15,14 +15,17 @@ const living = (fight, enemy = false) => enemy
   ? fight.enemies.map((row, i) => row.stamina > (fight.config.enemyFloor ?? 0) ? i : -1).filter(i => i >= 0)
   : fight.party.filter(key => fight.character.crew[key].stamina > 0);
 
-export function createCombat({CREW, COMPANIONS, OFFICERS, encounterFor}) {
+export function createCombat({CREW, COMPANIONS, OFFICERS, encounterFor, getCompanionPresets, getRules}) {
 function newCharacter(random = Math.random) {
   const crew = Object.fromEntries(CREW.map(key => {
     const skill = die(random) + 6, stamina = total(dice(random)) + 12;
     return [key, {skill, skillInitial: skill, stamina, staminaInitial: stamina, replaced: false}];
   }));
-  crew.macom = {skill: 9, skillInitial: 9, stamina: 12, staminaInitial: 12, replaced: false};
-  crew.eagle = {skill: 6, skillInitial: 6, stamina: 5, staminaInitial: 5, replaced: false};
+  const profiles = getCompanionPresets();
+  for (const key of COMPANIONS) {
+    const {skill, stamina} = profiles[key];
+    crew[key] = {skill, skillInitial: skill, stamina, staminaInitial: stamina, replaced: false};
+  }
   const weapons = die(random) + 6, shields = die(random) + 12, luck = die(random) + 6;
   return {crew, ship: {weapons, weaponsInitial: weapons, shields, shieldsInitial: shields, destroyed: false}, luck, luckInitial: luck, helmet: false};
 }
@@ -77,11 +80,11 @@ function startFight(section, character, setup = {}, random = Math.random) {
   if (config.party) party = party.filter(key => c.crew[key].stamina > 0 && !c.crew[key].replaced);
   if (config.pairedCrew) enemies = enemies.filter((_, i) => party.includes(CREW[i]));
   if (!party.length || party.some(key => ![...CREW, ...COMPANIONS].includes(key) || !c.crew[key].stamina || c.crew[key].replaced)) throw new RangeError('Invalid away team');
-  if (config.dividedCaptain) Object.assign(c.crew.captain, {skill: 6, stamina: 7});
+  if (config.dividedCaptain) Object.assign(c.crew.captain, config.dividedCaptainStats);
   if (config.madCrew) {
     const mad = c.crew[setup.madKey ?? 'guard1'];
     if (!mad || mad.stamina <= 0 || (setup.madKey ?? 'guard1') === 'captain') throw new RangeError('Invalid opponent crew');
-    enemies[0] = {...enemies[0], skill: mad.skill + 3, stamina: mad.stamina, initial: mad.stamina};
+    enemies[0] = {...enemies[0], skill: mad.skill + config.madSkillBonus, stamina: mad.stamina, initial: mad.stamina};
     config.madKey = setup.madKey ?? 'guard1';
     party = ['captain'];
   }
@@ -110,10 +113,10 @@ function damage(fight, player, enemyIndex, outgoing, random) {
   let amount = 2, roll;
   if (outgoing && c.revealArmour) {
     c.revealArmour = false; c.armour = true;
-    fight.events.push({kind: 'armourRevealed', destination: 183}); return;
+    fight.events.push({kind: 'armourRevealed', destination: c.armourDestination ?? encounterFor(fight.section)?.armourDestination}); return;
   }
-  if (outgoing && c.armour) { roll = die(random); amount = roll >= 5 ? 1 : 0; }
-  if (!outgoing && c.nerve) { roll = die(random); amount = roll >= 4 ? 4 : 2; }
+  if (outgoing && c.armour) { const rule = getRules().armour; roll = die(random); amount = roll >= rule.threshold ? rule.damage : rule.blockedDamage; }
+  if (!outgoing && c.nerve) { const rule = getRules().nerve; roll = die(random); amount = roll >= rule.threshold ? rule.damage : rule.ordinaryDamage; }
   target.stamina = Math.max(0, target.stamina - amount);
   fight.events.push({kind: 'damage', player, enemy: enemyIndex, outgoing, amount, roll});
 }
@@ -154,14 +157,15 @@ function resolveHand(fight, targets, rolls, random) {
   }
   fight.events.unshift({kind: 'hand', playerScores: pAS, enemyScores: eAS});
   if (config.conflict) {
-    const roll = die(random), options = roll === 1 ? living(fight) : roll === 6 ? living(fight, true) : [];
-    fight.pendingConflict = options.length ? {outgoing: roll === 6, options, roll} : null;
+    const rule = getRules().conflict;
+    const roll = die(random), options = roll === rule.incomingFace ? living(fight) : roll === rule.outgoingFace ? living(fight, true) : [];
+    fight.pendingConflict = options.length ? {outgoing: roll === rule.outgoingFace, options, roll} : null;
     fight.events.push({kind: 'conflict', roll});
   }
   finish(fight);
-  if (!fight.outcome && config.restraint && fight.rounds >= 2) {
+  if (!fight.outcome && config.restraint && fight.rounds >= getRules().restraint.firstRound) {
     const roll = die(random); fight.events.push({kind: 'restraint', roll});
-    if (roll >= 5) fight.outcome = 'restrained';
+    if (roll >= getRules().restraint.threshold) fight.outcome = 'restrained';
   }
   if (config.madCrew) fight.character.crew[config.madKey].stamina = fight.enemies[0].stamina;
   return fight;
@@ -188,7 +192,7 @@ function shipRound(fight, random) {
 }
 
 function phaserRound(fight, targets, random) {
-  const c = fight.config, range = c.closingRange ? Math.max(0, 4 - fight.rounds) : 0;
+  const c = fight.config, range = c.closingRange ? Math.max(0, getRules().closingRange.initial - fight.rounds) : 0;
   for (const outgoing of c.enemyFirst ? [false, true] : [true, false]) {
     if (!outgoing && c.noReturnFire) continue;
     const shooters = outgoing ? living(fight) : living(fight, true);
@@ -232,8 +236,9 @@ function resolveConflict(original, target) {
   const fight = copy(original), pending = fight.pendingConflict;
   if (!pending || !pending.options.includes(target) || fight.outcome) throw new RangeError('Invalid conflict target');
   const victim = pending.outgoing ? fight.enemies[target] : fight.character.crew[target];
-  victim.stamina = Math.max(0, victim.stamina - 1);
-  fight.events = [{kind: 'damage', player: pending.outgoing ? null : target, enemy: pending.outgoing ? target : null, outgoing: pending.outgoing, amount: 1}];
+  const amount = getRules().conflict.damage;
+  victim.stamina = Math.max(0, victim.stamina - amount);
+  fight.events = [{kind: 'damage', player: pending.outgoing ? null : target, enemy: pending.outgoing ? target : null, outgoing: pending.outgoing, amount}];
   fight.pendingConflict = null;
   return finish(fight);
 }

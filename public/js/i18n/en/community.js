@@ -80,6 +80,7 @@ export default {
     'feed.tmpl.rated_series':         '{user} <span class="feed-verb neutral">rated series</span> {series} <span class="star-rating feed-rating-stars">{stars}</span>',
 
     'feed.join_default':    'A new adventurer enters the fray - welcome, {name}.',
+    'feed.job_levelup': '{user} reached Job Level {level} - {title}',
     'feed.levelup_default': '{name} reached {level} - {title}',
     'feed.ability_unlocked': ' · <span class="feed-ability">+1 undo &amp; fast travel unlocked ({n} per run)</span>',
 

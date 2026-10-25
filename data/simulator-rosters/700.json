@@ -43,7 +43,299 @@
               "speed": 6,
               "weaponCode": 0
             }
-          ]
+          ],
+          "support": {
+            "checks": {
+              "42": [
+                "strength",
+                "speed",
+                "combatSkill"
+              ],
+              "101": [
+                "strength",
+                "dexterity",
+                "combatSkill",
+                "strikingStyle"
+              ],
+              "111": [
+                "strength",
+                "dexterity",
+                "combatSkill",
+                "strikingStyle"
+              ],
+              "175": [
+                "strength",
+                "dexterity",
+                "combatSkill",
+                "douglas"
+              ],
+              "210": [
+                "speed",
+                "shooting"
+              ],
+              "216": [
+                "fighters",
+                "primaryPower"
+              ],
+              "220": [
+                "fighters"
+              ],
+              "226": [
+                "fighters",
+                "primaryPower"
+              ],
+              "228": [
+                "shooting",
+                "primaryPower"
+              ],
+              "230": [
+                "strength",
+                "speed",
+                "dexterity",
+                "combatSkill"
+              ],
+              "242": [
+                "fighters",
+                "labDamage"
+              ],
+              "243": [
+                "fighters",
+                "barracksDamage"
+              ],
+              "252": [
+                "shooting",
+                "combatSkill",
+                "primaryPower"
+              ],
+              "256": [
+                "speed",
+                "dexterity",
+                "combatSkill"
+              ],
+              "257": [
+                "strength",
+                "dexterity"
+              ],
+              "261": [
+                "fighters",
+                "squads",
+                "attackHelis"
+              ],
+              "268": [
+                "fighters",
+                "sequential",
+                "day"
+              ],
+              "273": [
+                "fighters",
+                "barracksDamage"
+              ],
+              "282": [
+                "fighters",
+                "labDamage"
+              ],
+              "283": [
+                "fighters",
+                "groups",
+                "groupSize"
+              ],
+              "284": [
+                "fighters",
+                "guardPosted",
+                "day"
+              ],
+              "292": [
+                "fighters",
+                "groups",
+                "groupSize"
+              ],
+              "83-smg": [
+                "shooting",
+                "speed"
+              ],
+              "83-pistol": [
+                "shooting",
+                "speed"
+              ]
+            },
+            "rules": {
+              "checkRules": {
+                "42": {
+                  "threshold": 25,
+                  "win": 23,
+                  "loss": 13
+                },
+                "101": {
+                  "threshold": 24,
+                  "inclusive": true,
+                  "styleWin": 131,
+                  "win": 121,
+                  "loss": 141
+                },
+                "111": {
+                  "threshold": 26,
+                  "inclusive": false,
+                  "styleWin": 131,
+                  "win": 121,
+                  "loss": 141
+                },
+                "175": {
+                  "multiplier": 2,
+                  "threshold": 32,
+                  "win": 157,
+                  "loss": 167
+                },
+                "210": {
+                  "threshold": 16,
+                  "win": 240,
+                  "loss": 230
+                },
+                "216": {
+                  "low": 30,
+                  "high": 60,
+                  "losses": [
+                    6,
+                    4,
+                    2
+                  ],
+                  "destination": 207
+                },
+                "220": {
+                  "minimum": 10,
+                  "destination": 210
+                },
+                "226": {
+                  "low": 15,
+                  "high": 20,
+                  "divisor": 2,
+                  "losses": 1,
+                  "lowDestination": 216,
+                  "destination": 207
+                },
+                "228": {
+                  "multiplier": 2,
+                  "threshold": 35,
+                  "win": 209
+                },
+                "230": {
+                  "threshold": 30,
+                  "win": 260,
+                  "loss": 250
+                },
+                "242": {
+                  "losses": [
+                    6,
+                    4,
+                    2,
+                    0
+                  ]
+                },
+                "243": {
+                  "losses": [
+                    4,
+                    3,
+                    0
+                  ]
+                },
+                "252": {
+                  "threshold": 14,
+                  "win": 262
+                },
+                "256": {
+                  "threshold": 20,
+                  "win": 296,
+                  "loss": 286
+                },
+                "257": {
+                  "threshold": 12
+                },
+                "261": {
+                  "minimumSquads": 1,
+                  "fightersPerSquad": 8,
+                  "losses": 16,
+                  "fatalSquads": 2
+                },
+                "268": {
+                  "dayMinimum": 1,
+                  "dayMaximum": 31,
+                  "sequentialLosses": 2,
+                  "oddLosses": 1,
+                  "oddSequentialDestination": 298,
+                  "destination": 288
+                },
+                "273": {
+                  "losses": [
+                    2,
+                    1
+                  ]
+                },
+                "282": {
+                  "losses": [
+                    3,
+                    2,
+                    1
+                  ]
+                },
+                "283": {
+                  "minimumGroupSize": 2,
+                  "minimumGroups": 1,
+                  "largeSize": 4,
+                  "mediumSize": 3,
+                  "largeLosses": 0,
+                  "divisor": 2,
+                  "smallDestination": 273
+                },
+                "284": {
+                  "dayMinimum": 1,
+                  "dayMaximum": 31,
+                  "losses": 2,
+                  "destination": 269
+                },
+                "292": {
+                  "minimumGroupSize": 2,
+                  "minimumGroups": 1,
+                  "largeSize": 4,
+                  "mediumSize": 3,
+                  "largeLosses": 1,
+                  "divisor": 2,
+                  "smallDestination": 282
+                },
+                "83-smg": {
+                  "gapMinimum": 6,
+                  "threshold": 8,
+                  "win": 124,
+                  "loss": 114
+                },
+                "83-pistol": {
+                  "threshold": 16,
+                  "win": 104,
+                  "loss": 114
+                }
+              },
+              "damageRules": {
+                "102": {
+                  "kind": "remainingEquals",
+                  "remaining": 2,
+                  "damage": 12,
+                  "otherwise": 8
+                },
+                "177": {
+                  "kind": "remainingLinear",
+                  "base": 4,
+                  "perExtra": 6
+                }
+              },
+              "douglas": {
+                "origin": 177,
+                "multiplier": 2
+              },
+              "conversion": {
+                "shootingOrigin": 143,
+                "unarmedOrigin": 133,
+                "baseOrigin": 133
+              }
+            }
+          }
         },
         "part": {
           "aggression": 3,

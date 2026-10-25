@@ -19,7 +19,7 @@ function _enemyDefeated(d) {
  return d.enemy.staminaMax > 0 && d.enemy.stamina <= (d.player.enemyDefeatThreshold || 0); }
 
 function _resetEncounterKnobs(d) {
-  const { _enemyList } = getContext();
+  const { ENCOUNTER_RULES, _enemyList } = getContext();
 
   d.player.attackModifier = 0;
   d.player.enemyWoundDamage = 2;
@@ -30,13 +30,12 @@ function _resetEncounterKnobs(d) {
   d.encounter = { paired: false, breath: '', fear: false, goldRing: d.encounter?.goldRing || false };
   d.sideEnemy = { name: '', skill: 0, stamina: 0, staminaMax: 0 };
   const section = Number(d.enemy.name.match(/§(\d+)\)?$/)?.[1]);
-  if ([37, 357].includes(section)) d.player.attackModifier = -2;
-  if ([188, 240, 332, 386].includes(section)) d.player.attackModifier = -3;
-  if (section === 17) d.player.enemyDefeatThreshold = 2;
-  if ([108, 143].includes(section)) d.encounter.breath = 'demon';
-  if (section === 223) d.encounter.breath = 'dragon';
-  d.encounter.fear = section === 185;
-  if ([13, 262, 296].includes(section)) {
+  const rules = ENCOUNTER_RULES[section] || {};
+  d.player.attackModifier = rules.attackModifier || 0;
+  d.player.enemyDefeatThreshold = rules.enemyDefeatThreshold || 0;
+  d.encounter.breath = rules.breath || '';
+  d.encounter.fear = !!rules.fear;
+  if (rules.paired) {
     const other = (_enemyList || []).find(enemy => enemy.name !== d.enemy.name && Number(enemy.name.match(/§(\d+)\)?$/)?.[1]) === section);
     if (other) {
       d.encounter.paired = true;

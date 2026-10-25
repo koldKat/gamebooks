@@ -1,0 +1,3604 @@
+{
+  "schemaVersion": 1,
+  "bookId": 723,
+  "family": "fighting-fantasy",
+  "source": "All 33 Seven Serpents base encounters and 44 ordered spell variants, linked to their base encounter metadata without duplicate enemy rows. All current legacy names, IDs, combat profiles, component conditions, success/failure rules and routes retained. Summoned goblin profile moved from combat code into supportProfiles; all spell and encounter behavior preserved.",
+  "enemies": [
+    {
+      "key": "encounter:27:0",
+      "name": "Храст-удушвач (27)",
+      "attack": 5,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Храст-удушвач (27)",
+        "attack": 5,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 27,
+            "win": 106,
+            "enemies": [
+              {
+                "key": "stranglebush",
+                "skill": 5,
+                "stamina": 8
+              }
+            ],
+            "harmlessEnemy": true,
+            "roundLimit": 5,
+            "timeoutDestination": 305
+          },
+          "variants": [],
+          "support": {
+            "rules": {
+              "extraArrow": {
+                "hitMaximum": 3,
+                "damage": 2
+              },
+              "elementalStaff": {
+                "enemies": [
+                  "fireSerpent",
+                  "weakenedFireSerpent",
+                  "moonSerpent",
+                  "weakenedMoonSerpent",
+                  "earthSerpent",
+                  "waterSerpent",
+                  "airSerpent",
+                  "timeSerpent"
+                ],
+                "penalty": 2
+              },
+              "fireFoxNotice": 71,
+              "acid": {
+                "initialDamage": 1,
+                "damageByRoll": [
+                  3,
+                  2,
+                  2,
+                  1,
+                  0,
+                  0
+                ],
+                "eyeLossRoll": 1,
+                "skillLossRoll": 2,
+                "skillLoss": 1
+              },
+              "earthLift": {
+                "damage": 3,
+                "destination": 127
+              }
+            }
+          }
+        },
+        "part": {
+          "key": "stranglebush",
+          "skill": 5,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "encounter:32:0",
+      "name": "Дух на смъртта (32)",
+      "attack": 9,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Дух на смъртта (32)",
+        "attack": 9,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 32,
+            "win": 205,
+            "enemies": [
+              {
+                "key": "deathwraith",
+                "skill": 9,
+                "stamina": 9
+              }
+            ],
+            "enemyFloor": 3
+          },
+          "variants": [
+            {
+              "order": 24,
+              "spec": {
+                "section": 424,
+                "base": 32,
+                "entryCost": 2
+              }
+            },
+            {
+              "order": 26,
+              "spec": {
+                "section": 433,
+                "base": 32,
+                "entryCost": 1,
+                "entryDamage": 2
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "deathwraith",
+          "skill": 9,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:42:0",
+      "name": "Огнен Дракон (42)",
+      "attack": 13,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Огнен Дракон (42)",
+        "attack": 13,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 42,
+            "win": 306,
+            "enemies": [
+              {
+                "key": "fireSerpent",
+                "skill": 13,
+                "stamina": 12
+              }
+            ],
+            "entrySkillLoss": 2,
+            "entryDamage": 6
+          },
+          "variants": [
+            {
+              "order": 0,
+              "spec": {
+                "section": 336,
+                "base": 42,
+                "entryCost": 2,
+                "entryDamage": 0,
+                "entrySkillLoss": 0
+              }
+            },
+            {
+              "order": 38,
+              "spec": {
+                "section": 474,
+                "base": 42,
+                "entryCost": 1,
+                "component": "galehorn",
+                "success": {
+                  "entryDamage": 0,
+                  "entrySkillLoss": 0,
+                  "playerSkillModifier": 2
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "fireSerpent",
+          "skill": 13,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "encounter:45:0",
+      "name": "Лунен Дракон (45)",
+      "attack": 13,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Лунен Дракон (45)",
+        "attack": 13,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 45,
+            "win": 62,
+            "enemies": [
+              {
+                "key": "moonSerpent",
+                "skill": 13,
+                "stamina": 10
+              }
+            ]
+          },
+          "variants": [
+            {
+              "order": 6,
+              "spec": {
+                "section": 364,
+                "base": 45,
+                "entryCost": 2,
+                "entryDamage": 2
+              }
+            },
+            {
+              "order": 13,
+              "spec": {
+                "section": 392,
+                "base": 45,
+                "entryCost": 1,
+                "entryDamage": 2
+              }
+            },
+            {
+              "order": 17,
+              "spec": {
+                "section": 405,
+                "base": 45,
+                "entryCost": 1,
+                "entryDamage": 2
+              }
+            },
+            {
+              "order": 18,
+              "spec": {
+                "section": 413,
+                "base": 45,
+                "entryCost": 2,
+                "entryDamage": 2
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "moonSerpent",
+          "skill": 13,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "encounter:49:0",
+      "name": "Лодкар (49)",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Лодкар (49)",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 49,
+            "win": 110,
+            "enemies": [
+              {
+                "key": "ferryman",
+                "skill": 7,
+                "stamina": 8
+              }
+            ],
+            "enemyFloor": 4
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "ferryman",
+          "skill": 7,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "encounter:52:0",
+      "name": "Златна змия (52)",
+      "attack": 6,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Златна змия (52)",
+        "attack": 6,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 52,
+            "win": 309,
+            "enemies": [
+              {
+                "key": "goldenSnake",
+                "skill": 6,
+                "stamina": 6
+              }
+            ],
+            "enemyDamageDie": 6
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "goldenSnake",
+          "skill": 6,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:54:0",
+      "name": "Земен Дракон (54)",
+      "attack": 12,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Земен Дракон (54)",
+        "attack": 12,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 54,
+            "win": 220,
+            "enemies": [
+              {
+                "key": "earthSerpent",
+                "skill": 12,
+                "stamina": 14
+              }
+            ]
+          },
+          "variants": [
+            {
+              "order": 7,
+              "spec": {
+                "section": 367,
+                "base": 54,
+                "entryCost": 2
+              }
+            },
+            {
+              "order": 30,
+              "spec": {
+                "section": 443,
+                "base": 54,
+                "entryCost": 1,
+                "component": "brassPendulum",
+                "failure": {
+                  "entryDamage": 3
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "earthSerpent",
+          "skill": 12,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "encounter:59:0",
+      "name": "Дракон на Времето (59)",
+      "attack": 3,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Дракон на Времето (59)",
+        "attack": 3,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 59,
+            "win": 4,
+            "enemies": [
+              {
+                "key": "timeSerpent",
+                "skill": 3,
+                "stamina": 14
+              }
+            ]
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "timeSerpent",
+          "skill": 3,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "encounter:67:0",
+      "name": "Воден Дракон (67)",
+      "attack": 10,
+      "defense": null,
+      "hp": 11,
+      "pb": null,
+      "adopt": {
+        "name": "Воден Дракон (67)",
+        "attack": 10,
+        "defense": null,
+        "hp": 11,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 67,
+            "win": 75,
+            "enemies": [
+              {
+                "key": "waterSerpent",
+                "skill": 10,
+                "stamina": 11
+              }
+            ]
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "waterSerpent",
+          "skill": 10,
+          "stamina": 11
+        }
+      }
+    },
+    {
+      "key": "encounter:70:0",
+      "name": "Първи кентавър (70)",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Първи кентавър (70)",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 70,
+            "win": 154,
+            "enemies": [
+              {
+                "key": "centaur1",
+                "skill": 8,
+                "stamina": 7
+              },
+              {
+                "key": "centaur2",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "key": "centaur3",
+                "skill": 7,
+                "stamina": 8
+              }
+            ],
+            "mode": "centaurs",
+            "chooseOrder": true,
+            "arrows": {
+              "count": 3,
+              "hitMaximum": 2,
+              "damage": 2,
+              "skillPenaltyAfterHits": 2,
+              "skillPenalty": 2
+            },
+            "surrender": {
+              "enemiesDefeated": 2,
+              "lastEnemyWounds": 2,
+              "destination": 35
+            }
+          },
+          "variants": [
+            {
+              "order": 12,
+              "spec": {
+                "section": 391,
+                "base": 70,
+                "entryCost": 2,
+                "excludeEnemy": true
+              }
+            },
+            {
+              "order": 31,
+              "spec": {
+                "section": 445,
+                "base": 70,
+                "entryCost": 2,
+                "extraArrow": true
+              }
+            },
+            {
+              "order": 40,
+              "spec": {
+                "section": 476,
+                "base": 70,
+                "entryCost": 2,
+                "extraArrow": true
+              }
+            },
+            {
+              "order": 43,
+              "spec": {
+                "section": 495,
+                "base": 70,
+                "entryCost": 1,
+                "extraArrow": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "centaur1",
+          "skill": 8,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:70:1",
+      "name": "Втори кентавър (70)",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Втори кентавър (70)",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 70,
+            "win": 154,
+            "enemies": [
+              {
+                "key": "centaur1",
+                "skill": 8,
+                "stamina": 7
+              },
+              {
+                "key": "centaur2",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "key": "centaur3",
+                "skill": 7,
+                "stamina": 8
+              }
+            ],
+            "mode": "centaurs",
+            "chooseOrder": true,
+            "arrows": {
+              "count": 3,
+              "hitMaximum": 2,
+              "damage": 2,
+              "skillPenaltyAfterHits": 2,
+              "skillPenalty": 2
+            },
+            "surrender": {
+              "enemiesDefeated": 2,
+              "lastEnemyWounds": 2,
+              "destination": 35
+            }
+          },
+          "variants": [
+            {
+              "order": 12,
+              "spec": {
+                "section": 391,
+                "base": 70,
+                "entryCost": 2,
+                "excludeEnemy": true
+              }
+            },
+            {
+              "order": 31,
+              "spec": {
+                "section": 445,
+                "base": 70,
+                "entryCost": 2,
+                "extraArrow": true
+              }
+            },
+            {
+              "order": 40,
+              "spec": {
+                "section": 476,
+                "base": 70,
+                "entryCost": 2,
+                "extraArrow": true
+              }
+            },
+            {
+              "order": 43,
+              "spec": {
+                "section": 495,
+                "base": 70,
+                "entryCost": 1,
+                "extraArrow": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "centaur2",
+          "skill": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:70:2",
+      "name": "Трети кентавър (70)",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Трети кентавър (70)",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 70,
+            "win": 154,
+            "enemies": [
+              {
+                "key": "centaur1",
+                "skill": 8,
+                "stamina": 7
+              },
+              {
+                "key": "centaur2",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "key": "centaur3",
+                "skill": 7,
+                "stamina": 8
+              }
+            ],
+            "mode": "centaurs",
+            "chooseOrder": true,
+            "arrows": {
+              "count": 3,
+              "hitMaximum": 2,
+              "damage": 2,
+              "skillPenaltyAfterHits": 2,
+              "skillPenalty": 2
+            },
+            "surrender": {
+              "enemiesDefeated": 2,
+              "lastEnemyWounds": 2,
+              "destination": 35
+            }
+          },
+          "variants": [
+            {
+              "order": 12,
+              "spec": {
+                "section": 391,
+                "base": 70,
+                "entryCost": 2,
+                "excludeEnemy": true
+              }
+            },
+            {
+              "order": 31,
+              "spec": {
+                "section": 445,
+                "base": 70,
+                "entryCost": 2,
+                "extraArrow": true
+              }
+            },
+            {
+              "order": 40,
+              "spec": {
+                "section": 476,
+                "base": 70,
+                "entryCost": 2,
+                "extraArrow": true
+              }
+            },
+            {
+              "order": 43,
+              "spec": {
+                "section": 495,
+                "base": 70,
+                "entryCost": 1,
+                "extraArrow": true
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "centaur3",
+          "skill": 7,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "encounter:74:0",
+      "name": "Котка Сната (74)",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Котка Сната (74)",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 74,
+            "win": 160,
+            "enemies": [
+              {
+                "key": "snattacat",
+                "skill": 7,
+                "stamina": 9
+              }
+            ],
+            "mode": "snattacats",
+            "invisibleAttackPenalty": 2,
+            "rollCount": true
+          },
+          "variants": [
+            {
+              "order": 4,
+              "spec": {
+                "section": 358,
+                "base": 74,
+                "entryCost": 0,
+                "wastedTeeth": 2,
+                "failureDamage": 3
+              }
+            },
+            {
+              "order": 14,
+              "spec": {
+                "section": 398,
+                "base": 74,
+                "entryCost": 1,
+                "component": "pearlRing",
+                "success": {
+                  "avoidDestination": 271
+                },
+                "failure": {
+                  "playerSkillModifier": -2
+                }
+              }
+            },
+            {
+              "order": 23,
+              "spec": {
+                "section": 423,
+                "base": 74,
+                "entryCost": 1,
+                "component": "crystalOrb",
+                "success": {
+                  "avoidDestination": 271
+                },
+                "failure": {
+                  "entryDamage": 3
+                }
+              }
+            },
+            {
+              "order": 33,
+              "spec": {
+                "section": 451,
+                "base": 74,
+                "entryCost": 1,
+                "component": "glue",
+                "success": {
+                  "optionalEntryLuck": true,
+                  "luckyCountReduction": 1
+                },
+                "failure": {
+                  "entryDamage": 3
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "snattacat",
+          "skill": 7,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:84:0",
+      "name": "Дух на смъртта (84)",
+      "attack": 9,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Дух на смъртта (84)",
+        "attack": 9,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 84,
+            "win": 205,
+            "enemies": [
+              {
+                "key": "deathwraith",
+                "skill": 9,
+                "stamina": 9
+              }
+            ],
+            "enemyFloor": 3
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "deathwraith",
+          "skill": 9,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:99:0",
+      "name": "Котка Сната (99)",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Котка Сната (99)",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 99,
+            "win": 160,
+            "enemies": [
+              {
+                "key": "snattacat",
+                "skill": 7,
+                "stamina": 9
+              }
+            ],
+            "mode": "snattacats",
+            "invisibleAttackPenalty": 2,
+            "count": 4
+          },
+          "variants": [
+            {
+              "order": 2,
+              "spec": {
+                "section": 343,
+                "base": 99,
+                "entryCost": 0,
+                "wastedTeeth": 2,
+                "failureDamage": 3
+              }
+            },
+            {
+              "order": 10,
+              "spec": {
+                "section": 376,
+                "base": 99,
+                "entryCost": 1,
+                "component": "glue",
+                "success": {
+                  "testEntryLuck": true,
+                  "luckyCount": 3
+                },
+                "failure": {
+                  "entryDamage": 3
+                }
+              }
+            },
+            {
+              "order": 25,
+              "spec": {
+                "section": 431,
+                "base": 99,
+                "entryCost": 1,
+                "component": "rockDust",
+                "success": {
+                  "testEntryLuck": true,
+                  "luckyCount": 1,
+                  "unluckyCount": 3
+                },
+                "failure": {
+                  "entryDamage": 3
+                }
+              }
+            },
+            {
+              "order": 36,
+              "spec": {
+                "section": 467,
+                "base": 99,
+                "entryCost": 1,
+                "component": "crystalOrb",
+                "success": {
+                  "avoidDestination": 41
+                },
+                "failure": {
+                  "entryDamage": 3
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "snattacat",
+          "skill": 7,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:139:0",
+      "name": "Дива Мечка (139)",
+      "attack": 8,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Дива Мечка (139)",
+        "attack": 8,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 139,
+            "win": 20,
+            "enemies": [
+              {
+                "key": "wildBear",
+                "skill": 8,
+                "stamina": 8
+              }
+            ]
+          },
+          "variants": [
+            {
+              "order": 20,
+              "spec": {
+                "section": 415,
+                "base": 139,
+                "entryCost": 2
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "wildBear",
+          "skill": 8,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "encounter:148:0",
+      "name": "Змия (148)",
+      "attack": 5,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Змия (148)",
+        "attack": 5,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 148,
+            "win": 306,
+            "enemies": [
+              {
+                "key": "weakenedFireSerpent",
+                "skill": 5,
+                "stamina": 6
+              }
+            ]
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "weakenedFireSerpent",
+          "skill": 5,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:155:0",
+      "name": "Лунен Дракон (155)",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Лунен Дракон (155)",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 155,
+            "win": 62,
+            "enemies": [
+              {
+                "key": "weakenedMoonSerpent",
+                "skill": 7,
+                "stamina": 6
+              }
+            ]
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "weakenedMoonSerpent",
+          "skill": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:172:0",
+      "name": "Воден Дракон (172)",
+      "attack": 10,
+      "defense": null,
+      "hp": 11,
+      "pb": null,
+      "adopt": {
+        "name": "Воден Дракон (172)",
+        "attack": 10,
+        "defense": null,
+        "hp": 11,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 172,
+            "win": 75,
+            "enemies": [
+              {
+                "key": "waterSerpent",
+                "skill": 10,
+                "stamina": 11
+              }
+            ]
+          },
+          "variants": [
+            {
+              "order": 19,
+              "spec": {
+                "section": 414,
+                "base": 172,
+                "entryCost": 1,
+                "component": "wax",
+                "success": {
+                  "playerDamage": 3
+                },
+                "failure": {
+                  "entryDamage": 3
+                }
+              }
+            },
+            {
+              "order": 27,
+              "spec": {
+                "section": 436,
+                "base": 172,
+                "entryCost": 1,
+                "component": "coin",
+                "success": {
+                  "enemyAttackModifier": -2
+                }
+              }
+            },
+            {
+              "order": 37,
+              "spec": {
+                "section": 473,
+                "base": 172,
+                "entryCost": 1,
+                "component": "sand",
+                "failure": {
+                  "entryDamage": 3
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "waterSerpent",
+          "skill": 10,
+          "stamina": 11
+        }
+      }
+    },
+    {
+      "key": "encounter:188:0",
+      "name": "Първи Клатамен (188)",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Първи Клатамен (188)",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 188,
+            "win": 251,
+            "enemies": [
+              {
+                "key": "klattaman1",
+                "skill": 8,
+                "stamina": 7
+              },
+              {
+                "key": "klattaman2",
+                "skill": 8,
+                "stamina": 6
+              },
+              {
+                "key": "klattaman3",
+                "skill": 7,
+                "stamina": 7
+              }
+            ],
+            "mode": "separate-attacks",
+            "chooseTarget": true
+          },
+          "variants": [
+            {
+              "order": 28,
+              "spec": {
+                "section": 439,
+                "base": 188,
+                "entryCost": 1,
+                "component": "boneBracelet",
+                "success": {
+                  "avoidDestination": 251
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              }
+            },
+            {
+              "order": 34,
+              "spec": {
+                "section": 456,
+                "base": 188,
+                "entryCost": 1,
+                "component": "blackMask",
+                "success": {
+                  "enemyAttackModifier": -2
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              }
+            },
+            {
+              "order": 39,
+              "spec": {
+                "section": 475,
+                "base": 188,
+                "entryCost": 1,
+                "component": "giantTooth",
+                "success": {
+                  "usedGiantTooth": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "klattaman1",
+          "skill": 8,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:188:1",
+      "name": "Втори Клатамен (188)",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Втори Клатамен (188)",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 188,
+            "win": 251,
+            "enemies": [
+              {
+                "key": "klattaman1",
+                "skill": 8,
+                "stamina": 7
+              },
+              {
+                "key": "klattaman2",
+                "skill": 8,
+                "stamina": 6
+              },
+              {
+                "key": "klattaman3",
+                "skill": 7,
+                "stamina": 7
+              }
+            ],
+            "mode": "separate-attacks",
+            "chooseTarget": true
+          },
+          "variants": [
+            {
+              "order": 28,
+              "spec": {
+                "section": 439,
+                "base": 188,
+                "entryCost": 1,
+                "component": "boneBracelet",
+                "success": {
+                  "avoidDestination": 251
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              }
+            },
+            {
+              "order": 34,
+              "spec": {
+                "section": 456,
+                "base": 188,
+                "entryCost": 1,
+                "component": "blackMask",
+                "success": {
+                  "enemyAttackModifier": -2
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              }
+            },
+            {
+              "order": 39,
+              "spec": {
+                "section": 475,
+                "base": 188,
+                "entryCost": 1,
+                "component": "giantTooth",
+                "success": {
+                  "usedGiantTooth": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "klattaman2",
+          "skill": 8,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:188:2",
+      "name": "Трети Клатамен (188)",
+      "attack": 7,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Трети Клатамен (188)",
+        "attack": 7,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 188,
+            "win": 251,
+            "enemies": [
+              {
+                "key": "klattaman1",
+                "skill": 8,
+                "stamina": 7
+              },
+              {
+                "key": "klattaman2",
+                "skill": 8,
+                "stamina": 6
+              },
+              {
+                "key": "klattaman3",
+                "skill": 7,
+                "stamina": 7
+              }
+            ],
+            "mode": "separate-attacks",
+            "chooseTarget": true
+          },
+          "variants": [
+            {
+              "order": 28,
+              "spec": {
+                "section": 439,
+                "base": 188,
+                "entryCost": 1,
+                "component": "boneBracelet",
+                "success": {
+                  "avoidDestination": 251
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              }
+            },
+            {
+              "order": 34,
+              "spec": {
+                "section": 456,
+                "base": 188,
+                "entryCost": 1,
+                "component": "blackMask",
+                "success": {
+                  "enemyAttackModifier": -2
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              }
+            },
+            {
+              "order": 39,
+              "spec": {
+                "section": 475,
+                "base": 188,
+                "entryCost": 1,
+                "component": "giantTooth",
+                "success": {
+                  "usedGiantTooth": true
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "klattaman3",
+          "skill": 7,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:194:0",
+      "name": "Първи Блатен таласъм (194)",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Първи Блатен таласъм (194)",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 5,
+        "entry": {
+          "encounter": {
+            "section": 194,
+            "win": 277,
+            "enemies": [
+              {
+                "key": "marshGoblin1",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "key": "marshGoblin2",
+                "skill": 6,
+                "stamina": 5
+              },
+              {
+                "key": "marshGoblin3",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "key": "marshGoblin4",
+                "skill": 5,
+                "stamina": 6
+              }
+            ],
+            "fleeDestination": 168
+          },
+          "variants": [
+            {
+              "order": 35,
+              "spec": {
+                "section": 459,
+                "base": 194,
+                "entryCost": 0,
+                "summonedGoblins": true
+              }
+            }
+          ],
+          "supportProfiles": [
+            {
+              "key": "summonedGoblin",
+              "skill": 5,
+              "stamina": 5
+            }
+          ]
+        },
+        "part": {
+          "key": "marshGoblin1",
+          "skill": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:194:1",
+      "name": "Втори Блатен таласъм (194)",
+      "attack": 6,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Втори Блатен таласъм (194)",
+        "attack": 6,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 1,
+        "partCount": 5,
+        "entry": {
+          "encounter": {
+            "section": 194,
+            "win": 277,
+            "enemies": [
+              {
+                "key": "marshGoblin1",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "key": "marshGoblin2",
+                "skill": 6,
+                "stamina": 5
+              },
+              {
+                "key": "marshGoblin3",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "key": "marshGoblin4",
+                "skill": 5,
+                "stamina": 6
+              }
+            ],
+            "fleeDestination": 168
+          },
+          "variants": [
+            {
+              "order": 35,
+              "spec": {
+                "section": 459,
+                "base": 194,
+                "entryCost": 0,
+                "summonedGoblins": true
+              }
+            }
+          ],
+          "supportProfiles": [
+            {
+              "key": "summonedGoblin",
+              "skill": 5,
+              "stamina": 5
+            }
+          ]
+        },
+        "part": {
+          "key": "marshGoblin2",
+          "skill": 6,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "encounter:194:2",
+      "name": "Трети Блатен таласъм (194)",
+      "attack": 6,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Трети Блатен таласъм (194)",
+        "attack": 6,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 2,
+        "partCount": 5,
+        "entry": {
+          "encounter": {
+            "section": 194,
+            "win": 277,
+            "enemies": [
+              {
+                "key": "marshGoblin1",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "key": "marshGoblin2",
+                "skill": 6,
+                "stamina": 5
+              },
+              {
+                "key": "marshGoblin3",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "key": "marshGoblin4",
+                "skill": 5,
+                "stamina": 6
+              }
+            ],
+            "fleeDestination": 168
+          },
+          "variants": [
+            {
+              "order": 35,
+              "spec": {
+                "section": 459,
+                "base": 194,
+                "entryCost": 0,
+                "summonedGoblins": true
+              }
+            }
+          ],
+          "supportProfiles": [
+            {
+              "key": "summonedGoblin",
+              "skill": 5,
+              "stamina": 5
+            }
+          ]
+        },
+        "part": {
+          "key": "marshGoblin3",
+          "skill": 6,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:194:3",
+      "name": "Четвърти Блатен таласъм (194)",
+      "attack": 5,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Четвърти Блатен таласъм (194)",
+        "attack": 5,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 3,
+        "partCount": 5,
+        "entry": {
+          "encounter": {
+            "section": 194,
+            "win": 277,
+            "enemies": [
+              {
+                "key": "marshGoblin1",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "key": "marshGoblin2",
+                "skill": 6,
+                "stamina": 5
+              },
+              {
+                "key": "marshGoblin3",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "key": "marshGoblin4",
+                "skill": 5,
+                "stamina": 6
+              }
+            ],
+            "fleeDestination": 168
+          },
+          "variants": [
+            {
+              "order": 35,
+              "spec": {
+                "section": 459,
+                "base": 194,
+                "entryCost": 0,
+                "summonedGoblins": true
+              }
+            }
+          ],
+          "supportProfiles": [
+            {
+              "key": "summonedGoblin",
+              "skill": 5,
+              "stamina": 5
+            }
+          ]
+        },
+        "part": {
+          "key": "marshGoblin4",
+          "skill": 5,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:202:0",
+      "name": "Първа Змия (202)",
+      "attack": 7,
+      "defense": null,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Първа Змия (202)",
+        "attack": 7,
+        "defense": null,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 7,
+        "entry": {
+          "encounter": {
+            "section": 202,
+            "win": 260,
+            "enemies": [
+              {
+                "key": "snake1",
+                "skill": 7,
+                "stamina": 3
+              },
+              {
+                "key": "snake2",
+                "skill": 6,
+                "stamina": 1
+              },
+              {
+                "key": "snake3",
+                "skill": 6,
+                "stamina": 4
+              },
+              {
+                "key": "snake4",
+                "skill": 5,
+                "stamina": 2
+              },
+              {
+                "key": "snake5",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "key": "snake6",
+                "skill": 7,
+                "stamina": 1
+              },
+              {
+                "key": "snakeCharmer",
+                "skill": 6,
+                "stamina": 7
+              }
+            ],
+            "mode": "snake-charmer",
+            "charmerRoundLimit": 5,
+            "timeoutDestination": 312,
+            "snakeBiteDoublesSubsequentStaminaLoss": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "snake1",
+          "skill": 7,
+          "stamina": 3
+        }
+      }
+    },
+    {
+      "key": "encounter:202:1",
+      "name": "Втора Змия (202)",
+      "attack": 6,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Втора Змия (202)",
+        "attack": 6,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 1,
+        "partCount": 7,
+        "entry": {
+          "encounter": {
+            "section": 202,
+            "win": 260,
+            "enemies": [
+              {
+                "key": "snake1",
+                "skill": 7,
+                "stamina": 3
+              },
+              {
+                "key": "snake2",
+                "skill": 6,
+                "stamina": 1
+              },
+              {
+                "key": "snake3",
+                "skill": 6,
+                "stamina": 4
+              },
+              {
+                "key": "snake4",
+                "skill": 5,
+                "stamina": 2
+              },
+              {
+                "key": "snake5",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "key": "snake6",
+                "skill": 7,
+                "stamina": 1
+              },
+              {
+                "key": "snakeCharmer",
+                "skill": 6,
+                "stamina": 7
+              }
+            ],
+            "mode": "snake-charmer",
+            "charmerRoundLimit": 5,
+            "timeoutDestination": 312,
+            "snakeBiteDoublesSubsequentStaminaLoss": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "snake2",
+          "skill": 6,
+          "stamina": 1
+        }
+      }
+    },
+    {
+      "key": "encounter:202:2",
+      "name": "Трета Змия (202)",
+      "attack": 6,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Трета Змия (202)",
+        "attack": 6,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 2,
+        "partCount": 7,
+        "entry": {
+          "encounter": {
+            "section": 202,
+            "win": 260,
+            "enemies": [
+              {
+                "key": "snake1",
+                "skill": 7,
+                "stamina": 3
+              },
+              {
+                "key": "snake2",
+                "skill": 6,
+                "stamina": 1
+              },
+              {
+                "key": "snake3",
+                "skill": 6,
+                "stamina": 4
+              },
+              {
+                "key": "snake4",
+                "skill": 5,
+                "stamina": 2
+              },
+              {
+                "key": "snake5",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "key": "snake6",
+                "skill": 7,
+                "stamina": 1
+              },
+              {
+                "key": "snakeCharmer",
+                "skill": 6,
+                "stamina": 7
+              }
+            ],
+            "mode": "snake-charmer",
+            "charmerRoundLimit": 5,
+            "timeoutDestination": 312,
+            "snakeBiteDoublesSubsequentStaminaLoss": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "snake3",
+          "skill": 6,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "encounter:202:3",
+      "name": "Четвърта Змия (202)",
+      "attack": 5,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Четвърта Змия (202)",
+        "attack": 5,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 3,
+        "partCount": 7,
+        "entry": {
+          "encounter": {
+            "section": 202,
+            "win": 260,
+            "enemies": [
+              {
+                "key": "snake1",
+                "skill": 7,
+                "stamina": 3
+              },
+              {
+                "key": "snake2",
+                "skill": 6,
+                "stamina": 1
+              },
+              {
+                "key": "snake3",
+                "skill": 6,
+                "stamina": 4
+              },
+              {
+                "key": "snake4",
+                "skill": 5,
+                "stamina": 2
+              },
+              {
+                "key": "snake5",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "key": "snake6",
+                "skill": 7,
+                "stamina": 1
+              },
+              {
+                "key": "snakeCharmer",
+                "skill": 6,
+                "stamina": 7
+              }
+            ],
+            "mode": "snake-charmer",
+            "charmerRoundLimit": 5,
+            "timeoutDestination": 312,
+            "snakeBiteDoublesSubsequentStaminaLoss": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "snake4",
+          "skill": 5,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:202:4",
+      "name": "Пета Змия (202)",
+      "attack": 6,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Пета Змия (202)",
+        "attack": 6,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 4,
+        "partCount": 7,
+        "entry": {
+          "encounter": {
+            "section": 202,
+            "win": 260,
+            "enemies": [
+              {
+                "key": "snake1",
+                "skill": 7,
+                "stamina": 3
+              },
+              {
+                "key": "snake2",
+                "skill": 6,
+                "stamina": 1
+              },
+              {
+                "key": "snake3",
+                "skill": 6,
+                "stamina": 4
+              },
+              {
+                "key": "snake4",
+                "skill": 5,
+                "stamina": 2
+              },
+              {
+                "key": "snake5",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "key": "snake6",
+                "skill": 7,
+                "stamina": 1
+              },
+              {
+                "key": "snakeCharmer",
+                "skill": 6,
+                "stamina": 7
+              }
+            ],
+            "mode": "snake-charmer",
+            "charmerRoundLimit": 5,
+            "timeoutDestination": 312,
+            "snakeBiteDoublesSubsequentStaminaLoss": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "snake5",
+          "skill": 6,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:202:5",
+      "name": "Шеста Змия (202)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Шеста Змия (202)",
+        "attack": 7,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 5,
+        "partCount": 7,
+        "entry": {
+          "encounter": {
+            "section": 202,
+            "win": 260,
+            "enemies": [
+              {
+                "key": "snake1",
+                "skill": 7,
+                "stamina": 3
+              },
+              {
+                "key": "snake2",
+                "skill": 6,
+                "stamina": 1
+              },
+              {
+                "key": "snake3",
+                "skill": 6,
+                "stamina": 4
+              },
+              {
+                "key": "snake4",
+                "skill": 5,
+                "stamina": 2
+              },
+              {
+                "key": "snake5",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "key": "snake6",
+                "skill": 7,
+                "stamina": 1
+              },
+              {
+                "key": "snakeCharmer",
+                "skill": 6,
+                "stamina": 7
+              }
+            ],
+            "mode": "snake-charmer",
+            "charmerRoundLimit": 5,
+            "timeoutDestination": 312,
+            "snakeBiteDoublesSubsequentStaminaLoss": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "snake6",
+          "skill": 7,
+          "stamina": 1
+        }
+      }
+    },
+    {
+      "key": "encounter:202:6",
+      "name": "Укротител на змии (202)",
+      "attack": 6,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Укротител на змии (202)",
+        "attack": 6,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 6,
+        "partCount": 7,
+        "entry": {
+          "encounter": {
+            "section": 202,
+            "win": 260,
+            "enemies": [
+              {
+                "key": "snake1",
+                "skill": 7,
+                "stamina": 3
+              },
+              {
+                "key": "snake2",
+                "skill": 6,
+                "stamina": 1
+              },
+              {
+                "key": "snake3",
+                "skill": 6,
+                "stamina": 4
+              },
+              {
+                "key": "snake4",
+                "skill": 5,
+                "stamina": 2
+              },
+              {
+                "key": "snake5",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "key": "snake6",
+                "skill": 7,
+                "stamina": 1
+              },
+              {
+                "key": "snakeCharmer",
+                "skill": 6,
+                "stamina": 7
+              }
+            ],
+            "mode": "snake-charmer",
+            "charmerRoundLimit": 5,
+            "timeoutDestination": 312,
+            "snakeBiteDoublesSubsequentStaminaLoss": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "snakeCharmer",
+          "skill": 6,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:246:0",
+      "name": "Котка Сната (246)",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Котка Сната (246)",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 246,
+            "win": 41,
+            "enemies": [
+              {
+                "key": "snattacat",
+                "skill": 7,
+                "stamina": 9
+              }
+            ],
+            "mode": "snattacats",
+            "invisibleAttackPenalty": 2,
+            "count": 1,
+            "entryDamage": 2,
+            "startsVisible": true,
+            "roundLimit": 6,
+            "timeoutDestination": 99
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "snattacat",
+          "skill": 7,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:256:0",
+      "name": "Огнена лисица (256)",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Огнена лисица (256)",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 256,
+            "win": 95,
+            "enemies": [
+              {
+                "key": "fireFox",
+                "skill": 7,
+                "stamina": 6
+              }
+            ],
+            "mode": "fire-fox",
+            "fireDamage": 5,
+            "fireSkillCost": 1,
+            "fireStaminaCost": 1
+          },
+          "variants": [
+            {
+              "order": 21,
+              "spec": {
+                "section": 416,
+                "base": 256,
+                "entryCost": 1,
+                "component": "greenWig",
+                "failure": {
+                  "entryDamage": 2
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "fireFox",
+          "skill": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:258:0",
+      "name": "Първи нощен ястреб (258)",
+      "attack": 7,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Първи нощен ястреб (258)",
+        "attack": 7,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "encounter": {
+            "section": 258,
+            "win": null,
+            "enemies": [
+              {
+                "key": "nightHawk1",
+                "skill": 7,
+                "stamina": 5
+              },
+              {
+                "key": "nightHawk2",
+                "skill": 6,
+                "stamina": 5
+              },
+              {
+                "key": "nightHawk3",
+                "skill": 7,
+                "stamina": 5
+              },
+              {
+                "key": "nightHawk4",
+                "skill": 7,
+                "stamina": 4
+              }
+            ],
+            "mode": "night-hawks",
+            "playerAttackDice": 1,
+            "roundLimit": 3,
+            "timeoutDestination": 314,
+            "chooseTarget": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "nightHawk1",
+          "skill": 7,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "encounter:258:1",
+      "name": "Втори нощен ястреб (258)",
+      "attack": 6,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Втори нощен ястреб (258)",
+        "attack": 6,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "encounter": {
+            "section": 258,
+            "win": null,
+            "enemies": [
+              {
+                "key": "nightHawk1",
+                "skill": 7,
+                "stamina": 5
+              },
+              {
+                "key": "nightHawk2",
+                "skill": 6,
+                "stamina": 5
+              },
+              {
+                "key": "nightHawk3",
+                "skill": 7,
+                "stamina": 5
+              },
+              {
+                "key": "nightHawk4",
+                "skill": 7,
+                "stamina": 4
+              }
+            ],
+            "mode": "night-hawks",
+            "playerAttackDice": 1,
+            "roundLimit": 3,
+            "timeoutDestination": 314,
+            "chooseTarget": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "nightHawk2",
+          "skill": 6,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "encounter:258:2",
+      "name": "Трети нощен ястреб (258)",
+      "attack": 7,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Трети нощен ястреб (258)",
+        "attack": 7,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "encounter": {
+            "section": 258,
+            "win": null,
+            "enemies": [
+              {
+                "key": "nightHawk1",
+                "skill": 7,
+                "stamina": 5
+              },
+              {
+                "key": "nightHawk2",
+                "skill": 6,
+                "stamina": 5
+              },
+              {
+                "key": "nightHawk3",
+                "skill": 7,
+                "stamina": 5
+              },
+              {
+                "key": "nightHawk4",
+                "skill": 7,
+                "stamina": 4
+              }
+            ],
+            "mode": "night-hawks",
+            "playerAttackDice": 1,
+            "roundLimit": 3,
+            "timeoutDestination": 314,
+            "chooseTarget": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "nightHawk3",
+          "skill": 7,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "encounter:258:3",
+      "name": "Четвърти нощен ястреб (258)",
+      "attack": 7,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Четвърти нощен ястреб (258)",
+        "attack": 7,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "encounter": {
+            "section": 258,
+            "win": null,
+            "enemies": [
+              {
+                "key": "nightHawk1",
+                "skill": 7,
+                "stamina": 5
+              },
+              {
+                "key": "nightHawk2",
+                "skill": 6,
+                "stamina": 5
+              },
+              {
+                "key": "nightHawk3",
+                "skill": 7,
+                "stamina": 5
+              },
+              {
+                "key": "nightHawk4",
+                "skill": 7,
+                "stamina": 4
+              }
+            ],
+            "mode": "night-hawks",
+            "playerAttackDice": 1,
+            "roundLimit": 3,
+            "timeoutDestination": 314,
+            "chooseTarget": true
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "nightHawk4",
+          "skill": 7,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "encounter:261:0",
+      "name": "Въздушен Дракон (261)",
+      "attack": 11,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Въздушен Дракон (261)",
+        "attack": 11,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 261,
+            "win": 213,
+            "enemies": [
+              {
+                "key": "airSerpent",
+                "skill": 11,
+                "stamina": 14
+              }
+            ],
+            "mode": "air-serpent",
+            "playerConsecutiveWins": 2,
+            "playerPairDamage": 3,
+            "enemyStreakDamage": [
+              1,
+              2,
+              4,
+              8
+            ]
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "airSerpent",
+          "skill": 11,
+          "stamina": 14
+        }
+      }
+    },
+    {
+      "key": "encounter:266:0",
+      "name": "Огнен Дракон (266)",
+      "attack": 13,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Огнен Дракон (266)",
+        "attack": 13,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 266,
+            "win": 306,
+            "enemies": [
+              {
+                "key": "fireSerpent",
+                "skill": 13,
+                "stamina": 12
+              }
+            ]
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "fireSerpent",
+          "skill": 13,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "encounter:268:0",
+      "name": "Скален демон (268)",
+      "attack": 10,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Скален демон (268)",
+        "attack": 10,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 268,
+            "win": 222,
+            "enemies": [
+              {
+                "key": "rockDemon",
+                "skill": 10,
+                "stamina": 12
+              }
+            ],
+            "mode": "rock-demon",
+            "trappedAttackPenalty": 2,
+            "escapeAttemptDamage": 2,
+            "strictSkillEscape": true
+          },
+          "variants": [
+            {
+              "order": 3,
+              "spec": {
+                "section": 352,
+                "base": 268,
+                "entryCost": 1,
+                "entryDamage": 2
+              }
+            },
+            {
+              "order": 8,
+              "spec": {
+                "section": 372,
+                "base": 268,
+                "entryCost": 1,
+                "component": "wax",
+                "success": {
+                  "playerDamage": 4
+                },
+                "failure": {
+                  "entrySkillLoss": 1
+                }
+              }
+            },
+            {
+              "order": 11,
+              "spec": {
+                "section": 382,
+                "base": 268,
+                "entryCost": 1,
+                "component": "goldMirror",
+                "success": {
+                  "mirrorAlly": true
+                },
+                "failure": {
+                  "entryDamage": 3
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "rockDemon",
+          "skill": 10,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "encounter:280:0",
+      "name": "Шампионът Клатамен (280)",
+      "attack": 9,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Шампионът Клатамен (280)",
+        "attack": 9,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 280,
+            "win": 240,
+            "enemies": [
+              {
+                "key": "klattamanChampion",
+                "skill": 9,
+                "stamina": 8
+              }
+            ]
+          },
+          "variants": [
+            {
+              "order": 1,
+              "spec": {
+                "section": 340,
+                "base": 280,
+                "entryCost": 2,
+                "enemySkillModifier": -3
+              }
+            },
+            {
+              "order": 15,
+              "spec": {
+                "section": 402,
+                "base": 280,
+                "entryCost": 1,
+                "entryDamage": 3
+              }
+            },
+            {
+              "order": 22,
+              "spec": {
+                "section": 420,
+                "base": 280,
+                "entryCost": 1,
+                "component": "blackMask",
+                "success": {
+                  "avoidDestination": 173
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              }
+            },
+            {
+              "order": 42,
+              "spec": {
+                "section": 494,
+                "base": 280,
+                "entryCost": 2,
+                "entryDamage": 2
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "klattamanChampion",
+          "skill": 9,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "encounter:286:0",
+      "name": "Бръмбар Баду (286)",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Бръмбар Баду (286)",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 27,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 286,
+            "win": 24,
+            "enemies": [
+              {
+                "key": "baduBeetle",
+                "skill": 7,
+                "stamina": 9
+              }
+            ],
+            "mode": "acid-beetle",
+            "firstWoundDestination": 216
+          },
+          "variants": [
+            {
+              "order": 29,
+              "spec": {
+                "section": 440,
+                "base": 286,
+                "entryCost": 2,
+                "playerSkillMultiplier": 2
+              }
+            },
+            {
+              "order": 41,
+              "spec": {
+                "section": 488,
+                "base": 286,
+                "entryCost": 4,
+                "firstRoundEnemyAttackModifier": 4
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "baduBeetle",
+          "skill": 7,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:291:0",
+      "name": "Летяща риба (291)",
+      "attack": 8,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Летяща риба (291)",
+        "attack": 8,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 28,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 291,
+            "win": 75,
+            "enemies": [
+              {
+                "key": "flyingFish",
+                "skill": 8,
+                "stamina": 8
+              }
+            ],
+            "mode": "flying-fish",
+            "requireManualCount": true
+          },
+          "variants": [
+            {
+              "order": 5,
+              "spec": {
+                "section": 360,
+                "base": 291,
+                "entryCost": 1,
+                "component": "wax",
+                "success": {
+                  "playerDamage": 4
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              }
+            },
+            {
+              "order": 9,
+              "spec": {
+                "section": 373,
+                "base": 291,
+                "entryCost": 1,
+                "component": "oakStaff",
+                "success": {
+                  "enemySkillModifier": -1
+                },
+                "failure": {
+                  "entryDamage": 2
+                }
+              }
+            },
+            {
+              "order": 16,
+              "spec": {
+                "section": 403,
+                "base": 291,
+                "entryCost": 1,
+                "smellDamage": 3
+              }
+            },
+            {
+              "order": 32,
+              "spec": {
+                "section": 449,
+                "base": 291,
+                "entryCost": 1,
+                "component": "fireWater",
+                "failure": {
+                  "entryDamage": 2
+                }
+              }
+            }
+          ]
+        },
+        "part": {
+          "key": "flyingFish",
+          "skill": 8,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "encounter:319:0",
+      "name": "Огнен Дракон (319)",
+      "attack": 13,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Огнен Дракон (319)",
+        "attack": 13,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 29,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 319,
+            "win": 306,
+            "enemies": [
+              {
+                "key": "fireSerpent",
+                "skill": 13,
+                "stamina": 12
+              }
+            ]
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "fireSerpent",
+          "skill": 13,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "encounter:422:0",
+      "name": "Първи кентавър (422)",
+      "attack": 1,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Първи кентавър (422)",
+        "attack": 1,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 30,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 422,
+            "win": 154,
+            "enemies": [
+              {
+                "key": "confusedCentaur",
+                "skill": 1,
+                "stamina": 7
+              },
+              {
+                "key": "centaur2",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "key": "centaur3",
+                "skill": 7,
+                "stamina": 8
+              }
+            ],
+            "spell": true,
+            "entryCost": 2,
+            "reverseOrder": true,
+            "surrender": {
+              "enemiesDefeated": 2,
+              "destination": 35
+            }
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "confusedCentaur",
+          "skill": 1,
+          "stamina": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:422:1",
+      "name": "Втори кентавър (422)",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Втори кентавър (422)",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 30,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 422,
+            "win": 154,
+            "enemies": [
+              {
+                "key": "confusedCentaur",
+                "skill": 1,
+                "stamina": 7
+              },
+              {
+                "key": "centaur2",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "key": "centaur3",
+                "skill": 7,
+                "stamina": 8
+              }
+            ],
+            "spell": true,
+            "entryCost": 2,
+            "reverseOrder": true,
+            "surrender": {
+              "enemiesDefeated": 2,
+              "destination": 35
+            }
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "centaur2",
+          "skill": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:422:2",
+      "name": "Трети кентавър (422)",
+      "attack": 7,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Трети кентавър (422)",
+        "attack": 7,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 30,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "encounter": {
+            "section": 422,
+            "win": 154,
+            "enemies": [
+              {
+                "key": "confusedCentaur",
+                "skill": 1,
+                "stamina": 7
+              },
+              {
+                "key": "centaur2",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "key": "centaur3",
+                "skill": 7,
+                "stamina": 8
+              }
+            ],
+            "spell": true,
+            "entryCost": 2,
+            "reverseOrder": true,
+            "surrender": {
+              "enemiesDefeated": 2,
+              "destination": 35
+            }
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "centaur3",
+          "skill": 7,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "encounter:452:0",
+      "name": "Плешив мъж (452)",
+      "attack": 6,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Плешив мъж (452)",
+        "attack": 6,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 31,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 452,
+            "win": 143,
+            "enemies": [
+              {
+                "key": "baldMan",
+                "skill": 6,
+                "stamina": 9
+              }
+            ],
+            "spell": true,
+            "entryCost": 2,
+            "mercyDestination": 72
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "baldMan",
+          "skill": 6,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:487:0",
+      "name": "Дух на смъртта (487)",
+      "attack": 5,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Дух на смъртта (487)",
+        "attack": 5,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 32,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "encounter": {
+            "section": 487,
+            "win": 326,
+            "enemies": [
+              {
+                "key": "confusedDeathwraith",
+                "skill": 5,
+                "stamina": 9
+              }
+            ],
+            "spell": true,
+            "entryCost": 2,
+            "mode": "confused-ghost",
+            "normalSkill": 9,
+            "recoveryRollMinimum": 5,
+            "recoveryDamageRoll": 6,
+            "recoveryDamage": 2,
+            "mercyFloor": 3,
+            "mercyDestination": 205
+          },
+          "variants": []
+        },
+        "part": {
+          "key": "confusedDeathwraith",
+          "skill": 5,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "support:summonedGoblin",
+      "name": "Призован таласъм (459)",
+      "attack": 5,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 4,
+        "partCount": 5,
+        "entry": {
+          "encounter": {
+            "section": 194,
+            "win": 277,
+            "enemies": [
+              {
+                "key": "marshGoblin1",
+                "skill": 7,
+                "stamina": 6
+              },
+              {
+                "key": "marshGoblin2",
+                "skill": 6,
+                "stamina": 5
+              },
+              {
+                "key": "marshGoblin3",
+                "skill": 6,
+                "stamina": 6
+              },
+              {
+                "key": "marshGoblin4",
+                "skill": 5,
+                "stamina": 6
+              }
+            ],
+            "fleeDestination": 168
+          },
+          "variants": [
+            {
+              "order": 35,
+              "spec": {
+                "section": 459,
+                "base": 194,
+                "entryCost": 0,
+                "summonedGoblins": true
+              }
+            }
+          ],
+          "supportProfiles": [
+            {
+              "key": "summonedGoblin",
+              "skill": 5,
+              "stamina": 5
+            }
+          ]
+        },
+        "part": {
+          "key": "summonedGoblin",
+          "skill": 5,
+          "stamina": 5
+        }
+      }
+    }
+  ]
+}

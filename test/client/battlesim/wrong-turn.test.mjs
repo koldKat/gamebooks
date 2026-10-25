@@ -1,11 +1,34 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as combat from '../../../public/js/battlesim/books/797/combat.js';
 import { createState } from '../../../public/js/battlesim/books/797/state.js';
+import { MISSION_RULES } from '../../../public/js/battlesim/books/797/definition.js';
+
+await loadFixtureRoster(797);
 
 const roll = (...values) => () => { assert.ok(values.length); return values.shift(); };
 const character = () => combat.medicalStation(combat.newCharacter(() => 6));
 const start = (options = {}, section = 27) => combat.startFight(section, character(), options);
+
+test('mission metadata controls entry and saved-round timeouts without losing pending doubles or wounds',()=>{
+  const original=structuredClone(MISSION_RULES);
+  try{
+    Object.assign(MISSION_RULES,{timeoutSeconds:200,timeoutDestination:999,roundSeconds:7});
+    const c=character();c.elapsed=80;
+    assert.equal(combat.startFight(27,c).destination,999);
+    const fight=start();fight.character.elapsed=193;fight.rounds=4;fight.enemies[0].stamina=7;fight.extension={keep:true};
+    const saved=JSON.parse(JSON.stringify(fight)),snapshot=structuredClone(saved);
+    const result=combat.round(saved,roll(1,1,2,2));
+    assert.equal(result.outcome,'timeout');assert.equal(result.destination,999);
+    assert.equal(result.character.elapsed,200);assert.equal(result.rounds,5);
+    assert.equal(result.enemies[0].stamina,7);assert.deepEqual(result.extension,{keep:true});assert.deepEqual(saved,snapshot);
+    const pending={...snapshot,pendingDoubles:true};
+    const resolved=combat.resolveDoubles(pending,'player');
+    assert.equal(resolved.character.elapsed,193);assert.equal(resolved.rounds,4);assert.equal(resolved.destination,11);
+    assert.equal(pending.pendingDoubles,true);
+  }finally{Object.assign(MISSION_RULES,original);}
+});
 
 test('initial maxima, hangover, medical restoration and standalone Luck follow the source', () => {
   const c = combat.newCharacter(() => 1);

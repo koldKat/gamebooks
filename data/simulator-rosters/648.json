@@ -72,7 +72,56 @@
               "section": 66,
               "fleet": true
             }
-          ]
+          ],
+          "support": {
+            "rules": {
+              "specials": [
+                {
+                  "section": 24,
+                  "missileLimit": 4,
+                  "beamBonus": 0,
+                  "lower": 600,
+                  "upper": 700,
+                  "destinations": {
+                    "success": 7,
+                    "failure": 41,
+                    "middle": 17
+                  },
+                  "torpedo": 31
+                },
+                {
+                  "section": 28,
+                  "missileLimit": 6,
+                  "beamBonus": 2,
+                  "lower": 1000,
+                  "upper": 1200,
+                  "destinations": {
+                    "success": 16,
+                    "failure": 8,
+                    "middle": 37
+                  },
+                  "torpedo": 31
+                },
+                {
+                  "section": 34,
+                  "missileLimit": 4,
+                  "beamBonus": 0,
+                  "lower": 800,
+                  "upper": 900,
+                  "destinations": {
+                    "success": 16,
+                    "failure": 8,
+                    "middle": 37
+                  },
+                  "torpedo": 31
+                },
+                {
+                  "section": 91,
+                  "torpedo": 104
+                }
+              ]
+            }
+          }
         },
         "part": {
           "name": "Torpedo boat",

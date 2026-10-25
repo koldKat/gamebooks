@@ -1,4 +1,4 @@
-import { definition, ENCOUNTERS, ENEMIES, MODES, encounterPreset } from './definition.js';
+import { definition, ENCOUNTERS, ENEMIES, MODES, encounterPreset, ISLAND_RULES } from './definition.js';
 import * as combat from './combat.js';
 import { createState } from './state.js';
 import { createOpponentEditor } from '../../opponents.js';
@@ -46,8 +46,8 @@ export function createIslandPanel({document, t, getRun, getBookId, saveState, sh
   }
   function defaults(mode) {
     if (mode === 'pirates') return [{...ENEMIES[1]}, {...ENEMIES[2]}];
-    if (mode === 'dogs') return Array.from({length: 3}, () => ({...ENEMIES[7]}));
-    return [{displayName: tk('customOpponent'), hp: mode === 'octopus' ? 15 : 12}];
+    if (mode === 'dogs') return Array.from({length: ISLAND_RULES.dogs.kills}, () => ({...ENEMIES[7]}));
+    return [{displayName: tk('customOpponent'), hp: mode === 'octopus' ? ENEMIES[3].hp : 12}];
   }
   function render(force = false) {
     if (!el('overlay')?.classList.contains('active')) return;
@@ -124,7 +124,7 @@ export function createIslandPanel({document, t, getRun, getBookId, saveState, sh
       saveSetup();
     });
     el('mode').addEventListener('change', () => {
-      el('encounter').value = ''; el('hitAt').value = el('mode').value === 'octopus' ? 5 : 7;
+      el('encounter').value = ''; el('hitAt').value = el('mode').value === 'octopus' ? ENCOUNTERS.find(row => row.mode === 'octopus').hitAt : 7;
       editor.set(defaults(el('mode').value)); saveSetup();
     });
     el('close').addEventListener('click', close);

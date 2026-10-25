@@ -7,7 +7,8 @@ import { runInNewContext } from 'node:vm';
 import { spaceScoutLoadout, startSpaceScoutDuel, spaceScoutDuelRound,
   spaceScoutDuelMissile, startSpaceScoutFleet, spaceScoutFleetOpening,
   spaceScoutFleetMissiles, spaceScoutFleetManeuver, spaceScoutCruiserAttack,
-  spaceScoutTorpedo, spaceScoutPersonalEquipment, startSpaceScoutEncounter
+  spaceScoutTorpedo, spaceScoutPersonalEquipment, startSpaceScoutEncounter,
+  SPACE_SCOUT_RULES, spaceScoutSpecial, spaceScoutFleetAllocation
 } from '../../../public/js/battlesim/engines/space-scout/core.js';
 
 const setup = () => ({ ship: 'centurion', weapons: ['phaser', 'phaser'],
@@ -46,6 +47,7 @@ test('backend recognizes sim648 outcomes once without touching a real database',
     if (name === './diamonds') return { diamondInfoForUser: () => ({}) };
     if (name === './rubies') return { rubyInfoForUser: () => ({}), createRubyCompletionChecker: () => () => 0 };
     if (name === './heartbeat-coins') return { advanceHeartbeatCoins: () => 0 };
+    if (name === './job-xp') return { getJobTitle: () => 'test' };
     throw new Error('Unexpected real dependency: ' + name);
   } };
   const source = readFileSync(new URL('../../../server/db/xp.js', import.meta.url), 'utf8');
@@ -330,4 +332,37 @@ test('saved fleet survivors retain damaged shields and captured attack rules, in
     assert.deepEqual(next.legacyExtension,{retained:true});
     assert.equal(f.enemies[2].attack,60);
   }
+});
+
+test('cruiser limits, bonuses, thresholds, destinations and torpedoes follow roster metadata', () => {
+  const saved=structuredClone(SPACE_SCOUT_RULES),c=character();
+  try {
+    const rule=spaceScoutSpecial(24);
+    Object.assign(rule,{missileLimit:0,beamBonus:3,lower:249,upper:251,
+      destinations:{success:701,middle:702,failure:703},torpedo:704});
+    assert.equal(spaceScoutCruiserAttack(c,24,[],rolls(1,1)).section,702);
+    assert.equal(spaceScoutCruiserAttack({...c,power:51},24,[],rolls(1,1)).section,701);
+    assert.equal(spaceScoutCruiserAttack({...c,power:49},24,[],rolls(1,1)).section,703);
+    assert.throws(()=>spaceScoutCruiserAttack(c,24,['leech'],rolls(1,1)),RangeError);
+    assert.equal(spaceScoutTorpedo(c,24).section,704);
+    assert.equal(spaceScoutSpecial('24'),undefined);
+    assert.throws(()=>spaceScoutCruiserAttack(c,'24',[],rolls(1,1)),RangeError);
+    assert.throws(()=>spaceScoutTorpedo(c,'24'),RangeError);
+  } finally {Object.assign(SPACE_SCOUT_RULES,saved);}
+});
+
+test('fleet control limits use captured maneuver rules without rewriting saved shields or ammunition', () => {
+  const f=JSON.parse(JSON.stringify(startSpaceScoutFleet(character())));
+  f.stage='maneuver';f.shields=123;f.enemies[0].shields=0;f.enemies[1].shields=71;
+  f.inventory.krotal=1;f.extension={keep:true};
+  Object.assign(f.fleetRules.maneuvers[110],{beams:2,missiles:1});f.fleetRules.maxMissiles=2;
+  const saved=JSON.stringify(f);
+  assert.deepEqual(spaceScoutFleetAllocation(f),{beams:2,missiles:1});
+  const result=spaceScoutFleetManeuver(f,[1,2],[],rolls(1,1));
+  assert.deepEqual(result.damage,[50,50]);assert.equal(result.fight.shields,3);
+  assert.equal(result.fight.inventory.krotal,1);assert.deepEqual(result.fight.extension,{keep:true});
+  assert.equal(JSON.stringify(f),saved);
+  f.stage='missiles-two';assert.deepEqual(spaceScoutFleetAllocation(f),{beams:0,missiles:2});
+  delete f.fleetRules;f.stage='maneuver';
+  assert.deepEqual(spaceScoutFleetAllocation(f),{beams:1,missiles:2});
 });

@@ -35,6 +35,11 @@ function _enemyNameSafe(d) {
 function _effectiveSkill(d) {
  return d.combatSkill + (d.attackModifier || 0); }
 
+function _rulesFor(section) {
+  const { ENCOUNTER_RULES } = getContext();
+  return ENCOUNTER_RULES[section] ?? {};
+}
+
 function _captureFightEffects(d) {
 
   d.printedDeathRules = 1;
@@ -46,19 +51,20 @@ function _captureFightEffects(d) {
 }
 
 function _roundRatio(d) {
-
-  const effects = d.combatEffects || {};
+  const { _rulesFor } = getContext();
+  const effects = d.combatEffects || {}, rules = _rulesFor(effects.section);
   let ratio = d.ratio;
-  if (effects.mindblast && ![26, 77, 88, 122, 325].includes(effects.section)) ratio += 2;
-  if (effects.section === 62 && d.roundsThisBattle <= 3) ratio -= 2;
-  if (effects.section === 153 && d.roundsThisBattle <= 2) ratio -= 4;
-  if (effects.section === 316) ratio -= 2;
-  if (effects.section === 122 && !effects.mindshield) ratio -= 4;
+  if (effects.mindblast && !rules.mindblastImmune) ratio += 2;
+  for (const adjustment of rules.ratioAdjustments ?? []) {
+    if (adjustment.maxRounds !== undefined && d.roundsThisBattle > adjustment.maxRounds
+        || adjustment.whenFalse && effects[adjustment.whenFalse]) continue;
+    ratio += adjustment.amount;
+  }
   return ratio;
 }
 
 function _runRound() {
-  const { COMBAT_TABLE, _appendLog, _checkBattleEnd, _data, _enemyNameSafe, _pick10, _pickRow, _ratioCol, _renderAll, _roundRatio, saveState, t } = getContext();
+  const { COMBAT_TABLE, _appendLog, _checkBattleEnd, _data, _enemyNameSafe, _pick10, _pickRow, _ratioCol, _renderAll, _roundRatio, _rulesFor, saveState, t } = getContext();
 
   const d = _data();
   if (!d || !d.rolled || d.endurance <= 0 || d.enemy.endurance <= 0) return;
@@ -69,8 +75,10 @@ function _runRound() {
   const col = _ratioCol(ratio);
   let [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
   const effects = d.combatEffects || {};
-  if (effects.section === 147 && d.roundsThisBattle === 1) lwLoss = 0;
-  if (effects.section === 77 && !effects.mindshield && lwLoss !== 'K') lwLoss += 1;
+  const rules = _rulesFor(effects.section);
+  if (rules.protectedRound === d.roundsThisBattle) lwLoss = 0;
+  const extra = rules.extraPlayerLoss;
+  if (extra && !effects[extra.whenFalse] && lwLoss !== 'K') lwLoss += extra.amount;
   _appendLog(d, t('battlesim432.log.round', { round: d.roundsThisBattle, ratio, pick }));
 
   if (enemyLoss === 'K') d.enemy.endurance = 0;
@@ -122,5 +130,5 @@ function _resetBattle() {
 }
 
 // END EXTRACTED RULES
-  return { _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _effectiveSkill, _captureFightEffects, _roundRatio, _runRound, _checkBattleEnd, _resetBattle };
+  return { _rulesFor, _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _effectiveSkill, _captureFightEffects, _roundRatio, _runRound, _checkBattleEnd, _resetBattle };
 }

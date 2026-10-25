@@ -1,4 +1,4 @@
-import { definition, ENCOUNTERS } from './definition.js';
+import { definition, ENCOUNTERS, SPACE_RULES } from './definition.js';
 import { prepareEncounter } from './combat.js';
 import { createState } from './state.js';
 import * as effects from './effects.js';
@@ -102,8 +102,8 @@ export function createSpaceAssassinPanel({ document, t, getRun, getBookId, saveS
     el('round').disabled = !liveFight || fight?.openingPending;
     const precombat = liveFight && !fight.rounds && !fight.openingPending;
     el('grenade').disabled = !precombat || !fight.grenadeAllowed || !player?.grenades || fight.grenadesUsed >= fight.grenadeLimit;
-    el('gas').disabled = !precombat || ![108, 312].includes(fight.encounterSection) || !player?.nerveGas;
-    el('gravityBomb').disabled = !precombat || fight.encounterSection !== 267 || !player?.gravityBombs;
+    el('gas').disabled = !precombat || !SPACE_RULES.nerveGas.sections.includes(fight.encounterSection) || !player?.nerveGas;
+    el('gravityBomb').disabled = !precombat || !SPACE_RULES.gravityBombSections.includes(fight.encounterSection) || !player?.gravityBombs;
     el('escapeFight').disabled = !liveFight || fight.openingPending || fight.escapeCost === null;
     el('status').textContent = battle ? tk('status.' + (battle.outcome ?? 'active')) : data.notice ? tk(data.notice) : tk('ready');
     const destination = battle?.destination ?? (battle?.outcome === 'win' ? battle.winDestination : null);

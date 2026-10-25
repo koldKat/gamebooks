@@ -8,7 +8,7 @@ import { createLegionCharacter, initialLegionLife, legionEquipment, legionStrike
   legionCast, legionProjectile, legionEquip, legionSunstone, legionAmulet,
   legionWand, legionBat, legionSleep, legionFriendly, legionCollar,
   settleLegionFight } from '../../../public/js/battlesim/engines/grailquest/legion-of-the-dead.js';
-import { LEGION_ENCOUNTERS, LEGION_EQUIPMENT } from '../../../public/js/battlesim/engines/grailquest/legion-of-the-dead-roster.js';
+import { LEGION_ENCOUNTERS, LEGION_EQUIPMENT, LEGION_RULES, LEGION_COMPANIONS } from '../../../public/js/battlesim/engines/grailquest/legion-of-the-dead-roster.js';
 
 const random = (...faces) => { let index = 0; return () => ((faces[index++] ?? 1)-1)/6; };
 const rolls = (...totals) => random(...totals.flatMap(total => [Math.min(6,total-1), Math.max(1,total-6)]));
@@ -18,6 +18,47 @@ const fight = (id, options = {}, player = character()) => {
   result.first = 'player';
   return result;
 };
+
+test('Legion count transforms and limits follow loaded settings', () => {
+  const saved=structuredClone(LEGION_RULES);
+  try {
+    LEGION_RULES.shapesOffset=0;LEGION_RULES.shapesDivisor=3;
+    assert.equal(startLegionFight(character(),24,{},()=>.5).foes.length,3);
+    LEGION_RULES.vampiresDivisor=3;
+    assert.equal(startLegionFight(character(),204,{},()=>.5).foes.length,2);
+    LEGION_RULES.countRanges.shapes=[1,2];
+    assert.throws(()=>fight(24,{enemyCount:0}),RangeError);
+    assert.throws(()=>fight(24,{enemyCount:3}),RangeError);
+    assert.equal(fight(24,{enemyCount:2}).foes.length,2);
+  } finally {Object.assign(LEGION_RULES,saved);}
+});
+test('Legion companion participation follows settings without replacing captured wounds', () => {
+  const saved=structuredClone(LEGION_RULES);
+  try {
+    Object.assign(LEGION_RULES,{monkeyMinRoll:7,germPlayerRoll:6,germEnemyAbove:5,orangutigerMinRoll:6});
+    const p=character();p.monkey=p.germ=true;p.companions.orangutiger={...LEGION_COMPANIONS.orangutiger,life:17,extension:{keep:true}};
+    const f=startLegionFight(p,4,{useMonkey:true,useGerm:true},rolls(6,6,6));
+    assert.equal(f.monkey,false);assert.equal(f.germPlayer,true);assert.equal(f.germEnemy,true);
+    assert.equal(f.allies.orangutiger.life,17);assert.deepEqual(f.allies.orangutiger.extension,{keep:true});
+    const old=JSON.parse(JSON.stringify(f));legionRound(old,0,rolls(2,2,2));
+    assert.equal(old.allies.orangutiger.life,17);
+  } finally {Object.assign(LEGION_RULES,saved);}
+});
+test('Legion PALS eligibility stays strict and saved drain remains captured', () => {
+  const saved=structuredClone(LEGION_RULES);
+  try {
+    LEGION_RULES.palsSection=900;LEGION_RULES.consecutiveDrainAmount=7;
+    const f=fight(110);f.foes[0].consecutive.player=2;
+    legionRound(f,0,rolls(2,6));assert.equal(f.player.drain,7);
+    LEGION_RULES.consecutiveDrainAmount=1;
+    const old=JSON.parse(JSON.stringify(f));const life=old.player.life;legionVisit(old.player,2,()=>0);
+    assert.equal(old.player.life,life-7);
+    for(const [section,expected] of [[900,'bypassed'],['900','fighting']]){
+      const p=character(),battle=fight(4,{},p);battle.spec.section=section;
+      legionCast(battle.player,'pals',rolls(7),battle);assert.equal(battle.status,expected);
+    }
+  } finally {Object.assign(LEGION_RULES,saved);}
+});
 
 test('Legion starting LIFE uses best of three, reincarnation one only', () => {
   assert.equal(initialLegionLife(0,rolls(2,12,4)).life,48);

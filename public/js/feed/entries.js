@@ -107,6 +107,11 @@ export function renderEntry(e) {
     const tmpl = e.joinTemplate || t('feed.join_default');
     html = tmpl.replace('{name}', () => userEl);
     extraClass = 'feed-entry--join';
+  } else if (e.type === 'job_level_up') {
+    extraClass = 'feed-entry--joblevel';
+    html = t('feed.job_levelup', { user: userEl,
+      level: `<span class="feed-level">${e.level}</span>`,
+      title: `<span class="feed-title">${escapeHtml(e.levelTitle)}</span>` });
   } else if (e.type === 'level_up') {
     extraClass = 'feed-entry--levelup';
     const abilitySuffix = e.gainedAbility

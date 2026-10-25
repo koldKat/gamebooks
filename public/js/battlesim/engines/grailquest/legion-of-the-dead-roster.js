@@ -3,12 +3,14 @@ import { createRosterLoader } from '../../roster-data.js';
 export let LEGION_ENCOUNTERS = Object.freeze([]);
 export let LEGION_DREAMS = Object.freeze([]);
 export let LEGION_COMPANIONS = Object.freeze({});
+export const LEGION_RULES = {};
 export const loadRoster = createRosterLoader(533, 'CATALOG', rows => {
   const freeze = spec => Object.freeze({...spec, enemies: Object.freeze(spec.enemies.map(Object.freeze))});
   const catalogs = ['LEGION_ENCOUNTERS', 'LEGION_DREAMS']
     .map(name => rows.filter(row => row.catalog === name).map(row => freeze(row.spec)));
   const support = rows.find(row => row.support)?.support;
-  if (catalogs.some(rows => !rows.length) || !support?.companions) throw new Error('Incomplete encounter catalogs');
+  if (catalogs.some(rows => !rows.length) || !support?.companions || !support.rules) throw new Error('Incomplete encounter catalogs');
+  Object.assign(LEGION_RULES, support.rules);
   LEGION_ENCOUNTERS = Object.freeze(catalogs[0]);
   LEGION_DREAMS = Object.freeze(catalogs[1]);
   LEGION_COMPANIONS = Object.freeze(Object.fromEntries(Object.entries(support.companions).map(([key, value]) => [key, Object.freeze(value)])));

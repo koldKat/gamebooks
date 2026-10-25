@@ -1,10 +1,10 @@
-import { MAX_PROVISIONS, PROVISIONS_HEAL, SIDE_WOUND_DMG, DRAIN_DMG } from './definition.js';
+import { MAX_PROVISIONS, PROVISIONS_HEAL, SIDE_WOUND_DMG, DRAIN_DMG, VAMPIRE_RULES } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, DRAIN_DMG, MAX_PROVISIONS, PROVISIONS_HEAL, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _allEnemiesDown, _appendLog, _data, _eatProvisions, _effectiveSkill, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderItemsHtml, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _sideEnemyNameSafe, _skipLuck, _testLuck, apiFetch, closeSim234, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim234, openSim234, registerPanelShortcut, renderSim234, saveState, setSim234Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, VAMPIRE_RULES, DRAIN_DMG, MAX_PROVISIONS, PROVISIONS_HEAL, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _allEnemiesDown, _appendLog, _data, _eatProvisions, _effectiveSkill, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderItemsHtml, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _sideEnemyNameSafe, _skipLuck, _testLuck, apiFetch, closeSim234, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim234, openSim234, registerPanelShortcut, renderSim234, saveState, setSim234Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _effectiveSkill, _resetEncounterKnobs, _allEnemiesDown, _runRound, _testLuck, _skipLuck, _resetBattle } = createCombat(simulatorContext);
 const { _eatProvisions } = createEffects(simulatorContext);
@@ -51,7 +51,7 @@ function _renderStatus() {
   document.getElementById('sim234-luck-no').disabled  = notReady || !d.pendingLuckQueue.length;
   document.getElementById('sim234-provisions').disabled =
     notReady || d.player.provisionsLeft <= 0 || d.player.stamina >= d.player.staminaInitial ||
-    (d.roundsThisBattle > 0 && d.player.stamina > 0 && d.enemy.stamina > 0);
+    (d.roundsThisBattle > 0 && d.player.stamina > 0 && !_allEnemiesDown(d));
 }
 
 function _renderItemsHtml(d) {
@@ -313,6 +313,10 @@ export function initSim234() {
               ${_numField(t('battlesim234.ui.stamina_max'), 'sim234-side-staminamax')}
             </div>
           </div>
+          <details class="bsim-history" open>
+            <summary>${t('battlesim234.ui.items')}</summary>
+            <div id="sim234-item-list" class="bsim-tech-list"></div>
+          </details>
           <div id="sim234-status" class="bsim-status"></div>
           <div id="sim234-luck-prompt" class="inv-edit-row bsim-heal-row" style="display:none">
             <span class="inv-edit-label bsim-stat-label">${t('battlesim234.btn.luck_prompt')}</span>
@@ -325,10 +329,6 @@ export function initSim234() {
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
-          <details class="bsim-history" open>
-            <summary>${t('battlesim234.ui.items')}</summary>
-            <div id="sim234-item-list" class="bsim-tech-list"></div>
-          </details>
           <details class="bsim-history">
             <summary id="sim234-history-summary">${t('battlesim234.history.summary', { n: 0 })}</summary>
             <div id="sim234-history-list" class="bsim-history-list"></div>

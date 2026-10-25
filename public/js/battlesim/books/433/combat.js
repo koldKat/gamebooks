@@ -21,21 +21,25 @@ function _crCol(ratio) {
 function _rollRandomNumber() {
  return Math.floor(Math.random() * 10); }
 
+function _rulesFor(section) {
+  const { ENCOUNTER_RULES } = getContext();
+  return ENCOUNTER_RULES[section] ?? {};
+}
+
 function _playerCS(d) {
+  const { _rulesFor } = getContext();
 
   const effects = d.combatEffects;
   if (effects?.captured) {
     let cs = effects.baseCS;
-    const section = effects.section;
-    if (effects.mindBlast && ![12, 162, 299, 355, 375].includes(section)) cs += [64, 110].includes(section) ? 4 : 2;
-    if ([12, 135, 190, 357].includes(section)) cs -= 2;
-    if (section === 91) cs -= 4;
-    if ([106, 159, 316].includes(section) && d.roundsThisBattle <= 3) cs -= 2;
-    if (section === 393 && d.roundsThisBattle <= 1) cs -= 2;
-    if (section === 194 && !effects.mindshield) cs -= 3;
-    if ([299, 353, 355].includes(section) && !effects.mindshield) cs -= 2;
-    if (section === 57 && effects.previousElix) cs += 2;
-    if (section === 253 && effects.magicMace) cs += 5;
+    const rules = _rulesFor(effects.section);
+    if (effects.mindBlast && !rules.mindblastImmune) cs += rules.mindblastBonus ?? 2;
+    for (const adjustment of rules.skillAdjustments ?? []) {
+      if (adjustment.maxRounds !== undefined && d.roundsThisBattle > adjustment.maxRounds
+          || adjustment.whenTrue && !effects[adjustment.whenTrue]
+          || adjustment.whenFalse && effects[adjustment.whenFalse]) continue;
+      cs += adjustment.amount;
+    }
     return cs;
   }
   let cs = d.player.csBase;
@@ -83,11 +87,12 @@ function _setRoute(d, section) {
 }
 
 function _recoverCombatLoss(d) {
-  const { _appendLog, t } = getContext();
+  const { _appendLog, _rulesFor, t } = getContext();
 
   const effects = d.combatEffects;
-  if (!effects || ![20, 135].includes(effects.section)) return;
-  const recovered = Math.min(Math.floor(effects.lostEP / 2), d.player.epInitial - d.player.ep);
+  const fraction = effects && _rulesFor(effects.section).recoverLossFraction;
+  if (!fraction) return;
+  const recovered = Math.min(Math.floor(effects.lostEP * fraction), d.player.epInitial - d.player.ep);
   if (recovered > 0) {
     d.player.ep += recovered;
     _appendLog(d, t('battlesim433.log.recovered', { n: recovered }));
@@ -95,14 +100,14 @@ function _recoverCombatLoss(d) {
 }
 
 function _runRound() {
-  const { CRT, SVG_SKULL, SVG_TROPHY, _appendLog, _battleOver, _crCol, _data, _enemyNameSafe, _playerCS, _playerLost, _playerWon, _recordOutcome, _recoverCombatLoss, _renderAll, _rollRandomNumber, _setRoute, saveState, t } = getContext();
+  const { CRT, SVG_SKULL, SVG_TROPHY, _appendLog, _battleOver, _crCol, _data, _enemyNameSafe, _playerCS, _playerLost, _playerWon, _recordOutcome, _recoverCombatLoss, _renderAll, _rollRandomNumber, _setRoute, _rulesFor, saveState, t } = getContext();
 
   const d = _data();
   if (!d || _battleOver(d)) return;
   const effects = d.combatEffects || {};
-  const stop = { 20: [3, 82], 330: [2, 394], 361: [3, 382] }[effects.section];
-  if (stop && d.roundsThisBattle >= stop[0]) {
-    _setRoute(d, stop[1]);
+  const rules = _rulesFor(effects.section), stop = rules.stop;
+  if (stop && d.roundsThisBattle >= stop.rounds) {
+    _setRoute(d, stop.route);
     saveState();
     _renderAll();
     return;
@@ -112,16 +117,15 @@ function _runRound() {
   const ratio = _playerCS(d) - d.enemy.cs;
   const rn = _rollRandomNumber();
   let [enemyLoss, selfLoss] = CRT[rn][_crCol(ratio)];
-  if (effects.section === 4 && d.roundsThisBattle === 1) enemyLoss = 0;
-  if ((effects.section === 119 && d.roundsThisBattle <= 3) ||
-      (effects.section === 280 && d.roundsThisBattle === 1) ||
-      (effects.section === 334 && effects.protectedEntry && d.roundsThisBattle <= 2)) selfLoss = 0;
-  if ([240, 370].includes(effects.section) && selfLoss !== 'K') selfLoss *= 2;
-  if (effects.section === 357 && rn === 1) {
+  if (rules.noEnemyDamageRound === d.roundsThisBattle) enemyLoss = 0;
+  const protection = rules.protection;
+  if (protection && d.roundsThisBattle <= protection.rounds && (!protection.whenTrue || effects[protection.whenTrue])) selfLoss = 0;
+  if (rules.playerLossMultiplier && selfLoss !== 'K') selfLoss *= rules.playerLossMultiplier;
+  if (rules.fatalPick && rn === rules.fatalPick.pick) {
     d.player.ep = 0;
     _appendLog(d, t('battlesim433.log.fallen'));
     _recordOutcome(d, 'loss');
-    _setRoute(d, 293);
+    _setRoute(d, rules.fatalPick.route);
     saveState();
     _renderAll();
     return;
@@ -145,24 +149,24 @@ function _runRound() {
   }));
 
   if (d.printedRules && _playerLost(d)) {
-    const nonfatal = [20, 135].includes(effects.section);
+    const nonfatal = rules.nonfatalLossRoute;
     _appendLog(d, `${SVG_SKULL} ${t(nonfatal ? 'battlesim433.log.knocked_out' : 'battlesim433.log.fallen')}`);
     _recordOutcome(d, 'loss');
-    if (nonfatal) _setRoute(d, 161);
+    if (nonfatal) _setRoute(d, nonfatal);
   } else if (_playerWon(d)) {
     _recoverCombatLoss(d);
     _appendLog(d, `${SVG_TROPHY} ${t('battlesim433.log.defeated', { enemy: _enemyNameSafe(d) })}`);
     _recordOutcome(d, 'win');
-    const routes = { 4: [4, 165, 180], 91: [4, 65, 180], 168: [3, 101, 46], 355: [4, 249, 304] }[effects.section];
-    if (routes) _setRoute(d, routes[d.roundsThisBattle <= routes[0] ? 1 : 2]);
+    const victory = rules.victory;
+    if (victory) _setRoute(d, d.roundsThisBattle <= victory.rounds ? victory.early : victory.late);
   } else if (_playerLost(d)) {
     _appendLog(d, `${SVG_SKULL} ${t('battlesim433.log.fallen')}`);
     _recordOutcome(d, 'loss');
   }
-  if (effects.section === 244 && !_playerLost(d)) {
-    _setRoute(d, selfLoss > enemyLoss ? 347 : enemyLoss > selfLoss || enemyDied ? 327 : 271);
+  if (rules.exchangeRoutes && !_playerLost(d)) {
+    _setRoute(d, selfLoss > enemyLoss ? rules.exchangeRoutes.greaterPlayerLoss : enemyLoss > selfLoss || enemyDied ? rules.exchangeRoutes.greaterEnemyLoss : rules.exchangeRoutes.tie);
   }
-  if (stop && d.roundsThisBattle >= stop[0] && !_playerLost(d) && !_playerWon(d)) _setRoute(d, stop[1]);
+  if (stop && d.roundsThisBattle >= stop.rounds && !_playerLost(d) && !_playerWon(d)) _setRoute(d, stop.route);
 
   saveState();
   _renderAll();
@@ -184,5 +188,5 @@ function _resetBattle() {
 }
 
 // END EXTRACTED RULES
-  return { _crCol, _rollRandomNumber, _playerCS, _enemyName, _enemyNameSafe, _playerLost, _playerWon, _captureFightEffects, _setRoute, _recoverCombatLoss, _runRound, _resetBattle };
+  return { _rulesFor, _crCol, _rollRandomNumber, _playerCS, _enemyName, _enemyNameSafe, _playerLost, _playerWon, _captureFightEffects, _setRoute, _recoverCombatLoss, _runRound, _resetBattle };
 }

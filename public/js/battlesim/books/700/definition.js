@@ -16,9 +16,15 @@ export const PLAYER_DEFAULTS = Object.freeze({
 
 export let UNARMED_RETURNS = Object.freeze({});
 export let SHOOTING_RETURNS = Object.freeze({});
+export let CHECKS = Object.freeze({});
+export const MONEY_RULES = {};
 let UNARMED_ROSTERS = {};
 let SHOOTING_ROSTERS = {};
 export const loadRoster = createRosterLoader(700, 'CATALOG', entries => {
+  const support = entries.find(entry=>entry.support)?.support;
+  if (!support?.checks || !support.rules?.checkRules) throw new Error('Incomplete Money and Gangsters settings');
+  CHECKS = Object.freeze(support.checks);
+  Object.assign(MONEY_RULES,support.rules);
   const unarmed = entries.filter(entry => entry.kind === 'unarmed');
   const shooting = entries.filter(entry => entry.kind === 'shooting');
   UNARMED_ROSTERS = Object.fromEntries(unarmed.map(entry => [entry.origin, entry]));
@@ -26,6 +32,13 @@ export const loadRoster = createRosterLoader(700, 'CATALOG', entries => {
   UNARMED_RETURNS = Object.freeze(Object.fromEntries(unarmed.map(entry => [entry.origin, entry.returns])));
   SHOOTING_RETURNS = Object.freeze(Object.fromEntries(shooting.map(entry => [entry.origin, entry.returns])));
 });
+
+export function unarmedPresetOptions(origin) {
+  const source = UNARMED_ROSTERS[Number(origin)];
+  if (!source) throw new RangeError('Unknown unarmed encounter');
+  return {countOptions:source.countOptions ? [...source.countOptions] : null,
+    wounded:!!source.woundedOpponents,douglas:Number(origin)===MONEY_RULES.douglas.origin};
+}
 
 export function unarmedEncounter(origin, { count = 1, wounded = false } = {}) {
   const source = UNARMED_ROSTERS[Number(origin)];
@@ -53,29 +66,3 @@ export function shootingEncounter(origin, { simplifiedMap = true } = {}) {
     })),
   };
 }
-export const CHECKS = Object.freeze({
-  42: ['strength', 'speed', 'combatSkill'],
-  101: ['strength', 'dexterity', 'combatSkill', 'strikingStyle'],
-  111: ['strength', 'dexterity', 'combatSkill', 'strikingStyle'],
-  175: ['strength', 'dexterity', 'combatSkill', 'douglas'],
-  210: ['speed', 'shooting'],
-  230: ['strength', 'speed', 'dexterity', 'combatSkill'],
-  252: ['shooting', 'combatSkill', 'primaryPower'],
-  256: ['speed', 'dexterity', 'combatSkill'],
-  257: ['strength', 'dexterity'],
-  '83-smg': ['shooting', 'speed'],
-  '83-pistol': ['shooting', 'speed'],
-  216: ['fighters', 'primaryPower'],
-  226: ['fighters', 'primaryPower'],
-  220: ['fighters'],
-  228: ['shooting', 'primaryPower'],
-  242: ['fighters', 'labDamage'],
-  243: ['fighters', 'barracksDamage'],
-  261: ['fighters', 'squads', 'attackHelis'],
-  268: ['fighters', 'sequential', 'day'],
-  273: ['fighters', 'barracksDamage'],
-  282: ['fighters', 'labDamage'],
-  283: ['fighters', 'groups', 'groupSize'],
-  292: ['fighters', 'groups', 'groupSize'],
-  284: ['fighters', 'guardPosted', 'day'],
-});

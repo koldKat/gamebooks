@@ -1,8 +1,11 @@
+import {loadFixtureRoster} from './battlesim/roster-fixtures.mjs';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { ENCOUNTERS } from '../../public/js/battlesim/books/773/definition.js';
 import * as combat from '../../public/js/battlesim/books/773/combat.js';
 import { createState } from '../../public/js/battlesim/books/773/state.js';
+
+await loadFixtureRoster(773);
 
 const character = (skill = 10, stamina = 24, luck = 12) => ({
   skill, skillInitial: skill, stamina, staminaInitial: stamina, luck, luckInitial: luck,

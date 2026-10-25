@@ -8,7 +8,7 @@ function _data() {
   if (!pt) return null;
   if (!pt.sim871) {
     pt.sim871 = {
-      enemyId: 'bandit', playerTarget: 6, playerStamina: 25, enemyTarget: 8, enemyStamina: 10,
+      enemyId: 'bandit', playerTarget: 6, playerStamina: 25, enemyTarget: _rival('bandit').target, enemyStamina: _rival('bandit').stamina,
       multi: false, playerBonus: 0, enemyPenalty: 0, over: false, winner: null, started: false, log: [], history: [],
     };
   }

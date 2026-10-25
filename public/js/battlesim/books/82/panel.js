@@ -117,12 +117,12 @@ function _renderInputs(skipEnemyPick) {
   if (strEl) strEl.textContent = String(strength);
 
   const status = document.getElementById('sim82-status');
-  if (!_ready(d)) {
-    status.textContent = t('battlesim82.status.not_ready');
-  } else if (d.life <= 0) {
+  if (d.life <= 0) {
     status.textContent = t('battlesim82.status.fallen');
   } else if (d.enemy.hp <= 0 && d.enemy.hpMax > 0) {
     status.textContent = t('battlesim82.status.defeated', { enemy: _enemyName(d) });
+  } else if (!_ready(d)) {
+    status.textContent = t('battlesim82.status.not_ready');
   } else {
     status.textContent = '';
   }

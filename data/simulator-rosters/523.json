@@ -82,7 +82,10 @@
             }
           ],
           "mode": "troll",
-          "fortuneReward": 2
+          "fortuneReward": 2,
+          "npcRules": {
+            "doubleHitDamage": 3
+          }
         },
         "part": {
           "name": "Mountain Troll",
@@ -582,7 +585,12 @@
           ],
           "mode": "phantom",
           "fortuneReward": 4,
-          "expertiseReward": 1
+          "expertiseReward": 1,
+          "npcRules": {
+            "embraceDamage": 8,
+            "embraceFortune": 4,
+            "embraceExpertiseLoss": 1
+          }
         },
         "part": {
           "name": "Lake Phantom",
@@ -671,7 +679,12 @@
           "mode": "phantom",
           "fortuneReward": 4,
           "expertiseReward": 1,
-          "weaponDamage": 4
+          "weaponDamage": 4,
+          "npcRules": {
+            "embraceDamage": 8,
+            "embraceFortune": 4,
+            "embraceExpertiseLoss": 1
+          }
         },
         "part": {
           "name": "Lake Phantom",

@@ -1,6 +1,6 @@
 import { createOpponentEditor } from '../../opponents.js';
 import { meleeOpponentFields, shootingOpponentFields } from './opponents.js';
-import { CHECKS, definition, PLAYER_DEFAULTS, UNARMED_RETURNS, SHOOTING_RETURNS, shootingEncounter, unarmedEncounter } from './definition.js';
+import { CHECKS, MONEY_RULES, unarmedPresetOptions, definition, PLAYER_DEFAULTS, UNARMED_RETURNS, SHOOTING_RETURNS, shootingEncounter, unarmedEncounter } from './definition.js';
 import { createState } from './state.js';
 import { startUnarmedFight, stepUnarmedFight, unarmedActions, startShootingFight,
   stepShootingFight, shootingActions, convertShootingToUnarmed, evaluateCheck } from './combat.js';
@@ -77,8 +77,9 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
       return;
     }
     if (mode() === 'unarmed') {
-      el('options').innerHTML = (origin() === 102 ? select('count', 'count', [[1, '1'], [2, '2']]) : '')
-        + (origin() === 193 ? check('wounded') : '') + (origin() === 177 ? check('douglas') : '');
+      const options = unarmedPresetOptions(origin());
+      el('options').innerHTML = (options.countOptions ? select('count', 'count', options.countOptions.map(value=>[value,String(value)])) : '')
+        + (options.wounded ? check('wounded') : '') + (options.douglas ? check('douglas') : '');
       return;
     }
     const spec = shootingEncounter(origin());
@@ -128,7 +129,7 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
         : startShootingFight(d.character,0,{opponents,terrain:number('terrain'),weapon:weapon(),playerCover:number('setup-playerCover')});
     } else if (mode() === 'unarmed') {
       d.fight = startUnarmedFight(d.character, origin(), { count: el('count') ? number('count') : 1,
-        wounded: el('wounded')?.checked ?? false, playerMultiplier: el('douglas')?.checked ? 2 : 1 });
+        wounded: el('wounded')?.checked ?? false, playerMultiplier: el('douglas')?.checked ? MONEY_RULES.douglas.multiplier : 1 });
     } else {
       const spec = shootingEncounter(origin(), { simplifiedMap: el('simplifiedMap')?.checked ?? false });
       const opponents = spec.opponents.map((e, i) => ({ ...e,
@@ -268,8 +269,8 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
     const flags = ['strikingStyle', 'douglas', 'attackHelis', 'sequential', 'guardPosted'];
     el('checkFields').innerHTML = CHECKS[id].filter(key => !STATS.includes(key)).map(key => {
       if (flags.includes(key)) return check('check-' + key, key === 'douglas' ? key : 'helper.' + key);
-      const damage = key === 'labDamage' ? ['0', '1', '2', ...(id === '242' ? ['3'] : [])]
-        : key === 'barracksDamage' ? ['0', '1', ...(id === '243' ? ['2'] : [])] : null;
+      const damage = ['labDamage','barracksDamage'].includes(key)
+        ? MONEY_RULES.checkRules[id].losses.map((_,index)=>String(index)) : null;
       return damage ? select('check-' + key, 'helper.' + key, damage.map(value => [value, tk('helper.' + key + '.' + value)]))
         : input('check-' + key, 'helper.' + key);
     }).join('');

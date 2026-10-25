@@ -24,7 +24,7 @@ function feedFor({ publicRun = true, publicBook = true, hideFirst = true } = {})
       get: () => undefined,
     }) } },
     './xp': { computeLevel: () => 1, getTitleForLevel: () => 'Lost Soul' },
-    './content': {}, './books': {},
+    './content': {}, './books': {}, './job-xp': require('../server/db/job-xp'),
   };
   const context = vm.createContext({ module: { exports: {} }, require: name => deps[name], Date });
   vm.runInContext(fs.readFileSync(require.resolve('../server/db/feed'), 'utf8'), context);

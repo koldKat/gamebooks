@@ -194,6 +194,16 @@
               "redOrOdd": 2,
               "blackOrEven": 3
             }
+          },
+          "support": {
+            "rules": {
+              "gardeners": {
+                "active": 2,
+                "defeated": 2
+              },
+              "ironScalesDamage": 3,
+              "teapotSection": 271
+            }
           }
         },
         "part": {

@@ -1,4 +1,4 @@
-import { MEAL_HEALING } from './definition.js';
+import { MEAL_HEALING, SERPENT_RULES } from './definition.js';
 import { integer, loseStamina, validateCharacter, testLuck, rollDice, effectiveSkill } from './combat.js';
 
 const livingCopy = character => {
@@ -44,8 +44,8 @@ export function liftEarthSerpent(character, protectedFromDamage = false, roll) {
   const tested = testLuck(character, roll);
   const skillRoll = tested.lucky ? rollDice(roll) : null;
   const success = tested.lucky && skillRoll < effectiveSkill(tested.character);
-  const next = !success && !protectedFromDamage ? loseStamina(tested.character, 3).character : tested.character;
-  return { character: next, luckRoll: tested.roll, skillRoll, success, destination: success ? 127 : null };
+  const next = !success && !protectedFromDamage ? loseStamina(tested.character, SERPENT_RULES.earthLift.damage).character : tested.character;
+  return { character: next, luckRoll: tested.roll, skillRoll, success, destination: success ? SERPENT_RULES.earthLift.destination : null };
 }
 
 export function useLibra(character, kind = 'restore') {

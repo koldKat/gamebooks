@@ -1,5 +1,5 @@
 import { customSixActionsEncounter } from './opponents.js';
-import { SIX_ACTIONS_FIGHTS, SIX_ACTIONS_CHECKS, SIX_ACTIONS_WEAPONS } from './roster.js';
+import { SIX_ACTIONS_FIGHTS, SIX_ACTIONS_CHECKS, SIX_ACTIONS_WEAPONS, SIX_ACTIONS_RULES } from './roster.js';
 
 const copy = value => structuredClone(value);
 function integer(value, min = 0, max = 10000) {
@@ -45,7 +45,7 @@ export function startSixActionsFight(character, section, options = {}) {
   if (config.kind === 'knife') config.weapon = 'knife';
   const fight = { rulesVersion: 1, config, character: copy(character), status: 'fighting',
     round: 1, killed: 0, remaining: config.enemies, vehicleHits: 0, targetAlive: [true, true],
-    groups: config.groups ? { armour: 3, jeep: 4 } : null, section: null };
+    groups: config.groups ? copy(SIX_ACTIONS_RULES.groups) : null, section: null };
   return fight;
 }
 function validateFight(fight) {
@@ -68,7 +68,7 @@ function shots(fight, options) {
   if (options.enemyShots !== undefined) return integer(options.enemyShots, 0, 100);
   if (config.manualShots) return integer(options.enemyShots, 0, 100);
   if (config.firstFree && round === 1) return 0;
-  if (config.kind === 'knife') return fight.targetAlive.filter((alive, index) => alive && (index === 0 || round >= 4)).length;
+  if (config.kind === 'knife') return fight.targetAlive.filter((alive, index) => alive && (index === 0 || round >= SIX_ACTIONS_RULES.knifeSecondRound)).length;
   if (config.fixedShots !== undefined) return config.fixedShots;
   if (config.firstShots !== undefined && round === 1) return Math.min(config.firstShots, fight.remaining);
   if (config.scheduledShots) return round >= 2 ? round : 0;
@@ -79,7 +79,7 @@ function enemyPhase(fight, options, roll, result) {
   let count = shots(fight, options);
   if (fight.config.kind === 'knife') {
     for (const [index, alive] of fight.targetAlive.entries()) {
-      if (!alive || index === 1 && fight.round < 4) continue;
+      if (!alive || index === 1 && fight.round < SIX_ACTIONS_RULES.knifeSecondRound) continue;
       if (!count--) break;
       const rolled = dice(roll), threshold = index === 0 ? fight.config.enemyThreshold : fight.config.secondThreshold;
       if (rolled.total >= threshold) fight.character.wounds++;
@@ -148,6 +148,7 @@ export function sixActionsPostCheck(fight, roll) {
   if (fight?.rulesVersion !== 1 || fight.status !== 'post-check' || !fight.config.postCheck) throw new RangeError('No source post-combat check');
   const next = copy(fight), result = dice(roll);
   const total = result.total + sixActionsBonus(next.character, next.config.modifiers);
-  end(next, total <= 10 ? 'loss' : 'win', total <= 10 ? next.config.loss : next.config.win);
+  const lost = total <= SIX_ACTIONS_RULES.postCheckLower;
+  end(next, lost ? 'loss' : 'win', lost ? next.config.loss : next.config.win);
   return { ...result, total, fight: next };
 }

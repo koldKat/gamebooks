@@ -1,5 +1,5 @@
 import { createCustomOpponentSetup } from '../../custom-setup.js';
-import { definition, ENCOUNTERS } from './definition.js';
+import { definition, ENCOUNTERS, DEEP_RULES } from './definition.js';
 import * as rules from './combat.js';
 import * as effects from './effects.js';
 import { createState } from './state.js';
@@ -10,6 +10,8 @@ import { registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../
 import { t } from '../../../i18n.js';
 
 const ID = definition.stateKey;
+const batFishCount = () => ENCOUNTERS.find(entry=>entry.remainingBatFish).enemies.length;
+const allyLimit = () => Math.max(0,...ENCOUNTERS.filter(entry=>entry.ally).map(entry=>entry.ally.stamina));
 const FIELDS = ['skill', 'skillInitial', 'stamina', 'staminaInitial', 'luck', 'luckInitial', 'provisions', 'gold',
   'attackModifier', 'weaponModifier', 'nextFightModifier'];
 const EQUIPMENT = ['unarmed', 'swiftstinger', 'talisman', 'anemoneRing'];
@@ -26,7 +28,7 @@ export function createDemonsPanel({ document, t, getRun, getBookId, saveState, s
   const store = createState(() => ({ currentBookId: getBookId(), currentPlaythrough: getRun, saveState }));
   let shownRun, rendered;
   const button = key => `<button type="button" class="inv-add-btn bsim-action-btn" id="${ID}-${key}">${escape(tk(key))}</button>`;
-  const input = (key, optional = false) => `<label class="inv-edit-row" id="${ID}-${key}-row"><span>${escape(tk(key))}</span><input class="inv-edit-input" id="${ID}-${key}" type="number" min="${SIGNED.has(key) ? -1000 : key.endsWith('Initial') || key === 'previousOgreStamina' || key === 'remainingBatFish' ? 1 : 0}" max="${key === 'remainingBatFish' ? 4 : key === 'allyStamina' ? 9 : SIGNED.has(key) ? 1000 : 10000}" step="1"${optional ? '' : ' required'}></label>`;
+  const input = (key, optional = false) => `<label class="inv-edit-row" id="${ID}-${key}-row"><span>${escape(tk(key))}</span><input class="inv-edit-input" id="${ID}-${key}" type="number" min="${SIGNED.has(key) ? -1000 : key.endsWith('Initial') || key === 'previousOgreStamina' || key === 'remainingBatFish' ? 1 : 0}" max="${key === 'remainingBatFish' ? batFishCount() : key === 'allyStamina' ? allyLimit() : SIGNED.has(key) ? 1000 : 10000}" step="1"${optional ? '' : ' required'}></label>`;
   const checkbox = key => `<label class="bsim-checkbox" id="${ID}-${key}-row"><input type="checkbox" id="${ID}-${key}">${escape(tk(key))}</label>`;
   function number(key, optional = false) {
     const field = el(key), raw = field.value.trim(), value = Number(raw);
@@ -91,7 +93,7 @@ export function createDemonsPanel({ document, t, getRun, getBookId, saveState, s
       if (config[flag]) notes.push(tk('rule.' + key));
     }
     if (config.preWound) notes.push(tk('rule.preWound', { damage: config.preWound }));
-    if (config.incomingDamage === 3) notes.push(tk('rule.snakes'));
+    if (config.incomingDamage === DEEP_RULES.noteIncomingDamage) notes.push(tk('rule.snakes'));
     if (config.mode) notes.push(tk('rule.' + config.mode));
     if (config.attackModifier) notes.push(tk('rule.slime'));
     if (config.escape?.damage === 0 && !config.escape.fatal) notes.push(tk('rule.freeEscape'));
@@ -110,7 +112,7 @@ export function createDemonsPanel({ document, t, getRun, getBookId, saveState, s
     el('encounter').value = data.setup.encounter ?? '0';
     customSetup.render();
     const config = selected();
-    for (const key of ['remainingBatFish', 'previousOgreStamina', 'allyStamina']) el(key).value = data.setup[key] ?? (key === 'remainingBatFish' ? '4' : '');
+    for (const key of ['remainingBatFish', 'previousOgreStamina', 'allyStamina']) el(key).value = data.setup[key] ?? (key === 'remainingBatFish' ? String(batFishCount()) : '');
     for (const key of ['axeFish', 'sawFish', 'preWoundApplied']) el(key).checked = data.setup[key] ?? false;
     for (const [key, visible] of [['remainingBatFish', config.remainingBatFish], ['previousOgreStamina', config.injuredOgre],
       ['allyStamina', config.ally], ['axeFish', config.krakenInjuries], ['sawFish', config.krakenInjuries], ['preWoundApplied', config.preWound]]) {

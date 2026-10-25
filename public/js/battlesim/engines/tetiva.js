@@ -1,9 +1,10 @@
-export function tetivaEncounter(section) {
+export function tetivaEncounter(section, rules = {}) {
+  const effects = typeof section === 'number' ? rules[section] || {} : {};
   return {
-    enemyFirst: section === 119 || section === 279,
-    initiativeBySpeed: section === 211,
-    variableDefense: section === 109 || section === 119,
-    kobaldi: section === 279,
+    enemyFirst: effects.enemyFirst === true,
+    initiativeBySpeed: effects.initiativeBySpeed === true,
+    variableDefense: effects.variableDefense === true,
+    kobaldi: effects.kobaldi === true,
   };
 }
 

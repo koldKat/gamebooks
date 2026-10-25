@@ -1,6 +1,6 @@
 import { prepareCustomDemonEncounter } from './opponents.js';
 import { FIRE_WOLF_ATTRIBUTES, rollFireWolfCharacter, fireWolfNaturalLife } from './fire-wolf.js';
-import { cryptsEnemy, installCryptsRoster, CRYPTS_EQUIPMENT, CRYPTS_VARIANTS, CRYPTS_SPECIAL_ENEMIES } from './crypts-of-terror-roster.js';
+import { cryptsEnemy, installCryptsRoster, CRYPTS_EQUIPMENT, CRYPTS_VARIANTS, CRYPTS_SPECIAL_ENEMIES, CRYPTS_RULES } from './crypts-of-terror-roster.js';
 
 export function rollCryptsCharacter(random = Math.random) {
   const player = rollFireWolfCharacter(random);
@@ -30,7 +30,7 @@ function manualEnemy(name, values) {
   if (!values || keys.some(key => !Number.isFinite(values[key]) || values[key] < 0) || values.lifePoints <= 0) {
     throw new Error('This opponent needs manually supplied statistics');
   }
-  if (name === 'Shaman Wizard' && (!Number.isFinite(values.power) || values.power < 0)) {
+  if (name === CRYPTS_RULES.manualPowerEnemy && (!Number.isFinite(values.power) || values.power < 0)) {
     throw new Error('The Shaman Wizard needs manually supplied Power');
   }
   return { ...structuredClone(values), name, maxLife: values.lifePoints,
@@ -54,7 +54,7 @@ export function prepareCryptsEncounter(section, player, { manual = null, haroldW
   });
   if (clementineUnarmed) for (const enemy of enemies) if (enemy.name === 'Clementine') enemy.weapon = CRYPTS_VARIANTS[enemy.name].unarmed.weapon;
   let first = encounter.first ?? null;
-  if (Number(encounter.section) === 47 && haroldWarning) first = 'player';
+  if (Number(encounter.section) === CRYPTS_RULES.haroldWarningSection && haroldWarning) first = 'player';
   return { encounter: structuredClone(encounter), player: p, enemies,
     options: { ...options, first, cursedStone, orb, suppressDoombringer: !!encounter.crypt,
       manualGroup: enemies.length > 1, enemyOpening: encounter.enemyOpening ?? 0 } };

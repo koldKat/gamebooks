@@ -1,11 +1,24 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
+await loadFixtureRoster(534);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { FIRE_WOLF_RULES } from '../../../public/js/battlesim/engines/demonspawn/fire-wolf-roster.js';
 import { FIRE_WOLF_SPELLS, createFireWolfMagicSection, enterFireWolfMagicSection,
   castFireWolfSpell, castFireWolfRegentSpell } from '../../../public/js/battlesim/engines/demonspawn/fire-wolf-magic.js';
 
 const low = () => 0, high = () => 0.999;
 const player = extra => ({ lifePoints: 200, power: 100, maxPower: 100, ...extra });
 const rolls = values => () => values.shift();
+
+test('Regent spell effects use loaded metadata', () => {
+  const saved=structuredClone(FIRE_WOLF_RULES.regent);
+  try {
+    Object.assign(FIRE_WOLF_RULES.regent,{paralysisRounds:4,timetrapMultiplier:3,crackDamage:9,fireboltDamage:13,leprosyPercent:6});
+    for(const [spell,key,value] of [['blight','paralysisRounds',4],['timetrap','destination',36],['crackOfDoom','damage',9],['firebolt','damage',13],['leprosy','leprosyPercent',6]]){
+      assert.equal(castFireWolfRegentSpell({lifePoints:610},spell,high)[key],value);
+    }
+  } finally {Object.assign(FIRE_WOLF_RULES.regent,saved);}
+});
 
 test('all ten spell costs match the printed spell table', () => {
   assert.deepEqual(FIRE_WOLF_SPELLS, { armour: 25, crypt: 10, fireball: 15, invisibility: 30,

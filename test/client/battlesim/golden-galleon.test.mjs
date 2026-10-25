@@ -1,3 +1,4 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ARCS, SHIPS, DIAGRAMS, TACTICS } from '../../../public/js/battlesim/books/728/definition.js';
@@ -7,6 +8,8 @@ import en from '../../../public/js/i18n/en/battlesim/battlesim728.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim728.js';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
+
+await loadFixtureRoster(728);
 
 const start = changes => combat.startFight({ ...combat.newShip('large'), ...changes });
 const position = (section, changes = {}) => ({ ...start(), section, ...changes });

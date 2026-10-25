@@ -1,3 +1,4 @@
+import { DIVINE_WEAPON_NAME_RULES } from './definition.js';
 // Book 402 Return of the Wanderer (Cretan Chronicles); Honour carries over.
 import { createCretanSim } from "../.././engines/cretan.js";
 
@@ -7,6 +8,7 @@ const _sim = createCretanSim({
   stateKey: 'sim402',
   i18nPrefix: 'battlesim402',
   defaultHonour: 7,
+  requiresDivineNameRules: DIVINE_WEAPON_NAME_RULES,
 });
 
 export const initSim402      = _sim.init;

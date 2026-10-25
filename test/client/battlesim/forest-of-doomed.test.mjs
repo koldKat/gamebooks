@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
+const rosterEntries = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/462.json', import.meta.url), 'utf8')).enemies.map(row => row.stats.entry);
+
 const source = readFileSync(new URL('../../../public/js/battlesim/battlesim462.js', import.meta.url), 'utf8')
   .replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
 
@@ -10,6 +12,7 @@ function fixture(saved) {
   const pt = saved ? { sim462: structuredClone(saved) } : {};
   const dice = [];
   const context = vm.createContext({
+    createRosterLoader: (_id, _dataset, install) => { install(structuredClone(rosterEntries)); return async () => {}; },
     currentPlaythrough: () => pt, saveState: () => {}, escapeHtml: value => value,
     t: (key, params) => JSON.stringify({ key, params }),
     Math: Object.assign(Object.create(Math), { random: () => {
@@ -159,4 +162,18 @@ test('all simulator translation keys exist', () => {
   const text = readFileSync(new URL('../../../public/js/i18n/en/battlesim/battlesim462.js', import.meta.url), 'utf8');
   const context = { table: null }; vm.runInNewContext(text.replace('export default', 'table ='), context);
   for (const match of source.matchAll(/['"](battlesim462\.[\w.]+)['"]/g)) assert.equal(typeof context.table[match[1]], 'string', match[1]);
+});
+
+
+test('renamed encounter metadata controls attack, whip and paralysis setup', () => {
+  const entry = rosterEntries.find(entry => entry.section === 352);
+  const original = structuredClone(entry);
+  try {
+    entry.section = 900; entry.rules = {attackModifier:-5,whip:true,paralyzeAfter:3};
+    const f = ready(fixture()); f.d.enemy.name = 'Custom §900';
+    f.run('_resetEncounterKnobs(_data())');
+    assert.equal(f.d.player.attackModifier,-5);
+    assert.equal(f.d.encounter.whip,true);
+    assert.equal(f.d.encounter.paralyzeAfter,3);
+  } finally { Object.assign(entry,original); }
 });

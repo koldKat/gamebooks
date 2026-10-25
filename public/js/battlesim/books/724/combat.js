@@ -1,6 +1,6 @@
 import { customFightingEncounter } from '../../engines/fighting-fantasy/opponents.js';
 import * as core from '../../engines/sorcery/core.js';
-import { CHARACTER_DEFAULTS, RULES_REVISION, encounterFor } from './definition.js';
+import { CHARACTER_DEFAULTS, NPC_RULES, RULES_REVISION, SUMMONED_ALLIES, encounterFor } from './definition.js';
 
 export { die, integer, rollDice, testLuck } from '../../engines/sorcery/core.js';
 
@@ -43,7 +43,8 @@ const livingAlly = (fight, enemy) => fight.allies.findIndex(ally => ally.stamina
 export function activeEnemies(fight) {
   if (!fight || fight.outcome) return [];
   const indices = living(fight);
-  if (fight.config.mode === 'captain') return indices.includes(0) || indices.includes(1) ? indices.filter(index => index < 2) : indices;
+  if (fight.config.mode === 'captain') return NPC_RULES.captain.frontline.some(index => indices.includes(index))
+    ? indices.filter(index => NPC_RULES.captain.frontline.includes(index)) : indices;
   return ['group', 'red-eyes'].includes(fight.config.mode) ? indices.slice(0, fight.config.activeLimit ?? indices.length) : indices.slice(0, 1);
 }
 
@@ -87,10 +88,11 @@ function finish(fight) {
   } else if (!living(fight).length) {
     fight.outcome = fight.config.winOutcome ?? 'win';
     fight.destination = fight.config.win;
-  } else if (fight.config.mode === 'captain' && living(fight).every(index => index === 2) && fight.enemies[2].stamina <= 6) {
+  } else if (fight.config.mode === 'captain' && living(fight).every(index => index === NPC_RULES.captain.enemyIndex)
+    && fight.enemies[NPC_RULES.captain.enemyIndex].stamina <= NPC_RULES.captain.stamina) {
     fight.outcome = 'continue';
-    fight.destination = 391;
-    fight.mercyDestination = 347;
+    fight.destination = NPC_RULES.captain.destination;
+    fight.mercyDestination = NPC_RULES.captain.mercyDestination;
   } else if (fight.config.secondHitDestination && fight.playerHits >= 2) {
     fight.outcome = 'continue';
     fight.destination = fight.config.secondHitDestination;
@@ -174,10 +176,12 @@ export function startFight(section, character, options = {}, roll) {
   carryWounds(fight, options.carryFrom, options);
   if (config.volley) fight.volleyRemaining = core.integer(options.volleyCount ?? character.pebbles, 1, character.pebbles);
   if (config.surpriseChoice) {
-    const surprise = options.surprise ?? 'none';
-    if (!['none', '446', '553'].includes(surprise)) throw new RangeError('Invalid surprise');
-    config.playerWinsTies = surprise !== 'none';
-    if (surprise === '446') fight.enemies[0].skill = Math.max(0, fight.enemies[0].skill - 3);
+    const settings = NPC_RULES.roomGuards;
+    const surprise = options.surprise ?? settings.defaultChoice;
+    const choice = settings.choices.find(value => value.value === surprise);
+    if (!choice) throw new RangeError('Invalid surprise');
+    config.playerWinsTies = choice.winsTies;
+    if (choice.skillLoss) fight.enemies[choice.enemyIndex].skill = Math.max(0, fight.enemies[choice.enemyIndex].skill - choice.skillLoss);
   }
   for (const enemy of fight.enemies) {
     enemy.skill = Math.max(0, enemy.skill + (config.enemySkillModifier ?? 0));
@@ -226,7 +230,7 @@ export function startFight(section, character, options = {}, roll) {
     fight.player.nextFightDoubleDamage = false;
   }
   if (config.summon) {
-    const ally = config.summon === 'giant' ? { key: 'giant', skill: 8, stamina: 9 } : { key: 'goblin', skill: 5, stamina: 5 };
+    const ally = config.summon === 'giant' ? SUMMONED_ALLIES.giant : SUMMONED_ALLIES.goblin;
     fight.allies = Array.from({ length: summonCount }, () => ({ ...ally, enemy: null, gazeUses: 0, gazeBurns: 0 }));
   }
   for (const index of copies) {
@@ -302,7 +306,8 @@ function gaze(fight, hit, direction, roll) {
   const fromEnemy = direction === 'outgoing';
   const user = fromEnemy ? fight.gazeUses : ally;
   const uses = fromEnemy ? user[hit.enemy] ?? 0 : user.gazeUses;
-  const threshold = Math.max(1, 6 - uses), value = core.die(roll);
+  const settings = NPC_RULES.redEyes;
+  const threshold = Math.max(settings.minimumThreshold, settings.initialThreshold - uses), value = core.die(roll);
   if (fromEnemy) user[hit.enemy] = uses + 1;
   else user.gazeUses++;
   const burnt = value >= threshold;
@@ -312,14 +317,14 @@ function gaze(fight, hit, direction, roll) {
   if (fromEnemy && hit.actor === 'player') {
     fight.gazeBurns++;
     damagePlayer(fight, amount, 'gazeDamage');
-    if (fight.gazeBurns >= 2) { fight.player.stamina = 0; fight.player.dead = true; }
+    if (fight.gazeBurns >= settings.fatalBurns) { fight.player.stamina = 0; fight.player.dead = true; }
   } else if (fromEnemy) {
     ally.gazeBurns++;
-    ally.stamina = ally.gazeBurns >= 2 ? 0 : Math.max(0, ally.stamina - amount);
+    ally.stamina = ally.gazeBurns >= settings.fatalBurns ? 0 : Math.max(0, ally.stamina - amount);
   } else {
     const enemy = fight.enemies[hit.enemy];
     enemy.gazeBurns = (enemy.gazeBurns ?? 0) + 1;
-    enemy.stamina = enemy.gazeBurns >= 2 ? 0 : Math.max(0, enemy.stamina - amount);
+    enemy.stamina = enemy.gazeBurns >= settings.fatalBurns ? 0 : Math.max(0, enemy.stamina - amount);
   }
 }
 
@@ -415,7 +420,8 @@ export function throwPebble(fight, target = null, roll) {
     else next.enemies[target].stamina = Math.max(0, next.enemies[target].stamina - volley.damage);
   } else next.volleyMisses++;
   next.events.push({ kind: 'pebble', enemy: target, roll: value, hit, damage: hit ? volley.damage ?? 0 : 0 });
-  if (volley.frightens && next.frightened >= 3) { next.outcome = 'continue'; next.destination = 397; next.volleyActive = false; }
+  const immediate = volley.frightens ? NPC_RULES.frightenedGuards.routes[0] : null;
+  if (immediate && next.frightened >= immediate.minimum) { next.outcome = 'continue'; next.destination = immediate.destination; next.volleyActive = false; }
   else if (!living(next).length || !next.player.pebbles || !next.volleyRemaining || volley.missLimit && next.volleyMisses >= volley.missLimit) next.volleyActive = false;
   return next.outcome || next.volleyActive ? next : stopVolley(next);
 }
@@ -427,8 +433,9 @@ export function stopVolley(fight) {
   const next = structuredClone(fight);
   next.volleyActive = false;
   if (next.config.volley.frightens) {
-    if (next.frightened >= 2) { next.outcome = 'continue'; next.destination = next.frightened >= 3 ? 397 : 401; }
-    else if (next.frightened === 1) next.enemies[0].excluded = true;
+    const settings = NPC_RULES.frightenedGuards, route = settings.routes.find(value => next.frightened >= value.minimum);
+    if (route) { next.outcome = 'continue'; next.destination = route.destination; }
+    else if (next.frightened === settings.excludeAt) next.enemies[settings.excludeEnemy].excluded = true;
   }
   return finish(next);
 }

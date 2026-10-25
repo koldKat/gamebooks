@@ -1,5 +1,5 @@
 import { customFreewayEncounter } from './opponents.js';
-import { FREEWAY_FIGHTS, FREEWAY_CONTESTS, FREEWAY_RACES } from './roster.js';
+import { FREEWAY_FIGHTS, FREEWAY_CONTESTS, FREEWAY_RACES, FREEWAY_RULES } from './roster.js';
 
 const clone = value => structuredClone(value);
 function integer(value, min = 0, max = 10000) {
@@ -132,12 +132,13 @@ export function startFreewayRace(section) {
 }
 export function freewayRaceStep(race, roll) {
   if (race?.rulesVersion !== 1 || race.status !== 'racing') throw new RangeError('No active race');
-  integer(race.player, 0, 23); integer(race.enemy, 0, 23); integer(race.round);
+  const target = FREEWAY_RULES.raceTarget;
+  integer(race.player, 0, target - 1); integer(race.enemy, 0, target - 1); integer(race.round);
   const next = clone(race), enemyDie = die(roll);
   next.round++; next.enemy += enemyDie;
-  if (next.enemy >= 24) { next.status = 'loss'; next.section = next.config.loss; return { race: next, enemyDie, playerDie: null }; }
+  if (next.enemy >= target) { next.status = 'loss'; next.section = next.config.loss; return { race: next, enemyDie, playerDie: null }; }
   const playerDie = die(roll);
   next.player += playerDie + next.config.boost;
-  if (next.player >= 24) { next.status = 'win'; next.section = next.config.win; }
+  if (next.player >= target) { next.status = 'win'; next.section = next.config.win; }
   return { race: next, enemyDie, playerDie };
 }

@@ -41,7 +41,7 @@ function _resetEncounterKnobs(d) {
 }
 
 function _runRound() {
-  const { LIZARDINE_FIRE_DMG, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _effectiveSkill, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll1d6, _roll2d6, _sideEnemyNameSafe, saveState, t } = getContext();
+  const { CITY_RULES, LIZARDINE_FIRE_DMG, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _effectiveSkill, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll1d6, _roll2d6, _sideEnemyNameSafe, saveState, t } = getContext();
 
   const d = _data();
   if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
@@ -80,7 +80,7 @@ function _runRound() {
   // Lizardine breath: each round, 1-3 on 1d6 costs 1 Luck-eligible STAMINA (sec 392).
   if (d.player.lizardineBreath && d.player.stamina > 0) {
     const fireRoll = _roll1d6();
-    if (fireRoll <= 3) {
+    if (fireRoll <= CITY_RULES.fireHitMax) {
       d.player.stamina = Math.max(0, d.player.stamina - LIZARDINE_FIRE_DMG);
       _appendLog(d, t('battlesim201.log.fire_hit', { roll: fireRoll, n: LIZARDINE_FIRE_DMG, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
       if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'fire-hit' });

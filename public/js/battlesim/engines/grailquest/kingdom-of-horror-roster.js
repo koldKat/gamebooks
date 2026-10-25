@@ -3,15 +3,20 @@ import { createRosterLoader } from '../../roster-data.js';
 export let KINGDOM_ENCOUNTERS = Object.freeze([]);
 export let KINGDOM_DREAMS = Object.freeze([]);
 export let KINGDOM_SUPPORT = Object.freeze({});
+export const KINGDOM_RULES = {};
+export const KINGDOM_FRED = {};
 export const loadRoster = createRosterLoader(530, 'CATALOG', rows => {
   const freeze = spec => Object.freeze({...spec, enemies: Object.freeze(spec.enemies.map(Object.freeze))});
   const catalogs = ['KINGDOM_ENCOUNTERS', 'KINGDOM_DREAMS']
     .map(name => rows.filter(row => row.catalog === name).map(row => freeze(row.spec)));
   const support = rows.find(row => row.support)?.support;
-  if (catalogs.some(rows => !rows.length) || !support?.gnurlbash) throw new Error('Incomplete encounter catalogs');
+  if (catalogs.some(rows => !rows.length) || !support?.gnurlbash || !support.fred || !support.rules) throw new Error('Incomplete encounter catalogs');
   KINGDOM_ENCOUNTERS = Object.freeze(catalogs[0]);
   KINGDOM_DREAMS = Object.freeze(catalogs[1]);
-  KINGDOM_SUPPORT = Object.freeze(support);
+  const { rules, fred, ...profiles } = support;
+  Object.assign(KINGDOM_RULES, rules);
+  Object.assign(KINGDOM_FRED, fred);
+  KINGDOM_SUPPORT = Object.freeze(profiles);
 });
 
 export const KINGDOM_MAGIC_STOCK = Object.freeze([

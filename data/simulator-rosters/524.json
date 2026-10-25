@@ -39,7 +39,8 @@
           "mode": "wyvern",
           "breath": 5,
           "fortuneReward": 5,
-          "expertiseReward": 1
+          "expertiseReward": 1,
+          "selectableSurprise": true
         },
         "part": {
           "name": "Red Wyvern",
@@ -85,7 +86,8 @@
           "mode": "wyvern",
           "breath": 1,
           "fortuneReward": 3,
-          "expertiseReward": 1
+          "expertiseReward": 1,
+          "selectableSurprise": true
         },
         "part": {
           "name": "Green Wyvern",
@@ -132,7 +134,8 @@
           "breath": 3,
           "fortuneReward": 4,
           "expertiseReward": 1,
-          "lightning": true
+          "lightning": true,
+          "selectableSurprise": true
         },
         "part": {
           "name": "Blue Wyvern",
@@ -270,7 +273,14 @@
           ],
           "disease": true,
           "escapeDamage": 0,
-          "fortuneReward": 3
+          "fortuneReward": 3,
+          "carryFrom": [
+            41,
+            105,
+            190,
+            374,
+            384
+          ]
         },
         "part": {
           "name": "Tripodal Creature",
@@ -446,7 +456,8 @@
             }
           ],
           "disease": false,
-          "fortuneReward": 2
+          "fortuneReward": 2,
+          "startsDiseased": true
         },
         "part": {
           "name": "Tripodal Creature",
@@ -556,6 +567,9 @@
               "initialVitality": 7,
               "damage": 1
             }
+          },
+          "npcRules": {
+            "reinforcementRound": 2
           }
         },
         "part": {
@@ -622,6 +636,9 @@
               "initialVitality": 7,
               "damage": 1
             }
+          },
+          "npcRules": {
+            "reinforcementRound": 2
           }
         },
         "part": {
@@ -688,6 +705,9 @@
               "initialVitality": 7,
               "damage": 1
             }
+          },
+          "npcRules": {
+            "reinforcementRound": 2
           }
         },
         "part": {
@@ -754,6 +774,9 @@
               "initialVitality": 7,
               "damage": 1
             }
+          },
+          "npcRules": {
+            "reinforcementRound": 2
           }
         },
         "part": {
@@ -799,7 +822,10 @@
           ],
           "mode": "gaps",
           "rounds": 3,
-          "escapeDamage": 2
+          "escapeDamage": 2,
+          "npcRules": {
+            "roundDamage": 2
+          }
         },
         "part": {
           "name": "Spectral Guardian",
@@ -964,7 +990,8 @@
           "mode": "all",
           "penalty": 1,
           "fortuneReward": 5,
-          "expertiseReward": 1
+          "expertiseReward": 1,
+          "selectableSurprise": true
         },
         "part": {
           "name": "Guard 1",
@@ -1038,7 +1065,8 @@
           "mode": "all",
           "penalty": 1,
           "fortuneReward": 5,
-          "expertiseReward": 1
+          "expertiseReward": 1,
+          "selectableSurprise": true
         },
         "part": {
           "name": "Guard 2",
@@ -1112,7 +1140,8 @@
           "mode": "all",
           "penalty": 1,
           "fortuneReward": 5,
-          "expertiseReward": 1
+          "expertiseReward": 1,
+          "selectableSurprise": true
         },
         "part": {
           "name": "Guard 3",
@@ -1186,7 +1215,8 @@
           "mode": "all",
           "penalty": 1,
           "fortuneReward": 5,
-          "expertiseReward": 1
+          "expertiseReward": 1,
+          "selectableSurprise": true
         },
         "part": {
           "name": "Guard 4",
@@ -1260,7 +1290,8 @@
           "mode": "all",
           "penalty": 1,
           "fortuneReward": 5,
-          "expertiseReward": 1
+          "expertiseReward": 1,
+          "selectableSurprise": true
         },
         "part": {
           "name": "Guard 5",
@@ -1351,7 +1382,12 @@
           ],
           "mode": "slug",
           "escapeDamage": 4,
-          "fortuneReward": 4
+          "fortuneReward": 4,
+          "npcRules": {
+            "dodgeCoins": 3,
+            "spittleThreshold": 12,
+            "spittleDamage": 4
+          }
         },
         "part": {
           "name": "Giant Slug",
@@ -1507,7 +1543,8 @@
           ],
           "mode": "all",
           "rounds": 10,
-          "reinforcementsFatal": true
+          "reinforcementsFatal": true,
+          "fallenWeaponDamage": 4
         },
         "part": {
           "name": "Bodyguard 1",
@@ -1559,7 +1596,8 @@
           ],
           "mode": "all",
           "rounds": 10,
-          "reinforcementsFatal": true
+          "reinforcementsFatal": true,
+          "fallenWeaponDamage": 4
         },
         "part": {
           "name": "Bodyguard 2",
@@ -1646,7 +1684,10 @@
             }
           ],
           "mode": "crossbow",
-          "playerSurprise": true
+          "playerSurprise": true,
+          "npcRules": {
+            "boltDamage": 2
+          }
         },
         "part": {
           "name": "Hobgoblin",
@@ -1885,7 +1926,32 @@
           "disease": true,
           "escapeDamage": 0,
           "escapeAfter": 3,
-          "fortuneReward": 0
+          "fortuneReward": 0,
+          "companionRounds": true,
+          "carryFrom": [
+            41,
+            105,
+            190,
+            374,
+            384
+          ],
+          "setupRules": {
+            "initialFlowers": 5,
+            "companionChoices": [
+              {
+                "labelKey": "princess",
+                "rounds": 3
+              },
+              {
+                "labelKey": "maid",
+                "rounds": 5
+              },
+              {
+                "labelKey": "both",
+                "rounds": 8
+              }
+            ]
+          }
         },
         "part": {
           "name": "Tripodal Creature",

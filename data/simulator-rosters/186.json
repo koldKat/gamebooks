@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "bookId": 186,
+  "family": "fighting-fantasy",
+  "source": "Existing nerve-stick and Manslayer armour damage rules. One legacy opponent hosts shared metadata; all 36 legacy profiles retain their original columns.",
+  "enemies": [
+    {
+      "key": "damage-rules",
+      "name": "Squinns (1st)",
+      "attack": 8,
+      "defense": null,
+      "hp": 16,
+      "pb": null,
+      "adopt": {
+        "name": "Squinns (1st)",
+        "attack": 8,
+        "defense": null,
+        "hp": 16,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "DAMAGE_RULES",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "nerve": {
+            "threshold": 4,
+            "damage": 4,
+            "ordinaryDamage": 2
+          },
+          "armor": {
+            "threshold": 5,
+            "damage": 1,
+            "blockedDamage": 0
+          }
+        },
+        "part": {
+          "name": "Squinns (1st)",
+          "attack": 8,
+          "defense": null,
+          "hp": 16,
+          "pb": null
+        },
+        "count": 1
+      }
+    }
+  ]
+}

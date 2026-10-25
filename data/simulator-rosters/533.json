@@ -66,6 +66,35 @@
                 "armour": 0,
                 "remainingFights": 7
               }
+            },
+            "rules": {
+              "countRanges": {
+                "shapes": [
+                  0,
+                  5
+                ],
+                "twoDice": [
+                  2,
+                  12
+                ],
+                "vampires": [
+                  1,
+                  3
+                ],
+                "oneDie": [
+                  1,
+                  6
+                ]
+              },
+              "shapesOffset": 2,
+              "shapesDivisor": 2,
+              "vampiresDivisor": 2,
+              "monkeyMinRoll": 4,
+              "germPlayerRoll": 2,
+              "germEnemyAbove": 8,
+              "orangutigerMinRoll": 10,
+              "consecutiveDrainAmount": 2,
+              "palsSection": 144
             }
           }
         },

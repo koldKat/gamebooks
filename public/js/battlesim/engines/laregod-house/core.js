@@ -2,9 +2,13 @@ import { validateOpponents } from '../../opponents.js';
 import { createRosterLoader } from '../../roster-data.js';
 
 export let LAREGOD_ENCOUNTERS = {};
+export const LAREGOD_RULES = {};
 export const loadRoster = createRosterLoader(644, 'ENCOUNTERS', rows => {
-  const entries = Object.fromEntries(rows.map(row => [row.context, row]));
+  const rules = rows.find(row => row.support?.rules)?.support.rules;
+  if (!rules) throw new Error('Missing Laregod settings');
+  const entries = Object.fromEntries(rows.map(({support, ...row}) => [row.context, row]));
   if (!['yard', 'market', 'guard'].every(key => entries[key])) throw new Error('Incomplete Laregod catalog');
+  Object.assign(LAREGOD_RULES, rules);
   LAREGOD_ENCOUNTERS = entries;
 });
 const sourceEncounter = context => LAREGOD_ENCOUNTERS[context] ?? Object.values(LAREGOD_ENCOUNTERS).find(row => row.manualDefault);
@@ -12,6 +16,9 @@ const sourceEncounter = context => LAREGOD_ENCOUNTERS[context] ?? Object.values(
 const clone = value => structuredClone(value);
 const contexts = new Set(['yard', 'market', 'guard', 'manual']);
 const opponents = new Set(['wingrugur', 'butchersword', 'other']);
+
+export const laregodOpponent = (context, manual = 'other') =>
+  context === 'manual' ? manual : sourceEncounter(context).opponent;
 
 function integer(value, maximum = 1000000) {
   if (!Number.isSafeInteger(value) || value < 0 || value > maximum) throw new RangeError('Invalid combat number');
@@ -30,15 +37,15 @@ export function laregodPoints(equipment = {}, opponent = 'other', context = 'man
   if (!opponents.has(opponent) || !contexts.has(context)) throw new RangeError('Invalid encounter');
   const armour = ['sword', 'mail', 'dagger'].filter(key => equipment[key]).length;
   const set = armour === 3 ? 20 : armour * 5;
-  const scimitar = equipment.scimitar ? opponent === 'other' ? 5 : 20 : 0;
-  const stone = equipment.stone ? context === 'market' ? 20 : context === 'guard' ? 10 : 0 : 0;
+  const scimitar = equipment.scimitar ? LAREGOD_RULES.scimitar[opponent] : 0;
+  const stone = equipment.stone ? LAREGOD_RULES.stone[context] ?? 0 : 0;
   return 20 + set + scimitar + stone + (equipment.success ? 10 : 0);
 }
 
 export function startLaregodFight(context, options = {}, roll = die) {
   if (!contexts.has(context)) throw new RangeError('Invalid fight context');
   const encounter = sourceEncounter(context);
-  const opponent = context === 'manual' ? options.opponent ?? 'other' : encounter.opponent;
+  const opponent = laregodOpponent(context, options.opponent ?? 'other');
   const points = laregodPoints(options.equipment, opponent, context);
   const enemyNumber = options.enemyNumber === undefined ? draw(roll) : integer(options.enemyNumber);
   const custom = context === 'manual' && options.opponents ? validateOpponents(options.opponents,

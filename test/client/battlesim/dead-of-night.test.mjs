@@ -2,13 +2,15 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
+const roster = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/236.json', import.meta.url), 'utf8'));
 
 const source = readFileSync(new URL('../../../public/js/battlesim/battlesim236.js', import.meta.url), 'utf8')
   .replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
 
 function fixture(saved) {
   const pt = saved ? { sim236: structuredClone(saved) } : {};
-  const context = vm.createContext({ currentPlaythrough: () => pt, saveState: () => {}, t: k => k, escapeHtml: s => s, showAlert: () => {} });
+  const context = vm.createContext({ currentPlaythrough: () => pt, saveState: () => {}, t: k => k, escapeHtml: s => s, showAlert: () => {},
+    createRosterLoader: (_id, dataset, install) => { install(roster.enemies.filter(row => row.stats.dataset === dataset).map(row => row.stats.entry)); return () => Promise.resolve(); } });
   vm.runInContext(source + '\n_renderAll = () => {};', context);
   const run = s => vm.runInContext(s, context);
   const d = run('_data()');
@@ -122,6 +124,22 @@ function servant() {
   f.run('_roll2d6 = () => 7');
   return f;
 }
+
+for (const [name, matches] of [['DEMONIC SERVANT (§254)',true],['Custom demonic servant helper',true],['Notademonic Servant',false],['Demonic Servants',false]]) {
+  test('metadata preserves custom-name word boundaries: ' + name, () => {
+    const f = servant(); f.d.enemy.name = name;
+    f.run('_runRound(); _skipLuck(); _runRound()');
+    assert.equal(f.d.enemy.stamina,matches?0:6);
+  });
+}
+
+test('Servant identification follows the installed metadata rather than a code fallback', () => {
+  const f=servant(); f.run('SERVANT_NAME_RULES = [/custom sentinel/i]');
+  f.run('_runRound(); _skipLuck(); _runRound()');assert.equal(f.d.enemy.stamina,6);
+  const custom=servant();custom.d.enemy.name='Custom Sentinel';
+  custom.run('SERVANT_NAME_RULES = [/custom sentinel/i]; _runRound(); _skipLuck(); _runRound()');
+  assert.equal(custom.d.enemy.stamina,0);
+});
 
 test('two successive blows destroy a Servant, including through armour', () => {
   for (const armour of [false, true]) {
@@ -241,4 +259,21 @@ test('Myurr receives only one wound while making two attacks', () => {
   losing.run('_roll2d6 = () => 7; _runRound()');
   assert.equal(losing.d.player.stamina, 8);
   assert.equal(losing.d.pendingLuckQueue.length, 2);
+});
+
+test('Myurr extra attacks come from the installed database settings',()=>{
+  for(const extra of [0,2]){
+    const f=ready();f.d.player.myurrFight=true;f.d.enemy.skill=20;
+    f.run(`MYURR_RULES.extraAttacks=${extra}; _roll2d6=()=>7; _runRound()`);
+    assert.equal(f.d.player.stamina,12-2*(1+extra));
+    assert.equal(f.d.pendingLuckQueue.length,1+extra);
+  }
+});
+
+test('both database datasets share one roster fetch and parsed response',async()=>{
+  const rules=await import('../../../public/js/battlesim/books/236/definition.js?single-fetch-check');let requests=0,parses=0;
+  const fetcher=async path=>{requests++;assert.equal(path,'/api/books/236/enemies');return {ok:true,json:async()=>{parses++;return roster.enemies;}};};
+  await rules.loadRoster(fetcher);assert.equal(requests,1);assert.equal(parses,1);
+  assert.equal(rules.SERVANT_NAME_RULES.length,1);assert.equal(rules.MYURR_RULES.extraAttacks,1);
+  await rules.loadRoster(fetcher);assert.equal(requests,1);
 });

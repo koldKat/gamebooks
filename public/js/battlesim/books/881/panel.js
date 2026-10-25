@@ -1,4 +1,4 @@
-import { SWORDS, ROSTER } from './definition.js';
+import { SWORDS, ROSTER, ENCOUNTER_SETTINGS } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
@@ -26,16 +26,17 @@ function _fight() {
   if (!d) return;
   const enc = _encounter(d.encounterId);
   if (!d.pendingFight && d.player.izd <= 0) return;
-  const aids = ['orgfelt_gang', 'night_thieves5', 'alkein_thugs', 'wolfspiders'].includes(enc.id);
+  const settings = ENCOUNTER_SETTINGS[enc.id];
   const removed = [];
   for (const kind of ['dagger', 'poison']) {
     const selected = Number(document.getElementById(`sim881-${kind}`).value);
-    if ((kind === 'dagger' && aids || kind === 'poison' && enc.id === 'wolfspiders') && selected >= 0) removed.push(selected);
+    if (settings[kind] && selected >= 0) removed.push(selected);
   }
   if (new Set(removed).size !== removed.length) {
     showAlert(t('battlesim881.ui.distinct')); return;
   }
   const options = {
+    encounterSettings: settings,
     swordId: d.swordId, removed,
     potion: document.getElementById('sim881-potion').checked,
     magicKnife: enc.special === 'knifeThrow' && document.getElementById('sim881-knife-magic').checked,
@@ -120,7 +121,7 @@ function _renderInputs() {
   document.getElementById('sim881-player-sila').value = d.player.sila;
   document.getElementById('sim881-player-izd').value = d.player.izd;
   const enc = _encounter(d.encounterId), pending = !!d.pendingFight;
-  const aids = ['orgfelt_gang', 'night_thieves5', 'alkein_thugs', 'wolfspiders'].includes(enc.id);
+  const settings = ENCOUNTER_SETTINGS[enc.id];
   for (const kind of ['dagger', 'poison', 'target']) {
     const input = document.getElementById(`sim881-${kind}`), selected = input.value;
     const enemies = d.pendingFight?.enemies || (enc.enemies || []).map((enemy, index) => ({ ...enemy, index, remaining: enemy.izd }));
@@ -129,7 +130,7 @@ function _renderInputs() {
     input.innerHTML = none + available.map(enemy => `<option value="${enemy.index}">${escapeHtml(t(enemy.nameKey))} (${enemy.index + 1})</option>`).join('');
     if (Array.from(input.options).some(option => option.value === selected)) input.value = selected;
     input.disabled = pending && kind !== 'target';
-    document.getElementById(`sim881-${kind}-row`).style.display = (kind === 'target' ? enc.chooseTarget : kind === 'poison' ? enc.id === 'wolfspiders' : aids) ? '' : 'none';
+    document.getElementById(`sim881-${kind}-row`).style.display = (kind === 'target' ? enc.chooseTarget : settings[kind]) ? '' : 'none';
   }
   document.getElementById('sim881-potion').disabled = pending;
   document.getElementById('sim881-knife-magic-row').style.display = enc.special === 'knifeThrow' ? '' : 'none';

@@ -6,6 +6,11 @@ import { createRosterLoader } from '../../roster-data.js';
 export let MINE_ENCOUNTERS = [];
 export const loadRoster = createRosterLoader(523, 'MINE_ENCOUNTERS', rows => { MINE_ENCOUNTERS = rows; });
 
+// Resolve older saved encounters without migrating their fields or pending rolls.
+function npcRules(encounter) {
+  return encounter.npcRules ?? MINE_ENCOUNTERS.find(e => String(e.section) === String(encounter.section))?.npcRules ?? {};
+}
+
 export function createMineFight(section, player, { underclothes = false, failedLanding = false, ambush = false, fedusar = false, opponents } = {}) {
   const entry = editableSkyfallEncounter(MINE_ENCOUNTERS.find(e => String(e.section) === String(section)),
     section === 'custom' || MINE_ENCOUNTERS.some(e => String(e.section) === String(section)) ? opponents : undefined);
@@ -59,9 +64,9 @@ export function rollMineRound(fight, target = 0, random = Math.random) {
     } else if (lower.some(roll => roll.index === target)) hits.push({ index: target, damage });
   }
   const embrace = e.mode === 'phantom' && higher.length === 2;
-  const enemyDamage = embrace ? 8 : e.mode === 'troll' && higher.length === 2 ? 3
+  const enemyDamage = embrace ? npcRules(e).embraceDamage : e.mode === 'troll' && higher.length === 2 ? npcRules(e).doubleHitDamage
     : higher.reduce((total, roll) => total + e.foes[roll.index].damage, 0);
-  const mandatoryFortune = embrace ? 4 : higher.length && e.fear ? e.fear : 0;
+  const mandatoryFortune = embrace ? npcRules(e).embraceFortune : higher.length && e.fear ? e.fear : 0;
   const fatal = Boolean(e.fatalMargin && higher.some(roll => roll.total - player.total >= e.fatalMargin));
   fight.pending = { player, rolls, hits, enemyDamage, enemyHits: higher.length, mandatoryFortune, embrace, fatal,
     retry: rolls.every(roll => roll.total === player.total), selection: {} };
@@ -78,7 +83,7 @@ export function settleMineRound(fight, { attackBonus = false, bonusHit = 0, defe
   const e = fight.encounter;
   const mandatory = Math.min(fight.player.fortune, pending.mandatoryFortune);
   fight.player.fortune -= mandatory;
-  if (pending.embrace) fight.player.expertise -= 1;
+  if (pending.embrace) fight.player.expertise -= npcRules(e).embraceExpertiseLoss;
   const fatal = pending.fatal || mandatory < pending.mandatoryFortune;
   const spentAttack = attackBonus && pending.hits.length && fight.player.fortune > 0 ? 1 : 0;
   fight.player.fortune -= spentAttack;

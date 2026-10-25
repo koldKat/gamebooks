@@ -1,5 +1,6 @@
 import { customGrailEncounter } from './opponents.js';
-import { LEGION_ENCOUNTERS, LEGION_DREAMS, LEGION_COMPANIONS, LEGION_EQUIPMENT } from './legion-of-the-dead-roster.js';
+import { LEGION_ENCOUNTERS, LEGION_DREAMS, LEGION_COMPANIONS, LEGION_EQUIPMENT, LEGION_RULES } from './legion-of-the-dead-roster.js';
+export { LEGION_RULES, LEGION_COMPANIONS } from './legion-of-the-dead-roster.js';
 
 const clone = value => JSON.parse(JSON.stringify(value));
 const die = random => 1 + Math.floor(random() * 6);
@@ -240,7 +241,7 @@ export function legionCast(character, spell, random = Math.random, fight = null,
       }
       case 'pip': character.poisonImmune = true; break;
       case 'pals':
-        if (fight?.spec.section === 144) fight.status = 'bypassed';
+        if (fight?.spec.section === LEGION_RULES.palsSection) fight.status = 'bypassed';
         else result.manual = true;
         break;
       case 'pil':
@@ -348,10 +349,10 @@ export function startLegionFight(character, id, options = {}, random = Math.rand
   const spec = clone(original), player = clone(character);
   let count = spec.custom ? spec.enemies.length : spec.count ?? 1;
   if (typeof count === 'string') {
-    const ranges = { shapes: [0, 5], twoDice: [2, 12], vampires: [1, 3], oneDie: [1, 6] };
+    const ranges = LEGION_RULES.countRanges;
     const kind = count;
-    count = options.enemyCount ?? (kind === 'shapes' ? Math.ceil((dice(random)-2)/2)
-      : kind === 'vampires' ? Math.ceil(die(random)/2) : kind === 'oneDie' ? die(random) : dice(random));
+    count = options.enemyCount ?? (kind === 'shapes' ? Math.ceil((dice(random)-LEGION_RULES.shapesOffset)/LEGION_RULES.shapesDivisor)
+      : kind === 'vampires' ? Math.ceil(die(random)/LEGION_RULES.vampiresDivisor) : kind === 'oneDie' ? die(random) : dice(random));
     if (!integer(count, ranges[kind][0]) || count > ranges[kind][1]) throw new RangeError('Invalid enemy count');
   }
   const foes = Array.from({ length: count }, (_, index) => {
@@ -379,17 +380,17 @@ export function startLegionFight(character, id, options = {}, random = Math.rand
   if (player.creeperFights > 0) player.creeperFights--;
   player.drunkNext = false;
   if (options.useMonkey && player.monkey) {
-    fight.monkeyRoll = dice(random); fight.monkey = fight.monkeyRoll >= 4;
+    fight.monkeyRoll = dice(random); fight.monkey = fight.monkeyRoll >= LEGION_RULES.monkeyMinRoll;
     if (fight.monkey) fight.first = 'enemy';
   }
   if (options.useGerm && player.germ) {
     fight.germRoll = dice(random);
-    fight.germPlayer = fight.germRoll === 2; fight.germEnemy = fight.germRoll > 8;
+    fight.germPlayer = fight.germRoll === LEGION_RULES.germPlayerRoll; fight.germEnemy = fight.germRoll > LEGION_RULES.germEnemyAbove;
   }
   for (const [key, ally] of Object.entries(player.companions)) {
     if (ally.life <= 5 || spec.contest || spec.dream) continue;
     if (key === 'skeleton' && !options.useSkeleton) continue;
-    if (key === 'orangutiger' && dice(random) < 10) continue;
+    if (key === 'orangutiger' && dice(random) < LEGION_RULES.orangutigerMinRoll) continue;
     if (key === 'dragon') {
       if (ally.remainingFights <= 0) continue;
       ally.remainingFights--;
@@ -473,7 +474,7 @@ function enemyStrike(fight, index, random, surprise = false) {
   }
   if (!(surprise && foe.excludeSurprise)) {
     foe.consecutive[targetKey] = strike.hit ? (foe.consecutive[targetKey] ?? 0) + 1 : 0;
-    if (foe.consecutiveDrain && foe.consecutive[targetKey] >= foe.consecutiveDrain) target.drain = 2;
+    if (foe.consecutiveDrain && foe.consecutive[targetKey] >= foe.consecutiveDrain) target.drain = LEGION_RULES.consecutiveDrainAmount;
     if (foe.consecutiveFatal && foe.consecutive[targetKey] >= foe.consecutiveFatal) target.life = 0;
   }
   return { kind: 'enemy', index, target: targetKey, roll, ...strike, fatal: !!fatal, missed };

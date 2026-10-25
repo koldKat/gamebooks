@@ -54,7 +54,35 @@
                 "defeat": 20
               }
             }
-          ]
+          ],
+          "support": {
+            "rules": {
+              "sparringStop": 50,
+              "groupRewardSection": 4,
+              "groupReward": 2,
+              "otherGroupReward": 1,
+              "bleedingDamage": 10,
+              "regent": {
+                "spellThresholds": {
+                  "leprosy": 8,
+                  "blight": 6,
+                  "timetrap": 9,
+                  "crackOfDoom": 8,
+                  "firebolt": 9
+                },
+                "paralysisRounds": 2,
+                "timetrapMultiplier": 10,
+                "crackDamage": 50,
+                "fireboltDamage": 75,
+                "leprosyPercent": 10,
+                "swordCycle": [
+                  10,
+                  20
+                ],
+                "swordDieMultiplier": 20
+              }
+            }
+          }
         },
         "part": {
           "name": "Baldar",

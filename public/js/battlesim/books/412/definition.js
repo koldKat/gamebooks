@@ -9,4 +9,8 @@ export const definition = Object.freeze({
 });
 
 export let ROSTER = [];
-export const loadRoster = createRosterLoader(412, 'ROSTER', rows => { ROSTER = rows; });
+export let COMPANION_RULES = {};
+export const loadRoster = createRosterLoader(412, 'ROSTER', rows => {
+  COMPANION_RULES = rows.find(row => row.companionRules)?.companionRules ?? {};
+  ROSTER = rows.map(({ companionRules, ...profile }) => profile);
+});

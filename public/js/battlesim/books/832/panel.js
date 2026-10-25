@@ -1,4 +1,4 @@
-import { definition, ENCOUNTERS, MODES, encounterPreset } from './definition.js';
+import { definition, ENCOUNTERS, MODES, encounterPreset, SCARLET_RULES } from './definition.js';
 import * as combat from './combat.js';
 import { createState } from './state.js';
 import { createOpponentEditor } from '../../opponents.js';
@@ -80,7 +80,7 @@ export function createScarletPanel({document, t, getRun, getBookId, saveState, s
     for (const key of dice) el('die-' + key).disabled = !locked || !el('manual').checked;
     el('status').textContent = tk('status.' + (fight?.outcome ?? (fight ? 'active' : 'ready')));
     el('totals').textContent = fight ? tk('totals', {health: fight.health, hp: fight.hp, darts: character.darts}) : '';
-    el('clock').textContent = fight?.mode === 'clock' ? tk('clockTotals', {hours: fight.hours, clock: fight.hours % 12 || 12}) : '';
+    el('clock').textContent = fight?.mode === 'clock' ? tk('clockTotals', {hours: fight.hours, clock: fight.hours % SCARLET_RULES.clock.cycle || SCARLET_RULES.clock.cycle}) : '';
     el('destination').textContent = fight?.destination ? tk('destination', {section: fight.destination}) : '';
     el('combatNote').textContent = tk('note.' + mode);
     el('log').innerHTML = data.log.slice(-80).map(line => '<div>' + escape(line) + '</div>').join('');

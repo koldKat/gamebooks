@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from './simulator-source.mjs';
 import {runInNewContext} from 'node:vm';
-import { GATEWAY_ENCOUNTERS, GATEWAY_WANDERING } from '../../../public/js/battlesim/engines/grailquest/gateway-of-doom-roster.js';
+import { GATEWAY_ENCOUNTERS, GATEWAY_WANDERING, GATEWAY_DREAMS, GATEWAY_RULES } from '../../../public/js/battlesim/engines/grailquest/gateway-of-doom-roster.js';
 import { createGatewayCharacter, initialGatewayStats, createGatewayFight, rollGatewayRound,
   gatewayTargets, launchGatewayMagic, castGatewaySpell, useGatewayHealing, useGatewayAntidote,
   useGatewayAardvark, callGatewayDjinn, resurrectGatewayPlayer, visitGatewaySection,
@@ -405,4 +405,71 @@ test('new generated fights use database templates while legacy saved fights keep
     assert.equal(legacy.foes[0].name,'Djinn');
     assert.equal('spawnGroups' in legacy.spec,false);
   } finally { spec.spawnGroups[0].foe=original; }
+});
+
+test('summoned companions reuse database profiles while retaining old companion shapes and overrides', () => {
+  const djinn = GATEWAY_ENCOUNTERS.find(s => s.section === 101).foes[1];
+  const gnurlbash = GATEWAY_DREAMS.find(s => s.section === 'dream7').foes[0];
+  const originals = [structuredClone(djinn), structuredClone(gnurlbash), structuredClone(GATEWAY_RULES)];
+  try {
+    Object.assign(djinn, {life:43,hit:7,bonus:8});
+    Object.assign(gnurlbash, {life:44,hit:8,bonus:4});
+    GATEWAY_RULES.companions.djinn.maxCalls = 1;
+    const f = fight(32, {tinglering:true});
+    assert.equal(callGatewayDjinn(f), true); assert.deepEqual(f.companion, {life:43});
+    rollGatewayRound(f, 0, high);
+    assert.equal(f.events.find(e => e.kind === 'player').damage, 13);
+    f.companion.life = 0; assert.equal(callGatewayDjinn(f), false);
+    const saved = fight(32); saved.companion = {life:17,hit:11,bonus:1,custom:'keep'};
+    rollGatewayRound(saved, 0, high);
+    assert.equal(saved.events.find(e => e.kind === 'player').damage, 2);
+    assert.equal(saved.companion.hit, 11); assert.equal(saved.companion.custom, 'keep');
+    const g = fight(13, {gnurlbash:true});
+    assert.equal(callGatewayGnurlbash(g), true);
+    assert.deepEqual(g.companion, {life:44,hit:8,bonus:4,expiresOnEnemy:0});
+  } finally {
+    Object.assign(djinn, originals[0]); Object.assign(gnurlbash, originals[1]); Object.assign(GATEWAY_RULES, originals[2]);
+  }
+});
+
+test('book metadata controls knight armour, wizard bolts, strict retaliation and invisibility', () => {
+  const original = structuredClone(GATEWAY_RULES);
+  try {
+    GATEWAY_RULES.knightArmourStages = [8,3,1];
+    const knight = fight(200, {}, {djinnGone:true,dwarvesGone:true});
+    knight.foes.slice(0,-1).forEach(foe => { foe.life = 0; });
+    const damage = [];
+    for (let i=0;i<3;i++) { rollGatewayRound(knight,knight.foes.length-1,high); damage.push(knight.events.find(e => e.kind === 'player').damage); }
+    assert.deepEqual(damage, [5,10,12]);
+    GATEWAY_RULES.wizardBoltDamage = 6;
+    const wizard = fight(113, {bonus:0,hit:12}); wizard.foes[0].bolts = 1;
+    rollGatewayWizardRound(wizard, 'bolt', high); assert.equal(wizard.player.life, 94);
+    GATEWAY_RULES.babyFireball = {section:900,damage:9};
+    for (const section of [900,'900']) {
+      const family = fight(76,{bonus:100}); family.spec.section = section;
+      rollGatewayRound(family, 0, high);
+      assert.equal(family.events.some(e => e.kind === 'baby-fireball'), typeof section === 'number');
+      assert.equal(family.player.life, typeof section === 'number' ? 91 : 100);
+    }
+    GATEWAY_RULES.invisibilitySections = [900];
+    const allowed = fight(32); allowed.spec.section = 900;
+    assert.equal(castGatewaySpell(allowed,'invisibility',0,high).success,true);
+    const blocked = fight(32); blocked.spec.section = '900';
+    assert.equal(castGatewaySpell(blocked,'invisibility',0,high),null);
+  } finally { Object.assign(GATEWAY_RULES, original); }
+});
+
+test('renamed encounter metadata controls opening hazards and destination', () => {
+  const specs = [85,120,124].map(section => GATEWAY_ENCOUNTERS.find(s => s.section === section));
+  const originals = specs.map(s => structuredClone(s));
+  try {
+    Object.assign(specs[0], {section:901,npcRules:{webFatalAt:7}});
+    assert.equal(createGatewayFight(901,player(),{},high).status,'fighting');
+    Object.assign(specs[1], {section:902,npcRules:{swimFatalMax:0,coldFatalMax:0}});
+    assert.equal(createGatewayFight(902,player(),{},low).status,'fighting');
+    Object.assign(specs[2], {section:903,npcRules:{bellRedirectMax:6,bellDestination:777}});
+    assert.equal(createGatewayFight(903,player(),{},high).redirect,777);
+  } finally {
+    specs.forEach((spec,i) => { for (const key of Object.keys(spec)) delete spec[key]; Object.assign(spec,originals[i]); });
+  }
 });

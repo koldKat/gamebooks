@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
+const rosterEntries = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/434.json', import.meta.url), 'utf8')).enemies.map(row => row.stats.entry);
+
 function fixture(saved) {
   const pt = saved ? { sim434: structuredClone(saved) } : {};
   const source = readFileSync(new URL('../../../public/js/battlesim/battlesim434.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
   const math = Object.create(Math);
   math.random = () => .2;
-  const context = vm.createContext({ Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, t: key => key, escapeHtml: value => value });
+  const context = vm.createContext({ createRosterLoader: (_id, _dataset, install) => { install(structuredClone(rosterEntries)); return async () => {}; }, Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, t: key => key, escapeHtml: value => value });
   vm.runInContext(source + '\n_renderAll = () => {}; globalThis.sim = { data: _data, potion: _usePotion, reset: _resetBattle, capture: _captureFightEffects, skill: _effectiveSkill, round: _runRound, escape: _escape, escapeRoute: _escapeRoute };', context);
   return { sim: context.sim, data: context.sim.data(), math };
 }
@@ -211,4 +213,20 @@ test('archery loss chooses its nonfatal printed destination', () => {
   assert.equal(data.combatEffects.route, 183);
   assert.equal(data.endurance, 100);
   assert.equal(data.history[0].outcome, 'loss');
+});
+
+
+test('renamed metadata controls threshold and retreat without source section branches', () => {
+  const entry = rosterEntries.find(entry => entry.section === 78);
+  const original = structuredClone(entry);
+  try {
+    entry.section = 900; entry.rules.stop = { endurance: 99, route: 901 };
+    entry.rules.escape = { route: 902, minRounds: 1 };
+    const { sim, data } = combat(900);
+    assert.equal(sim.escapeRoute(data), 0);
+    sim.round();
+    assert.equal(data.combatEffects.route, 901);
+    assert.equal(data.history.length, 0);
+    assert.equal(sim.escapeRoute(data), 902);
+  } finally { Object.assign(entry, original); }
 });

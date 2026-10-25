@@ -36,7 +36,68 @@
               "defence": 11,
               "stamina": 14
             }
-          ]
+          ],
+          "support": {
+            "seaChecks": {
+              "27": {
+                "kind": "passage"
+              },
+              "52": {
+                "kind": "shipwreck"
+              },
+              "126": {
+                "kind": "shipwreck"
+              },
+              "222": {
+                "kind": "storm"
+              }
+            },
+            "rules": {
+              "darknessPenalty": 2,
+              "subdue": {
+                "penalty": 1,
+                "win": 463
+              },
+              "thunderShardsDivisor": 1000,
+              "sea": {
+                "passageSection": 27,
+                "stormSection": 222,
+                "hardWreckSection": 52,
+                "death": 140,
+                "passage": {
+                  "specialRoll": 1,
+                  "specialDestination": 241,
+                  "arrival": 612,
+                  "illnessRoll": 2,
+                  "illnessDamage": 2
+                },
+                "storm": {
+                  "blessingDestination": 580,
+                  "shipDice": {
+                    "barque": 1,
+                    "brigantine": 2,
+                    "galleon": 3
+                  },
+                  "crewBonus": {
+                    "poor": 0,
+                    "average": 0,
+                    "good": 1,
+                    "excellent": 2
+                  },
+                  "threshold": 3,
+                  "destinations": [
+                    126,
+                    6
+                  ]
+                },
+                "shipwreck": {
+                  "hardDifficulty": 15,
+                  "difficulty": 14,
+                  "success": 241
+                }
+              }
+            }
+          }
         },
         "part": {
           "name": "Imperial Guard",

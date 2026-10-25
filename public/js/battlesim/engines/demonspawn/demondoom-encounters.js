@@ -1,5 +1,5 @@
 import { prepareCustomDemonEncounter } from './opponents.js';
-import { demondoomEnemy, installDemondoomRoster } from './demondoom-roster.js';
+import { demondoomEnemy, installDemondoomRoster, DEMONDOOM_RULES } from './demondoom-roster.js';
 
 import { createRosterLoader } from '../../roster-data.js';
 
@@ -25,7 +25,7 @@ export function prepareDemondoomEncounter(section, player, options = {}) {
   let count = encounter.count ?? 1;
   if (encounter.rolledCount) {
     count = options.spawnCount;
-    if (!Number.isInteger(count) || count < 2 || count > 12) throw new Error('Roll two dice for the number of Spawn');
+    if (!Number.isInteger(count) || count < DEMONDOOM_RULES.spawnMin || count > DEMONDOOM_RULES.spawnMax) throw new Error('Roll two dice for the number of Spawn');
   }
   const names = encounter.enemies ?? Array.from({length:count}, () => encounter.enemy);
   const enemies = names.map(name => demondoomEnemy(name, {

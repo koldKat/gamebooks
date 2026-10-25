@@ -1,12 +1,12 @@
-import { HEALING_POTION_HEAL, COMBAT_TABLE, FIGHT_OPTIONS, BLAST_IMMUNE } from './definition.js';
+import { HEALING_POTION_HEAL, COMBAT_TABLE, FIGHT_OPTIONS, BLAST_IMMUNE, ENCOUNTER_RULES } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, BLAST_IMMUNE, COMBAT_TABLE, FIGHT_OPTIONS, HEALING_POTION_HEAL, SVG_SKULL, SVG_TROPHY, _appendLog, _battleOver, _captureFightEffects, _checkBattleEnd, _data, _effectiveSkill, _enemyList, _enemyName, _enemyNameSafe, _escape, _escapeRoute, _loadEnemyList, _numField, _pick10, _pickRow, _psychic, _ratioCol, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _resetBattle, _runRound, _setRoute, _setVal, _setupAutocomplete, _usePotion, apiFetch, closeSim438, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim438, openSim438, registerPanelShortcut, renderSim438, saveState, setSim438Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ENCOUNTER_RULES, _rulesFor, BLAST_IMMUNE, COMBAT_TABLE, FIGHT_OPTIONS, HEALING_POTION_HEAL, SVG_SKULL, SVG_TROPHY, _appendLog, _battleOver, _captureFightEffects, _checkBattleEnd, _data, _effectiveSkill, _enemyList, _enemyName, _enemyNameSafe, _escape, _escapeRoute, _loadEnemyList, _numField, _pick10, _pickRow, _psychic, _ratioCol, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _resetBattle, _runRound, _setRoute, _setVal, _setupAutocomplete, _usePotion, apiFetch, closeSim438, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim438, openSim438, registerPanelShortcut, renderSim438, saveState, setSim438Visible, shortcutLabel, showAlert, t });
 const { _data, _appendLog, _recordOutcome, _battleOver } = createState(simulatorContext);
-const { _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _psychic, _effectiveSkill, _setRoute, _escapeRoute, _escape, _runRound, _checkBattleEnd, _resetBattle } = createCombat(simulatorContext);
+const { _rulesFor, _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _psychic, _effectiveSkill, _setRoute, _escapeRoute, _escape, _runRound, _checkBattleEnd, _resetBattle } = createCombat(simulatorContext);
 const { _usePotion } = createEffects(simulatorContext);
 // END SIMULATOR WIRING
 // Printed encounter effects apply only to newly started fights.

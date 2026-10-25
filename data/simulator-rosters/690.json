@@ -1484,6 +1484,1234 @@
                 "automaticDamage": 0
               }
             ]
+          },
+          "support": {
+            "rules": {
+              "sections": {
+                "priorDuel": 136,
+                "ogres": 738,
+                "rioters": 880,
+                "guards": 94,
+                "controlled": 399,
+                "abbess": 469,
+                "walkway": 695,
+                "pit": 762,
+                "grapple": 621,
+                "doors": 468,
+                "rescue": 1185,
+                "rooftop": 240,
+                "surprise": 932,
+                "trapped": 1146,
+                "pirates": 1193,
+                "frozen": 1175
+              },
+              "defeated": {
+                "sections": [
+                  136,
+                  911
+                ],
+                "restrictedNames": [
+                  "Sir Walter",
+                  "Sar Lidia"
+                ]
+              },
+              "ogres": [
+                {
+                  "name": "Sly Ogre",
+                  "minimumVisits": 1
+                },
+                {
+                  "name": "Wild Ogre",
+                  "minimumVisits": 2
+                }
+              ],
+              "rioters": [
+                {
+                  "code": "B3",
+                  "name": "Flanking Rioters"
+                },
+                {
+                  "code": "B4",
+                  "name": "Angry Rioters"
+                }
+              ],
+              "guards": {
+                "assassination": {
+                  "Lief of Joria": 2,
+                  "Robyn Spyre": 4,
+                  "Krea Brocas": 6,
+                  "Quinn Marshall": 8
+                },
+                "approaches": [
+                  "ordinary",
+                  "walls",
+                  "basement",
+                  "assassination"
+                ],
+                "basementFirst": "Sir Barda",
+                "basementRounds": [
+                  1,
+                  2
+                ]
+              },
+              "controlled": {
+                "minimumParticipants": 2,
+                "controllerIndex": 0,
+                "threshold": 4,
+                "defence": 4
+              },
+              "abbess": {
+                "reserveLoss": 760,
+                "name": "The Abbess"
+              },
+              "doors": {
+                "participants": [
+                  1,
+                  2
+                ],
+                "partySize": 4
+              },
+              "rescue": {
+                "profile": "tasha",
+                "winGroups": [
+                  [
+                    1,
+                    2,
+                    3
+                  ]
+                ],
+                "defeatOnVictory": [
+                  0
+                ],
+                "fastThug": "Fast Thug",
+                "damage": 4
+              },
+              "rooftopRounds": [
+                1,
+                2
+              ],
+              "reactions": {
+                "182": [
+                  {
+                    "enemyIndex": 1,
+                    "checks": [
+                      {
+                        "index": 0,
+                        "below": 20
+                      },
+                      {
+                        "index": 1,
+                        "below": 10
+                      }
+                    ],
+                    "hits": 3,
+                    "recipients": 2,
+                    "noArmour": true
+                  }
+                ],
+                "611": [
+                  {
+                    "enemyIndex": 0,
+                    "checks": [
+                      {
+                        "index": 0,
+                        "atMost": 25
+                      }
+                    ],
+                    "hits": 4,
+                    "recipients": 2,
+                    "noArmour": true
+                  }
+                ]
+              },
+              "trap": {
+                "ability": "survival",
+                "damage": 1,
+                "unpreventable": true
+              },
+              "pirates": {
+                "wins": {
+                  "cog": 704,
+                  "carrack": 99
+                }
+              },
+              "pit": {
+                "entryDamage": 2,
+                "moveDamage": 1
+              },
+              "entryDamage": {
+                "256": {
+                  "recipient": "chosen",
+                  "hits": 2
+                },
+                "931": {
+                  "recipient": "all",
+                  "hits": 2
+                },
+                "1072": {
+                  "recipient": "first",
+                  "hits": 1
+                }
+              },
+              "grappleDamage": 2,
+              "netAttack": {
+                "count": 1,
+                "threshold": 3
+              },
+              "terrain": {
+                "flankClimbingPenalty": 1,
+                "defensiveCavalryPenalty": 1,
+                "defensiveFlankBonus": 1
+              },
+              "siegeRestriction": {
+                "section": 349,
+                "zone": 1,
+                "name": "Mounted Sergeants"
+              },
+              "conditions": [
+                [
+                  "ogreVisits",
+                  "number",
+                  [
+                    738
+                  ]
+                ],
+                [
+                  "vesselType",
+                  "vessel",
+                  [
+                    1193
+                  ]
+                ],
+                [
+                  "trappedHero",
+                  "hero",
+                  [
+                    1146
+                  ]
+                ],
+                [
+                  "entryDamageHero",
+                  "hero",
+                  [
+                    256
+                  ]
+                ],
+                [
+                  "rooftopAssassin",
+                  "hero",
+                  [
+                    240
+                  ]
+                ],
+                [
+                  "controlledMember",
+                  "hero",
+                  [
+                    399
+                  ]
+                ],
+                [
+                  "pitVictim",
+                  "hero",
+                  [
+                    762
+                  ]
+                ],
+                [
+                  "freeHero",
+                  "hero",
+                  [
+                    621
+                  ]
+                ],
+                [
+                  "frozenHero",
+                  "hero",
+                  [
+                    1175
+                  ]
+                ],
+                [
+                  "abbessSlain",
+                  "check",
+                  [
+                    469
+                  ]
+                ],
+                [
+                  "goddessCaress",
+                  "check",
+                  [
+                    399
+                  ]
+                ],
+                [
+                  "titanEyesHit",
+                  "check",
+                  [
+                    318
+                  ]
+                ],
+                [
+                  "wizardWounded",
+                  "check",
+                  [
+                    543
+                  ]
+                ],
+                [
+                  "skipFirstEnemyTurn",
+                  "check",
+                  [
+                    932
+                  ]
+                ],
+                [
+                  "spareBryce",
+                  "check",
+                  [
+                    954
+                  ]
+                ],
+                [
+                  "entryDamageAlreadyApplied",
+                  "check",
+                  [
+                    256,
+                    931,
+                    1072,
+                    762
+                  ]
+                ],
+                [
+                  "boyFreed",
+                  "outcome",
+                  [
+                    1185
+                  ]
+                ],
+                [
+                  "guardApproach",
+                  "approach",
+                  [
+                    94
+                  ]
+                ],
+                [
+                  "assassinationSuccesses",
+                  "number",
+                  [
+                    94
+                  ]
+                ],
+                [
+                  "defeatedEnemies",
+                  "opponents",
+                  [
+                    136,
+                    911
+                  ]
+                ]
+              ],
+              "armourSections": [
+                82,
+                370,
+                1175,
+                1191
+              ],
+              "enemyEffects": [
+                {
+                  "section": 33,
+                  "names": [
+                    "Roof Goblins"
+                  ],
+                  "properties": {
+                    "weaponGuard": {
+                      "indices": [
+                        1
+                      ],
+                      "minimum": 1
+                    },
+                    "automaticDamageGuard": 1
+                  }
+                },
+                {
+                  "section": 94,
+                  "names": [
+                    "Robyn Spyre"
+                  ],
+                  "properties": {
+                    "spellPlan": {
+                      "mode": "round",
+                      "entries": [
+                        {
+                          "min": 1,
+                          "max": 1,
+                          "name": "Poison Spray",
+                          "effects": [
+                            {
+                              "type": "attack",
+                              "count": 5,
+                              "recipients": 2
+                            }
+                          ]
+                        },
+                        {
+                          "min": 2,
+                          "max": 2,
+                          "name": "Ice Bolt",
+                          "effects": [
+                            {
+                              "type": "attack",
+                              "count": 8
+                            }
+                          ]
+                        },
+                        {
+                          "min": 3,
+                          "max": 3,
+                          "name": "Wither",
+                          "effects": [
+                            {
+                              "type": "damageParty",
+                              "hits": 1,
+                              "noArmour": true
+                            }
+                          ]
+                        }
+                      ],
+                      "fallback": {
+                        "name": "Attack",
+                        "effects": [
+                          {
+                            "type": "ordinary"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "section": 114,
+                  "names": [
+                    "Demon Statue"
+                  ],
+                  "properties": {
+                    "spellPlan": {
+                      "mode": "roll",
+                      "entries": [
+                        {
+                          "min": 1,
+                          "max": 4,
+                          "name": "Claws",
+                          "effects": [
+                            {
+                              "type": "ordinary"
+                            }
+                          ]
+                        },
+                        {
+                          "min": 5,
+                          "max": 6,
+                          "name": "Burning Blood",
+                          "effects": [
+                            {
+                              "type": "damageParty",
+                              "hits": 2,
+                              "unpreventable": true
+                            },
+                            {
+                              "type": "halveFightingNextTurn"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "section": 240,
+                  "names": [
+                    "Keraknorn the Wise"
+                  ],
+                  "properties": {
+                    "weaponGuard": {
+                      "indices": [
+                        1
+                      ],
+                      "minimum": 1
+                    },
+                    "spellPlan": {
+                      "mode": "roll",
+                      "entries": [
+                        {
+                          "min": 1,
+                          "max": 2,
+                          "name": "Ice Bolt",
+                          "effects": [
+                            {
+                              "type": "attack",
+                              "count": 8
+                            }
+                          ]
+                        },
+                        {
+                          "min": 3,
+                          "max": 5,
+                          "name": "Flame Jet",
+                          "effects": [
+                            {
+                              "type": "attack",
+                              "count": 5,
+                              "recipients": 3
+                            }
+                          ]
+                        },
+                        {
+                          "min": 6,
+                          "max": 6,
+                          "name": "Soothing Touch",
+                          "effects": [
+                            {
+                              "type": "healSelf",
+                              "amount": 5,
+                              "maximum": 11,
+                              "rerollIfFull": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "section": 243,
+                  "names": [
+                    "1st Orc Archer",
+                    "2nd Orc Archer"
+                  ],
+                  "properties": {
+                    "weaponGuard": {
+                      "indices": [
+                        0,
+                        1,
+                        2
+                      ],
+                      "minimum": 2
+                    },
+                    "undamagedAttack": {
+                      "hits": 3
+                    }
+                  }
+                },
+                {
+                  "section": 254,
+                  "names": [
+                    "Dread Naga"
+                  ],
+                  "properties": {
+                    "spellPlan": {
+                      "mode": "roll",
+                      "afterAttack": true,
+                      "entries": [
+                        {
+                          "min": 1,
+                          "max": 2,
+                          "name": "Invigorate",
+                          "effects": [
+                            {
+                              "type": "healSelf",
+                              "amount": 8
+                            }
+                          ]
+                        },
+                        {
+                          "min": 3,
+                          "max": 4,
+                          "name": "Stingtail Rune",
+                          "effects": [
+                            {
+                              "type": "damageParty",
+                              "hits": 3
+                            }
+                          ]
+                        },
+                        {
+                          "min": 5,
+                          "max": 6,
+                          "name": "Ice Bolt",
+                          "effects": [
+                            {
+                              "type": "attack",
+                              "count": 8
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "section": 265,
+                  "names": [
+                    "Bandit Archers"
+                  ],
+                  "properties": {
+                    "undamagedAttack": {
+                      "hits": 2,
+                      "recipients": 2,
+                      "noArmour": true
+                    }
+                  }
+                },
+                {
+                  "section": 318,
+                  "names": [
+                    "The Titan"
+                  ],
+                  "properties": {
+                    "retaliationDamage": 1
+                  }
+                },
+                {
+                  "section": 318,
+                  "names": [
+                    "The Titan"
+                  ],
+                  "when": {
+                    "flag": "titanEyesHit",
+                    "value": true
+                  },
+                  "properties": {
+                    "threshold": 5,
+                    "automaticDamage": 0
+                  },
+                  "healthLoss": 5
+                },
+                {
+                  "section": 350,
+                  "names": [
+                    "1st Spinner",
+                    "2nd Spinner",
+                    "3rd Spinner",
+                    "4th Spinner"
+                  ],
+                  "properties": {
+                    "extraDamageOnSix": 1
+                  }
+                },
+                {
+                  "section": 351,
+                  "names": [
+                    "Lord Luthor Swan"
+                  ],
+                  "properties": {
+                    "weaponGuard": {
+                      "indices": [
+                        0
+                      ],
+                      "minimum": 1
+                    }
+                  }
+                },
+                {
+                  "section": 381,
+                  "names": [
+                    "Skeleton"
+                  ],
+                  "properties": {
+                    "spellPlan": {
+                      "mode": "roll",
+                      "entries": [
+                        {
+                          "min": 1,
+                          "max": 2,
+                          "name": "Deathly Armour",
+                          "effects": [
+                            {
+                              "type": "setDefence",
+                              "value": 6
+                            }
+                          ]
+                        },
+                        {
+                          "min": 3,
+                          "max": 4,
+                          "name": "Poison Stream",
+                          "effects": [
+                            {
+                              "type": "attack",
+                              "count": 5,
+                              "recipients": 2
+                            }
+                          ]
+                        },
+                        {
+                          "min": 5,
+                          "max": 6,
+                          "name": "Orb of Annihilation",
+                          "effects": [
+                            {
+                              "type": "attack",
+                              "count": 13
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "section": 399,
+                  "names": [
+                    "Narakath"
+                  ],
+                  "properties": {
+                    "magicOnly": true
+                  }
+                },
+                {
+                  "section": 399,
+                  "names": [
+                    "Narakath"
+                  ],
+                  "when": {
+                    "flag": "goddessCaress",
+                    "value": false
+                  },
+                  "properties": {
+                    "spellPlan": {
+                      "mode": "round",
+                      "entries": [
+                        {
+                          "min": 1,
+                          "max": 1,
+                          "name": "Vulnerability",
+                          "effects": [
+                            {
+                              "type": "vulnerabilityTarget",
+                              "attackerIndex": 1,
+                              "threshold": 2
+                            }
+                          ]
+                        },
+                        {
+                          "min": 2,
+                          "max": 2,
+                          "name": "Dazing Lights",
+                          "effects": [
+                            {
+                              "type": "setDefence",
+                              "value": 6
+                            }
+                          ]
+                        },
+                        {
+                          "min": 3,
+                          "max": 3,
+                          "name": "Stingtail Rune",
+                          "effects": [
+                            {
+                              "type": "damageParty",
+                              "hits": 3
+                            }
+                          ]
+                        }
+                      ],
+                      "fallback": {
+                        "name": "Spectral Dagger",
+                        "effects": [
+                          {
+                            "type": "ordinary"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "section": 417,
+                  "names": [
+                    "Eternity Ghoul"
+                  ],
+                  "properties": {
+                    "counterattack": true
+                  }
+                },
+                {
+                  "section": 421,
+                  "names": [
+                    "Death Hulk"
+                  ],
+                  "properties": {
+                    "extraAttacksOnTriple": true
+                  }
+                },
+                {
+                  "section": 447,
+                  "names": [
+                    "Savage Trogs",
+                    "Wild Trogs",
+                    "Bloodthirsty Trogs",
+                    "Trog Brutes"
+                  ],
+                  "properties": {
+                    "halveAttackAtHalfHealth": true
+                  }
+                },
+                {
+                  "section": 469,
+                  "names": [
+                    "The Abbess"
+                  ],
+                  "properties": {
+                    "weaponGuard": {
+                      "indices": [
+                        0,
+                        1,
+                        2,
+                        3
+                      ],
+                      "minimum": 1
+                    },
+                    "spellPlan": {
+                      "mode": "roll",
+                      "entries": [
+                        {
+                          "min": 1,
+                          "max": 2,
+                          "name": "Tendrils of Terror",
+                          "effects": [
+                            {
+                              "type": "stunStrongest",
+                              "count": 2
+                            }
+                          ]
+                        },
+                        {
+                          "min": 3,
+                          "max": 4,
+                          "name": "Bolt of Sacrifice",
+                          "effects": [
+                            {
+                              "type": "sacrificeOthers"
+                            }
+                          ]
+                        },
+                        {
+                          "min": 5,
+                          "max": 5,
+                          "name": "Bloody Restoration",
+                          "effects": [
+                            {
+                              "type": "healOthers",
+                              "amount": 3
+                            }
+                          ]
+                        },
+                        {
+                          "min": 6,
+                          "max": 6,
+                          "name": "Manic Stabbing",
+                          "effects": [
+                            {
+                              "type": "weaponOpening"
+                            },
+                            {
+                              "type": "ordinary"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "section": 543,
+                  "names": [
+                    "Keraknorn the Wise"
+                  ],
+                  "properties": {
+                    "spellPlan": {
+                      "mode": "roll",
+                      "entries": [
+                        {
+                          "min": 1,
+                          "max": 2,
+                          "name": "Ice Bolt",
+                          "effects": [
+                            {
+                              "type": "attack",
+                              "count": 8
+                            }
+                          ]
+                        },
+                        {
+                          "min": 3,
+                          "max": 5,
+                          "name": "Flame Jet",
+                          "effects": [
+                            {
+                              "type": "attack",
+                              "count": 5,
+                              "recipients": 3
+                            }
+                          ]
+                        },
+                        {
+                          "min": 6,
+                          "max": 6,
+                          "name": "Soothing Touch",
+                          "effects": [
+                            {
+                              "type": "healSelf",
+                              "amount": 5
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "section": 543,
+                  "names": [
+                    "Keraknorn the Wise"
+                  ],
+                  "when": {
+                    "flag": "wizardWounded",
+                    "value": true
+                  },
+                  "properties": {},
+                  "healthLoss": 3
+                },
+                {
+                  "section": 546,
+                  "names": [
+                    "Skeleton Archers"
+                  ],
+                  "properties": {
+                    "undamagedAttack": {
+                      "hits": 2,
+                      "recipients": 2,
+                      "noArmour": true
+                    }
+                  }
+                },
+                {
+                  "section": 600,
+                  "names": [
+                    "1st Orc Archer",
+                    "2nd Orc Archer",
+                    "3rd Orc Archer",
+                    "4th Orc Archer",
+                    "5th Orc Archer"
+                  ],
+                  "properties": {
+                    "undamagedAttack": {
+                      "hits": 3
+                    }
+                  }
+                },
+                {
+                  "section": 611,
+                  "names": [
+                    "Horned Dragon"
+                  ],
+                  "properties": {
+                    "attacksPerTurn": 2
+                  }
+                },
+                {
+                  "section": 626,
+                  "names": [
+                    "Apocalypse Demon"
+                  ],
+                  "properties": {
+                    "attacksPerTurn": 2,
+                    "undamagedHeroAura": 2
+                  }
+                },
+                {
+                  "section": 691,
+                  "names": [
+                    "Keraknorn the Wise"
+                  ],
+                  "properties": {
+                    "spellPlan": {
+                      "mode": "roll",
+                      "entries": [
+                        {
+                          "min": 1,
+                          "max": 2,
+                          "name": "Ice Bolt",
+                          "effects": [
+                            {
+                              "type": "attack",
+                              "count": 8
+                            }
+                          ]
+                        },
+                        {
+                          "min": 3,
+                          "max": 5,
+                          "name": "Flame Jet",
+                          "effects": [
+                            {
+                              "type": "attack",
+                              "count": 5
+                            }
+                          ]
+                        },
+                        {
+                          "min": 6,
+                          "max": 6,
+                          "name": "Recharge",
+                          "effects": [
+                            {
+                              "type": "skip"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "section": 695,
+                  "names": [
+                    "1st Dread Bat",
+                    "2nd Dread Bat",
+                    "3rd Dread Bat",
+                    "4th Dread Bat"
+                  ],
+                  "properties": {
+                    "zone": "walkwayOrPool"
+                  }
+                },
+                {
+                  "section": 695,
+                  "names": [
+                    "Tentacled Horror"
+                  ],
+                  "properties": {
+                    "zone": "pool"
+                  }
+                },
+                {
+                  "section": 740,
+                  "names": [
+                    "1st Hydra Head",
+                    "2nd Hydra Head",
+                    "3rd Hydra Head",
+                    "4th Hydra Head",
+                    "5th Hydra Head",
+                    "6th Hydra Head",
+                    "7th Hydra Head"
+                  ],
+                  "properties": {
+                    "spellPlan": {
+                      "mode": "roll",
+                      "entries": [
+                        {
+                          "min": 1,
+                          "max": 4,
+                          "name": "Bite",
+                          "effects": [
+                            {
+                              "type": "ordinary"
+                            }
+                          ]
+                        },
+                        {
+                          "min": 5,
+                          "max": 6,
+                          "name": "Poison Gas",
+                          "effects": [
+                            {
+                              "type": "damage",
+                              "hits": 3,
+                              "recipients": 2,
+                              "noArmour": true
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "section": 762,
+                  "names": [
+                    "Sewer Squid"
+                  ],
+                  "properties": {
+                    "zone": "pool",
+                    "attackEveryoneInZone": true,
+                    "outsideSpellsAllowed": true
+                  }
+                },
+                {
+                  "section": 905,
+                  "names": [
+                    "Sentinel Naga"
+                  ],
+                  "properties": {
+                    "spellPlan": {
+                      "mode": "roll",
+                      "afterAttack": true,
+                      "entries": [
+                        {
+                          "min": 1,
+                          "max": 2,
+                          "name": "Soothing Touch",
+                          "effects": [
+                            {
+                              "type": "healSelf",
+                              "amount": 5
+                            }
+                          ]
+                        },
+                        {
+                          "min": 3,
+                          "max": 4,
+                          "name": "Stingtail Rune",
+                          "effects": [
+                            {
+                              "type": "damageParty",
+                              "hits": 3
+                            }
+                          ]
+                        },
+                        {
+                          "min": 5,
+                          "max": 6,
+                          "name": "Ice Bolt",
+                          "effects": [
+                            {
+                              "type": "attack",
+                              "count": 8
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  "section": 949,
+                  "names": [
+                    "Gareth Mulgate"
+                  ],
+                  "properties": {
+                    "weaponGuard": {
+                      "indices": [
+                        0,
+                        1,
+                        2,
+                        3
+                      ],
+                      "minimum": 2
+                    },
+                    "undamagedAttack": {
+                      "hits": 3
+                    }
+                  }
+                },
+                {
+                  "section": 954,
+                  "names": [
+                    "Sir Bryce"
+                  ],
+                  "when": {
+                    "flag": "spareBryce",
+                    "value": true
+                  },
+                  "properties": {
+                    "nonlethal": true,
+                    "spellTargetForbidden": true
+                  }
+                },
+                {
+                  "section": 980,
+                  "names": [
+                    "Skeleton Archers"
+                  ],
+                  "properties": {
+                    "undamagedAttack": {
+                      "hits": 2,
+                      "recipients": 2,
+                      "noArmour": true
+                    }
+                  }
+                },
+                {
+                  "section": 1126,
+                  "names": [
+                    "Hell Drone"
+                  ],
+                  "properties": {
+                    "endRoundPartyDamage": 1
+                  }
+                },
+                {
+                  "section": 1126,
+                  "names": [
+                    "Shaddish Ooze"
+                  ],
+                  "properties": {
+                    "ignoreArmour": true
+                  }
+                },
+                {
+                  "section": 1139,
+                  "names": [
+                    "Mr Wing",
+                    "Mr Chen"
+                  ],
+                  "properties": {
+                    "iceBoltDefence": 2
+                  }
+                },
+                {
+                  "section": 1165,
+                  "names": [
+                    "1st Orc Archer",
+                    "2nd Orc Archer",
+                    "3rd Orc Archer"
+                  ],
+                  "properties": {
+                    "undamagedAttack": {
+                      "hits": 3
+                    }
+                  }
+                },
+                {
+                  "section": 1185,
+                  "names": [
+                    "Lead Thug"
+                  ],
+                  "when": {
+                    "flag": "boyFreed",
+                    "value": false
+                  },
+                  "properties": {
+                    "inactive": true,
+                    "untargetable": true
+                  }
+                },
+                {
+                  "section": 1193,
+                  "names": [
+                    "Pirate Netter"
+                  ],
+                  "properties": {
+                    "netWhileOthersAlive": true
+                  }
+                }
+              ]
+            }
           }
         },
         "part": {

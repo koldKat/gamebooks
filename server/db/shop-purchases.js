@@ -28,7 +28,7 @@ function getShopRefundRows(row, definitions, computeLevel) {
     const def = definitions.find(item => item.id === id);
     if (!def) throw Error('Missing shop definition: ' + id);
     const count = counts[id], escalating = id !== 'undo' && id !== 'fast_travel';
-    const step = escalating ? 1 : def.step_cost;
+    const step = id === 'diamond_dig' ? 10 : escalating ? 1 : def.step_cost;
     return { id, count, refundOne: step ? step * count : def.cost,
       refundAll: step ? step * count * (count + 1) / 2 : count * def.cost };
   });

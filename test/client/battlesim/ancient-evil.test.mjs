@@ -2,7 +2,7 @@ import { loadFixtureRoster } from './roster-fixtures.mjs';
 await loadFixtureRoster(537);
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ANCIENT_EVIL_ENCOUNTERS, ANCIENT_EVIL_ROSTER, prepareAncientEvilEncounter } from '../../../public/js/battlesim/engines/demonspawn/ancient-evil-roster.js';
+import { ANCIENT_EVIL_ENCOUNTERS, ANCIENT_EVIL_ROSTER, ANCIENT_EVIL_RULES, prepareAncientEvilEncounter } from '../../../public/js/battlesim/engines/demonspawn/ancient-evil-roster.js';
 import { createAncientEvilFight, rollAncientEvilCharacter, rollAncientEvilAttack,
   determineAncientEvilInitiative, checkAncientEvilFight, resolveAncientEvilDeathLuck,
   castAncientEvilSpell, ancientEvilCastAvailability, checkAncientEvilSerpent,
@@ -12,6 +12,33 @@ import { createAncientEvilFight, rollAncientEvilCharacter, rollAncientEvilAttack
 const random = (...rolls) => { let i = 0; return () => ((rolls[i++] ?? 3) - .5) / 6; };
 const player = () => ({ ...rollAncientEvilCharacter(() => .5), weapon: 'sword', armour: 'none' });
 const fight = (section, overrides = {}) => createAncientEvilFight(prepareAncientEvilEncounter(section, { ...player(), ...overrides }));
+
+test('Ancient Evil poison defaults follow metadata and preserve captured remaining poison',()=>{
+  const saved=structuredClone(ANCIENT_EVIL_RULES);
+  try{
+    ANCIENT_EVIL_RULES.freya={total:14,tick:3};ANCIENT_EVIL_RULES.slime={roll:6,tick:2};
+    const f=fight('176',{lifePoints:1000,maxLife:1000,armour:1000});f.turn='enemy';rollAncientEvilAttack(f,'enemy',0,()=>.999);assert.equal(f.player.freyaPoison,14);
+    f.slimePoison=true;f.manualGroup=true;f.extension={keep:true};const old=JSON.parse(JSON.stringify(f));ANCIENT_EVIL_RULES.freya.total=99;const life=old.player.lifePoints;endAncientEvilGroupRound(old);
+    assert.equal(old.player.freyaPoison,11);assert.equal(old.player.lifePoints,life-5);assert.deepEqual(old.extension,{keep:true});
+    const slime=fight('10',{lifePoints:1000,maxLife:1000});slime.turn='enemy';rollAncientEvilAttack(slime,'enemy',0,random(3,3));assert.equal(slime.slimePoison,true);
+  }finally{Object.assign(ANCIENT_EVIL_RULES,saved);}
+});
+test('Ancient Evil attack exceptions use loaded settings',()=>{
+  const saved=structuredClone(ANCIENT_EVIL_RULES);
+  try{
+    ANCIENT_EVIL_RULES.stalker={playerHit:4,roll:6,damage:11};const stalker=fight('215',{lifePoints:1000,maxLife:1000});stalker.turn='player';assert.equal(rollAncientEvilAttack(stalker,'player',0,random(3,3)).threshold,4);stalker.turn='enemy';assert.equal(rollAncientEvilAttack(stalker,'enemy',0,random(3,3)).damage,11);
+    ANCIENT_EVIL_RULES.fieryDragon={rolls:[2],damage:7};const dragon=fight('174',{lifePoints:1000,maxLife:1000,armour:1000});dragon.turn='enemy';assert.equal(rollAncientEvilAttack(dragon,'enemy',0,()=>0).damage,7);
+    ANCIENT_EVIL_RULES.fumes={rolls:[2],divisor:4};const fumes=fight('209',{lifePoints:1000,maxLife:1000,armour:1000});fumes.turn='enemy';assert.equal(rollAncientEvilAttack(fumes,'enemy',0,()=>0).damage,250);
+    ANCIENT_EVIL_RULES.sorcerers.hitDamage=9;const sorcerer=fight('208',{lifePoints:1000,maxLife:1000});sorcerer.turn='enemy';assert.equal(rollAncientEvilAttack(sorcerer,'enemy',0,()=>.5).damage,9);
+  }finally{Object.assign(ANCIENT_EVIL_RULES,saved);}
+});
+test('Ancient Evil opening and footing checks use loaded thresholds',()=>{
+  const saved=structuredClone(ANCIENT_EVIL_RULES);
+  try{
+    ANCIENT_EVIL_RULES.serpent={baseline:0,divisor:1,min:5};const serpent=fight('52',{speed:3});assert.equal(checkAncientEvilSerpent(serpent,()=>0).success,true);
+    ANCIENT_EVIL_RULES.plank={baseline:0,divisor:1,min:5};const prepared=prepareAncientEvilEncounter('7',player(),{playerWeapon:10,staffWeapon:10}),plank=createAncientEvilFight(prepared);plank.turn='player';plank.enemies[0].skill=3;plank.enemies[0].lifePoints=1000;const r=rollAncientEvilAttack(plank,'player',0,random(6,6,1,1));assert.equal(r.footing,5);assert.ok(plank.enemies[0].lifePoints>0);
+  }finally{Object.assign(ANCIENT_EVIL_RULES,saved);}
+});
 
 test('Ancient Evil starts with seven rolled attributes, carried Skill and fresh Power', () => {
   const p = rollAncientEvilCharacter(() => 0, 35);

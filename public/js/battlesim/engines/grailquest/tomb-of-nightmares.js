@@ -1,5 +1,18 @@
 import { customGrailEncounter } from './opponents.js';
-import { TOMB_EQUIPMENT, TOMB_SECRET_DOORS, TOMB_ENCOUNTERS, TOMB_DREAMS, TOMB_COMPANION } from './tomb-of-nightmares-roster.js';
+import { TOMB_EQUIPMENT, TOMB_SECRET_DOORS, TOMB_ENCOUNTERS, TOMB_DREAMS, TOMB_COMPANION, TOMB_RULES } from './tomb-of-nightmares-roster.js';
+export { TOMB_RULES, TOMB_COMPANION } from './tomb-of-nightmares-roster.js';
+
+export function tombEncounterId(value) {
+  return [...TOMB_ENCOUNTERS, ...TOMB_DREAMS].find(spec => String(spec.id) === String(value))?.id ?? Number(value);
+}
+
+export function tombDisplaySection(id) {
+  return [...TOMB_ENCOUNTERS, ...TOMB_DREAMS].find(spec => spec.id === id)?.section ?? id;
+}
+
+export function tombManualPoisonAmount(kind) {
+  return kind === 'needle' ? TOMB_RULES.manualPoison.needle : TOMB_RULES.manualPoison.default;
+}
 
 const die = random => 1 + Math.floor(random() * 6);
 const dice = random => die(random) + die(random);
@@ -208,9 +221,10 @@ export function tombDream(character, number, random = Math.random) {
 export function tombBees(character, random = Math.random) {
   if (!alive(character)) return null;
   if (character.beeTraining) return { bypassed: true, bees: 0, loss: 0, dead: false };
-  const bees = dice(random) * 2;
-  character.life = Math.max(0, character.life - bees * 2);
-  return { bypassed: false, bees, loss: bees * 2, dead: !alive(character) };
+  const bees = Array.from({ length: TOMB_RULES.bees.countDice }, () => die(random)).reduce((sum, value) => sum + value, 0) * TOMB_RULES.bees.multiplier;
+  const loss = bees * TOMB_RULES.bees.damageEach;
+  character.life = Math.max(0, character.life - loss);
+  return { bypassed: false, bees, loss, dead: !alive(character) };
 }
 
 export function tombReincarnate(character, random = Math.random) {
@@ -517,8 +531,7 @@ export function tombUseRod(fight, target = 0, random = Math.random) {
     || !tombTargets(fight).some(row => row.index === target)) return null;
   const roll = dice(random);
   fight.rodRound = fight.round;
-  const humanoid = new Set([29, 31, 41, 49, 118, 141, 144, 148, 151, 172, 189, '204-grott', 209, 218, 222]);
-  const success = roll >= 9 && humanoid.has(fight.spec.id);
+  const success = roll >= 9 && TOMB_RULES.rodHumanoidIds.includes(fight.spec.id);
   if (success) fight.foes[target].life = 0;
   const result = { kind: 'rod', target, roll, success };
   fight.actions.push(result);

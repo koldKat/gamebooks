@@ -17,14 +17,14 @@ function _encounter(id) {
  return ROSTER.find(e => e.id === id) || ROSTER[0]; }
 
 function _fight() {
-  const { SVG_SKULL, SVG_TROPHY, _appendLog, _data, _encounter, _recordOutcome, _renderAll, _roll1d6, resolveGalacticEncounter, saveState, showAlert, t } = getContext();
+  const { SVG_SKULL, SVG_TROPHY, _appendLog, _isFleeRequested, _data, _encounter, _recordOutcome, _renderAll, _roll1d6, resolveGalacticEncounter, saveState, showAlert, t } = getContext();
 
   const d = _data();
   if (!d) return;
   const enc = _encounter(d.encounterId);
   if (d.player.zhivot < 3) { showAlert(t('battlesim877.log.dead')); return; }
   const before = { ...d.player };
-  const res = resolveGalacticEncounter(enc, d.player, d.pendingDuel?.state, document.getElementById('sim877-flee').checked, _roll1d6);
+  const res = resolveGalacticEncounter(enc, d.player, d.pendingDuel?.state, _isFleeRequested(), _roll1d6);
   if (res.cost && res.cost.zhivot) d.player.zhivot = Math.max(0, d.player.zhivot - res.cost.zhivot);
   if (res.cost && res.cost.sila) d.player.sila = Math.max(0, d.player.sila - res.cost.sila);
   if (d.player.zhivot < 3) res.outcome = 'loss';

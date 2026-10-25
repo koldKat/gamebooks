@@ -3,15 +3,25 @@ const checkBrowser=require('./browser-harness.cjs');
 const root=process.env.TMPDIR,repo=process.cwd();
 if(!root?.startsWith('/media/koldKat/MediaDrive/.tmp/'))throw Error('Use MediaDrive scratch');
 const ids=process.argv.includes('--all')?fs.readdirSync('public/js/battlesim/books').map(Number).sort((a,b)=>a-b):process.argv.slice(2).map(Number);if(!ids.length)throw Error('Supply book IDs');
+// Full-catalog audits can exercise older API-backed simulators with the actual
+// installed enemy response, without opening a writable database connection.
+let installedRosters;
+if (process.env.SIMULATOR_LIVE_ROSTERS === '1') {
+  const db = new (require('better-sqlite3'))(path.join(repo, 'database.sqlite'), {readonly: true});
+  try { installedRosters = Object.fromEntries(ids.map(id => [id, require('../../../server/db/enemy-rosters.js').getBookEnemyRows(db, id)])); }
+  finally { db.close(); }
+}
 const scratch=fs.mkdtempSync(path.join(root,'sim-architecture-'));
 const scenario=process.env.SIMULATOR_SCENARIO;
 if(scenario&&!/^[a-z-]+$/.test(scenario))throw Error('Invalid simulator scenario');
 (async()=>{try{
   const results=[];
-  for(const language of scenario?['en','bg']:['en']){
+  const languages = scenario ? ['en','bg'] : (process.env.SIMULATOR_LANGUAGES?.split(',') ?? ['en']);
+  if (!languages.length || !languages.every(language => ['en','bg'].includes(language))) throw Error('Invalid simulator languages');
+  for(const language of languages){
   for(const mode of ['desktop','mobile']){
-    const rosterSeeds=Object.fromEntries(ids.flatMap(id=>{const file=path.join(repo,'data/simulator-rosters',id+'.json');return fs.existsSync(file)?[[id,JSON.parse(fs.readFileSync(file,'utf8')).enemies]]:[];}));
-    const fixture=fs.readFileSync(__dirname+'/'+(scenario?scenario+'-integration':'architecture-browser')+'.fixture','utf8').replaceAll('REPO','file://'+repo).replaceAll('MODE',mode).replaceAll('LANGUAGE',language).replace('BOOK_IDS',JSON.stringify(ids)).replace('ROSTER_SEEDS',JSON.stringify(rosterSeeds));
+    const rosterSeeds=installedRosters ?? Object.fromEntries(ids.flatMap(id=>{const file=path.join(repo,'data/simulator-rosters',id+'.json');return fs.existsSync(file)?[[id,JSON.parse(fs.readFileSync(file,'utf8')).enemies]]:[];}));
+    const fixture=fs.readFileSync(__dirname+'/'+(scenario?scenario+'-integration':'architecture-browser')+'.fixture','utf8').replaceAll('REPO','file://'+repo).replaceAll('MODE',mode).replaceAll('LANGUAGE',language).replaceAll('AUDIT_LEGACY_ROSTERS', String(process.env.SIMULATOR_LIVE_ROSTERS === '1')).replace('BOOK_IDS',JSON.stringify(ids)).replace('ROSTER_SEEDS',JSON.stringify(rosterSeeds));
     const css=['style','charsheet','equipment','battlesim','confirm'].map(n=>`<link rel="stylesheet" href="file://${repo}/public/css/${n}.css">`).join('')
       + `<link rel="stylesheet" href="file://${repo}/public/${mode === 'mobile' ? 'mobile/css/style' : 'css/play'}.css">`;
     const file=path.join(scratch,mode+'.html');
@@ -27,7 +37,7 @@ if(scenario&&!/^[a-z-]+$/.test(scenario))throw Error('Invalid simulator scenario
     const files=ids.map(id=>'public/js/battlesim/battlesim'+id+'.js').concat([
       'public/js/battlesim/loader.js','public/mobile/js/battlesim-dispatch.js',
       'public/js/core/state.js','public/js/core/util.js','public/css/battlesim.css',
-      ...ids.flatMap(id=>['en','bg'].map(lang=>'public/js/i18n/'+lang+'/battlesim/battlesim'+id+'.js')),
+      ...ids.flatMap(id=>['en','bg'].map(lang=>'public/js/i18n/'+lang+'/battlesim/battlesim'+id+'.js').filter(file=>fs.existsSync(file))),
       __filename,__dirname+'/'+scenario+'-integration.fixture']);
     const hash=bytes=>require('node:crypto').createHash('sha256').update(bytes).digest('hex');
     receipt={results,hashes:Object.fromEntries(require('./browser-sources.cjs')(files).map(file=>[file,hash(fs.readFileSync(file))]))};

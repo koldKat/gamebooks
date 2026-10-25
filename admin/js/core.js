@@ -245,6 +245,33 @@ export function mkLevelCell(u) {
   return wrap;
 }
 
+export function mkJobLevelCell(u) {
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'margin-top:4px;color:#c084fc;font-size:0.8rem;white-space:nowrap';
+  const level = u.jobLevel || 0;
+  const xp = u.jobXp || 0;
+  wrap.textContent = `Job Lvl ${level}${u.jobTitle ? '  ' + u.jobTitle : ''}`;
+  wrap.title = `${xp.toLocaleString()} / ${(1000*(level+1)*(level+2)/2).toLocaleString()} Job XP; cap: ${u.jobLevelCap || 0}`;
+  return wrap;
+}
+
+export function userProgressTooltipHtml(u) {
+  const number = value => Number.isFinite(+value) ? Math.max(0, +value) : 0;
+  const section = (label, level, title, xp, start, next, cls) => {
+    const pct = next > start ? Math.min(100, Math.max(0, (xp-start)/(next-start)*100)) : 100;
+    return `<section class="admin-progress-section ${cls}">
+      <div class="admin-progress-heading">${label} ${level} <span>${esc(title)}</span></div>
+      <div class="admin-progress-track"><span style="width:${pct}%"></span></div>
+      <div class="admin-progress-caption"><span>${xp.toLocaleString()}${next ? ' / '+next.toLocaleString() : ''} XP</span><span>${Math.floor(pct)}%</span></div>
+    </section>`;
+  };
+  const job = number(u.jobLevel);
+  return `<div class="admin-progress-tooltip"><strong>${esc(u.username)}</strong>`
+    + section('Level', number(u.level), u.title, number(u.xp), number(u.levelXp), number(u.nextLevelXp), 'admin-progress-main')
+    + section('Job Level', job, u.jobTitle, number(u.jobXp), 1000*job*(job+1)/2, 1000*(job+1)*(job+2)/2, 'admin-progress-job')
+    + `<div class="admin-progress-caption"><span>XP boost: ${number(u.xpBoostPct)}%</span><span>Job cap: ${number(u.jobLevelCap)}</span></div></div>`;
+}
+
 const _countryNames = new Intl.DisplayNames(['en'], { type: 'region' });
 
 export function countryName(code) {

@@ -15,4 +15,9 @@ export const SWORDS = [
 ];
 
 export let ROSTER = [];
-export const loadRoster = createRosterLoader(881, 'ROSTER', rows => { ROSTER = rows; });
+export const ENCOUNTER_SETTINGS = {};
+export const loadRoster = createRosterLoader(881, 'ROSTER', rows => {
+  if (rows.some(row => row.special && !row.support?.[row.special])) throw new Error('Incomplete Cellar Dragon settings');
+  Object.assign(ENCOUNTER_SETTINGS, Object.fromEntries(rows.map(row => [row.id, row.support ?? {}])));
+  ROSTER = rows.map(({support,...row}) => row);
+});

@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
+const rosterEntries = [...new Map(JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/432.json', import.meta.url), 'utf8')).enemies.map(row => [row.stats.entryIndex, row.stats.entry])).values()];
+
 function fixture(saved) {
   const pt = saved ? { sim432: structuredClone(saved) } : {};
   const source = readFileSync(new URL('../../../public/js/battlesim/battlesim432.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
   const math = Object.create(Math);
   math.random = () => 0.1;
-  const context = vm.createContext({ Math: math, currentPlaythrough: () => pt, saveState() {}, t: key => key, escapeHtml: value => value });
+  const context = vm.createContext({ createRosterLoader: (_id, _dataset, install) => { install(structuredClone(rosterEntries)); return async () => {}; }, Math: math, currentPlaythrough: () => pt, saveState() {}, t: key => key, escapeHtml: value => value });
   vm.runInContext(source + '\n_renderAll = () => {}; globalThis.sim = { data: _data, end: _checkBattleEnd, potion: _usePotion, reset: _resetBattle, capture: _captureFightEffects, ratio: _roundRatio, round: _runRound };', context);
   return { sim: context.sim, data: context.sim.data() };
 }
@@ -145,4 +147,14 @@ test('new controls and manual limitations have translations', () => {
   const source = readFileSync(new URL('../../../public/js/i18n/en/battlesim/battlesim432.js', import.meta.url), 'utf8');
   const labels = vm.runInNewContext(source.replace('export default', 'globalThis.labels ='));
   for (const key of ['next_fight', 'mindblast', 'mindshield', 'manual_effects']) assert.equal(typeof labels['battlesim432.ui.' + key], 'string');
+});
+
+test('renamed source section follows supplied immunity and timed ratio settings', () => {
+  const entry = rosterEntries.find(entry => entry.section === 26), original = structuredClone(entry);
+  try {
+    entry.section = 900; entry.rules.ratioAdjustments = [{amount: -5, maxRounds: 2}];
+    const {sim, data} = combat(900); data.nextMindblast = true; sim.capture(data);
+    assert.equal(sim.ratio(data), -5);
+    data.roundsThisBattle = 3; assert.equal(sim.ratio(data), 0);
+  } finally {Object.assign(entry, original);}
 });

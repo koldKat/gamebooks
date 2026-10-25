@@ -1152,6 +1152,37 @@
               "armour": 0,
               "temporary": true,
               "gnurlbash": true
+            },
+            "rules": {
+              "leaveSections": [
+                57,
+                67,
+                77,
+                90
+              ],
+              "retainKeysOnLossSections": [
+                203
+              ],
+              "companionRoles": {
+                "jason": 0,
+                "argonaut": 2
+              },
+              "ferretSplit": 6,
+              "roofFatalMax": 3,
+              "pistol": {
+                "hit": 6,
+                "damage": 25
+              },
+              "evilEyeRoll": 12,
+              "mummyPoisonDamage": 5,
+              "guardChallenge": {
+                "dice": 6,
+                "winEach": 6,
+                "fatalMax": 6,
+                "deathDestination": 14,
+                "capturedDestination": 114
+              },
+              "mongooseUpkeep": 10
             }
           }
         },

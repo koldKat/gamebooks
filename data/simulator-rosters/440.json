@@ -1,0 +1,734 @@
+{
+  "schemaVersion": 1,
+  "bookId": 440,
+  "family": "lone-wolf",
+  "source": "All eighteen Forbidden City section profiles, exact victory/deadline routes, six skill adjustments, first-round protection and escape route. General weapon and willpower rules and all legacy enemy fields remain unchanged.",
+  "enemies": [
+    {
+      "key": "section:4",
+      "name": "Блатен гигант §4",
+      "attack": 16,
+      "defense": 0,
+      "hp": 30,
+      "pb": 0,
+      "adopt": {
+        "name": "Блатен гигант §4",
+        "attack": 16,
+        "defense": 0,
+        "hp": 30,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 4,
+          "rules": {
+            "victoryRoutes": [
+              65
+            ]
+          }
+        },
+        "part": {
+          "name": "Блатен гигант §4",
+          "attack": 16,
+          "defense": 0,
+          "hp": 30,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:10",
+      "name": "Блатен гигант §10",
+      "attack": 16,
+      "defense": 0,
+      "hp": 30,
+      "pb": 0,
+      "adopt": {
+        "name": "Блатен гигант §10",
+        "attack": 16,
+        "defense": 0,
+        "hp": 30,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 10,
+          "rules": {
+            "victoryRoutes": [
+              65
+            ]
+          }
+        },
+        "part": {
+          "name": "Блатен гигант §10",
+          "attack": 16,
+          "defense": 0,
+          "hp": 30,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:11",
+      "name": "Шадакински бойци §11",
+      "attack": 18,
+      "defense": 0,
+      "hp": 24,
+      "pb": 0,
+      "adopt": {
+        "name": "Шадакински бойци §11",
+        "attack": 18,
+        "defense": 0,
+        "hp": 24,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 11,
+          "rules": {
+            "victoryRoutes": [
+              82
+            ]
+          }
+        },
+        "part": {
+          "name": "Шадакински бойци §11",
+          "attack": 18,
+          "defense": 0,
+          "hp": 24,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:20",
+      "name": "Хрътка магди §20",
+      "attack": 20,
+      "defense": 0,
+      "hp": 30,
+      "pb": 0,
+      "adopt": {
+        "name": "Хрътка магди §20",
+        "attack": 20,
+        "defense": 0,
+        "hp": 30,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 20,
+          "rules": {
+            "victoryRoutes": [
+              97
+            ],
+            "deadline": [
+              4,
+              149
+            ],
+            "skillBonus": -2
+          }
+        },
+        "part": {
+          "name": "Хрътка магди §20",
+          "attack": 20,
+          "defense": 0,
+          "hp": 30,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:39",
+      "name": "Дивак §39",
+      "attack": 14,
+      "defense": 0,
+      "hp": 20,
+      "pb": 0,
+      "adopt": {
+        "name": "Дивак §39",
+        "attack": 14,
+        "defense": 0,
+        "hp": 20,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 39,
+          "rules": {
+            "victoryRoutes": [
+              259
+            ]
+          }
+        },
+        "part": {
+          "name": "Дивак §39",
+          "attack": 14,
+          "defense": 0,
+          "hp": 20,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:61",
+      "name": "Магди §61",
+      "attack": 20,
+      "defense": 0,
+      "hp": 30,
+      "pb": 0,
+      "adopt": {
+        "name": "Магди §61",
+        "attack": 20,
+        "defense": 0,
+        "hp": 30,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 61,
+          "rules": {
+            "victoryRoutes": [
+              271
+            ],
+            "deadline": [
+              5,
+              149
+            ],
+            "skillBonus": -2
+          }
+        },
+        "part": {
+          "name": "Магди §61",
+          "attack": 20,
+          "defense": 0,
+          "hp": 30,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:82",
+      "name": "Хрътка магди §82",
+      "attack": 20,
+      "defense": 0,
+      "hp": 30,
+      "pb": 0,
+      "adopt": {
+        "name": "Хрътка магди §82",
+        "attack": 20,
+        "defense": 0,
+        "hp": 30,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 82,
+          "rules": {
+            "victoryRoutes": [
+              247
+            ],
+            "skillBonus": -2
+          }
+        },
+        "part": {
+          "name": "Хрътка магди §82",
+          "attack": 20,
+          "defense": 0,
+          "hp": 30,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:83",
+      "name": "Отрепка в Мъртвия град §83",
+      "attack": 15,
+      "defense": 0,
+      "hp": 25,
+      "pb": 0,
+      "adopt": {
+        "name": "Отрепка в Мъртвия град §83",
+        "attack": 15,
+        "defense": 0,
+        "hp": 25,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 83,
+          "rules": {
+            "victoryRoutes": [
+              197
+            ],
+            "skillBonus": 2
+          }
+        },
+        "part": {
+          "name": "Отрепка в Мъртвия град §83",
+          "attack": 15,
+          "defense": 0,
+          "hp": 25,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:99",
+      "name": "Шадакински воин §99",
+      "attack": 17,
+      "defense": 0,
+      "hp": 20,
+      "pb": 0,
+      "adopt": {
+        "name": "Шадакински воин §99",
+        "attack": 17,
+        "defense": 0,
+        "hp": 20,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 99,
+          "rules": {
+            "victoryRoutes": [
+              40
+            ],
+            "protectedRound": 1
+          }
+        },
+        "part": {
+          "name": "Шадакински воин §99",
+          "attack": 17,
+          "defense": 0,
+          "hp": 20,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:116",
+      "name": "Отрепка от Мъртвия град §116",
+      "attack": 15,
+      "defense": 0,
+      "hp": 25,
+      "pb": 0,
+      "adopt": {
+        "name": "Отрепка от Мъртвия град §116",
+        "attack": 15,
+        "defense": 0,
+        "hp": 25,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 116,
+          "rules": {
+            "victoryRoutes": [
+              197
+            ],
+            "skillBonus": 2
+          }
+        },
+        "part": {
+          "name": "Отрепка от Мъртвия град §116",
+          "attack": 15,
+          "defense": 0,
+          "hp": 25,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:123",
+      "name": "Магди хрътки §123",
+      "attack": 25,
+      "defense": 0,
+      "hp": 35,
+      "pb": 0,
+      "adopt": {
+        "name": "Магди хрътки §123",
+        "attack": 25,
+        "defense": 0,
+        "hp": 35,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 123,
+          "rules": {
+            "victoryRoutes": [
+              177
+            ],
+            "skillBonus": -2
+          }
+        },
+        "part": {
+          "name": "Магди хрътки §123",
+          "attack": 25,
+          "defense": 0,
+          "hp": 35,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:134",
+      "name": "Побъркани придворни §134",
+      "attack": 18,
+      "defense": 0,
+      "hp": 23,
+      "pb": 0,
+      "adopt": {
+        "name": "Побъркани придворни §134",
+        "attack": 18,
+        "defense": 0,
+        "hp": 23,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 134,
+          "rules": {
+            "victoryRoutes": [
+              153
+            ],
+            "deadline": [
+              3,
+              153
+            ]
+          }
+        },
+        "part": {
+          "name": "Побъркани придворни §134",
+          "attack": 18,
+          "defense": 0,
+          "hp": 23,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:163",
+      "name": "Шадакински воин §163",
+      "attack": 18,
+      "defense": 0,
+      "hp": 25,
+      "pb": 0,
+      "adopt": {
+        "name": "Шадакински воин §163",
+        "attack": 18,
+        "defense": 0,
+        "hp": 25,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 163,
+          "rules": {
+            "victoryRoutes": [
+              88
+            ],
+            "escapeRoute": 30
+          }
+        },
+        "part": {
+          "name": "Шадакински воин §163",
+          "attack": 18,
+          "defense": 0,
+          "hp": 25,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:176",
+      "name": "отрепки от Града на мъртвите §176",
+      "attack": 18,
+      "defense": 0,
+      "hp": 25,
+      "pb": 0,
+      "adopt": {
+        "name": "отрепки от Града на мъртвите §176",
+        "attack": 18,
+        "defense": 0,
+        "hp": 25,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 176,
+          "rules": {
+            "victoryRoutes": [
+              308
+            ]
+          }
+        },
+        "part": {
+          "name": "отрепки от Града на мъртвите §176",
+          "attack": 18,
+          "defense": 0,
+          "hp": 25,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:251",
+      "name": "Луд страж §251",
+      "attack": 20,
+      "defense": 0,
+      "hp": 25,
+      "pb": 0,
+      "adopt": {
+        "name": "Луд страж §251",
+        "attack": 20,
+        "defense": 0,
+        "hp": 25,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 251,
+          "rules": {
+            "victoryRoutes": [
+              134
+            ]
+          }
+        },
+        "part": {
+          "name": "Луд страж §251",
+          "attack": 20,
+          "defense": 0,
+          "hp": 25,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:254",
+      "name": "Пазач на портата §254",
+      "attack": 10,
+      "defense": 0,
+      "hp": 28,
+      "pb": 0,
+      "adopt": {
+        "name": "Пазач на портата §254",
+        "attack": 10,
+        "defense": 0,
+        "hp": 28,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 254,
+          "rules": {
+            "victoryRoutes": [
+              158
+            ]
+          }
+        },
+        "part": {
+          "name": "Пазач на портата §254",
+          "attack": 10,
+          "defense": 0,
+          "hp": 28,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:273",
+      "name": "Сипеста змия §273",
+      "attack": 18,
+      "defense": 0,
+      "hp": 22,
+      "pb": 0,
+      "adopt": {
+        "name": "Сипеста змия §273",
+        "attack": 18,
+        "defense": 0,
+        "hp": 22,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 273,
+          "rules": {
+            "victoryRoutes": [
+              85
+            ],
+            "deadline": [
+              3,
+              182
+            ]
+          }
+        },
+        "part": {
+          "name": "Сипеста змия §273",
+          "attack": 18,
+          "defense": 0,
+          "hp": 22,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:301",
+      "name": "Дивак §301",
+      "attack": 14,
+      "defense": 0,
+      "hp": 20,
+      "pb": 0,
+      "adopt": {
+        "name": "Дивак §301",
+        "attack": 14,
+        "defense": 0,
+        "hp": 20,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 301,
+          "rules": {
+            "victoryRoutes": [
+              259
+            ]
+          }
+        },
+        "part": {
+          "name": "Дивак §301",
+          "attack": 14,
+          "defense": 0,
+          "hp": 20,
+          "pb": 0
+        },
+        "count": 1
+      }
+    }
+  ]
+}

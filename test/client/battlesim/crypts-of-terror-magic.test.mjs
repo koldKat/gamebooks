@@ -2,6 +2,7 @@ import { loadFixtureRoster } from './roster-fixtures.mjs';
 await loadFixtureRoster(535);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { CRYPTS_RULES } from '../../../public/js/battlesim/engines/demonspawn/crypts-of-terror-roster.js';
 import { prepareCryptsEncounter, rollCryptsCharacter } from '../../../public/js/battlesim/engines/demonspawn/crypts-of-terror-encounters.js';
 import { createCryptsFight, resolveCryptsDeathLuck, rollCryptsAttack } from '../../../public/js/battlesim/engines/demonspawn/crypts-of-terror.js';
 import { createCryptsMagicSection, castCryptsPlayerSpell, castCryptsEnemySpell,
@@ -16,6 +17,16 @@ function setup(section = 100, extra = {}, options = {}) {
   magic.inclination = true;
   return {fight,magic};
 }
+
+test('Crypts special spell and artifact settings follow metadata with strict section identity', () => {
+  const saved=structuredClone(CRYPTS_RULES);
+  try {
+    CRYPTS_RULES.manticoreParalysisRounds=5;const m=setup(108);m.fight.turn='enemy';castCryptsEnemySpell(m.fight,0,'paralysis',high);assert.equal(m.fight.paralysedPlayerRounds,5);
+    CRYPTS_RULES.box={enemyName:'Panther',limit:1};const b=setup(100,{rosewoodBox:true});b.fight.enemies.push(structuredClone(b.fight.enemies[0]));b.fight.enemyDamage.push(0);assert.equal(useCryptsRosewoodBox(b.fight),true);assert.equal(b.fight.enemies.filter(e=>e.paralysed).length,1);
+    CRYPTS_RULES.orb={possessionSection:900,minRoll:4};for(const [section,possession]of [[900,true],['900',false]]){const o=setup(100,{}, {orb:true});o.fight.encounter.section=section;assert.equal(tryCryptsOrb(o.fight,low),possession);}
+    assert.equal(tryCryptsOrb(setup(100,{}, {orb:true}).fight,()=>.2),true);
+  } finally {Object.assign(CRYPTS_RULES,saved);}
+});
 
 test('player spells spend Power even when they fail and cannot repeat in a section', () => {
   const {fight,magic} = setup();

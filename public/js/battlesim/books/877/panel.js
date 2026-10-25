@@ -2,8 +2,10 @@ import { ROSTER } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
+function _isFleeRequested() { return document.getElementById('sim877-flee').checked; }
+
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ROSTER, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _encounter, _encounterOptions, _fight, _numField, _pickEncounter, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _roll1d6, _roll2d6, _roll3d6, _rollEsper, _rollSila, _rollZhivot, closeSim877, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim877, openSim877, registerPanelShortcut, renderSim877, resolveGalacticEncounter, saveState, setSim877Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ROSTER, SVG_SKULL, SVG_TROPHY, _appendLog, _isFleeRequested, _data, _encounter, _encounterOptions, _fight, _numField, _pickEncounter, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _roll1d6, _roll2d6, _roll3d6, _rollEsper, _rollSila, _rollZhivot, closeSim877, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim877, openSim877, registerPanelShortcut, renderSim877, resolveGalacticEncounter, saveState, setSim877Visible, shortcutLabel, showAlert, t });
 const { _data, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _roll1d6, _roll2d6, _roll3d6, _encounter, _fight, _rollSila, _rollZhivot, _rollEsper, _pickEncounter } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -66,7 +68,7 @@ function _renderInputs() {
   document.getElementById('sim877-encounter-pick').disabled = !!d.pendingDuel;
   document.querySelectorAll('#sim877-overlay .inv-qty-input, #sim877-overlay .inv-qty-btn, #sim877-overlay .bsim-roll-btn')
     .forEach(element => { element.disabled = !!d.pendingDuel; });
-  document.getElementById('sim877-flee-row').hidden = d.encounterId !== 'invisiblerobot';
+  document.getElementById('sim877-flee-row').hidden = _encounter(d.encounterId).fleeBelowStrength === undefined;
 }
 
 function _renderAll() {

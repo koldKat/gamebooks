@@ -1,6 +1,10 @@
 export let FIRE_WOLF_ROSTER = Object.freeze([]);
+export const FIRE_WOLF_RULES = {};
+export let FIRE_WOLF_REGENT_SPELLS = Object.freeze({});
 
-export function installFireWolfRoster(rows) {
+export function installFireWolfRoster(rows, rules) {
+  Object.assign(FIRE_WOLF_RULES, rules);
+  FIRE_WOLF_REGENT_SPELLS = Object.freeze({...rules.regent.spellThresholds});
   FIRE_WOLF_ROSTER = Object.freeze(rows.map(Object.freeze));
 }
 

@@ -1,4 +1,4 @@
-import { KINGDOM_DREAMS, KINGDOM_EQUIPMENT, KINGDOM_MAGIC_STOCK } from './kingdom-of-horror-roster.js';
+import { KINGDOM_DREAMS, KINGDOM_EQUIPMENT, KINGDOM_MAGIC_STOCK, KINGDOM_RULES } from './kingdom-of-horror-roster.js';
 import { startKingdomFight } from './kingdom-of-horror.js';
 
 const die = random => 1 + Math.floor(random() * 6);
@@ -122,8 +122,10 @@ export function kingdomCityPatrol(character, random = Math.random) {
   if (p.life <= 0) return null;
   if (p.equipment.includes('falseBeard')) return { player: p, status: 'clear', roll: null };
   const roll = die(random);
-  return roll >= 4 ? { player: p, status: 'clear', roll }
-    : { player: p, status: 'patrol', roll, count: die(random), fine: 200 };
+  return roll >= KINGDOM_RULES.patrol.clearAt ? { player: p, status: 'clear', roll }
+    : { player: p, status: 'patrol', roll,
+      count: Array.from({length: KINGDOM_RULES.patrol.countDice}, () => die(random)).reduce((sum, value) => sum + value, 0),
+      fine: KINGDOM_RULES.patrol.fine };
 }
 
 export function kingdomPayFine(character, amount) {

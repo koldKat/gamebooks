@@ -1,3 +1,5 @@
+import { createRosterLoader } from '../../roster-data.js';
+
 // Book identity and declarative defaults; no DOM or saved-state access.
 export const definition = Object.freeze({
   "id": 208,
@@ -7,14 +9,8 @@ export const definition = Object.freeze({
   "i18nPrefix": "battlesim208"
 });
 
-export const DEITY_WEAPONS = [
-  { name: 'battlesim208.weapon.whip',       skill: 10, dmg: 3,        instant: false },
-  { name: 'battlesim208.weapon.bolas',      skill: 9,  dmg: 2,        instant: false },
-  { name: 'battlesim208.weapon.spear',      skill: 7,  dmg: 1,        instant: false },
-  { name: 'battlesim208.weapon.lash',       skill: 8,  dmg: 2,        instant: false },
-  { name: 'battlesim208.weapon.blaster',    skill: 6,  dmg: null,     instant: false }, // 1d6
-  { name: 'battlesim208.weapon.disintegrator', skill: 5, dmg: null,   instant: true  },
-];
+export let DEITY_WEAPONS = [];
+export const loadRoster = createRosterLoader(208, 'DEITY_TABLE', entries => { DEITY_WEAPONS = entries[0].weapons; });
 
 export const HAND_WOUND_DMG = 2;
 

@@ -1,3 +1,4 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -9,6 +10,8 @@ import {IRON_DRAGON, NECROMOR, CHARACTER_FIELDS} from '../../../public/js/battle
 import {createState} from '../../../public/js/battlesim/books/768/state.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim768.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim768.js';
+
+await loadFixtureRoster(768);
 
 test('768: chance ranges retain the printed non-six-sided tables', () => {
   for (const sides of [6, 8, 12, 16]) {

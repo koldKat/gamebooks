@@ -1,3 +1,4 @@
+import { DIVINE_WEAPON_NAME_RULES } from './definition.js';
 // Book 400 Bloodfeud of Altheus (Cretan Chronicles); Honour starts at 7.
 import { createCretanSim } from "../.././engines/cretan.js";
 
@@ -7,6 +8,7 @@ const _sim = createCretanSim({
   stateKey: 'sim400',
   i18nPrefix: 'battlesim400',
   defaultHonour: 7,
+  requiresDivineNameRules: DIVINE_WEAPON_NAME_RULES,
 });
 
 export const initSim400      = _sim.init;

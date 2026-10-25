@@ -73,14 +73,18 @@ test('reward snapshots expose diamonds to every player using primary-key lookups
   h.add(1, 'visit_node', 36963); h.add(2, 'visit_node', 6040); h.add(17, 'visit_node', 1402);
   initializeDiamondBalances(h.db);
   const queries = [];
+  require('../server/db/job-xp').initializeJobXp(h.db);
   require('../server/db/heartbeat-coins').initializeHeartbeatCoins(h.db);
   const context = vm.createContext({
     db: { prepare(sql) { queries.push(sql); return h.db.prepare(sql); } },
     userXpInfoFromRow: () => ({ coinsBalance: 7, level: 0 }), diamondInfoForUser, rubyInfoForUser: () => ({}),
+    computeLevel: xp => Math.floor((-1 + Math.sqrt(1 + 8 * xp / 1000)) / 2),
   });
   const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
   vm.runInContext(source.slice(source.indexOf('function getUserXpInfo('), source.indexOf('// Admin lists use')), context);
   assert.equal(context.getUserXpInfo(1).diamondsBalance, 36);
+  assert.equal(context.getUserXpInfo(1).eventXp, 36963);
+  assert.equal(context.getUserXpInfo(17).eventXp, 1402);
   assert.equal(context.getUserXpInfo(17).diamondsBalance, 1);
   assert.equal(context.getUserXpInfo('17').diamondsBalance, 1);
   assert.equal(context.getUserXpInfo(2).coinsBalance, 7);

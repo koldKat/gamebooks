@@ -1,5 +1,6 @@
 import { customGrailEncounter } from './opponents.js';
-import { GATEWAY_ENCOUNTERS, GATEWAY_WANDERING, GATEWAY_DREAMS } from './gateway-of-doom-roster.js';
+import { GATEWAY_ENCOUNTERS, GATEWAY_WANDERING, GATEWAY_DREAMS, GATEWAY_RULES } from './gateway-of-doom-roster.js';
+export { GATEWAY_RULES } from './gateway-of-doom-roster.js';
 import { initialDenLife, denDamage, denFriendlyReaction } from './den-of-dragons.js';
 
 const die = random => 1 + Math.floor(random() * 6);
@@ -8,7 +9,17 @@ const clone = value => JSON.parse(JSON.stringify(value));
 const valid = (value, minimum = 0) => Number.isSafeInteger(value) && value >= minimum;
 const spells = new Set(['panic', 'pow', 'pill', 'pad', 'pip', 'pin', 'repeat', 'invisibility',
   'plop', 'pid', 'pals', 'pil', 'pops', 'light']);
-const invisibilitySections = new Set([78, 83, 86, 88, 89, 91, 93, 98, 106, 118, 121, 129]);
+
+// Old saved specs retain their fields and captured stats. Missing supplemental
+// settings are resolved from the catalog without rewriting a saved fight.
+function npcRules(spec) {
+  return spec.npcRules ?? [...GATEWAY_ENCOUNTERS, ...GATEWAY_WANDERING, ...GATEWAY_DREAMS].find(entry => String(entry.section) === String(spec.section))?.npcRules ?? {};
+}
+
+export function gatewayCompanionTemplate(kind) {
+  const { sourceSection, foeIndex } = GATEWAY_RULES.companions[kind];
+  return [...GATEWAY_ENCOUNTERS, ...GATEWAY_DREAMS].find(entry => entry.section === sourceSection).foes[foeIndex];
+}
 
 export function createGatewayCharacter() {
   return { life: 0, maxLife: 0, hit: 4, bonus: 5, armour: 0, permanent: 0, experience: 0,
@@ -51,7 +62,8 @@ function hurtPlayer(fight, amount) {
 }
 
 function armour(fight, foe) {
-  return foe.knight ? [12, 6, 4][Math.min(2, foe.hitsTaken)] : foe.armour;
+  const stages = GATEWAY_RULES.knightArmourStages;
+  return foe.knight ? stages[Math.min(stages.length - 1, foe.hitsTaken)] : foe.armour;
 }
 
 function hurtEnemy(fight, foe, damage, hit) {
@@ -67,11 +79,11 @@ function hurtEnemy(fight, foe, damage, hit) {
     if (fight.companion?.expiresOnEnemy === fight.foes.indexOf(foe)) fight.companion = null;
     if (!fight.spec.wandering && !fight.spec.first) fight.first = null;
   }
-  if (fight.spec.section === 76 && !foe.baby && before > 0 && foe.life === 0) {
+  if (fight.spec.section === GATEWAY_RULES.babyFireball.section && !foe.baby && before > 0 && foe.life === 0) {
     const baby = fight.foes.find(enemy => enemy.baby && enemy.life > 0);
     if (baby && !baby.fireballUsed) {
       baby.fireballUsed = true;
-      const amount = Math.max(0, 75 - fight.player.armour - fight.magicArmour);
+      const amount = Math.max(0, GATEWAY_RULES.babyFireball.damage - fight.player.armour - fight.magicArmour);
       hurtPlayer(fight, amount);
       fight.events.push({ kind: 'baby-fireball', damage: amount });
     }
@@ -111,17 +123,17 @@ export function createGatewayFight(section, player, options = {}, random = Math.
   if (spec.webCheck) {
     const roll = die(random);
     fight.events.push({ kind: 'web', roll });
-    if (roll >= 5) hurtPlayer(fight, p.life);
+    if (roll >= npcRules(spec).webFatalAt) hurtPlayer(fight, p.life);
   }
   if (spec.waterChecks) {
     const swim = die(random), cold = die(random);
     fight.events.push({ kind: 'water', swim, cold });
-    if (swim <= 3 || cold <= 2) hurtPlayer(fight, p.life);
+    if (swim <= npcRules(spec).swimFatalMax || cold <= npcRules(spec).coldFatalMax) hurtPlayer(fight, p.life);
   }
   if (spec.bellCheck) {
     const roll = die(random);
     fight.events.push({ kind: 'bell', roll });
-    if (roll <= 3) { fight.status = 'redirect'; fight.redirect = 101; }
+    if (roll <= npcRules(spec).bellRedirectMax) { fight.status = 'redirect'; fight.redirect = npcRules(spec).bellDestination; }
   }
   if (options.polish && !spec.dream && p.polish > 0) { p.polish--; fight.polish = true; }
   if (options.lamp && !spec.dream && p.lamp > 0) { p.lamp--; fight.lamp = true; fight.magicArmour += 3; }
@@ -195,11 +207,11 @@ function playerTurn(fight, target, random) {
     const buddy = fight.companion?.life > 5;
     const roll = dice(random);
     fight.playerStrikes++;
-    const hitAt = buddy ? fight.companion.hit ?? 5 : fight.spec.playerHit ?? (p.dark && !fight.spec.dream ? 8 : p.hit);
+    const hitAt = buddy ? fight.companion.hit ?? gatewayCompanionTemplate('djinn').hit : fight.spec.playerHit ?? (p.dark && !fight.spec.dream ? 8 : p.hit);
     const missed = !buddy && (fight.spec.missEvery && fight.playerStrikes % fight.spec.missEvery === 0
       || !fight.spec.dream && p.dreamLimp.length && fight.playerStrikes % 3 === 0);
     const hit = !missed && roll >= hitAt;
-    const bonus = buddy ? fight.companion.bonus ?? 3 : fight.spec.playerBonus ?? p.bonus;
+    const bonus = buddy ? fight.companion.bonus ?? gatewayCompanionTemplate('djinn').bonus : fight.spec.playerBonus ?? p.bonus;
     const extras = buddy || fight.spec.dream ? 0 : fight.nextBonus + (p.coin ? 5 : 0)
       - (p.emerald ? 4 : 0) + (fight.polish ? 2 : 0) - (fight.spec.swordPenalty ?? 0);
     let damage = hit ? denDamage(roll, hitAt, bonus + extras, 0) : 0;
@@ -257,7 +269,7 @@ export function castGatewaySpell(fight, spell, target = 0, random = Math.random)
   const p = fight.player;
   if (fight.status !== 'fighting' || fight.spec.dream || p.magicLost || p.magicLock.length || !spells.has(spell)) return null;
   const limit = spell === 'invisibility' ? 1 : 3;
-  if ((p.spellUses[spell] ?? 0) >= limit || spell === 'invisibility' && !invisibilitySections.has(fight.spec.section)) return null;
+  if ((p.spellUses[spell] ?? 0) >= limit || spell === 'invisibility' && !GATEWAY_RULES.invisibilitySections.includes(fight.spec.section)) return null;
   const foe = fight.foes[target];
   if (['pad', 'pill', 'pals'].includes(spell) && (!foe || foe.life <= threshold(fight, foe) || foe.bypassed)) return null;
   if (spell === 'pals' && !foe.vegetable || spell === 'pip' && fight.poisoned) return null;
@@ -360,9 +372,9 @@ export function useGatewayAardvark(fight, random = Math.random) {
 
 export function callGatewayDjinn(fight) {
   const p = fight.player;
-  if (fight.status !== 'fighting' || fight.spec.dream || !p.tinglering || p.djinnCalls >= 3 || fight.companion?.life > 5) return false;
+  if (fight.status !== 'fighting' || fight.spec.dream || !p.tinglering || p.djinnCalls >= GATEWAY_RULES.companions.djinn.maxCalls || fight.companion?.life > 5) return false;
   p.djinnCalls++;
-  fight.companion = { life: 100 };
+  fight.companion = { life: gatewayCompanionTemplate('djinn').life };
   return true;
 }
 
@@ -451,7 +463,8 @@ export function resolveGatewayLimerick(player, finishedInTime) {
 export function callGatewayGnurlbash(fight) {
   if (fight.status !== 'fighting' || fight.spec.dream || !fight.player.gnurlbash || fight.companion?.life > 5) return false;
   fight.player.gnurlbash = false;
-  fight.companion = { life: 30, hit: 6, bonus: 2, expiresOnEnemy: gatewayTargets(fight)[0].index };
+  const source = gatewayCompanionTemplate('gnurlbash');
+  fight.companion = { life: source.life, hit: source.hit, bonus: source.bonus, expiresOnEnemy: gatewayTargets(fight)[0].index };
   return true;
 }
 
@@ -496,7 +509,7 @@ export function rollGatewayWizardRound(fight, spell, random = Math.random) {
     }
     if (spell === 'bolt') {
       wizard.bolts--;
-      const damage = Math.max(0, 2 - fight.player.armour - fight.magicArmour);
+      const damage = Math.max(0, GATEWAY_RULES.wizardBoltDamage - fight.player.armour - fight.magicArmour);
       hurtPlayer(fight, damage);
       fight.events.push({ kind: 'wizard-bolt', damage }); settle(fight); return;
     }

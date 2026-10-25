@@ -1,3 +1,4 @@
+import { POLICE_RULES } from './roster.js';
 const clone = value => structuredClone(value);
 export function policeInteger(value, minimum = 0, maximum = 1000000) {
   if (!Number.isSafeInteger(value) || value < minimum || value > maximum) throw new RangeError('Invalid combat value');
@@ -132,7 +133,7 @@ export function startPoliceDragon(lines, enemy, { heroLine = 1 } = {}) {
 export function policeDragonRound(fight, roll = () => Math.floor(Math.random() * 6) + 1) {
   active(fight);
   const next = clone(fight), dice = [], n = die(roll, dice);
-  const index = [0, 1, 2, 1, 2, 0][n - 1], line = next.lines[index];
+  const index = POLICE_RULES.dragon.targets[n - 1], line = next.lines[index];
   const hit = line.count > 0 && next.enemy.attack > line.defence;
   if (hit) next.pending = { kind: 'dragonCasualty', line: index };
   // The dragon attacks first; remove its casualty before the surviving line strikes.
@@ -166,7 +167,7 @@ export function resolvePoliceDragonCasualty(fight, { heroKilled = false, survivo
 export function startPoliceShip(ship, base, { targets, commandHits = 0, ammunition = 0, atmosphericShield = false } = {}) {
   policeInteger(ship.attack); policeInteger(ship.shield); policeInteger(ship.life, 1);
   policeInteger(base.attack); policeInteger(base.defence); policeInteger(targets, 1, 1000);
-  policeInteger(commandHits, 0, 5);
+  policeInteger(commandHits, 0, POLICE_RULES.ship.commandHits - 1);
   if (typeof ammunition === 'number') policeInteger(ammunition);
   else for (const key of ['antiproton', 'atomic', 'pa', 'pb']) policeInteger(ammunition[key]);
   return { ship: clone(ship), base: clone(base), targets, commandHits, ammunition: clone(ammunition),
@@ -189,13 +190,13 @@ export function policeShipRound(fight, { weapon = 'blaster', command = false } =
   if (hit) {
     if (command) next.commandHits++;
     else if (weapon !== 'pa') next.targets--;
-    if (weapon === 'pa') next.base.attack = Math.max(0, next.base.attack - 4);
+    if (weapon === 'pa') next.base.attack = Math.max(0, next.base.attack - POLICE_RULES.ship.paReduction);
   } else if (command) next.commandHits = 0;
   const attack = next.base.attack + die(roll, dice) + (weapon === 'blaster' ? die(roll, dice) : 0);
-  const damage = weapon === 'blaster' ? Math.max(0, attack - next.ship.shield) : attack > next.ship.shield ? 10 : 0;
+  const damage = weapon === 'blaster' ? Math.max(0, attack - next.ship.shield) : attack > next.ship.shield ? POLICE_RULES.ship.counterDamage : 0;
   next.ship.life = Math.max(0, next.ship.life - damage);
   if (next.ship.life === 0) next.status = 'loss';
-  else if (next.commandHits === 6 || next.targets === 0) next.status = 'win';
+  else if (next.commandHits === POLICE_RULES.ship.commandHits || next.targets === 0) next.status = 'win';
   next.round++; next.dice = dice;
   return { fight: next, hit, damage, attack, dice };
 }

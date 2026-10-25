@@ -1,3 +1,5 @@
+import { FIRE_WOLF_RULES, FIRE_WOLF_REGENT_SPELLS } from './fire-wolf-roster.js';
+export { FIRE_WOLF_REGENT_SPELLS } from './fire-wolf-roster.js';
 export const FIRE_WOLF_SPELLS = Object.freeze({
   armour: 25, crypt: 10, fireball: 15, invisibility: 30, paralysis: 30,
   poisonNeedle: 25, resurrection: 50, retrace: 20, timewarp: 10, xenophobia: 15,
@@ -65,8 +67,6 @@ export function castFireWolfSpell(magic, player, spell, { enemy = null, destinat
   return result;
 }
 
-export const FIRE_WOLF_REGENT_SPELLS = Object.freeze({ leprosy: 8, blight: 6, timetrap: 9, crackOfDoom: 8, firebolt: 9 });
-
 export function castFireWolfRegentSpell(regent, spell, random = Math.random) {
   const threshold = FIRE_WOLF_REGENT_SPELLS[spell];
   if (threshold === undefined || regent.lifePoints <= 0) return { error: 'unavailable' };
@@ -75,10 +75,11 @@ export function castFireWolfRegentSpell(regent, spell, random = Math.random) {
   const roll = dice(random);
   const result = { spell, cost, roll, success: roll >= threshold };
   if (!result.success) return result;
-  if (spell === 'blight') result.paralysisRounds = 2;
-  else if (spell === 'timetrap') result.destination = dice(random) * 10;
-  else if (spell === 'crackOfDoom') result.damage = 50;
-  else if (spell === 'firebolt') result.damage = 75;
-  else result.leprosyPercent = 10;
+  const effects = FIRE_WOLF_RULES.regent;
+  if (spell === 'blight') result.paralysisRounds = effects.paralysisRounds;
+  else if (spell === 'timetrap') result.destination = dice(random) * effects.timetrapMultiplier;
+  else if (spell === 'crackOfDoom') result.damage = effects.crackDamage;
+  else if (spell === 'firebolt') result.damage = effects.fireboltDamage;
+  else result.leprosyPercent = effects.leprosyPercent;
   return result;
 }

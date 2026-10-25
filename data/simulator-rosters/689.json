@@ -283,6 +283,162 @@
                 "health": 16
               }
             ]
+          },
+          "support": {
+            "rules": {
+              "sections": {
+                "cursed": 771,
+                "ironKing": 214,
+                "enlightenment": 500,
+                "lateDaisy": 117,
+                "lateSkullcracker": 749,
+                "statue": 782,
+                "slaves": 213,
+                "undercover": 706,
+                "stealth": [
+                  2,
+                  213
+                ],
+                "surprise": 2,
+                "codeArmies": [
+                  162,
+                  316
+                ],
+                "bronzeArmy": 376
+              },
+              "names": {
+                "bronzeguardPattern": "Bronzeguard",
+                "malronacPattern": "Malronac",
+                "daisy": "Daisy",
+                "skullcracker": "Skullcracker",
+                "orcLeader": "Orc Leader",
+                "zealots": "Cursite Zealots",
+                "mercenaryPattern": "mercenary",
+                "bronzeArmy": "Bronzeguard"
+              },
+              "codes": {
+                "bronzeguard": "A8",
+                "malronac": "A13",
+                "zealots": "A40",
+                "mercenaries": "A96",
+                "descantos": "A95"
+              },
+              "hygliphPenalty": 1,
+              "enlightened": {
+                "threshold": 4,
+                "defence": 4
+              },
+              "arrivalRound": 3,
+              "slaves": {
+                "default": 1,
+                "maximum": 2
+              },
+              "cursed": {
+                "threshold": 4,
+                "defence": 4,
+                "knockoutWin": 850,
+                "knockoutHealth": 2
+              },
+              "guardWeaponBonus": 1,
+              "tommul": {
+                "section": 239,
+                "lastRound": 3,
+                "enemyIndex": 0
+              },
+              "skallos": {
+                "name": "Skallos",
+                "partyDamage": 1,
+                "maximumHealth": 20,
+                "healing": 4
+              },
+              "fallingRocks": {
+                "selfDamage": 1,
+                "partyDamage": 1
+              },
+              "beetleDamage": 1,
+              "saltDragonDamage": 3,
+              "jungleAttackDamage": 1,
+              "yuYanAttack": 5,
+              "zealotHealer": {
+                "name": "Zealot Healer",
+                "healing": 2
+              },
+              "archers": {
+                "pattern": "Archers",
+                "hits": 2,
+                "recipients": 2
+              },
+              "monkeys": {
+                "pattern": "Monkey",
+                "bounds": [
+                  2,
+                  4
+                ],
+                "attacks": [
+                  {
+                    "count": 8,
+                    "threshold": 4
+                  },
+                  {
+                    "hits": 3
+                  },
+                  {
+                    "count": 5,
+                    "threshold": 4,
+                    "repeat": 2
+                  }
+                ]
+              },
+              "unbraakiName": "Unbraaki",
+              "imopposh": {
+                "rounds": [
+                  1,
+                  2,
+                  3
+                ],
+                "firstCount": 10,
+                "firstRepeats": 2,
+                "secondCount": 13,
+                "partyCount": 3
+              },
+              "sorcerer": {
+                "name": "Sorcerer",
+                "rounds": [
+                  1,
+                  2,
+                  3
+                ],
+                "firstCount": 8,
+                "playerThreshold": 5,
+                "partyCount": 3
+              },
+              "fastilon": {
+                "spellLimit": 3,
+                "firstHits": 6,
+                "secondHits": 5,
+                "maximumHealth": 40,
+                "healing": 8,
+                "stunRounds": 1
+              },
+              "backstab": {
+                "name": "Cursite Assassin",
+                "hits": 4
+              },
+              "descantos": {
+                "lastRound": 3,
+                "targets": [
+                  1,
+                  0,
+                  0
+                ],
+                "effects": [
+                  "enfeeblement",
+                  "clingingDread",
+                  "rout"
+                ],
+                "amount": 1
+              }
+            }
           }
         },
         "part": {

@@ -23,8 +23,8 @@ function configure() {
 
   const e = selectedEncounter();
   element('daggerTaken-wrap').hidden = e.mode !== 'reinforcement';
-  element('companions-wrap').hidden = Number(e.section) !== 384;
-  element('surprise-wrap').hidden = ![8, 10, 15, 191].includes(Number(e.section));
+  element('companions-wrap').hidden = !e.companionRounds;
+  element('surprise-wrap').hidden = !e.selectableSurprise;
   element('source-note').textContent = tk('rewards_note');
 }
 

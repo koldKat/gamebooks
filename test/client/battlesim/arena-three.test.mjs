@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 
 const source = readFileSync(new URL('../../../public/js/battlesim/battlesim716.js', import.meta.url), 'utf8');
+const seed = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/716.json', import.meta.url), 'utf8'));
+const rules = Object.fromEntries(seed.enemies.map(row => [row.stats.entry.enemyName, row.stats.entry]));
 const combat = source.slice(source.indexOf('function _ready('), source.indexOf('function _resetBattle()'));
 const battle = version => ({
   player: { sila: 0, barzina: 0, lovkost: 0, reflekt: 0, bm: 1, izdr: 30, izdrMax: 36 },
@@ -67,9 +69,25 @@ test('future selections adjust the printed conditional stats for Barzaka', () =>
   data.player.barzina = 8;
   data.player.reflekt = 4;
   const player = structuredClone(data.player);
-  new Function('d', 'enemy', selection)(data, { name: 'Бързака', attack: 18, defense: 12, pb: 4, hp: 10 });
+  new Function('d', 'enemy', 'ENCOUNTER_RULES', selection)(data, { name: 'Бързака', attack: 18, defense: 12, pb: 4, hp: 10 }, rules);
   assert.equal(data.enemy.ataka, 10);
   assert.equal(data.enemy.zashtita, 8);
   assert.equal(data.combatRulesVersion, 2);
   assert.deepEqual(data.player, player);
+});
+
+
+test('conditional opponent adjustments follow installed metadata and floor at zero without changing the player', () => {
+  const start=source.indexOf('    d.enemy.name       = enemy.name;');
+  const select=new Function('d','enemy','ENCOUNTER_RULES',source.slice(start,source.indexOf('    saveState();',start)));
+  for (const speed of [0,8,30]) for (const reflex of [0,4,30]) {
+    const data=battle();data.player.barzina=speed;data.player.reflekt=reflex;
+    const before=structuredClone(data.player);
+    select(data,{name:'Бързака',attack:18,defense:12,pb:4,hp:10},rules);
+    assert.equal(data.enemy.ataka,Math.max(0,18-speed));assert.equal(data.enemy.zashtita,Math.max(0,12-reflex));
+    assert.deepEqual(data.player,before);
+  }
+  const data=battle();data.player.sila=6;
+  select(data,{name:'Custom',attack:18,defense:12,pb:4,hp:10},{Custom:{subtractPlayerStats:{ataka:'sila'}}});
+  assert.equal(data.enemy.ataka,12);assert.equal(data.enemy.zashtita,12);
 });

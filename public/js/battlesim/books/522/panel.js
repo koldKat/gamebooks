@@ -16,7 +16,7 @@ import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS
 import { t } from "../../../i18n.js";
 import { initialFortune, recoverVitality } from "../.././engines/skyfall-rules.js";
 import { PYRAMID_ENCOUNTERS, createPyramidFight, rollPyramidRound, settlePyramidRound,
-  escapePyramidFight, finishPyramidFight, treatPyramidBites } from "../.././engines/skyfall/black-pyramid.js";
+  escapePyramidFight, finishPyramidFight, treatPyramidBites, activePyramidFoeCount } from "../.././engines/skyfall/black-pyramid.js";
 
 const tk = (key, params) => t(`battlesim522.${key}`, params);
 const element = key => document.getElementById(`${ID}-${key}`);
@@ -44,7 +44,7 @@ export function renderSim522() {
   element('status').textContent = f ? tk(`status.${f.status}`) : tk('pick');
   const selected = element('target').value;
   const living = (f?.encounter.foes ?? []).flatMap((foe, i) => (f.encounter.mode === 'troll' ? foe.vitality >= 0 : foe.vitality > 0)
-    && (f.encounter.mode !== 'tendrils' || i < f.round + 3) ? [{ foe, i }] : []);
+    && (f.encounter.mode !== 'tendrils' || i < activePyramidFoeCount(f)) ? [{ foe, i }] : []);
   element('target').innerHTML = living.map(({ foe, i }) => `<option value="${i}">${escapeHtml(foe.name)} (${foe.vitality} V)</option>`).join('');
   if ([...element('target').options].some(o => o.value === selected)) element('target').value = selected;
   element('target').disabled = Boolean(pending);

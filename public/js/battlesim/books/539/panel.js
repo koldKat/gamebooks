@@ -43,7 +43,7 @@ export function renderSim539() {
   for (const key of flags) { el(key).checked=!!p[key]; el(key).disabled=fighting; }
   el('upgraded').checked=p.knobkerrieDamage===4; el('upgraded').disabled=fighting;
   el('weapon').value=p.weapon;
-  el('weapon').disabled=fighting && (f.spec.unarmed || f.spec.id===257
+  el('weapon').disabled=fighting && (f.spec.unarmed || rules.shadowsLocksWeapon(f.spec.id)
     || f.spec.mode==='ordinary' && f.queue[0]!==-1
     || f.spec.mode==='lurker' && !['choice','gun'].includes(f.phase));
   el('new_character').disabled=fighting;
@@ -62,7 +62,7 @@ export function renderSim539() {
   el('turn').textContent=fighting && f.spec.mode==='ordinary' && !f.opening
     ? tk('turn',{round:f.round,actor:f.queue[0]===-1 ? tk('you'):(f.enemies[f.queue[0]]?.displayName || tk('names.'+f.enemies[f.queue[0]]?.name))}) : '';
   el('opening').hidden=!fighting || !f.opening;
-  el('flee').hidden=!fighting || !f.opening || f.spec.id!==257;
+  el('flee').hidden=!fighting || !f.opening || !rules.shadowsLocksWeapon(f.spec.id);
   el('attack').disabled=!fighting || !!f.opening || !['ordinary','twoStrikes','gunOnly'].includes(f?.spec.mode)
     || f.spec.mode==='gunOnly' && (p.weapon!=='revolver' || p.bullets<1)
     || f.spec.mode!=='gunOnly' && f.queue?.[0]===-1 && p.weapon==='revolver' && p.bullets<1;

@@ -1,5 +1,5 @@
 import { createDemonOpponentSetup } from '../../engines/demonspawn/setup.js';
-import { DEMONDOOM_ROSTER } from '../../engines/demonspawn/demondoom-roster.js';
+import { DEMONDOOM_ROSTER, DEMONDOOM_RULES } from '../../engines/demonspawn/demondoom-roster.js';
 let customSetup;
 import { actions } from './definition.js';
 import { createState } from './state.js';
@@ -106,14 +106,14 @@ export function initSim536() {
   <label class="inv-edit-row">${tk('armour')}<select id="${ID}-armour" class="inv-edit-input">${['none','leather','chain','plate'].map(key=>`<option value="${key}">${tk(key)}</option>`).join('')}</select></label>
   ${toggle('shield')}${toggle('healingTalisman')}${button('roll_character')}${button('transform')}${button('heal')}</div>
   <div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">${DEMONDOOM_ENCOUNTERS.map(entry=>`<option value="${entry.section}">${escapeHtml(entry.enemy??entry.enemies.join(', '))} (${tk('section',{section:entry.section})})</option>`).join('')}</select></label>
-  <label id="${ID}-spawn-row" class="inv-edit-row">${tk('spawnCount')}<input id="${ID}-spawnCount" class="inv-edit-input inv-qty-input" type="number" min="2" max="12" step="1"></label>
+  <label id="${ID}-spawn-row" class="inv-edit-row">${tk('spawnCount')}<input id="${ID}-spawnCount" class="inv-edit-input inv-qty-input" type="number" min="${DEMONDOOM_RULES.spawnMin}" max="${DEMONDOOM_RULES.spawnMax}" step="1"></label>
   <p>${tk('manual_note')}</p>${button('start')}<p id="${ID}-manual_group" hidden>${tk('manual_group')}</p>
   <select id="${ID}-target" class="inv-edit-input" aria-label="${tk('enemy')}"></select><div id="${ID}-foes"></div><div id="${ID}-status" class="bsim-status"></div>
   ${actions.filter(key=>key!=='apply_damage').map(button).join('')}${field('manual_damage')}${button('apply_damage')}</div>
   <div class="bsim-side"><label class="inv-edit-row">${tk('spell')}<select id="${ID}-spell" class="inv-edit-input">${DEMONDOOM_SPELLS.map(spell=>`<option value="${spell.id}">${tk(`spell.${spell.id}`)}${spell.cost===null?'':` (${spell.cost})`}</option>`).join('')}</select></label>
   <div id="${ID}-manual_cost_row">${field('manual_cost')}<p>${tk('manual_cost_note')}</p></div>
   <label id="${ID}-destination_row" class="inv-edit-row">${tk('destination')}<input id="${ID}-destination" class="inv-edit-input"></label>${button('cast')}
-  <label class="inv-edit-row">${tk('enemy_spell')}<select id="${ID}-enemy_spell" class="inv-edit-input">${['leprosy','blight','crack-of-doom','firebolt'].map(spell=>`<option value="${spell}">${tk(`spell.${spell}`)}</option>`).join('')}</select></label>${button('enemy_cast')}
+  <label class="inv-edit-row">${tk('enemy_spell')}<select id="${ID}-enemy_spell" class="inv-edit-input">${Object.keys(DEMONDOOM_RULES.enemyMagic.thresholds).map(spell=>`<option value="${spell}">${tk(`spell.${spell}`)}</option>`).join('')}</select></label>${button('enemy_cast')}
   ${field('trade_amount')}${button('trade')}</div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${tk('history')}</summary><div id="${ID}-history" class="bsim-history-list"></div></details><div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
   document.body.appendChild(overlay);
   customSetup = createDemonOpponentSetup({document, id: ID, t, tk, roster: DEMONDOOM_ROSTER, getRun: currentPlaythrough, getData: data});

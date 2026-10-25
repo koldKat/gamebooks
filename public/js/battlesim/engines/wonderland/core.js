@@ -1,4 +1,4 @@
-import { WONDERLAND_ENCOUNTERS } from './roster.js';
+import { WONDERLAND_ENCOUNTERS, WONDERLAND_RULES } from './roster.js';
 import { wonderlandDraw, wonderlandInteger } from './random.js';
 
 const rulesFor = encounter => encounter.specialRules ?? WONDERLAND_ENCOUNTERS.find(row => row.section === encounter.section)?.specialRules ?? {};
@@ -38,7 +38,7 @@ export function startWonderlandFight(player, encounter, options = {}) {
   }
   const teapotInjury = !!rulesFor(encounter).teapotInjury && !!options.teapotInjury;
   const first = initiative(options.initiative ?? (teapotInjury ? 'enemy' : encounter.initiative));
-  const activeCount = encounter.gardeners ? 2 : encounter.sequential ? 1 : encounter.stages?.[0] ?? enemies.length;
+  const activeCount = encounter.gardeners ? WONDERLAND_RULES.gardeners.active : encounter.sequential ? 1 : encounter.stages?.[0] ?? enemies.length;
   return { player: p, enemies, initialEndurance: p.endurance, weapon, protection, mode,
     section: encounter.section, encounter: clone(encounter), initiative: first, startingInitiative: first,
     active: Array.from({ length: activeCount }, (_, i) => i), waiting: activeCount,
@@ -65,8 +65,8 @@ function advance(fight) {
   fight.defeated += fight.active.length - survivors.length;
   fight.active = survivors;
   if (fight.encounter.gardeners) {
-    if (fight.defeated >= 2) { complete(fight, 'win'); return; }
-    if (survivors.length < 2 && fight.waiting < fight.enemies.length) fight.active.push(fight.waiting++);
+    if (fight.defeated >= WONDERLAND_RULES.gardeners.defeated) { complete(fight, 'win'); return; }
+    if (survivors.length < WONDERLAND_RULES.gardeners.active && fight.waiting < fight.enemies.length) fight.active.push(fight.waiting++);
   } else if (!survivors.length && fight.waiting < fight.enemies.length) {
     const count = fight.encounter.sequential ? 1 : fight.encounter.stages?.[++fight.stage];
     if (!count) throw new RangeError('Missing group stage');
@@ -107,7 +107,7 @@ export function wonderlandRound(fight, { roll, random } = {}) {
     next.enemyStreaks[result.index] = result.outcome === 'enemy' ? next.enemyStreaks[result.index] + 1 : 0;
     if (result.outcome === 'player') {
       damage = next.weapon === 'unarmed' ? 2 : next.weapon === 'vorpal'
-        ? next.encounter.ironScales ? 3 : 4 : 3;
+        ? next.encounter.ironScales ? WONDERLAND_RULES.ironScalesDamage : 4 : 3;
       if (rules.playerDamage !== undefined) damage = rules.playerDamage;
       if (rules.scissors && next.weapon === 'scissors') {
         damage = rules.scissors.damage; enemy.combat = Math.max(0, enemy.combat - rules.scissors.combatDrain);

@@ -32,6 +32,11 @@ function _enemyNameSafe(d) {
   const { _enemyName, escapeHtml } = getContext();
  return escapeHtml(_enemyName(d)); }
 
+function _rulesFor(section) {
+  const { ENCOUNTER_RULES } = getContext();
+  return ENCOUNTER_RULES[section] ?? {};
+}
+
 function _captureFightEffects(d) {
   const { _effectiveSkill } = getContext();
 
@@ -46,6 +51,7 @@ function _captureFightEffects(d) {
 }
 
 function _effectiveSkill(d) {
+  const { _rulesFor } = getContext();
 
   let skill = d.combatSkill + (d.attackModifier || 0);
   const effects = d.combatEffects;
@@ -53,7 +59,7 @@ function _effectiveSkill(d) {
   if (effects.weapon === 'none') skill -= 8;
   else if (effects.weapon !== 'staff' || !(d.willpower >= 1)) skill -= 6;
   if (effects.dagger && effects.weapon !== 'none') skill++;
-  return skill + (({20:-2,61:-2,82:-2,83:2,116:2,123:-2})[effects.section] || 0);
+  return skill + (_rulesFor(effects.section).skillBonus || 0);
 }
 
 function _stopFight(d, routes) {
@@ -65,12 +71,12 @@ function _stopFight(d, routes) {
 }
 
 function _escapeRoute(d) {
-
-  return d.combatEffects?.section === 163 && !d.combatEffects.finished ? 30 : null;
+  const { _rulesFor } = getContext();
+  return d.combatEffects && !d.combatEffects.finished ? _rulesFor(d.combatEffects.section).escapeRoute ?? null : null;
 }
 
 function _runRound(escape = false) {
-  const { COMBAT_TABLE, DEADLINES, _appendLog, _captureFightEffects, _checkBattleEnd, _data, _effectiveSkill, _enemyNameSafe, _escapeRoute, _pick10, _pickRow, _ratioCol, _renderAll, _stopFight, saveState, t } = getContext();
+  const { COMBAT_TABLE, DEADLINES, _appendLog, _captureFightEffects, _checkBattleEnd, _data, _effectiveSkill, _enemyNameSafe, _escapeRoute, _pick10, _pickRow, _ratioCol, _renderAll, _stopFight, _rulesFor, saveState, t } = getContext();
 
   const d = _data();
   escape = escape === true;
@@ -98,7 +104,7 @@ function _runRound(escape = false) {
     if (damage === 'K') d.enemy.endurance = 0;
     else d.enemy.endurance = Math.max(0, d.enemy.endurance - damage);
   }
-  const playerLoss = effects?.section === 99 && d.roundsThisBattle === 1 ? 0 : lwLoss;
+  const playerLoss = effects && _rulesFor(effects.section).protectedRound === d.roundsThisBattle ? 0 : lwLoss;
   if (playerLoss === 'K') d.endurance = 0;
   else d.endurance = Math.max(0, d.endurance - playerLoss);
 
@@ -154,5 +160,5 @@ function _resetBattle() {
 }
 
 // END EXTRACTED RULES
-  return { _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _effectiveSkill, _stopFight, _escapeRoute, _runRound, _checkBattleEnd, _resetBattle };
+  return { _rulesFor, _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _effectiveSkill, _stopFight, _escapeRoute, _runRound, _checkBattleEnd, _resetBattle };
 }

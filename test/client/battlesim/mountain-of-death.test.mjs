@@ -1,6 +1,7 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ABILITIES, DEFAULT_CHARACTER, ENCOUNTERS} from '../../../public/js/battlesim/books/895/definition.js';
+import {ABILITIES, DEFAULT_CHARACTER, ENCOUNTERS, MOUNTAIN_RULES} from '../../../public/js/battlesim/books/895/definition.js';
 import {startFight, exchange, castMagic, abandon, character} from '../../../public/js/battlesim/books/895/combat.js';
 import {recover} from '../../../public/js/battlesim/books/895/effects.js';
 import {createState} from '../../../public/js/battlesim/books/895/state.js';
@@ -11,6 +12,8 @@ const player = patch => ({...structuredClone(DEFAULT_CHARACTER), ...patch});
 const enemy = patch => ({displayName: 'Противник', skill: 8, stamina: 12, ...patch});
 const preset = id => ENCOUNTERS.find(row => row.id === String(id));
 const fight = (id, patch = {}, rules = {}) => startFight(player(patch), preset(id).enemies, {enemyDamage: 3, ...preset(id).rules, ...rules});
+
+await loadFixtureRoster(895);
 
 test('895 uses subtraction, harmless ties, immutable exchanges and configurable loss damage', () => {
   const original = startFight(player({skill: 8}), [enemy()], {enemyDamage: 4});
@@ -144,4 +147,18 @@ test('895 atomic state updates preserve other runs and record each outcome exact
   assert.equal(store.change(() => {run = {};}), false); assert.deepEqual(old, before);
   bookId = 891; assert.equal(store.read(), null); assert.equal(store.change(() => {}), false);
   assert.equal(saves, 2);
+});
+
+test('loaded penalty amount applies once to old saved rules without adding fields',()=>{
+  const amount=MOUNTAIN_RULES.skillLossAmount;
+  try{
+    MOUNTAIN_RULES.skillLossAmount=2;
+    const saved={...fight(200,{skill:9}),round:5,extension:{kept:true}};
+    saved.enemies[0].stamina=7;const before=JSON.stringify(saved),keys=Object.keys(saved.rules);
+    const next=exchange(JSON.parse(before),{player:1,enemy:1});
+    assert.equal(next.player.skill,7);assert.equal(next.round,6);assert.equal(next.skillPenaltyApplied,true);
+    assert.equal(next.enemies[0].stamina,7);assert.deepEqual(next.extension,{kept:true});
+    assert.deepEqual(Object.keys(next.rules),keys);assert.equal(JSON.stringify(saved),before);
+    assert.equal(exchange(next,{player:1,enemy:3}).player.skill,7);
+  }finally{MOUNTAIN_RULES.skillLossAmount=amount;}
 });

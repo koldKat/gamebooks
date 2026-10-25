@@ -134,7 +134,260 @@
               "defence": 13,
               "stamina": 17
             }
-          ]
+          ],
+          "support": {
+            "seaChecks": {
+              "55": {
+                "kind": "boarding",
+                "destinations": [
+                  99,
+                  556,
+                  1128
+                ],
+                "rankBonus": 10,
+                "thresholds": [
+                  5,
+                  10
+                ]
+              },
+              "252": {
+                "kind": "storm",
+                "destinations": [
+                  364,
+                  1191,
+                  200
+                ],
+                "safe": 592,
+                "thresholds": [
+                  6,
+                  10
+                ]
+              },
+              "268": {
+                "kind": "storm",
+                "destinations": [
+                  857,
+                  1148,
+                  159
+                ],
+                "safe": 159,
+                "thresholds": [
+                  6,
+                  10
+                ]
+              },
+              "303": {
+                "kind": "shipwreck",
+                "safe": 386
+              },
+              "364": {
+                "kind": "shipwreck",
+                "safe": 559,
+                "injury": true
+              },
+              "409": {
+                "kind": "escape",
+                "destinations": [
+                  352,
+                  894
+                ]
+              },
+              "499": {
+                "kind": "storm",
+                "destinations": [
+                  303,
+                  89,
+                  400
+                ],
+                "safe": 1104,
+                "thresholds": [
+                  5,
+                  7
+                ]
+              },
+              "857": {
+                "kind": "shipwreck",
+                "safe": 222,
+                "injury": true
+              },
+              "875": {
+                "kind": "boarding",
+                "destinations": [
+                  99,
+                  74,
+                  569
+                ],
+                "rankBonus": 8,
+                "thresholds": [
+                  5,
+                  9
+                ],
+                "victory": true
+              },
+              "945": {
+                "kind": "naval",
+                "destinations": [
+                  99,
+                  74,
+                  727
+                ],
+                "thresholds": [
+                  9,
+                  14
+                ]
+              },
+              "965": {
+                "kind": "tempest",
+                "destinations": [
+                  861,
+                  199,
+                  640
+                ],
+                "thresholds": [
+                  6,
+                  9
+                ]
+              },
+              "970": {
+                "kind": "escape",
+                "destinations": [
+                  352,
+                  189
+                ]
+              }
+            },
+            "rules": {
+              "mentalPenalty": {
+                "ability": 1,
+                "staminaDivisor": 2
+              },
+              "mildHeatPenalty": 1,
+              "soldierAmbush": {
+                "combat": 1,
+                "stamina": 5
+              },
+              "nyarNutBonus": 2,
+              "brokenFingersLoss": 1,
+              "ghouls": {
+                "ability": "magic",
+                "difficulty": 15,
+                "immuneProfession": "priest",
+                "combatPenalty": 3,
+                "damageBonus": 1
+              },
+              "grimEscape": {
+                "stamina": 6,
+                "abilities": [
+                  "magic",
+                  "sanctity"
+                ],
+                "difficulty": 15,
+                "destination": 8
+              },
+              "lightning": {
+                "minimum": 3,
+                "damage": 3,
+                "knifeWin": 1015,
+                "escapeDice": 4,
+                "escapeDestination": 332
+              },
+              "baron": {
+                "outcomes": [
+                  "penalty",
+                  "negate",
+                  "damage",
+                  "damage",
+                  "heal",
+                  "none"
+                ],
+                "returnedOutcomes": [
+                  "negate",
+                  "negate",
+                  "heal",
+                  "heal",
+                  "damage",
+                  "damage"
+                ],
+                "penalty": 1,
+                "healingDice": 2,
+                "damageDice": 2
+              },
+              "blowgunMaximum": 6,
+              "constableRounds": 4,
+              "nyarTrackers": {
+                "round": 1,
+                "penaltyMaximum": 3,
+                "penalty": 4,
+                "ability": "thievery",
+                "difficulty": 16,
+                "poisonDice": 4
+              },
+              "nyarWarrior": {
+                "round": 2,
+                "poisonMaximum": 2,
+                "healingMaximum": 4,
+                "combatBonus": 2,
+                "healing": 6
+              },
+              "spiderEscapeMaximum": 6,
+              "hazards": {
+                "snakes": {
+                  "section": 6,
+                  "combat": 16,
+                  "death": 99,
+                  "wounded": 821,
+                  "safe": 694
+                },
+                "horde": {
+                  "section": 967,
+                  "entryDamage": 6,
+                  "ability": "combat",
+                  "difficulty": 18,
+                  "injuryDice": 3,
+                  "death": 1146,
+                  "win": 267
+                }
+              },
+              "sea": {
+                "baseDice": 2,
+                "shipDice": {
+                  "barque": 1,
+                  "brigantine": 2,
+                  "galleon": 3
+                },
+                "stormCrew": {
+                  "poor": -1,
+                  "average": 0,
+                  "good": 0,
+                  "excellent": 1
+                },
+                "tempestGalleonBonus": 1,
+                "boardingWarriorBonus": 2,
+                "boardingRankBonus": 2,
+                "boardingCrew": {
+                  "poor": -1,
+                  "average": 0,
+                  "good": 1,
+                  "excellent": 2
+                },
+                "navalDice": {
+                  "warrior": 3,
+                  "other": 2
+                },
+                "navalCrew": {
+                  "poor": -2,
+                  "average": 0,
+                  "good": 2,
+                  "excellent": 3
+                },
+                "escapeExcellentBonus": 1,
+                "emptyCargoBonus": 1,
+                "wreckInjuryDice": 2,
+                "escapeMinimum": 11,
+                "death": 99
+              }
+            }
+          }
         },
         "part": {
           "name": "Tribal scout",

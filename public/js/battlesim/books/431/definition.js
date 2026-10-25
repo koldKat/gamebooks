@@ -1,3 +1,5 @@
+import { createRosterLoader } from '../../roster-data.js';
+
 // Book identity and declarative defaults; no DOM or saved-state access.
 export const definition = Object.freeze({
   "id": 431,
@@ -21,3 +23,8 @@ export const COMBAT_TABLE = [
   [[5,3],   [6,3],   [7,2], [8,0], [9,0], [10,0], [11,0], [12,0], [14,0], [16,0], [18,0], ['K',0], ['K',0]],
   [[6,0],   [7,0],   [8,0], [9,0], [10,0], [11,0], [12,0], [14,0], [16,0], [18,0], ['K',0], ['K',0], ['K',0]],
 ];
+
+export let COMPANION_RULES = {};
+export const loadRoster = createRosterLoader(431, 'COMPANION_RULES', entries => {
+  COMPANION_RULES = Object.assign({}, ...entries);
+});

@@ -1,10 +1,13 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as combat from '../../../public/js/battlesim/books/856/combat.js';
-import { ENCOUNTERS, PRESETS, encounterPreset } from '../../../public/js/battlesim/books/856/definition.js';
+import { ENCOUNTERS, PRESETS, encounterPreset, GALANSIA_RULES } from '../../../public/js/battlesim/books/856/definition.js';
 import { createState } from '../../../public/js/battlesim/books/856/state.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim856.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim856.js';
+
+await loadFixtureRoster(856);
 
 test('both dictionaries contain matching keys and event placeholders', () => {
   assert.deepEqual(Object.keys(bg).sort(), Object.keys(en).sort());
@@ -146,4 +149,22 @@ test('saved outcomes are recorded once and stale run updates cannot overwrite an
   assert.equal(store.change(data => {data.character.life = 1; run = {};}),false);
   assert.equal(previous.sim856.character.life,6);
   assert.equal(run.sim856,undefined);
+});
+
+test('loaded death route applies to saved drain fights without resetting progress or equipment', () => {
+  const destination = GALANSIA_RULES.deathDestination;
+  try {
+    GALANSIA_RULES.deathDestination = '99';
+    const f = start('20', {life:1, shield:true});
+    f.rounds = 4; f.enemies[0].rounds = 3; f.enemies[0].hp = 7;
+    f.boulderSpent = true; f.extension = {kept:true};
+    const saved = JSON.stringify(f), g = round(f, 1, 6, 2);
+    assert.equal(g.outcome, 'loss'); assert.equal(g.destination, '99');
+    assert.equal(g.rounds, 5); assert.equal(g.enemies[0].rounds, 4);
+    assert.equal(g.enemies[0].hp, 9); assert.equal(g.boulderSpent, true);
+    assert.equal(g.character.life, 0); assert.equal(g.character.shield, true);
+    assert.deepEqual(g.extension, {kept:true}); assert.equal(JSON.stringify(f), saved);
+    assert.equal(combat.flee(f).destination, '22');
+    assert.equal(round(start('3'), 6, 1).destination, '22');
+  } finally { GALANSIA_RULES.deathDestination = destination; }
 });

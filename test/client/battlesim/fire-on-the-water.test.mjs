@@ -3,13 +3,15 @@ import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
-function fixture(saved) {
+function fixture(saved, ruleOverride) {
+  const seed = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/430.json', import.meta.url), 'utf8'));
+  const createRosterLoader = (_book, _dataset, install) => () => install([ruleOverride || seed.enemies[0].stats.entry]);
   const pt = saved ? { sim430: structuredClone(saved) } : {};
   const source = readFileSync(new URL('../../../public/js/battlesim/battlesim430.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
   const math = Object.create(Math);
   math.random = () => 0.1;
-  const context = vm.createContext({ Math: math, currentPlaythrough: () => pt, saveState() {}, t: key => key, escapeHtml: value => value, SVG_SKULL: '', SVG_TROPHY: '' });
-  vm.runInContext(source + '\n_renderAll = () => {}; globalThis.sim = { data: _data, end: _checkBattleEnd, potion: _usePotion, reset: _resetBattle, capture: _captureFightEffects, round: _runRound };', context);
+  const context = vm.createContext({ createRosterLoader, Math: math, currentPlaythrough: () => pt, saveState() {}, t: key => key, escapeHtml: value => value, SVG_SKULL: '', SVG_TROPHY: '' });
+  vm.runInContext(source + '\nloadRoster(); _renderAll = () => {}; globalThis.sim = { data: _data, end: _checkBattleEnd, potion: _usePotion, reset: _resetBattle, capture: _captureFightEffects, round: _runRound };', context);
   return { sim: context.sim, data: context.sim.data() };
 }
 
@@ -141,4 +143,13 @@ test('all control labels are defined in the simulator translations', () => {
   const source = readFileSync(new URL('../../../public/js/i18n/en/battlesim/battlesim430.js', import.meta.url), 'utf8');
   const labels = vm.runInNewContext(source.replace('export default', 'globalThis.labels ='));
   for (const key of ['next_fight', 'double_damage', 'first_bonus', 'halvorc', 'mindblast']) assert.equal(typeof labels['battlesim430.ui.' + key], 'string');
+});
+
+
+test('Halvorc duration comes from installed metadata', () => {
+  const {sim,data}=fixture(undefined,{halvorcProtection:{protectedRounds:1}});
+  Object.assign(data,{rolled:true,endurance:30,enduranceInitial:30,ratio:0,nextHalvorcProtection:true});
+  Object.assign(data.enemy,{endurance:100,enduranceMax:100});sim.capture(data);
+  sim.round();assert.equal(data.endurance,30);
+  sim.round();assert.equal(data.endurance,25);
 });

@@ -2,6 +2,8 @@ import { loadFixtureRoster } from './roster-fixtures.mjs';
 await loadFixtureRoster(536);
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
+import {DEMONDOOM_RULES} from '../../../public/js/battlesim/engines/demonspawn/demondoom-roster.js';
+import {demondoomRegentWeapon} from '../../../public/js/battlesim/engines/demonspawn/demondoom-rules.js';
 import {rollDemondoomCharacter} from '../../../public/js/battlesim/engines/demonspawn/demondoom-character.js';
 import {prepareDemondoomEncounter} from '../../../public/js/battlesim/engines/demonspawn/demondoom-encounters.js';
 import {createDemondoomFight,demondoomEnemyActive,checkDemondoomFight,determineDemondoomInitiative,
@@ -10,6 +12,35 @@ import {createDemondoomFight,demondoomEnemyActive,checkDemondoomFight,determineD
 const high=()=>.999,low=()=>0;
 const make=(section,options={})=>createDemondoomFight(prepareDemondoomEncounter(section,
   {...rollDemondoomCharacter(high),lifePoints:2000,maxLife:2000,power:200,maxPower:200,weapon:'sword',armour:'none'},options));
+
+test('Demondoom count and weapon settings follow metadata without replacing saved groups',()=>{
+  const saved=structuredClone(DEMONDOOM_RULES);
+  try{
+    const old=JSON.parse(JSON.stringify(make(16,{spawnCount:2})));old.enemies[0].lifePoints=17;old.enemyAttacks[0]=4;old.extension={keep:true};
+    DEMONDOOM_RULES.spawnMin=3;DEMONDOOM_RULES.spawnMax=4;
+    assert.throws(()=>make(16,{spawnCount:2}));assert.equal(make(16,{spawnCount:4}).enemies.length,4);
+    assert.equal(old.enemies.length,2);assert.equal(old.enemies[0].lifePoints,17);assert.equal(old.enemyAttacks[0],4);assert.deepEqual(old.extension,{keep:true});
+    DEMONDOOM_RULES.regentSword={cycle:[3,7],dieMultiplier:2};assert.deepEqual([1,2,3,4].map(n=>demondoomRegentWeapon(n,6)),[3,7,12,3]);
+  }finally{Object.assign(DEMONDOOM_RULES,saved);}
+});
+test('Demondoom special attack and timeout settings follow metadata',()=>{
+  const saved=structuredClone(DEMONDOOM_RULES);
+  try{
+    for(const [section,key]of [[1,'assassin'],[89,'bear']]){DEMONDOOM_RULES[key]={halfRoll:8,divisor:4};const f=make(section);f.turn='enemy';f.enemies[0].weapon=10;const r=rollDemondoomAttack(f,'enemy',0,()=>.5);assert.equal(r.damage,500);assert.equal(r.poisonCheckRequired,undefined);}
+    DEMONDOOM_RULES.dragon={every:2,minRoll:4,multiplier:3};const dragon=make(104);dragon.turn='enemy';dragon.enemyAttacks[0]=1;dragon.enemies[0].weapon=10;assert.equal(rollDemondoomAttack(dragon,'enemy',0,()=>.5).damage,24);
+    DEMONDOOM_RULES.regina={weapon:3,fatalEvery:3,fatalRoll:8};const regina=make(139);regina.turn='enemy';regina.enemyAttacks[0]=2;assert.equal(rollDemondoomAttack(regina,'enemy',0,()=>.5).damage,2000);
+    DEMONDOOM_RULES.sqquashStrengthLoss=2;const sq=make(44);sq.turn='player';sq.enemies[0].lifePoints=10000;const strength=sq.player.strength;rollDemondoomAttack(sq,'player',0,high);assert.equal(sq.player.strength,strength-2);
+    DEMONDOOM_RULES.amoebixRounds=2;const amoebix=make(161);amoebix.turn='player';rollDemondoomAttack(amoebix,'player',0,low);rollDemondoomAttack(amoebix,'player',0,low);assert.equal(amoebix.pending,'death-luck');
+  }finally{Object.assign(DEMONDOOM_RULES,saved);}
+});
+test('Demondoom enemy spell thresholds, costs and effects use metadata',()=>{
+  const saved=structuredClone(DEMONDOOM_RULES);
+  try{
+    Object.assign(DEMONDOOM_RULES.enemyMagic,{captainCost:7,paralysisRounds:4,fireboltDamage:13});DEMONDOOM_RULES.enemyMagic.thresholds.firebolt=4;
+    const captain=make(249);captain.turn='enemy';const power=captain.enemies[0].power;castDemondoomEnemySpell(captain,'blight',0,high);assert.equal(captain.enemies[0].power,power-7);assert.equal(captain.paralysedPlayerRounds,4);
+    const regent=make(106);regent.turn='enemy';const result=castDemondoomEnemySpell(regent,'firebolt',0,()=>.2);assert.equal(result.success,true);assert.equal(result.damage,13);
+  }finally{Object.assign(DEMONDOOM_RULES,saved);}
+});
 
 test('creating fights and subsequent attacks cannot mutate their original prepared character or source enemies',()=>{
   const prepared=prepareDemondoomEncounter(50,{...rollDemondoomCharacter(high),weapon:'sword',armour:'none'});

@@ -1,5 +1,5 @@
 import { customFightingEncounter } from '../../engines/fighting-fantasy/opponents.js';
-import { INITIAL_GOLD, INITIAL_PROVISIONS, RULES_REVISION, encounterFor } from './definition.js';
+import { INITIAL_GOLD, INITIAL_PROVISIONS, RULES_REVISION, SUMMONED_GOBLIN, SERPENT_RULES, encounterFor } from './definition.js';
 
 export function integer(value, min = 0, max = 10000) {
   if (!Number.isSafeInteger(value) || value < min || value > max) throw new RangeError('Invalid Seven Serpents value');
@@ -63,8 +63,6 @@ export function loseStamina(character, amount) {
 
 const supportedModes = new Set([undefined, 'snattacats', 'separate-attacks', 'centaurs', 'flying-fish',
   'night-hawks', 'rock-demon', 'confused-ghost', 'snake-charmer', 'acid-beetle', 'fire-fox', 'air-serpent']);
-const elementalSerpents = new Set(['fireSerpent', 'weakenedFireSerpent', 'moonSerpent', 'weakenedMoonSerpent',
-  'earthSerpent', 'waterSerpent', 'airSerpent', 'timeSerpent']);
 const livingEnemies = fight => fight.enemies.flatMap((enemy, index) => enemy.stamina > (fight.config.enemyFloor ?? 0) ? [index] : []);
 
 function allyAssignments(fight) {
@@ -156,7 +154,7 @@ export function startFight(section, character, options = {}, roll) {
     const count = integer(options.summonCount, 0, character.goblinTeeth);
     config.entryCost = count;
     config.summonedGoblins = count > 0;
-    fight.allies = Array.from({ length: count }, () => ({ key: 'summonedGoblin', skill: 5, stamina: 5, staminaInitial: 5 }));
+    fight.allies = Array.from({ length: count }, () => ({ ...SUMMONED_GOBLIN, staminaInitial: SUMMONED_GOBLIN.stamina }));
     if (options.applyEntry !== false) fight.player.goblinTeeth -= count;
   }
   if (config.wastedTeeth) {
@@ -210,9 +208,9 @@ export function startFight(section, character, options = {}, roll) {
     if (config.entrySkillLoss) fight.player.skill = Math.max(0, fight.player.skill - config.entrySkillLoss);
     if (config.arrows && fight.player.stamina) {
       if (config.extraArrow) {
-        const value = die(roll), hit = value <= 3;
+        const value = die(roll), hit = value <= SERPENT_RULES.extraArrow.hitMaximum;
         fight.events.push({ kind: 'arrow', roll: value, hit });
-        if (hit) fight.player = loseStamina(fight.player, 2).character;
+        if (hit) fight.player = loseStamina(fight.player, SERPENT_RULES.extraArrow.damage).character;
       }
       let hits = 0;
       for (let index = 0; index < config.arrows.count && fight.player.stamina; index++) {
@@ -258,7 +256,7 @@ export function round(input, target = targets(input)[0], roll) {
     ? [target, ...livingEnemies(fight).filter(index => index !== target && !occupied.has(index))] : [target];
   for (const index of defenders) {
     const enemy = fight.enemies[index], enemyAS = rollDice(roll) + Math.max(0, enemy.skill
-      - (fight.player.elementalStaff && elementalSerpents.has(enemy.key) ? 2 : 0))
+      - (fight.player.elementalStaff && SERPENT_RULES.elementalStaff.enemies.includes(enemy.key) ? SERPENT_RULES.elementalStaff.penalty : 0))
       + (fight.config.enemyAttackModifier ?? 0) + (fight.rounds === 1 ? fight.config.firstRoundEnemyAttackModifier ?? 0 : 0);
     fight.events.push({ kind: 'attack', enemy: index, playerAS, enemyAS });
     if (fight.config.mode === 'air-serpent') {
@@ -272,7 +270,9 @@ export function round(input, target = targets(input)[0], roll) {
       } else if (enemyAS > playerAS) {
         fight.playerStreak = 0;
         fight.enemyStreak++;
-        fight.pending.push({ kind: 'enemy-hit', enemy: index, damage: Math.min(10000, 2 ** (fight.enemyStreak - 1)), variableDamage: true });
+        const table = fight.config.enemyStreakDamage, last = table.length - 1, indexInTable = fight.enemyStreak - 1;
+        const damage = indexInTable <= last ? table[indexInTable] : table[last] * (table[last] / table[last - 1]) ** (indexInTable - last);
+        fight.pending.push({ kind: 'enemy-hit', enemy: index, damage: Math.min(10000, damage), variableDamage: true });
       } else { fight.playerStreak = 0; fight.enemyStreak = 0; }
       continue;
     }
@@ -304,16 +304,16 @@ export function resolveLuck(input, useLuck = false, roll) {
       enemy.wounds++;
       if (fight.config.mode === 'fire-fox') {
         fight.nextFire = true;
-        fight.noticeDestination = 71;
+        fight.noticeDestination = SERPENT_RULES.fireFoxNotice;
       }
       if (fight.config.mode === 'snattacats') fight.visibility[hit.enemy] = true;
       if (fight.config.mode === 'acid-beetle') {
-        let backlash = 1;
+        let backlash = SERPENT_RULES.acid.initialDamage;
         if (fight.acidStarted) {
           const value = die(roll);
-          backlash = [3, 2, 2, 1, 0, 0][value - 1];
-          if (value === 1 && !fight.player.afflictions.includes('lost-left-eye')) fight.player.afflictions.push('lost-left-eye');
-          if (value === 2) fight.player.skill = Math.max(0, fight.player.skill - 1);
+          backlash = SERPENT_RULES.acid.damageByRoll[value - 1];
+          if (value === SERPENT_RULES.acid.eyeLossRoll && !fight.player.afflictions.includes('lost-left-eye')) fight.player.afflictions.push('lost-left-eye');
+          if (value === SERPENT_RULES.acid.skillLossRoll) fight.player.skill = Math.max(0, fight.player.skill - SERPENT_RULES.acid.skillLoss);
           fight.events.push({ kind: 'acid', roll: value, damage: backlash });
         } else {
           fight.acidStarted = true;

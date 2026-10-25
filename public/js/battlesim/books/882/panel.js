@@ -1,9 +1,9 @@
-import { ROSTER, PLAYER_DEFAULTS } from './definition.js';
+import { ROSTER, PLAYER_DEFAULTS, ENCOUNTER_SETTINGS } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, PLAYER_DEFAULTS, ROSTER, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _encounter, _encounterOptions, _fight, _numField, _pickEncounter, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _roll1d6, advanceZorroFight, closeSim882, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim882, openSim882, registerPanelShortcut, renderSim882, romeroSoldiers, saveState, setSim882Visible, shortcutLabel, showAlert, startZorroFight, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, PLAYER_DEFAULTS, ROSTER, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _encounter, _encounterOptions, _fight, _numField, _pickEncounter, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _roll1d6, advanceZorroFight, closeSim882, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim882, openSim882, registerPanelShortcut, renderSim882, saveState, setSim882Visible, shortcutLabel, showAlert, startZorroFight, t });
 const { _data, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _roll1d6, _encounter } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -22,13 +22,6 @@ import { startZorroFight, advanceZorroFight } from "../.././engines/zorro.js";
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
 
-const romeroSoldiers = ROSTER.find(e => e.id === 'romero_12').enemies;
-ROSTER.push(
-  { id: 'village_middle', nameKey: 'battlesim882.name.village_middle', type: 'shpagi', enemies: romeroSoldiers.slice(3, 8) },
-  { id: 'village_last', nameKey: 'battlesim882.name.village_last', type: 'shpagi', enemies: romeroSoldiers.slice(8) },
-  { id: 'village_whip', nameKey: 'battlesim882.name.village_whip', type: 'shpagi', enemies: romeroSoldiers.slice(9) },
-);
-
 function _fight(interrupt = false) {
   const d = _data();
   if (!d) return;
@@ -40,7 +33,7 @@ function _fight(interrupt = false) {
     return;
   }
   if (!d.pendingFight) {
-    d.pendingFight = startZorroFight(player, enc, Number(document.getElementById('sim882-removed').value), Number(document.getElementById('sim882-prior-damage').value));
+    d.pendingFight = startZorroFight(player, enc, Number(document.getElementById('sim882-removed').value), Number(document.getElementById('sim882-prior-damage').value), ENCOUNTER_SETTINGS[enc.id]);
     _appendLog(d, t('battlesim882.log.header', { name: t(enc.nameKey) }));
   }
   const result = advanceZorroFight(d.pendingFight, _roll1d6, interrupt);
@@ -125,8 +118,8 @@ function _renderInputs() {
   const overlay = document.getElementById('sim882-overlay');
   overlay.querySelectorAll('.inv-qty-btn, .inv-qty-input, #sim882-encounter-pick, #sim882-prior-damage').forEach(el => { el.disabled = Boolean(d.pendingFight); });
   const removed = document.getElementById('sim882-removed');
-  removed.closest('.inv-edit-row').hidden = !['romero_12', 'gate_4', 'village_whip'].includes(enc.id);
-  document.getElementById('sim882-prior-damage').closest('.inv-edit-row').hidden = enc.id !== 'rosario';
+  removed.closest('.inv-edit-row').hidden = !ENCOUNTER_SETTINGS[enc.id].removed;
+  document.getElementById('sim882-prior-damage').closest('.inv-edit-row').hidden = !ENCOUNTER_SETTINGS[enc.id].priorDamage;
   const interrupt = document.getElementById('sim882-interrupt');
   interrupt.hidden = !(d.pendingFight?.type === 'duel' && d.pendingFight.turn === false && d.pendingFight.playerInterrupts > 0);
   interrupt.textContent = t('battlesim882.btn.interrupt', { n: d.pendingFight?.playerInterrupts || 0 });
@@ -170,6 +163,7 @@ export function setSim882Visible(visible) {
 // ── Init ─────────────────────────────────────────────────────────────────
 
 export function initSim882() {
+  const priorDamageOptions = Object.values(ENCOUNTER_SETTINGS).find(settings => settings.priorDamageOptions)?.priorDamageOptions ?? [];
   const overlay = document.createElement('div');
   overlay.id        = 'sim882-overlay';
   overlay.className = 'inv-overlay';
@@ -207,9 +201,7 @@ export function initSim882() {
             <div class="inv-edit-row">
               <span class="inv-edit-label bsim-stat-label">${t('battlesim882.ui.prior_damage')}</span>
               <select id="sim882-prior-damage" class="inv-edit-input">
-                <option value="0">${t('battlesim882.ui.none')}</option>
-                <option value="4">${t('battlesim882.ui.bottle')}</option>
-                <option value="6">${t('battlesim882.ui.chair')}</option>
+                ${priorDamageOptions.map(option => `<option value="${escapeHtml(option.value)}">${escapeHtml(t('battlesim882.ui.' + option.key))}</option>`).join('')}
               </select>
             </div>
           </div>

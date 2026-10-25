@@ -113,7 +113,7 @@ export function resolveUrowenEncounterRound(state,roll,options={}) {
   enemy.life-=enemy.weaponBleeding??0;
   enemy.life-=enemy.weaponVenom??0;
   if(rules.startRoundSupportDamage) {
-    const damage=urowenSisteliumDamage(fight.enemies.filter(item=>item.life>0).length);
+    const damage=urowenSisteliumDamage(fight.enemies.filter(item=>item.life>0).length,fight.enemies.length);
     player.life-=damage;result.supportDamage=damage;
   }
   const initial=urowenCombatOutcome(player.life,enemy.life);

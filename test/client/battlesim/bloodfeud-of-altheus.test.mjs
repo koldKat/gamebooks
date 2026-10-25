@@ -3,15 +3,17 @@ import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
-function fixture(bookId = 400, saved) {
+function fixture(bookId = 400, saved, nameRules) {
+  const seed = JSON.parse(readFileSync(new URL(`../../../data/simulator-rosters/${bookId}.json`, import.meta.url), 'utf8'));
+  const requiresDivineNameRules = nameRules || seed.enemies.map(row => new RegExp(row.stats.entry.namePattern, row.stats.entry.flags));
   const key = `sim${bookId}`;
   const pt = saved ? { [key]: structuredClone(saved) } : {};
   const source = readFileSync(new URL('../../../public/js/battlesim/engines/cretan.js', import.meta.url), 'utf8')
     .replace(/^import .*;\n/gm, '').replace(/^export /gm, '')
     .replace('return { init, render, setVisible };', '_renderAll = () => {}; return { data: _data, win: _finishWin, reset: _resetBattle, select: _applyEnemy };');
-  const context = vm.createContext({ currentPlaythrough: () => pt, saveState() {}, t: k => k, escapeHtml: s => s });
+  const context = vm.createContext({ requiresDivineNameRules, currentPlaythrough: () => pt, saveState() {}, t: k => k, escapeHtml: s => s });
   vm.runInContext(source, context);
-  const sim = vm.runInContext(`createCretanSim({bookId:${bookId},idPrefix:'${key}',stateKey:'${key}',i18nPrefix:'${key}',defaultHonour:7})`, context);
+  const sim = vm.runInContext(`createCretanSim({bookId:${bookId},idPrefix:'${key}',stateKey:'${key}',i18nPrefix:'${key}',defaultHonour:7,requiresDivineNameRules})`, context);
   return { sim, data: sim.data() };
 }
 
@@ -122,5 +124,29 @@ test('changing next-fight options never changes the current or legacy fight', ()
     sim.win(data);
     assert.equal(data.player.stage, 2);
     assert.equal(data.carryWounds, undefined);
+  }
+});
+
+
+test('every Cretan book loads the original case-insensitive divine-weapon name predicate', () => {
+  for (const id of [400,401,402]) {
+    const {sim,data}=fixture(id);
+    for (const [name,needsDivine] of [['The Minotaur (§176)',true],['MINOTAUR',true],['Custom Minotaur champion',true],['Notaminotaur',true],['Procrustes (berserk)',false],['',false]]) {
+      sim.select(data,{name,attack:5,defense:12,hp:3,pb:0});
+      assert.equal(data.enemy.needsDivine,needsDivine,`${id}: ${name}`);
+    }
+  }
+});
+
+test('Cretan matching follows installed rules and never rewrites a saved divine-weapon flag on load', () => {
+  const configured=fixture(401,undefined,[/^custom guardian$/i]);
+  configured.sim.select(configured.data,{name:'Custom Guardian',attack:4,defense:12});
+  assert.equal(configured.data.enemy.needsDivine,true);
+  configured.sim.select(configured.data,{name:'Minotaur',attack:4,defense:12});
+  assert.equal(configured.data.enemy.needsDivine,false);
+  for (const id of [400,401,402]) for (const enabled of [true,false]) {
+    const saved=fixture(id).data;saved.enemy.name='The Minotaur';saved.enemy.needsDivine=enabled;saved.roundsThisBattle=2;
+    const expected=JSON.parse(JSON.stringify(saved));
+    assert.deepEqual(JSON.parse(JSON.stringify(fixture(id,expected).data)),expected);
   }
 });

@@ -1,3 +1,4 @@
+import { CROWN_SETTINGS } from './crown-roster.js';
 import { legendaryInteger } from './character.js';
 import { startLegendaryNaval } from './naval.js';
 import { startLegendaryArmy } from './army.js';
@@ -19,7 +20,7 @@ export function startCrownArmy(player, section) {
     if (troop.garrison !== battle.garrison || !['infantry','cavalry','missile','longbow'].includes(troop.type))
       throw new RangeError('Choose troop types and units from the required garrison');
   }
-  if (section === 349 && player[1]?.some(troop => troop.name === 'Mounted Sergeants'))
+  if (section === CROWN_SETTINGS.siegeRestriction.section && player[CROWN_SETTINGS.siegeRestriction.zone]?.some(troop => troop.name === CROWN_SETTINGS.siegeRestriction.name))
     throw new RangeError('Mounted Sergeants cannot operate the ram in the Centre');
   const {enemy,...rules} = battle;
   return startLegendaryArmy(player,enemy,{section,...rules});

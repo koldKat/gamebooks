@@ -290,7 +290,52 @@
                 }
               }
             }
-          ]
+          ],
+          "support": {
+            "rules": {
+              "spearDamage": 3,
+              "armour": {
+                "normal": 1,
+                "lucky": 2,
+                "unlucky": 0
+              },
+              "phantom": {
+                "odd": 1,
+                "even": 2
+              },
+              "phoenixOffset": -1,
+              "runeLoss": 1,
+              "spells": [
+                {
+                  "maxRoll": 2,
+                  "stat": "stamina",
+                  "amount": 2,
+                  "section": 90
+                },
+                {
+                  "maxRoll": 4,
+                  "stat": "luck",
+                  "amount": 1,
+                  "section": 102
+                },
+                {
+                  "maxRoll": 6,
+                  "stat": "skill",
+                  "amount": 1,
+                  "section": 118
+                }
+              ],
+              "beam": {
+                "period": 3,
+                "odd": 4,
+                "even": 0
+              },
+              "charcoalTimingSections": [
+                93,
+                307
+              ]
+            }
+          }
         },
         "part": {
           "name": "rokuroKubi",

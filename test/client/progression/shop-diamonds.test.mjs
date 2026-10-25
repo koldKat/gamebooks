@@ -40,7 +40,7 @@ function setup() {
 
 test('private diamond upgrades sit after Coin Mint and before Extra Undo with escalating costs and current rates', () => {
   const h = setup();
-  const html = h.render({ level: 10, coinsBalance: 55, diamondsBalance: 2,
+  const html = h.render({ level: 99, jobLevel: 10, coinsBalance: 55, diamondsBalance: 2,
     diamondDigPurchased: 2, diamondExchangePurchased: 3, diamondDigPct: 1.2,
     diamondEventsPerDiamond: 1000 / 1.012, diamondExchangeRate: 13 });
   assert.deepEqual([...html.matchAll(/data-item="([^"]+)"/g)].map(match => match[1]),
@@ -49,26 +49,26 @@ test('private diamond upgrades sit after Coin Mint and before Extra Undo with es
   assert.match(html, /Current: \+1.2% digging speed \(1.0 base \+ 0.2 bought\)/);
   assert.match(html, /shop-item-effect">1 <span role="img" aria-label="Gold coin"><svg class="coin-icon"><\/svg><\/span> per/);
   assert.match(html, /shop-item-effect">1 <span role="img" aria-label="Ruby"><svg class="diamond-icon"><\/svg><\/span> per/);
-  assert.equal(runInContext('SHOP_ITEMS.find(x=>x.id===\'diamond_dig\').costFn(_shopData)', h.context), 3);
+  assert.equal(runInContext('SHOP_ITEMS.find(x=>x.id===\'diamond_dig\').costFn(_shopData)', h.context), 30);
   assert.doesNotMatch(html, /data-item="diamond_exchange"/);
-  const capped = h.render({ level: 10, coinsBalance: 55, diamondsBalance: 2, diamondDigPurchased: 10, diamondExchangePurchased: 10 });
+  const capped = h.render({ level: 99, jobLevel: 10, coinsBalance: 55, diamondsBalance: 2, diamondDigPurchased: 10, diamondExchangePurchased: 10 });
   assert.match(capped, /data-item="diamond_dig" disabled/);
   assert.doesNotMatch(h.render({ level: 10, coinsBalance: 55 }), /data-item="diamond_/);
 });
 
 test('buying a diamond upgrade refreshes the shop and its next price from the server snapshot', async () => {
   const h = setup();
-  h.render({ level: 10, coinsBalance: 55, diamondsBalance: 1, diamondDigPurchased: 0 });
+  h.render({ level: 10, jobLevel: 1, coinsBalance: 55, diamondsBalance: 1, diamondDigPurchased: 0 });
   const buying = h.get('buy-diamond_dig').handlers.click();
   assert.equal(h.get('buy-diamond_dig').disabled, true);
   assert.equal(h.requests[0].url, '/api/shop/purchase');
   assert.deepEqual(JSON.parse(h.requests[0].options.body), { item: 'diamond_dig' });
-  const updated = { level: 10, coinsBalance: 54, coinsSpent: 1, diamondsBalance: 1,
+  const updated = { level: 10, jobLevel: 2, coinsBalance: 45, coinsSpent: 10, diamondsBalance: 1,
     diamondDigPurchased: 1, diamondDigPct: 1.1, diamondEventsPerDiamond: 1000 / 1.011, diamondExchangeRate: 10 };
   h.requests.shift().resolve({ ok: true, json: async () => updated });
   await buying;
   assert.equal(h.snapshots.at(-1), updated);
-  assert.equal(runInContext('SHOP_ITEMS.find(x=>x.id===\'diamond_dig\').costFn(_shopData)', h.context), 2);
+  assert.equal(runInContext('SHOP_ITEMS.find(x=>x.id===\'diamond_dig\').costFn(_shopData)', h.context), 20);
   assert.match(h.get('shop-items').innerHTML, /1.1% digging speed/);
 });
 

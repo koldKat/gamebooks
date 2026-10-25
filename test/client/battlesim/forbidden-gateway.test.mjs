@@ -2,6 +2,7 @@ import { loadFixtureRoster } from './roster-fixtures.mjs';
 await loadFixtureRoster(539);
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import * as rules from '../../../public/js/battlesim/engines/forbidden-gateway.js';
 import { resolveShadowsCheck } from '../../../public/js/battlesim/engines/forbidden-gateway-checks.js';
 
@@ -13,6 +14,29 @@ const roll = (...values) => {
   };
 };
 const player = () => rules.createShadowsCharacter(roll(6, 6, 6));
+
+test('printed Shadows checks take ratings, damage and routes from loaded metadata',async()=>{
+  const rosterUrl=new URL('../../../public/js/battlesim/engines/forbidden-gateway-roster.js?authority',import.meta.url);
+  const roster=await import(rosterUrl.href),seed=JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/539.json',import.meta.url)));
+  const support=seed.enemies.find(e=>e.key==='61:0').stats.entry.support,check=support.checks.find(c=>c.section===52);
+  Object.assign(check,{rating:2,success:777,successDamage:{stamina:7}});delete check.death;support.rules.death=900;
+  await roster.loadRoster(async()=>({ok:true,json:async()=>seed.enemies}));
+  const path=new URL('../../../public/js/battlesim/engines/forbidden-gateway-checks.js',import.meta.url);
+  const source=readFileSync(path,'utf8').replaceAll("'./forbidden-gateway-roster.js'",JSON.stringify(rosterUrl.href)).replaceAll("'./forbidden-gateway.js'",JSON.stringify(new URL('forbidden-gateway.js',path).href));
+  const checks=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+  assert.equal(checks.SHADOWS_CHECKS.length,33);assert.equal(checks.resolveShadowsCheck(player(),52,roll(1,2)).success,false);
+  const p=player();p.stamina=10;assert.equal(checks.resolveShadowsCheck(p,52,roll(1,1)).destination,777);assert.equal(p.stamina,3);
+  p.stamina=1;assert.equal(checks.resolveShadowsCheck(p,52,roll(1,1)).destination,900);
+});
+test('Shadows script limits, strict identity and disbelief settings preserve saved state',()=>{
+  const saved=structuredClone(rules.SHADOWS_RULES);
+  try{
+    rules.SHADOWS_RULES.scriptStrikes=3;rules.SHADOWS_RULES.changelingId=900;rules.SHADOWS_RULES.disbeliefLoss=2;
+    assert.equal(rules.shadowsLocksWeapon(900),true);assert.equal(rules.shadowsLocksWeapon('900'),false);
+    const f=rules.startShadowsFight(player(),24);f.strikes=1;f.extension={keep:true};const old=JSON.parse(JSON.stringify(f));rules.shadowsScriptStrike(old,roll(6,6));assert.equal(old.status,'fighting');rules.shadowsScriptStrike(old,roll(6,6));assert.equal(old.status,'continue');assert.deepEqual(old.extension,{keep:true});
+    const d=rules.startShadowsFight(player(),34);d.queue=[0];d.enemies[0].disbelief=true;d.enemies[0].mentality=2;d.enemies[0].endurance=9;delete d.enemies[0].stamina;rules.shadowsAttack(d,0,roll(6,6));assert.equal(d.enemies[0].endurance,7);
+  }finally{Object.assign(rules.SHADOWS_RULES,saved);}
+});
 
 test('initial attributes are 1d6+3 with separate doubled health and no gun', () => {
   const p = rules.createShadowsCharacter(roll(1, 2, 3));

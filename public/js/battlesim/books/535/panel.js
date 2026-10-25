@@ -1,5 +1,5 @@
 import { createDemonOpponentSetup } from '../../engines/demonspawn/setup.js';
-import { CRYPTS_ROSTER } from '../../engines/demonspawn/crypts-of-terror-roster.js';
+import { CRYPTS_ROSTER, CRYPTS_RULES } from '../../engines/demonspawn/crypts-of-terror-roster.js';
 let customSetup;
 import { ID, options, actions } from './definition.js';
 import { createState } from './state.js';
@@ -69,7 +69,7 @@ export function renderSim535() {
   el('end_round').hidden=!f?.manualGroup;
   el('player_attack').disabled||=!f?.manualGroup&&f?.turn!=='player'||f?.encounter.rule==='wizard-duel';
   el('enemy_attack').disabled||=!f?.manualGroup&&f?.turn!=='enemy'||f?.encounter.rule==='wizard-duel';
-  el('box').disabled||=!p.rosewoodBox||f?.encounter.noArtifacts||!f?.enemies.some((e,i)=>e.name==='Alchiller'&&cryptsEnemyActive(f,i));
+  el('box').disabled||=!p.rosewoodBox||f?.encounter.noArtifacts||!f?.enemies.some((e,i)=>e.name===CRYPTS_RULES.box.enemyName&&cryptsEnemyActive(f,i));
   el('orb_test').disabled||=!f?.options.orb||f?.orbTested||f?.encounter.noArtifacts;
   el('wand').disabled||=p.wandCharges<1||p.power<5||f?.encounter.noArtifacts;
   el('wight_hit').hidden=f?.encounter.rule!=='wights';el('wight-damage').hidden=f?.encounter.rule!=='wights';

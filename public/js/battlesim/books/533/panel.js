@@ -136,7 +136,7 @@ export function initSim533() {
   for (const key of ['skeleton','orangutiger','dragon']) el('ally-'+key).addEventListener('change',() => action(d => {
     const ally = p(d).companions[key], value = Number(el('ally-'+key).value);
     if (active(d) || !ally) return;
-    if (!Number.isFinite(value) || value < 0 || value > (key === 'dragon' ? 7000 : 30)) throw new RangeError('Invalid companion');
+    if (!Number.isFinite(value) || value < 0 || value > rules.LEGION_COMPANIONS[key].life) throw new RangeError('Invalid companion');
     ally.life = value;
   }));
   el('acquire').addEventListener('click',() => action(d => { if (!active(d)) report(d,rules.legionTakeItem(p(d),el('item').value),'acquire'); }));

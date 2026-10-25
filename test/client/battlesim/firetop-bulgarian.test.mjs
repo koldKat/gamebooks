@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 import {readFileSync} from './simulator-source.mjs';
 import vm from 'node:vm';
 
+const rosterEntries = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/464.json', import.meta.url), 'utf8')).enemies.map(row => row.stats.entry);
+
 const source = readFileSync(new URL('../../../public/js/battlesim/battlesim464.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
 function fixture(saved) {
  const pt = saved ? {sim464: structuredClone(saved)} : {}, dice = [];
- const context = vm.createContext({currentPlaythrough: () => pt, saveState: () => {}, escapeHtml: value => value, t: (key, params) => JSON.stringify({key, params}), Math: Object.assign(Object.create(Math), {random: () => {assert.ok(dice.length, 'unexpected die'); return (dice.shift() - 1) / 6;}})});
+ const context = vm.createContext({createRosterLoader: (_id,_dataset,install) => {install(structuredClone(rosterEntries));return async () => {};}, currentPlaythrough: () => pt, saveState: () => {}, escapeHtml: value => value, t: (key, params) => JSON.stringify({key, params}), Math: Object.assign(Object.create(Math), {random: () => {assert.ok(dice.length, 'unexpected die'); return (dice.shift() - 1) / 6;}})});
  vm.runInContext(source + '\n_renderAll = () => {};', context);
  const run = value => vm.runInContext(value, context), d = run('_data()');
  const action = (command, values) => {dice.push(...values); run(command); assert.equal(dice.length, 0);};
@@ -89,4 +91,15 @@ test('legacy Luck retains configured damage and reset does not migrate fights', 
 test('all static simulator keys, including new controls, have labels', () => {
  const labels = readFileSync(new URL('../../../public/js/i18n/en/battlesim/battlesim464.js', import.meta.url), 'utf8');
  for (const match of source.matchAll(/t\('([^']+)'/g)) if (match[1].startsWith('battlesim464.')) assert.ok(labels.includes("'" + match[1] + "'"), match[1]);
+});
+
+
+test('renamed metadata controls attack, fire and paralysis setup', () => {
+ const entry=rosterEntries.find(entry=>entry.section===39), original=structuredClone(entry);
+ try {
+  entry.section=900;entry.rules={attackModifier:-5,playerWoundDamage:4,fire:true,paralyzeAfter:3};
+  const f=ready();f.d.enemy.name='Custom §900';f.run('_resetEncounterKnobs(_data())');
+  assert.equal(f.d.player.attackModifier,-5);assert.equal(f.d.player.playerWoundDamage,4);
+  assert.equal(f.d.encounter.fire,true);assert.equal(f.d.encounter.paralyzeAfter,3);
+ } finally {Object.assign(entry,original);}
 });

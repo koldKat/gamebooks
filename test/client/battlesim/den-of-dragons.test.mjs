@@ -5,8 +5,8 @@ import { test } from 'node:test';
 import { readFileSync } from './simulator-source.mjs';
 import { runInNewContext } from 'node:vm';
 import { createDenCharacter, initialDenLife, denDamage, createDenFight, rollDenRound, resolveDenPoison,
-  castDenSpell, launchDenMagic, useDenLollipop, denFriendlyReaction, denDream, healDenPlayer, rerollDenInitiative, useDenItem } from '../../../public/js/battlesim/engines/grailquest/den-of-dragons.js';
-import { DEN_ENCOUNTERS, DEN_DREAM_FIGHTS } from '../../../public/js/battlesim/engines/grailquest/den-of-dragons-roster.js';
+  castDenSpell, launchDenMagic, useDenLollipop, denFriendlyReaction, denDream, healDenPlayer, rerollDenInitiative, useDenItem, denInvisibilityAllowed } from '../../../public/js/battlesim/engines/grailquest/den-of-dragons.js';
+import { DEN_ENCOUNTERS, DEN_DREAM_FIGHTS, DEN_RULES } from '../../../public/js/battlesim/engines/grailquest/den-of-dragons-roster.js';
 
 const low = () => 0;
 const high = () => 0.999;
@@ -432,4 +432,68 @@ test('healing caps at maximum and never resurrects zero LIFE', () => {
   p.life=0;
   assert.equal(healDenPlayer(p,12),false);
   assert.equal(p.life,0);
+});
+
+test('renamed NPC metadata controls evasion, blending, petrification and arrows', () => {
+  const specs = [153,157,136].map(section => DEN_ENCOUNTERS.find(s => s.section === section));
+  specs.push(DEN_DREAM_FIGHTS.find(s => s.section === 'dream10'));
+  const originals = specs.map(s => structuredClone(s));
+  try {
+    Object.assign(specs[0], { section: 900, npcRules: { openingEvasionFatalAt: 13 } });
+    assert.equal(createDenFight(900, player(), {}, high).status, 'fighting');
+    Object.assign(specs[1], { section: 901, npcRules: { blendDamage: 3 } });
+    const shapes = fight(901); rollDenRound(shapes, 0, low);
+    assert.equal(shapes.player.life, 45); assert.equal(shapes.events.at(-1).damage, 3);
+    Object.assign(specs[2], { section: 902, npcRules: { invisiblePetrifyExtraHits: 2 } });
+    const medusa = fight(902, { invisible: true, armour: 20 });
+    for (let i = 0; i < 3; i++) rollDenRound(medusa, 0, sequence([1,1,4,4]));
+    assert.equal(medusa.status, 'fighting');
+    rollDenRound(medusa, 0, sequence([1,1,4,4])); assert.equal(medusa.status, 'loss');
+    Object.assign(specs[3], { section: 'dream900', npcRules: { arrowHit: 2, arrowDamage: 3, rangedRounds: 2 } });
+    const arrows = fight('dream900');
+    assert.equal(rollDenRound(arrows, 0, low)[0].damage, 3);
+    assert.equal(arrows.events.some(e => e.kind === 'enemy'), false);
+    rollDenRound(arrows, 0, low);
+    assert.equal(arrows.events.some(e => e.kind === 'enemy'), true);
+    assert.equal(arrows.arrows, 5);
+  } finally {
+    specs.forEach((spec, i) => { for (const key of Object.keys(spec)) delete spec[key]; Object.assign(spec, originals[i]); });
+  }
+});
+
+test('book metadata controls poison outcomes and strict invisibility eligibility', () => {
+  const original = structuredClone(DEN_RULES);
+  try {
+    assert.equal(denInvisibilityAllowed({ section: 130 }), true);
+    assert.equal(denInvisibilityAllowed({ section: 137 }), true);
+    assert.equal(denInvisibilityAllowed({ section: '130' }), false);
+    DEN_RULES.invisibilitySections = [900];
+    const allowed = fight(24); allowed.spec.section = 900;
+    assert.equal(castDenSpell(allowed, 'invisibility', 0, high).success, true);
+    assert.equal(castDenSpell(fight(98), 'invisibility', 0, high), null);
+    DEN_RULES.poisonResults = { fatalMax: 2, protectedMax: 4, enemyDiesAt: 5, escapeLifeDivisor: 3 };
+    for (const [dice, outcome] of [[[1,1], 'loss'], [[1,2], 'protected'], [[2,3], 'win'], [[3,3], 'escaped']]) {
+      const f = fight(6); f.poisonPending = true;
+      resolveDenPoison(f, sequence(dice));
+      if (outcome === 'protected') assert.equal(f.player.poisonProtected, true);
+      else assert.equal(f.status, outcome);
+      if (outcome === 'escaped') assert.equal(f.player.life, 16);
+    }
+  } finally { Object.assign(DEN_RULES, original); }
+});
+
+test('old saved specs preserve poison, wounds and the seven-arrow eighth-round handoff', () => {
+  const rabbit = fight(6, { life: 31 }); rabbit.poisonPending = true; rabbit.foes[0].consecutiveHits = 3;
+  const saved = JSON.parse(JSON.stringify(rabbit)), before = structuredClone(saved);
+  assert.equal(rollDenRound(saved), null); assert.deepEqual(saved, before);
+  resolveDenPoison(saved, sequence([5,5]));
+  assert.equal(saved.player.life, 15); assert.equal(saved.status, 'escaped');
+  const arrows = fight('dream10', { life: 100, maxLife: 100 }); delete arrows.spec.npcRules;
+  arrows.rounds = 6; arrows.arrows = 1;
+  rollDenRound(arrows, 0, sequence([3,4]));
+  assert.equal(arrows.events[0].damage, 10); assert.equal(arrows.arrows, 0);
+  assert.equal(arrows.events.some(e => e.kind === 'enemy'), false);
+  rollDenRound(arrows, 0, low);
+  assert.equal(arrows.rounds, 8); assert.equal(arrows.events.some(e => e.kind === 'enemy'), true);
+  assert.equal(arrows.spec.npcRules, undefined);
 });

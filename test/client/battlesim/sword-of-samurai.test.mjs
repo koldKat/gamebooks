@@ -4,7 +4,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import { newSamuraiCharacter } from '../../../public/js/battlesim/engines/sword-of-samurai/character.js';
-import { SAMURAI_SOURCE_ROSTERS, SAMURAI_FIGHTS } from '../../../public/js/battlesim/engines/sword-of-samurai/roster.js';
+import { SAMURAI_SOURCE_ROSTERS, SAMURAI_FIGHTS, SAMURAI_RULES,
+  samuraiContinuation, samuraiContinuationLimit, samuraiCharcoalTiming } from '../../../public/js/battlesim/engines/sword-of-samurai/roster.js';
 import { startSamuraiFight, samuraiRound, resolveSamuraiAction, setSamuraiTarget }
   from '../../../public/js/battlesim/engines/sword-of-samurai/core.js';
 
@@ -24,6 +25,56 @@ const settle = (fight, roll = constant(6)) => {
   }
   return fight;
 };
+
+test('roster settings control armoured, phantom and phoenix damage', () => {
+  const saved=structuredClone(SAMURAI_RULES);
+  try {
+    SAMURAI_RULES.armour={normal:3,lucky:5,unlucky:1};SAMURAI_RULES.phantom={odd:3,even:4};SAMURAI_RULES.phoenixOffset=0;
+    assert.equal(samuraiRound(start(266,strong),constant(1)).enemies[0].stamina,7);
+    const lucky=samuraiRound(start(266,{...strong,luck:7}),constant(1));
+    assert.equal(resolveSamuraiAction(lucky,true,constant(1)).enemies[0].stamina,5);
+    const unlucky=samuraiRound(start(266,{...strong,luck:1}),constant(1));
+    assert.equal(resolveSamuraiAction(unlucky,true,constant(6)).enemies[0].stamina,9);
+    assert.equal(samuraiRound(start(94,strong),constant(1)).enemies[0].stamina,7);
+    assert.equal(samuraiRound(start(94,strong),constant(2)).enemies[0].stamina,6);
+    assert.equal(samuraiRound(start(372,{skill:1,stamina:100}),constant(1)).character.stamina,99);
+  } finally {Object.assign(SAMURAI_RULES,saved);}
+});
+
+test('roster settings control spear, spell, rune and periodic beam effects', () => {
+  const saved=structuredClone(SAMURAI_RULES);
+  try {
+    SAMURAI_RULES.spearDamage=5;SAMURAI_RULES.spells=[{maxRoll:6,stat:'stamina',amount:7,section:901}];
+    SAMURAI_RULES.beam={period:1,odd:7,even:2};SAMURAI_RULES.runeLoss=2;
+    assert.equal(startSamuraiFight(92,character({skill:1}),{applyEntry:true},constant(6)).character.stamina,19);
+    const spell=samuraiRound(start(292,{skill:1,stamina:100}),constant(1));
+    assert.equal(spell.character.stamina,91);assert(spell.events.some(e=>e.kind==='spell'&&e.section===901));
+    assert.equal(samuraiRound(start(364,{...strong,stamina:100}),constant(1)).character.stamina,93);
+    let runes=start(199,{skill:5,stamina:8,luck:3});runes.config.swordRunes=444;
+    runes=samuraiRound(runes,rolls(1,1,6,6));runes=resolveSamuraiAction(runes,false,rolls(4,4));
+    assert.equal(runes.character.skill,3);assert.equal(runes.character.luck,1);
+    assert(runes.events.some(e=>e.kind==='runeLoss'&&e.section===444));
+  } finally {Object.assign(SAMURAI_RULES,saved);}
+});
+
+test('continuation uses catalog links and captured thresholds with a legacy fallback', () => {
+  const first=start(82,strong);first.status='story';first.destination=32;first.enemies[0].stamina=6;
+  first.config.threshold.stamina=7;first.wounded=true;
+  const saved=JSON.stringify(first),spec=samuraiContinuation(first);
+  assert.equal(spec.section,32);assert.equal(samuraiContinuationLimit(spec,first),7);
+  const next=startSamuraiFight(32,first.character,{carryFrom:JSON.parse(saved)});
+  assert.equal(next.enemies[0].stamina,6);assert.equal(next.wounded,true);
+  assert.deepEqual(next.character,first.character);assert.equal(JSON.stringify(first),saved);
+  const legacy=JSON.parse(saved);delete legacy.config.threshold;legacy.enemies[0].stamina=4;
+  assert.equal(samuraiContinuationLimit(spec,legacy),5);
+  assert.equal(startSamuraiFight(32,legacy.character,{carryFrom:legacy}).enemies[0].stamina,4);
+  assert.equal(samuraiContinuation({...first,destination:'32'}),undefined);
+  assert.equal(samuraiContinuation({...first,config:{},destination:13}),undefined);
+  assert.equal(samuraiContinuation({...first,config:{section:'82'}}),undefined);
+  const sections=SAMURAI_RULES.charcoalTimingSections;
+  try{SAMURAI_RULES.charcoalTimingSections=[281];assert(samuraiCharcoalTiming(281));assert(!samuraiCharcoalTiming(93));}
+  finally{SAMURAI_RULES.charcoalTimingSections=sections;}
+});
 
 test('all83 printed stat rows and all59 source sections match an independent source fixture', () => {
   const sections = [...new Set(source.rows.map(row => row.section))];

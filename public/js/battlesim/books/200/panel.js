@@ -1,10 +1,10 @@
-import { POTIONS, SIDE_WOUND_DMG, FIRE_WHIP_DMG } from './definition.js';
+import { POTIONS, SIDE_WOUND_DMG, FIRE_WHIP_DMG, FOREST_RULES } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, FIRE_WHIP_DMG, POTIONS, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _appendLog, _checkParalyze, _data, _effectiveSkill, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderItemsHtml, _renderLog, _renderStatus, _resetBattle, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _sideEnemyNameSafe, _skipLuck, _testLuck, _usePotion, apiFetch, closeSim200, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim200, openSim200, registerPanelShortcut, renderSim200, saveState, setSim200Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ FOREST_RULES, ALL_PANEL_OVERLAY_IDS, FIRE_WHIP_DMG, POTIONS, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _appendLog, _checkParalyze, _data, _effectiveSkill, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderItemsHtml, _renderLog, _renderStatus, _resetBattle, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _sideEnemyNameSafe, _skipLuck, _testLuck, _usePotion, apiFetch, closeSim200, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim200, openSim200, registerPanelShortcut, renderSim200, saveState, setSim200Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _effectiveSkill, _checkParalyze, _runRound, _testLuck, _skipLuck, _resetBattle } = createCombat(simulatorContext);
 const { _usePotion } = createEffects(simulatorContext);

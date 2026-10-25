@@ -3,12 +3,14 @@ import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
+const rosterEntries = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/433.json', import.meta.url), 'utf8')).enemies.map(row => row.stats.entry);
+
 function fixture(saved) {
   const pt = saved ? { sim433: structuredClone(saved) } : {};
   const source = readFileSync(new URL('../../../public/js/battlesim/battlesim433.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
   const math = Object.create(Math);
   math.random = () => .2;
-  const context = vm.createContext({ Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, t: key => key, escapeHtml: value => value });
+  const context = vm.createContext({ createRosterLoader: (_id, _dataset, install) => { install(structuredClone(rosterEntries)); return async () => {}; }, Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, t: key => key, escapeHtml: value => value });
   vm.runInContext(source + '\n_renderAll = () => {}; globalThis.sim = { data: _data, potion: _useLaumspur, reset: _resetBattle, capture: _captureFightEffects, skill: _playerCS, round: _runRound };', context);
   return { sim: context.sim, data: context.sim.data(), math };
 }
@@ -229,4 +231,15 @@ test('new controls and outcome labels have translations', () => {
   const source = readFileSync(new URL('../../../public/js/i18n/en/battlesim/battlesim433.js', import.meta.url), 'utf8');
   const labels = vm.runInNewContext(source.replace('export default', 'globalThis.labels ='));
   for (const key of ['ui.next_fight', 'ui.mindshield', 'ui.previous_elix', 'ui.magic_mace', 'ui.protected_entry', 'ui.manual_effects', 'log.continue', 'log.recovered', 'log.knocked_out']) assert.equal(typeof labels['battlesim433.' + key], 'string');
+});
+
+test('renamed source section follows supplied fatal-pick outcome and route', () => {
+  const entry = rosterEntries.find(entry => entry.section === 357), original = structuredClone(entry);
+  try {
+    entry.section = 900; entry.rules.fatalPick.route = 901;
+    const {sim, data, math} = combat(900); math.random = () => .1;
+    sim.round();
+    assert.equal(data.player.ep, 0); assert.equal(data.combatEffects.route, 901);
+    assert.equal(data.history.at(-1).outcome, 'loss');
+  } finally {Object.assign(entry, original);}
 });

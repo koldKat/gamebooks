@@ -1,8 +1,9 @@
+import { ENCOUNTER_RULES } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _enemyDefeated, _enemyList, _enemyName, _enemyNameSafe, _finishSourceRound, _loadEnemyList, _notReady, _numField, _receiveSourceHit, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _roll1d6, _roll2d6, _runLegacyRound, _runRound, _runSourceRound, _setupEnemyAutocomplete, _sideAlive, _skipLuck, _sourceFightOver, _switchSourceTarget, _testLuck, _testSourceLuck, apiFetch, closeSim462, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim462, openSim462, registerPanelShortcut, renderSim462, saveState, setSim462Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ENCOUNTER_RULES, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _enemyDefeated, _enemyList, _enemyName, _enemyNameSafe, _finishSourceRound, _loadEnemyList, _notReady, _numField, _receiveSourceHit, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _roll1d6, _roll2d6, _runLegacyRound, _runRound, _runSourceRound, _setupEnemyAutocomplete, _sideAlive, _skipLuck, _sourceFightOver, _switchSourceTarget, _testLuck, _testSourceLuck, apiFetch, closeSim462, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim462, openSim462, registerPanelShortcut, renderSim462, saveState, setSim462Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _enemyDefeated, _resetEncounterKnobs, _runRound, _runLegacyRound, _sideAlive, _sourceFightOver, _finishSourceRound, _receiveSourceHit, _runSourceRound, _switchSourceTarget, _testLuck, _testSourceLuck, _skipLuck, _resetBattle } = createCombat(simulatorContext);
 // END SIMULATOR WIRING

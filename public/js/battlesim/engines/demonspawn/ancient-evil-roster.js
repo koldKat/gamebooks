@@ -3,12 +3,15 @@ import { createRosterLoader } from '../../roster-data.js';
 
 export let ANCIENT_EVIL_ROSTER = Object.freeze({});
 export let ANCIENT_EVIL_ENCOUNTERS = Object.freeze([]);
+export const ANCIENT_EVIL_RULES = {};
 export const loadRoster = createRosterLoader(537, 'BOOK_DATA', rows => {
   const encounters = rows.flatMap(row => row.encounters).sort((a,b) => a.index-b.index);
-  if (!rows.length || !encounters.length || new Set(rows.map(row => row.key)).size !== rows.length || new Set(encounters.map(row => row.index)).size !== encounters.length) throw new Error('Incomplete Ancient Evil catalog');
+  const rules = rows.find(row => row.support)?.support.rules;
+  if (!rows.length || !encounters.length || !rules || new Set(rows.map(row => row.key)).size !== rows.length || new Set(encounters.map(row => row.index)).size !== encounters.length) throw new Error('Incomplete Ancient Evil catalog');
   const roster = Object.freeze(Object.fromEntries(rows.map(row => [row.key, Object.freeze(row.enemy)])));
   const presets = Object.freeze(encounters.map(({spec}) => Object.freeze({...spec, enemies: Object.freeze(spec.enemies)})));
   ANCIENT_EVIL_ROSTER = roster;
+  Object.assign(ANCIENT_EVIL_RULES, rules);
   ANCIENT_EVIL_ENCOUNTERS = presets;
 });
 

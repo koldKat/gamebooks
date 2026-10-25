@@ -19,7 +19,7 @@ function _enemyDefeated(d) {
  return d.enemy.staminaMax > 0 && d.enemy.stamina <= (d.player.enemyDefeatThreshold || 0); }
 
 function _resetEncounterKnobs(d) {
-  const { _enemyList } = getContext();
+  const { ENCOUNTER_RULES, _enemyList } = getContext();
 
   d.player.attackModifier = 0;
   d.player.enemyWoundDamage = 2;
@@ -30,15 +30,17 @@ function _resetEncounterKnobs(d) {
   d.encounter = { shield: d.encounter?.shield || false, silver: d.encounter?.silver || false, fire: false, invisible: false, paralyzeAfter: 0, wounds: 0, wight: false, paired: false };
   d.sideEnemy = { name: '', skill: 0, stamina: 0, staminaMax: 0 };
   const section = Number(d.enemy.name.match(/§(\d+)$/)?.[1]);
-  if (section === 116) d.player.attackModifier = 1;
-  if (section === 394) d.player.attackModifier = -2;
-  if (section === 39) { d.player.attackModifier = 2; d.player.playerWoundDamage = 3; d.encounter.invisible = true; }
-  d.encounter.fire = section === 249;
-  d.encounter.paralyzeAfter = section === 230 ? 4 : 0;
-  d.encounter.wight = section === 41;
-  if (section === 140 && d.enemy.name.includes('двойка')) {
-    const prefix = d.enemy.name.split('СКЕЛЕТ')[0];
-    const other = (_enemyList || []).find(enemy => enemy.name !== d.enemy.name && enemy.name.startsWith(prefix) && enemy.name.endsWith('§140'));
+  const rules = ENCOUNTER_RULES[section] || {};
+  d.player.attackModifier = rules.attackModifier || 0;
+  d.player.playerWoundDamage = rules.playerWoundDamage || 2;
+  d.encounter.invisible = !!rules.invisible;
+  d.encounter.fire = !!rules.fire;
+  d.encounter.paralyzeAfter = rules.paralyzeAfter || 0;
+  d.encounter.wight = !!rules.wight;
+  const pair = rules.pair;
+  if (pair && d.enemy.name.includes(pair.nameIncludes)) {
+    const prefix = d.enemy.name.split(pair.prefixSeparator)[0];
+    const other = (_enemyList || []).find(enemy => enemy.name !== d.enemy.name && enemy.name.startsWith(prefix) && enemy.name.endsWith(pair.suffix));
     if (other) {
       d.encounter.paired = true;
       d.sideEnemy = { name: other.name, skill: other.attack, stamina: other.hp, staminaMax: other.hp };

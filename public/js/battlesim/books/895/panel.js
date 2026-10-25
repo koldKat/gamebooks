@@ -81,7 +81,7 @@ export function createMountainOfDeathPanel({document, t, getRun, getBookId, save
       el(effect).disabled = !character.stamina || character.stamina >= character.maxStamina || !character[effect + 'Uses'] || effect === 'healing' && !character.abilities.includes('healing');
     }
     el('manualRolls').hidden = !el('manual').checked;
-    el('archeryKills').disabled = locked || el('encounter').value !== '95';
+    el('archeryKills').disabled = locked || !ENCOUNTERS.find(row => row.id === el('encounter').value)?.rules.archery;
     el('status').textContent = tk('status.' + (fight?.outcome ?? (locked ? 'active' : 'ready')));
     el('totals').textContent = fight ? tk('remaining', {stamina: character.stamina, max: character.maxStamina,
       current: Math.min(fight.index + 1, fight.enemies.length), count: fight.enemies.length,
@@ -150,7 +150,7 @@ export function createMountainOfDeathPanel({document, t, getRun, getBookId, save
       data.setup = selected; data.log = [];
       updateFight(data, combat.startFight(player, enemies, {...preset?.rules, ...selected,
         physicalPlayerDamage: selected.physicalDamage === -1 ? null : selected.physicalDamage,
-        goldenScimitarBonusApplies: !selected.weaponProtection, archery: selected.encounterId === '95',
+        goldenScimitarBonusApplies: !selected.weaponProtection, archery: Boolean(preset?.rules.archery),
         name: preset?.title || enemies.map(row => row.displayName).join(', ')}));
     }));
     el('round').addEventListener('click', () => change(data => updateFight(data, combat.exchange(data.fight, {

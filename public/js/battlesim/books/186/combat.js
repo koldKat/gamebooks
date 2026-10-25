@@ -47,15 +47,17 @@ function _effectiveSkill(d) {
 }
 
 function _rollDamage(variant) {
-  const { NORMAL_DMG, _roll1d6 } = getContext();
+  const { NORMAL_DMG, STARSHIP_DAMAGE_RULES, _roll1d6 } = getContext();
 
   if (variant === 'nerve') {
     const r = _roll1d6();
-    return { amount: r >= 4 ? 4 : 2, note: ` (nerve-stick roll ${r})` };
+    const rule = STARSHIP_DAMAGE_RULES.nerve;
+    return { amount: r >= rule.threshold ? rule.damage : rule.ordinaryDamage, note: ` (nerve-stick roll ${r})` };
   }
   if (variant === 'armor') {
     const r = _roll1d6();
-    return { amount: r >= 5 ? 1 : 0, note: ` (armor roll ${r})` };
+    const rule = STARSHIP_DAMAGE_RULES.armor;
+    return { amount: r >= rule.threshold ? rule.damage : rule.blockedDamage, note: ` (armor roll ${r})` };
   }
   return { amount: NORMAL_DMG, note: '' };
 }

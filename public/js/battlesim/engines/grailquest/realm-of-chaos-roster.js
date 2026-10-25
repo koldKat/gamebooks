@@ -3,12 +3,14 @@ import { createRosterLoader } from '../../roster-data.js';
 export let REALM_ENCOUNTERS = Object.freeze([]);
 export let REALM_DREAMS = Object.freeze([]);
 export let REALM_COMPANION = Object.freeze({});
+export const REALM_RULES = {};
 export const loadRoster = createRosterLoader(531, 'CATALOG', rows => {
   const freeze = spec => Object.freeze({...spec, enemies: Object.freeze(spec.enemies.map(Object.freeze))});
   const catalogs = ['REALM_ENCOUNTERS', 'REALM_DREAMS']
     .map(name => rows.filter(row => row.catalog === name).map(row => freeze(row.spec)));
   const support = rows.find(row => row.support)?.support;
-  if (catalogs.some(rows => !rows.length) || !support?.companion) throw new Error('Incomplete encounter catalogs');
+  if (catalogs.some(rows => !rows.length) || !support?.companion || !support.rules) throw new Error('Incomplete encounter catalogs');
+  Object.assign(REALM_RULES, support.rules);
   REALM_ENCOUNTERS = Object.freeze(catalogs[0]);
   REALM_DREAMS = Object.freeze(catalogs[1]);
   REALM_COMPANION = Object.freeze(support.companion);

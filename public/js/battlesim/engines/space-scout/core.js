@@ -93,20 +93,31 @@ import { createRosterLoader } from '../../roster-data.js';
 export let SPACE_SCOUT_DUEL_ENEMIES = {};
 export let SPACE_SCOUT_ENCOUNTERS = [];
 export let SPACE_SCOUT_FLEET;
+export const SPACE_SCOUT_RULES = {};
 export const loadRoster = createRosterLoader(648, 'CATALOG', rows => {
   const duels = rows.filter(row => row.kind === 'duel');
   const fleet = rows.find(row => row.kind === 'fleet')?.fleet;
   const routes = rows.flatMap(row => row.routes ?? []);
-  if (!duels.length || !fleet?.enemies?.length || !routes.length) throw new Error('Incomplete Cosmic Scout catalog');
+  const rules = rows.find(row => row.support?.rules)?.support.rules;
+  if (!duels.length || !fleet?.enemies?.length || !routes.length || !rules) throw new Error('Incomplete Cosmic Scout catalog');
+  Object.assign(SPACE_SCOUT_RULES, rules);
   SPACE_SCOUT_DUEL_ENEMIES = Object.fromEntries(duels.map(row => [row.section, row.enemies]));
   SPACE_SCOUT_ENCOUNTERS = routes;
   SPACE_SCOUT_FLEET = fleet;
 });
 const fleetRules = fight => fight.fleetRules ?? SPACE_SCOUT_FLEET;
+export const spaceScoutRoute = section => SPACE_SCOUT_ENCOUNTERS.find(row => row.section === section);
+export const spaceScoutSpecial = section => SPACE_SCOUT_RULES.specials.find(row => row.section === section);
+export function spaceScoutFleetAllocation(fight) {
+  const rules = fight ? fleetRules(fight) : SPACE_SCOUT_FLEET;
+  if (fight?.stage !== 'maneuver') return { beams: 0, missiles: rules.maxMissiles };
+  const maneuver = rules.maneuvers[fight.speed * fight.manoeuvre];
+  return { beams: maneuver?.beams ?? 0, missiles: maneuver?.missiles ?? 0 };
+}
 
 export function startSpaceScoutEncounter(character, section, options = {}) {
   if (section === 'manual') return startSpaceScoutDuel(character, options.enemies, {shields: options.shields});
-  const encounter = SPACE_SCOUT_ENCOUNTERS.find(row => row.section === section);
+  const encounter = spaceScoutRoute(section);
   if (!encounter) throw new RangeError('Unknown encounter');
   if (encounter.fleet) return startSpaceScoutFleet(character);
   let player = character, openingDamage = 0;
@@ -288,27 +299,26 @@ function spendMissile(character, type) {
 
 export function spaceScoutCruiserAttack(character, section, missiles = [], roll = die) {
   integer(character?.power); inventory(character?.inventory);
-  if (![24,28,34].includes(section)) throw new RangeError('Unknown cruiser attack');
-  const limit = section === 28 ? 6 : 4;
-  if (!Array.isArray(missiles) || missiles.length > limit) throw new RangeError('Missile limit exceeded');
+  const rule = spaceScoutSpecial(section);
+  if (rule?.missileLimit === undefined) throw new RangeError('Unknown cruiser attack');
+  if (!Array.isArray(missiles) || missiles.length > rule.missileLimit) throw new RangeError('Missile limit exceeded');
   const next = copy(character);
   const missileDamage = missiles.reduce((total, type) => total + spendMissile(next, type), 0);
   const rolls = [draw(roll), draw(roll)];
-  const damage = (rolls[0] + rolls[1] + (section === 28 ? 2 : 0)) * next.power + missileDamage;
-  const lower = section === 24 ? 600 : section === 28 ? 1000 : 800;
-  const upper = section === 24 ? 700 : section === 28 ? 1200 : 900;
-  const destination = damage >= upper ? (section === 24 ? 7 : 16)
-    : damage < lower ? (section === 24 ? 41 : 8) : (section === 24 ? 17 : 37);
+  const damage = (rolls[0] + rolls[1] + rule.beamBonus) * next.power + missileDamage;
+  const destination = damage >= rule.upper ? rule.destinations.success
+    : damage < rule.lower ? rule.destinations.failure : rule.destinations.middle;
   return { character: next, rolls, missileDamage, damage, section: destination };
 }
 
 export function spaceScoutTorpedo(character, section) {
   inventory(character?.inventory);
-  if (![24,28,34,91].includes(section) || !character.inventory.torpedoes) {
+  const rule = spaceScoutSpecial(section);
+  if (rule?.torpedo === undefined || !character.inventory.torpedoes) {
     throw new RangeError('Torpedo unavailable here');
   }
   const next = copy(character);
   next.inventory.torpedoes--;
   // The book resolves torpedoes narratively, without a generic damage value.
-  return { character: next, section: section === 91 ? 104 : 31 };
+  return { character: next, section: rule.torpedo };
 }

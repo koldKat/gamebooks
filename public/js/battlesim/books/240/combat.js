@@ -49,7 +49,7 @@ function _runRound() {
   const { ARMOURS, DISARM_MARGIN, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, WEAPONS, _absorbHit, _appendLog, _data, _effectiveSkill, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll2d6, _sideEnemyNameSafe, saveState, t } = getContext();
 
   const d = _data();
-  if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0) return;
+  if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
   d.roundsThisBattle++;
   d.pendingLuckQueue = [];
 
@@ -118,6 +118,7 @@ function _runRound() {
     _appendLog(d, `${SVG_TROPHY} ${t('battlesim240.log.defeated', { enemy: _enemyNameSafe(d) })}`);
     _recordOutcome(d, 'win');
   } else if (d.player.stamina <= 0) {
+    d.pendingLuckQueue = [];
     _appendLog(d, `${SVG_SKULL} ${t('battlesim240.log.fallen')}`);
     _recordOutcome(d, 'loss');
   }
@@ -130,7 +131,14 @@ function _testLuck() {
   const { SVG_SKULL, SVG_TROPHY, WEAPONS, _appendLog, _data, _enemyNameSafe, _recordOutcome, _renderAll, _roll2d6, saveState, t } = getContext();
 
   const d = _data();
-  if (!d || !d.pendingLuckQueue.length || d.player.luck <= 0) return;
+  if (!d || !d.pendingLuckQueue.length) return;
+  if (d.player.stamina <= 0 || d.enemy.stamina <= 0) {
+    d.pendingLuckQueue = [];
+    saveState();
+    _renderAll();
+    return;
+  }
+  if (d.player.luck <= 0) return;
   const event = d.pendingLuckQueue.shift();
   const roll  = _roll2d6();
   const lucky = roll <= d.player.luck;
@@ -164,11 +172,12 @@ function _testLuck() {
 }
 
 function _skipLuck() {
-  const { _data, _renderAll } = getContext();
+  const { _data, _renderAll, saveState } = getContext();
 
   const d = _data();
   if (!d || !d.pendingLuckQueue.length) return;
   d.pendingLuckQueue.shift();
+  saveState();
   _renderAll();
 }
 
@@ -188,12 +197,12 @@ function _resetBattle() {
 }
 
 function _rollForSkull() {
-  const { SVG_TROPHY, _appendLog, _data, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll1d6, saveState, t } = getContext();
+  const { SHADOW_RULES, SVG_TROPHY, _appendLog, _data, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll1d6, saveState, t } = getContext();
 
   const d = _data();
-  if (!d || _notReady(d) || !d.immuneToWounds || d.player.stamina <= 0 || d.enemy.stamina <= 0) return;
+  if (!d || _notReady(d) || !d.immuneToWounds || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
   const roll = _roll1d6();
-  if (roll === 6) {
+  if (roll === SHADOW_RULES.skullWinFace) {
     _appendLog(d, t('battlesim240.log.skull_hit', { roll }));
     d.enemy.stamina = 0;
     _appendLog(d, `${SVG_TROPHY} ${t('battlesim240.log.defeated', { enemy: _enemyNameSafe(d) })}`);
@@ -223,7 +232,7 @@ function _empowerSpear() {
 
   const d = _data();
   if (!d || _notReady(d) || !d.voivodDefensive || !d.player.hasSpear || d.player.spearLifeForce <= 0) return;
-  if (d.player.stamina <= 0 || d.enemy.stamina <= 0) return;
+  if (d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
   const roll = _roll2d6();
   if (roll <= d.player.spearLifeForce) {
     _appendLog(d, t('battlesim240.log.spear_empower_success', { roll, n: d.player.spearLifeForce }));

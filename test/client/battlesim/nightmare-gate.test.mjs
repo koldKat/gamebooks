@@ -3,11 +3,13 @@ import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
+const rosterEntries = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/441.json', import.meta.url), 'utf8')).enemies.map(row => row.stats.entry);
+
 function fixture(saved) {
   const pt = saved ? { sim441: structuredClone(saved) } : {};
   const source = readFileSync(new URL('../../../public/js/battlesim/battlesim441.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
   const math = Object.create(Math); math.random = () => .2;
-  const context = vm.createContext({ Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, escapeHtml: value => value, t: key => key });
+  const context = vm.createContext({ createRosterLoader: (_id, _dataset, install) => { install(structuredClone(rosterEntries)); return async () => {}; }, Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, escapeHtml: value => value, t: key => key });
   vm.runInContext(source + '\n_renderAll = () => {}; globalThis.sim = { data: _data, capture: _captureFightEffects, skill: _effectiveSkill, round: _runRound, reset: _resetBattle, potion: _usePotion, stop: _stopByChoice, stopRoute: _escapeRoute, init: initSim441 };', context);
   return { sim: context.sim, data: context.sim.data(), math, context };
 }
@@ -175,4 +177,16 @@ test('localization contains all referenced static keys and dynamic choices', () 
   const keys = new Set([...source.matchAll(/['"](battlesim441\.[a-z_]+\.[a-z_]+)['"]/g)].map(m => m[1]));
   for (const key of ['staff','other','none','previous_0','previous_1','previous_2']) keys.add('battlesim441.ui.' + key);
   for (const key of keys) if (!['battlesim441.ui.','battlesim441.ui.previous_'].includes(key)) assert.ok(translations.includes("'" + key + "'"), key);
+});
+
+test('rescue outcome follows supplied metadata under a different section number', () => {
+  const entry = rosterEntries.find(entry => entry.section === 243), original = structuredClone(entry);
+  try {
+    entry.section = 900; entry.rules.rescue.route = 901;
+    const {sim, data} = combat(900); data.endurance = 1;
+    sim.round();
+    assert.equal(data.endurance, 0);
+    assert.equal(data.combatEffects.routes[0], 901);
+    assert.equal(data.history.at(-1).outcome, 'loss');
+  } finally {Object.assign(entry, original);}
 });

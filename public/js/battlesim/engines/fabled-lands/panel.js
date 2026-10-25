@@ -1,7 +1,7 @@
 import { FABLED_ABILITIES, FABLED_PROFESSIONS, newFabledCharacter, validateFabledCharacter,
   fabledDefence, fabledAbilityCheck, fabledRankCheck } from './character.js';
 import { startFabledFight, fabledRound, surrenderFabledFight, fleeFabledFight } from './core.js';
-import { WAR_TORN_FIGHTS } from './roster.js';
+import { WAR_TORN_FIGHTS, WAR_TORN_RULES } from './roster.js';
 import { FABLED_SEA_CHECKS, fabledSeaCheck } from './navigation.js';
 import { createOpponentEditor } from '../../opponents.js';
 
@@ -105,13 +105,13 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
     for (const option of encounterOptions) el(option.key+'-row').hidden = !option.sections.includes(spec.section);
     if (spec.threshold !== undefined) notes.push(tk('threshold', { stamina: spec.threshold, section: spec.win }));
     if (spec.attackModifier) notes.push(tk('penalty', { amount: spec.attackModifier }));
-    if (bookId === 674 && spec.section === 121) notes.push(tk('underwater'));
+    if (bookId === 674 && spec.section === WAR_TORN_RULES.underwaterSection) notes.push(tk('underwater'));
     if (spec.woundEffect) notes.push(tk('effect.' + spec.woundEffect));
     if (spec.special) notes.push(tk('effect.' + spec.special));
     if (spec.winChoices) notes.push(tk('winChoices', { sections: spec.winChoices.join(', ') }));
     if (spec.surrender) notes.push(tk('canSurrender'));
     if (spec.flee) notes.push(tk('canFlee'));
-    if (bookId === 674 && spec.section === 43) notes.push(tk('magicWeapon'));
+    if (bookId === 674 && spec.section === WAR_TORN_RULES.magicWeaponSection) notes.push(tk('magicWeapon'));
     el('contextNote').textContent = notes.join('\n');
   }
   function render() {

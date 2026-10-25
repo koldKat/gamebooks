@@ -12,7 +12,7 @@ import { syncPrefs, restoreCachedPrefs } from '../ui-helpers/prefs.js';
 import { hideActiveBattleSim } from '../battlesim/loader.js';
 import { setLiveReadVisible } from '../reading/liveread.js';
 import { updateCoinsDisplay } from '../progression/shop.js';
-import { updateAvatarUI, renderBooksXpSummary, closeProfileModal } from '../account/profile.js';
+import { updateAvatarUI, renderBooksXpSummary, renderJobXpSummary, closeProfileModal } from '../account/profile.js';
 import { _ensureLiveTabControllerStarted, _connectUserBadgeSSE, _disconnectUserBadgeSSE, _connectAppXpSSE, _disconnectAppXpSSE, _syncFeedVersionBaseline } from '../core/livetab.js';
 import { refreshAppXp } from '../progression/app-xp.js';
 import { loadCovers, _showCachedCoversPanel, _updateLandingBgDragUi } from '../covers.js';
@@ -27,6 +27,7 @@ import { _pushNav, _isViewLocked } from './navigation.js';
 import { APP_XP_EXTRA_USER_ID } from './state.js';
 
 export function showLogin() {
+  renderJobXpSummary(null);
   closeProfileModal();
   _revealLanding();
   _ensureLiveTabControllerStarted();
@@ -89,9 +90,9 @@ export async function loadSessionProfile(sessionToken = getToken()) {
     if (!response.ok) return null;
     const profile = await response.json();
     if (getToken() !== sessionToken) return null;
-    _processRewardSnapshot(profile);
     if (profile.id) { bootState._currentUserId = profile.id; setCurrentUserId(bootState._currentUserId); }
     bootState._isAdmin = resolveIsAdmin(profile);
+    _processRewardSnapshot(profile);
     bootState._canSeeAppXp = bootState._isAdmin || profile.id === APP_XP_EXTRA_USER_ID;
     bootState._hasPdfAccess = !!profile.pdfAccess || bootState._isAdmin;
     refreshAppXp({ immediate: true });

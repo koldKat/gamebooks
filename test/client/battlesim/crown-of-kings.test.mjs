@@ -1,7 +1,8 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { newCharacter } from '../../../public/js/battlesim/engines/sorcery/core.js';
-import { CHARACTER_DEFAULTS, ENCOUNTERS, SPELL_ENCOUNTERS, encounterFor } from '../../../public/js/battlesim/books/724/definition.js';
+import { CHARACTER_DEFAULTS, ENCOUNTERS, SPELL_ENCOUNTERS, SUMMONED_ALLIES, encounterFor } from '../../../public/js/battlesim/books/724/definition.js';
 import * as effects from '../../../public/js/battlesim/books/724/effects.js';
 import * as combat from '../../../public/js/battlesim/books/724/combat.js';
 import { readFileSync } from 'node:fs';
@@ -9,6 +10,8 @@ import { runInNewContext } from 'node:vm';
 import en from '../../../public/js/i18n/en/battlesim/battlesim724.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim724.js';
 import { SPELL_LABELS } from '../../../public/js/battlesim/books/724/definition.js';
+
+await loadFixtureRoster(724);
 
 const hero = changes => ({ ...newCharacter('wizard', () => 6), ...CHARACTER_DEFAULTS, ...changes });
 const rolls = (...values) => () => { assert.ok(values.length, 'Unexpected die'); return values.shift(); };
@@ -22,6 +25,10 @@ test('724: backend awards fresh wins/losses once, never handoffs or cancellation
   const events = [], db = { exec() {}, transaction: fn => () => fn(), prepare: () => ({ run() {}, all: () => [], get: () => ({ id: 724, total_sections: 800, is_container: 0 }) }) };
   const scope = { module: { exports: {} }, events, require(name) {
     if (name === './connection') return { db };
+    if (name === './diamonds') return {diamondInfoForUser: () => ({})};
+    if (name === './rubies') return {rubyInfoForUser: () => ({}), createRubyCompletionChecker: () => () => 0};
+    if (name === './heartbeat-coins') return {advanceHeartbeatCoins: () => 0};
+    if (name === './job-xp') return {getJobTitle: () => 'test'};
     if (name === './auth') return { generateToken: () => 'test-only' };
     if (name === '../impersonation-context') return { isImpersonatingContext: () => false };
     if (name === '../clean-run') return { isCleanRun: () => false };
@@ -313,6 +320,14 @@ test('724: allies fight instead of the player, mirror copies vanish, and allies 
   let army = combat.startFight(646, hero({ goblinTeeth: 2 }), { summonCount: 2 });
   assert.equal(army.player.stamina, 22);
   assert.equal(army.player.goblinTeeth, 0);
+  assert.deepEqual(army.allies.map(({key, skill, stamina}) => ({key, skill, stamina})),
+    [SUMMONED_ALLIES.goblin, SUMMONED_ALLIES.goblin]);
+  const giant = combat.startFight(789, hero({giantTeeth: 1}));
+  assert.deepEqual(giant.allies.map(({key, skill, stamina}) => ({key, skill, stamina})), [SUMMONED_ALLIES.giant]);
+  assert.equal(giant.player.giantTeeth, 0);
+  assert.equal(giant.player.stamina, 23);
+  giant.allies[0].stamina = 1;
+  assert.equal(SUMMONED_ALLIES.giant.stamina, 9);
   army = combat.round(army, 0, rolls(1, 1, 6, 6));
   assert.equal(army.pending[0].actor, 'ally');
   assert.throws(() => combat.resolveHit(army, true), RangeError);

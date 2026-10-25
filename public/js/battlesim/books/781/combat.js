@@ -25,8 +25,8 @@ function _enemyName(d) {
  return _enemy(d.enemyId).name; }
 
 function _playerWon(d) {
-  const { mutatedFleshWon } = getContext();
- return mutatedFleshWon(d); }
+  const { mutatedFleshWon, FLESH_RULES } = getContext();
+ return mutatedFleshWon(d, FLESH_RULES.victoryFloors); }
 
 function _playerLost(d) {
  return d.player.life <= 0; }
@@ -77,9 +77,9 @@ function _defend() {
 }
 
 function _printedRound(d, weapon, defend) {
-  const { _appendLog, _enemyName, _finishRound, _roll1d6, mutatedFleshRound, t } = getContext();
+  const { _appendLog, _enemyName, _finishRound, _roll1d6, mutatedFleshRound, FLESH_RULES, t } = getContext();
 
-  const events = mutatedFleshRound(d, weapon, defend, _roll1d6);
+  const events = mutatedFleshRound(d, weapon, defend, _roll1d6, FLESH_RULES.victoryFloors);
   if (!events.length) return;
   for (const event of events) {
     const key = event.side === 'player' ? 'battlesim781.log.player_attack' : 'battlesim781.log.enemy_hit';
@@ -89,10 +89,10 @@ function _printedRound(d, weapon, defend) {
 }
 
 function _finishRound(d) {
-  const { SVG_SKULL, SVG_TROPHY, _appendLog, _enemyName, _playerLost, _playerWon, _recordOutcome, _renderAll, saveState, t } = getContext();
+  const { SVG_SKULL, SVG_TROPHY, _appendLog, _enemyName, _playerLost, _playerWon, _recordOutcome, _renderAll, saveState, t, FLESH_RULES } = getContext();
 
   if (_playerWon(d)) {
-    _appendLog(d, t(d.rulesVersion === 1 && d.enemyId === 'lenova' ? 'battlesim781.log.lenova_stop' : 'battlesim781.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyName(d) }));
+    _appendLog(d, t(d.rulesVersion === 1 && FLESH_RULES.victoryFloors[d.enemyId] > 0 ? 'battlesim781.log.lenova_stop' : 'battlesim781.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyName(d) }));
     _recordOutcome(d, 'win');
   } else if (_playerLost(d)) {
     _appendLog(d, t('battlesim781.log.fallen', { skull: SVG_SKULL, enemy: _enemyName(d) }));

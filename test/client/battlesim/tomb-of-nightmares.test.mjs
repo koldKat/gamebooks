@@ -8,9 +8,10 @@ import {
   startTombFight, tombRound, tombTargets, tombInitiative,
   tombFightCast, tombUseStock, tombUseRing, tombUseRod, tombRecruitVampire,
   tombEquip, tombAssignEnemy, tombGrottCast, tombGrottStock, tombFriendlyReaction, tombTryFriendly,
+  tombEncounterId, tombDisplaySection, tombManualPoisonAmount,
 } from '../../../public/js/battlesim/engines/grailquest/tomb-of-nightmares.js';
 import {
-  TOMB_ENCOUNTERS, TOMB_DREAMS, TOMB_EQUIPMENT, TOMB_SECRET_DOORS, TOMB_COMPANION,
+  TOMB_ENCOUNTERS, TOMB_DREAMS, TOMB_EQUIPMENT, TOMB_SECRET_DOORS, TOMB_COMPANION, TOMB_RULES,
 } from '../../../public/js/battlesim/engines/grailquest/tomb-of-nightmares-roster.js';
 
 const random = (...rolls) => {
@@ -792,4 +793,35 @@ test('mould heals once after a survived knockout too, but cannot heal the dead',
   tombRound(fatal, 0, random(3, 3));
   assert.equal(fatal.player.life, 0);
   assert.equal(fatal.mouldHealing, undefined);
+});
+
+test('metadata controls strict Rod eligibility, manual poison defaults and bee attacks', () => {
+  const original=structuredClone(TOMB_RULES);
+  try {
+    TOMB_RULES.rodHumanoidIds=[900];
+    for(const id of [900,'900']) {
+      const p=character(100,100);p.blackRod=true;
+      const f=startTombFight(p,29,{},()=>0);f.spec.id=id;
+      assert.equal(tombUseRod(f,0,random(5,5)).success,typeof id==='number');
+    }
+    TOMB_RULES.manualPoison={needle:7,default:4};
+    assert.equal(tombManualPoisonAmount('needle'),7);assert.equal(tombManualPoisonAmount('crab'),4);
+    TOMB_RULES.bees={countDice:1,multiplier:3,damageEach:1};
+    const p=character();assert.deepEqual(tombBees(p,random(4)),{bypassed:false,bees:12,loss:12,dead:false});
+    assert.equal(p.life,28);p.beeTraining=true;
+    assert.deepEqual(tombBees(p,()=>{throw Error('Training must bypass dice');}),{bypassed:true,bees:0,loss:0,dead:false});
+  } finally { Object.assign(TOMB_RULES,original); }
+});
+
+test('database stage identity and saved poison values survive the metadata refactor', () => {
+  assert.equal(tombEncounterId('204-grott'),'204-grott');assert.equal(tombDisplaySection('204-grott'),204);
+  assert.equal(tombEncounterId('204'),204);assert.equal(tombDisplaySection(29),29);
+  const p=character(100,100);p.poison={kind:'combat',amount:9};
+  const f=JSON.parse(JSON.stringify(startTombFight(p,29,{},()=>0)));
+  f.first='player';f.extension={keep:true};
+  const original=structuredClone(TOMB_RULES.manualPoison);
+  try {
+    TOMB_RULES.manualPoison={needle:7,default:4};tombRound(f,0,()=>0);
+    assert.equal(f.player.life,91);assert.equal(f.player.poison.amount,9);assert.deepEqual(f.extension,{keep:true});
+  } finally { TOMB_RULES.manualPoison=original; }
 });

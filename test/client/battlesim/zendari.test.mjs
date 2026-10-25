@@ -5,7 +5,25 @@ import { createState } from '../../../public/js/battlesim/books/808/state.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim808.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim808.js';
 import { loadFixtureRoster } from './roster-fixtures.mjs';
+import { ZENDARI_RULES } from '../../../public/js/battlesim/books/808/definition.js';
 await loadFixtureRoster(808);
+
+test('personal and ravager metadata preserve saved counters, routes and player perks',()=>{
+  const original=structuredClone(ZENDARI_RULES);
+  try{
+    Object.assign(ZENDARI_RULES,{personalThreshold:1,ravagerThreshold:1,ravagerSuccesses:1,ravagerFastRolls:2,ravagerMaxRolls:3,ravagerFastDestination:'928',ravagerSlowDestination:'982'});
+    assert.equal(combat.applyRoll(combat.startFight(combat.newCharacter(),96,'Personal'),2).outcome,'loss');
+    assert.equal(combat.applyRoll(combat.startFight({...combat.newCharacter(),heavyWeapons:true},96,'Heavy weapons'),5).outcome,'win');
+    const fight=combat.startFight(combat.newCharacter(),71,'Saved ravagers');fight.rolls=2;fight.extension={keep:true};
+    const saved=JSON.parse(JSON.stringify(fight)),snapshot=structuredClone(saved);
+    const slow=combat.applyRoll(saved,1);
+    assert.equal(slow.destination,'982');assert.equal(slow.rolls,3);assert.equal(slow.successes,1);
+    assert.deepEqual(slow.extension,{keep:true});assert.deepEqual(saved,snapshot);
+    const fast=combat.applyRoll(combat.startFight(combat.newCharacter(),71,'Ravagers'),1);
+    assert.equal(fast.destination,'928');
+    const failure=combat.applyRoll(saved,6);assert.equal(failure.outcome,'loss');assert.equal(failure.rolls,3);
+  }finally{Object.assign(ZENDARI_RULES,original);}
+});
 
 test('mech defaults and difficulty preserve printed choices', () => {
   assert.equal(combat.newCharacter('sparta').weapons, 5);

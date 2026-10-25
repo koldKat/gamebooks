@@ -1,6 +1,8 @@
 const checks = [], saves = [];
+const rosterSeed = ROSTER_SEEDS[718];
 const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
 window.fetch = async (url, options = {}) => {
+  if (url === '/api/books/718/enemies' && !options.method) return new Response(JSON.stringify(rosterSeed), {status: 200});
   assert(url === '/api/books/718/state' && options.method === 'PUT', 'only intercepted state saves');
   saves.push(JSON.parse(options.body)); return new Response('{}', {status: 200});
 };
@@ -26,7 +28,7 @@ assert(el('title').textContent === t('battlesim718.title'), 'translated title');
 assert(run.sim718.character === null && el('start').disabled, 'manual character required');
 const ids = [...el('overlay').querySelectorAll('[id]')].map(node => node.id);
 assert(new Set(ids).size === ids.length, 'unique controls');
-assert(el('encounter').options.length === 40, 'all named encounters');
+assert(el('encounter').options.length === 41, 'all named encounters');
 assert([...el('encounter').options].every(option => !/^(Section|Епизод)\s+\d/.test(option.textContent)), 'names before section numbers');
 for (const [field, value] of Object.entries({skill: 99, skillInitial: 99, stamina: 20, staminaInitial: 24,
   luck: 0, luckInitial: 12, provisions: 10, gold: 0, attackModifier: 0, weaponModifier: 0, nextFightModifier: 0})) el(field).value = value;

@@ -19,6 +19,7 @@ function _enemyDefeated(d) {
  return d.enemy.staminaMax > 0 && d.enemy.stamina <= (d.player.enemyDefeatThreshold || 0); }
 
 function _resetEncounterKnobs(d) {
+  const { ENCOUNTER_RULES } = getContext();
 
   d.player.attackModifier = 0;
   d.player.enemyWoundDamage = 2;
@@ -29,10 +30,10 @@ function _resetEncounterKnobs(d) {
   d.encounter = { paired: false, whip: false, shield: d.encounter?.shield || false, paralyzeAfter: 0, wounds: 0 };
   d.sideEnemy = { name: '', skill: 0, stamina: 0, staminaMax: 0 };
   const section = Number(d.enemy.name.match(/§(\d+)$/)?.[1]);
-  if ([49, 71, 165, 193].includes(section)) d.player.attackModifier = -3;
-  if (section === 352) d.player.attackModifier = -2;
-  d.encounter.whip = section === 107;
-  d.encounter.paralyzeAfter = section === 227 ? 4 : 0;
+  const rules = ENCOUNTER_RULES[section] || {};
+  d.player.attackModifier = rules.attackModifier || 0;
+  d.encounter.whip = !!rules.whip;
+  d.encounter.paralyzeAfter = rules.paralyzeAfter || 0;
 }
 
 function _runRound() {

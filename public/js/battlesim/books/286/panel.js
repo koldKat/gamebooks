@@ -1,9 +1,9 @@
-import { MAX_LIFE_ROLLS, TECH_ATTEMPT_COST, WEAPONS, SHIELDS, TECH_ITEMS } from './definition.js';
+import { DREAM_ENCOUNTERS, MAX_LIFE_ROLLS, TECH_ATTEMPT_COST, WEAPONS, SHIELDS, TECH_ITEMS } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, MAX_LIFE_ROLLS, SHIELDS, SVG_SKULL, SVG_TROPHY, TECH_ATTEMPT_COST, TECH_ITEMS, WEAPONS, _activateTech, _advanceTarget, _allEnemiesDefeated, _appendLog, _checkField, _data, _dream3Finish, _dream3Roll, _dream3Stop, _enemyAttackOnce, _enemyList, _enemyName, _enemyNameSafe, _enemyTurn, _heal, _loadEnemyList, _loadoutAE, _notReady, _numField, _playerAttackOnce, _recordOutcome, _renderAll, _renderEffectsBadges, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _resolveDream, _resolveExtraAttackers, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _shieldDef, _sleepAttempt, _startGroup, _syncGroup, _techButtonsHtml, _techDesc, _techName, _totalPlayerDef, _weaponIsGlove, _weaponMinHit, apiFetch, closeSim286, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim286, openSim286, registerPanelShortcut, renderSim286, saveState, setSim286Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ DREAM_ENCOUNTERS, ALL_PANEL_OVERLAY_IDS, MAX_LIFE_ROLLS, SHIELDS, SVG_SKULL, SVG_TROPHY, TECH_ATTEMPT_COST, TECH_ITEMS, WEAPONS, _activateTech, _advanceTarget, _allEnemiesDefeated, _appendLog, _checkField, _data, _dream3Finish, _dream3Roll, _dream3Stop, _enemyAttackOnce, _enemyList, _enemyName, _enemyNameSafe, _enemyTurn, _heal, _loadEnemyList, _loadoutAE, _notReady, _numField, _playerAttackOnce, _recordOutcome, _renderAll, _renderEffectsBadges, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _resolveDream, _resolveExtraAttackers, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _shieldDef, _sleepAttempt, _startGroup, _syncGroup, _techButtonsHtml, _techDesc, _techName, _totalPlayerDef, _weaponIsGlove, _weaponMinHit, apiFetch, closeSim286, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim286, openSim286, registerPanelShortcut, renderSim286, saveState, setSim286Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _techName, _techDesc, _loadoutAE, _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _startGroup, _syncGroup, _allEnemiesDefeated, _advanceTarget, _enemyTurn, _weaponMinHit, _weaponIsGlove, _shieldDef, _totalPlayerDef, _playerAttackOnce, _enemyAttackOnce, _resolveExtraAttackers, _runRound, _heal, _resetBattle, _activateTech, _sleepAttempt, _resolveDream, _dream3Finish, _dream3Roll, _dream3Stop } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -375,6 +375,10 @@ export function initSim286() {
             ${_numField(t('battlesim286.ui.enemy_extra'), 'sim286-enemy-extra')}
             <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim286.ui.target')}</span><select id="sim286-target" class="inv-edit-input"></select></label>
           </div>
+          <details class="bsim-history" open>
+            <summary>${t('battlesim286.ui.tech_arsenal')}</summary>
+            <div id="sim286-tech-list" class="bsim-tech-list"></div>
+          </details>
           <div id="sim286-effects" class="bsim-effects"></div>
           <div id="sim286-status" class="bsim-status"></div>
           <div id="sim286-dream3" class="inv-edit-row" style="display:none">
@@ -399,10 +403,6 @@ export function initSim286() {
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
-          <details class="bsim-history" open>
-            <summary>${t('battlesim286.ui.tech_arsenal')}</summary>
-            <div id="sim286-tech-list" class="bsim-tech-list"></div>
-          </details>
           <details class="bsim-history">
             <summary id="sim286-history-summary">${t('battlesim286.history.summary', { n: 0 })}</summary>
             <div id="sim286-history-list" class="bsim-history-list"></div>

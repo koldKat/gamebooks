@@ -1,4 +1,4 @@
-import { PRESETS, RACES, RULES_REVISION } from './definition.js';
+import { PRESETS, RACES, RULES_REVISION, GALANSIA_RULES } from './definition.js';
 
 const integer = (value, min = 0, max = 1000000) => {
   if (!Number.isSafeInteger(value) || value < min || value > max) throw new RangeError('Invalid combat value');
@@ -93,7 +93,7 @@ function finish(fight, outcome) {
   fight.outcome = outcome;
   if (outcome === 'win' && fight.boulderSpent) fight.character.boulder = true;
   fight.destination = outcome === 'win' ? fight.encounter?.win ?? null
-    : outcome === 'fled' ? fight.encounter?.flee ?? null : '13';
+    : outcome === 'fled' ? fight.encounter?.flee ?? null : GALANSIA_RULES.deathDestination;
   fight.events.push({kind: outcome, destination: fight.destination ?? ''});
   return fight;
 }

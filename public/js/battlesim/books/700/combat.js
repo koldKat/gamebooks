@@ -1,5 +1,5 @@
 import { customMoneyOpponents } from './opponents.js';
-import { CHECKS, RULE_VERSION, UNARMED_RETURNS, SHOOTING_RETURNS, unarmedEncounter, shootingEncounter } from './definition.js';
+import { CHECKS, MONEY_RULES, RULE_VERSION, UNARMED_RETURNS, SHOOTING_RETURNS, unarmedEncounter, shootingEncounter } from './definition.js';
 
 const PHYSICAL = ['strength', 'dexterity', 'speed'];
 const NONNEGATIVE = [...PHYSICAL, 'endurance', 'enduranceMax', 'combatSkill', 'damageCode', 'shooting'];
@@ -8,8 +8,8 @@ const hitTactics = aggression => aggression <= 2 ? 2 : aggression === 3 ? 3 : 1;
 
 // These are advisory calculations, not fights or automatic character changes.
 export function evaluateCheck(id, values) {
-  const fields = CHECKS[id];
-  if (!fields) throw new RangeError('Unknown check');
+  if (!Object.hasOwn(CHECKS,id)) throw new RangeError('Unknown check');
+  const fields = CHECKS[id],r = MONEY_RULES.checkRules[id];
   const flags = ['strikingStyle', 'douglas', 'attackHelis', 'sequential', 'guardPosted'];
   for (const key of fields) {
     if (flags.includes(key)) {
@@ -30,57 +30,57 @@ export function evaluateCheck(id, values) {
     return { result: fatal ? 'death' : 'casualties', losses: Math.min(v.fighters, losses), remaining, destination: fatal ? null : destination };
   };
   switch (String(id)) {
-    case '42': { const n = sum('strength', 'speed', 'combatSkill'); return route(n, n >= 25, 23, 13); }
+    case '42': { const n = sum('strength', 'speed', 'combatSkill'); return route(n, n >= r.threshold, r.win, r.loss); }
     case '101':
     case '111': {
       const n = sum('strength', 'dexterity', 'combatSkill');
-      return route(n, String(id) === '101' ? n >= 24 : n > 26, v.strikingStyle ? 131 : 121, 141);
+      return route(n, r.inclusive ? n >= r.threshold : n > r.threshold, v.strikingStyle ? r.styleWin : r.win, r.loss);
     }
-    case '175': { const n = sum('strength', 'dexterity', 'combatSkill') * (v.douglas ? 2 : 1); return route(n, n > 32, 157, 167); }
-    case '210': { const n = sum('speed', 'shooting'); return route(n, n >= 16, 240, 230); }
-    case '230': { const n = sum('strength', 'speed', 'dexterity', 'combatSkill'); return route(n, n >= 30, 260, 250); }
+    case '175': { const n = sum('strength', 'dexterity', 'combatSkill') * (v.douglas ? r.multiplier : 1); return route(n, n > r.threshold, r.win, r.loss); }
+    case '210': { const n = sum('speed', 'shooting'); return route(n, n >= r.threshold, r.win, r.loss); }
+    case '230': { const n = sum('strength', 'speed', 'dexterity', 'combatSkill'); return route(n, n >= r.threshold, r.win, r.loss); }
     case '252': {
       const n = sum('shooting', 'combatSkill', 'primaryPower');
-      return n === 14 ? manual('overlap', n) : route(n, n > 14, 262, null);
+      return n === r.threshold ? manual('overlap', n) : route(n, n > r.threshold, r.win, null);
     }
-    case '256': { const n = sum('speed', 'dexterity', 'combatSkill'); return route(n, n > 20, 296, 286); }
-    case '257': { const n = sum('strength', 'dexterity'); return { score: n, result: n >= 12 ? 'success' : 'injury', destination: null }; }
+    case '256': { const n = sum('speed', 'dexterity', 'combatSkill'); return route(n, n > r.threshold, r.win, r.loss); }
+    case '257': { const n = sum('strength', 'dexterity'); return { score: n, result: n >= r.threshold ? 'success' : 'injury', destination: null }; }
     case '83-smg': {
       const n = sum('shooting', 'speed');
-      return n >= 6 && n < 8 ? manual('gap', n) : route(n, n >= 8, 124, 114);
+      return n >= r.gapMinimum && n < r.threshold ? manual('gap', n) : route(n, n >= r.threshold, r.win, r.loss);
     }
-    case '83-pistol': { const n = sum('shooting', 'speed'); return route(n, n >= 16, 104, 114); }
-    case '216': return casualties(v.primaryPower <= 30 ? 6 : v.primaryPower < 60 ? 4 : 2, 207);
-    case '226': return casualties(v.primaryPower <= 15 ? v.fighters : v.primaryPower < 20 ? v.fighters / 2 : 1, v.primaryPower <= 15 ? 216 : 207);
-    case '220': return { ...casualties(v.fighters), result: v.fighters >= 10 ? 'success' : 'death', destination: v.fighters >= 10 ? 210 : null };
-    case '228': { const n = 2 * v.shooting + v.primaryPower; return route(n, n > 35, 209, null); }
+    case '83-pistol': { const n = sum('shooting', 'speed'); return route(n, n >= r.threshold, r.win, r.loss); }
+    case '216': return casualties(v.primaryPower <= r.low ? r.losses[0] : v.primaryPower < r.high ? r.losses[1] : r.losses[2], r.destination);
+    case '226': return casualties(v.primaryPower <= r.low ? v.fighters : v.primaryPower < r.high ? v.fighters / r.divisor : r.losses, v.primaryPower <= r.low ? r.lowDestination : r.destination);
+    case '220': return { ...casualties(v.fighters), result: v.fighters >= r.minimum ? 'success' : 'death', destination: v.fighters >= r.minimum ? r.destination : null };
+    case '228': { const n = r.multiplier * v.shooting + v.primaryPower; return route(n, n > r.threshold, r.win, null); }
     case '242':
     case '282': {
-      const losses = String(id) === '242' ? [6, 4, 2, 0] : [3, 2, 1];
+      const losses = r.losses;
       if (v.labDamage >= losses.length) throw new RangeError('Invalid laboratory damage');
       return casualties(losses[v.labDamage], null, true);
     }
     case '243':
     case '273': {
-      const losses = String(id) === '243' ? [4, 3, 0] : [2, 1];
+      const losses = r.losses;
       if (v.barracksDamage >= losses.length) throw new RangeError('Invalid barracks damage');
       return casualties(losses[v.barracksDamage], null, true);
     }
     case '261':
-      if (v.squads < 1 || v.fighters !== 8 * v.squads) throw new RangeError('Each transport carries eight commandos');
-      return { ...casualties(v.attackHelis ? 0 : 16), ...(!v.attackHelis && v.squads <= 2 ? { result: 'death' } : {}) };
+      if (v.squads < r.minimumSquads || v.fighters !== r.fightersPerSquad * v.squads) throw new RangeError('Each transport carries eight commandos');
+      return { ...casualties(v.attackHelis ? 0 : r.losses), ...(!v.attackHelis && v.squads <= r.fatalSquads ? { result: 'death' } : {}) };
     case '268':
     case '284': {
-      if (v.day < 1 || v.day > 31) throw new RangeError('Invalid calendar day');
+      if (v.day < r.dayMinimum || v.day > r.dayMaximum) throw new RangeError('Invalid calendar day');
       const odd = v.day % 2 === 1;
-      return String(id) === '284' ? casualties(!v.guardPosted && odd ? 2 : 0, 269)
-        : casualties(v.sequential ? 2 : odd ? 1 : 0, v.sequential && odd ? 298 : 288);
+      return String(id) === '284' ? casualties(!v.guardPosted && odd ? r.losses : 0, r.destination)
+        : casualties(v.sequential ? r.sequentialLosses : odd ? r.oddLosses : 0, v.sequential && odd ? r.oddSequentialDestination : r.destination);
     }
     case '283':
     case '292':
-      if (v.groupSize < 2 || v.groups < 1 || v.fighters !== v.groups * v.groupSize) throw new RangeError('Enter the fighters assigned to equal-sized groups');
-      return casualties(v.groupSize >= 4 ? String(id) === '283' ? 0 : 1 : v.groupSize === 3 ? v.groups : v.fighters / 2,
-        v.groupSize === 2 ? String(id) === '283' ? 273 : 282 : null, true);
+      if (v.groupSize < r.minimumGroupSize || v.groups < r.minimumGroups || v.fighters !== v.groups * v.groupSize) throw new RangeError('Enter the fighters assigned to equal-sized groups');
+      return casualties(v.groupSize >= r.largeSize ? r.largeLosses : v.groupSize === r.mediumSize ? v.groups : v.fighters / r.divisor,
+        v.groupSize === r.minimumGroupSize ? r.smallDestination : null, true);
     default: throw new RangeError('Unknown check');
   }
 }
@@ -114,8 +114,9 @@ export function startUnarmedFight(player, origin, options = {}) {
 function prepareOpponent(fight) {
   fight.enemy = { ...fight.opponents[fight.enemyIndex] };
   const remaining = fight.opponents.length - fight.enemyIndex;
-  if (fight.origin === 102) fight.enemy.damageCode = remaining === 2 ? 12 : 8;
-  if (fight.origin === 177) fight.enemy.damageCode = 4 + 6 * (remaining - 1);
+  const rule = MONEY_RULES.damageRules?.[fight.origin];
+  if (rule?.kind==='remainingEquals') fight.enemy.damageCode = remaining===rule.remaining ? rule.damage : rule.otherwise;
+  if (rule?.kind==='remainingLinear') fight.enemy.damageCode = rule.base + rule.perExtra * (remaining - 1);
   fight.beforeOpponent = { ...fight.player };
   fight.phase = 'entry';
   fight.tactics = null;
@@ -636,8 +637,9 @@ export function convertShootingToUnarmed(fight, opponents) {
     throw new RangeError('No unarmed conversion is pending');
   }
   const remaining = fight.opponents.filter(e => !e.defeated).length;
-  if (!opponents && fight.origin === 143) {
-    opponents = unarmedEncounter(133).slice(0, remaining);
+  const conversion = MONEY_RULES.conversion;
+  if (!opponents && fight.origin === conversion.shootingOrigin) {
+    opponents = unarmedEncounter(conversion.unarmedOrigin).slice(0, remaining);
     if (shootingEnemy(fight).disarmed) {
       opponents[0].damageCode -= opponents[0].weaponCode;
       opponents[0].weaponCode = 0;
@@ -651,10 +653,10 @@ export function convertShootingToUnarmed(fight, opponents) {
     }
   }
   if (shootingEnemy(fight).disarmed && opponents[0].weaponCode > 0) throw new RangeError('Keep the current opponent disarmed');
-  const converted = startUnarmedFight(fight.player, 133);
+  const converted = startUnarmedFight(fight.player, conversion.baseOrigin);
   converted.origin = fight.origin;
   converted.opponents = opponents.map(e => ({ ...e }));
-  converted.returnRoutes = fight.origin === 143 ? { ...UNARMED_RETURNS[133] }
+  converted.returnRoutes = fight.origin === conversion.shootingOrigin ? { ...UNARMED_RETURNS[conversion.unarmedOrigin] }
     : { win: SHOOTING_RETURNS[fight.origin], loss: null, fatal: false };
   converted.shootingDefeated = fight.defeated;
   converted.events = structuredClone(fight.events);

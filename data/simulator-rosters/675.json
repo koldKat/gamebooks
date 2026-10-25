@@ -36,7 +36,200 @@
               "defence": 11,
               "stamina": 8
             }
-          ]
+          ],
+          "support": {
+            "seaChecks": {
+              "411": {
+                "kind": "escape",
+                "destinations": [
+                  461,
+                  14
+                ]
+              },
+              "434": {
+                "kind": "storm",
+                "destinations": [
+                  459,
+                  534,
+                  221
+                ],
+                "blessingDestination": 335
+              },
+              "435": {
+                "kind": "escape",
+                "destinations": [
+                  485,
+                  335
+                ]
+              },
+              "461": {
+                "kind": "naval",
+                "destinations": [
+                  560,
+                  535,
+                  510,
+                  14,
+                  536
+                ]
+              },
+              "484": {
+                "kind": "storm",
+                "destinations": [
+                  459,
+                  534,
+                  198
+                ],
+                "blessingDestination": 358
+              },
+              "485": {
+                "kind": "naval",
+                "destinations": [
+                  560,
+                  535,
+                  510,
+                  335,
+                  584
+                ]
+              },
+              "488": {
+                "kind": "escape",
+                "destinations": [
+                  538,
+                  221
+                ],
+                "crewBonus": true
+              },
+              "509": {
+                "kind": "storm",
+                "destinations": [
+                  459,
+                  534,
+                  14
+                ],
+                "blessingDestination": 14
+              },
+              "538": {
+                "kind": "naval",
+                "destinations": [
+                  560,
+                  535,
+                  510,
+                  221,
+                  563
+                ]
+              },
+              "583": {
+                "kind": "storm",
+                "destinations": [
+                  459,
+                  534,
+                  14
+                ],
+                "blessingDestination": 198
+              },
+              "607": {
+                "kind": "storm",
+                "destinations": [
+                  459,
+                  534,
+                  358
+                ],
+                "blessingDestination": 221
+              },
+              "611": {
+                "kind": "escape",
+                "destinations": [
+                  659,
+                  198
+                ]
+              },
+              "632": {
+                "kind": "escape",
+                "destinations": [
+                  680,
+                  358
+                ]
+              },
+              "659": {
+                "kind": "naval",
+                "destinations": [
+                  560,
+                  535,
+                  510,
+                  198,
+                  683
+                ]
+              },
+              "680": {
+                "kind": "naval",
+                "destinations": [
+                  560,
+                  535,
+                  510,
+                  358,
+                  752
+                ]
+              }
+            },
+            "rules": {
+              "shipDice": {
+                "barque": 1,
+                "brigantine": 2,
+                "galleon": 3
+              },
+              "warriorNavalDice": 3,
+              "otherDice": 2,
+              "crewModifiers": {
+                "storm": {
+                  "poor": 0,
+                  "average": 0,
+                  "good": 1,
+                  "excellent": 2
+                },
+                "naval": {
+                  "poor": -2,
+                  "average": 0,
+                  "good": 2,
+                  "excellent": 3
+                },
+                "escape": {
+                  "poor": -1,
+                  "average": 0,
+                  "good": 1,
+                  "excellent": 2
+                },
+                "escapeBonus": {
+                  "poor": 0,
+                  "average": 1,
+                  "good": 2,
+                  "excellent": 3
+                }
+              },
+              "thresholds": {
+                "storm": [
+                  3,
+                  5
+                ],
+                "naval": [
+                  4,
+                  9,
+                  13,
+                  17
+                ],
+                "escape": [
+                  6
+                ]
+              },
+              "navalLossOutcomes": 3,
+              "navalWinOutcome": 4,
+              "navalDamageDice": [
+                0,
+                2,
+                1
+              ],
+              "deathDestination": 560
+            }
+          }
         },
         "part": {
           "name": "Wereboar",

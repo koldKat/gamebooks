@@ -6,8 +6,8 @@ import { FIRE_WOLF_WEAPONS, FIRE_WOLF_ARMOUR, rollFireWolfCharacter, fireWolfNat
   fireWolfHitThreshold, fireWolfProtection, fireWolfDamage, createFireWolfFight,
   resolveFireWolfInitiative, rollFireWolfAttack, resolveFireWolfDeathLuck,
   throwFireWolfOrb, healFireWolfWithStone, tryFireWolfCharm, tryFireWolfLightbringer,
-  useFireWolfBluePowder } from '../../../public/js/battlesim/engines/demonspawn/fire-wolf.js';
-import { FIRE_WOLF_ROSTER, fireWolfEnemy } from '../../../public/js/battlesim/engines/demonspawn/fire-wolf-roster.js';
+  useFireWolfBluePowder, checkFireWolfOutcome } from '../../../public/js/battlesim/engines/demonspawn/fire-wolf.js';
+import { FIRE_WOLF_ROSTER, fireWolfEnemy, FIRE_WOLF_RULES } from '../../../public/js/battlesim/engines/demonspawn/fire-wolf-roster.js';
 import { FIRE_WOLF_ENCOUNTERS, prepareFireWolfEncounter, createFireWolfEncounterDuel } from '../../../public/js/battlesim/engines/demonspawn/fire-wolf-encounters.js';
 import { createFireWolfManualGroup, rollFireWolfManualAttack, advanceFireWolfManualRound } from '../../../public/js/battlesim/engines/demonspawn/fire-wolf-groups.js';
 
@@ -17,6 +17,33 @@ const character = extra => ({ strength: 48, speed: 48, stamina: 48, courage: 48,
   luck: 48, charm: 48, attraction: 48, skill: 0, lifePoints: 336, maxLife: 336,
   weapon: 'sword', armour: 'none', ...extra });
 const fight = (p = {}, e = {}, opts = {}) => createFireWolfFight(character(p), character(e), { first: 'player', ...opts });
+
+test('Fire*Wolf sparring and Regent sword settings follow database metadata', () => {
+  const saved=structuredClone(FIRE_WOLF_RULES);
+  try {
+    FIRE_WOLF_RULES.sparringStop=20;
+    const practice=fight({lifePoints:21},{lifePoints:20},{sparring:true});checkFireWolfOutcome(practice);
+    assert.equal(practice.outcome,'win');
+    FIRE_WOLF_RULES.regent.swordCycle=[3,7];FIRE_WOLF_RULES.regent.swordDieMultiplier=2;
+    const f=fight({lifePoints:1000,maxLife:1000},{lifePoints:1000,maxLife:1000},{regentSword:true});
+    for(const bonus of [3,7,12,3]){
+      f.turn='enemy';const result=rollFireWolfAttack(f,high);
+      assert.equal(result.damage,fireWolfDamage(f.enemy,f.player,12,bonus));
+    }
+  } finally {Object.assign(FIRE_WOLF_RULES,saved);}
+});
+test('Fire*Wolf group rewards and bleeding load settings without replacing saved fights', () => {
+  const saved=structuredClone(FIRE_WOLF_RULES);
+  try {
+    const old=createFireWolfManualGroup(prepareFireWolfEncounter(4,character()));
+    old.enemies[0].lifePoints=17;old.manualRound=3;old.extension={keep:true};
+    Object.assign(FIRE_WOLF_RULES,{bleedingDamage:7,groupRewardSection:128,groupReward:5,otherGroupReward:3});
+    const f=JSON.parse(JSON.stringify(old));advanceFireWolfManualRound(f);
+    assert.equal(f.enemies[0].lifePoints,10);assert.equal(f.manualRound,4);assert.equal(f.options.skillReward,2);assert.deepEqual(f.extension,{keep:true});
+    assert.equal(createFireWolfManualGroup(prepareFireWolfEncounter(128,character())).options.skillReward,5);
+    assert.equal(createFireWolfManualGroup(prepareFireWolfEncounter(4,character())).options.skillReward,3);
+  } finally {Object.assign(FIRE_WOLF_RULES,saved);}
+});
 
 test('Fire*Wolf rolls seven 2d6 x 8 attributes, zero Skill, and their total Life', () => {
   const p = rollFireWolfCharacter(low);

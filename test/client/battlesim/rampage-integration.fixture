@@ -1,6 +1,9 @@
+localStorage.setItem('gamebook_lang','LANGUAGE');
 const checks = [], saves = [];
+const rosterSeed = ROSTER_SEEDS[856];
 const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
 window.fetch = async (url, options = {}) => {
+  if (url === '/api/books/856/enemies' && !options.method) return new Response(JSON.stringify(rosterSeed));
   assert(url === '/api/books/856/state' && options.method === 'PUT', 'only intercepted state saves');
   saves.push(JSON.parse(options.body));
   return new Response('{}', {headers: {'Content-Type': 'application/json'}});
@@ -13,9 +16,9 @@ const el = key => document.getElementById('sim856-' + key);
 const run = {startedAt: 123, path: [1], sim838: {preserved: true}};
 app.setCurrentBookId(856); app.state.playthroughs = [run]; app.state.activePtIndex = 0;
 assert(!el('overlay') && mobile.hasSim(856), 'registered and lazy');
-const sim = await import('REPO/public/js/battlesim/battlesim856.js');
 if ('MODE' === 'mobile') await mobile.openSimForBook(856);
 else { await desktop.showBattleSimForBook(856); el('btn').click(); }
+const sim = await import('REPO/public/js/battlesim/battlesim856.js');
 assert(el('overlay').classList.contains('active'), 'opens through real loader');
 assert(el('title').textContent === 'Развилняване', 'Bulgarian source uses Bulgarian without injected translations');
 assert(!el('overlay').textContent.includes('battlesim856.'), 'translated initial controls');
@@ -28,7 +31,9 @@ name.dispatchEvent(new KeyboardEvent('keydown', {key: 'ArrowDown', bubbles: true
 name.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true, cancelable: true}));
 assert(run.sim856.encounter === '20' && run.sim856.traits.drain && !run.sim856.traits.firstHit, 'autocomplete synchronizes encounter rules');
 choose('40');
-name = el('editor').querySelector('[role="combobox"]'); name.focus();
+name = el('editor').querySelector('[role="combobox"]');
+name.dispatchEvent(new FocusEvent('focus'));
+assert(name.getAttribute('aria-expanded') === 'true', 'suggestions open before Escape');
 name.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true}));
 assert(el('overlay').classList.contains('active') && name.getAttribute('aria-expanded') === 'false', 'Escape dismisses autocomplete only');
 el('manual').click(); el('die-one').value = 6; el('die-two').value = 1;
@@ -41,6 +46,16 @@ const before = JSON.stringify(run); sim.render(); sim.render();
 assert(JSON.stringify(run) === before, 'render does not mutate saved state');
 assert(!el('overlay').textContent.includes('battlesim856.'), 'translated results');
 assert(run.sim838.preserved, 'unrelated simulator preserved');
+const combat=await import('REPO/public/js/battlesim/books/856/combat.js'),{encounterPreset}=await import('REPO/public/js/battlesim/books/856/definition.js');
+const spec=encounterPreset('20'),fight=combat.startFight({...combat.newCharacter(),life:1,shield:true},[spec],{encounter:spec});
+Object.assign(fight,{rounds:4,boulderSpent:true,extension:{preserved:true}});fight.enemies[0].rounds=3;fight.enemies[0].hp=7;
+run.sim856={...structuredClone(run.sim856),fight:JSON.parse(JSON.stringify(fight)),character:structuredClone(fight.character)};
+const savedDrain=JSON.stringify(run);sim.render();sim.render();
+assert(JSON.stringify(run)===savedDrain,'saved drain fight renders without mutation');
+el('die-one').value=1;el('die-two').value=6;el('die-shield').value=2;el('round').click();
+assert(run.sim856.fight.outcome==='loss'&&run.sim856.fight.destination==='13'&&run.sim856.character.life===0,'saved fatal drain uses database death route');
+assert(run.sim856.fight.rounds===5&&run.sim856.fight.enemies[0].rounds===4&&run.sim856.fight.enemies[0].hp===9&&run.sim856.fight.boulderSpent&&run.sim856.fight.extension.preserved&&run.sim856.history.length===2,'saved drain preserves counters, endurance, spent boulder and extension');
+el('life').value=6;el('saveCharacter').click();
 choose('');
 el('editor').querySelector('.bsim-opponent-editor > button').click();
 const added = el('editor').querySelector('fieldset:last-child');

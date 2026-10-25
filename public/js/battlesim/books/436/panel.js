@@ -1,12 +1,12 @@
-import { HEALING_POTION_HEAL, COMBAT_TABLE } from './definition.js';
+import { HEALING_POTION_HEAL, COMBAT_TABLE, ENCOUNTER_RULES } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, COMBAT_TABLE, HEALING_POTION_HEAL, SVG_SKULL, SVG_TROPHY, _appendLog, _battleOver, _captureFightEffects, _checkBattleEnd, _data, _effectiveSkill, _enemyList, _enemyName, _enemyNameSafe, _escape, _escapeRoute, _loadEnemyList, _numField, _pick10, _pickRow, _psychic, _ratioCol, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _resetBattle, _runRound, _setRoute, _setVal, _setupAutocomplete, _usePotion, apiFetch, closeSim436, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim436, openSim436, registerPanelShortcut, renderSim436, saveState, setSim436Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ENCOUNTER_RULES, COMBAT_TABLE, HEALING_POTION_HEAL, SVG_SKULL, SVG_TROPHY, _appendLog, _battleOver, _captureFightEffects, _checkBattleEnd, _data, _effectiveSkill, _enemyList, _enemyName, _enemyNameSafe, _escape, _escapeRoute, _loadEnemyList, _numField, _pick10, _pickRow, _psychic, _ratioCol, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _resetBattle, _rulesFor, _runRound, _setRoute, _setVal, _setupAutocomplete, _usePotion, apiFetch, closeSim436, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim436, openSim436, registerPanelShortcut, renderSim436, saveState, setSim436Visible, shortcutLabel, showAlert, t });
 const { _data, _appendLog, _recordOutcome, _battleOver } = createState(simulatorContext);
-const { _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _psychic, _effectiveSkill, _setRoute, _escapeRoute, _escape, _runRound, _checkBattleEnd, _resetBattle } = createCombat(simulatorContext);
+const { _rulesFor, _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _psychic, _effectiveSkill, _setRoute, _escapeRoute, _escape, _runRound, _checkBattleEnd, _resetBattle } = createCombat(simulatorContext);
 const { _usePotion } = createEffects(simulatorContext);
 // END SIMULATOR WIRING
 // Jungle of Horrors: encounter rules are captured only for newly started fights.
@@ -118,7 +118,7 @@ function _renderInputs(skipEnemyPick) {
   _setVal('sim436-enemy-en', d.enemy.endurance);
   _setVal('sim436-enemy-enmax', d.enemy.enduranceMax);
   _setVal('sim436-ratio', d.combatEffects?.captured ? _effectiveSkill(d) - d.enemy.skill : d.ratio);
-  if (!skipEnemyPick || [13,287].includes(d.combatEffects?.section)) _setVal('sim436-enemy-pick', d.enemy.name);
+  if (!skipEnemyPick || !!_rulesFor(d.combatEffects?.section).secondEnemy) _setVal('sim436-enemy-pick', d.enemy.name);
 
   const potionBtn = document.getElementById('sim436-use-potion');
   potionBtn.disabled = !d.rolled || !d.hasHealingPotion || d.healingPotionUsed;

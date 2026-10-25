@@ -1,5 +1,5 @@
 import * as rules from './core.js';
-import { POLICE_ENCOUNTERS, preparePoliceEnemy } from './roster.js';
+import { POLICE_ENCOUNTERS, preparePoliceEnemy, policeEncounterSetup } from './roster.js';
 import { policeDragonOpening, policeHunt } from './openings.js';
 import { createOpponentEditor } from '../../opponents.js';
 
@@ -103,15 +103,7 @@ export function createPolicePanel({ document, t, getRun, getBookId, saveState, s
         }
       } else {
         if (row.dragon || mode === 'party' && !row.party) throw new RangeError('Party unavailable in this scene');
-        const player = { ...actor('player'), magic: number('magic') };
-        let strikes = row.playerStrikes ?? 1;
-        if (row.id === 'arenaTroll' && !['axe', 'mace'].includes(el('weapon').value)) throw new RangeError('Troll requires axe or mace');
-        if (row.id === 'arenaDwarf' && (['axe', 'mace'].includes(el('weapon').value) || el('steelArmor').checked)) {
-          player.attack = player.defence = 4;
-        }
-        if (row.section === 139 && el('weapon').value === 'swordDagger') { player.defence = 1; strikes = 2; }
-        if (row.unarmed && el('weapon').value !== 'unarmed') throw new RangeError('Weapons forbidden');
-        if (row.unarmed) player.damage = 10;
+        const { player, strikes } = policeEncounterSetup(row, { ...actor('player'), magic: number('magic') }, el('weapon').value, el('steelArmor').checked);
         d.fight = rules.startPoliceFight(player, prepared.enemy, {
           count: prepared.count, level: options.level, tactic: el('tactic').value,
           party: mode === 'party', playerStrikes: strikes, spellsAllowed: !row.arena && !row.unarmed,

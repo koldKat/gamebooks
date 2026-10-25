@@ -3,12 +3,14 @@ import { createRosterLoader } from '../../roster-data.js';
 export let TOMB_ENCOUNTERS = Object.freeze([]);
 export let TOMB_DREAMS = Object.freeze([]);
 export let TOMB_COMPANION = Object.freeze({});
+export const TOMB_RULES = {};
 export const loadRoster = createRosterLoader(532, 'CATALOG', rows => {
   const freeze = spec => Object.freeze({...spec, enemies: Object.freeze(spec.enemies.map(Object.freeze))});
   const catalogs = ['TOMB_ENCOUNTERS', 'TOMB_DREAMS']
     .map(name => rows.filter(row => row.catalog === name).map(row => freeze(row.spec)));
   const support = rows.find(row => row.support)?.support;
-  if (catalogs.some(rows => !rows.length) || !support?.companion) throw new Error('Incomplete encounter catalogs');
+  if (catalogs.some(rows => !rows.length) || !support?.companion || !support.rules) throw new Error('Incomplete encounter catalogs');
+  Object.assign(TOMB_RULES, support.rules);
   TOMB_ENCOUNTERS = Object.freeze(catalogs[0]);
   TOMB_DREAMS = Object.freeze(catalogs[1]);
   TOMB_COMPANION = Object.freeze(support.companion);

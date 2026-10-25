@@ -65,7 +65,7 @@ export function renderSim530() {
     el(key).hidden = !allowed; el(key).disabled = !fighting || f.rounds > 0;
   }
   el('call_gnurlbash').disabled = !fighting || !p.gnurlbash || !!f.ally || f.spec.dream;
-  el('witch_loot').hidden = f?.spec.id !== 78 || f.status !== 'win' || !!p.witchLootCollected;
+  el('witch_loot').hidden = !rules.kingdomCanCollectWitchLoot(f);
   el('smarm').disabled = !fighting || f.rounds > 0 || !(p.magic.smarmOil > 0) || !el('opposite-sex').checked;
   el('lucky_strike').disabled = !fighting || f.spec.dream || p.luckyRolls <= 0 || !!f.luckyNext;
   el('cast').disabled = !fighting || f.spec.dream || f.spec.trial || !f.first
@@ -96,7 +96,7 @@ export function renderSim530() {
     : tk('round', { round: f.rounds + 1 }) : tk(f.status)}` : tk('pick');
   el('trial-note').hidden = !f?.spec.trial;
   for (const key of ['city_patrol', 'city_fine', 'city_court', 'constable_court']) el(key).disabled = fighting || p.life <= 0;
-  el('city_fine').disabled ||= d.patrol?.status !== 'patrol' || p.gold < 200;
+  el('city_fine').disabled ||= d.patrol?.status !== 'patrol' || p.gold < rules.KINGDOM_RULES.patrol.fine;
   el('log').innerHTML = d.log.slice(-100).reverse().map(text => `<div>${escapeHtml(text)}</div>`).join('');
   el('history').innerHTML = d.history.slice(-50).reverse().map(row => `<div class="bsim-history-row">${escapeHtml(row.enemy)}: ${escapeHtml(tk(row.outcome))}</div>`).join('');
 }
@@ -220,7 +220,7 @@ export function initSim530() {
     if (d.patrol) d.log.push(tk('patrol_result', { roll: d.patrol.roll ?? '-', count: d.patrol.count ?? 0, outcome: tk(d.patrol.status) }));
   } }));
   el('city_fine').addEventListener('click', () => action(d => {
-    if (!active(d) && d.patrol?.status === 'patrol' && travel.kingdomPayFine(character(d), 200)) d.patrol.status = 'clear';
+    if (!active(d) && d.patrol?.status === 'patrol' && travel.kingdomPayFine(character(d), rules.KINGDOM_RULES.patrol.fine)) d.patrol.status = 'clear';
   }));
   for (const key of ['city_court', 'constable_court']) el(key).addEventListener('click', () => action(d => {
     if (active(d) || character(d).life <= 0) return;

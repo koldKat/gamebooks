@@ -8,7 +8,7 @@ import { newShamutantiCharacter, startShamutantiFight, shamutantiRound,
   resolveShamutantiLuck, spareShamutanti, canSpareShamutanti,
   healShamutantiCharacter, shamutantiOtherSpell, setShamutantiEnemySkill }
   from '../../../public/js/battlesim/engines/shamutanti/core.js';
-import { SHAMUTANTI_FIGHTS } from '../../../public/js/battlesim/engines/shamutanti/roster.js';
+import { SHAMUTANTI_FIGHTS, SHAMUTANTI_RULES } from '../../../public/js/battlesim/engines/shamutanti/roster.js';
 
 const constant = value => () => value;
 const rolls = (...values) => () => {
@@ -19,6 +19,45 @@ const character = changes => ({ ...newShamutantiCharacter('wizard', constant(6))
 const start = (section, changes = {}, options = {}, roll) =>
   startShamutantiFight(section, character(changes), { applyEntry: false, ...options }, roll);
 const settle = fight => fight.pending ? resolveShamutantiLuck(fight, false) : fight;
+
+test('roster settings control weapon recovery and manticore sting damage', () => {
+  const rules=structuredClone(SHAMUTANTI_RULES);
+  try {
+    SHAMUTANTI_RULES.recovery={afterRound:0,oddSkill:3,evenSkill:9};
+    const fight=start(317,{skill:1,luck:0});
+    assert.equal(shamutantiRound(fight,rolls(1,1,1,1,1)).events.find(e=>e.kind==='attack').enemySkill,3);
+    assert.equal(shamutantiRound(fight,rolls(2,1,1,1,1)).events.find(e=>e.kind==='attack').enemySkill,9);
+    SHAMUTANTI_RULES.sting={minRoll:1,damage:4,luckyDamage:2};
+    const stung=shamutantiRound(start(227,{skill:1}),constant(1));
+    assert.equal(stung.pending.poison,true);assert.equal(stung.pending.damage,4);
+    const resolved=resolveShamutantiLuck(stung,true,constant(1));
+    assert.equal(resolved.character.stamina,stung.character.stamina-2);
+  } finally {Object.assign(SHAMUTANTI_RULES,rules);}
+});
+
+test('night modifier choices and previous-section bound follow loaded settings', () => {
+  const rules=structuredClone(SHAMUTANTI_RULES);
+  try {
+    SHAMUTANTI_RULES.night={modifiers:[0,1],maxPreviousSection:100};
+    const fight=start(123,{}, {previousSection:100,nightModifier:1,nightResult:1});
+    assert.equal(fight.events.find(e=>e.kind==='nightRoll').result,2);
+    assert.equal(fight.config.win,100);
+    assert.throws(()=>start(123,{}, {previousSection:101,nightResult:1}),RangeError);
+    assert.throws(()=>start(123,{}, {previousSection:100,nightModifier:2,nightResult:1}),RangeError);
+  } finally {Object.assign(SHAMUTANTI_RULES,rules);}
+});
+
+test('serialized recovery fights keep manual overrides, wounds and unknown fields', () => {
+  let fight=start(317,{skill:1,luck:0,stamina:13,gold:7});
+  fight.rounds=4;fight.enemies[0].stamina=3;fight=setShamutantiEnemySkill(fight,8);
+  fight.extension={keep:['saved']};const saved=JSON.stringify(fight),restored=JSON.parse(saved);
+  const next=shamutantiRound(restored,rolls(1,1,1,1));
+  assert.equal(next.character.stamina,11);assert.equal(next.character.gold,7);
+  assert.equal(next.enemies[0].stamina,3);assert.equal(next.rounds,5);
+  assert.equal(next.enemySkillOverride,8);assert.equal(next.enemySkillOverrideEnemy,0);
+  assert.equal(next.events.some(e=>e.kind==='weaponRecovery'),false);
+  assert.deepEqual(next.extension,fight.extension);assert.equal(JSON.stringify(restored),saved);
+});
 
 test('desktop registration and shortcut overlay include this simulator once', () => {
   const loader = readFileSync(new URL('../../../public/js/battlesim/loader.js', import.meta.url), 'utf8');
@@ -41,6 +80,7 @@ test('backend awards each win/loss once and excludes noncombat outcomes', () => 
     if (name === './diamonds') return { diamondInfoForUser: () => ({}) };
     if (name === './rubies') return { rubyInfoForUser: () => ({}), createRubyCompletionChecker: () => () => 0 };
     if (name === './heartbeat-coins') return { advanceHeartbeatCoins: () => 0 };
+    if (name === './job-xp') return { getJobTitle: () => 'test' };
     throw new Error('Unexpected dependency: ' + name);
   } };
   runInNewContext(readFileSync(new URL('../../../server/db/xp.js', import.meta.url), 'utf8')

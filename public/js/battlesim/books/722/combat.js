@@ -1,5 +1,5 @@
 import { customFightingEncounter } from '../../engines/fighting-fantasy/opponents.js';
-import { ARROW_LIMIT, ENCOUNTERS, INITIAL_GOLD, INITIAL_PROVISIONS, RULES_REVISION } from './definition.js';
+import { ARROW_LIMIT, ENCOUNTERS, FIRST_PLAYER_HIT_RULES, INITIAL_GOLD, INITIAL_PROVISIONS, RULES_REVISION } from './definition.js';
 
 const clone = value => structuredClone(value);
 export function integer(value, min = 0, max = 10000) {
@@ -203,7 +203,7 @@ export function startFight(section, character, options = {}, roll) {
     if (!Array.isArray(options.enemyStamina) || options.enemyStamina.length !== fight.enemies.length) throw new RangeError('Invalid enemy health');
     fight.enemies.forEach((enemy, index) => { enemy.stamina = integer(options.enemyStamina[index], 1, enemy.staminaInitial); });
   }
-  if (options.beggarStamina !== undefined && config.mode === 'harpies') fight.allies[0].stamina = integer(options.beggarStamina, 0, 8);
+  if (options.beggarStamina !== undefined && config.mode === 'harpies') fight.allies[0].stamina = integer(options.beggarStamina, 0, config.ally.stamina);
   if (config.confuseHarpy) {
     const mode = options.confuse ?? 'skip';
     if (!['skip', 'luck', 'cake'].includes(mode)) throw new RangeError('Invalid confusion choice');
@@ -221,10 +221,10 @@ export function startFight(section, character, options = {}, roll) {
   if (config.openingArrow) {
     const value = die(roll);
     fight.events.push({ kind: 'openingArrow', roll: value });
-    if (value === 1) { fatal(fight, 'arrow'); return fight; }
-    const wound = [0, 0, 5, 3, 2, 1, 0][value];
-    player.stamina = Math.max(0, player.stamina - wound);
-    if (value === 5) player.skill = Math.max(0, player.skill - 2);
+    const result = config.openingArrowResults[value];
+    if (result.fatal) { fatal(fight, 'arrow'); return fight; }
+    player.stamina = Math.max(0, player.stamina - (result.damage ?? 0));
+    if (result.skillPenalty) player.skill = Math.max(0, player.skill - result.skillPenalty);
   }
   if (config.openingSilverArrow) {
     if (!player.silverArrows) throw new RangeError('No silver arrows');
@@ -266,16 +266,17 @@ function applyHit(fight, hit, modifier = 0) {
     victim.stamina = 0;
     fight.events.push({ kind: 'libraChampion' });
   }
-  if (destination === 189) {
+  const transition = typeof destination === 'number' ? FIRST_PLAYER_HIT_RULES[destination] : null;
+  if (transition?.kind === 'unlockLuckEscape') {
     fight.config.firstPlayerHitDestination = null;
-    fight.config.winningRoundLuckDestination = 38;
-    fight.noticeDestination = 189;
-  } else if (destination === 11) {
-    const next = ENCOUNTERS.find(item => item.section === 11);
+    fight.config.winningRoundLuckDestination = transition.destination;
+    fight.noticeDestination = destination;
+  } else if (transition?.kind === 'replaceEncounter') {
+    const next = ENCOUNTERS.find(item => item.section === transition.section);
     fight.config = clone(next);
     fight.enemies = next.enemies.map(actor);
-    fight.noticeDestination = 11;
-    fight.events.push({ kind: 'splitCorpse' });
+    fight.noticeDestination = destination;
+    fight.events.push({ kind: transition.event });
   } else if (destination) finish(fight, 'redirect', 'immune', destination);
 }
 function settle(fight) {

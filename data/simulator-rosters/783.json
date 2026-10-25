@@ -1,0 +1,915 @@
+{
+  "schemaVersion": 1,
+  "bookId": 783,
+  "family": "samson",
+  "source": "All twelve Samson encounters and nineteen profiles. Both nonlethal LIFE values remain null with their unavailable-stat flags. Temporary strength bonuses, entry loss, Cyclops option, group order, loss limits and all win/loss routes retained; all original legacy rows and IDs preserved.",
+  "enemies": [
+    {
+      "key": "encounter:99:0",
+      "name": "Тълпа филистимци (99)",
+      "attack": 18,
+      "defense": null,
+      "hp": 38,
+      "pb": null,
+      "adopt": {
+        "name": "Тълпа филистимци (99)",
+        "attack": 18,
+        "defense": null,
+        "hp": 38,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 99,
+          "name": "Тълпа филистимци",
+          "bonus": 10,
+          "win": 219,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Тълпа филистимци",
+              "strength": 18,
+              "life": 38
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Тълпа филистимци",
+          "strength": 18,
+          "life": 38
+        }
+      }
+    },
+    {
+      "key": "encounter:176:0",
+      "name": "Първи страж (176)",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Първи страж (176)",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 176,
+          "name": "Двама стражи",
+          "win": 138,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Първи страж",
+              "strength": 8,
+              "life": 7
+            },
+            {
+              "displayName": "Втори страж",
+              "strength": 7,
+              "life": 9
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Първи страж",
+          "strength": 8,
+          "life": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:176:1",
+      "name": "Втори страж (176)",
+      "attack": 7,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Втори страж (176)",
+        "attack": 7,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 1,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 176,
+          "name": "Двама стражи",
+          "win": 138,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Първи страж",
+              "strength": 8,
+              "life": 7
+            },
+            {
+              "displayName": "Втори страж",
+              "strength": 7,
+              "life": 9
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Втори страж",
+          "strength": 7,
+          "life": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:187:0",
+      "name": "Млад лъв (187)",
+      "attack": 28,
+      "defense": null,
+      "hp": 14,
+      "pb": null,
+      "adopt": {
+        "name": "Млад лъв (187)",
+        "attack": 28,
+        "defense": null,
+        "hp": 14,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 187,
+          "name": "Млад лъв",
+          "bonus": 20,
+          "win": 38,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Млад лъв",
+              "strength": 28,
+              "life": 14
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Млад лъв",
+          "strength": 28,
+          "life": 14
+        }
+      }
+    },
+    {
+      "key": "encounter:210:0",
+      "name": "Циклоп (210)",
+      "attack": 9,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Циклоп (210)",
+        "attack": 9,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 210,
+          "name": "Циклоп",
+          "kratuna": true,
+          "win": 257,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Циклоп",
+              "strength": 9,
+              "life": 12
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Циклоп",
+          "strength": 9,
+          "life": 12
+        }
+      }
+    },
+    {
+      "key": "encounter:217:0",
+      "name": "Десятник (217)",
+      "attack": 8,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Десятник (217)",
+        "attack": 8,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 217,
+          "name": "Десятник",
+          "lossLimit": 3,
+          "win": 95,
+          "lose": 304,
+          "enemies": [
+            {
+              "displayName": "Десятник",
+              "strength": 8,
+              "life": null,
+              "unavailableStats": [
+                "life"
+              ]
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Десятник",
+          "strength": 8,
+          "life": null,
+          "unavailableStats": [
+            "life"
+          ]
+        }
+      }
+    },
+    {
+      "key": "encounter:220:0",
+      "name": "Първи цербер (220)",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Първи цербер (220)",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": 220,
+          "name": "Три цербера",
+          "win": 112,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Първи цербер",
+              "strength": 8,
+              "life": 6
+            },
+            {
+              "displayName": "Втори цербер",
+              "strength": 9,
+              "life": 4
+            },
+            {
+              "displayName": "Трети цербер",
+              "strength": 6,
+              "life": 9
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Първи цербер",
+          "strength": 8,
+          "life": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:220:1",
+      "name": "Втори цербер (220)",
+      "attack": 9,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Втори цербер (220)",
+        "attack": 9,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 5,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": 220,
+          "name": "Три цербера",
+          "win": 112,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Първи цербер",
+              "strength": 8,
+              "life": 6
+            },
+            {
+              "displayName": "Втори цербер",
+              "strength": 9,
+              "life": 4
+            },
+            {
+              "displayName": "Трети цербер",
+              "strength": 6,
+              "life": 9
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Втори цербер",
+          "strength": 9,
+          "life": 4
+        }
+      }
+    },
+    {
+      "key": "encounter:220:2",
+      "name": "Трети цербер (220)",
+      "attack": 6,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Трети цербер (220)",
+        "attack": 6,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 5,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": 220,
+          "name": "Три цербера",
+          "win": 112,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Първи цербер",
+              "strength": 8,
+              "life": 6
+            },
+            {
+              "displayName": "Втори цербер",
+              "strength": 9,
+              "life": 4
+            },
+            {
+              "displayName": "Трети цербер",
+              "strength": 6,
+              "life": 9
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Трети цербер",
+          "strength": 6,
+          "life": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:225:0",
+      "name": "Брахмапутра (225)",
+      "attack": 5,
+      "defense": null,
+      "hp": 21,
+      "pb": null,
+      "adopt": {
+        "name": "Брахмапутра (225)",
+        "attack": 5,
+        "defense": null,
+        "hp": 21,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 225,
+          "name": "Брахмапутра",
+          "win": 238,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Брахмапутра",
+              "strength": 5,
+              "life": 21
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Брахмапутра",
+          "strength": 5,
+          "life": 21
+        }
+      }
+    },
+    {
+      "key": "encounter:239:0",
+      "name": "Харон (239)",
+      "attack": 18,
+      "defense": null,
+      "hp": 25,
+      "pb": null,
+      "adopt": {
+        "name": "Харон (239)",
+        "attack": 18,
+        "defense": null,
+        "hp": 25,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 239,
+          "name": "Харон",
+          "entryLoss": 3,
+          "win": 143,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Харон",
+              "strength": 18,
+              "life": 25
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Харон",
+          "strength": 18,
+          "life": 25
+        }
+      }
+    },
+    {
+      "key": "encounter:247:0",
+      "name": "Ашгарот (247)",
+      "attack": 9,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "adopt": {
+        "name": "Ашгарот (247)",
+        "attack": 9,
+        "defense": null,
+        "hp": null,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 247,
+          "name": "Ашгарот",
+          "lossLimit": 5,
+          "win": 168,
+          "lose": 340,
+          "enemies": [
+            {
+              "displayName": "Ашгарот",
+              "strength": 9,
+              "life": null,
+              "unavailableStats": [
+                "life"
+              ]
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Ашгарот",
+          "strength": 9,
+          "life": null,
+          "unavailableStats": [
+            "life"
+          ]
+        }
+      }
+    },
+    {
+      "key": "encounter:300:0",
+      "name": "Египетски военачалник (300)",
+      "attack": 7,
+      "defense": null,
+      "hp": 11,
+      "pb": null,
+      "adopt": {
+        "name": "Египетски военачалник (300)",
+        "attack": 7,
+        "defense": null,
+        "hp": 11,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 300,
+          "name": "Египетски военачалник",
+          "win": 56,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Египетски военачалник",
+              "strength": 7,
+              "life": 11
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Египетски военачалник",
+          "strength": 7,
+          "life": 11
+        }
+      }
+    },
+    {
+      "key": "encounter:308:0",
+      "name": "Първи филистимец (308)",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Първи филистимец (308)",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "section": 308,
+          "name": "Филистимски предводители",
+          "win": 205,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Първи филистимец",
+              "strength": 8,
+              "life": 7
+            },
+            {
+              "displayName": "Втори филистимец",
+              "strength": 8,
+              "life": 7
+            },
+            {
+              "displayName": "Трети филистимец",
+              "strength": 8,
+              "life": 7
+            },
+            {
+              "displayName": "Космат гигант",
+              "strength": 10,
+              "life": 11
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Първи филистимец",
+          "strength": 8,
+          "life": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:308:1",
+      "name": "Втори филистимец (308)",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Втори филистимец (308)",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 10,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "section": 308,
+          "name": "Филистимски предводители",
+          "win": 205,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Първи филистимец",
+              "strength": 8,
+              "life": 7
+            },
+            {
+              "displayName": "Втори филистимец",
+              "strength": 8,
+              "life": 7
+            },
+            {
+              "displayName": "Трети филистимец",
+              "strength": 8,
+              "life": 7
+            },
+            {
+              "displayName": "Космат гигант",
+              "strength": 10,
+              "life": 11
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Втори филистимец",
+          "strength": 8,
+          "life": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:308:2",
+      "name": "Трети филистимец (308)",
+      "attack": 8,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Трети филистимец (308)",
+        "attack": 8,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 10,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "section": 308,
+          "name": "Филистимски предводители",
+          "win": 205,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Първи филистимец",
+              "strength": 8,
+              "life": 7
+            },
+            {
+              "displayName": "Втори филистимец",
+              "strength": 8,
+              "life": 7
+            },
+            {
+              "displayName": "Трети филистимец",
+              "strength": 8,
+              "life": 7
+            },
+            {
+              "displayName": "Космат гигант",
+              "strength": 10,
+              "life": 11
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Трети филистимец",
+          "strength": 8,
+          "life": 7
+        }
+      }
+    },
+    {
+      "key": "encounter:308:3",
+      "name": "Космат гигант (308)",
+      "attack": 10,
+      "defense": null,
+      "hp": 11,
+      "pb": null,
+      "adopt": {
+        "name": "Космат гигант (308)",
+        "attack": 10,
+        "defense": null,
+        "hp": 11,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 10,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "section": 308,
+          "name": "Филистимски предводители",
+          "win": 205,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Първи филистимец",
+              "strength": 8,
+              "life": 7
+            },
+            {
+              "displayName": "Втори филистимец",
+              "strength": 8,
+              "life": 7
+            },
+            {
+              "displayName": "Трети филистимец",
+              "strength": 8,
+              "life": 7
+            },
+            {
+              "displayName": "Космат гигант",
+              "strength": 10,
+              "life": 11
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Космат гигант",
+          "strength": 10,
+          "life": 11
+        }
+      }
+    },
+    {
+      "key": "encounter:319:0",
+      "name": "Първи наемник (319)",
+      "attack": 6,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Първи наемник (319)",
+        "attack": 6,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 319,
+          "name": "Двама наемници",
+          "win": 232,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Първи наемник",
+              "strength": 6,
+              "life": 10
+            },
+            {
+              "displayName": "Втори наемник",
+              "strength": 8,
+              "life": 6
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Първи наемник",
+          "strength": 6,
+          "life": 10
+        }
+      }
+    },
+    {
+      "key": "encounter:319:1",
+      "name": "Втори наемник (319)",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Втори наемник (319)",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "samson",
+        "dataset": "ENCOUNTERS",
+        "entryIndex": 11,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 319,
+          "name": "Двама наемници",
+          "win": 232,
+          "lose": 200,
+          "enemies": [
+            {
+              "displayName": "Първи наемник",
+              "strength": 6,
+              "life": 10
+            },
+            {
+              "displayName": "Втори наемник",
+              "strength": 8,
+              "life": 6
+            }
+          ]
+        },
+        "part": {
+          "displayName": "Втори наемник",
+          "strength": 8,
+          "life": 6
+        }
+      }
+    }
+  ]
+}

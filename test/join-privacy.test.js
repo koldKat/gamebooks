@@ -26,7 +26,7 @@ test('join events exclude stored location data and respect hide-from-feed', t =>
     './connection': { db: { prepare: sql => (sql.includes('FROM users u') && sql.includes('u.join_template_id')) || sql.includes('SELECT template FROM join_templates')
       ? db.prepare(sql) : { all: () => [], get: () => undefined } } },
     './xp': { computeLevel: () => 0, getTitleForLevel: () => 'Newborn' },
-    './content': { getRandomJoinTemplate: () => '{name} joins.' }, './books': {},
+    './job-xp': require('../server/db/job-xp'), './content': { getRandomJoinTemplate: () => '{name} joins.' }, './books': {},
   };
   const context = vm.createContext({ module: { exports: {} }, Date, require: n => deps[n] });
   vm.runInContext(fs.readFileSync(require.resolve('../server/db/feed'), 'utf8'), context);

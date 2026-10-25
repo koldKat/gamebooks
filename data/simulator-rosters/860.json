@@ -19,7 +19,20 @@
           "id": "12",
           "displayName": "Братството на Ваал",
           "threshold": 8,
-          "damageDice": 1
+          "damageDice": 1,
+          "support": {
+            "rules": {
+              "heavyWound": {
+                "wounded": "78",
+                "safe": "85"
+              },
+              "accuracy": {
+                "specialRoll": 1,
+                "special": "7",
+                "other": "38"
+              }
+            }
+          }
         },
         "part": {
           "id": "12",

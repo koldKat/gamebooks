@@ -458,7 +458,11 @@
             }
           ],
           "mode": "scorpion",
-          "fortuneReward": 4
+          "fortuneReward": 4,
+          "npcRules": {
+            "doubleHitDamage": 6,
+            "poisonedDoubleHitDamage": 4
+          }
         },
         "part": {
           "name": "Giant Scorpion",
@@ -565,7 +569,12 @@
             }
           ],
           "mode": "tendrils",
-          "fortuneReward": 4
+          "fortuneReward": 4,
+          "npcRules": {
+            "initialActiveFoes": 3,
+            "maxActiveFoes": 10,
+            "tendrilHitDamage": 1
+          }
         },
         "part": {
           "name": "Tendril 1",
@@ -672,7 +681,12 @@
             }
           ],
           "mode": "tendrils",
-          "fortuneReward": 4
+          "fortuneReward": 4,
+          "npcRules": {
+            "initialActiveFoes": 3,
+            "maxActiveFoes": 10,
+            "tendrilHitDamage": 1
+          }
         },
         "part": {
           "name": "Tendril 2",
@@ -779,7 +793,12 @@
             }
           ],
           "mode": "tendrils",
-          "fortuneReward": 4
+          "fortuneReward": 4,
+          "npcRules": {
+            "initialActiveFoes": 3,
+            "maxActiveFoes": 10,
+            "tendrilHitDamage": 1
+          }
         },
         "part": {
           "name": "Tendril 3",
@@ -886,7 +905,12 @@
             }
           ],
           "mode": "tendrils",
-          "fortuneReward": 4
+          "fortuneReward": 4,
+          "npcRules": {
+            "initialActiveFoes": 3,
+            "maxActiveFoes": 10,
+            "tendrilHitDamage": 1
+          }
         },
         "part": {
           "name": "Tendril 4",
@@ -993,7 +1017,12 @@
             }
           ],
           "mode": "tendrils",
-          "fortuneReward": 4
+          "fortuneReward": 4,
+          "npcRules": {
+            "initialActiveFoes": 3,
+            "maxActiveFoes": 10,
+            "tendrilHitDamage": 1
+          }
         },
         "part": {
           "name": "Tendril 5",
@@ -1100,7 +1129,12 @@
             }
           ],
           "mode": "tendrils",
-          "fortuneReward": 4
+          "fortuneReward": 4,
+          "npcRules": {
+            "initialActiveFoes": 3,
+            "maxActiveFoes": 10,
+            "tendrilHitDamage": 1
+          }
         },
         "part": {
           "name": "Tendril 6",
@@ -1207,7 +1241,12 @@
             }
           ],
           "mode": "tendrils",
-          "fortuneReward": 4
+          "fortuneReward": 4,
+          "npcRules": {
+            "initialActiveFoes": 3,
+            "maxActiveFoes": 10,
+            "tendrilHitDamage": 1
+          }
         },
         "part": {
           "name": "Tendril 7",
@@ -1314,7 +1353,12 @@
             }
           ],
           "mode": "tendrils",
-          "fortuneReward": 4
+          "fortuneReward": 4,
+          "npcRules": {
+            "initialActiveFoes": 3,
+            "maxActiveFoes": 10,
+            "tendrilHitDamage": 1
+          }
         },
         "part": {
           "name": "Tendril 8",
@@ -1421,7 +1465,12 @@
             }
           ],
           "mode": "tendrils",
-          "fortuneReward": 4
+          "fortuneReward": 4,
+          "npcRules": {
+            "initialActiveFoes": 3,
+            "maxActiveFoes": 10,
+            "tendrilHitDamage": 1
+          }
         },
         "part": {
           "name": "Tendril 9",
@@ -1528,7 +1577,12 @@
             }
           ],
           "mode": "tendrils",
-          "fortuneReward": 4
+          "fortuneReward": 4,
+          "npcRules": {
+            "initialActiveFoes": 3,
+            "maxActiveFoes": 10,
+            "tendrilHitDamage": 1
+          }
         },
         "part": {
           "name": "Tendril 10",
@@ -1618,7 +1672,11 @@
             }
           ],
           "mode": "troll",
-          "fortuneReward": 5
+          "fortuneReward": 5,
+          "npcRules": {
+            "stunningVitalityBelow": 4,
+            "regeneration": 1
+          }
         },
         "part": {
           "name": "Troll",
@@ -1755,7 +1813,11 @@
           "mode": "troll",
           "fortuneReward": 5,
           "stunning": true,
-          "carryTroll": true
+          "carryTroll": true,
+          "npcRules": {
+            "stunningVitalityBelow": 4,
+            "regeneration": 1
+          }
         },
         "part": {
           "name": "Troll",
@@ -1800,7 +1862,10 @@
           ],
           "mode": "lion",
           "fortuneReward": 3,
-          "expertiseReward": 1
+          "expertiseReward": 1,
+          "npcRules": {
+            "doubleHitDamage": 6
+          }
         },
         "part": {
           "name": "Mountain Lion",
@@ -1844,7 +1909,11 @@
             }
           ],
           "mode": "troll",
-          "fortuneReward": 5
+          "fortuneReward": 5,
+          "npcRules": {
+            "stunningVitalityBelow": 4,
+            "regeneration": 1
+          }
         },
         "part": {
           "name": "Troll",

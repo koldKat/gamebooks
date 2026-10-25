@@ -31,8 +31,8 @@ function _playerWon(d) {
  return _hasWon(d.playerResults); }
 
 function _playerLost(d) {
-  const { _hasWon, kungFuDefeated } = getContext();
- return _hasWon(d.enemyResults) || (d.rulesVersion === 2 && kungFuDefeated(d)); }
+  const { _hasWon, kungFuDefeated, _enemy } = getContext();
+ return _hasWon(d.enemyResults) || (d.rulesVersion === 2 && kungFuDefeated(d, _enemy(d.enemyId))); }
 
 function _playerAttackTotal(d, move) {
   const { _roll1d6 } = getContext();
@@ -106,7 +106,7 @@ function _runRound(playerAction) {
   const staticEnemy = _enemy(d.enemyId);
   // Keep live opponent stats for the fight so passive penalties persist between rounds.
   const revised = d.rulesVersion === 2;
-  const liveEnemy = d._liveEnemy || (d._liveEnemy = revised ? kungFuEnemy(staticEnemy) : { ...staticEnemy, pattern: undefined });
+  const liveEnemy = d._liveEnemy || (d._liveEnemy = kungFuEnemy(staticEnemy, revised));
 
   const enemyAction = revised ? kungFuAction(d, staticEnemy) : staticEnemy.pattern(d.roundIdx);
 

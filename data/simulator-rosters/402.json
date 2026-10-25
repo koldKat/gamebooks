@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "bookId": 402,
+  "family": "cretan",
+  "source": "Original shared simulator case-insensitive Minotaur name predicate for requiring a divine weapon. One exact existing row carries this book-wide name rule; it is not a new property of the carrier opponent. All legacy profiles and saved fights remain unchanged.",
+  "enemies": [
+    {
+      "key": "divine-weapon:name-rule",
+      "name": "Cave tribesmen (section 20)",
+      "attack": 4,
+      "defense": 12,
+      "hp": 3,
+      "pb": 2,
+      "adopt": {
+        "name": "Cave tribesmen (section 20)",
+        "attack": 4,
+        "defense": 12,
+        "hp": 3,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "cretan",
+        "dataset": "DIVINE_WEAPON_NAME_RULES",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "namePattern": "minotaur",
+          "flags": "i"
+        },
+        "part": {
+          "namePattern": "minotaur",
+          "flags": "i"
+        },
+        "count": 1
+      }
+    }
+  ]
+}

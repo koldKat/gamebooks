@@ -1,4 +1,4 @@
-import { definition, POSITIONS } from './definition.js';
+import { definition, POSITIONS, DESERT_RULES } from './definition.js';
 import { defendShip, retakeShip, attackShip } from './combat.js';
 import { createState } from './state.js';
 import { currentBookId, currentPlaythrough, saveState } from '../../../core/state.js';
@@ -59,7 +59,7 @@ export function createDesertPanel({ document, t, getRun, getBookId, saveState, s
     el('history').textContent = d.history.slice(-40).reverse().map(h => h.enemy + ': ' + tk('status.' + h.outcome)).join('\n');
     for (const key of Object.keys(POSITIONS)) {
       const point = d.deployment[key] ?? {};
-      for (const field of ['force', 'pots', 'bows']) el(key + '-' + field).value = point[field] ?? (key === 'А' && field === 'force' ? 31 : 0);
+      for (const field of ['force', 'pots', 'bows']) el(key + '-' + field).value = point[field] ?? (key === DESERT_RULES.defaultPosition && field === 'force' ? DESERT_RULES.force : 0);
       for (const field of ['whip', 'chestnuts', 'poison']) el(key + '-' + field).checked = Boolean(point[field]);
     }
     for (const key of ['whip', 'chestnuts', 'poison']) el('owned-' + key).checked = Boolean(d.equipment[key]);
@@ -93,9 +93,9 @@ export function createDesertPanel({ document, t, getRun, getBookId, saveState, s
     const overlay = document.createElement('div');
     overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
     const deployments = Object.keys(POSITIONS).map(key => `<details><summary>${escape(tk('position.' + key))} (${key})</summary>`
-      + input(key + '-force', 'force', 31, key === 'А' ? 31 : 0) + input(key + '-pots', 'pots', 8) + input(key + '-bows', 'bows', 3)
+      + input(key + '-force', 'force', DESERT_RULES.force, key === DESERT_RULES.defaultPosition ? DESERT_RULES.force : 0) + input(key + '-pots', 'pots', DESERT_RULES.pots) + input(key + '-bows', 'bows', DESERT_RULES.bows)
       + ['whip', 'chestnuts', 'poison'].map(field => check(key + '-' + field, field)).join('') + '</details>').join('');
-    overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form" role="dialog" aria-modal="true" aria-labelledby="${ID}-title"><div class="inv-modal-hdr"><span class="inv-modal-title" id="${ID}-title">${escape(tk('title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><details><summary>${escape(tk('character'))}</summary>${input('endurance', 'endurance', 40, 40, -1000)}${input('silver', 'silver', 1000000, 40)}${button('apply')}</details><div id="${ID}-naval"><p>${escape(tk('navalNote'))}</p><div id="${ID}-deployment">${['whip', 'chestnuts', 'poison'].map(field => check('owned-' + field, 'own.' + field)).join('')}${deployments}</div>${button('defend')}<p class="bsim-status" id="${ID}-navalStatus" role="status" aria-live="polite"></p><div id="${ID}-retakeFields" hidden><p>${escape(tk('manualEquipment'))}</p>${input('survivors', 'survivors', 31)}${check('whipSurvives', 'whipSurvives')}${input('whipKills', 'whipKills', 3)}${button('retake')}</div><div id="${ID}-attackFields" hidden><p>${escape(tk('manualEquipment'))}</p>${input('attackSurvivors', 'survivors', 31)}${input('availablePots', 'availablePots', 8)}${input('availableBows', 'availableBows', 3)}${check('availablePoison', 'availablePoison')}${button('attack')}</div></div><div class="bsim-btn-row">${button('cancel')}</div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list bsim-status" id="${ID}-history"></div></details></div></div></div>`;
+    overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form" role="dialog" aria-modal="true" aria-labelledby="${ID}-title"><div class="inv-modal-hdr"><span class="inv-modal-title" id="${ID}-title">${escape(tk('title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><details><summary>${escape(tk('character'))}</summary>${input('endurance', 'endurance', 40, 40, -1000)}${input('silver', 'silver', 1000000, 40)}${button('apply')}</details><div id="${ID}-naval"><p>${escape(tk('navalNote'))}</p><div id="${ID}-deployment">${['whip', 'chestnuts', 'poison'].map(field => check('owned-' + field, 'own.' + field)).join('')}${deployments}</div>${button('defend')}<p class="bsim-status" id="${ID}-navalStatus" role="status" aria-live="polite"></p><div id="${ID}-retakeFields" hidden><p>${escape(tk('manualEquipment'))}</p>${input('survivors', 'survivors', DESERT_RULES.force)}${check('whipSurvives', 'whipSurvives')}${input('whipKills', 'whipKills', DESERT_RULES.retake.whipKills)}${button('retake')}</div><div id="${ID}-attackFields" hidden><p>${escape(tk('manualEquipment'))}</p>${input('attackSurvivors', 'survivors', DESERT_RULES.force)}${input('availablePots', 'availablePots', DESERT_RULES.pots)}${input('availableBows', 'availableBows', DESERT_RULES.bows)}${check('availablePoison', 'availablePoison')}${button('attack')}</div></div><div class="bsim-btn-row">${button('cancel')}</div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list bsim-status" id="${ID}-history"></div></details></div></div></div>`;
     document.body.appendChild(overlay);
     const btn = document.createElement('button'); btn.id = ID + '-btn'; btn.textContent = t('battlesim.title'); btn.style.display = 'none';
     getButtonRow().appendChild(btn); btn.addEventListener('click', open);
@@ -132,7 +132,7 @@ export function createDesertPanel({ document, t, getRun, getBookId, saveState, s
       if (el('availablePoison').checked && !d.equipment.poison) throw new RangeError('Poison not owned');
       const result = attackShip({ survivors: number('attackSurvivors'), pots: number('availablePots'),
         bows: number('availableBows'), poison: el('availablePoison').checked });
-      d.naval = { ...d.naval, ...result, outcome: result.destination === 68 ? 'win' : result.destination === 58 ? 'loss' : 'retreat' };
+      d.naval = { ...d.naval, ...result, outcome: result.destination === DESERT_RULES.attack.win ? 'win' : result.destination === DESERT_RULES.death ? 'loss' : 'retreat' };
     }));
     registerShortcut({ button: btn, overlay, open, close });
   }

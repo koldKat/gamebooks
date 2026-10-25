@@ -1,3 +1,4 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as combat from '../../../public/js/battlesim/books/833/combat.js';
@@ -5,6 +6,8 @@ import { encounterPreset, ENCOUNTERS } from '../../../public/js/battlesim/books/
 import { createState } from '../../../public/js/battlesim/books/833/state.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim833.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim833.js';
+
+await loadFixtureRoster(833);
 
 const start = (section = 7, changes = {}, opponent = {}, chip = false) => {
   const preset = encounterPreset(section);

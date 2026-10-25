@@ -20,7 +20,18 @@
           "count": 2,
           "range": 1,
           "escape": true,
-          "destination": "47"
+          "destination": "47",
+          "support": {
+            "rules": {
+              "personalThreshold": 3,
+              "ravagerThreshold": 4,
+              "ravagerSuccesses": 2,
+              "ravagerFastRolls": 3,
+              "ravagerMaxRolls": 5,
+              "ravagerFastDestination": "28",
+              "ravagerSlowDestination": "82"
+            }
+          }
         },
         "part": {
           "section": 2,

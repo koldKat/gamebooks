@@ -7,6 +7,7 @@ import { createFabledPanel } from "../.././engines/fabled-lands/panel.js";
 import { RISING_FIGHTS, RISING_DEFAULTS, RISING_SEA_CHECKS, risingSeaCheck,
   startRisingFight, risingRound, fleeRisingFight } from "../.././engines/fabled-lands/rising-sun.js";
 
+const sectionsFor = special => RISING_FIGHTS.filter(f=>f.special===special).map(f=>f.section);
 const panel = createFabledPanel({ document, t, getRun: currentPlaythrough,
   getBookId: () => currentBookId, saveState, showAlert, showConfirm, getButtonRow: getPlayBtnRow,
   bookId:679, fights:RISING_FIGHTS, characterDefaults:RISING_DEFAULTS,
@@ -14,13 +15,13 @@ const panel = createFabledPanel({ document, t, getRun: currentPlaythrough,
   roundFight:risingRound, fleeFight:fleeRisingFight,
   extraFlags:['divineWrath','diseaseBlessing','permanentStorms'],
   encounterOptions:[
-    {key:'light',type:'checkbox',sections:[624]},
-    {key:'subdue',type:'checkbox',sections:[490]},
-    {key:'weaponBonus',min:0,max:12,sections:[490]},
-    {key:'exchangedWeaponBonus',min:-2,max:12,sections:[656]},
-    {key:'crimsonArrow',type:'checkbox',sections:[481]},
+    {key:'light',type:'checkbox',sections:sectionsFor('darkness')},
+    {key:'subdue',type:'checkbox',sections:sectionsFor('subdue')},
+    {key:'weaponBonus',min:0,max:12,sections:sectionsFor('subdue')},
+    {key:'exchangedWeaponBonus',min:-2,max:12,sections:sectionsFor('exchangedWeapon')},
+    {key:'crimsonArrow',type:'checkbox',sections:sectionsFor('poisonSpider')},
     {key:'divineWrathUse',type:'checkbox',sections:RISING_FIGHTS.map(f=>f.section)},
-    {key:'enemyDamage',min:0,max:37,sections:[460]},
+    {key:'enemyDamage',min:0,max:RISING_FIGHTS.find(f=>f.special==='morituriOutside').enemies[0].stamina-1,sections:sectionsFor('morituriOutside')},
   ],
   registerShortcut({ button, overlay, open, close }) {
     button.innerHTML = shortcutLabel(t('battlesim.title'));

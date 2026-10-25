@@ -1,9 +1,10 @@
 import { createFireWolfFight, rollFireWolfAttack, checkFireWolfOutcome } from './fire-wolf.js';
+import { FIRE_WOLF_RULES } from './fire-wolf-roster.js';
 
 export function createFireWolfManualGroup(prepared) {
   if (!prepared.encounter.manualGroup || !prepared.enemies.length) throw new Error('Not a manual group encounter');
   const fight = createFireWolfFight(prepared.player, prepared.enemies[0], {
-    ...prepared.options, skillReward: Number(prepared.encounter.section) === 4 ? 2 : 1,
+    ...prepared.options, skillReward: Number(prepared.encounter.section) === FIRE_WOLF_RULES.groupRewardSection ? FIRE_WOLF_RULES.groupReward : FIRE_WOLF_RULES.otherGroupReward,
   });
   fight.enemies = structuredClone(prepared.enemies);
   fight.enemy = fight.enemies[0];
@@ -31,7 +32,7 @@ export function advanceFireWolfManualRound(fight) {
   if (fight.blindedEnemyRounds > 0) fight.blindedEnemyRounds -= 1;
   if (fight.bleedingEnemy !== null) {
     const enemy = fight.enemies[fight.bleedingEnemy];
-    if (enemy.lifePoints > 0) enemy.lifePoints -= 10;
+    if (enemy.lifePoints > 0) enemy.lifePoints -= FIRE_WOLF_RULES.bleedingDamage;
   }
   checkFireWolfOutcome(fight);
   return true;

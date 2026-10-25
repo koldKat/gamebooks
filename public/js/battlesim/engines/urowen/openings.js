@@ -1,6 +1,7 @@
 import {rollUrowenDie,urowenDamage,urowenCombatOutcome} from './core.js';
 import {resolveUrowenCharge} from './forms.js';
 import {throwUrowenNet} from './spells.js';
+import {UROWEN_RULES} from './roster.js';
 const clone=value=>structuredClone(value);
 export function resolveUrowenOpening(state,roll,{retry=false,hunterBow=null,net=false,horseCharge=false}={}) {
   if(state.fight?.status!=='prepared'||state.fight.openingDone)throw new RangeError('Opening unavailable');
@@ -26,7 +27,7 @@ export function resolveUrowenOpening(state,roll,{retry=false,hunterBow=null,net=
     }
   }
   if(rules.openingCharge&&player.life>0) {
-    const charge=resolveUrowenCharge(roll,{enemy:true});
+    const charge=resolveUrowenCharge(roll,{enemy:true,charge:rules.openingCharge});
     result.dice.push(...charge.rolls.map(raw=>({phase:'enemy-charge',raw})));
     player.life-=charge.damage;result.playerDamage+=charge.damage;
   }
@@ -53,7 +54,7 @@ export function resolveUrowenOpening(state,roll,{retry=false,hunterBow=null,net=
     }
   }
   if(player.life>0&&enemy.life>0&&horseCharge) {
-    if(fight.section!==123||!next.character.horse)throw new RangeError('Horse charge unavailable');
+    if(fight.section!==UROWEN_RULES.horseChargeSection||!next.character.horse)throw new RangeError('Horse charge unavailable');
     const charge=resolveUrowenCharge(roll);
     result.dice.push(...charge.rolls.map(raw=>({phase:'horse-charge',raw})));
     enemy.life-=charge.damage;result.enemyDamage+=charge.damage;

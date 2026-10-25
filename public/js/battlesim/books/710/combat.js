@@ -1,4 +1,4 @@
-import { ENCOUNTERS } from './definition.js';
+import { ENCOUNTERS, TEMPLE_RULES } from './definition.js';
 
 const clone = value => structuredClone(value);
 function integer(value, min = 0, max = 10000) {
@@ -96,7 +96,7 @@ export function round(input, target, roll) {
   if (input.pending.length || !targets(input).includes(target)) throw new RangeError('Invalid target');
   const fight = clone(input);
   fight.rounds++; fight.events = [];
-  const modifier = fight.config.ally ? 0 : fight.player.attackModifier - (fight.config.daggerPenalty && !fight.player.dagger ? 2 : 0);
+  const modifier = fight.config.ally ? 0 : fight.player.attackModifier - (fight.config.daggerPenalty && !fight.player.dagger ? TEMPLE_RULES.daggerPenalty : 0);
   const playerAttack = dice(roll) + actor(fight).skill + modifier;
   let lost = false;
   for (const index of targets(fight)) {
@@ -105,7 +105,7 @@ export function round(input, target, roll) {
     if (playerAttack > enemyAttack && index === target) {
       let wounds = true;
       if (fight.config.partialImmunity) {
-        const value = die(roll); wounds = value >= 4;
+        const value = die(roll); wounds = value >= TEMPLE_RULES.immunityMinimum;
         fight.events.push({ kind: 'immunity', roll: value, wounds });
       }
       if (wounds) fight.pending.push({ kind: 'outgoing', enemy: index, damage: 2 });
@@ -114,7 +114,7 @@ export function round(input, target, roll) {
       let damage = 2;
       if (fight.config.lightning) {
         const value = die(roll);
-        if (value <= 3) damage += 2;
+        if (value <= TEMPLE_RULES.lightning.maximum) damage += TEMPLE_RULES.lightning.damage;
         fight.events.push({ kind: 'lightning', roll: value });
       }
       fight.pending.push({ kind: 'incoming', enemy: index, damage });
@@ -128,7 +128,7 @@ export function round(input, target, roll) {
   if (!fight.outcome && fight.config.fireBreath) {
     const value = die(roll);
     fight.events.push({ kind: 'fire', roll: value });
-    if (value <= 2) fight.pending.push({ kind: 'fireHit', damage: 1 });
+    if (value <= TEMPLE_RULES.fireBreath.maximum) fight.pending.push({ kind: 'fireHit', damage: TEMPLE_RULES.fireBreath.damage });
   }
   automaticHits(fight);
   return fight;

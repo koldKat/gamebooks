@@ -1,6 +1,6 @@
 import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { customUrowenEncounter, urowenOpponentFields } from './opponents.js';
-import {UROWEN_SOURCE} from './roster.js';
+import {UROWEN_SOURCE,UROWEN_RULES} from './roster.js';
 import {createUrowenCharacter,UROWEN_RACES,UROWEN_CAREERS,upgradeUrowenAttribute,
   changeUrowenExperience} from './core.js';
 import {compileUrowenEncounters,createUrowenSimState,prepareUrowenEncounter} from './state.js';
@@ -71,7 +71,7 @@ export function createUrowenPanel({document,t,getRun,getBookId,saveState,showAle
     el('arrows').value=d.character.arrows??0;el('arrows').disabled=busy;
     for(const kind of UROWEN_ELIXIRS){el('stock_'+kind).value=d.character.elixirs?.[kind]??0;el('stock_'+kind).disabled=busy;}
     el('drink_elixir').disabled=!['prepared','fighting'].includes(f?.status)||f?.rules.items===false;
-    el('fight_stake').disabled=f?.section!==262||f?.status!=='prepared'||!!f?.wager;
+    el('fight_stake').disabled=f?.section!==UROWEN_RULES.contests.fight.section||f?.status!=='prepared'||!!f?.wager;
     el('place_fight_bet').disabled=el('fight_stake').disabled;
     for(const key of ['attack','damage','lifeLoss']) {
       el('next_'+key).value=d.character.nextCombat?.[key]??0;el('next_'+key).disabled=busy;
@@ -93,7 +93,7 @@ export function createUrowenPanel({document,t,getRun,getBookId,saveState,showAle
     el('opening').hidden=f?.status!=='prepared';el('attack').disabled=f?.status!=='fighting';
     el('cancel').disabled=!busy;
     el('opening_net').disabled=f?.status!=='prepared'||!d.character.net||f.rules.items===false;
-    el('opening_horse').disabled=f?.status!=='prepared'||f.section!==123||!d.character.horse;
+    el('opening_horse').disabled=f?.status!=='prepared'||f.section!==UROWEN_RULES.horseChargeSection||!d.character.horse;
     el('retry').disabled=f?.status!=='prepared';
     el('fire_edge').disabled=f?.status!=='fighting'||f.fireEdgeUsed||!d.character.knownSpells?.includes('fireEdge')||f.rules.spells===false;
     el('lethal_mirror').disabled=f?.status!=='fighting'||f.lethalMirrorUsed||!d.character.knownSpells?.includes('lethalMirror')||f.rules.spells===false;
@@ -120,8 +120,8 @@ export function createUrowenPanel({document,t,getRun,getBookId,saveState,showAle
     const contest=d.contest;
     el('contest_status').textContent=!contest?'':tk('contest_progress',{
       name:tk(String(contest.section)),status:tk('status.'+(contest.status==='finished'?(contest.winner===contest.selected?'win':'loss'):contest.status)),
-      score:[53,72].includes(contest.section)?`${contest.playerPoints} : ${contest.enemyPoints}`:
-        contest.section===391?`${contest.playerResistance} : ${contest.enemyResistance}`:
+      score:UROWEN_RULES.contests.point.sections.includes(contest.section)?`${contest.playerPoints} : ${contest.enemyPoints}`:
+        contest.section===UROWEN_RULES.contests.drinking.section?`${contest.playerResistance} : ${contest.enemyResistance}`:
           contest.animals.map(animal=>`${animal.name}: ${animal.life}`).join(' / ')});
     const animals=UROWEN_SOURCE.animals.filter(animal=>animal.section===Number(el('contest').value));
     const selectedAnimal=el('animal').value;
@@ -161,7 +161,7 @@ export function createUrowenPanel({document,t,getRun,getBookId,saveState,showAle
     <label class="inv-edit-row">${tk('target')}<select id="${ID}-target" class="inv-edit-input"></select></label>
     <label class="inv-edit-row">${tk('ability')}<select id="${ID}-ability" class="inv-edit-input"></select></label>
     <details><summary>${tk('critical_options')}</summary>${check('fire_edge')}${check('lethal_mirror')}${check('head_spit')}</details>${button('attack')}</div>
-    <details class="bsim-side"><summary>${tk('contests')}</summary>${select('contest',['53','56','72','129','391'])}<label class="inv-edit-row">${tk('animal')}<select id="${ID}-animal" class="inv-edit-input"></select></label>${number('stake')}<div class="bsim-btn-row">${button('bet')}${button('contest_roll')}</div><p id="${ID}-contest_status"></p></details>
+    <details class="bsim-side"><summary>${tk('contests')}</summary>${select('contest',[...UROWEN_RULES.contests.point.sections,...UROWEN_RULES.contests.animal.sections,UROWEN_RULES.contests.drinking.section].sort((a,b)=>a-b).map(String))}<label class="inv-edit-row">${tk('animal')}<select id="${ID}-animal" class="inv-edit-input"></select></label>${number('stake')}<div class="bsim-btn-row">${button('bet')}${button('contest_roll')}</div><p id="${ID}-contest_status"></p></details>
     <p>${tk('note')}</p></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${tk('history')}</summary><div id="${ID}-history" class="bsim-history-list"></div></details><div id="${ID}-log" class="bsim-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
     customSetup=createCustomOpponentSetup({document,id:ID,t,getRun,getData:data,isBusy:active,
@@ -280,7 +280,7 @@ export function createUrowenPanel({document,t,getRun,getBookId,saveState,showAle
     }));
     el('prepare').addEventListener('click',()=>action(previous=>prepareUrowenEncounter(previous,el('encounter').value==='0'?customUrowenEncounter(customSetup.settings(previous).opponents):specs.find(spec=>spec.section===Number(el('encounter').value)),
       {missionAttribute:el('attribute').value,unarmedAttribute:el('attribute').value,
-        firstAttackPenalty:Number(el('encounter').value)===135&&el('scene112').checked?3:0})));
+        firstAttackPenalty:Number(el('encounter').value)===UROWEN_RULES.scenePenalty.section&&el('scene112').checked?UROWEN_RULES.scenePenalty.amount:0})));
     el('opening').addEventListener('click',()=>action(previous=>{
       let next=resolveUrowenOpening(previous,roll,{net:!el('opening_net').disabled&&el('opening_net').checked,
         horseCharge:!el('opening_horse').disabled&&el('opening_horse').checked,retry:el('retry').checked,
@@ -306,13 +306,13 @@ export function createUrowenPanel({document,t,getRun,getBookId,saveState,showAle
       const section=Number(el('contest').value);
       if(!el('stake').value.trim())throw new RangeError('Enter a wager');
       const stake=Number(el('stake').value);
-      if([53,72].includes(section))return startUrowenPointBet(previous,section,stake);
-      return section===391?startUrowenDrinkingBet(previous,stake):startUrowenAnimalBet(previous,section,
+      if(UROWEN_RULES.contests.point.sections.includes(section))return startUrowenPointBet(previous,section,stake);
+      return section===UROWEN_RULES.contests.drinking.section?startUrowenDrinkingBet(previous,stake):startUrowenAnimalBet(previous,section,
         UROWEN_SOURCE.animals.filter(animal=>animal.section===section),{stake,selected:el('animal').value});
     }));
     el('contest').addEventListener('change',render);
-    el('contest_roll').addEventListener('click',()=>action(previous=>previous.contest.section===391?
-      rollUrowenDrinkingBet(previous,roll).state:[53,72].includes(previous.contest.section)?
+    el('contest_roll').addEventListener('click',()=>action(previous=>previous.contest.section===UROWEN_RULES.contests.drinking.section?
+      rollUrowenDrinkingBet(previous,roll).state:UROWEN_RULES.contests.point.sections.includes(previous.contest.section)?
         rollUrowenPointBet(previous,roll).state:rollUrowenAnimalBet(previous,roll).state));
   }
   return {init,render,open,close,setVisible(visible){if(el('btn'))el('btn').style.display=visible?'':'none';if(!visible)close();}};

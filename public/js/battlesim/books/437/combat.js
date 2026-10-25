@@ -1,6 +1,11 @@
 // Combat rules and resolution; UI and persistence callbacks are injected.
 export function createCombat(getContext) {
 // BEGIN EXTRACTED RULES
+function _rulesFor(section) {
+  const { ENCOUNTER_RULES } = getContext();
+  return ENCOUNTER_RULES[section] || {};
+}
+
 function _ratioCol(ratio) {
 
   if (ratio <= -11) return 0;
@@ -33,48 +38,41 @@ function _enemyNameSafe(d) {
  return escapeHtml(_enemyName(d)); }
 
 function _captureFightEffects(d) {
-  const { FIGHT_OPTIONS, _effectiveSkill } = getContext();
+  const { FIGHT_OPTIONS, _effectiveSkill, _rulesFor } = getContext();
 
   d.printedRules = 1;
   const section = Number(d.enemy.name.match(/§(\d+)/)?.[1]) || 0;
   const name = d.enemy.name;
-  const phase = section === 238 ? (/5\s*и\s*6/.test(name) ? 2 : /3\s*и\s*4/.test(name) ? 1 : 0)
-    : section === 309 ? (/сержант/i.test(name) ? 2 : /3\s*и\s*4/.test(name) ? 1 : 0) : 0;
+  const sequence = _rulesFor(section).sequence;
+  const phase = sequence?.phaseMatchers.find(matcher => new RegExp(matcher.pattern, matcher.flags).test(name))?.phase || 0;
   d.combatEffects = { captured: true, section, phase, initialEnemy: { ...d.enemy }, psychic: d.nextPsychic || 'none' };
   for (const option of FIGHT_OPTIONS) d.combatEffects[option] = !!d['next' + option[0].toUpperCase() + option.slice(1)];
   d.ratio = _effectiveSkill(d) - d.enemy.skill;
 }
 
 function _psychic(d) {
+  const { _rulesFor } = getContext();
 
   const e = d.combatEffects;
-  if (!e?.captured || [10,32,82,128,327].includes(e.section)) return 'none';
-  if (e.psychic === 'blast' && ![46,116,129,220,249,277,336].includes(e.section)) return 'blast';
+  if (!e?.captured || _rulesFor(e.section).psychicImmune) return 'none';
+  if (e.psychic === 'blast' && !_rulesFor(e.section).blastImmune) return 'blast';
   if (e.psychic === 'surge' && d.endurance > 6) return 'surge';
   return 'none';
 }
 
 function _effectiveSkill(d) {
-  const { _psychic } = getContext();
+  const { _psychic, _rulesFor } = getContext();
 
   let skill = d.combatSkill + (d.attackModifier || 0);
   const e = d.combatEffects;
   if (!e?.captured) return skill;
+  const rules = _rulesFor(e.section);
   const psychic = _psychic(d);
   skill += psychic === 'surge' ? 4 : psychic === 'blast' ? 2 : 0;
-  if (e.section === 32) skill -= 2;
-  if (e.section === 327) skill -= 4;
-  if (e.section === 82 && !e.tracking) skill -= 2;
-  if (e.section === 97 && !e.tracking) skill -= 3;
-  if (e.section === 104 && !e.tracking && !e.divination) skill -= 3;
-  if (e.section === 129 && !e.animal) skill -= 2;
-  if ([85,244].includes(e.section) && e.animal) skill += 2;
-  if (e.section === 148 && d.roundsThisBattle < 2) skill -= 2;
-  if (e.section === 166) skill += 2;
-  if (e.section === 191) skill -= 4;
-  if (e.section === 214) skill += 8;
-  if (e.section === 238 || e.section === 309 && e.phase > 0) skill += 2;
-  if (e.section === 316 || e.section === 182 && d.roundsThisBattle < 4) skill -= e.tutelary ? 2 : 4;
+  for (const adjustment of rules.skillAdjustments || []) {
+    if (adjustment.maxRounds !== undefined && d.roundsThisBattle >= adjustment.maxRounds || adjustment.minPhase !== undefined && !(e.phase >= adjustment.minPhase) || adjustment.whenFalse && e[adjustment.whenFalse] || adjustment.whenTrue && !e[adjustment.whenTrue] || adjustment.unlessAny?.some(key => e[key])) continue;
+    skill += adjustment.amount;
+  }
   return skill;
 }
 
@@ -87,38 +85,36 @@ function _setRoute(d, section) {
 }
 
 function _escapeRoute(d) {
-
+  const { _rulesFor } = getContext();
   const e = d.combatEffects;
   if (!e?.captured) return 0;
-  if ([36,86,260].includes(e.section)) return 328;
-  if (e.section === 119) return 49;
-  if (e.section === 217) return 334;
-  if ([98,127,308].includes(e.section) && d.roundsThisBattle >= 1) return 223;
-  return 0;
+  const rule = _rulesFor(e.section).escape;
+  return rule && d.roundsThisBattle >= rule.minRounds ? rule.route : 0;
 }
 
 function _escape() {
-  const { _battleOver, _data, _escapeRoute, _renderAll, _runRound, _setRoute, saveState } = getContext();
+  const { _battleOver, _data, _escapeRoute, _renderAll, _rulesFor, _runRound, _setRoute, saveState } = getContext();
 
   const d = _data();
   if (!d || _battleOver(d)) return;
   const route = _escapeRoute(d);
   if (!route) return;
-  if ([98,127,308].includes(d.combatEffects.section)) _runRound(true);
+  if (!_rulesFor(d.combatEffects.section).escape.skipRound) _runRound(true);
   if (d.endurance > 0) _setRoute(d, route);
   saveState();
   _renderAll();
 }
 
 function _runRound(escaping = false) {
-  const { COMBAT_TABLE, _appendLog, _battleOver, _checkBattleEnd, _data, _effectiveSkill, _enemyNameSafe, _pick10, _pickRow, _psychic, _ratioCol, _renderAll, _setRoute, saveState, t } = getContext();
+  const { COMBAT_TABLE, _appendLog, _battleOver, _checkBattleEnd, _data, _effectiveSkill, _enemyNameSafe, _pick10, _pickRow, _psychic, _ratioCol, _renderAll, _rulesFor, _setRoute, saveState, t } = getContext();
 
   const d = _data();
   if (!d || _battleOver(d)) return;
   escaping = escaping === true;
   const e = d.combatEffects || {};
-  if (e.captured && e.section === 82 && d.roundsThisBattle >= 4) {
-    _setRoute(d, 151);
+  const rules = _rulesFor(e.section);
+  if (e.captured && rules.stop && d.roundsThisBattle >= rules.stop.completedRounds) {
+    _setRoute(d, rules.stop.route);
     saveState();
     _renderAll();
     return;
@@ -132,9 +128,9 @@ function _runRound(escaping = false) {
   let [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
   if (escaping) enemyLoss = 0;
   if (e.captured) {
-    if (e.sommerwerd && [97,104,166,191,254,301,322].includes(e.section) && enemyLoss !== 'K') enemyLoss *= 2;
-    if ([46,116,285].includes(e.section) && d.roundsThisBattle <= 2) lwLoss = 0;
-    if (e.section === 82 && lwLoss !== 'K') lwLoss *= 2;
+    if (e.sommerwerd && rules.sommerwerdMultiplier && enemyLoss !== 'K') enemyLoss *= rules.sommerwerdMultiplier;
+    if (d.roundsThisBattle <= (rules.protectedRounds || 0)) lwLoss = 0;
+    if (rules.playerLossMultiplier && lwLoss !== 'K') lwLoss *= rules.playerLossMultiplier;
   }
   _appendLog(d, t('battlesim437.log.round', { round: d.roundsThisBattle, ratio: d.ratio, pick }));
 
@@ -156,34 +152,30 @@ function _runRound(escaping = false) {
   }));
 
   _checkBattleEnd(d);
-  if (e.captured && e.section === 82 && !_battleOver(d) && d.roundsThisBattle >= 4) _setRoute(d, 151);
+  if (e.captured && rules.stop && !_battleOver(d) && d.roundsThisBattle >= rules.stop.completedRounds) _setRoute(d, rules.stop.route);
   saveState();
   _renderAll();
 }
 
 function _checkBattleEnd(d) {
-  const { SVG_SKULL, SVG_TROPHY, _appendLog, _enemyNameSafe, _recordOutcome, _setRoute, t } = getContext();
+  const { SVG_SKULL, SVG_TROPHY, _appendLog, _enemyNameSafe, _recordOutcome, _rulesFor, _setRoute, t } = getContext();
 
   const e = d.combatEffects || {};
+  const rules = _rulesFor(e.section);
   if (d.printedRules && d.endurance <= 0) {
     _appendLog(d, t('battlesim437.log.fallen', { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
-  } else if (d.enemy.endurance <= 0 && e.captured && [238,309].includes(e.section) && e.phase < 2) {
+  } else if (d.enemy.endurance <= 0 && e.captured && rules.sequence && e.phase < rules.sequence.profiles.length - 1) {
     e.phase++;
-    const pair = (e.section === 238 ? [[20,32],[18,32],[17,29]] : [[17,29],[18,32],[20,32]])[e.phase];
-    d.enemy = { name: t('battlesim437.ui.next_pair', { pair: e.phase + 1, section: e.section }), skill: pair[0], endurance: pair[1], enduranceMax: pair[1] };
+    const pair = rules.sequence.profiles[e.phase];
+    d.enemy = { name: t(rules.sequence.nameKey, { pair: e.phase + 1, section: e.section }), skill: pair.skill, endurance: pair.endurance, enduranceMax: pair.endurance };
     _appendLog(d, t('battlesim437.log.next_pair'));
   } else if (d.enemy.endurance <= 0) {
     _appendLog(d, t('battlesim437.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
     if (e.captured) {
-      let route = { 10:350,32:139,36:170,46:241,82:247,85:176,86:170,97:338,98:174,
-        116:241,119:170,127:174,128:350,129:169,148:66,166:87,182:90,188:350,
-        191:87,214:93,217:155,220:30,238:177,249:303,254:147,260:170,277:93,
-        285:21,301:87,308:174,309:177,316:259,322:147,327:139,336:93 }[e.section];
-      if (e.section === 3) route = d.roundsThisBattle <= 3 ? 117 : 276;
-      if (e.section === 104) route = d.roundsThisBattle <= 3 ? 228 : 322;
-      if (e.section === 244) route = d.roundsThisBattle <= 3 ? 306 : 148;
+      const victory = rules.victory;
+      const route = victory?.rounds !== undefined ? (d.roundsThisBattle <= victory.rounds ? victory.early : victory.late) : victory?.route;
       if (route) _setRoute(d, route);
     }
   } else if (d.endurance <= 0) {
@@ -209,5 +201,5 @@ function _resetBattle() {
 }
 
 // END EXTRACTED RULES
-  return { _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _psychic, _effectiveSkill, _setRoute, _escapeRoute, _escape, _runRound, _checkBattleEnd, _resetBattle };
+  return { _rulesFor, _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _psychic, _effectiveSkill, _setRoute, _escapeRoute, _escape, _runRound, _checkBattleEnd, _resetBattle };
 }

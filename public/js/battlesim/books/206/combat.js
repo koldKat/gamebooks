@@ -16,13 +16,11 @@ function _enemyNameSafe(d) {
  return escapeHtml(_enemyName(d)); }
 
 function _krisBonus(d) {
-  const { _enemyName } = getContext();
+  const { _enemyName, KRIS_KNIFE_RULES } = getContext();
 
   if (!d.player.hasKrisKnife) return 0;
   const name = _enemyName(d).toLowerCase();
-  if (name.includes('hell demon')) return 6;
-  if (name.includes('earl of drumer') || name.includes('franklins')) return 3;
-  return 0;
+  return KRIS_KNIFE_RULES.find(rule => rule.nameIncludes.some(match => name.includes(match)))?.bonus ?? 0;
 }
 
 function _effectiveSkill(d) {
@@ -109,9 +107,9 @@ function _runRound() {
 }
 
 function _checkGhoulParalysis(d) {
-  const { SVG_SKULL, _appendLog, _recordOutcome, t } = getContext();
+  const { GHOUL_PARALYSIS_THRESHOLD, SVG_SKULL, _appendLog, _recordOutcome, t } = getContext();
 
-  if (d.player.ghoulWoundCounter && d.player.woundEventsThisFight >= 4 && d.player.stamina > 0) {
+  if (d.player.ghoulWoundCounter && d.player.woundEventsThisFight >= GHOUL_PARALYSIS_THRESHOLD && d.player.stamina > 0) {
     _appendLog(d, t('battlesim206.log.ghoul_paralysis', { skull: SVG_SKULL }));
     d.player.stamina = 0;
     _recordOutcome(d, 'loss');

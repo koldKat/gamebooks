@@ -3,8 +3,10 @@ export function createCombat(getContext) {
 // BEGIN EXTRACTED RULES
 function _captureStopRule(d) {
 
-  d.stopBelowEndurance = d.enemy.name === 'Неизвестен корпоративен служител' ? 10 : 0;
-  if (d.stopBelowEndurance) d.enemy.enduranceCritical = 0;
+  const { ENEMY_STOP_RULES } = getContext();
+  const rule = Object.hasOwn(ENEMY_STOP_RULES, d.enemy.name) ? ENEMY_STOP_RULES[d.enemy.name] : null;
+  d.stopBelowEndurance = rule?.belowEndurance ?? 0;
+  if (rule?.suppressCritical) d.enemy.enduranceCritical = 0;
 }
 
 function _applyEnemy(d, enemy) {

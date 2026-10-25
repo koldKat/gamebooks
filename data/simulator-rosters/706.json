@@ -24,6 +24,35 @@
             "enemies": 0,
             "ratio": 1,
             "penalty": 0
+          },
+          "support": {
+            "rules": {
+              "force": 31,
+              "pots": 8,
+              "bows": 3,
+              "defaultPosition": "А",
+              "broadside": {
+                "position": "Ж",
+                "whip": 6,
+                "chestnuts": 8,
+                "bow": 4
+              },
+              "armoury": {
+                "position": "В",
+                "fallbackPenalty": 2
+              },
+              "lookoutBonus": 3,
+              "death": 58,
+              "retake": {
+                "whipKills": 3
+              },
+              "attack": {
+                "pirates": 5,
+                "forceRatio": 3,
+                "win": 68,
+                "retreat": 78
+              }
+            }
           }
         },
         "part": {

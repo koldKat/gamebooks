@@ -1,4 +1,4 @@
-import { SAMURAI_FIGHTS } from './roster.js';
+import { SAMURAI_FIGHTS, SAMURAI_RULES, samuraiContinuationLimit } from './roster.js';
 import { customFightingEncounter } from '../fighting-fantasy/opponents.js';
 import { validateSamuraiCharacter, testSamuraiLuck, fireSamuraiArrow } from './character.js';
 
@@ -101,10 +101,10 @@ export function startSamuraiFight(section, input, options = {}, roll) {
       if (carryFrom.rulesRevision !== 1 || carryFrom.status !== 'story' || carryFrom.pending || carryFrom.queue?.length
         || carryFrom.config?.section !== spec.continuation || carryFrom.destination !== section
         || JSON.stringify(input) !== JSON.stringify(carryFrom.character)) throw new RangeError('Invalid continued fight');
-      fight.enemies[0].stamina = integer(carryFrom.enemies[0].stamina, 1, 5);
+      fight.enemies[0].stamina = integer(carryFrom.enemies[0].stamina, 1, samuraiContinuationLimit(spec, carryFrom));
       fight.wounded = carryFrom.wounded;
     } else {
-      fight.enemies[0].stamina = integer(continuationStamina, 1, 5);
+      fight.enemies[0].stamina = integer(continuationStamina, 1, samuraiContinuationLimit(spec));
     }
     fight.events.push({ kind: 'carriedWounds', stamina: fight.enemies[0].stamina });
   } else if (carryFrom || continuationStamina !== null) throw new RangeError('Unexpected fight continuation');
@@ -128,7 +128,7 @@ export function startSamuraiFight(section, input, options = {}, roll) {
   }
   if (applyEntry && spec.entryDefence) {
     const total = dice(roll), defended = total <= fight.character.skill;
-    if (!defended) fight.character.stamina = Math.max(0, fight.character.stamina - 3);
+    if (!defended) fight.character.stamina = Math.max(0, fight.character.stamina - SAMURAI_RULES.spearDamage);
     fight.events.push({ kind: 'spearDefence', total, defended });
   }
   if (!death(fight) && !storyCheck(fight)) {
@@ -140,21 +140,21 @@ export function startSamuraiFight(section, input, options = {}, roll) {
 
 function skill(fight) { return fight.character.skill + (fight.config.skillModifier || 0) + fight.playerModifier; }
 function outgoingDamage(fight, hit, roll) {
-  if (fight.config.outgoing === 'armour') return 1;
+  if (fight.config.outgoing === 'armour') return SAMURAI_RULES.armour.normal;
   if (fight.config.outgoing === 'phantom') {
-    const total = die(roll); fight.events.push({ kind: 'phantom', total }); return total % 2 ? 1 : 2;
+    const total = die(roll); fight.events.push({ kind: 'phantom', total }); return total % 2 ? SAMURAI_RULES.phantom.odd : SAMURAI_RULES.phantom.even;
   }
   return hit.iaijutsu ? 3 : 2;
 }
 function incomingDamage(fight, roll) {
   if (fight.config.incoming !== 'phoenix') return fight.incomingDamage;
-  const total = die(roll); fight.events.push({ kind: 'flame', total }); return total - 1;
+  const total = die(roll); fight.events.push({ kind: 'flame', total }); return total + SAMURAI_RULES.phoenixOffset;
 }
 function applyHit(fight, hit, lucky = null) {
   let amount = hit.damage;
   if (lucky !== null) {
     if (hit.direction === 'outgoing') amount = fight.config.outgoing === 'armour'
-      ? lucky ? 2 : 0 : Math.max(0, amount + (lucky ? 2 : -1));
+      ? lucky ? SAMURAI_RULES.armour.lucky : SAMURAI_RULES.armour.unlucky : Math.max(0, amount + (lucky ? 2 : -1));
     else amount = Math.max(0, amount + (lucky ? -1 : 1));
   }
   const foe = fight.enemies[hit.enemy];
@@ -175,9 +175,11 @@ function applyHit(fight, hit, lucky = null) {
   storyCheck(fight);
 }
 function runeLoss(fight) {
-  fight.character.skill = Math.max(0, fight.character.skill - 1);
-  fight.character.luck = Math.max(0, fight.character.luck - 1);
-  fight.events.push({ kind: 'runeLoss', section: 47 });
+  fight.character.skill = Math.max(0, fight.character.skill - SAMURAI_RULES.runeLoss);
+  fight.character.luck = Math.max(0, fight.character.luck - SAMURAI_RULES.runeLoss);
+  const section = typeof fight.config.swordRunes === 'number' ? fight.config.swordRunes
+    : SAMURAI_FIGHTS.find(spec => spec.swordRunes)?.swordRunes;
+  fight.events.push({ kind: 'runeLoss', section });
 }
 function pump(fight, roll) {
   while (fight.status === 'fighting' && !fight.pending && fight.queue.length) {
@@ -198,12 +200,11 @@ function pump(fight, roll) {
       if (total > stamina) runeLoss(fight);
       else if (total === stamina) fight.pending = { kind: 'runeEquality', total };
     } else if (action.kind === 'spell') {
-      const total = die(roll), stat = total <= 2 ? 'stamina' : total <= 4 ? 'luck' : 'skill';
-      const amount = stat === 'stamina' ? 2 : 1, section = stat === 'stamina' ? 90 : stat === 'luck' ? 102 : 118;
+      const total = die(roll), { stat, amount, section } = SAMURAI_RULES.spells.find(rule => total <= rule.maxRoll);
       fight.character[stat] = Math.max(0, fight.character[stat] - amount);
       fight.events.push({ kind: 'spell', total, stat, amount, section }); death(fight);
     } else if (action.kind === 'beam') {
-      const total = die(roll), amount = total % 2 ? 4 : 0;
+      const total = die(roll), amount = total % 2 ? SAMURAI_RULES.beam.odd : SAMURAI_RULES.beam.even;
       fight.character.stamina = Math.max(0, fight.character.stamina - amount);
       fight.events.push({ kind: 'beam', total, amount }); death(fight);
     } else throw new RangeError('Unknown Samurai action');
@@ -250,7 +251,7 @@ export function samuraiRound(input, roll) {
     fight.queue.push({ kind: 'nito', enemy: fight.target });
   }
   fight.queue.push(...incoming);
-  if (spec.periodicBeam && fight.rounds % 3 === 0) fight.queue.push({ kind: 'beam' });
+  if (spec.periodicBeam && fight.rounds % SAMURAI_RULES.beam.period === 0) fight.queue.push({ kind: 'beam' });
   return pump(fight, roll);
 }
 

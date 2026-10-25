@@ -19,7 +19,7 @@ function _runRound() {
   const { SVG_SKULL, SVG_TROPHY, _appendLog, _data, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll2d6, saveState, t } = getContext();
 
   const d = _data();
-  if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0) return;
+  if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuck) return;
   d.roundsThisBattle++;
   d.pendingLuck = null;
 
@@ -54,7 +54,14 @@ function _testLuck() {
   const { SVG_SKULL, SVG_TROPHY, _appendLog, _data, _enemyNameSafe, _recordOutcome, _renderAll, _roll2d6, saveState, t } = getContext();
 
   const d = _data();
-  if (!d || !d.pendingLuck || d.player.luck <= 0) return;
+  if (!d || !d.pendingLuck) return;
+  if (d.player.stamina <= 0 || d.enemy.stamina <= 0) {
+    d.pendingLuck = null;
+    saveState();
+    _renderAll();
+    return;
+  }
+  if (d.player.luck <= 0) return;
   const roll  = _roll2d6();
   const lucky = roll <= d.player.luck;
   d.player.luck = Math.max(0, d.player.luck - 1);
@@ -83,11 +90,12 @@ function _testLuck() {
 }
 
 function _skipLuck() {
-  const { _data, _renderAll } = getContext();
+  const { _data, _renderAll, saveState } = getContext();
 
   const d = _data();
-  if (!d) return;
+  if (!d || !d.pendingLuck) return;
   d.pendingLuck = null;
+  saveState();
   _renderAll();
 }
 

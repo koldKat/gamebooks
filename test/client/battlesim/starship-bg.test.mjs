@@ -1,6 +1,7 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ENCOUNTERS} from '../../../public/js/battlesim/books/906/definition.js';
+import {ENCOUNTERS, COMPANION_PRESETS, STARSHIP_RULES} from '../../../public/js/battlesim/books/906/definition.js';
 import * as combat from '../../../public/js/battlesim/books/906/combat.js';
 import {createState} from '../../../public/js/battlesim/books/906/state.js';
 
@@ -8,6 +9,8 @@ const character = () => combat.newCharacter(() => 0.99);
 const sequence = (...values) => () => { assert(values.length, 'Unexpected random roll'); return values.shift(); };
 const custom = (c = character(), extra = {}) => combat.startFight(0, c,
   {party: ['captain'], opponents: [{displayName: 'Враг', skill: 7, stamina: 8}], ...extra});
+
+await loadFixtureRoster(906);
 
 test('source initial values and all declared encounters start without touching original values', () => {
   const c = character(), before = structuredClone(c);
@@ -114,4 +117,67 @@ test('run isolation and history recording do not touch the English simulator', (
   const other = {}; current = other; assert.equal(store.read(), null);
   store.change(data => { data.character = character(); current = run; });
   assert.equal(other.sim906, undefined); assert.equal(saves, 3);
+});
+
+test('companion defaults read database profiles without sharing character state', () => {
+  const profile = COMPANION_PRESETS.macom, original = structuredClone(profile);
+  try {
+    profile.skill = 8; profile.stamina = 11;
+    const one = character(), two = character();
+    assert.equal(one.crew.macom.skill, 8); assert.equal(one.crew.macom.stamina, 11);
+    one.crew.macom.stamina = 0;
+    assert.equal(two.crew.macom.stamina, 11); assert.equal(profile.stamina, 11);
+  } finally { Object.assign(profile, original); }
+});
+
+test('saved armour encounters lacking new metadata retain the original reveal route', () => {
+  const fight = combat.startFight(239, character());
+  delete fight.config.armourDestination;
+  const before = structuredClone(fight);
+  const reveal = combat.round(fight, {}, sequence(0.99, 0.99, 0, 0));
+  assert.equal(reveal.events.find(event => event.kind === 'armourRevealed').destination, 183);
+  assert.deepEqual(fight, before);
+});
+
+test('catalog armour and nerve settings govern captured encounter wounds', () => {
+  const rules = structuredClone(STARSHIP_RULES);
+  try {
+    STARSHIP_RULES.armour = {threshold: 6, damage: 3, blockedDamage: 0};
+    const robot = combat.startFight(183, character());
+    assert.equal(combat.round(robot, {}, sequence(0.99, 0.99, 0, 0, 0.7)).enemies[0].stamina, 4);
+    assert.equal(combat.round(robot, {}, sequence(0.99, 0.99, 0, 0, 0.99)).enemies[0].stamina, 1);
+    STARSHIP_RULES.nerve = {threshold: 6, damage: 5, ordinaryDamage: 1};
+    const c = character(); c.crew.captain.skill = 1;
+    const guards = combat.startFight(43, c);
+    assert.equal(combat.round(guards, {}, () => 0.99).character.crew.captain.stamina, 9);
+    assert.equal(guards.character.crew.captain.stamina, 24);
+  } finally { Object.assign(STARSHIP_RULES, rules); }
+});
+
+test('saved conflict choices use catalog damage without changing the pending input', () => {
+  const rules = structuredClone(STARSHIP_RULES);
+  try {
+    STARSHIP_RULES.conflict = {incomingFace: 2, outgoingFace: 5, damage: 3};
+    const fight = combat.round(combat.startFight(208, character()), {}, () => 1 / 6);
+    assert.equal(fight.pendingConflict.outgoing, false);
+    fight.extension = {kept: true};
+    const saved = JSON.parse(JSON.stringify(fight)), before = structuredClone(saved);
+    const resolved = combat.resolveConflict(saved, 'captain');
+    assert.equal(resolved.character.crew.captain.stamina, 21);
+    assert.equal(resolved.events[0].amount, 3);
+    assert.deepEqual(resolved.extension, {kept: true});
+    assert.deepEqual(saved, before);
+  } finally { Object.assign(STARSHIP_RULES, rules); }
+});
+
+test('catalog restraint timing and closing range preserve encounter-specific procedures', () => {
+  const rules = structuredClone(STARSHIP_RULES);
+  try {
+    STARSHIP_RULES.restraint = {firstRound: 1, threshold: 1};
+    assert.equal(combat.round(combat.startFight(102, character()), {}, () => 0).outcome, 'restrained');
+    const fight = combat.startFight(122, character());
+    assert.equal(combat.round(fight, {captain: 0}, () => 4 / 6).enemies[0].stamina, 1);
+    STARSHIP_RULES.closingRange = {initial: 1};
+    assert.equal(combat.round(fight, {captain: 0}, () => 4 / 6).enemies[0].stamina, 0);
+  } finally { Object.assign(STARSHIP_RULES, rules); }
 });

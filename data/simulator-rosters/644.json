@@ -27,6 +27,12 @@
         "partCount": 1,
         "entry": {
           "context": "yard",
+          "support": {
+            "rules": {
+              "scimitar": { "wingrugur": 20, "butchersword": 20, "other": 5 },
+              "stone": { "market": 20, "guard": 10 }
+            }
+          },
           "opponent": "wingrugur",
           "enemy": {
             "points": {

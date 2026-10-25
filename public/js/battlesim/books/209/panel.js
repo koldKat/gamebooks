@@ -4,9 +4,9 @@ import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, HAND_KO_THRESHOLD, MAX_MEDKIT, MAX_OIL, MAX_ROCKETS, MAX_SPIKES, MEDKIT_HEAL, MODES, SVG_SKULL, SVG_TROPHY, _activeSide, _appendLog, _checkOutcome, _data, _enemyList, _fireRocket, _foeName, _foeNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderConsumablesHtml, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _useMedKit, apiFetch, closeSim209, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim209, openSim209, registerPanelShortcut, renderSim209, saveState, setSim209Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, HAND_KO_THRESHOLD, MAX_MEDKIT, MAX_OIL, MAX_ROCKETS, MAX_SPIKES, MEDKIT_HEAL, MODES, SVG_SKULL, SVG_TROPHY, _activeSide, _appendLog, _checkOutcome, _data, _enemyList, _fireRocket, _foeName, _foeNameSafe, _handOver, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderConsumablesHtml, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _useMedKit, apiFetch, closeSim209, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim209, openSim209, registerPanelShortcut, renderSim209, saveState, setSim209Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
-const { _roll2d6, _roll1d6, _activeSide, _foeName, _foeNameSafe, _runRound, _checkOutcome, _fireRocket, _resetBattle } = createCombat(simulatorContext);
+const { _roll2d6, _roll1d6, _activeSide, _foeName, _foeNameSafe, _handOver, _runRound, _checkOutcome, _fireRocket, _resetBattle } = createCombat(simulatorContext);
 const { _useMedKit } = createEffects(simulatorContext);
 // END SIMULATOR WIRING
 // Battle Simulator (Freeway Fighter, book 209)
@@ -47,15 +47,17 @@ function _renderStatus() {
   if (notReady)                                el.innerHTML = t('battlesim209.status.not_ready');
   else if (side.self[side.selfHp] <= 0)         el.innerHTML = t('battlesim209.status.fallen', { skull: SVG_SKULL });
   else if (hasFoe && side.foe[side.foeHp] <= 0) el.innerHTML = t('battlesim209.status.victory', { trophy: SVG_TROPHY });
+  else if (d.mode === 'hand' && d.enemyHandLoss >= HAND_KO_THRESHOLD) el.innerHTML = t('battlesim209.log.ko_enemy', { trophy: SVG_TROPHY, enemy: _foeNameSafe(d) });
+  else if (d.mode === 'hand' && d.playerHandLoss >= HAND_KO_THRESHOLD) el.innerHTML = t('battlesim209.log.ko_player', { skull: SVG_SKULL });
   else                                          el.innerHTML = '';
-  const over = notReady || side.self[side.selfHp] <= 0 || (hasFoe && side.foe[side.foeHp] <= 0);
+  const over = notReady || side.self[side.selfHp] <= 0 || (hasFoe && side.foe[side.foeHp] <= 0) || _handOver(d);
   document.getElementById('sim209-round').disabled = over;
   document.getElementById('sim209-rocket').disabled = notReady || d.mode !== 'vehicle' || d.car.rockets <= 0 || over;
   document.getElementById('sim209-rocket').style.display = d.mode === 'vehicle' ? '' : 'none';
   document.getElementById('sim209-handdmg-row').style.display = d.mode === 'hand' ? '' : 'none';
   document.getElementById('sim209-medkit').disabled =
     notReady || d.player.medKitLeft <= 0 || d.player.stamina >= d.player.staminaInitial ||
-    (d[side.roundsKey] > 0 && side.self[side.selfHp] > 0 && side.foe[side.foeHp] > 0);
+    (!_handOver(d) && d[side.roundsKey] > 0 && side.self[side.selfHp] > 0 && side.foe[side.foeHp] > 0);
 }
 
 function _renderConsumablesHtml(d) {

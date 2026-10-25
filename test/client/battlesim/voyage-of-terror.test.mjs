@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from './simulator-source.mjs';
 import { runInNewContext } from 'node:vm';
-import { VOYAGE_ENCOUNTERS, VOYAGE_DREAMS, VOYAGE_NAVIGATION, VOYAGE_ARGONAUTS,
+import { VOYAGE_ENCOUNTERS, VOYAGE_DREAMS, VOYAGE_NAVIGATION, VOYAGE_ARGONAUTS, VOYAGE_RULES,
 } from '../../../public/js/battlesim/engines/grailquest/voyage-of-terror-roster.js';
 import { createVoyageCharacter, initialVoyageLife, VOYAGE_WEAPONS,
   voyageStrike, voyageFriendlyReaction, voyageArmourShatter, voyageNavigation,
@@ -16,7 +16,7 @@ import { createVoyageCharacter, initialVoyageLife, VOYAGE_WEAPONS,
   useVoyageHealing, cureVoyageAilment, exchangeVoyageExperience, voyageDream,
   voyageSleep, resolveVoyageLimerick, voyageNavigationMishap, navigateVoyage,
   escapeVoyageCannibals,
-  voyageCombatStats, callVoyageGnurlbash,
+  voyageCombatStats, callVoyageGnurlbash, voyageCanLeave, voyageRetainsKeysOnLoss,
 } from '../../../public/js/battlesim/engines/grailquest/voyage-of-terror.js';
 
 const rolls = (...values) => {
@@ -836,4 +836,67 @@ test('legacy saved Shadow fights continue without resetting wounds or adding new
   assert.equal(f.status,'fighting');
   assert.equal('shadowRules' in f.spec,false);
   assert.deepEqual(f.legacyExtension,{retained:true});
+});
+
+test('metadata controls combat tuning without resetting saved counters or unknown fields', () => {
+  const original = structuredClone(VOYAGE_RULES);
+  try {
+    VOYAGE_RULES.roofFatalMax = 0;
+    const roof = fight(169); rollVoyageRound(roof, 0, () => 0);
+    assert.equal(roof.status, 'fighting');
+    VOYAGE_RULES.pistol = {hit:2,damage:9};
+    const pistol = fight(133); pistol.first = 'enemy';
+    rollVoyageRound(pistol, 0, rolls(1,1,1,1));
+    assert.equal(pistol.player.life, 39);
+    VOYAGE_RULES.mummyPoisonDamage = 2;
+    const mummy = JSON.parse(JSON.stringify(fight(203)));
+    mummy.mummyPoisonRound = 0; mummy.extension = {keep:true};
+    rollVoyageRound(mummy, 0, rolls(1,1,1,1));
+    assert.equal(mummy.player.life, 46); assert.equal(mummy.mummyPoisonRound, 0);
+    assert.deepEqual(mummy.extension, {keep:true});
+    VOYAGE_RULES.evilEyeRoll = 8;
+    const p = character({enemyHalfNext:true}); recruitVoyageArgonauts(p);
+    const witch = createVoyageFight(140,p,{},rolls(1,1,6,6));
+    witch.foes.slice(0,12).forEach(foe => { foe.life=0; }); witch.first='enemy';
+    rollVoyageRound(witch,12,rolls(4,4));
+    assert.equal(witch.player.life,0); assert.equal(witch.status,'loss');
+  } finally { Object.assign(VOYAGE_RULES, original); }
+});
+
+test('metadata controls ferret assignments and resolves Jason from the existing support profile', () => {
+  const original = structuredClone(VOYAGE_RULES), name = VOYAGE_ARGONAUTS[0].name;
+  try {
+    VOYAGE_RULES.ferretSplit = 2; VOYAGE_ARGONAUTS[0].name = 'Captain Jason';
+    const p = character(); recruitVoyageArgonauts(p);
+    const f = createVoyageFight(140,p,{},rolls(1,1,6,6));
+    rollVoyageRound(f,2,rolls(6,6,1,1));
+    assert.equal(f.playerStrikes,0); assert.equal(f.foes[2].life,0);
+    assert.equal(f.allies[0].name,'Captain Jason');
+    const party = createVoyageFight(113,p,{},rolls(1,1,6,6));
+    party.player.life=0; party.allies[0].bonus=30;
+    party.foes.slice(1).forEach(foe => { foe.life=0; });
+    rollVoyageRound(party,0,rolls(6,6));
+    assert.equal(party.status,'win'); assert.equal(party.player.life,p.maxLife);
+  } finally { Object.assign(VOYAGE_RULES,original); VOYAGE_ARGONAUTS[0].name=name; }
+});
+
+test('metadata controls strict eligibility, guard challenge outcomes and mongoose upkeep', () => {
+  const original = structuredClone(VOYAGE_RULES);
+  try {
+    assert.equal(voyageCanLeave({section:57}),true);
+    assert.equal(voyageCanLeave({section:'57'}),false);
+    assert.equal(voyageRetainsKeysOnLoss({spec:{section:203},status:'loss'}),true);
+    assert.equal(voyageRetainsKeysOnLoss({spec:{section:'203'},status:'loss'}),false);
+    VOYAGE_RULES.leaveSections=[900]; VOYAGE_RULES.retainKeysOnLossSections=[901];
+    const f=fight(57);f.spec.section=900;assert.equal(voyageLeaveFight(f),true);
+    assert.equal(voyageRetainsKeysOnLoss({spec:{section:901},status:'loss'}),true);
+    VOYAGE_RULES.guardChallenge={dice:2,winEach:1,fatalMax:3,deathDestination:900,capturedDestination:901};
+    assert.deepEqual(voyageGuardChallenge(rolls(1,1)),{rolls:[1,1],status:'win'});
+    assert.equal(voyageGuardChallenge(rolls(2,2,1,1)).section,900);
+    assert.equal(voyageGuardChallenge(rolls(2,2,2,2)).section,901);
+    VOYAGE_RULES.mongooseUpkeep=3;
+    const p=character({mongoose:true,gold:5});visitVoyageSection(p,1);
+    assert.equal(p.gold,2);assert.equal(p.mongoose,true);
+    visitVoyageSection(p,2);assert.equal(p.gold,2);assert.equal(p.mongoose,false);
+  } finally { Object.assign(VOYAGE_RULES,original); }
 });

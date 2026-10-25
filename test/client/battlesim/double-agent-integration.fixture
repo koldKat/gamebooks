@@ -1,7 +1,10 @@
+localStorage.setItem('gamebook_lang','LANGUAGE');
+const rosterSeeds = ROSTER_SEEDS;
 const bookId = BOOK_IDS[0], stateKey = `sim${bookId}`;
 const checks = [], saves = [];
 const assert = (value, label) => {if (!value) throw Error(label); checks.push(label);};
 window.fetch = async (url, options = {}) => {
+  if (url === `/api/books/${bookId}/enemies` && !options.method) return new Response(JSON.stringify(rosterSeeds[bookId]));
   assert(url === `/api/books/${bookId}/state` && options.method === 'PUT', 'only intercepted simulator saves');
   saves.push(JSON.parse(options.body)); return new Response('{}', {headers: {'Content-Type': 'application/json'}});
 };
@@ -13,9 +16,9 @@ const el = key => document.getElementById(stateKey + '-' + key);
 const run = {startedAt: 123, path: [1], sim860: {preserved: true}};
 app.setCurrentBookId(bookId); app.state.playthroughs = [run]; app.state.activePtIndex = 0;
 assert(!el('overlay') && mobile.hasSim(bookId), 'registered and lazy');
-const sim = await import(`REPO/public/js/battlesim/battlesim${bookId}.js`);
 if ('MODE' === 'mobile') await mobile.openSimForBook(bookId);
 else {await desktop.showBattleSimForBook(bookId); el('btn').click();}
+const sim = await import(`REPO/public/js/battlesim/battlesim${bookId}.js`);
 assert(el('title').textContent === (bookId === 896 ? 'Опасна мисия' : 'Двоен агент'), 'Bulgarian book title');
 assert(!el('overlay').textContent.includes(`battlesim${bookId}.`), 'all labels translated');
 const choose = query => {
@@ -27,7 +30,9 @@ const choose = query => {
 };
 Math.random = () => 0.99;
 let name = choose('Младият войник');
-name.focus(); name.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true}));
+name.dispatchEvent(new FocusEvent('focus'));
+assert(name.getAttribute('aria-expanded') === 'true', 'suggestions open before Escape');
+name.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', bubbles: true, cancelable: true}));
 assert(el('overlay').classList.contains('active') && name.getAttribute('aria-expanded') === 'false', 'Escape closes autocomplete first');
 el('start').click();
 assert(run[stateKey].fight.encounter.id === '63' && name.disabled, 'selected encounter starts and locks setup');
@@ -52,6 +57,16 @@ assert(document.documentElement.scrollWidth <= innerWidth, 'no horizontal overfl
 assert(el('overlay').querySelector('.bsim-modal').getBoundingClientRect().width <= innerWidth, 'dialog fits viewport');
 assert(getComputedStyle(el('start')).backgroundColor !== 'rgb(239, 239, 239)', 'themed buttons');
 assert(getComputedStyle(el('tracer')).appearance === 'none', 'themed checkbox');
+const core=await import(`REPO/public/js/battlesim/books/${bookId}/combat.js`),{encounterPreset}=await import(`REPO/public/js/battlesim/books/${bookId}/definition.js`);
+const fight=core.startFight({...core.newCharacter(),health:1,tracers:2,aircraftHits:1},encounterPreset('88'));
+Object.assign(fight,{round:2,remaining:2,playerShots:4,enemyShots:3,extension:{preserved:true}});
+run[stateKey]={...structuredClone(run[stateKey]),fight:JSON.parse(JSON.stringify(fight)),character:structuredClone(fight.character),result:null};
+const savedExposure=JSON.stringify(run),historyCount=run[stateKey].history.length;
+sim.render();sim.render();assert(JSON.stringify(run)===savedExposure,'saved exposure fight renders without changing health or ammunition');
+el('weapon').value=0;el('tracer').checked=true;Math.random=()=>0.01;el('attack').click();
+assert(run[stateKey].fight.round===3&&run[stateKey].fight.remaining===1&&run[stateKey].fight.playerShots===5&&run[stateKey].fight.enemyShots===4&&run[stateKey].character.health===1&&run[stateKey].character.tracers===1&&run[stateKey].character.aircraftHits===1&&run[stateKey].fight.extension.preserved,'saved exposure round retains counters, health, ammunition, aircraft damage and extension');
+Math.random=()=>0.99;el('attack').click();
+assert(run[stateKey].fight.outcome==='win'&&run[stateKey].character.tracers===0&&run[stateKey].history.length===historyCount+1,'saved fight spends remaining ammunition and records one outcome');
 const beforeRender = JSON.stringify(run); sim.render(); sim.render();
 assert(JSON.stringify(run) === beforeRender, 'render is read-only');
 el('newCharacter').click();

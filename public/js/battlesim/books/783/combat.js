@@ -1,5 +1,5 @@
 import { integer, rollDice } from '../../engines/sorcery/core.js';
-import { CHARACTER_FIELDS, encounterFor, RULES_REVISION } from './definition.js';
+import { CHARACTER_FIELDS, encounterFor, RULES_REVISION, DEATH_DESTINATION } from './definition.js';
 
 export function validateCharacter(character, alive = false) {
   if (!character || typeof character.dead !== 'boolean') throw new RangeError('Invalid character');
@@ -56,7 +56,7 @@ export function targets(fight) {
 function finish(fight) {
   if (fight.character.life <= 0 || fight.character.faith <= 0) {
     fight.character.dead = true;
-    fight.outcome = 'loss'; fight.destination = 200;
+    fight.outcome = 'loss'; fight.destination = DEATH_DESTINATION;
   } else if (fight.config.lossLimit && fight.playerLost >= fight.config.lossLimit) {
     fight.outcome = 'loss'; fight.destination = fight.config.lose;
   } else if (!targets(fight).length) {

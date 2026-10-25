@@ -5,20 +5,23 @@ import { registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../
 import { t } from "../../../i18n.js";
 import { createFabledPanel } from "../.././engines/fabled-lands/panel.js";
 import { FABLED_ABILITIES } from "../.././engines/fabled-lands/character.js";
-import { SERPENT_FIGHTS, SERPENT_SEA_CHECKS, newSerpentCharacter, validateSerpentCharacter,
+import { SERPENT_FIGHTS, SERPENT_SEA_CHECKS, SERPENT_RULES, newSerpentCharacter, validateSerpentCharacter,
   serpentDefence, serpentAbilityCheck, startSerpentFight, serpentRound, resolveSerpentAction,
   fleeSerpentFight, cancelSerpentFight, serpentSeaCheck, burnedHordeCheck, javelinSnakesCheck }
   from "../.././engines/fabled-lands/serpent-domain.js";
+
+const sectionsFor = special => SERPENT_FIGHTS.filter(f=>f.special===special).map(f=>f.section);
+const hazardRules = SERPENT_RULES.hazards;
 
 function extendPanel({el,tk,button,checkbox,select,action,report,overlay,render:refresh}) {
   el('luckReroll').closest('label').insertAdjacentHTML('afterend', select('clarityUse',['','player','enemy']));
   el('abilityRoll').insertAdjacentHTML('beforebegin', checkbox('spiritualCheck')+checkbox('spiritWeaponCheck'));
   el('step').parentElement.insertAdjacentHTML('afterend',
     `<div id="sim680-pending" class="bsim-status"><p id="sim680-pendingNote"></p>`
-    +select('escapeAbility',['magic','sanctity'])+checkbox('escapeLuck')
+    +select('escapeAbility',SERPENT_RULES.grimEscape.abilities)+checkbox('escapeLuck')
     +`<div class="bsim-btn-row">${button('resolveAction')}${button('escapeAction')}</div></div>`);
   const hazards=document.createElement('details');
-  hazards.innerHTML=`<summary>${tk('hazards')}</summary>${select('hazard',['6','967'])}`
+  hazards.innerHTML=`<summary>${tk('hazards')}</summary>${select('hazard',[String(hazardRules.snakes.section),String(hazardRules.horde.section)])}`
     +checkbox('hazardEntry')+checkbox('hazardObfuscation')+checkbox('hazardLuck')+button('hazardRoll');
   overlay.querySelector('.bsim-col-left').appendChild(hazards);
   el('seaRoll').insertAdjacentHTML('beforebegin',checkbox('emptyCargo'));
@@ -30,7 +33,7 @@ function extendPanel({el,tk,button,checkbox,select,action,report,overlay,render:
   el('escapeAction').addEventListener('click',()=>resolve(true));
   el('hazardRoll').addEventListener('click',()=>action(game=>{
     if (game.fight?.status==='fighting'||!game.character?.stamina) return;
-    const result=el('hazard').value==='6'
+    const result=el('hazard').value===String(hazardRules.snakes.section)
       ?javelinSnakesCheck(game.character,{obfuscationUse:el('hazardObfuscation').checked,luckReroll:el('hazardLuck').checked})
       :burnedHordeCheck(game.character,{applyEntry:el('hazardEntry').checked});
     game.fight=null;game.character=result.character;
@@ -72,9 +75,9 @@ function extendPanel({el,tk,button,checkbox,select,action,report,overlay,render:
       el('hazardLuck').disabled ||= !c?.luckBlessing;
       if (el('hazardObfuscation').disabled) el('hazardObfuscation').checked=false;
       if (el('hazardLuck').disabled) el('hazardLuck').checked=false;
-      el('hazardEntry-row').hidden=el('hazard').value!=='967';
-      el('hazardObfuscation-row').hidden=el('hazard').value!=='6';
-      el('hazardLuck-row').hidden=el('hazard').value!=='6';
+      el('hazardEntry-row').hidden=el('hazard').value!==String(hazardRules.horde.section);
+      el('hazardObfuscation-row').hidden=el('hazard').value!==String(hazardRules.snakes.section);
+      el('hazardLuck-row').hidden=el('hazard').value!==String(hazardRules.snakes.section);
       for (const key of ['spiritualCheck','spiritWeaponCheck']) el(key).disabled=blocked||!c?.stamina;
       el('safetyFromStorms').disabled ||= SERPENT_SEA_CHECKS[el('seaContext').value]?.kind!=='storm';
       if (el('safetyFromStorms').disabled) el('safetyFromStorms').checked=false;
@@ -93,14 +96,14 @@ const panel=createFabledPanel({document,t,getRun:currentPlaythrough,
     ...['nahual','spiritualWeapon','spiritualCombatBonus','spiritualArmour','heatArmour','metalArmour'].map(key=>({key,min:0,max:1000}))],
   extraFlags:['obfuscation','clarity','diseaseBlessing','periapt','guise','frenziedMight','crazedVim','shimasCurse','pacharaCirclet'],
   encounterOptions:[
-    {key:'mentalPenalty',type:'checkbox',sections:[779]},
-    {key:'soldierAmbush',type:'checkbox',sections:[3]},
+    {key:'mentalPenalty',type:'checkbox',sections:sectionsFor('grimEscape')},
+    {key:'soldierAmbush',type:'checkbox',sections:sectionsFor('soldiers')},
     {key:'obfuscationUse',type:'checkbox',sections:SERPENT_FIGHTS.map(f=>f.section)},
-    {key:'flintKnife',type:'checkbox',sections:[802]},
-    {key:'goldenWeapon',type:'checkbox',sections:[612]},
-    {key:'nyarDisarmed',type:'checkbox',sections:[988]},
-    {key:'nyarNut',type:'checkbox',sections:[988]},
-    {key:'enemyDamage',min:0,max:19,sections:[988]},
+    {key:'flintKnife',type:'checkbox',sections:sectionsFor('lightning')},
+    {key:'goldenWeapon',type:'checkbox',sections:sectionsFor('goldenWeapon')},
+    {key:'nyarDisarmed',type:'checkbox',sections:sectionsFor('nyarContinuation')},
+    {key:'nyarNut',type:'checkbox',sections:sectionsFor('nyarContinuation')},
+    {key:'enemyDamage',min:0,max:SERPENT_FIGHTS.find(f=>f.special==='nyarContinuation').enemies[0].stamina-1,sections:sectionsFor('nyarContinuation')},
   ],extendPanel,
   registerShortcut({button,overlay,open,close}) {
     button.innerHTML=shortcutLabel(t('battlesim.title'));

@@ -2,7 +2,7 @@ import { loadFixtureRoster } from './roster-fixtures.mjs';
 await loadFixtureRoster(680);
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { newSerpentCharacter, SERPENT_FIGHTS, serpentDefence, startSerpentFight,
+import { newSerpentCharacter, SERPENT_FIGHTS, SERPENT_RULES, serpentDefence, startSerpentFight,
   serpentRound, resolveSerpentAction, fleeSerpentFight, cancelSerpentFight,
   serpentSeaCheck, javelinSnakesCheck, burnedHordeCheck }
   from '../../../public/js/battlesim/engines/fabled-lands/serpent-domain.js';
@@ -259,4 +259,82 @@ test('rat poison bonus does not consume a dose and Namagal takes the first physi
   assert.equal(f.character.ratPoison, 1);
   const namagal = serpentRound(start(966, {guise:true}), {}, rolls(1,1,1,1));
   assert.equal(attacks(namagal)[0].direction, 'enemy');
+});
+
+
+test('roster settings drive encounter entry penalties and option identities', () => {
+  const before=structuredClone(SERPENT_RULES);
+  try {
+    SERPENT_RULES.soldierAmbush={combat:2,stamina:7};
+    const soldier=start(3,{}, {soldierAmbush:true});
+    assert.deepEqual([soldier.enemies[0].combat,soldier.enemies[0].stamina],[5,15]);
+    SERPENT_RULES.brokenFingersLoss=2;
+    assert.equal(start(688).character.baseCombat,7);
+    SERPENT_RULES.ghouls.difficulty=99;
+    SERPENT_RULES.ghouls.combatPenalty=5;
+    assert.equal(start(29,{}, {},rolls(6,6)).combatPenalty,5);
+    assert.throws(()=>start(15,{}, {soldierAmbush:true}),/Setting does not apply/);
+    assert.throws(()=>start(15,{}, {mentalPenalty:true}),/Setting does not apply/);
+  } finally {Object.assign(SERPENT_RULES,before);}
+});
+
+test('Baron spell outcomes and healing dice come from the roster', () => {
+  const before=structuredClone(SERPENT_RULES.baron);
+  try {
+    SERPENT_RULES.baron.outcomes[0]='heal';
+    SERPENT_RULES.baron.healingDice=1;
+    const fight=start(1128,{combat:1},{defence:100});
+    fight.enemies[0].stamina=30;
+    const next=serpentRound(fight,{},rolls(1,1,1,1,1,4));
+    assert.equal(next.enemies[0].stamina,34);
+    assert.equal(next.events.at(-1).kind,'enemyHealing');
+    assert.equal(next.events.at(-1).amount,4);
+    assert.equal(fight.enemies[0].stamina,30);
+  } finally {SERPENT_RULES.baron=before;}
+});
+
+test('saved Nyar pending actions retain wounds, extensions and configured effects', () => {
+  const before=structuredClone(SERPENT_RULES.nyarWarrior);
+  try {
+    SERPENT_RULES.nyarWarrior.healing=3;SERPENT_RULES.nyarWarrior.combatBonus=4;
+    const fight=start(642,{stamina:17});
+    fight.rounds=2;fight.pendingAction='nyarWarrior';fight.enemies[0].stamina=10;
+    fight.extension={keep:true};
+    const next=resolveSerpentAction(JSON.parse(JSON.stringify(fight)),{},rolls(3));
+    assert.equal(next.enemies[0].stamina,13);
+    assert.equal(next.enemies[0].combat,15);
+    assert.equal(next.character.stamina,17);
+    assert.equal(next.rounds,2);
+    assert.equal(next.pendingAction,null);
+    assert.deepEqual(next.extension,{keep:true});
+    assert.equal(fight.pendingAction,'nyarWarrior');
+  } finally {SERPENT_RULES.nyarWarrior=before;}
+});
+
+test('hazard attack scores, injuries and destinations come from metadata', () => {
+  const before=structuredClone(SERPENT_RULES.hazards);
+  try {
+    SERPENT_RULES.hazards.snakes.combat=1;
+    SERPENT_RULES.hazards.snakes.safe=777;
+    assert.equal(javelinSnakesCheck(character(),{},rolls(1,1)).destination,777);
+    SERPENT_RULES.hazards.horde.entryDamage=2;
+    SERPENT_RULES.hazards.horde.death=888;
+    const death=burnedHordeCheck(character({stamina:1}),{applyEntry:true});
+    assert.equal(death.destination,888);
+    assert.equal(death.damage,2);
+  } finally {SERPENT_RULES.hazards=before;}
+});
+
+test('sea routing and damage use independent book settings', () => {
+  const before=structuredClone(SERPENT_RULES.sea);
+  try {
+    SERPENT_RULES.sea.death=777;
+    assert.equal(serpentSeaCheck(303,character({rank:1}),{},rolls(6,6)).destination,777);
+    SERPENT_RULES.sea.wreckInjuryDice=1;
+    const wreck=serpentSeaCheck(364,character({rank:12}),{},rolls(1,1,3));
+    assert.equal(wreck.damage,3);
+    assert.equal(wreck.character.stamina,27);
+    SERPENT_RULES.sea.escapeMinimum=2;
+    assert.equal(serpentSeaCheck(409,character(),{},rolls(1,1)).destination,894);
+  } finally {SERPENT_RULES.sea=before;}
 });

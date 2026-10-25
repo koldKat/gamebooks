@@ -52,7 +52,58 @@
                 "win": 10
               }
             }
-          ]
+          ],
+          "support": {
+            "rules": {
+              "spawnMin": 2,
+              "spawnMax": 12,
+              "amoebixRounds": 15,
+              "regentSword": {
+                "cycle": [
+                  10,
+                  20
+                ],
+                "dieMultiplier": 20
+              },
+              "cupricWeapons": [
+                15,
+                10
+              ],
+              "regina": {
+                "weapon": 10,
+                "fatalEvery": 2,
+                "fatalRoll": 12
+              },
+              "bear": {
+                "halfRoll": 12,
+                "divisor": 2
+              },
+              "assassin": {
+                "halfRoll": 12,
+                "divisor": 2
+              },
+              "dragon": {
+                "every": 3,
+                "minRoll": 8,
+                "multiplier": 10
+              },
+              "sqquashStrengthLoss": 8,
+              "enemyMagic": {
+                "thresholds": {
+                  "leprosy": 8,
+                  "blight": 6,
+                  "crack-of-doom": 8,
+                  "firebolt": 9
+                },
+                "captainCost": 25,
+                "defaultThreshold": 6,
+                "paralysisRounds": 2,
+                "crackDamage": 50,
+                "fireboltDamage": 75,
+                "leprosyDivisor": 10
+              }
+            }
+          }
         },
         "part": {
           "name": "Assassin",

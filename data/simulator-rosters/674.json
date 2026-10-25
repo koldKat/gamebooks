@@ -38,7 +38,131 @@
           ],
           "win": 476,
           "loss": 680,
-          "entryDamage": 5
+          "entryDamage": 5,
+          "support": {
+            "seaChecks": {
+              "38": {
+                "kind": "storm",
+                "destinations": [
+                  325,
+                  397,
+                  209
+                ]
+              },
+              "124": {
+                "kind": "storm",
+                "destinations": [
+                  346,
+                  583,
+                  420
+                ]
+              },
+              "324": {
+                "kind": "storm",
+                "destinations": [
+                  607,
+                  83,
+                  559
+                ]
+              },
+              "586": {
+                "kind": "storm",
+                "destinations": [
+                  182,
+                  530,
+                  85
+                ]
+              },
+              "613": {
+                "kind": "storm",
+                "destinations": [
+                  485,
+                  70,
+                  439
+                ]
+              },
+              "639": {
+                "kind": "storm",
+                "destinations": [
+                  219,
+                  67,
+                  507
+                ]
+              },
+              "51": {
+                "kind": "naval",
+                "destinations": [
+                  680,
+                  153,
+                  242,
+                  62
+                ]
+              },
+              "311": {
+                "kind": "naval",
+                "destinations": [
+                  680,
+                  153,
+                  242,
+                  62
+                ]
+              },
+              "444": {
+                "kind": "escape",
+                "destinations": [
+                  51,
+                  402
+                ]
+              }
+            },
+            "rules": {
+              "shipDice": {
+                "barque": 1,
+                "brigantine": 2,
+                "galleon": 3
+              },
+              "warriorNavalDice": 3,
+              "otherDice": 2,
+              "crewModifiers": {
+                "storm": {
+                  "poor": 0,
+                  "average": 0,
+                  "good": 1,
+                  "excellent": 2
+                },
+                "naval": {
+                  "poor": -2,
+                  "average": 0,
+                  "good": 2,
+                  "excellent": 3
+                },
+                "escape": {
+                  "poor": -1,
+                  "average": 0,
+                  "good": 1,
+                  "excellent": 2
+                }
+              },
+              "thresholds": {
+                "storm": [
+                  3,
+                  5
+                ],
+                "naval": [
+                  4,
+                  9,
+                  13
+                ],
+                "escape": [
+                  7
+                ]
+              },
+              "stormBlessingOutcome": 2,
+              "deathDestination": 680,
+              "underwaterSection": 121,
+              "magicWeaponSection": 43
+            }
+          }
         },
         "part": {
           "name": "Thug",

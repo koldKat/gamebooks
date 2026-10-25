@@ -1656,7 +1656,8 @@
             }
           ],
           "mode": "all",
-          "weaponDamage": 3
+          "weaponDamage": 3,
+          "displayCount": 5
         },
         "part": {
           "name": "Lizardman",
@@ -2051,7 +2052,16 @@
             }
           ],
           "roundLimit": 4,
-          "carryEnemyVitality": true
+          "carryEnemyVitality": true,
+          "carryFrom": [
+            {
+              "sections": [
+                342,
+                363
+              ],
+              "expertiseModifier": true
+            }
+          ]
         },
         "part": {
           "name": "Lizardman",
@@ -2250,7 +2260,15 @@
             5,
             6
           ],
-          "flankFortune": 2
+          "flankFortune": 2,
+          "carryFrom": [
+            {
+              "sections": [
+                274
+              ],
+              "foeCount": 6
+            }
+          ]
         },
         "part": {
           "name": "Lizardman",

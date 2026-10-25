@@ -62,7 +62,7 @@ export function renderSim531(){
   el('spook').disabled=!fighting || !p.spookBasher || f.rounds>0 || f.spookBasherTried;
   el('gem').disabled=!fighting || !p.horrorgem || f.rounds>0 || f.spec.dream;
   el('call_dragon').disabled=!fighting || f.spec.dream || !p.dragonStone || !!f.ally
-    || p.dragonCalls>=(f.options.oneUseStone?1:3);
+    || p.dragonCalls>=rules.realmDragonCallLimit(f.options.oneUseStone);
   el('use_mastiff').disabled=!fighting || f.spec.dream || f.rounds>0 || !!f.ally || !(p.companion?.life>5);
   el('use_lizard').disabled=!fighting || f.spec.dream || f.rounds>0 || availableLizard(f)<0;
   el('companion_life').value=p.companion?.life??0;el('companion_life').disabled=fighting || !p.companion;
@@ -120,7 +120,7 @@ export function initSim531(){
     if(active(d))return;
     const value=Number(el(key).value),p=character(d);
     if(!Number.isSafeInteger(value) || value<0 || key==='life' && value>p.maxLife || key==='maxLife' && value<p.life
-      || key==='hit' && (value<1 || value>12) || key==='dragonCalls' && value>3 || key==='pathwalker' && value>2)throw new RangeError('Invalid character');
+      || key==='hit' && (value<1 || value>12) || key==='dragonCalls' && value>rules.realmDragonCallLimit() || key==='pathwalker' && value>2)throw new RangeError('Invalid character');
     p[key]=value;
   }));
   for(const key of flags)el(key).addEventListener('change',()=>action(d=>{if(!active(d))character(d)[key]=el(key).checked;}));
@@ -129,7 +129,7 @@ export function initSim531(){
   }));
   el('companion_life').addEventListener('change',()=>action(d=>{
     const p=character(d),value=Number(el('companion_life').value);
-    if(!active(d) && p.companion && Number.isSafeInteger(value) && value>=0 && value<=25)p.companion.life=value;
+    if(!active(d) && p.companion && Number.isSafeInteger(value) && value>=0 && value<=REALM_COMPANION.life)p.companion.life=value;
   }));
   el('take_mastiff').addEventListener('click',()=>action(d=>{
     if(!active(d) && !character(d).companion)character(d).companion={...REALM_COMPANION};

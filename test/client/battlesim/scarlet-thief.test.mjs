@@ -1,10 +1,13 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as combat from '../../../public/js/battlesim/books/832/combat.js';
-import { encounterPreset } from '../../../public/js/battlesim/books/832/definition.js';
+import { encounterPreset, SCARLET_RULES } from '../../../public/js/battlesim/books/832/definition.js';
 import { createState } from '../../../public/js/battlesim/books/832/state.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim832.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim832.js';
+
+await loadFixtureRoster(832);
 
 const start = (section, changes = {}, opponent = {}) => {
   const preset = encounterPreset(section);
@@ -117,4 +120,60 @@ test('immutable rules and state do not mutate originals or unrelated runs', () =
   book = 1; assert.equal(store.change(() => {}), false); assert.equal(store.read(), null);
   book = 832; assert.equal(store.change(() => { run = {}; }), false); assert.deepEqual(run, {});
   assert.equal(saves, 2);
+});
+
+test('loaded persuasion and tiger settings govern setup, saved fights and cancellation', () => {
+  const before = structuredClone(SCARLET_RULES);
+  try {
+    SCARLET_RULES.persuasion.health = 7;
+    SCARLET_RULES.persuasion.lossDestination = '99';
+    SCARLET_RULES.persuasion.choices[5] = 'small';
+    let f = start(3, {disguise: 1000});
+    assert.equal(f.health, 1007);
+    f = {...f, health: 1, turns: 9, extension: {kept: true}};
+    const saved = JSON.stringify(f);
+    const g = combat.playRound(f, {lie: 'large', counter: 'large'}, rolls({player: 1, enemyChoice: 6, enemy: 1}));
+    assert.equal(g.destination, '99'); assert.equal(g.outcome, 'loss');
+    assert.equal(g.turns, 10); assert.deepEqual(g.extension, {kept: true});
+    assert.equal(JSON.stringify(f), saved);
+    SCARLET_RULES.tiger.healthBonus = 5;
+    SCARLET_RULES.tiger.targets[5] = 'legs';
+    f = start(37, {life: 2});
+    assert.equal(f.health, 7);
+    const h = combat.playRound(f, tiger({guard: 'head'}), rolls({player: 1, enemy: 6, enemyChoice: 6}));
+    assert.equal(h.health, 6); assert.equal(h.events[0].enemyChoice, 'legs');
+    assert.equal(combat.cancelFight(h).character.life, 1);
+  } finally { Object.assign(SCARLET_RULES, before); }
+});
+
+test('loaded Countess and emerald settings control hazard, dodge and skill boundaries', () => {
+  const before = structuredClone(SCARLET_RULES);
+  try {
+    Object.assign(SCARLET_RULES.countess, {hitMaximum: 4, damage: 1, dodgeMinimum: 5});
+    let f = combat.playRound(start(63, {speed: 6}), {skill: 'speed'}, rolls({player: 1, enemy: 4, dodge: 4}));
+    assert.equal(f.health, 3); assert.equal(f.hp, 6);
+    f = combat.playRound(f, {skill: 'speed'}, rolls({player: 1, enemy: 5, dodge: 5}));
+    assert.equal(f.health, 3); assert.equal(f.hp, 5);
+    Object.assign(SCARLET_RULES.emeralds, {hitMaximum: 4, damage: 2, skillPenalty: 1});
+    f = combat.playRound(start(77, {speed: 4}), {skill: 'speed'}, rolls({player: 2, enemy: 4}));
+    assert.equal(f.health, 2); assert.equal(f.hp, 3);
+  } finally { Object.assign(SCARLET_RULES, before); }
+});
+
+test('saved clock progress uses loaded hazards and cycle without mutating the save', () => {
+  const before = structuredClone(SCARLET_RULES);
+  try {
+    Object.assign(SCARLET_RULES.clock, {cycle: 10, sphereDamage: 2, birdDamage: 2, skillPenalty: 1});
+    SCARLET_RULES.clock.hours.gears = 2;
+    SCARLET_RULES.clock.sphereHitMaximum.gears = 3;
+    SCARLET_RULES.clock.birdHitMaximum.cuckoo = 5;
+    const f = {...start(71), hp: 0, hours: 8, turns: 7, extension: ['saved']};
+    const saved = JSON.stringify(f);
+    const g = combat.playRound(f, {work: 'gears'}, rolls({sphere: 3, enemy: 1}));
+    assert.equal(g.health, 2); assert.equal(g.hp, 0); assert.equal(g.hours, 10);
+    assert.equal(g.turns, 8); assert.equal(g.outcome, 'win');
+    assert.deepEqual(g.extension, ['saved']); assert.equal(JSON.stringify(f), saved);
+    const h = combat.playRound(start(71, {speed: 4}), {work: 'cuckoo', skill: 'speed'}, rolls({player: 2, enemy: 5}));
+    assert.equal(h.hp, 2); assert.equal(h.health, 2); assert.equal(h.hours, 2);
+  } finally { Object.assign(SCARLET_RULES, before); }
 });

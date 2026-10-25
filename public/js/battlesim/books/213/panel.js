@@ -1,12 +1,12 @@
-import { SUPER_POWERS, HERO_POINT_PENALTY, SUPER_POWER_STAMINA_COST } from './definition.js';
+import { FEAR_RULES, SUPER_POWERS, HERO_POINT_PENALTY, SUPER_POWER_STAMINA_COST } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, HERO_POINT_PENALTY, SUPER_POWERS, SUPER_POWER_STAMINA_COST, SVG_SKULL, SVG_TROPHY, _appendLog, _attemptEnergyBlast, _captureEnemy, _continueAttacking, _data, _enemyList, _enemyName, _enemyNameSafe, _finishEnemy, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _resolveRoundEnd, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _skipLuck, _testLuck, _usePsiPower, apiFetch, closeSim213, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim213, openSim213, registerPanelShortcut, renderSim213, saveState, setSim213Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ FEAR_RULES, ALL_PANEL_OVERLAY_IDS, HERO_POINT_PENALTY, SUPER_POWERS, SUPER_POWER_STAMINA_COST, SVG_SKULL, SVG_TROPHY, _appendLog, _attemptEnergyBlast, _captureEnemy, _continueAttacking, _data, _enemyList, _enemyName, _enemyNameSafe, _finishEnemy, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _resolveRoundEnd, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _skipLuck, _testLuck, _usePsiPower, apiFetch, closeSim213, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim213, openSim213, registerPanelShortcut, renderSim213, saveState, setSim213Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
-const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _resetEncounterKnobs, _runRound, _captureEnemy, _finishEnemy, _continueAttacking, _testLuck, _skipLuck, _resetBattle, _attemptEnergyBlast } = createCombat(simulatorContext);
+const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _resetEncounterKnobs, _runRound, _resolveRoundEnd, _captureEnemy, _finishEnemy, _continueAttacking, _testLuck, _skipLuck, _resetBattle, _attemptEnergyBlast } = createCombat(simulatorContext);
 const { _usePsiPower } = createEffects(simulatorContext);
 // END SIMULATOR WIRING
 // Battle Simulator (Appointment with F.E.A.R., book 213)
@@ -29,33 +29,6 @@ const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" ari
 // ── Combat ───────────────────────────────────────────────────────────────────
 
 // Resolve surrender, death, and round limits consistently after attacks and Luck tests.
-function _resolveRoundEnd(d) {
-  if (d.pendingLuckQueue.length) return; // wait for the Luck test to resolve first
-
-  if (d.enemy.stamina <= 0) {
-    // Reduced straight to 0 without ever pausing in the 1-2 surrender
-    // window - the rules treat that as a kill, no choice was ever offered.
-    _appendLog(d, t('battlesim213.log.killed_outright', { enemy: _enemyNameSafe(d), n: HERO_POINT_PENALTY }));
-    d.player.heroPoints -= HERO_POINT_PENALTY;
-    _appendLog(d, t('battlesim213.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
-    _recordOutcome(d, 'win');
-    return;
-  }
-  if (d.enemy.stamina > 0 && d.enemy.stamina <= 2) {
-    d.pendingSurrender = true;
-    _appendLog(d, t('battlesim213.log.surrenders', { enemy: _enemyNameSafe(d), stamina: d.enemy.stamina }));
-    return;
-  }
-  if (d.player.stamina <= 0) {
-    _appendLog(d, t('battlesim213.log.fallen', { skull: SVG_SKULL }));
-    _recordOutcome(d, 'loss');
-    return;
-  }
-  // Warn once at the threshold; later rounds remain playable.
-  if (d.player.forceLossAfterRounds > 0 && d.roundsThisBattle === d.player.forceLossAfterRounds) {
-    _appendLog(d, t('battlesim213.log.round_limit'));
-  }
-}
 
 // Test Your Luck after a hit lands: costs 1 LUCK regardless of outcome.
 // Same table every sim in this app uses.
@@ -81,7 +54,7 @@ function _renderStatus() {
   document.getElementById('sim213-psi-use').disabled =
     notReady || (d.roundsThisBattle > 0 && d.player.stamina > 0 && d.enemy.stamina > 0);
   document.getElementById('sim213-eblast-use').disabled =
-    notReady || d.roundsThisBattle > 0 || !hasEnemy;
+    over || d.roundsThisBattle > 0 || !hasEnemy || !!d.pendingLuckQueue.length || d.pendingSurrender;
 }
 
 function _renderHistory() {

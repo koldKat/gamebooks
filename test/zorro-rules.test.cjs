@@ -68,7 +68,7 @@ test('Rosario previous chair and bottle damage remain fight-local', async () => 
   const { startZorroFight } = await engine;
   for (const damage of [0, 4, 6]) {
     const enc = { id: 'rosario', type: 'rukopashna', enemies: [{ ...foe, zhivot: 24 }] };
-    const s = startZorroFight(player, enc, 0, damage);
+    const s = startZorroFight(player, enc, 0, damage, {priorDamage:true});
     assert.equal(s.enemies[0].life, 24 - damage); assert.equal(enc.enemies[0].zhivot, 24);
   }
 });
@@ -108,7 +108,10 @@ test('legacy controller opens without modifying saved character or history', asy
   await definition.loadRoster(async()=>({ok:true,json:async()=>JSON.parse(read('data/simulator-rosters/882.json')).enemies}));
   const saved = { encounterId: 'galdos_mounted', player: { zhivot: 19 }, history: [{ outcome: 'win' }], log: ['old'] };
   const context = vm.createContext({ currentPlaythrough: () => ({ sim882: saved }), startZorroFight, advanceZorroFight,
-    createRosterLoader:(_id,_dataset,install)=>{install(structuredClone(definition.ROSTER));return async()=>{};} });
+    createRosterLoader:(_id,_dataset,install)=>{
+      const seed=JSON.parse(read('data/simulator-rosters/882.json'));
+      install([...new Map(seed.enemies.map(row=>[row.stats.entryIndex,row.stats.entry])).values()]);return async()=>{};
+    } });
   vm.runInContext(readSimulatorSource(require('node:path').join(__dirname, '../public/js/battlesim/battlesim882.js'), 'utf8').replace(/^import .*;$/gm, '').replace(/^export /gm, '') + '\nglobalThis.audit={data:_data,roster:ROSTER};', context);
   const old = JSON.stringify(saved); context.audit.data(); assert.equal(JSON.stringify(saved), old);
   const roster = context.audit.roster;
@@ -118,4 +121,22 @@ test('legacy controller opens without modifying saved character or history', asy
   assert.equal(roster.find(e => e.id === 'village_last').enemies.length, 4);
   assert.equal(roster.find(e => e.id === 'village_whip').enemies.length, 3);
   assert.equal(roster.find(e => e.id === 'outer_guards').enemies[0].zhivot, 12);
+});
+
+test('derived encounters load before the panel and retain metadata order and setup rules',async()=>{
+  const definition=await import('../public/js/battlesim/books/882/definition.js');
+  await definition.loadRoster(async()=>({ok:true,json:async()=>JSON.parse(read('data/simulator-rosters/882.json')).enemies}));
+  assert.equal(definition.ROSTER.length,21);
+  assert.deepEqual(definition.ROSTER.slice(-3).map(row=>[row.id,row.enemies.length]),[['village_middle',5],['village_last',4],['village_whip',3]]);
+  assert.equal(definition.ENCOUNTER_SETTINGS.village_whip.removed,true);
+  assert.deepEqual(definition.ENCOUNTER_SETTINGS.rosario.priorDamageOptions.map(row=>row.value),[0,4,6]);
+  assert(definition.ROSTER.every(row=>!('support' in row)));
+});
+
+test('prior damage follows supplied settings rather than opponent identity',async()=>{
+  const {startZorroFight}=await engine;
+  const custom={id:'custom',type:'rukopashna',enemies:[{...foe,zhivot:24}]};
+  assert.equal(startZorroFight(player,custom,0,6,{priorDamage:true}).enemies[0].life,18);
+  assert.equal(startZorroFight(player,{...custom,id:'rosario'},0,6,{}).enemies[0].life,24);
+  assert.equal(custom.enemies[0].zhivot,24);
 });

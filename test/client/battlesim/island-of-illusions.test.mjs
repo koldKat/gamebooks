@@ -1,10 +1,13 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as combat from '../../../public/js/battlesim/books/838/combat.js';
-import { ENCOUNTERS, ENEMIES, encounterPreset } from '../../../public/js/battlesim/books/838/definition.js';
+import { ENCOUNTERS, ENEMIES, encounterPreset, ISLAND_RULES } from '../../../public/js/battlesim/books/838/definition.js';
 import { createState } from '../../../public/js/battlesim/books/838/state.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim838.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim838.js';
+
+await loadFixtureRoster(838);
 
 const character = () => ({life: 30, agility: 7, gold: 10});
 const start = (section, changes = {}) => {
@@ -133,4 +136,49 @@ test('state rejects replaced runs and does not migrate saved fights when reading
   assert.equal(store.read(), first.sim838); assert.deepEqual(first, original);
   assert.equal(store.change(data => { data.character.life = 1; run = {}; }), false);
   assert.deepEqual(first, original); assert.equal(saves, 0);
+});
+
+test('loaded pirate thresholds and damage bands apply to saved survivor fights', () => {
+  const before = structuredClone(ISLAND_RULES);
+  try {
+    Object.assign(ISLAND_RULES.pirates, {pairedHit:9, singleHit:7, doubleDamageMaximum:4, doubleDamage:5});
+    assert.equal(round(start(20), 8).character.life, 27);
+    assert.equal(round(start(20), 4).character.life, 25);
+    const fight = {...start(20), singlePirate:true, kills:1, rounds:4, extension:{kept:true}};
+    fight.enemies[1].hp = 0;
+    const saved = JSON.stringify(fight);
+    const next = round(fight, 6);
+    assert.equal(next.character.life, 27); assert.equal(next.enemies[0].hp, 12);
+    assert.equal(next.rounds, 5); assert.equal(next.singlePirate, true);
+    assert.deepEqual(next.extension, {kept:true}); assert.equal(JSON.stringify(fight), saved);
+    assert.equal(round(fight, 7).enemies[0].hp, 9);
+  } finally { Object.assign(ISLAND_RULES, before); }
+});
+
+test('loaded damage and dog completion settings govern outcomes without resetting progress', () => {
+  const before = structuredClone(ISLAND_RULES);
+  try {
+    ISLAND_RULES.hitDamage = 2; ISLAND_RULES.baseDamage = 2;
+    Object.assign(ISLAND_RULES.dogs, {hitAt:8, kills:2, damageBySum:{2:7,3:4}});
+    assert.equal(round(start(59), 7).character.life, 28);
+    assert.equal(round(start(59), 2).character.life, 23);
+    assert.equal(round(start(59), 3).character.life, 26);
+    const f = {...start(59), kills:1, rounds:7};
+    f.enemies[0].hp = 0; f.enemies[1].hp = 2;
+    const g = round(f, 8, 1);
+    assert.equal(g.kills, 2); assert.equal(g.outcome, 'win');
+    assert.equal(g.enemies[2].hp, 5); assert.equal(g.rounds, 8);
+    ISLAND_RULES.octopus.damageMultiplier = 2;
+    assert.equal(round(start(22), 4, 0, 6).character.life, 18);
+    assert.equal(round(start(10), 6).enemies[0].hp, 7);
+  } finally { Object.assign(ISLAND_RULES, before); }
+});
+
+test('whirlpool routes use loaded settings while the sail still adds exactly one', () => {
+  const before = structuredClone(ISLAND_RULES);
+  try {
+    Object.assign(ISLAND_RULES.whirlpool, {minimum:4, success:'80', failure:'81'});
+    assert.deepEqual(combat.checkWhirlpool(3, false), {total:3,destination:'81'});
+    assert.deepEqual(combat.checkWhirlpool(3, true), {total:4,destination:'80'});
+  } finally { Object.assign(ISLAND_RULES, before); }
 });

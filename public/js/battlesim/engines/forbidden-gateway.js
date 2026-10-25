@@ -1,4 +1,6 @@
 import { customShadowsEncounter } from './gateway-opponents.js';
+import { SHADOWS_ENCOUNTERS, SHADOWS_RULES } from './forbidden-gateway-roster.js';
+export { SHADOWS_ENCOUNTERS, SHADOWS_RULES, loadRoster } from './forbidden-gateway-roster.js';
 
 const attributes = ['strength', 'mentality', 'dexterity'];
 const die = random => Math.floor(random() * 6) + 1;
@@ -14,12 +16,7 @@ export const SHADOWS_WEAPONS = Object.freeze({
   revolver: { stamina: '2d6', endurance: 0 },
 });
 
-import { createRosterLoader } from '../roster-data.js';
-
-export let SHADOWS_ENCOUNTERS = Object.freeze([]);
-export const loadRoster = createRosterLoader(539, 'ENCOUNTERS', rows => {
-  SHADOWS_ENCOUNTERS = Object.freeze(rows.map(spec => Object.freeze({...spec, enemies: Object.freeze(spec.enemies.map(Object.freeze))})));
-});
+export const shadowsLocksWeapon = id => id === SHADOWS_RULES.changelingId;
 
 export function createShadowsCharacter(random = Math.random) {
   const player = { bullets: 0, revolver: false, spiritSpear: false, hunterSpear: false,
@@ -81,7 +78,7 @@ export function settleShadows(fight) {
   if (fight.status !== 'fighting') return;
   if (fight.player.stamina <= 0 || fight.player.endurance <= 0) {
     fight.status = 'loss';
-    fight.destination = fight.spec.custom ? null : fight.player.stamina <= 0 ? fight.spec.death ?? 219 : fight.spec.insanity ?? 233;
+    fight.destination = fight.spec.custom ? null : fight.player.stamina <= 0 ? fight.spec.death ?? SHADOWS_RULES.death : fight.spec.insanity ?? SHADOWS_RULES.insanity;
   } else if (!shadowsTargets(fight).length) {
     fight.status = 'win'; fight.destination = fight.options.diningRoom ? fight.spec.diningWin ?? fight.spec.win : fight.spec.win;
   }
@@ -176,7 +173,7 @@ export function shadowsAttack(fight, target = 0, random = Math.random) {
       : shadowsTest(enemy, 'dexterity', random);
     const damage = test.success ? { ...enemy.damage } : { stamina: 0, endurance: 0 };
     if (test.success && !enemy.disbelief && test.rolls.every(value => value === 1)) for (const key of Object.keys(damage)) damage[key] *= 2;
-    if (enemy.disbelief && !test.success) enemy.endurance = Math.max(0, enemy.endurance - 1);
+    if (enemy.disbelief && !test.success) enemy.endurance = Math.max(0, enemy.endurance - SHADOWS_RULES.disbeliefLoss);
     applyDamage(fight.player, damage);
     result = { ...test, actor, target: -1, damage, disbelief: !!enemy.disbelief && !test.success };
   }
@@ -191,7 +188,7 @@ export function shadowsScriptStrike(fight, random = Math.random) {
   if (fight.spec.mode === 'gunOnly' && fight.player.weapon !== 'revolver') return null;
   const result = playerStrike(fight, 0, random); if (!result) return null;
   fight.strikes++; settleShadows(fight);
-  if (fight.status === 'fighting' && fight.spec.mode === 'twoStrikes' && fight.strikes >= 2) {
+  if (fight.status === 'fighting' && fight.spec.mode === 'twoStrikes' && fight.strikes >= SHADOWS_RULES.scriptStrikes) {
     fight.status = 'continue'; fight.destination = fight.spec.continuation;
   }
   return result;

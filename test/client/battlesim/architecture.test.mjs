@@ -77,7 +77,7 @@ test('book modules expose a consistent identity and lifecycle without DOM in ext
     const {definition}=await import(new URL('definition.js',book));
     assert.equal(definition.id,Number(match[1]));assert.ok(definition.title&&definition.family&&definition.stateKey);
     const panel=readFileSync(new URL('panel.js',book),'utf8');
-    assert.match(panel,/export \{ \w+ as init, \w+ as render, \w+ as setVisible \}/);
+    assert.match(panel,/export\s*\{\s*\w+\s+as\s+init\s*,\s*\w+\s+as\s+render\s*,\s*\w+\s+as\s+setVisible\s*\}/);
     for(const name of readdirSync(book).filter(name=>/^(state|combat|effects)\.js$/.test(name))){
       const source=readFileSync(new URL(name,book),'utf8');
       assert.doesNotMatch(source,/\b(?:document|window|HTMLElement)\b/,match[1]+'/'+name);

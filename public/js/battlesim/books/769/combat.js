@@ -1,6 +1,6 @@
 import { attackStrength, damageWithLuck, die, integer, rollDice } from '../../engines/sorcery/core.js';
 import { customFightingEncounter } from '../../engines/fighting-fantasy/opponents.js';
-import { RULES_REVISION, STARTING_PROVISIONS, encounterFor } from './definition.js';
+import { RULES_REVISION, STARTING_PROVISIONS, DUNGEON_RULES, encounterFor } from './definition.js';
 
 export { die, integer, rollDice } from '../../engines/sorcery/core.js';
 
@@ -131,8 +131,8 @@ export function resolveLuck(input, useLuck, roll) {
   }
   if (event.kind === 'weakPoint') {
     fight.weakPointAttempts++;
-    fight.outcome = lucky ? 'win' : fight.weakPointAttempts === 1 ? 'continue' : 'loss';
-    fight.destination = lucky ? fight.config.win : fight.weakPointAttempts === 1 ? fight.config.retry : fight.config.failure;
+    fight.outcome = lucky ? 'win' : fight.weakPointAttempts === DUNGEON_RULES.retryAttempt ? 'continue' : 'loss';
+    fight.destination = lucky ? fight.config.win : fight.weakPointAttempts === DUNGEON_RULES.retryAttempt ? fight.config.retry : fight.config.failure;
     if (fight.outcome === 'loss') fight.character.dead = true;
     return fight;
   }
@@ -144,8 +144,8 @@ export function resolveLuck(input, useLuck, roll) {
 }
 
 export function continueWeakPoint(input) {
-  if (!input || input.rulesRevision !== RULES_REVISION || input.outcome !== 'continue' || input.destination !== 21
-    || !input.config.weakPoint || input.weakPointAttempts !== 1 || input.pending.length) throw new RangeError('No second attempt');
+  if (!input || input.rulesRevision !== RULES_REVISION || input.outcome !== 'continue' || input.destination !== input.config?.retry
+    || !input.config?.weakPoint || input.weakPointAttempts !== DUNGEON_RULES.retryAttempt || input.pending.length) throw new RangeError('No second attempt');
   validateCharacter(input.character, true);
   const fight = structuredClone(input);
   fight.outcome = null; fight.destination = null; fight.events = [];

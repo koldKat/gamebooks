@@ -1,6 +1,9 @@
+localStorage.setItem('gamebook_lang','LANGUAGE');
+const rosterSeed = ROSTER_SEEDS[860];
 const checks = [], saves = [];
 const assert = (value,label) => {if (!value) throw Error(label);checks.push(label);};
 window.fetch = async (url,options = {}) => {
+  if (url === '/api/books/860/enemies' && !options.method) return new Response(JSON.stringify(rosterSeed));
   assert(url === '/api/books/860/state' && options.method === 'PUT','only intercepted state saves');
   saves.push(JSON.parse(options.body));return new Response('{}',{headers:{'Content-Type':'application/json'}});
 };
@@ -29,7 +32,9 @@ let name = choose('Съдия Смърт');
 assert(run.sim860.sourceId === '31','autocomplete preserves heavy-wound source rule');
 name.dispatchEvent(new Event('change',{bubbles:true}));
 assert(run.sim860.sourceId === '31','blur change does not detach selected exception');
-name.focus();name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
+name.dispatchEvent(new FocusEvent('focus'));
+assert(name.getAttribute('aria-expanded') === 'true','suggestions open before Escape');
+name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
 assert(el('overlay').classList.contains('active') && name.getAttribute('aria-expanded') === 'false','Escape dismisses suggestions only');
 el('manual').click();el('attackOne').value = 5;el('attackTwo').value = 5;
 el('energy').value = 44;el('initialEnergy').value = 44;el('start').click();
@@ -63,6 +68,13 @@ assert(el('overlay').querySelector('.bsim-modal').getBoundingClientRect().width 
 assert(document.documentElement.scrollWidth <= innerWidth,'no horizontal overflow');
 assert(getComputedStyle(el('resolve')).backgroundColor !== 'rgb(239, 239, 239)','button is themed');
 assert(getComputedStyle(el('manual')).appearance === 'none','checkbox is themed');
+const {encounterPreset}=await import('REPO/public/js/battlesim/books/860/definition.js');
+run.sim860={...structuredClone(run.sim860),pending:true,sourceId:'31',encounter:encounterPreset('31'),character:{energy:17,initialEnergy:44,extension:{kept:true}},extension:{preserved:true}};
+const savedPending=JSON.stringify(run);sim.render();sim.render();
+assert(JSON.stringify(run)===savedPending&&el('energy').disabled&&!el('resolve').disabled&&!el('special').hidden,'saved pending heavy wound renders without changing captured values');
+el('attackOne').value=4;el('attackTwo').value=5;el('resolve').click();
+assert(!run.sim860.pending&&run.sim860.result.destination==='85'&&run.sim860.result.outcome==='safe'&&run.sim860.character.energy===17&&run.sim860.character.initialEnergy===44&&run.sim860.character.extension.kept&&run.sim860.extension.preserved&&run.sim860.history.length===0,'saved pending round resolves with routes, energy and extensions preserved');
+const resolvedPending=JSON.stringify(run);el('resolve').click();assert(JSON.stringify(run)===resolvedPending,'saved round resolves only once');
 const beforeRender = JSON.stringify(run);sim.render();sim.render();
 assert(JSON.stringify(run) === beforeRender,'render is read-only');
 el('newCharacter').click();assert(document.getElementById('confirm-overlay').classList.contains('active'),'new character confirms');

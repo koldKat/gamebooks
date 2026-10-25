@@ -1,3 +1,4 @@
+import { DIVINE_WEAPON_NAME_RULES } from './definition.js';
 // Book 401 At the Court of King Minos (Cretan Chronicles); Honour carries over.
 import { createCretanSim } from "../.././engines/cretan.js";
 
@@ -7,6 +8,7 @@ const _sim = createCretanSim({
   stateKey: 'sim401',
   i18nPrefix: 'battlesim401',
   defaultHonour: 7,
+  requiresDivineNameRules: DIVINE_WEAPON_NAME_RULES,
 });
 
 export const initSim401      = _sim.init;

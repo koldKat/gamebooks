@@ -1,3 +1,4 @@
+import { ENCOUNTER_RULES } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
@@ -324,9 +325,9 @@ export function initSim716() {
     d.enemy.izdr       = enemy.hp ?? 10;
     d.enemy.izdrMax    = enemy.hp ?? 10;
     d.enemy.nonlethal  = (enemy.hp ?? 10) <= 10;
-    if (enemy.name === 'Бързака') {
-      d.enemy.ataka = Math.max(0, d.enemy.ataka - d.player.barzina);
-      d.enemy.zashtita = Math.max(0, d.enemy.zashtita - d.player.reflekt);
+    const adjustments = ENCOUNTER_RULES[enemy.name]?.subtractPlayerStats || {};
+    for (const [field, playerStat] of Object.entries(adjustments)) {
+      d.enemy[field] = Math.max(0, d.enemy[field] - d.player[playerStat]);
     }
     d.roundsThisBattle = 0;
     d.combatRulesVersion = 2;

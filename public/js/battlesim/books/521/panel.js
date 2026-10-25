@@ -96,7 +96,7 @@ export function initSim521() {
     <button id="${ID}-fortune-roll" class="inv-add-btn">${tk('fortune_roll')}</button>
     <button id="${ID}-potion" class="inv-add-btn">${tk('potion')}</button></div>
     <div class="bsim-side"><label class="inv-edit-row">${tk('encounter')}<select id="${ID}-encounter" class="inv-edit-input">
-    ${MARSH_ENCOUNTERS.map(e => `<option value="${e.section}">${escapeHtml(tk('encounter_label', { section: e.sourceSection ?? e.section, enemy: e.foes[0].name }))}${e.section === '274c' ? ' (5)' : ''}</option>`).join('')}</select></label>
+    ${MARSH_ENCOUNTERS.map(e => `<option value="${e.section}">${escapeHtml(tk('encounter_label', { section: e.sourceSection ?? e.section, enemy: e.foes[0].name }))}${e.displayCount ? ` (${e.displayCount})` : ''}</option>`).join('')}</select></label>
     <label id="${ID}-count-wrap" class="inv-edit-row">${tk('count')}<select id="${ID}-count" class="inv-edit-input"></select></label>
     <label id="${ID}-companions-wrap" class="inv-edit-row">${tk('companions')}<input id="${ID}-companions" class="inv-edit-input" placeholder="${tk('companions_hint')}"></label>
     <div id="${ID}-cutting-wrap">${toggle('cutting')}</div><div id="${ID}-poison-wrap">${toggle('poison')}</div>

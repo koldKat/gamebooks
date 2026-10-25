@@ -159,7 +159,7 @@ test('reading a saved legacy fight is inert; explicit reset opts in without heal
   d.player.hp = 5; d.history = []; d.log = [];
   const pt = { sim829: d, equipment: {} };
   const controller = readSimulatorSource(path.join(__dirname, '../public/js/battlesim/battlesim829.js'), 'utf8').replace(/^import .*;$/gm, '').replace(/^export /gm, '');
-  const context = vm.createContext({ ...api, currentPlaythrough: () => pt, saveState: () => {}, t: key => key, escapeHtml: x => x });
+  const context = vm.createContext({ createRosterLoader:()=>()=>{}, ...api, currentPlaythrough: () => pt, saveState: () => {}, t: key => key, escapeHtml: x => x });
   vm.runInContext(controller + '\n_renderInputs=()=>{};_renderLog=()=>{};_renderHistory=()=>{};globalThis.subject={data:_data,reset:_resetBattle,sync:_syncStatFromEquipment};', context);
   const original = JSON.stringify(d); context.subject.data(); assert.equal(JSON.stringify(d), original);
   d.player.skills.weapon = 3; context.subject.sync(d, pt, 'a'); assert.equal(d.player.a, 3);

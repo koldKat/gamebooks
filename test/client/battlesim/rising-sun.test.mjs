@@ -3,7 +3,7 @@ await loadFixtureRoster(679);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { newFabledCharacter } from '../../../public/js/battlesim/engines/fabled-lands/character.js';
-import { RISING_DEFAULTS, RISING_FIGHTS, startRisingFight, risingRound, fleeRisingFight, risingSeaCheck }
+import { RISING_DEFAULTS, RISING_FIGHTS, RISING_RULES, RISING_SEA_CHECKS, startRisingFight, risingRound, fleeRisingFight, risingSeaCheck }
   from '../../../public/js/battlesim/engines/fabled-lands/rising-sun.js';
 
 const rolls = (...values) => () => { assert.ok(values.length,'Unexpected roll'); return values.shift(); };
@@ -138,4 +138,57 @@ test('sea rules use the printed ship dice and protect permanent storm blessings'
   const immune = risingSeaCheck(27,character({diseaseBlessing:true}),{},rolls(2));
   assert.equal(immune.character.staminaInitial,27); assert.equal(immune.character.diseaseBlessing,false);
   assert.equal(risingSeaCheck(52,character({scouting:1}),{},rolls(1,1)).character.stamina,0);
+});
+
+
+test('special encounter settings come from roster metadata', () => {
+  const before = structuredClone(RISING_RULES);
+  try {
+    RISING_RULES.darknessPenalty = 4;
+    assert.equal(start(624).attackModifier,-4);
+    RISING_RULES.subdue = {penalty:3,win:777};
+    const subdued=start(490,{}, {subdue:true,weaponBonus:2});
+    assert.equal(subdued.attackModifier,-5);
+    assert.equal(subdued.config.win,777);
+    RISING_RULES.thunderShardsDivisor=100;
+    const thunder=risingRound(start(183,{shards:900}),{},rolls(1,1,1,1));
+    assert.equal(thunder.events.at(-1).damage,0);
+  } finally { Object.assign(RISING_RULES,before); }
+});
+
+test('wounded spider victory uses the captured loss route and retains saved extensions', () => {
+  const fight=start(481,{combat:12,notebookExtension:'keep'});
+  fight.config.loss=777; fight.enemies[0].stamina=1; fight.wounded=true;
+  fight.savedExtension={keep:true};
+  const next=risingRound(JSON.parse(JSON.stringify(fight)),{},rolls(6,6));
+  assert.equal(next.destination,777);
+  assert.equal(next.status,'loss');
+  assert.equal(next.character.notebookExtension,'keep');
+  assert.deepEqual(next.savedExtension,{keep:true});
+  assert.equal(fight.character.stamina,27);
+});
+
+test('sea settings are metadata driven without changing strict section routing', () => {
+  const before=structuredClone(RISING_RULES.sea);
+  try {
+    RISING_RULES.sea.passage.illnessDamage=4;
+    RISING_RULES.sea.death=777;
+    const loss=risingSeaCheck(27,character({stamina:3}),{},rolls(2));
+    assert.equal(loss.destination,777);
+    assert.equal(loss.character.staminaInitial,23);
+    RISING_RULES.sea.storm.destinations=[888,999];
+    assert.equal(risingSeaCheck(222,character(),{},rolls(3)).destination,888);
+    // Historical string keys select the wreck procedure, despite their display kind.
+    const stringKey=risingSeaCheck('27',character({scouting:20}),{},rolls(1,1));
+    assert.equal(stringKey.kind,'passage');
+    assert.equal(stringKey.total,22);
+    assert.equal(stringKey.destination,241);
+  } finally { RISING_RULES.sea=before; }
+  assert.deepEqual(Object.keys(RISING_SEA_CHECKS),['27','52','126','222']);
+});
+
+test('sea lookups reject inherited property names', () => {
+  for (const section of ['constructor','__proto__','toString']) {
+    assert.throws(()=>risingSeaCheck(section,character()),/Invalid sea check/);
+  }
 });

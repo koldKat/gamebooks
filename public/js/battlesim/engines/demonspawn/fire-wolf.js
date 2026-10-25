@@ -1,3 +1,4 @@
+import { FIRE_WOLF_RULES } from './fire-wolf-roster.js';
 export const FIRE_WOLF_ATTRIBUTES = ['strength', 'speed', 'stamina', 'courage', 'luck', 'charm', 'attraction'];
 export const FIRE_WOLF_WEAPONS = Object.freeze({ unarmed: 0, arrow: 10, axe: 15, club: 8, dagger: 5, flail: 7, halberd: 12, lance: 12, mace: 14, spear: 12, sword: 10, doombringer: 20 });
 export const FIRE_WOLF_ARMOUR = Object.freeze({ none: 0, leather: 5, chain: 8, plate: 12 });
@@ -66,8 +67,8 @@ export function checkFireWolfOutcome(fight) {
   if (fight.outcome || fight.pending) return;
   // Baldar's practice fight ends at 50 LP, without a death or a Luck rescue.
   if (fight.options.sparring) {
-    if (fight.player.lifePoints <= 50) survive(fight, 'defeat');
-    else if (fight.enemy.lifePoints <= 50) survive(fight, 'win');
+    if (fight.player.lifePoints <= FIRE_WOLF_RULES.sparringStop) survive(fight, 'defeat');
+    else if (fight.enemy.lifePoints <= FIRE_WOLF_RULES.sparringStop) survive(fight, 'win');
   } else if (fight.player.lifePoints <= 0) {
     if (!fight.luckUsed) fight.pending = 'death-luck';
     else fight.outcome = 'loss';
@@ -130,7 +131,8 @@ export function rollFireWolfAttack(fight, random = Math.random) {
   if (side === 'enemy') fight.enemyTurns += 1;
   if (side === 'enemy' && fight.options.regentSword) {
     const round = fight.enemyTurns;
-    weapon = round % 3 === 1 ? 10 : round % 3 === 2 ? 20 : 20 * die(random);
+    const cycle = FIRE_WOLF_RULES.regent.swordCycle, position = (round - 1) % (cycle.length + 1);
+    weapon = position < cycle.length ? cycle[position] : FIRE_WOLF_RULES.regent.swordDieMultiplier * die(random);
   }
   let damage = fireWolfDamage(attacker, defender, roll, weapon);
   if (side === 'player' && fight.options.orbHeld && fight.options.demonspawn) damage *= 2;

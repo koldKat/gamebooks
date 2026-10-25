@@ -55,6 +55,46 @@
           ],
           "equipment": {
             "weapon": 15
+          },
+          "support": {
+            "rules": {
+              "manualPowerEnemy": "Shaman Wizard",
+              "haroldWarningSection": 47,
+              "chaseStop": 150,
+              "fleeStop": 20,
+              "knockoutStop": 10,
+              "firstBloodDamage": 100,
+              "firstBloodRoll": 12,
+              "nonfatalStop": 50,
+              "prince": {
+                "name": "Harkaan Prince",
+                "guardName": "Demonspawn",
+                "deadGuards": 2
+              },
+              "vampireHealDivisor": 2,
+              "ratHits": 3,
+              "wight": {
+                "attributes": [
+                  "strength",
+                  "speed",
+                  "courage"
+                ],
+                "penalty": 5
+              },
+              "reinforcements": {
+                "count": 2,
+                "enemyName": "Fortress Guard"
+              },
+              "manticoreParalysisRounds": 3,
+              "box": {
+                "enemyName": "Alchiller",
+                "limit": 4
+              },
+              "orb": {
+                "possessionSection": 144,
+                "minRoll": 11
+              }
+            }
           }
         },
         "part": {

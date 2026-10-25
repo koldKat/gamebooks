@@ -1,10 +1,10 @@
-import { MAX_PROVISIONS, PROVISIONS_HEAL } from './definition.js';
+import { ENCOUNTER_RULES, CALDWELL_NAME_RULES, CALDWELL_RULE, MAX_PROVISIONS, PROVISIONS_HEAL } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, MAX_PROVISIONS, PROVISIONS_HEAL, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _eatProvisions, _enemyList, _enemyName, _enemyNameSafe, _isCaldwell, _loadEnemyList, _notReady, _numField, _playerDamage, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _skipLuck, _startSpecialRules, _testLuck, apiFetch, closeSim267, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim267, openSim267, registerPanelShortcut, renderSim267, saveState, setSim267Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ENCOUNTER_RULES, CALDWELL_NAME_RULES, CALDWELL_RULE, ALL_PANEL_OVERLAY_IDS, MAX_PROVISIONS, PROVISIONS_HEAL, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _eatProvisions, _enemyList, _enemyName, _enemyNameSafe, _isCaldwell, _loadEnemyList, _notReady, _numField, _playerDamage, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _skipLuck, _startSpecialRules, _testLuck, apiFetch, closeSim267, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim267, openSim267, registerPanelShortcut, renderSim267, saveState, setSim267Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _roll2d6, _roll1d6, _enemyName, _isCaldwell, _startSpecialRules, _playerDamage, _enemyNameSafe, _runRound, _testLuck, _skipLuck, _resetBattle } = createCombat(simulatorContext);
 const { _eatProvisions } = createEffects(simulatorContext);
@@ -102,9 +102,9 @@ function _renderInputs() {
 
   const pendingEl = document.getElementById('sim267-luck-prompt');
   pendingEl.style.display = d.pendingLuck ? '' : 'none';
-  for (const [key, enemy] of [['craggenKnife', 'BRONZE WARRIOR'], ['demon283', 'HOWLING DEMON']]) {
+  for (const key of ['craggenKnife', 'demon283']) {
     const input = document.getElementById('sim267-' + key);
-    input.closest('.inv-edit-row').style.display = d.specialRules?.enemy === enemy ? '' : 'none';
+    input.closest('.inv-edit-row').style.display = ENCOUNTER_RULES[d.specialRules?.enemy]?.optionFlags?.includes(key) ? '' : 'none';
     input.checked = !!d.specialRules?.[key];
     input.disabled = d.roundsThisBattle > 0;
   }

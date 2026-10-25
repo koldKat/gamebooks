@@ -56,7 +56,62 @@
                 "noMagic": true
               }
             }
-          ]
+          ],
+          "support": {
+            "rules": {
+              "slime": {
+                "roll": 12,
+                "tick": 8
+              },
+              "freya": {
+                "total": 100,
+                "tick": 15
+              },
+              "stalker": {
+                "playerHit": 10,
+                "roll": 12,
+                "damage": 75
+              },
+              "demon": {
+                "reduction": 5
+              },
+              "sorcerers": {
+                "fatalRoll": 12,
+                "lifeStealMultiplier": 0.25,
+                "hitDamage": 25
+              },
+              "club": {
+                "roll": 12,
+                "weapon": 10
+              },
+              "lethalRoll": 12,
+              "fieryDragon": {
+                "rolls": [
+                  6,
+                  12
+                ],
+                "damage": 25
+              },
+              "fumes": {
+                "rolls": [
+                  5,
+                  6,
+                  9
+                ],
+                "divisor": 10
+              },
+              "plank": {
+                "baseline": 50,
+                "divisor": 5,
+                "min": 10
+              },
+              "serpent": {
+                "baseline": 50,
+                "divisor": 5,
+                "min": 10
+              }
+            }
+          }
         },
         "part": {
           "name": "Large Man",

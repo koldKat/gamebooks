@@ -79,7 +79,7 @@ export function renderSim528() {
     p.gold < f.spec.bribe * (f.spec.bribeEach ? targets.length : 1);
   el('antidote').disabled = !fighting || !f.poisoned || p.antidotes < 1;
   el('aardvark-button').disabled = !fighting || !f.spec.ants || !p.aardvark;
-  el('djinn').disabled = !fighting || f.spec.dream || !p.tinglering || p.djinnCalls >= 3 || f.companion?.life > 5;
+  el('djinn').disabled = !fighting || f.spec.dream || !p.tinglering || p.djinnCalls >= rules.GATEWAY_RULES.companions.djinn.maxCalls || f.companion?.life > 5;
   el('gnurlbash-button').disabled = !fighting || f.spec.dream || !p.gnurlbash || f.companion?.life > 5;
   el('resurrect').disabled = !f || p.life > 0 || !p.resurrection || f.spec.dream;
   el('leave-zapper').hidden = !fighting || !f.spec.oneBlow;

@@ -7,7 +7,7 @@ const el = id => {
   if (!nodes.has(id)) {
     const classes = new Set();
     nodes.set(id, { style: {}, textContent: '', innerHTML: '', value: '',
-      querySelector: () => null,
+      querySelector: () => null, setAttribute() {},
       classList: { add: c => classes.add(c), remove: c => classes.delete(c), contains: c => classes.has(c) } });
   }
   return nodes.get(id);
@@ -17,10 +17,13 @@ const frames = [];
 let now = 0;
 const context = createContext({ document: { getElementById: el }, console,
   performance: { now: () => now }, requestAnimationFrame: callback => frames.push(callback) });
+const titleModule = new SourceTextModule(readFileSync(new URL('../i18n/en/progression.js', 'file://' + process.argv[1]), 'utf8'), { context });
+await titleModule.link(() => { throw Error('Unexpected translation dependency'); });
+await titleModule.evaluate();
 const stubs = {
   '../core/state.js': { apiFetch: () => new Promise((resolve, reject) => pending.push({ resolve, reject })), getToken: () => token,
     getUsername: () => 'Tester', setUsername() {}, setCurrentUserLevel() {} },
-  '../i18n.js': { t: key => key },
+  '../i18n.js': { t: key => titleModule.namespace.default[key] || key },
   '../progression/shop.js': { updateCoinsDisplay() {} },
   '../progression/rubies.js': { updateRubiesDisplay() {} },
   '../progression/diamonds.js': { updateDiamondsDisplay() {} },
@@ -90,3 +93,35 @@ now = 100; frames.shift()(now);
 assert.equal(frames.length, 0, 'existing tween still finishes');
 assert.ok(el('play-xp-boost').innerHTML.includes('+0.3% boost'));
 console.log('Immediate boost/heartbeat purchase updates and active-animation preservation passed.');
+
+let isAdmin = true;
+profile.setProfileHooks({ getIsAdmin: () => isAdmin });
+for (const [jobXp, level, percent] of [[0, 0, 0], [999, 0, 99.9], [1000, 1, 0], [2999, 1, 99.95], [3000, 2, 0], [4500, 2, 50], [6000, 3, 0]]) {
+  profile.renderBooksXpSummary({ ...xpData, jobXp });
+  for (const prefix of ['books', 'play']) {
+    assert.equal(el(`${prefix}-job-xp`).hidden, false);
+    assert.equal(el(`${prefix}-job-xp-level`).textContent, `Job Lvl ${level}`);
+    assert.ok(Math.abs(parseFloat(el(`${prefix}-job-xp-fill`).style.width) - percent) < 0.00001);
+  }
+}
+profile.renderBooksXpSummary({ ...xpData, xp: 999999, jobXp: 6000 });
+assert.equal(el('books-job-xp-level').textContent, 'Job Lvl 3', 'awarded XP and boosts do not affect event levels');
+isAdmin = false;
+profile.renderBooksXpSummary({ ...xpData, jobXp: 6000, isAdmin: true });
+assert.equal(el('books-job-xp').hidden, false, 'Job Level is visible to ordinary signed-in players');
+assert.equal(el('books-job-xp-title').textContent, 'Panner');
+isAdmin = true; token = null;
+profile.renderBooksXpSummary({ ...xpData, jobXp: 6000 });
+assert.equal(el('play-job-xp').hidden, true, 'logout hides the event bar');
+token = 'new-session';
+profile.renderBooksXpSummary(xpData);
+assert.equal(el('books-job-xp').hidden, true, 'an older cached snapshot without the counter stays hidden');
+console.log('Independent event XP thresholds, live updates, player visibility and logout guards passed.');
+
+profile.setProfileHooks({ getIsAdmin: () => true });
+const approved = ['Laborer','Digger','Sifter','Panner','Quarrier','Prospector','Miner','Excavator','Ore Grader','Stonecutter','Gem Sorter','Gem Polisher','Gem Cutter','Lapidary','Jeweler','Gemsmith','Mine Foreman','Master Miner','Master Lapidary','Master Jeweler','Gem Guildmaster'];
+for (let level = 0; level <= 21; level++) {
+  profile.renderBooksXpSummary({ ...xpData, jobXp: 1000 * level * (level + 1) / 2 });
+  for (const prefix of ['books', 'play']) assert.equal(el(`${prefix}-job-xp-title`).textContent, approved[Math.min(level,20)], 'approved title for Job Level ' + level);
+}
+console.log('All approved Job Level titles, including level zero and the final-title fallback, passed.');

@@ -54,7 +54,7 @@ export function renderSim529() {
   el('enemyWeapon').disabled = fighting;
   const targets = f?.spec.shadows ? f.shadows.map((shadow, index) => ({ shadow, index }))
     .filter(({ shadow }) => !shadow.banished) : f ? rules.voyageTargets(f) : [];
-  const pipTargets = f?.spec.splitFerrets ? targets.filter(({ foe, index }) => foe.phase !== 0 || index < 6) : targets;
+  const pipTargets = f?.spec.splitFerrets ? targets.filter(({ foe, index }) => foe.phase !== 0 || index < rules.VOYAGE_RULES.ferretSplit) : targets;
   const available = f?.spec.splitFerrets ? pipTargets.length ? pipTargets : targets.slice(0, 1)
     : f?.spec.simultaneous || f?.spec.alternating || f?.spec.argonautBattle || f?.spec.shadows ? targets : targets.slice(0, 1);
   const selected = el('target').value;
@@ -73,7 +73,7 @@ export function renderSim529() {
     || !f?.spec.bribe && !f?.spec.equipmentBribe && !f?.spec.eggBribe;
   el('sleeping_rex').hidden = !f?.spec.sleepingRoll;
   el('sleeping_rex').disabled ||= f?.sleepChecked;
-  el('leave').hidden = ![57, 67, 77, 90].includes(f?.spec.section);
+  el('leave').hidden = !rules.voyageCanLeave(f?.spec);
   el('teeth').disabled ||= p.dragonTeeth === 0 || f?.spec.shadows || f?.spec.dream || p.shape !== 'human';
   el('weakening').disabled ||= !p.weakeningPotion || f?.spec.dream;
   el('gnurlbash_button').disabled = !fighting || !p.gnurlbash || f.spec.dream || f.spec.shadows;
@@ -98,14 +98,16 @@ export function renderSim529() {
     : tk('round', { round: f.rounds + 1 })}` : f?.status === 'redirect' ? tk('redirect', { section: f.redirect })
     : f ? `${label(f.spec.section)}: ${tk(f.status)}` : tk('pick');
   el('crew').innerHTML = p.companions.map((ally, index) => `<details><summary>${escapeHtml(tk('companion_label', {
-    name: ally.name, number: ally.name === 'Argonaut' ? index - 1 : '' }))}</summary>${['life', 'hit', 'bonus', 'armour'].map(key =>
+    name: ally.name, number: ally.name === rules.voyageCompanionName('argonaut') ? index - 1 : '' }))}</summary>${['life', 'hit', 'bonus', 'armour'].map(key =>
     `<label class="inv-edit-row">${tk(key === 'hit' || key === 'bonus' ? 'companion_' + key : key)}<input class="inv-edit-input inv-qty-input" type="number" min="0" step="1" data-ally="${index}" data-stat="${key}" value="${ally[key]}" ${fighting ? 'disabled' : ''}></label>`).join('')}</details>`).join('');
-  const selectedEncounter = Number(el('encounter').value);
-  const party = fighting ? f.spec.argonautBattle : selectedEncounter === 113;
+  const selectedEncounter = rules.voyageEncounter(el('encounter').value);
+  const partySpec = fighting ? f.spec : selectedEncounter;
+  const party = partySpec?.argonautBattle;
+  const assignmentFoes = fighting ? f.foes : partySpec?.foes ?? [];
   const participants = [p, ...(fighting ? f.allies : p.companions)];
   el('assignments').hidden = !party;
-  el('assignments-list').innerHTML = party ? Array.from({ length: 10 }, (_, index) =>
-    `<label class="inv-edit-row">${tk('assigned_to', { enemy: 'Pirate', number: index + 1 })}<select class="inv-edit-input" data-assignment="${index}">${participants.map((actor, i) =>
+  el('assignments-list').innerHTML = party ? assignmentFoes.map((foe, index) =>
+    `<label class="inv-edit-row">${tk('assigned_to', { enemy: foe.name, number: index + 1 })}<select class="inv-edit-input" data-assignment="${index}">${participants.map((actor, i) =>
       `<option value="${i}" ${i === (fighting ? f.options.assignments?.[index] ?? 0 : Math.min(index, p.companions.length)) ? 'selected' : ''} ${actor.life <= 0 ? 'disabled' : ''}>${escapeHtml(i ? actor.name : tk('player'))}</option>`).join('')}</select></label>`).join('') : '';
   el('log').innerHTML = d.log.slice(-100).reverse().map(line => `<div>${escapeHtml(line)}</div>`).join('');
   el('history').innerHTML = d.history.slice(-50).reverse().map(row => `<div class="bsim-history-row">${escapeHtml(row.enemy)}: ${escapeHtml(tk(row.outcome))}</div>`).join('');
@@ -140,7 +142,7 @@ export function initSim529() {
   el('start').addEventListener('click', () => {
     const settings = Object.fromEntries(options.map(key => [key, el(`option-${key}`).checked]));
     settings.enemyWeapon = el('enemyWeapon').value.replace('enemy_', '');
-    if (Number(el('encounter').value) === 113) settings.assignments = Array.from(el('assignments-list').querySelectorAll('select'), input => Number(input.value));
+    if (rules.voyageEncounter(el('encounter').value)?.argonautBattle) settings.assignments = Array.from(el('assignments-list').querySelectorAll('select'), input => Number(input.value));
     const section = el('encounter').value;
     const apply = d => { const next = rules.createVoyageFight(section, character(d), customSetup.settings(d, settings, section));
       record(d); d.fight = next; d.dreamAgain = d.limerick = false; logEvents(d); };
@@ -149,7 +151,7 @@ export function initSim529() {
   for (const key of ['encounter', 'spell', 'healing', 'cure_type', 'target']) el(key).addEventListener('change', renderSim529);
   el('new_character').addEventListener('click', () => confirm(tk('new_confirm'), d => {
     record(d); const stats = rules.initialVoyageLife(character(d).permanent);
-    const goldenKeys = d.fight?.spec.section === 203 && d.fight.status === 'loss' ? character(d).goldenKeys : 0;
+    const goldenKeys = rules.voyageRetainsKeysOnLoss(d.fight) ? character(d).goldenKeys : 0;
     d.player = { ...rules.createVoyageCharacter(), ...stats, goldenKeys }; d.fight = null; d.dreamAgain = d.limerick = false;
   }));
   for (const key of [...core, ...resources, 'sprain', 'limp']) el(key).addEventListener('change', () => action(d => {

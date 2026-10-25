@@ -1,4 +1,4 @@
-import { RULES_REVISION } from './definition.js';
+import { RULES_REVISION, ENCOUNTERS, HOUSE_RULES } from './definition.js';
 
 const integer = (value, min, max) => {
   if (!Number.isSafeInteger(value) || value < min || value > max) throw new RangeError('Invalid combat value');
@@ -29,7 +29,10 @@ export function validateEncounter(encounter) {
   if (encounter.threshold === 1) throw new RangeError('Use zero for automatic wounds');
   integer(encounter.damageDice, 0, 2);
   if (encounter.heavyWound !== undefined && typeof encounter.heavyWound !== 'boolean') throw new RangeError('Invalid wound rule');
-  if (encounter.heavyWound && (String(encounter.id) !== '31' || encounter.threshold !== 10 || encounter.damageDice !== 0)) throw new RangeError('Invalid source exception');
+  if (encounter.heavyWound) {
+    const source = ENCOUNTERS.find(row => row.heavyWound && row.id === String(encounter.id));
+    if (!source || encounter.threshold !== source.threshold || encounter.damageDice !== source.damageDice) throw new RangeError('Invalid source exception');
+  }
   if (!encounter.heavyWound && encounter.damageDice < 1) throw new RangeError('Missing damage dice');
   return structuredClone(encounter);
 }
@@ -46,10 +49,10 @@ export function resolveRound(character, encounter, supplied = {}, random = rollD
   player.energy = Math.max(0, player.energy - damage);
   return {rulesRevision: RULES_REVISION, character: player, encounter: enemy, attackDice, attackTotal,
     wounded, damageDice, damage, outcome: !player.energy ? 'death' : wounded ? 'wounded' : 'safe',
-    destination: enemy.heavyWound ? (wounded ? '78' : '85') : null};
+    destination: enemy.heavyWound ? (wounded ? HOUSE_RULES.heavyWound.wounded : HOUSE_RULES.heavyWound.safe) : null};
 }
 
 export function rollAccuracy(value, random = rollDie) {
   const die = dice(value === undefined ? undefined : [value], 1, random)[0];
-  return {die, destination: die === 1 ? '7' : '38'};
+  return {die, destination: die === HOUSE_RULES.accuracy.specialRoll ? HOUSE_RULES.accuracy.special : HOUSE_RULES.accuracy.other};
 }

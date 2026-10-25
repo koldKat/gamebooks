@@ -1,3 +1,5 @@
+import { createRosterLoader } from '../../roster-data.js';
+
 // Book identity and declarative defaults; no DOM or saved-state access.
 export const definition = Object.freeze({
   "id": 433,
@@ -21,3 +23,8 @@ export const CRT = [
   /* 8 */ [[4,4],[5,4],[6,3],[7,2],[8,1],[9,1],[10,0],[11,0],[12,0],[14,0],[16,0],[18,0],['K',0]],
   /* 9 */ [[5,3],[6,3],[7,2],[8,0],[9,0],[10,0],[11,0],[12,0],[14,0],[16,0],[18,0],['K',0],['K',0]],
 ];
+
+export let ENCOUNTER_RULES = {};
+export const loadRoster = createRosterLoader(433, 'ENCOUNTER_RULES', entries => {
+  ENCOUNTER_RULES = Object.fromEntries(entries.flatMap(entry => [entry, ...(entry.supplementalSections ?? [])]).map(entry => [entry.section, entry.rules]));
+});

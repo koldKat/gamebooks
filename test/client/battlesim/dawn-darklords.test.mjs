@@ -1,3 +1,4 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as combat from '../../../public/js/battlesim/books/809/combat.js';
@@ -7,6 +8,8 @@ import { COMBAT_TABLE, combatColumn, combatLosses } from '../../../public/js/bat
 import { COMBAT_TABLE as established } from '../../../public/js/battlesim/books/430/definition.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim809.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim809.js';
+
+await loadFixtureRoster(809);
 
 test('standard Lone Wolf table and all ratio boundaries match established rules', () => {
   assert.deepEqual(COMBAT_TABLE, established);

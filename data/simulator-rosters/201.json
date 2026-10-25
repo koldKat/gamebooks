@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "bookId": 201,
+  "family": "fighting-fantasy",
+  "source": "Existing Lizardine breath damage and hit threshold; all legacy opponent columns and saved encounter fields remain unchanged.",
+  "enemies": [
+    {
+      "key": "lizardine-breath",
+      "name": "Lizardine",
+      "attack": 8,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Lizardine",
+        "attack": 8,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "fighting-fantasy",
+        "dataset": "CITY_RULES",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "fireDamage": 1,
+          "fireHitMax": 3
+        },
+        "part": {
+          "name": "Lizardine",
+          "attack": 8,
+          "defense": null,
+          "hp": 8,
+          "pb": null
+        },
+        "count": 1
+      }
+    }
+  ]
+}

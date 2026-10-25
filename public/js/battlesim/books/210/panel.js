@@ -1,10 +1,10 @@
-import { MAX_PROVISIONS, WOUND_DAMAGE, FIRE_BREATH_DMG, ELECTRIC_SHOCK_DMG, PROVISIONS_HEAL } from './definition.js';
+import { TEMPLE_RULES, MAX_PROVISIONS, WOUND_DAMAGE, FIRE_BREATH_DMG, ELECTRIC_SHOCK_DMG, PROVISIONS_HEAL } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ELECTRIC_SHOCK_DMG, FIRE_BREATH_DMG, MAX_PROVISIONS, PROVISIONS_HEAL, SVG_SKULL, SVG_TROPHY, WOUND_DAMAGE, _appendLog, _data, _eatProvisions, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _sideEnemyNameSafe, _skipLuck, _testLuck, apiFetch, closeSim210, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim210, openSim210, registerPanelShortcut, renderSim210, saveState, setSim210Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ TEMPLE_RULES, ALL_PANEL_OVERLAY_IDS, ELECTRIC_SHOCK_DMG, FIRE_BREATH_DMG, MAX_PROVISIONS, PROVISIONS_HEAL, SVG_SKULL, SVG_TROPHY, WOUND_DAMAGE, _appendLog, _data, _eatProvisions, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _sideEnemyNameSafe, _skipLuck, _testLuck, apiFetch, closeSim210, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim210, openSim210, registerPanelShortcut, renderSim210, saveState, setSim210Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _resetEncounterKnobs, _runRound, _testLuck, _skipLuck, _resetBattle } = createCombat(simulatorContext);
 const { _eatProvisions } = createEffects(simulatorContext);

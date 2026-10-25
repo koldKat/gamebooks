@@ -1,4 +1,4 @@
-import { ENCOUNTERS, MECHS, RULES_REVISION } from './definition.js';
+import { ENCOUNTERS, MECHS, RULES_REVISION, ZENDARI_RULES } from './definition.js';
 
 const integer = (value, min, max) => {
   if (!Number.isSafeInteger(value) || value < min || value > max) throw new RangeError('Invalid combat value');
@@ -66,12 +66,12 @@ export function applyRoll(fight, die) {
   const character = next.character;
   if (next.phase === 'personal') {
     next.rolls++;
-    const threshold = character.heavyWeapons ? 5 : next.encounter.kind === 'ravagers' ? 4 : 3;
+    const threshold = character.heavyWeapons ? 5 : next.encounter.kind === 'ravagers' ? ZENDARI_RULES.ravagerThreshold : ZENDARI_RULES.personalThreshold;
     if (die <= threshold) next.successes++;
     next.events.push({ kind: 'personal', die, successes: next.successes, rolls: next.rolls });
     if (next.encounter.kind === 'personal') return finish(next, die <= threshold ? 'win' : 'loss');
-    if (next.successes >= 2) return finish(next, 'win', next.rolls <= 3 ? '28' : '82');
-    if (next.rolls >= 5) return finish(next, 'loss');
+    if (next.successes >= ZENDARI_RULES.ravagerSuccesses) return finish(next, 'win', next.rolls <= ZENDARI_RULES.ravagerFastRolls ? ZENDARI_RULES.ravagerFastDestination : ZENDARI_RULES.ravagerSlowDestination);
+    if (next.rolls >= ZENDARI_RULES.ravagerMaxRolls) return finish(next, 'loss');
     return next;
   }
   if (next.phase === 'attack' || next.phase === 'sniper') {

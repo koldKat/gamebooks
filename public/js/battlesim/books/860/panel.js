@@ -1,4 +1,4 @@
-import { definition, ENCOUNTERS, encounterPreset } from './definition.js';
+import { definition, ENCOUNTERS } from './definition.js';
 import * as combat from './combat.js';
 import { createState } from './state.js';
 import { createOpponentEditor } from '../../opponents.js';
@@ -65,7 +65,7 @@ export function createHousePanel({document,t,getRun,getBookId,saveState,showAler
     el('cancel').disabled = !locked;
     el('accuracy').disabled = locked || !data.character.energy;
     el('manualDice').hidden = !el('manual').checked;
-    el('special').hidden = data.sourceId !== '31';
+    el('special').hidden = !ENCOUNTERS.some(row => row.id === data.sourceId && row.heavyWound);
     const result = data.result;
     el('status').textContent = tk('status.' + (locked ? 'pending' : result?.outcome ?? 'ready'));
     el('totals').textContent = tk('totals',{energy:data.character.energy,initial:data.character.initialEnergy});
@@ -110,7 +110,7 @@ export function createHousePanel({document,t,getRun,getBookId,saveState,showAler
       if (data.pending) throw new RangeError('Active round');
       const opponents = editor.read();
       if (opponents.length !== 1) throw new RangeError('Choose one encounter');
-      const source = data.sourceId === '31' ? encounterPreset('31') : null;
+      const source = ENCOUNTERS.find(row => row.id === data.sourceId && row.heavyWound) ?? null;
       data.encounter = combat.validateEncounter({...opponents[0],id:source?.id,heavyWound:Boolean(source)});
       data.character = character();
       if (!data.character.energy) throw new RangeError('Dead character');

@@ -1,6 +1,6 @@
 import {die, integer, rollDice, damageWithLuck} from '../../engines/sorcery/core.js';
 import {validateOpponents} from '../../opponents.js';
-import {encounterFor, RULES_REVISION} from './definition.js';
+import {encounterFor, RULES_REVISION, TALISMAN_RULES} from './definition.js';
 
 export function validateCharacter(character, alive = false) {
   if (!character || typeof character.dead !== 'boolean' || alive && character.dead) throw new RangeError('Invalid character');
@@ -139,7 +139,7 @@ function advance(fight) {
       fight.hits++;
     } else {
       fight.character.stamina = Math.max(0, fight.character.stamina - damage);
-      if (enemy.skillDrain) fight.character.skill = Math.max(0, fight.character.skill - 1);
+      if (enemy.skillDrain) fight.character.skill = Math.max(0, fight.character.skill - TALISMAN_RULES.skillDrainAmount);
       const capture = fight.config.capture;
       if (capture && capture.enemy === exchange.enemy && enemyAttack >= capture.attack) fight.interruption = capture.destination;
     }

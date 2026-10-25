@@ -229,6 +229,11 @@
             "win": 131,
             "modifier": -1,
             "woundPenalty": true
+          },
+          "support": {
+            "rules": {
+              "raceTarget": 24
+            }
           }
         },
         "part": {

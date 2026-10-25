@@ -1,5 +1,6 @@
 // Admin startup, tooltips, and tab switching.
 
+import { userProgressTooltipHtml } from './core.js';
 import { loadTips } from './tips.js';
 import { loadAdminAnthologies } from './anthologies.js';
 import { loadAdminSeries } from './series.js';
@@ -18,7 +19,11 @@ import { loadTools, loadAll, loadActiveTab, registerTabLoaders, loadLive, loadSt
   document.addEventListener('mouseover', e => {
     const el = e.target.closest('[data-tooltip]');
     tip.style.display = el ? 'block' : 'none';
-    if (el) { tip.textContent = el.dataset.tooltip; position(e); }
+    if (el) {
+      if (el._adminProgress) tip.innerHTML = userProgressTooltipHtml(el._adminProgress);
+      else tip.textContent = el.dataset.tooltip;
+      position(e);
+    }
   });
   document.addEventListener('mousemove', e => {
     if (tip.style.display === 'block') {

@@ -46,7 +46,7 @@ export function stageName(stage) {
 
 // Factory: build a complete per-book simulator object. idPrefix/stateKey/prefix
 // and the Honour default are the only things that differ between books.
-export function createCretanSim({ bookId, idPrefix, stateKey, i18nPrefix, defaultHonour }) {
+export function createCretanSim({ bookId, idPrefix, stateKey, i18nPrefix, defaultHonour, requiresDivineNameRules }) {
   const ID = idPrefix;                 // e.g. 'sim400'
   const K  = i18nPrefix;               // e.g. 'battlesim400'
   const tk = (suffix, params) => t(`${K}.${suffix}`, params);
@@ -354,7 +354,7 @@ export function createCretanSim({ bookId, idPrefix, stateKey, i18nPrefix, defaul
       d.enemy.protection = defense || 0;
       d.enemy.hasStats = true;
     }
-    d.enemy.needsDivine = /minotaur/i.test(enemy.name);
+    d.enemy.needsDivine = requiresDivineNameRules.some(rule => rule.test(enemy.name));
     d.enemy.companions = 0;
     d.enemy.stage = HEALTHY;
     if (!carryPreviousWounds) d.player.stage = HEALTHY;

@@ -1,0 +1,1870 @@
+{
+  "schemaVersion": 1,
+  "bookId": 438,
+  "family": "lone-wolf",
+  "source": "Complete original section-specific Dungeons of Torgar encounter rules: psychic immunity/multipliers, conditional skill changes, escape deadlines/damage rounds, victory destinations, timed retreats, damage multipliers, Tagazin threshold and two-stage swordsmen. All existing enemy fields/IDs and player/general combat tables preserved.",
+  "enemies": [
+    {
+      "key": "section:2:0",
+      "name": "Гарнизон с драккарими §2",
+      "attack": 26,
+      "defense": 0,
+      "hp": 39,
+      "pb": 0,
+      "adopt": {
+        "name": "Гарнизон с драккарими §2",
+        "attack": 26,
+        "defense": 0,
+        "hp": 39,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 2,
+          "rules": {
+            "victory": {
+              "route": 332
+            }
+          }
+        },
+        "part": {
+          "name": "Гарнизон с драккарими §2",
+          "attack": 26,
+          "defense": 0,
+          "hp": 39,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:23:0",
+      "name": "Партизански конник §23",
+      "attack": 17,
+      "defense": 0,
+      "hp": 24,
+      "pb": 0,
+      "adopt": {
+        "name": "Партизански конник §23",
+        "attack": 17,
+        "defense": 0,
+        "hp": 24,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 23,
+          "rules": {
+            "victory": {
+              "route": 239
+            }
+          }
+        },
+        "part": {
+          "name": "Партизански конник §23",
+          "attack": 17,
+          "defense": 0,
+          "hp": 24,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:28:0",
+      "name": "Сикуали §28",
+      "attack": 29,
+      "defense": 0,
+      "hp": 36,
+      "pb": 0,
+      "adopt": {
+        "name": "Сикуали §28",
+        "attack": 29,
+        "defense": 0,
+        "hp": 36,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 28,
+          "rules": {
+            "skillAdjustments": [
+              {
+                "amount": -3,
+                "firstRound": true,
+                "whenFalse": "tracking"
+              }
+            ],
+            "victory": {
+              "route": 169,
+              "maxRounds": 4,
+              "lateRoute": 309
+            }
+          }
+        },
+        "part": {
+          "name": "Сикуали §28",
+          "attack": 29,
+          "defense": 0,
+          "hp": 36,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:33:0",
+      "name": "Халгар §33",
+      "attack": 24,
+      "defense": 0,
+      "hp": 30,
+      "pb": 0,
+      "adopt": {
+        "name": "Халгар §33",
+        "attack": 24,
+        "defense": 0,
+        "hp": 30,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 33,
+          "rules": {
+            "victory": {
+              "route": 145
+            }
+          }
+        },
+        "part": {
+          "name": "Халгар §33",
+          "attack": 24,
+          "defense": 0,
+          "hp": 30,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:41:0",
+      "name": "Роарк §41",
+      "attack": 18,
+      "defense": 0,
+      "hp": 20,
+      "pb": 0,
+      "adopt": {
+        "name": "Роарк §41",
+        "attack": 18,
+        "defense": 0,
+        "hp": 20,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 41,
+          "rules": {
+            "deadline": {
+              "rounds": 3,
+              "route": 10
+            },
+            "victory": {
+              "route": 326
+            }
+          }
+        },
+        "part": {
+          "name": "Роарк §41",
+          "attack": 18,
+          "defense": 0,
+          "hp": 20,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:54:0",
+      "name": "Лапилибор §54",
+      "attack": 16,
+      "defense": 0,
+      "hp": 50,
+      "pb": 0,
+      "adopt": {
+        "name": "Лапилибор §54",
+        "attack": 16,
+        "defense": 0,
+        "hp": 50,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 54,
+          "rules": {
+            "skillAdjustments": [
+              {
+                "amount": -3
+              },
+              {
+                "byOption": {
+                  "option": "tutelary",
+                  "yes": -2,
+                  "no": -4
+                },
+                "whenFalse": "weapon"
+              }
+            ],
+            "victory": {
+              "route": 237
+            }
+          }
+        },
+        "part": {
+          "name": "Лапилибор §54",
+          "attack": 16,
+          "defense": 0,
+          "hp": 50,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:76:0",
+      "name": "Бхакиши §76",
+      "attack": 21,
+      "defense": 0,
+      "hp": 25,
+      "pb": 0,
+      "adopt": {
+        "name": "Бхакиши §76",
+        "attack": 21,
+        "defense": 0,
+        "hp": 25,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 76,
+          "rules": {
+            "blastImmune": true,
+            "victory": {
+              "route": 34
+            }
+          }
+        },
+        "part": {
+          "name": "Бхакиши §76",
+          "attack": 21,
+          "defense": 0,
+          "hp": 25,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:81:0",
+      "name": "Глутница акатази §81",
+      "attack": 28,
+      "defense": 0,
+      "hp": 45,
+      "pb": 0,
+      "adopt": {
+        "name": "Глутница акатази §81",
+        "attack": 28,
+        "defense": 0,
+        "hp": 45,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 81,
+          "rules": {
+            "psychicMultiplier": {
+              "normal": 2,
+              "spirit": 3
+            },
+            "escape": {
+              "route": 340,
+              "afterRounds": 0,
+              "damageRound": false
+            },
+            "victory": {
+              "route": 268
+            }
+          }
+        },
+        "part": {
+          "name": "Глутница акатази §81",
+          "attack": 28,
+          "defense": 0,
+          "hp": 45,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:109:0",
+      "name": "Елитни рицари на смъртта §109",
+      "attack": 38,
+      "defense": 0,
+      "hp": 45,
+      "pb": 0,
+      "adopt": {
+        "name": "Елитни рицари на смъртта §109",
+        "attack": 38,
+        "defense": 0,
+        "hp": 45,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 109,
+          "rules": {
+            "victory": {
+              "route": 162
+            }
+          }
+        },
+        "part": {
+          "name": "Елитни рицари на смъртта §109",
+          "attack": 38,
+          "defense": 0,
+          "hp": 45,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:115:0",
+      "name": "Драккарими §115",
+      "attack": 22,
+      "defense": 0,
+      "hp": 32,
+      "pb": 0,
+      "adopt": {
+        "name": "Драккарими §115",
+        "attack": 22,
+        "defense": 0,
+        "hp": 32,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 115,
+          "rules": {
+            "victory": {
+              "route": 297
+            }
+          }
+        },
+        "part": {
+          "name": "Драккарими §115",
+          "attack": 22,
+          "defense": 0,
+          "hp": 32,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:118:0",
+      "name": "Партизански конници §118",
+      "attack": 28,
+      "defense": 0,
+      "hp": 32,
+      "pb": 0,
+      "adopt": {
+        "name": "Партизански конници §118",
+        "attack": 28,
+        "defense": 0,
+        "hp": 32,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 118,
+          "rules": {
+            "skillAdjustments": [
+              {
+                "amount": 2,
+                "whenTrue": "animal"
+              }
+            ],
+            "escape": {
+              "route": 39,
+              "afterRounds": 2,
+              "damageRound": true
+            },
+            "victory": {
+              "route": 239
+            }
+          }
+        },
+        "part": {
+          "name": "Партизански конници §118",
+          "attack": 28,
+          "defense": 0,
+          "hp": 32,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:119:0",
+      "name": "Крони §119",
+      "attack": 20,
+      "defense": 0,
+      "hp": 33,
+      "pb": 0,
+      "adopt": {
+        "name": "Крони §119",
+        "attack": 20,
+        "defense": 0,
+        "hp": 33,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 119,
+          "rules": {
+            "victory": {
+              "route": 84
+            }
+          }
+        },
+        "part": {
+          "name": "Крони §119",
+          "attack": 20,
+          "defense": 0,
+          "hp": 33,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:126:0",
+      "name": "Група крорни §126",
+      "attack": 23,
+      "defense": 0,
+      "hp": 60,
+      "pb": 0,
+      "adopt": {
+        "name": "Група крорни §126",
+        "attack": 23,
+        "defense": 0,
+        "hp": 60,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 126,
+          "rules": {
+            "victory": {
+              "route": 11,
+              "maxRounds": 4,
+              "lateRoute": 321
+            }
+          }
+        },
+        "part": {
+          "name": "Група крорни §126",
+          "attack": 23,
+          "defense": 0,
+          "hp": 60,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:132:0",
+      "name": "Партизани §132",
+      "attack": 24,
+      "defense": 0,
+      "hp": 36,
+      "pb": 0,
+      "adopt": {
+        "name": "Партизани §132",
+        "attack": 24,
+        "defense": 0,
+        "hp": 36,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 132,
+          "rules": {
+            "escape": {
+              "route": 23,
+              "afterRounds": 0,
+              "damageRound": false
+            },
+            "victory": {
+              "route": 170
+            }
+          }
+        },
+        "part": {
+          "name": "Партизани §132",
+          "attack": 24,
+          "defense": 0,
+          "hp": 36,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:133:0",
+      "name": "Сенерски призраци §133",
+      "attack": 32,
+      "defense": 0,
+      "hp": 40,
+      "pb": 0,
+      "adopt": {
+        "name": "Сенерски призраци §133",
+        "attack": 32,
+        "defense": 0,
+        "hp": 40,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 133,
+          "rules": {
+            "blastImmune": true,
+            "enemyLossMultiplier": 2,
+            "victory": {
+              "route": 156
+            }
+          }
+        },
+        "part": {
+          "name": "Сенерски призраци §133",
+          "attack": 32,
+          "defense": 0,
+          "hp": 40,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:143:0",
+      "name": "Зиран §143",
+      "attack": 25,
+      "defense": 0,
+      "hp": 33,
+      "pb": 0,
+      "adopt": {
+        "name": "Зиран §143",
+        "attack": 25,
+        "defense": 0,
+        "hp": 33,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 143,
+          "rules": {
+            "victory": {
+              "route": 56
+            }
+          }
+        },
+        "part": {
+          "name": "Зиран §143",
+          "attack": 25,
+          "defense": 0,
+          "hp": 33,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:148:0",
+      "name": "Рицар на смъртта §148",
+      "attack": 24,
+      "defense": 0,
+      "hp": 40,
+      "pb": 0,
+      "adopt": {
+        "name": "Рицар на смъртта §148",
+        "attack": 24,
+        "defense": 0,
+        "hp": 40,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 148,
+          "rules": {
+            "blastImmune": true,
+            "victory": {
+              "route": 206
+            }
+          }
+        },
+        "part": {
+          "name": "Рицар на смъртта §148",
+          "attack": 24,
+          "defense": 0,
+          "hp": 40,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:168:0",
+      "name": "Сенерски призраци §168",
+      "attack": 24,
+      "defense": 0,
+      "hp": 40,
+      "pb": 0,
+      "adopt": {
+        "name": "Сенерски призраци §168",
+        "attack": 24,
+        "defense": 0,
+        "hp": 40,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 168,
+          "rules": {
+            "blastImmune": true,
+            "skillAdjustments": [
+              {
+                "amount": 2
+              }
+            ],
+            "victory": {
+              "route": 156
+            }
+          }
+        },
+        "part": {
+          "name": "Сенерски призраци §168",
+          "attack": 24,
+          "defense": 0,
+          "hp": 40,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:170:0",
+      "name": "Партизански конник §170",
+      "attack": 17,
+      "defense": 0,
+      "hp": 24,
+      "pb": 0,
+      "adopt": {
+        "name": "Партизански конник §170",
+        "attack": 17,
+        "defense": 0,
+        "hp": 24,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 170,
+          "rules": {
+            "victory": {
+              "route": 239
+            }
+          }
+        },
+        "part": {
+          "name": "Партизански конник §170",
+          "attack": 17,
+          "defense": 0,
+          "hp": 24,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:172:0",
+      "name": "Городон §172",
+      "attack": 29,
+      "defense": 0,
+      "hp": 36,
+      "pb": 0,
+      "adopt": {
+        "name": "Городон §172",
+        "attack": 29,
+        "defense": 0,
+        "hp": 36,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 172,
+          "rules": {
+            "playerLossMultiplier": 0.5,
+            "victory": {
+              "route": 217
+            }
+          }
+        },
+        "part": {
+          "name": "Городон §172",
+          "attack": 29,
+          "defense": 0,
+          "hp": 36,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:180:0",
+      "name": "Рицар на смъртта §180",
+      "attack": 24,
+      "defense": 0,
+      "hp": 38,
+      "pb": 0,
+      "adopt": {
+        "name": "Рицар на смъртта §180",
+        "attack": 24,
+        "defense": 0,
+        "hp": 38,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 180,
+          "rules": {
+            "blastImmune": true,
+            "victory": {
+              "route": 316,
+              "maxRounds": 2,
+              "lateRoute": 261
+            }
+          }
+        },
+        "part": {
+          "name": "Рицар на смъртта §180",
+          "attack": 24,
+          "defense": 0,
+          "hp": 38,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:187:0",
+      "name": "Тайнторски вълк §187",
+      "attack": 27,
+      "defense": 0,
+      "hp": 49,
+      "pb": 0,
+      "adopt": {
+        "name": "Тайнторски вълк §187",
+        "attack": 27,
+        "defense": 0,
+        "hp": 49,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 187,
+          "rules": {
+            "deadline": {
+              "rounds": 4,
+              "route": 234
+            },
+            "victory": {
+              "route": 202
+            }
+          }
+        },
+        "part": {
+          "name": "Тайнторски вълк §187",
+          "attack": 27,
+          "defense": 0,
+          "hp": 49,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:208:0",
+      "name": "Халгар §208",
+      "attack": 24,
+      "defense": 0,
+      "hp": 30,
+      "pb": 0,
+      "adopt": {
+        "name": "Халгар §208",
+        "attack": 24,
+        "defense": 0,
+        "hp": 30,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 208,
+          "rules": {
+            "victory": {
+              "route": 145
+            }
+          }
+        },
+        "part": {
+          "name": "Халгар §208",
+          "attack": 24,
+          "defense": 0,
+          "hp": 30,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:211:0",
+      "name": "Хамърлендец §211",
+      "attack": 24,
+      "defense": 0,
+      "hp": 31,
+      "pb": 0,
+      "adopt": {
+        "name": "Хамърлендец §211",
+        "attack": 24,
+        "defense": 0,
+        "hp": 31,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 211,
+          "rules": {
+            "blastImmune": true,
+            "victory": {
+              "route": 87
+            }
+          }
+        },
+        "part": {
+          "name": "Хамърлендец §211",
+          "attack": 24,
+          "defense": 0,
+          "hp": 31,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:216:0",
+      "name": "Партизани §216",
+      "attack": 24,
+      "defense": 0,
+      "hp": 36,
+      "pb": 0,
+      "adopt": {
+        "name": "Партизани §216",
+        "attack": 24,
+        "defense": 0,
+        "hp": 36,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 216,
+          "rules": {
+            "escape": {
+              "route": 23,
+              "afterRounds": 0,
+              "damageRound": false
+            },
+            "victory": {
+              "route": 170
+            }
+          }
+        },
+        "part": {
+          "name": "Партизани §216",
+          "attack": 24,
+          "defense": 0,
+          "hp": 36,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:245:0",
+      "name": "Сикуали §245",
+      "attack": 21,
+      "defense": 0,
+      "hp": 36,
+      "pb": 0,
+      "adopt": {
+        "name": "Сикуали §245",
+        "attack": 21,
+        "defense": 0,
+        "hp": 36,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 245,
+          "rules": {
+            "skillAdjustments": [
+              {
+                "amount": 2
+              }
+            ],
+            "victory": {
+              "route": 169,
+              "maxRounds": 4,
+              "lateRoute": 309
+            }
+          }
+        },
+        "part": {
+          "name": "Сикуали §245",
+          "attack": 21,
+          "defense": 0,
+          "hp": 36,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:251:0",
+      "name": "Загганозоди §251",
+      "attack": 24,
+      "defense": 0,
+      "hp": 35,
+      "pb": 0,
+      "adopt": {
+        "name": "Загганозоди §251",
+        "attack": 24,
+        "defense": 0,
+        "hp": 35,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 251,
+          "rules": {
+            "skillAdjustments": [
+              {
+                "amount": 2,
+                "firstRound": true
+              }
+            ],
+            "victory": {
+              "route": 271
+            }
+          }
+        },
+        "part": {
+          "name": "Загганозоди §251",
+          "attack": 24,
+          "defense": 0,
+          "hp": 35,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:254:0",
+      "name": "Акатази §254",
+      "attack": 27,
+      "defense": 0,
+      "hp": 43,
+      "pb": 0,
+      "adopt": {
+        "name": "Акатази §254",
+        "attack": 27,
+        "defense": 0,
+        "hp": 43,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 27,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 254,
+          "rules": {
+            "psychicMultiplier": {
+              "normal": 2,
+              "spirit": 3
+            },
+            "victory": {
+              "route": 220
+            }
+          }
+        },
+        "part": {
+          "name": "Акатази §254",
+          "attack": 27,
+          "defense": 0,
+          "hp": 43,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:274:0",
+      "name": "Пирсиански фехтовач 1 §274",
+      "attack": 18,
+      "defense": 0,
+      "hp": 31,
+      "pb": 0,
+      "adopt": {
+        "name": "Пирсиански фехтовач 1 §274",
+        "attack": 18,
+        "defense": 0,
+        "hp": 31,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 28,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": 274,
+          "rules": {
+            "secondEnemy": {
+              "nameKey": "battlesim438.ui.second_enemy",
+              "skill": 17,
+              "endurance": 29
+            },
+            "victory": {
+              "route": 68
+            }
+          }
+        },
+        "part": {
+          "name": "Пирсиански фехтовач 1 §274",
+          "attack": 18,
+          "defense": 0,
+          "hp": 31,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:274:1",
+      "name": "Пирсиански фехтовач 2 §274",
+      "attack": 17,
+      "defense": 0,
+      "hp": 29,
+      "pb": 0,
+      "adopt": {
+        "name": "Пирсиански фехтовач 2 §274",
+        "attack": 17,
+        "defense": 0,
+        "hp": 29,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 28,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": 274,
+          "rules": {
+            "secondEnemy": {
+              "nameKey": "battlesim438.ui.second_enemy",
+              "skill": 17,
+              "endurance": 29
+            },
+            "victory": {
+              "route": 68
+            }
+          }
+        },
+        "part": {
+          "name": "Пирсиански фехтовач 2 §274",
+          "attack": 17,
+          "defense": 0,
+          "hp": 29,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:286:0",
+      "name": "Демонски господар Тагазин §286",
+      "attack": 45,
+      "defense": 0,
+      "hp": 65,
+      "pb": 0,
+      "adopt": {
+        "name": "Демонски господар Тагазин §286",
+        "attack": 45,
+        "defense": 0,
+        "hp": 65,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 29,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 286,
+          "rules": {
+            "blastImmune": true,
+            "stopEnemyEndurance": {
+              "atMost": 20,
+              "route": 20
+            }
+          }
+        },
+        "part": {
+          "name": "Демонски господар Тагазин §286",
+          "attack": 45,
+          "defense": 0,
+          "hp": 65,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:288:0",
+      "name": "Хамърлендци §288",
+      "attack": 29,
+      "defense": 0,
+      "hp": 40,
+      "pb": 0,
+      "adopt": {
+        "name": "Хамърлендци §288",
+        "attack": 29,
+        "defense": 0,
+        "hp": 40,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 30,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 288,
+          "rules": {
+            "skillAdjustments": [
+              {
+                "amount": 2
+              }
+            ],
+            "victory": {
+              "route": 44
+            }
+          }
+        },
+        "part": {
+          "name": "Хамърлендци §288",
+          "attack": 29,
+          "defense": 0,
+          "hp": 40,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:304:0",
+      "name": "Лапилибор §304",
+      "attack": 16,
+      "defense": 0,
+      "hp": 50,
+      "pb": 0,
+      "adopt": {
+        "name": "Лапилибор §304",
+        "attack": 16,
+        "defense": 0,
+        "hp": 50,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 31,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 304,
+          "rules": {
+            "skillAdjustments": [
+              {
+                "amount": -3
+              },
+              {
+                "amount": -2,
+                "whenTrue": "shield"
+              }
+            ],
+            "victory": {
+              "route": 72
+            }
+          }
+        },
+        "part": {
+          "name": "Лапилибор §304",
+          "attack": 16,
+          "defense": 0,
+          "hp": 50,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:311:0",
+      "name": "Бхакиши §311",
+      "attack": 21,
+      "defense": 0,
+      "hp": 28,
+      "pb": 0,
+      "adopt": {
+        "name": "Бхакиши §311",
+        "attack": 21,
+        "defense": 0,
+        "hp": 28,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 32,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 311,
+          "rules": {
+            "blastImmune": true,
+            "victory": {
+              "route": 34
+            }
+          }
+        },
+        "part": {
+          "name": "Бхакиши §311",
+          "attack": 21,
+          "defense": 0,
+          "hp": 28,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:315:0",
+      "name": "Крорни §315",
+      "attack": 23,
+      "defense": 0,
+      "hp": 35,
+      "pb": 0,
+      "adopt": {
+        "name": "Крорни §315",
+        "attack": 23,
+        "defense": 0,
+        "hp": 35,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 33,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 315,
+          "rules": {
+            "victory": {
+              "route": 84
+            }
+          }
+        },
+        "part": {
+          "name": "Крорни §315",
+          "attack": 23,
+          "defense": 0,
+          "hp": 35,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:318:0",
+      "name": "Драккаримски гарнизон §318",
+      "attack": 26,
+      "defense": 0,
+      "hp": 39,
+      "pb": 0,
+      "adopt": {
+        "name": "Драккаримски гарнизон §318",
+        "attack": 26,
+        "defense": 0,
+        "hp": 39,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 34,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 318,
+          "rules": {
+            "victory": {
+              "route": 332
+            }
+          }
+        },
+        "part": {
+          "name": "Драккаримски гарнизон §318",
+          "attack": 26,
+          "defense": 0,
+          "hp": 39,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:320:0",
+      "name": "Елитни рицари на смъртта §320",
+      "attack": 42,
+      "defense": 0,
+      "hp": 48,
+      "pb": 0,
+      "adopt": {
+        "name": "Елитни рицари на смъртта §320",
+        "attack": 42,
+        "defense": 0,
+        "hp": 48,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 35,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 320,
+          "rules": {
+            "victory": {
+              "route": 162
+            }
+          }
+        },
+        "part": {
+          "name": "Елитни рицари на смъртта §320",
+          "attack": 42,
+          "defense": 0,
+          "hp": 48,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:336:0",
+      "name": "Тайнторски вълк §336",
+      "attack": 26,
+      "defense": 0,
+      "hp": 46,
+      "pb": 0,
+      "adopt": {
+        "name": "Тайнторски вълк §336",
+        "attack": 26,
+        "defense": 0,
+        "hp": 46,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 36,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 336,
+          "rules": {
+            "skillAdjustments": [
+              {
+                "byOption": {
+                  "option": "tutelary",
+                  "yes": -2,
+                  "no": -4
+                },
+                "firstRound": true
+              }
+            ],
+            "deadline": {
+              "rounds": 4,
+              "route": 234
+            },
+            "victory": {
+              "route": 202
+            }
+          }
+        },
+        "part": {
+          "name": "Тайнторски вълк §336",
+          "attack": 26,
+          "defense": 0,
+          "hp": 46,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:344:0",
+      "name": "Загганозоди §344",
+      "attack": 20,
+      "defense": 0,
+      "hp": 32,
+      "pb": 0,
+      "adopt": {
+        "name": "Загганозоди §344",
+        "attack": 20,
+        "defense": 0,
+        "hp": 32,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 37,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 344,
+          "rules": {
+            "victory": {
+              "route": 271
+            }
+          }
+        },
+        "part": {
+          "name": "Загганозоди §344",
+          "attack": 20,
+          "defense": 0,
+          "hp": 32,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:348:0",
+      "name": "Драккаримски капитан щурмовак §348",
+      "attack": 31,
+      "defense": 0,
+      "hp": 35,
+      "pb": 0,
+      "adopt": {
+        "name": "Драккаримски капитан щурмовак §348",
+        "attack": 31,
+        "defense": 0,
+        "hp": 35,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 38,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 348,
+          "rules": {
+            "victory": {
+              "route": 177
+            }
+          }
+        },
+        "part": {
+          "name": "Драккаримски капитан щурмовак §348",
+          "attack": 31,
+          "defense": 0,
+          "hp": 35,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:349:0",
+      "name": "Тайнторски вълк §349",
+      "attack": 25,
+      "defense": 0,
+      "hp": 42,
+      "pb": 0,
+      "adopt": {
+        "name": "Тайнторски вълк §349",
+        "attack": 25,
+        "defense": 0,
+        "hp": 42,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 39,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 349,
+          "rules": {
+            "deadline": {
+              "rounds": 4,
+              "route": 234
+            },
+            "victory": {
+              "route": 202
+            }
+          }
+        },
+        "part": {
+          "name": "Тайнторски вълк §349",
+          "attack": 25,
+          "defense": 0,
+          "hp": 42,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:113:0",
+      "name": "Барон Шинзар (Оггкор Кагазз) §113",
+      "attack": 40,
+      "defense": 0,
+      "hp": 50,
+      "pb": 0,
+      "adopt": {
+        "name": "Барон Шинзар (Оггкор Кагазз) §113",
+        "attack": 40,
+        "defense": 0,
+        "hp": 50,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 40,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 113,
+          "rules": {
+            "blastImmune": true,
+            "escape": {
+              "route": 229,
+              "afterRounds": 3,
+              "damageRound": true
+            },
+            "victory": {
+              "route": 300
+            }
+          }
+        },
+        "part": {
+          "name": "Барон Шинзар (Оггкор Кагазз) §113",
+          "attack": 40,
+          "defense": 0,
+          "hp": 50,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:252:0",
+      "name": "Зиран (с Могъщ жезъл) §252",
+      "attack": 40,
+      "defense": 0,
+      "hp": 50,
+      "pb": 0,
+      "adopt": {
+        "name": "Зиран (с Могъщ жезъл) §252",
+        "attack": 40,
+        "defense": 0,
+        "hp": 50,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 41,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 252,
+          "rules": {
+            "blastImmune": true,
+            "victory": {
+              "route": 305
+            }
+          }
+        },
+        "part": {
+          "name": "Зиран (с Могъщ жезъл) §252",
+          "attack": 40,
+          "defense": 0,
+          "hp": 50,
+          "pb": 0
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "section:312:0",
+      "name": "Тайнторски вълк (ранен) §312",
+      "attack": 21,
+      "defense": 0,
+      "hp": 36,
+      "pb": 0,
+      "adopt": {
+        "name": "Тайнторски вълк (ранен) §312",
+        "attack": 21,
+        "defense": 0,
+        "hp": 36,
+        "pb": 0
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "lone-wolf",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 42,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": 312,
+          "rules": {
+            "victory": {
+              "route": 178
+            }
+          }
+        },
+        "part": {
+          "name": "Тайнторски вълк (ранен) §312",
+          "attack": 21,
+          "defense": 0,
+          "hp": 36,
+          "pb": 0
+        },
+        "count": 1
+      }
+    }
+  ]
+}

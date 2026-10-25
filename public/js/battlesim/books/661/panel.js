@@ -384,7 +384,7 @@ function _typeSelect(id) {
   return `
     <div class="inv-edit-row">
       <span class="inv-edit-label bsim-stat-label">${t('battlesim661.ui.form_type')}</span>
-      <select id="${id}" class="inv-edit-input">
+      <select id="${id}" class="inv-edit-input bsim-select">
         <option value="rock">${t('battlesim661.ui.rock')}</option>
         <option value="paper">${t('battlesim661.ui.paper')}</option>
         <option value="scissors">${t('battlesim661.ui.scissors')}</option>

@@ -1,3 +1,4 @@
+import { DEMONDOOM_RULES } from '../../engines/demonspawn/demondoom-roster.js';
 // Combat rules and resolution; UI and persistence callbacks are injected.
 export function createCombat(getContext) {
 // BEGIN EXTRACTED RULES
@@ -63,7 +64,7 @@ function act(action) {
   else if(action==='player_attack'||action==='enemy_attack')value=rollDemondoomAttack(fight,action==='player_attack'?'player':'enemy',target());
   else if(action==='end_round')value=endDemondoomGroupRound(fight);
   else if(action==='apply_damage')value=applyDemondoomManualDamage(fight,number('manual_damage'));
-  else if(action==='leprosy_tick'&&fight.leprosy)value=applyDemondoomManualDamage(fight,fight.player.lifePoints/10);
+  else if(action==='leprosy_tick'&&fight.leprosy)value=applyDemondoomManualDamage(fight,fight.player.lifePoints/DEMONDOOM_RULES.enemyMagic.leprosyDivisor);
   else if(action==='poison'&&fight.encounter.rule==='assassin')value=applyDemondoomManualDamage(fight,fight.player.lifePoints);
   else if(action==='reconsider')value=finishDemondoomFight(fight,'reconsider');
   result(d,value);

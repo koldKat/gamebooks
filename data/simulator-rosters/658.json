@@ -332,7 +332,18 @@
               "lowSection": 7,
               "highSection": 91
             }
-          ]
+          ],
+          "support": {
+            "rules": {
+              "groups": {
+                "armour": 3,
+                "jeep": 4
+              },
+              "knifeSecondRound": 4,
+              "postCheckLower": 10,
+              "carryRemainingFrom": 90
+            }
+          }
         },
         "part": {
           "section": 9,

@@ -14,7 +14,8 @@ function fixture({ xp = 1890993, purchased = 24, balance = 25 } = {}) {
     bonus_fast_travels INTEGER DEFAULT 0, bonus_heartbeat_xp INTEGER DEFAULT 0,
     bonus_gc_chance_purchased INTEGER DEFAULT 0, bonus_gc_mint_purchased INTEGER DEFAULT 0);
     CREATE TABLE notifications (id INTEGER PRIMARY KEY, user_id INTEGER, type TEXT, payload TEXT);
-    CREATE TABLE xp_events (user_id INTEGER, event TEXT, ref TEXT, UNIQUE(user_id,event,ref));`);
+    CREATE TABLE xp_events (user_id INTEGER, event TEXT, ref TEXT, UNIQUE(user_id,event,ref));
+    CREATE TABLE user_job_xp(user_id INTEGER PRIMARY KEY,xp INTEGER);`);
   initializeDiamondBalances(db);
   const context = vm.createContext({ db, hasDiamondAccess, _insertNotif: db.prepare('INSERT INTO notifications (user_id,type,payload) VALUES (?,?,?)') });
   const xpSource = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
@@ -23,30 +24,31 @@ function fixture({ xp = 1890993, purchased = 24, balance = 25 } = {}) {
   vm.runInContext(admin.slice(admin.indexOf('function undoFastTravelCap('), admin.indexOf('function adminRefundShopItem(')), context);
   db.prepare('INSERT INTO users (id,xp,bonus_gc_mint_purchased,coins_spent) VALUES (1,?,?,?)')
     .run(xp, purchased, context.coinsFromXp(xp, purchased) - balance);
+  db.prepare('INSERT INTO user_job_xp VALUES(1,55000)').run();
   return { db, refund: vm.runInContext('_adminRefundShopItemTx', context), purchase: (item, id = 1) => context.purchaseShopItem(id, item), balance: () => context.coinBalance(db.prepare('SELECT * FROM users WHERE id=1').get()), notifications: () => db.prepare('SELECT * FROM notifications').all(),
     totals: () => getShopPurchaseTotals(db, context.computeLevel),
     quotes: () => getShopRefundRows(db.prepare('SELECT * FROM users WHERE id=1').get(), context.getShopItems(), context.computeLevel),
     setCost: (...args) => context.setShopItemCost(...args) };
 }
 
-test('all eight purchase totals exclude free bonuses and refund quotes match actual latest/all refunds', t => {
+test('all seven active purchase totals exclude free bonuses and refund quotes match actual latest/all refunds', t => {
   const f=fixture();t.after(()=>f.db.close());
   f.db.exec(`UPDATE users SET xp=55000,xp_boost_pct=13,bonus_heartbeat_xp=2,
     bonus_gc_chance_purchased=4,bonus_gc_mint_purchased=3,bonus_diamond_dig_purchased=2,
-    bonus_diamond_exchange_purchased=2,bonus_undos=2,bonus_fast_travels=3 WHERE id=1`);
+    bonus_diamond_exchange_purchased=0,bonus_undos=2,bonus_fast_travels=3 WHERE id=1`);
   f.setCost('undo',7,7);f.setCost('fast_travel',11,11);
-  assert.equal(f.totals().totalUpgrades,21);assert.equal(f.totals().upgradeXpBoosts,3);
-  assert.equal(f.totals().upgradeDiamondDig,2);assert.equal(f.totals().upgradeDiamondExchange,2);
-  const quotes=f.quotes();assert.equal(quotes.length,8);
+  assert.equal(f.totals().totalUpgrades,19);assert.equal(f.totals().upgradeXpBoosts,3);
+  assert.equal(f.totals().upgradeDiamondDig,2);assert.equal(f.totals().upgradeDiamondExchange,0);
+  const quotes=f.quotes();assert.equal(quotes.length,7);
   assert.equal(quotes.find(row=>row.id==='undo').refundOne,14);
   assert.equal(quotes.find(row=>row.id==='fast_travel').refundAll,66);
   for(const quote of quotes)for(const all of [false,true]){
     f.db.exec('SAVEPOINT check_refund');
     try{const result=f.refund(1,quote.id,all);assert.equal(result.refundedCost,all?quote.refundAll:quote.refundOne,quote.id);
-      assert.equal(f.totals().totalUpgrades,21-(all?quote.count:1));
+      assert.equal(f.totals().totalUpgrades,19-(all?quote.count:1));
     }finally{f.db.exec('ROLLBACK TO check_refund; RELEASE check_refund');}
   }
-  assert.equal(f.totals().totalUpgrades,21);
+  assert.equal(f.totals().totalUpgrades,19);
 });
 
 test('Coin Mint purchase explains the two coins minted from existing XP without awarding them twice', t => {
@@ -86,40 +88,32 @@ test('purchase and its bonus notification are atomic', t => {
   assert.deepEqual(f.db.prepare('SELECT * FROM users').get(), before);
 });
 
-test('diamond upgrades cost 1 through level, cap independently and never change existing diamond progress', t => {
-  const f = fixture({ xp: 55000, purchased: 0, balance: 55 }); t.after(() => f.db.close());
-  f.db.exec('INSERT INTO user_diamonds(user_id,qualifying_events,diamonds_earned,dig_progress) VALUES(1,36963,36,963000)');
-  const before = f.db.prepare('SELECT * FROM user_diamonds WHERE user_id=1').get();
-  for (let n = 1; n <= 10; n++) {
-    assert.equal(f.purchase('diamond_dig').ok, true);
-    assert.equal(f.db.prepare('SELECT coins_spent n FROM users WHERE id=1').get().n, n * (n + 1) / 2);
+test('digging upgrades cost 10 through 10 times Job Level and preserve current progress', t => {
+  const f=fixture({xp:55000,purchased:0,balance:55});t.after(()=>f.db.close());
+  f.db.exec('UPDATE users SET bonus_coins=495 WHERE id=1; INSERT INTO user_diamonds(user_id,qualifying_events,diamonds_earned,dig_progress) VALUES(1,36963,36,963000)');
+  const before=f.db.prepare('SELECT * FROM user_diamonds WHERE user_id=1').get();
+  for(let n=1;n<=10;n++){
+    assert.equal(f.purchase('diamond_dig').ok,true);
+    assert.equal(f.db.prepare('SELECT coins_spent n FROM users WHERE id=1').get().n,10*n*(n+1)/2);
   }
-  assert.equal(f.balance(), 0);
-  assert.equal(f.purchase('diamond_dig').error, 'cap_reached');
-  assert.equal(f.purchase('diamond_exchange').error, 'insufficient_coins');
-  f.db.exec('UPDATE users SET bonus_coins=55 WHERE id=1');
-  for (let n = 1; n <= 10; n++) assert.equal(f.purchase('diamond_exchange').ok, true);
-  assert.equal(f.db.prepare('SELECT bonus_diamond_exchange_purchased n FROM users WHERE id=1').get().n, 10);
-  assert.equal(f.balance(), 0);
-  assert.equal(f.purchase('diamond_exchange').error, 'cap_reached');
-  assert.deepEqual(f.db.prepare('SELECT * FROM user_diamonds WHERE user_id=1').get(), before);
-  assert.equal(f.notifications().length, 0, 'buying upgrades cannot mint retrospective gold or diamonds');
+  assert.equal(f.balance(),0);assert.equal(f.purchase('diamond_dig').error,'cap_reached');
+  assert.equal(f.purchase('diamond_exchange').error,'invalid_item');
+  assert.deepEqual(f.db.prepare('SELECT * FROM user_diamonds WHERE user_id=1').get(),before);
+  assert.equal(f.notifications().length,0);
 });
 
-test('diamond upgrades work for every player, reject level zero and refund escalating costs correctly', t => {
-  const f = fixture({ xp: 1000, purchased: 0, balance: 1 }); t.after(() => f.db.close());
-  f.db.exec('INSERT INTO users(id,xp,bonus_coins) VALUES(2,55000,100),(17,55000,100)');
-  for (const item of ['diamond_dig', 'diamond_exchange']) assert.equal(f.purchase(item, 2).ok, true);
-  assert.equal(f.purchase('diamond_dig', 17).ok, true);
-  f.db.exec('UPDATE users SET xp=0 WHERE id=1');
-  assert.equal(f.purchase('diamond_dig').error, 'cap_reached');
-  assert.equal(f.purchase('diamond_exchange').error, 'cap_reached');
-  f.db.exec('UPDATE users SET xp=55000,coins_spent=0 WHERE id=1');
-  for (let n=0;n<3;n++) assert.equal(f.purchase('diamond_exchange').ok, true);
-  assert.equal(f.refund(1,'diamond_exchange',false).refundedCost, 3);
-  assert.equal(f.refund(1,'diamond_exchange',true).refundedCost, 3);
-  assert.equal(f.db.prepare('SELECT bonus_diamond_exchange_purchased n FROM users WHERE id=1').get().n, 0);
-  assert.equal(f.db.prepare('SELECT coins_spent n FROM users WHERE id=1').get().n, 0);
+test('digging upgrades work for all players, reject Job Level zero and refund new costs', t => {
+  const f=fixture({xp:1000,purchased:0,balance:1});t.after(()=>f.db.close());
+  f.db.exec('INSERT INTO users(id,xp,bonus_coins) VALUES(2,55000,100),(17,55000,100); INSERT INTO user_job_xp VALUES(2,1000),(17,1000)');
+  assert.equal(f.purchase('diamond_dig',2).ok,true);assert.equal(f.purchase('diamond_dig',17).ok,true);
+  f.db.exec('UPDATE user_job_xp SET xp=0 WHERE user_id=1');
+  assert.equal(f.purchase('diamond_dig').error,'cap_reached');assert.equal(f.purchase('diamond_exchange').error,'invalid_item');
+  f.db.exec('UPDATE users SET xp=55000,coins_spent=0,bonus_coins=100 WHERE id=1; UPDATE user_job_xp SET xp=6000 WHERE user_id=1');
+  for(let n=0;n<3;n++)assert.equal(f.purchase('diamond_dig').ok,true);
+  assert.equal(f.refund(1,'diamond_dig',false).refundedCost,30);
+  assert.equal(f.refund(1,'diamond_dig',true).refundedCost,30);
+  assert.equal(f.db.prepare('SELECT bonus_diamond_dig_purchased n FROM users WHERE id=1').get().n,0);
+  assert.equal(f.db.prepare('SELECT coins_spent n FROM users WHERE id=1').get().n,0);
 });
 
 test('a failed diamond purchase rolls back the cost and upgrade together', t => {

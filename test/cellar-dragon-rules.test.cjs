@@ -16,11 +16,12 @@ async function subject() {
   const context = vm.createContext({ currentPlaythrough: () => ({ sim881: saved }), saveState: () => {},
     document: { getElementById: id => elements[id] }, t: key => key, showAlert: () => {},
     resolveCellarDragon, Math: Object.create(Math), createRosterLoader: (_id,_dataset,install)=>{
-      install(structuredClone(definition.ROSTER)); return async()=>{};
+      install(definition.ROSTER.map(row=>({...structuredClone(row),support:structuredClone(definition.ENCOUNTER_SETTINGS[row.id])}))); return async()=>{};
     } });
   const code = readSimulatorSource(path.join(__dirname, '../public/js/battlesim/battlesim881.js'), 'utf8').replace(/^import .*;$/gm, '').replace(/^export /gm, '');
   vm.runInContext(code + '\n_renderAll=()=>{};globalThis.subject={data:_data,fight:_fight,roster:ROSTER};', context);
-  return { saved, context, elements, ...context.subject, resolve: resolveCellarDragon };
+  return { saved, context, elements, ...context.subject,
+    resolve: (encounter,player,options,previous,roll,limit)=>resolveCellarDragon(encounter,player,{encounterSettings:definition.ENCOUNTER_SETTINGS[encounter.id],...options},previous,roll,limit) };
 }
 async function fight(id, player, rolls, options = {}, previous, limit) {
   const s = await subject();
@@ -124,4 +125,29 @@ test('night-thief roster and companion order match the printed columns', async (
   const s = await subject();
   assert.equal(JSON.stringify(s.roster.find(e => e.id === 'night_thieves5').enemies.map(e => [e.sila, e.izd])), JSON.stringify([[6,4],[8,12],[10,6],[6,6],[9,8]]));
   assert.equal(s.roster.find(e => e.id === 'orgfelt_gang').enemies[1].nameKey, 'battlesim881.enemy.companion');
+});
+
+test('loaded wolf settings apply to saved kills, rounds and wounds without mutating the save', async () => {
+  const options={encounterSettings:{wolfpack:{kills:2,hitThreshold:9,missDamage:1}}};
+  const previous={version:2,strength:4,endurance:3,startingEndurance:30,rounds:7,killed:1,enemies:[],extension:{kept:true}};
+  const before=JSON.stringify(previous);
+  const missed=await fight('wolfpack',{sila:99,izd:99},dice([4]),options,previous,1);
+  assert.equal(missed.outcome,'pending');assert.equal(missed.state.rounds,8);assert.equal(missed.state.endurance,2);
+  assert.equal(missed.state.killed,1);assert.equal(JSON.stringify(previous),before);
+  const won=await fight('wolfpack',{sila:99,izd:99},dice([5]),options,missed.state,1);
+  assert.equal(won.outcome,'win');assert.equal(won.state.killed,2);assert.equal(won.state.rounds,9);
+  assert.equal(won.state.strength,4);assert.deepEqual(won.state.extension,{kept:true});
+});
+
+test('loaded knife thresholds govern each throw independently', async () => {
+  const settings={knifeThrow:{playerThreshold:9,enemyThreshold:11}};
+  const win=await fight('dwarf_knife',{sila:5,izd:9},dice([4]),{encounterSettings:settings});
+  assert.equal(win.outcome,'win');assert.equal(win.finalPlayerIzd,9);
+  const loss=await fight('dwarf_knife',{sila:5,izd:9},dice([1,3]),{encounterSettings:{knifeThrow:{playerThreshold:12,enemyThreshold:9}}});
+  assert.equal(loss.outcome,'loss');assert.equal(loss.finalPlayerIzd,0);
+});
+
+test('special encounters reject missing settings instead of silently using inline defaults',async()=>{
+  const {resolveCellarDragon}=await engine;
+  assert.throws(()=>resolveCellarDragon({special:'wolfpack'},{sila:5,izd:30},{},undefined,()=>1),/Load special encounter settings/);
 });

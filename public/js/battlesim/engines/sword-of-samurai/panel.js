@@ -2,7 +2,7 @@ import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { newSamuraiCharacter, validateSamuraiCharacter, eatSamuraiMeal, drinkSamuraiPotion,
   SAMURAI_ARTS, SAMURAI_ARROW_DAMAGE } from './character.js';
 import { startSamuraiFight, samuraiRound, resolveSamuraiAction, setSamuraiTarget } from './core.js';
-import { SAMURAI_FIGHTS } from './roster.js';
+import { SAMURAI_FIGHTS, samuraiContinuation, samuraiContinuationLimit, samuraiCharcoalTiming } from './roster.js';
 
 const ID = 'sim672';
 const stats = ['skill', 'skillInitial', 'stamina', 'staminaInitial', 'luck', 'luckInitial', 'honour', 'provisions', 'swords'];
@@ -19,7 +19,7 @@ export function createSamuraiPanel({ document, t, getRun, getBookId, saveState,
   const enemyLabel = enemy => enemy.displayName || tk('enemy.' + (enemy.key ?? enemy.name));
   const el = key => document.getElementById(ID + '-' + key);
   const active = game => game?.fight?.status === 'fighting';
-  const carried = game => game?.fight?.status === 'story' && game.fight.config.section === 82 && game.fight.destination === 32;
+  const carried = game => samuraiContinuation(game?.fight);
   const supported = game => game && (!game.fight || game.fight.rulesRevision === 1);
   let shownRun;
   function data() {
@@ -83,18 +83,19 @@ export function createSamuraiPanel({ document, t, getRun, getBookId, saveState,
     }
     if (fight.status !== 'fighting') game.log.push(tk('status.' + fight.status));
     if (fight.destination) game.log.push(tk('destination', { section: fight.destination }));
-    if (carried(game)) el('context').value = '32';
+    if (carried(game)) el('context').value = String(carried(game).section);
   }
   function contextChanged() {
     const game = data(), spec = SAMURAI_FIGHTS.find(item => item.section === Number(el('context').value));
     if (!spec) return;
     for (const [key, visible] of Object.entries({ arrowType: !!spec.preArrowMax && !spec.preArrowType,
       arrowCount: !!spec.preArrowMax, continuationStamina: !!spec.continuation && !carried(game),
-      acrobatics: !!spec.acrobatics, charcoalTiming: [93, 307].includes(spec.section), recover: !!spec.entryRecovery,
+      acrobatics: !!spec.acrobatics, charcoalTiming: samuraiCharcoalTiming(spec.section), recover: !!spec.entryRecovery,
       applyEntry: !!(spec.entry || spec.entryDefence || spec.unarmed || spec.entryRecovery) })) {
       el(key + '-row').hidden = !visible;
     }
     el('arrowCount').max = String(spec.preArrowMax || 0);
+    if (spec.continuation) el('continuationStamina').max = String(samuraiContinuationLimit(spec, carried(game) ? game.fight : null));
     el('incomingDamage-row').hidden = spec.incoming === 'phoenix';
     const notes = [tk(spec.mode === 'simultaneous' ? 'simultaneous' : 'sequential')];
     if (spec.deadline) notes.push(tk('deadline', { rounds: spec.deadline.rounds }));
@@ -106,7 +107,7 @@ export function createSamuraiPanel({ document, t, getRun, getBookId, saveState,
     if (spec.skillModifier) notes.push(tk('skillPenalty', { modifier: spec.skillModifier }));
     el('contextNote').textContent = notes.join('\n');
     el('start').disabled = !supported(game) || active(game) || !game.character?.stamina || !game.character?.honour
-      || carried(game) && spec.section !== 32;
+      || carried(game) && spec.section !== carried(game).section;
   }
   function render() {
     if (!el('overlay')) return;
@@ -115,7 +116,7 @@ export function createSamuraiPanel({ document, t, getRun, getBookId, saveState,
     if (shownRun !== getRun()) {
       if (shownRun) close();
       shownRun = getRun();
-      const defaults = { context: carried(game) ? 32 : 13, playerModifier: 0, enemyModifier: 0, incomingDamage: '',
+      const defaults = { context: carried(game)?.section ?? 13, playerModifier: 0, enemyModifier: 0, incomingDamage: '',
         arrowType: 'leaf', arrowCount: 0, continuationStamina: '', charcoalTiming: 'firstKill' };
       for (const key of setupFields) el(key).value = String(game.setup[key] ?? defaults[key]);
       for (const key of setupFlags) el(key).checked = game.setup[key] ?? key !== 'iaijutsuUsed';
@@ -171,7 +172,7 @@ export function createSamuraiPanel({ document, t, getRun, getBookId, saveState,
     if (el('overlay')) return;
     const overlay = document.createElement('div');
     overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
-    overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(tk('title'))}</span><button class="inv-close-btn" type="button" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div class="bsim-status" id="${ID}-characterStatus"></div>${select('art', SAMURAI_ARTS)}${select('potion', ['skill', 'stamina', 'luck'])}${button('roll')}<details><summary>${escape(tk('character'))}</summary>${stats.map(key => field(key, key.endsWith('Initial') ? 1 : 0, key === 'swords' ? 2 : 10000)).join('')}${arrows.map(type => field('arrow-' + type, 0, 10000, 'arrowType.' + type)).join('')}${checkbox('bow')}${checkbox('potionUsed')}${button('apply')}</details><div class="bsim-btn-row">${button('meal')}${button('drink')}</div><label class="inv-edit-row"><span class="inv-edit-label">${escape(tk('context'))}</span><select class="inv-edit-input" id="${ID}-context">${[...SAMURAI_FIGHTS].sort((a, b) => a.section - b.section).map(spec => `<option value="${spec.section}">${escape(encounterName(spec))} (${spec.section})</option>`).join('')}</select></label>${checkbox('applyEntry')}${select('arrowType', arrows)}${field('arrowCount', 0, 3)}${field('continuationStamina', 1, 5)}${checkbox('acrobatics')}${checkbox('iaijutsuUsed')}${checkbox('recover')}${select('charcoalTiming', ['firstKill', 'firstWound'])}<details><summary>${escape(tk('overrides'))}</summary>${field('playerModifier', -1000, 1000)}${field('enemyModifier', -1000, 1000)}${field('incomingDamage')}<p>${escape(tk('overrideNote'))}</p></details><p class="bsim-status" id="${ID}-contextNote"></p>${button('start')}<div class="bsim-status" id="${ID}-status"></div><label class="inv-edit-row" id="${ID}-target-row"><span class="inv-edit-label">${escape(tk('target'))}</span><select class="inv-edit-input" id="${ID}-target"></select></label><div class="bsim-btn-row">${button('step')}${button('cancel')}</div><div id="${ID}-pending-row"><p id="${ID}-pending"></p><div class="bsim-btn-row">${button('yes')}${button('no')}</div></div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;
+    overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(tk('title'))}</span><button class="inv-close-btn" type="button" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div class="bsim-status" id="${ID}-characterStatus"></div>${select('art', SAMURAI_ARTS)}${select('potion', ['skill', 'stamina', 'luck'])}${button('roll')}<details><summary>${escape(tk('character'))}</summary>${stats.map(key => field(key, key.endsWith('Initial') ? 1 : 0, key === 'swords' ? 2 : 10000)).join('')}${arrows.map(type => field('arrow-' + type, 0, 10000, 'arrowType.' + type)).join('')}${checkbox('bow')}${checkbox('potionUsed')}${button('apply')}</details><div class="bsim-btn-row">${button('meal')}${button('drink')}</div><label class="inv-edit-row"><span class="inv-edit-label">${escape(tk('context'))}</span><select class="inv-edit-input" id="${ID}-context">${[...SAMURAI_FIGHTS].sort((a, b) => a.section - b.section).map(spec => `<option value="${spec.section}">${escape(encounterName(spec))} (${spec.section})</option>`).join('')}</select></label>${checkbox('applyEntry')}${select('arrowType', arrows)}${field('arrowCount', 0, 3)}${field('continuationStamina', 1)}${checkbox('acrobatics')}${checkbox('iaijutsuUsed')}${checkbox('recover')}${select('charcoalTiming', ['firstKill', 'firstWound'])}<details><summary>${escape(tk('overrides'))}</summary>${field('playerModifier', -1000, 1000)}${field('enemyModifier', -1000, 1000)}${field('incomingDamage')}<p>${escape(tk('overrideNote'))}</p></details><p class="bsim-status" id="${ID}-contextNote"></p>${button('start')}<div class="bsim-status" id="${ID}-status"></div><label class="inv-edit-row" id="${ID}-target-row"><span class="inv-edit-label">${escape(tk('target'))}</span><select class="inv-edit-input" id="${ID}-target"></select></label><div class="bsim-btn-row">${button('step')}${button('cancel')}</div><div id="${ID}-pending-row"><p id="${ID}-pending"></p><div class="bsim-btn-row">${button('yes')}${button('no')}</div></div></div><div class="bsim-col bsim-col-right"><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details><div class="bsim-log" id="${ID}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
     customSetup = createCustomOpponentSetup({document, id: ID, t, language: 'bg', selectKey: "context", getRun, getData: data,
       fields: [{key: 'skill', label: tk('skill'), max: 10000}, {key: 'stamina', label: tk('stamina'), min: 1, max: 10000}],
@@ -205,7 +206,7 @@ export function createSamuraiPanel({ document, t, getRun, getBookId, saveState,
     el('start').addEventListener('click', () => action(game => {
       if (active(game) || !game.character) return;
       const section = number('context'), spec = SAMURAI_FIGHTS.find(item => item.section === section) ?? (section === 0 ? {custom: true, enemies: []} : null);
-      if (!spec || carried(game) && section !== 32) throw new RangeError('Finish the continued encounter');
+      if (!spec || carried(game) && section !== carried(game).section) throw new RangeError('Finish the continued encounter');
       game.setup = Object.fromEntries(setupFields.map(key => [key, el(key).value]));
       for (const key of setupFlags) game.setup[key] = el(key).checked;
       const arrowCount = spec.preArrowMax ? number('arrowCount') : 0;
@@ -214,7 +215,7 @@ export function createSamuraiPanel({ document, t, getRun, getBookId, saveState,
       report(game, startSamuraiFight(section, game.character, customSetup.settings(game, { ...Object.fromEntries(setupFlags.map(key => [key, el(key).checked])),
         playerModifier: number('playerModifier'), enemyModifier: number('enemyModifier'),
         incomingDamage: spec.incoming === 'phoenix' ? null : number('incomingDamage', true),
-        charcoalTiming: [93, 307].includes(section) ? el('charcoalTiming').value : 'firstKill',
+        charcoalTiming: samuraiCharcoalTiming(section) ? el('charcoalTiming').value : 'firstKill',
         preArrows: Array(arrowCount).fill(spec.preArrowType || el('arrowType').value),
         carryFrom: spec.continuation && carried(game) ? game.fight : null,
         continuationStamina: spec.continuation && !carried(game) ? number('continuationStamina') : null })));

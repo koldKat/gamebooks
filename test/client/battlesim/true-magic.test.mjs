@@ -1,3 +1,4 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -7,6 +8,8 @@ import {startFight, advanceRitual, advanceAttackers, advanceDuel, spendSpell} fr
 import {createState} from '../../../public/js/battlesim/books/757/state.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim757.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim757.js';
+
+await loadFixtureRoster(757);
 
 const enemies = [{defence: 0, stamina: 0}, {defence: 2, stamina: 10}, {defence: 3, stamina: 10}];
 const ritual = options => startFight('ritual', DEFAULT_CHARACTER, options);
@@ -120,6 +123,9 @@ test('757: backend registers combat wins and losses once, not draws', () => {
   const events=[],db={exec(){},transaction:fn=>()=>fn(),prepare:()=>({run(){},all:()=>[],get:()=>({id:757,total_sections:263,is_container:0})})};
   const context={module:{exports:{}},require(name){
     if(name==='./connection')return{db};
+    if(name==='./diamonds')return{diamondInfoForUser:()=>({})};
+    if(name==='./rubies')return{rubyInfoForUser:()=>({}),createRubyCompletionChecker:()=>()=>0};
+    if(name==='./heartbeat-coins')return{advanceHeartbeatCoins:()=>0};
     if(name==='./auth')return{generateToken:()=> 'test-only'};
     if(name==='../impersonation-context')return{isImpersonatingContext:()=>false};
     if(name==='../clean-run')return{isCleanRun:()=>false};

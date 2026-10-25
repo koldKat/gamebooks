@@ -17,8 +17,9 @@ export const WEAPONS = [
 ];
 
 export const ROSTER = [];
+export const FLESH_RULES = {};
 // Preserve saved encounter IDs during the legacy API transition. All numeric
-// enemy stats come from the database in both response formats.
+// enemy stats and encounter settings come from the database.
 const legacyIds = new Map([
   ['Мутирал доберман', 'doberman'], ['Д-р Стоев', 'stoev'], ['Д-р Стоев (след юмручен удар)', 'stoev-punched'],
   ['Д-р Ленова', 'lenova'], ['Медицинска сестра-мутант', 'nurse'], ['Продавач-мутант', 'vendor'],
@@ -34,8 +35,12 @@ export function loadRoster(fetcher) {
   }).then(rows => {
     const order = [...legacyIds.values()];
     if (order.some(id => !rows.some(row => row.id === id))) throw new Error('Incomplete book roster');
-    rows.sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));
-    ROSTER.splice(0, ROSTER.length, ...rows);
+    const rules = rows.find(row => row.support)?.support.rules;
+    if (!rules) throw new Error('Incomplete Mutated Flesh settings');
+    const profiles = rows.map(({support,...profile}) => profile);
+    profiles.sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));
+    Object.assign(FLESH_RULES, rules);
+    ROSTER.splice(0, ROSTER.length, ...profiles);
   }).finally(() => { loading = null; });
   return loading;
 }

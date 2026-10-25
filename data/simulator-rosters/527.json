@@ -128,7 +128,22 @@
             "hit": 5,
             "bonus": 3,
             "armour": 0,
-            "count": 1
+            "count": 1,
+            "bookRules": {
+              "invisibilitySections": [
+                98,
+                130,
+                136,
+                137,
+                172
+              ],
+              "poisonResults": {
+                "fatalMax": 4,
+                "protectedMax": 8,
+                "enemyDiesAt": 9,
+                "escapeLifeDivisor": 2
+              }
+            }
           }
         },
         "part": {
@@ -739,7 +754,10 @@
             "bonus": 0,
             "armour": 0,
             "count": 1,
-            "petrifyHits": 2
+            "petrifyHits": 2,
+            "npcRules": {
+              "invisiblePetrifyExtraHits": 1
+            }
           }
         },
         "part": {
@@ -832,7 +850,10 @@
             "armour": 0,
             "count": 1,
             "lethalHit": true,
-            "openingEvasion": true
+            "openingEvasion": true,
+            "npcRules": {
+              "openingEvasionFatalAt": 9
+            }
           }
         },
         "part": {
@@ -880,7 +901,10 @@
             "armour": 0,
             "count": 6,
             "shapes": true,
-            "first": "player"
+            "first": "player",
+            "npcRules": {
+              "blendDamage": 15
+            }
           }
         },
         "part": {
@@ -929,7 +953,10 @@
             "count": 5,
             "shapes": true,
             "entryDamage": 15,
-            "first": "player"
+            "first": "player",
+            "npcRules": {
+              "blendDamage": 15
+            }
           }
         },
         "part": {
@@ -1136,7 +1163,12 @@
             "dream": true,
             "unarmed": true,
             "arrows": 7,
-            "first": "player"
+            "first": "player",
+            "npcRules": {
+              "arrowHit": 7,
+              "arrowDamage": 10,
+              "rangedRounds": 8
+            }
           }
         },
         "part": {

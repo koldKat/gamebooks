@@ -45,7 +45,7 @@ export function createDayRenderer() {
     const thisDayIndex = dayKey ?? dayIndex++;
     const groupId = key => 'feed-collapse-' + encodeURIComponent(thisDayIndex + ':' + key);
     // Keep one-time book, series, and anthology achievements outside ordinary action groups.
-    const skipTypes = new Set(['level_up', 'user_joined', 'book_rated', 'series_rated', 'book_created', 'series_created', 'all_visited', 'all_discovered', 'first_win', 'first_loss', 'first_battle_death', 'visit_all_series', 'discover_all_series', 'visit_all_anthology', 'discover_all_anthology']);
+    const skipTypes = new Set(['level_up', 'job_level_up', 'user_joined', 'book_rated', 'series_rated', 'book_created', 'series_created', 'all_visited', 'all_discovered', 'first_win', 'first_loss', 'first_battle_death', 'visit_all_series', 'discover_all_series', 'visit_all_anthology', 'discover_all_anthology']);
     const userCounts = new Map();
     for (const e of items) {
       if (skipTypes.has(e.type)) continue;

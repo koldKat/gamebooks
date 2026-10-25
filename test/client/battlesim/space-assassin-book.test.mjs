@@ -1,8 +1,9 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
-import { ENCOUNTERS } from '../../../public/js/battlesim/books/735/definition.js';
+import { ENCOUNTERS, SPACE_RULES } from '../../../public/js/battlesim/books/735/definition.js';
 import { prepareEncounter } from '../../../public/js/battlesim/books/735/combat.js';
 import { createState } from '../../../public/js/battlesim/books/735/state.js';
 import { newCharacter } from '../../../public/js/battlesim/engines/space-assassin/core.js';
@@ -10,7 +11,29 @@ import { buyLoadout, rollCharacter, useNerveGas, useGravityBomb, replaceSuit, ea
 import en from '../../../public/js/i18n/en/battlesim/battlesim735.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim735.js';
 
+await loadFixtureRoster(735);
+
 const player = () => ({ ...newCharacter(() => 1), stamina: 8 });
+
+test('special item permissions and gas immunity read metadata for saved fights', () => {
+  const original=structuredClone(SPACE_RULES);
+  try {
+    SPACE_RULES.nerveGas={sections:[20],ineffectiveSections:[20]};
+    SPACE_RULES.gravityBombSections=[20];
+    const fight=prepareEncounter({...player(),nerveGas:2,gravityBombs:2},20,{weapon:'blaster'}).fight;
+    fight.enemies[0].stamina=3;fight.extension={keep:true};
+    const saved=JSON.parse(JSON.stringify(fight)),snapshot=structuredClone(saved);
+    const immune=useNerveGas(saved,()=>{throw Error('Immune opponent must not roll gas damage');});
+    assert.equal(immune.enemies[0].stamina,3);assert.equal(immune.player.nerveGas,1);
+    assert.equal(immune.events.at(-1).failed,true);assert.deepEqual(immune.extension,{keep:true});
+    SPACE_RULES.nerveGas.ineffectiveSections=[];
+    const wounded=useNerveGas(saved,()=>2);assert.equal(wounded.enemies[0].stamina,1);
+    const destroyed=useGravityBomb(saved);assert.equal(destroyed.outcome,'win');
+    assert.equal(destroyed.player.gravityBombs,1);assert.deepEqual(destroyed.extension,{keep:true});
+    assert.deepEqual(saved,snapshot);
+    assert.throws(()=>useNerveGas(prepareEncounter({...player(),nerveGas:1},108,{weapon:'blaster'}).fight));
+  } finally {Object.assign(SPACE_RULES,original);}
+});
 
 test('custom opponents and preset overrides use the existing combat rules', () => {
   const enemies = [{displayName: 'Manual robot', skill: 0, stamina: 3}];

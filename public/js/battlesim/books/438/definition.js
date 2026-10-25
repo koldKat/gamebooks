@@ -1,3 +1,5 @@
+import { createRosterLoader } from '../../roster-data.js';
+
 // Book identity and declarative defaults; no DOM or saved-state access.
 export const definition = Object.freeze({
   "id": 438,
@@ -24,4 +26,8 @@ export const COMBAT_TABLE = [
 
 export const FIGHT_OPTIONS = ['tracking', 'animal', 'spirit', 'tutelary', 'weapon', 'shield'];
 
-export const BLAST_IMMUNE = [76,113,133,148,168,180,211,252,286,311];
+export let BLAST_IMMUNE = [], ENCOUNTER_RULES = {};
+export const loadRoster = createRosterLoader(438, 'ENCOUNTER_RULES', entries => {
+  ENCOUNTER_RULES = Object.fromEntries(entries.map(entry => [entry.section, entry.rules]));
+  BLAST_IMMUNE = entries.filter(entry => entry.rules.blastImmune).map(entry => entry.section).sort((a, b) => a - b);
+});

@@ -1,7 +1,10 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {newCharacter, startFight, round, resolveLuck} from '../../../public/js/battlesim/books/710/combat.js';
 import {ENCOUNTERS} from '../../../public/js/battlesim/books/710/definition.js';
+
+await loadFixtureRoster(710);
 
 test('Temple custom opponents use ordinary printed combat without requiring a source encounter', () => {
   const hero = newCharacter(() => 1);

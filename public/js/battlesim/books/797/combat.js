@@ -1,6 +1,6 @@
 import { die, integer, rollDice } from '../../engines/sorcery/core.js';
 import { customFightingEncounter } from '../../engines/fighting-fantasy/opponents.js';
-import { encounterFor, RULES_REVISION } from './definition.js';
+import { encounterFor, RULES_REVISION, MISSION_RULES } from './definition.js';
 
 export { integer } from '../../engines/sorcery/core.js';
 
@@ -41,7 +41,7 @@ function end(fight, outcome, destination) {
 }
 
 function finish(fight) {
-  if (fight.character.elapsed >= 3600) return end(fight, 'timeout', 33);
+  if (fight.character.elapsed >= MISSION_RULES.timeoutSeconds) return end(fight, 'timeout', MISSION_RULES.timeoutDestination);
   if (fight.character.stamina <= fight.config.threshold) return end(fight, 'loss', fight.config.loss);
   if (fight.enemies[0].stamina <= fight.config.threshold) return end(fight, 'win', fight.config.win);
   return fight;
@@ -73,12 +73,12 @@ export function round(input, random) {
   if (input.pendingDoubles) throw new RangeError('Resolve simultaneous doubles first');
   const fight = structuredClone(input), playerDice = [die(random), die(random)], enemyDice = [die(random), die(random)];
   fight.rounds++;
-  fight.character.elapsed += 10;
+  fight.character.elapsed += MISSION_RULES.roundSeconds;
   const playerAttack = playerDice[0] + playerDice[1] + fight.character.skill + fight.character.attackModifier
     + (fight.config.weapon === 'sword' ? 2 : 0);
   const enemyAttack = enemyDice[0] + enemyDice[1] + fight.enemies[0].skill;
   fight.events = [{ kind: 'attack', playerDice, enemyDice, playerAttack, enemyAttack }];
-  if (fight.character.elapsed >= 3600) return end(fight, 'timeout', 33);
+  if (fight.character.elapsed >= MISSION_RULES.timeoutSeconds) return end(fight, 'timeout', MISSION_RULES.timeoutDestination);
   const playerDouble = playerDice[0] === playerDice[1], enemyDouble = enemyDice[0] === enemyDice[1];
   if (fight.config.stun && (playerDouble || enemyDouble)) {
     if (playerDouble && enemyDouble) { fight.pendingDoubles = true; return fight; }

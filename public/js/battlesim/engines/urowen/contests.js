@@ -1,4 +1,5 @@
 import {rollUrowenDie,urowenDamage,urowenCombatOutcome} from './core.js';
+import {UROWEN_RULES} from './roster.js';
 
 const copy=value=>structuredClone(value);
 function integer(value,min,max=Number.MAX_SAFE_INTEGER) {
@@ -7,42 +8,45 @@ function integer(value,min,max=Number.MAX_SAFE_INTEGER) {
 }
 export function urowenBetPayout({section,stake,winner,selected,thief=false}) {
   integer(stake,0);
-  if(![53,56,72,129,262,391].includes(section))throw new RangeError('Invalid wager');
-  if([53,72].includes(section)&&stake>15)throw new RangeError('Invalid wager');
-  if([56,129].includes(section)&&(stake>20||stake%2))throw new RangeError('Invalid wager');
+  const {point,animal,drinking,fight}=UROWEN_RULES.contests;
+  if(![...point.sections,...animal.sections,fight.section,drinking.section].includes(section))throw new RangeError('Invalid wager');
+  if(point.sections.includes(section)&&stake>point.maxStake)throw new RangeError('Invalid wager');
+  if(animal.sections.includes(section)&&(stake>animal.maxStake||stake%animal.stakeMultiple))throw new RangeError('Invalid wager');
   let profit=stake;
-  if(section===56) {
-    if(!['Hurg','Grinkot'].includes(selected))throw new RangeError('Invalid selection');
-    if(selected==='Grinkot')profit=stake/2;
+  if(section===animal.sections[0]) {
+    if(!Object.keys(animal.profitDivisors).includes(selected))throw new RangeError('Invalid selection');
+    profit=stake/animal.profitDivisors[selected];
   }
-  if(section===391)profit=stake*2;
+  if(section===drinking.section)profit=stake*drinking.profitMultiplier;
   return {returned:winner===selected?stake+profit:0,
-    extra:section===56&&thief?5:0};
+    extra:section===animal.sections[0]&&thief?animal.thiefExtra:0};
 }
 export function createUrowenPointContest(section) {
-  if(![53,72].includes(section))throw new RangeError('Invalid points contest');
+  if(!UROWEN_RULES.contests.point.sections.includes(section))throw new RangeError('Invalid points contest');
   return {section,playerPoints:0,enemyPoints:0,round:0,status:'fighting'};
 }
 export function resolveUrowenPointRound(contest,roll) {
-  if(![53,72].includes(contest.section)||contest.status!=='fighting')throw new RangeError('Contest finished');
+  const rules=UROWEN_RULES.contests.point;
+  if(!rules.sections.includes(contest.section)||contest.status!=='fighting')throw new RangeError('Contest finished');
   const next=copy(contest),rolls=[];
   const die=()=>{const raw=rollUrowenDie(roll).raw;rolls.push(raw);return raw;};
-  const player=next.section===53?die():die()+die();
-  const enemy=next.section===53?die():die()+die();
-  const playerScore=next.section===53?-player:player>9?0:player;
-  const enemyScore=next.section===53?-enemy:enemy>9?0:enemy;
+  const player=next.section===rules.sections[0]?die():die()+die();
+  const enemy=next.section===rules.sections[0]?die():die()+die();
+  const playerScore=next.section===rules.sections[0]?-player:player>rules.bustAbove?0:player;
+  const enemyScore=next.section===rules.sections[0]?-enemy:enemy>rules.bustAbove?0:enemy;
   next.round++;
   if(playerScore>enemyScore)next.playerPoints++;
   if(enemyScore>playerScore)next.enemyPoints++;
-  if(next.playerPoints>=5||next.enemyPoints>=5) {
-    next.status='finished';next.winner=next.playerPoints>=5?'player':'enemy';
+  if(next.playerPoints>=rules.winPoints||next.enemyPoints>=rules.winPoints) {
+    next.status='finished';next.winner=next.playerPoints>=rules.winPoints?'player':'enemy';
   }
   return {contest:next,rolls};
 }
 export function createUrowenAnimalContest(section,animals) {
-  if(![56,129].includes(section)||!Array.isArray(animals)||animals.length!==2)throw new RangeError('Invalid contest');
+  const rules=UROWEN_RULES.contests.animal;
+  if(!rules.sections.includes(section)||!Array.isArray(animals)||animals.length!==rules.count)throw new RangeError('Invalid contest');
   for(const animal of animals){integer(animal.life,1);integer(animal.attributeValue,0);}
-  return {section,animals:copy(animals),round:0,status:'fighting',winner:null,stopAt:section===56?3:0};
+  return {section,animals:copy(animals),round:0,status:'fighting',winner:null,stopAt:rules.stopAt[section]};
 }
 export function resolveUrowenAnimalRound(contest,roll) {
   if(contest.status!=='fighting')throw new RangeError('Contest finished');
@@ -62,7 +66,8 @@ export function resolveUrowenAnimalRound(contest,roll) {
 }
 export function createUrowenDrinkingContest(baseLife) {
   integer(baseLife,1);
-  return {playerResistance:baseLife*2,enemyResistance:54,round:0,status:'fighting'};
+  const rules=UROWEN_RULES.contests.drinking;
+  return {playerResistance:baseLife*rules.playerMultiplier,enemyResistance:rules.resistance,round:0,status:'fighting'};
 }
 export function resolveUrowenDrinkingRound(contest,roll) {
   if(contest.status!=='fighting')throw new RangeError('Contest finished');

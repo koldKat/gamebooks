@@ -3,10 +3,28 @@ import assert from 'node:assert/strict';
 import * as combat from '../../../public/js/battlesim/books/807/combat.js';
 import { createState } from '../../../public/js/battlesim/books/807/state.js';
 import { loadFixtureRoster } from './roster-fixtures.mjs';
+import { OUTCOME_RULES } from '../../../public/js/battlesim/books/807/definition.js';
 await loadFixtureRoster(807);
 
 const roll = (...values) => () => { assert.ok(values.length); return values.shift(); };
 const start = (determination = 1, pills = false) => combat.startFight({ determination, pills }, 'Двойник');
+
+test('metadata controls outcome routes and pill loss while preserving a saved decision',()=>{
+  const original=structuredClone(OUTCOME_RULES);
+  try{
+    Object.assign(OUTCOME_RULES,{win:911,loss:930,escape:974,pillsLostAt:930});
+    const fight=combat.rollPlayer(start(5,true),roll(2,3));fight.rounds=4;fight.rerolls=2;fight.extension={keep:true};
+    const saved=JSON.parse(JSON.stringify(fight)),snapshot=structuredClone(saved);
+    const result=combat.rollEnemy(saved,roll(6,6));
+    assert.equal(result.destination,930);assert.equal(result.character.pills,false);
+    assert.equal(result.rounds,4);assert.equal(result.rerolls,2);assert.equal(result.character.determination,5);
+    assert.deepEqual(result.extension,{keep:true});assert.deepEqual(saved,snapshot);
+    assert.equal(combat.rollEnemy(saved,roll(1,2)).destination,911);
+    assert.equal(combat.rollPlayer(start(5,true),roll(2,2)).destination,974);
+    OUTCOME_RULES.pillsLostAt=-1;
+    assert.equal(combat.rollEnemy(saved,roll(6,6)).character.pills,true);
+  }finally{Object.assign(OUTCOME_RULES,original);}
+});
 
 test('initial passport and safe signed Determination have no invented health stats', () => {
   assert.deepEqual(combat.newCharacter(), { determination: 1, pills: false });

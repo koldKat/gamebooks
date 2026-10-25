@@ -3,6 +3,7 @@ import { demondoomDamage, applyDemondoomPhysicalDamage, demondoomOutcome, finish
 import { fireWolfHitThreshold, FIRE_WOLF_WEAPONS } from './fire-wolf.js';
 import { checkDemondoomInclination, attemptDemondoomSpell, applyDemondoomSpellEffect, restoreDemondoomTimewarp } from './demondoom-magic.js';
 import { rollDemondoomCharacter } from './demondoom-character.js';
+import { DEMONDOOM_RULES } from './demondoom-roster.js';
 
 const die = random => Math.floor(random()*6)+1;
 const dice = random => die(random)+die(random);
@@ -52,7 +53,7 @@ export function determineDemondoomInitiative(fight,random=Math.random) {
 }
 
 function checkRoundLimit(fight) {
-  if(fight.encounter.rule==='amoebix'&&fight.round>=15&&fight.enemies.some(enemy=>enemy.lifePoints>0)) {
+  if(fight.encounter.rule==='amoebix'&&fight.round>=DEMONDOOM_RULES.amoebixRounds&&fight.enemies.some(enemy=>enemy.lifePoints>0)) {
     fight.player.lifePoints=0;checkDemondoomFight(fight);
   }
   if(fight.encounter.returnAfter&&fight.round>=fight.encounter.returnAfter&&fight.enemyTurns>=fight.encounter.returnAfter&&!fight.outcome&&!fight.pending)
@@ -101,24 +102,24 @@ export function rollDemondoomAttack(fight,side,target=0,random=Math.random) {
   const roll=dice(random),threshold=side==='enemy'?(fight.encounter.hitThreshold??fireWolfHitThreshold(attacker)):fireWolfHitThreshold(attacker);
   let weapon=attacker.weapon;
   if(side==='enemy'&&rule==='regent')weapon=demondoomRegentWeapon(fight.enemyAttacks[target],die(random));
-  if(side==='enemy'&&rule==='cupric')weapon=demondoomAlternatingWeapon(fight.enemyAttacks[target],15,10);
-  if(side==='enemy'&&rule==='regina')weapon=10;
+  if(side==='enemy'&&rule==='cupric')weapon=demondoomAlternatingWeapon(fight.enemyAttacks[target],...DEMONDOOM_RULES.cupricWeapons);
+  if(side==='enemy'&&rule==='regina')weapon=DEMONDOOM_RULES.regina.weapon;
   let damage;
   try {damage=demondoomDamage(rule==='sqquash'&&side==='enemy'?{...attacker,strength:0}:attacker,defender,roll,{weapon,hitThreshold:threshold,halfDamage:side==='player'&&fight.encounter.halfDamage});}
   catch {return {error:'manual-stats'};}
   damage=Math.max(0,damage-(attacker.magicFear??0));
   if(side==='player')applyDemondoomPhysicalDamage(fight.player,enemy,damage,fight.encounter);
   else {
-    if(rule==='bear'&&roll===12)damage=fight.player.lifePoints/2;
-    if(rule==='assassin'&&roll===12)damage=fight.player.lifePoints/2;
-    if(rule==='regina'&&fight.enemyAttacks[target]%2===0&&roll===12)damage=fight.player.lifePoints;
-    if(rule==='dragon'&&fight.enemyAttacks[target]%3===0&&roll>=8)damage=dice(random)*10;
+    if(rule==='bear'&&roll===DEMONDOOM_RULES.bear.halfRoll)damage=fight.player.lifePoints/DEMONDOOM_RULES.bear.divisor;
+    if(rule==='assassin'&&roll===DEMONDOOM_RULES.assassin.halfRoll)damage=fight.player.lifePoints/DEMONDOOM_RULES.assassin.divisor;
+    if(rule==='regina'&&fight.enemyAttacks[target]%DEMONDOOM_RULES.regina.fatalEvery===0&&roll===DEMONDOOM_RULES.regina.fatalRoll)damage=fight.player.lifePoints;
+    if(rule==='dragon'&&fight.enemyAttacks[target]%DEMONDOOM_RULES.dragon.every===0&&roll>=DEMONDOOM_RULES.dragon.minRoll)damage=dice(random)*DEMONDOOM_RULES.dragon.multiplier;
     fight.player.lifePoints-=damage;
     if(!fight.encounter.manualGroup&&fight.rest&&!--fight.rest)fight.attacks=0;
   }
-  if(side==='player'&&rule==='sqquash'&&roll>=threshold)fight.player.strength=Math.max(0,fight.player.strength-8);
+  if(side==='player'&&rule==='sqquash'&&roll>=threshold)fight.player.strength=Math.max(0,fight.player.strength-DEMONDOOM_RULES.sqquashStrengthLoss);
   const event=log(fight,{kind:'attack',side,target,roll,threshold,damage});
-  if(side==='enemy'&&rule==='assassin'&&roll>=threshold&&roll!==12)event.poisonCheckRequired=true;
+  if(side==='enemy'&&rule==='assassin'&&roll>=threshold&&roll!==DEMONDOOM_RULES.assassin.halfRoll)event.poisonCheckRequired=true;
   const sequence=fight.sequence;
   checkDemondoomFight(fight);
   checkRoundLimit(fight);
@@ -131,19 +132,19 @@ export function castDemondoomEnemySpell(fight,spell,target=0,random=Math.random)
   if(fight.outcome||fight.pending||!demondoomEnemyActive(fight,target))return {error:'unavailable'};
   if(!fight.encounter.manualGroup&&fight.turn!=='enemy')return {error:'wrong-turn'};
   const rule=fight.encounter.rule,enemy=fight.enemies[target];
-  const thresholds={leprosy:8,blight:6,'crack-of-doom':8,firebolt:9};
+  const magic=DEMONDOOM_RULES.enemyMagic,thresholds=magic.thresholds;
   if(!(['regent','village-spawn'].includes(rule)&&Object.hasOwn(thresholds,spell))&&!(rule==='captain'&&spell==='blight'))return {error:'forbidden-spell'};
   if(rule==='village-spawn'&&spell!=='firebolt')return {error:'forbidden-spell'};
-  const cost=rule==='captain'?25:dice(random);
+  const cost=rule==='captain'?magic.captainCost:dice(random);
   if(rule==='captain'&&enemy.power<cost)return {error:'insufficient-power'};
   if(rule==='captain')enemy.power-=cost;else enemy.lifePoints-=cost;
-  const roll=dice(random),success=roll>=(thresholds[spell]??6);
+  const roll=dice(random),success=roll>=(thresholds[spell]??magic.defaultThreshold);
   let damage=0;
   if(success) {
     if(spell==='leprosy')fight.leprosy=true;
-    if(spell==='blight')fight.paralysedPlayerRounds=2;
-    if(spell==='crack-of-doom')damage=50;
-    if(spell==='firebolt')damage=75;
+    if(spell==='blight')fight.paralysedPlayerRounds=magic.paralysisRounds;
+    if(spell==='crack-of-doom')damage=magic.crackDamage;
+    if(spell==='firebolt')damage=magic.fireboltDamage;
     fight.player.lifePoints-=damage;
   }
   fight.turn='player';fight.enemyTurns++;fight.enemyAttacks[target]++;

@@ -17,7 +17,7 @@ import { t } from "../../../i18n.js";
 import { DEN_ENCOUNTERS } from "../.././engines/grailquest/den-of-dragons-roster.js";
 import { createDenCharacter, initialDenLife, createDenFight, rollDenRound, rerollDenInitiative,
   resolveDenPoison, castDenSpell, launchDenMagic, useDenLollipop, denFriendlyReaction,
-  denDream, healDenPlayer, useDenItem } from "../.././engines/grailquest/den-of-dragons.js";
+  denDream, healDenPlayer, useDenItem, denInvisibilityAllowed } from "../.././engines/grailquest/den-of-dragons.js";
 
 const tk = (key, params) => t(`battlesim527.${key}`, params);
 const el = key => document.getElementById(`${ID}-${key}`);
@@ -68,7 +68,7 @@ export function renderSim527() {
     option.textContent = `${tk(option.value)} (${used}/${limit})`;
     option.disabled = used >= limit || !!p.spellCharged[option.value]
       || f?.spec.magicChallenge && !['pad', 'pow'].includes(option.value)
-      || option.value === 'invisibility' && ![98, 130, 136, 137, 172].includes(f?.spec.section);
+      || option.value === 'invisibility' && !denInvisibilityAllowed(f?.spec);
   }
   el('cast').disabled ||= el('spell').selectedOptions[0]?.disabled ?? true;
   el('bolt').disabled = magicBlocked || !!f?.spec.magicChallenge || p.bolts < 1;

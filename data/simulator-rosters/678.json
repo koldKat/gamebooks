@@ -37,7 +37,185 @@
               "stamina": 25
             }
           ],
-          "special": "choking"
+          "special": "choking",
+          "support": {
+            "seaChecks": {
+              "60": {
+                "kind": "coastal",
+                "arrival": 133
+              },
+              "178": {
+                "kind": "harbour"
+              },
+              "200": {
+                "kind": "coastal",
+                "arrival": 619
+              },
+              "232": {
+                "kind": "passage",
+                "arrival": 100
+              },
+              "250": {
+                "kind": "coastal",
+                "arrival": 81
+              },
+              "502": {
+                "kind": "passage",
+                "arrival": 444
+              },
+              "510": {
+                "kind": "shipwreck"
+              },
+              "527": {
+                "kind": "storm"
+              },
+              "600": {
+                "kind": "boarding"
+              },
+              "660": {
+                "kind": "drift"
+              },
+              "716": {
+                "kind": "rescue"
+              }
+            },
+            "rules": {
+              "restoreKinds": [
+                "champion",
+                "vampires",
+                "spectre"
+              ],
+              "champion": {
+                "ability": "magic",
+                "difficulty": 13,
+                "divisor": 2
+              },
+              "strangling": {
+                "ability": "combat",
+                "difficulty": 12,
+                "damage": 3
+              },
+              "underwater": {
+                "ability": "scouting",
+                "entryDifficulty": 10,
+                "roundDifficulty": 9
+              },
+              "choking": {
+                "ability": "sanctity",
+                "difficulty": 17
+              },
+              "triplingAttacks": 3,
+              "combatDrain": {
+                "amount": 1,
+                "minimum": 1
+              },
+              "abilityDrain": {
+                "abilities": [
+                  "charisma",
+                  "combat",
+                  "magic",
+                  "scouting",
+                  "sanctity",
+                  "thievery"
+                ],
+                "amount": 1,
+                "minimum": 1,
+                "fatalAt": 1
+              },
+              "spectre": {
+                "ability": "sanctity",
+                "difficulty": 11
+              },
+              "lightning": {
+                "ability": "magic",
+                "difficulty": 12,
+                "damageDice": 1
+              },
+              "sea": {
+                "singleDieKinds": [
+                  "rescue",
+                  "drift"
+                ],
+                "shipModifiers": {
+                  "barque": -1,
+                  "brigantine": 0,
+                  "galleon": 1
+                },
+                "crewModifiers": {
+                  "poor": -1,
+                  "average": 0,
+                  "good": 0,
+                  "excellent": 1
+                },
+                "storm": {
+                  "rankMinimum": 6,
+                  "rankBonus": 1,
+                  "threshold": 4,
+                  "destinations": [
+                    510,
+                    660
+                  ]
+                },
+                "shipwreck": {
+                  "penalty": 2,
+                  "death": 7,
+                  "destinations": [
+                    539,
+                    334,
+                    569
+                  ],
+                  "bucketSize": 2
+                },
+                "boarding": {
+                  "threshold": 13,
+                  "win": 460,
+                  "loss": 540
+                },
+                "harbour": {
+                  "threshold": 10,
+                  "destinations": [
+                    480,
+                    634
+                  ]
+                },
+                "drift": {
+                  "destinations": [
+                    400,
+                    26,
+                    95
+                  ],
+                  "bucketSize": 2
+                },
+                "rescue": {
+                  "stormRoll": 6,
+                  "bounds": [
+                    1,
+                    3,
+                    5
+                  ],
+                  "destinations": [
+                    321,
+                    100,
+                    88,
+                    510
+                  ]
+                },
+                "travel": {
+                  "stormMinimum": 11,
+                  "low": 3,
+                  "high": 10,
+                  "coastal": {
+                    "low": 600,
+                    "high": 527
+                  },
+                  "passage": {
+                    "low": 321,
+                    "high": 510
+                  }
+                }
+              }
+            }
+          }
         },
         "part": {
           "name": "Hangman",

@@ -1,12 +1,12 @@
-import { HEALING_POTION_HEAL, COMBAT_TABLE } from './definition.js';
+import { HEALING_POTION_HEAL, COMBAT_TABLE, ENCOUNTER_RULES } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, COMBAT_TABLE, HEALING_POTION_HEAL, SVG_SKULL, SVG_TROPHY, _appendLog, _battleOver, _captureFightEffects, _checkBattleEnd, _data, _effectiveSkill, _enemyList, _enemyName, _enemyNameSafe, _escape, _escapeRoute, _health, _loadEnemyList, _numField, _pick10, _pickRow, _ratioCol, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _resetBattle, _runRound, _setRoute, _setVal, _setupAutocomplete, _usePotion, apiFetch, closeSim434, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim434, openSim434, registerPanelShortcut, renderSim434, saveState, setSim434Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ENCOUNTER_RULES, COMBAT_TABLE, HEALING_POTION_HEAL, SVG_SKULL, SVG_TROPHY, _appendLog, _battleOver, _captureFightEffects, _checkBattleEnd, _data, _effectiveSkill, _enemyList, _enemyName, _enemyNameSafe, _escape, _escapeRoute, _health, _loadEnemyList, _numField, _pick10, _pickRow, _ratioCol, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _resetBattle, _rulesFor, _runRound, _setRoute, _setVal, _setupAutocomplete, _usePotion, apiFetch, closeSim434, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim434, openSim434, registerPanelShortcut, renderSim434, saveState, setSim434Visible, shortcutLabel, showAlert, t });
 const { _data, _appendLog, _recordOutcome, _battleOver } = createState(simulatorContext);
-const { _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _health, _effectiveSkill, _setRoute, _escapeRoute, _escape, _runRound, _checkBattleEnd, _resetBattle } = createCombat(simulatorContext);
+const { _rulesFor, _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _health, _effectiveSkill, _setRoute, _escapeRoute, _escape, _runRound, _checkBattleEnd, _resetBattle } = createCombat(simulatorContext);
 const { _usePotion } = createEffects(simulatorContext);
 // END SIMULATOR WIRING
 // Battle Simulator (Царствата на терора / Kingdoms of Terror, Bulgarian edition of Lone Wolf book
@@ -145,11 +145,11 @@ function _renderInputs(skipEnemyPick) {
   } else if (d.enemy.endurance <= 0 && d.enemy.enduranceMax > 0) {
     status.textContent = t('battlesim434.status.defeated', { enemy: _enemyName(d) });
   } else {
-    status.textContent = d.combatEffects?.section === 26 ? t('battlesim434.status.targets', { n: d.combatEffects.targetPoints }) : '';
+    status.textContent = !!_rulesFor(d.combatEffects?.section).archery ? t('battlesim434.status.targets', { n: d.combatEffects.targetPoints }) : '';
   }
   document.getElementById('sim434-round').disabled = _battleOver(d);
   const escapeBtn = document.getElementById('sim434-escape');
-  if (escapeBtn) escapeBtn.disabled = _battleOver(d) || (!(_escapeRoute(d)) && d.combatEffects?.section !== 156);
+  if (escapeBtn) escapeBtn.disabled = _battleOver(d) || (!(_escapeRoute(d)) && !_rulesFor(d.combatEffects?.section).escape?.immediate);
 }
 
 function _renderLog() {

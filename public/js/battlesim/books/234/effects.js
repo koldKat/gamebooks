@@ -2,11 +2,11 @@
 export function createEffects(getContext) {
 // BEGIN EXTRACTED RULES
 function _eatProvisions() {
-  const { PROVISIONS_HEAL, _appendLog, _data, _notReady, _renderAll, saveState, showAlert, t } = getContext();
+  const { PROVISIONS_HEAL, _allEnemiesDown, _appendLog, _data, _notReady, _renderAll, saveState, showAlert, t } = getContext();
 
   const d = _data();
   if (!d || _notReady(d)) return;
-  if (d.roundsThisBattle > 0 && d.player.stamina > 0 && d.enemy.stamina > 0) {
+  if (d.roundsThisBattle > 0 && d.player.stamina > 0 && !_allEnemiesDown(d)) {
     showAlert(t('battlesim234.alert.provisions_midfight'));
     return;
   }

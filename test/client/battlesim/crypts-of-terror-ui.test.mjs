@@ -10,6 +10,7 @@ import * as combat from '../../../public/js/battlesim/engines/demonspawn/crypts-
 import * as spells from '../../../public/js/battlesim/engines/demonspawn/fire-wolf-magic.js';
 import * as magic from '../../../public/js/battlesim/engines/demonspawn/crypts-of-terror-magic.js';
 import strings from '../../../public/js/i18n/en/battlesim/battlesim535.js';
+import { CRYPTS_RULES } from '../../../public/js/battlesim/engines/demonspawn/crypts-of-terror-roster.js';
 
 function fixture(section=100) {
   const p={...encounters.rollCryptsCharacter(()=>.4),power:250,maxPower:250,wandCharges:2,weapon:'sword',armour:'none'};
@@ -22,7 +23,7 @@ function fixture(section=100) {
     return nodes.get(key);
   };
   node('encounter').value=String(section);node('target').value='0';node('spell').value='armour';node('cryptStart').value='6';
-  const context=createContext({...base,...encounters,...combat,...spells,...magic,structuredClone,
+  const context=createContext({...base,...encounters,...combat,...spells,...magic,structuredClone,CRYPTS_RULES,
     currentBookId:535,pt:{sim535:d,path:[1,100]},saves:0,alerts:[],confirmations:[],
     currentPlaythrough:()=>context.pt,saveState:()=>context.saves++,
     showAlert:message=>context.alerts.push(message),showConfirm:(_message,callback)=>context.confirmations.push(callback),

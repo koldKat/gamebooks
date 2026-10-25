@@ -7,11 +7,12 @@ function _data() {
   const pt = currentPlaythrough();
   if (!pt) return null;
   if (!pt.sim760) {
+    const player = _fighter('chameleon'), enemy = _fighter('666');
     pt.sim760 = {
       playerId: 'chameleon',
       enemyId: '666',
-      player: { attack: 3, defense: 3, interactive: 3, life: 20 },
-      enemy:  { attack: 6, defense: 6, interactive: 6, life: 40 },
+      player: { attack: player.attack, defense: player.defense, interactive: player.interactive, life: player.life },
+      enemy:  { attack: enemy.attack, defense: enemy.defense, interactive: enemy.interactive, life: enemy.life },
       turn: null,        // 'player' | 'enemy' - whose turn is next
       started: false,
       log: [],

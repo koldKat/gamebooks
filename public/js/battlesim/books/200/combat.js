@@ -42,7 +42,7 @@ function _checkParalyze(d) {
 }
 
 function _runRound() {
-  const { FIRE_WHIP_DMG, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _appendLog, _checkParalyze, _data, _effectiveSkill, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll1d6, _roll2d6, _sideEnemyNameSafe, saveState, t } = getContext();
+  const { FIRE_WHIP_DMG, FOREST_RULES, SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _appendLog, _checkParalyze, _data, _effectiveSkill, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll1d6, _roll2d6, _sideEnemyNameSafe, saveState, t } = getContext();
 
   const d = _data();
   if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
@@ -83,7 +83,7 @@ function _runRound() {
   // for 1 STAMINA, 3-6 misses. Usable Luck against it like any other hit.
   if (d.player.fireDemonWhip && d.player.stamina > 0) {
     const whipRoll = _roll1d6();
-    if (whipRoll <= 2) {
+    if (whipRoll <= FOREST_RULES.whipHitMax) {
       d.player.stamina = Math.max(0, d.player.stamina - FIRE_WHIP_DMG);
       d.player.woundsTakenThisFight++;
       _appendLog(d, t('battlesim200.log.whip_hit', { roll: whipRoll, n: FIRE_WHIP_DMG, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));

@@ -6,18 +6,130 @@ await loadFixtureRoster(677);
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
-import { WAR_TORN_FIGHTS } from '../../../public/js/battlesim/engines/fabled-lands/roster.js';
+import { WAR_TORN_FIGHTS, WAR_TORN_RULES } from '../../../public/js/battlesim/engines/fabled-lands/roster.js';
+import { FABLED_SEA_CHECKS, fabledSeaCheck } from '../../../public/js/battlesim/engines/fabled-lands/navigation.js';
 import { newFabledCharacter, fabledDefence, fabledAbilityCheck, fabledRankCheck }
   from '../../../public/js/battlesim/engines/fabled-lands/character.js';
 import { startFabledFight, fabledRound, fleeFabledFight } from '../../../public/js/battlesim/engines/fabled-lands/core.js';
-import { CITIES_OF_GOLD_FIGHTS, citiesOfGoldSeaCheck } from '../../../public/js/battlesim/engines/fabled-lands/cities-of-gold.js';
-import { BLOOD_DARK_DEFAULTS, BLOOD_DARK_FIGHTS, bloodDarkSeaCheck } from '../../../public/js/battlesim/engines/fabled-lands/blood-dark-sea.js';
-import { HOWLING_DEFAULTS, HOWLING_FIGHTS, howlingSeaCheck } from '../../../public/js/battlesim/engines/fabled-lands/howling-darkness.js';
+import { CITIES_OF_GOLD_FIGHTS, CITIES_OF_GOLD_SEA_CHECKS, CITIES_OF_GOLD_RULES, citiesOfGoldSeaCheck } from '../../../public/js/battlesim/engines/fabled-lands/cities-of-gold.js';
+import { BLOOD_DARK_DEFAULTS, BLOOD_DARK_FIGHTS, BLOOD_DARK_SEA_CHECKS, BLOOD_DARK_RULES, bloodDarkSeaCheck } from '../../../public/js/battlesim/engines/fabled-lands/blood-dark-sea.js';
+import { HOWLING_DEFAULTS, HOWLING_FIGHTS, HOWLING_SEA_CHECKS, HOWLING_RULES, howlingSeaCheck } from '../../../public/js/battlesim/engines/fabled-lands/howling-darkness.js';
 
 const rolls = (...values) => () => { assert.ok(values.length, 'Unexpected die roll'); return values.shift(); };
 const enemy = (changes = {}) => ({ name: 'Wolf', combat: 3, defence: 5, stamina: 7, ...changes });
 const fight = (config = {}, character = {}) => startFabledFight({ enemies: [enemy()], ...config },
   { ...newFabledCharacter(), ...character });
+
+test('Howling sea dice, crew bonuses, thresholds and naval outcomes follow its own metadata', () => {
+  const rules=structuredClone(HOWLING_RULES),storm=structuredClone(HOWLING_SEA_CHECKS[11]),naval=structuredClone(HOWLING_SEA_CHECKS[338]);
+  const character=newFabledCharacter('warrior',HOWLING_DEFAULTS);
+  try {
+    HOWLING_RULES.shipDice.barque=2;HOWLING_RULES.crewModifiers.storm.average=9;HOWLING_RULES.thresholds.storm=[10,11];
+    HOWLING_SEA_CHECKS[11].destinations=[701,702,703];
+    const result=howlingSeaCheck(11,character,{},rolls(1,1));
+    assert.equal(result.total,11);assert.equal(result.destination,702);
+    HOWLING_RULES.warriorNavalDice=1;HOWLING_RULES.navalWinOutcome=1;HOWLING_SEA_CHECKS[338].bounds=[0,100];
+    assert.equal(howlingSeaCheck(338,character,{},rolls(1)).status,'win');
+  } finally {Object.assign(HOWLING_RULES,rules);Object.assign(HOWLING_SEA_CHECKS[11],storm);Object.assign(HOWLING_SEA_CHECKS[338],naval);}
+});
+
+test('Howling shipwreck damage and death routes preserve saved resources and inputs', () => {
+  const rules=structuredClone(HOWLING_RULES),character={...newFabledCharacter('warrior',HOWLING_DEFAULTS),shards:7,extension:{keep:true}},saved=JSON.stringify(character);
+  try {
+    HOWLING_RULES.wreckDamageDice=2;HOWLING_RULES.deathDestination=999;
+    const survived=howlingSeaCheck(135,character,{},rolls(1,1,3,4));
+    assert.equal(survived.damage,7);assert.equal(survived.character.stamina,13);assert.equal(survived.destination,436);
+    const fatal=howlingSeaCheck(135,{...character,stamina:1},{},rolls(1,1,3,4));
+    assert.equal(fatal.destination,999);assert.equal(fatal.character.shards,7);
+    assert.deepEqual(fatal.character.extension,character.extension);assert.equal(JSON.stringify(character),saved);
+  } finally {Object.assign(HOWLING_RULES,rules);}
+});
+
+test('Blood-Dark routes, ship dice, crew bonuses and bounds follow its own metadata', () => {
+  const rules=structuredClone(BLOOD_DARK_RULES),route=structuredClone(BLOOD_DARK_SEA_CHECKS[83]);
+  try {
+    BLOOD_DARK_RULES.shipDice.barque=2;BLOOD_DARK_RULES.crewModifiers.storm.average=9;
+    BLOOD_DARK_SEA_CHECKS[83].bounds=[10,11];BLOOD_DARK_SEA_CHECKS[83].destinations=[701,702,703];
+    const result=bloodDarkSeaCheck(83,newFabledCharacter('warrior',BLOOD_DARK_DEFAULTS),{},rolls(1,1));
+    assert.equal(result.total,11);assert.equal(result.destination,702);
+  } finally {Object.assign(BLOOD_DARK_RULES,rules);Object.assign(BLOOD_DARK_SEA_CHECKS[83],route);}
+});
+
+test('Blood-Dark ore, cargo, ship penalties and degraded crew use source settings', () => {
+  const rules=structuredClone(BLOOD_DARK_RULES),character={...newFabledCharacter('warrior',BLOOD_DARK_DEFAULTS),copperOre:true,hasCargo:true};
+  try {
+    BLOOD_DARK_RULES.copperOreBonus=4;BLOOD_DARK_RULES.degradedCrew='good';
+    const lightning=bloodDarkSeaCheck(168,character,{},rolls(1,1));
+    assert.equal(lightning.total,6);assert.equal(lightning.destination,135);assert.equal(lightning.crew,'good');
+    BLOOD_DARK_RULES.cargoPenalty=3;
+    assert.equal(bloodDarkSeaCheck(268,character,{},rolls(1,1)).total,3);
+    BLOOD_DARK_RULES.shipAdjustmentBase=5;
+    assert.equal(bloodDarkSeaCheck(384,character,{ship:'galleon'},rolls(1)).total,-1);
+  } finally {Object.assign(BLOOD_DARK_RULES,rules);}
+});
+
+test('Blood-Dark survival dice and naval death route preserve player inputs and resources', () => {
+  const rules=structuredClone(BLOOD_DARK_RULES),character={...newFabledCharacter('wayfarer',BLOOD_DARK_DEFAULTS),shards:7,extension:{keep:true}},saved=JSON.stringify(character);
+  try {
+    BLOOD_DARK_RULES.survivalDice.wayfarer=3;BLOOD_DARK_RULES.deathDestination=999;
+    const survival=bloodDarkSeaCheck(142,character,{},rolls(6,6,6));
+    assert.equal(survival.total,21);assert.equal(survival.destination,152);
+    const fatal=bloodDarkSeaCheck(201,{...character,profession:'warrior',stamina:1},{crew:'poor'},rolls(1,1,1,1,1));
+    assert.equal(fatal.destination,999);assert.equal(fatal.character.shards,7);
+    assert.deepEqual(fatal.character.extension,character.extension);assert.equal(JSON.stringify(character),saved);
+  } finally {Object.assign(BLOOD_DARK_RULES,rules);}
+});
+
+test('Golnir sea dice, thresholds, routes and special escape crew bonus follow its own metadata', () => {
+  const rules=structuredClone(CITIES_OF_GOLD_RULES),route=structuredClone(CITIES_OF_GOLD_SEA_CHECKS[434]);
+  const character=newFabledCharacter('warrior',{rank:2,stamina:13});
+  try {
+    CITIES_OF_GOLD_RULES.shipDice.barque=2;CITIES_OF_GOLD_RULES.crewModifiers.storm.average=9;
+    CITIES_OF_GOLD_RULES.thresholds.storm=[10,11];CITIES_OF_GOLD_SEA_CHECKS[434].destinations=[701,702,703];
+    const storm=citiesOfGoldSeaCheck(434,character,{},rolls(1,1));
+    assert.equal(storm.total,11);assert.equal(storm.destination,702);
+    CITIES_OF_GOLD_RULES.otherDice=1;CITIES_OF_GOLD_RULES.crewModifiers.escapeBonus.poor=5;
+    const escape=citiesOfGoldSeaCheck(488,character,{crew:'poor'},rolls(1));
+    assert.equal(escape.total,8);assert.equal(escape.destination,221);
+  } finally {Object.assign(CITIES_OF_GOLD_RULES,rules);Object.assign(CITIES_OF_GOLD_SEA_CHECKS[434],route);}
+});
+
+test('Golnir naval damage bands and death route preserve character inputs and inventory', () => {
+  const rules=structuredClone(CITIES_OF_GOLD_RULES),character={...newFabledCharacter('warrior',{rank:2,stamina:20}),shards:7,extension:{keep:true}},saved=JSON.stringify(character);
+  try {
+    CITIES_OF_GOLD_RULES.warriorNavalDice=1;CITIES_OF_GOLD_RULES.thresholds.naval=[0,100,200,300];
+    CITIES_OF_GOLD_RULES.navalDamageDice[1]=3;CITIES_OF_GOLD_RULES.deathDestination=999;
+    const result=citiesOfGoldSeaCheck(461,character,{},rolls(1,2,3,4));
+    assert.equal(result.damage,9);assert.equal(result.character.stamina,11);assert.equal(result.destination,535);
+    const fatal=citiesOfGoldSeaCheck(461,{...character,stamina:1},{},rolls(1,2,3,4));
+    assert.equal(fatal.destination,999);assert.equal(fatal.character.shards,7);
+    assert.deepEqual(result.character.extension,character.extension);assert.equal(JSON.stringify(character),saved);
+  } finally {Object.assign(CITIES_OF_GOLD_RULES,rules);}
+});
+
+test('War-Torn sea routes, dice, crew bonuses and thresholds follow roster metadata', () => {
+  const rules=structuredClone(WAR_TORN_RULES),route=structuredClone(FABLED_SEA_CHECKS[38]);
+  try {
+    WAR_TORN_RULES.shipDice.barque=2;WAR_TORN_RULES.crewModifiers.storm.average=9;
+    WAR_TORN_RULES.thresholds.storm=[10,11];FABLED_SEA_CHECKS[38].destinations=[701,702,703];
+    const result=fabledSeaCheck(38,newFabledCharacter(),{},rolls(1,1));
+    assert.equal(result.total,11);assert.equal(result.destination,702);
+    WAR_TORN_RULES.stormBlessingOutcome=0;
+    const blessed=fabledSeaCheck(38,{...newFabledCharacter(),stormsBlessing:true},{safetyFromStorms:true});
+    assert.equal(blessed.destination,701);assert.equal(blessed.character.stormsBlessing,false);
+  } finally {Object.assign(WAR_TORN_RULES,rules);Object.assign(FABLED_SEA_CHECKS[38],route);}
+});
+
+test('War-Torn naval dice and death destination use metadata without mutating saved character', () => {
+  const rules=structuredClone(WAR_TORN_RULES),character={...newFabledCharacter(),stamina:1,shards:7,extension:{keep:true}},saved=JSON.stringify(character);
+  try {
+    WAR_TORN_RULES.warriorNavalDice=1;WAR_TORN_RULES.deathDestination=999;
+    const result=fabledSeaCheck(51,character,{},rolls(1));
+    assert.equal(result.total,2);assert.equal(result.status,'loss');assert.equal(result.destination,999);
+    assert.equal(result.character.shards,7);assert.deepEqual(result.character.extension,character.extension);
+    assert.equal(JSON.stringify(character),saved);
+  } finally {Object.assign(WAR_TORN_RULES,rules);}
+});
 
 test('book-four first-wound interruption and Avar threshold preserve saved inputs', () => {
   const c = newFabledCharacter('warrior', HOWLING_DEFAULTS);

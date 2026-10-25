@@ -1,4 +1,4 @@
-import { ROSTER } from './definition.js';
+import { COMPANION_RULES, ROSTER } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createOpponentEditor, validateOpponents } from '../../opponents.js';
@@ -6,7 +6,7 @@ import { createOpponentEditor, validateOpponents } from '../../opponents.js';
 let opponents, editorState;
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, ROSTER, SVG_SKULL, SVG_TROPHY, _appendLog, _autoResolve, _checkEnd, _data, _enemy, _enemyName, _enemyOptions, _numField, _pickEnemy, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _rollLp, _startBattle, _strike, _strikeOnce, closeSim412, currentPlaythrough, drawChance, escapeHtml, getPlayBtnRow, initSim412, lifeTier, openSim412, registerPanelShortcut, renderSim412, resolveStrike, saveState, setSim412Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, COMPANION_RULES, ROSTER, SVG_SKULL, SVG_TROPHY, _appendLog, _autoResolve, _checkEnd, _data, _enemy, _enemyName, _enemyOptions, _numField, _pickEnemy, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _rollLp, _startBattle, _strike, _strikeOnce, closeSim412, currentPlaythrough, drawChance, escapeHtml, getPlayBtnRow, initSim412, lifeTier, openSim412, registerPanelShortcut, renderSim412, resolveStrike, saveState, setSim412Visible, shortcutLabel, showAlert, t });
 const { _data, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _enemy, _enemyName, _checkEnd, _startBattle, _strikeOnce, _strike, _autoResolve, _rollLp, _pickEnemy } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
@@ -131,7 +131,7 @@ export function initSim412() {
           <div class="bsim-side">
             <div class="bsim-side-title">${t('battlesim412.ui.you')}</div>
             ${_numField(t('battlesim412.ui.lp'), 'sim412-player-lp', 'sim412-roll-lp')}
-            <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim412.ui.companion')}</span><input id="sim412-companion" type="checkbox"></label>
+            <label class="inv-edit-row"><span class="inv-edit-label bsim-stat-label">${t('battlesim412.ui.companion', {bonus:COMPANION_RULES.alvian.strengthBonus})}</span><input id="sim412-companion" type="checkbox"></label>
             <div id="sim412-player-stat" class="bsim-stat-summary"></div>
           </div>
           <div class="bsim-side">

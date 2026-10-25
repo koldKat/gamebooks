@@ -1,5 +1,7 @@
 import { protectLegendaryHero } from './protection.js';
 import { legendaryDie } from './character.js';
+import { VALLEY_SETTINGS } from './valley-roster.js';
+import { CROWN_SETTINGS } from './crown-roster.js';
 
 function injureParty(fight, amount, combat = true) {
   for (const index of fight.participants) {
@@ -10,31 +12,33 @@ function injureParty(fight, amount, combat = true) {
 
 export function applyLegendaryEndRound(fight, roll) {
   const special = fight.rules.special;
+  const settings = VALLEY_SETTINGS;
   if (fight.rules.grappleEscape) {
     for (const index of fight.grappled) {
       const hero = fight.party[index];
-      if (hero.health > 0) fight.party[index] = protectLegendaryHero(hero, 2, {combat:false,attack:false}).character;
+      if (hero.health > 0) fight.party[index] = protectLegendaryHero(hero, CROWN_SETTINGS.grappleDamage, {combat:false,attack:false}).character;
     }
   }
   if (special === 'skallos') {
-    const index = fight.enemies.findIndex(enemy => enemy.name === 'Skallos');
+    const rules=settings.skallos;
+    const index = fight.enemies.findIndex(enemy => enemy.name === rules.name);
     if (index >= 0 && fight.enemies[index].health > 0 && !fight.roundEnemyDamage[index]) {
-      injureParty(fight, 1);
-      fight.enemies[index].health = Math.min(20, fight.enemies[index].health + 4);
+      injureParty(fight, rules.partyDamage);
+      fight.enemies[index].health = Math.min(rules.maximumHealth, fight.enemies[index].health + rules.healing);
       fight.log = [...fight.log.slice(-59), { round: fight.round, type: 'skallosRoar' }];
     }
   } else if (special === 'fallingRocks') {
     const priest = fight.enemies[0];
     if (priest.health > 0) {
-      priest.health = Math.max(0, priest.health - 1);
-      injureParty(fight, 1, false);
+      priest.health = Math.max(0, priest.health - settings.fallingRocks.selfDamage);
+      injureParty(fight, settings.fallingRocks.partyDamage, false);
       fight.log = [...fight.log.slice(-59), { round: fight.round, type: 'fallingRocks' }];
     }
   } else if (special === 'beetles') {
-    injureParty(fight, 1);
+    injureParty(fight, settings.beetleDamage);
     fight.log = [...fight.log.slice(-59), { round: fight.round, type: 'beetleBites' }];
   } else if (special === 'saltDragon' && !fight.roundPartyDamage) {
-    injureParty(fight, 3);
+    injureParty(fight, settings.saltDragonDamage);
     fight.log = [...fight.log.slice(-59), { round: fight.round, type: 'dragonFire' }];
   } else if (special === 'assassinObjective' && !fight.roundEnemyDamage[0] && fight.enemies[0].health > 0) {
     fight.status = 'failed';
@@ -73,9 +77,9 @@ export function applyLegendaryEndRound(fight, roll) {
 
 export function applyLegendaryPartyEnd(fight) {
   if (fight.rules.special !== 'slaveAllies' || fight.rules.slaveDamage === 0) return;
-  const amount = fight.rules.slaveDamage ?? 1;
+  const amount = fight.rules.slaveDamage ?? VALLEY_SETTINGS.slaves.default;
   for (const [index, enemy] of fight.enemies.entries()) {
-    if (enemy.health > 0 && enemy.name !== 'Orc Leader') {
+    if (enemy.health > 0 && enemy.name !== VALLEY_SETTINGS.names.orcLeader) {
       const damage = Math.min(enemy.health, amount);
       enemy.health -= damage;
       fight.roundEnemyDamage[index] += damage;

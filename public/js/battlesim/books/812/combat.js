@@ -1,4 +1,4 @@
-import { ENCOUNTERS, RULES_REVISION } from './definition.js';
+import { ENCOUNTERS, RULES_REVISION, FOREST_RULES } from './definition.js';
 
 const integer = (value, min, max) => {
   if (!Number.isSafeInteger(value) || value < min || value > max) throw new RangeError('Invalid combat value');
@@ -29,9 +29,9 @@ export function startFight(character, opponent, section, mode = 'player', matchL
   const encounter = ENCOUNTERS.find(row => row.section === Number(section));
   const player = validateCharacter(character);
   if (!encounter || !['player', 'reader'].includes(mode) || !opponent?.displayName?.trim() || player.life <= 0) throw new RangeError('Invalid fight');
-  if (encounter.unarmed && mode === 'player' && player.life <= 1) throw new RangeError('Already at knockout threshold');
+  if (encounter.unarmed && mode === 'player' && player.life <= FOREST_RULES.knockout) throw new RangeError('Already at knockout threshold');
   const enemy = {...opponent, attack: integer(opponent.attack, 0, 1000), defence: integer(opponent.defence, 0, 1000),
-    life: encounter.dynamicLife && matchLife ? player.life : integer(opponent.life, encounter.unarmed ? 2 : 1, 10000)};
+    life: encounter.dynamicLife && matchLife ? player.life : integer(opponent.life, encounter.unarmed ? FOREST_RULES.knockout + 1 : 1, 10000)};
   const fight = {rulesRevision: RULES_REVISION, encounter, character: player, enemy, name: enemy.displayName,
     mode, phase: mode === 'reader' ? 'reader' : 'player', turns: 0, rounds: 0, outcome: null,
     ratings: ratings(player, encounter), events: [{kind: 'start', section: encounter.section}]};
@@ -54,11 +54,11 @@ export function turn(fight, attackDie = rollDie(), defenceDie = rollDie()) {
   const attack = (playerAttack ? next.ratings.attack : next.enemy.attack) + attackDie;
   const defence = (playerAttack ? next.enemy.defence : next.ratings.defence) + defenceDie;
   const damage = Math.max(0, attack - defence), target = playerAttack ? next.enemy : next.character;
-  target.life = Math.max(next.encounter.unarmed ? 1 : 0, target.life - damage);
+  const threshold = next.encounter.unarmed ? FOREST_RULES.knockout : 0;
+  target.life = Math.max(threshold, target.life - damage);
   next.turns++;
   if (playerAttack) next.rounds++;
   next.events.push({kind: playerAttack ? 'playerTurn' : 'enemyTurn', attackDie, defenceDie, attack, defence, damage});
-  const threshold = next.encounter.unarmed ? 1 : 0;
   if (next.character.life <= threshold) return finish(next, 'loss');
   if (next.enemy.life <= threshold) return finish(next, 'win');
   next.phase = playerAttack ? 'enemy' : 'player';

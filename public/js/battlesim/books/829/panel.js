@@ -1,4 +1,4 @@
-import { BASE_HP_MAX, ENDURANCE_HP_BONUS, THROWING_ACCURACY_BONUS, RE_STAT_A, RE_STAT_D, RE_STAT_T } from './definition.js';
+import { BASE_HP_MAX, ENDURANCE_HP_BONUS, THROWING_ACCURACY_BONUS, RE_STAT_A, RE_STAT_D, RE_STAT_T, quailEnemyRules } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
@@ -272,17 +272,10 @@ function _setupEnemyAutocomplete() {
     d.enemy = { name: enemy.name, a: enemy.attack ?? d.enemy.a, d: enemy.defense ?? d.enemy.d,
       hp: enemy.hp ?? d.enemy.hp, hpMax: enemy.hp ?? d.enemy.hpMax, pb: enemy.pb ?? d.enemy.pb };
     if (d.rulesVersion !== 1 || d.finished) quailStart(d);
-    d.enemy.rule = /^Огнен бръмбар/.test(enemy.name) ? 'plus3six'
-      : /^(Огромен плъх|Скелет магьосник)$/.test(enemy.name) ? 'sum2'
-      : /^Върховен жрец на огъня$/.test(enemy.name) ? 'max2'
-      : /^Върховен жрец на водата$/.test(enemy.name) ? 'water'
-      : /^Скална усойница$/.test(enemy.name) ? 'extra6'
-      : /^Демон-пъдпъдък$/.test(enemy.name) ? 'explode56'
-      : /^Огнен гущер$/.test(enemy.name) ? 'explode12'
-      : /^Дървеница$/.test(enemy.name) ? 'bedbug' : 'standard';
-    if (/^Инсумо$/.test(enemy.name)) d.enemy.rule = 'extra12';
-    d.enemy.aura = /^(Изгубена душа|Планински призрак)/.test(enemy.name) ? 1 : 0;
-    d.options.lowRoll = /^(Боен тритон|Гигантски плъх)$/.test(enemy.name);
+    const preset = quailEnemyRules(enemy.name);
+    d.enemy.rule = preset.rule;
+    d.enemy.aura = preset.aura;
+    d.options.lowRoll = preset.lowRoll;
     closeDropdown();
     saveState();
     _renderInputs();

@@ -115,7 +115,7 @@ function _startBattle() {
   }
   if (d.log.length) _appendLog(d, t('battlesim871.log.reset_sep'));
   _appendLog(d, t('battlesim871.log.start', { name: _enemyName(d) }));
-  if (d.fightMulti || r.playerBonus && d.simautBonus !== false) _appendLog(d, t('battlesim871.log.player_bonus', { n: 5 }));
+  if (d.fightMulti || r.playerBonus && d.simautBonus !== false) _appendLog(d, t('battlesim871.log.player_bonus', { n: d.fightMulti ? 5 : r.playerBonus }));
   saveState();
   _renderAll();
 }

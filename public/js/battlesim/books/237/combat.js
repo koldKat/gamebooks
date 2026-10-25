@@ -130,7 +130,7 @@ function _checkBattleEnd(d) {
 }
 
 function _testLuck() {
-  const { SVG_SKULL, _appendLog, _checkBattleEnd, _data, _enemyNameSafe, _recordOutcome, _renderAll, _roll2d6, _secondNameSafe, saveState, t } = getContext();
+  const { _appendLog, _checkBattleEnd, _data, _enemyNameSafe, _renderAll, _roll2d6, _secondNameSafe, saveState, t } = getContext();
 
   const d = _data();
   if (!d || !d.pendingLuckQueue.length || d.player.luck <= 0) return;
@@ -155,11 +155,6 @@ function _testLuck() {
     } else {
       d.player.stamina = Math.max(0, d.player.stamina - 1);
       _appendLog(d, t('battlesim237.log.luck_hit_unlucky', { roll, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
-    }
-    if (d.player.stamina <= 0) {
-      _appendLog(d, t('battlesim237.log.fallen', { skull: SVG_SKULL }));
-      _recordOutcome(d, 'loss');
-      d.pendingLuckQueue = [];
     }
   }
   _checkBattleEnd(d);

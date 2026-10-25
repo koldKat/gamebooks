@@ -2,12 +2,12 @@
 export function createEffects(getContext) {
 // BEGIN EXTRACTED RULES
 function _useMedKit() {
-  const { MEDKIT_HEAL, _activeSide, _appendLog, _data, _notReady, _renderAll, saveState, showAlert, t } = getContext();
+  const { MEDKIT_HEAL, _activeSide, _appendLog, _data, _handOver, _notReady, _renderAll, saveState, showAlert, t } = getContext();
 
   const d = _data();
   if (!d || _notReady(d)) return;
   const side = _activeSide(d);
-  const midFight = d[side.roundsKey] > 0 && side.self[side.selfHp] > 0 && side.foe[side.foeHp] > 0;
+  const midFight = !_handOver(d) && d[side.roundsKey] > 0 && side.self[side.selfHp] > 0 && side.foe[side.foeHp] > 0;
   if (midFight) {
     showAlert(t('battlesim209.alert.medkit_midfight'));
     return;

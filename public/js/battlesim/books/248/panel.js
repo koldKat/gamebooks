@@ -9,7 +9,7 @@ const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorCo
 const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _runRound, _testLuck, _skipLuck, _resetBattle } = createCombat(simulatorContext);
 const { _eatProvisions } = createEffects(simulatorContext);
 // END SIMULATOR WIRING
-// Battle Simulator (Island of the Undead, book 248)
+// Battle Simulator (Night Dragon, book 248)
 // Fighting Fantasy: opposed 2d6 + SKILL; ties miss, normal wounds cost 2 STAMINA.
 // Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 

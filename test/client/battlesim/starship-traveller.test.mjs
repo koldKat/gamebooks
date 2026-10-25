@@ -2,6 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
+import {readFileSync as readSeed} from 'node:fs';
+
+const damageSeed = JSON.parse(readSeed(new URL('../../../data/simulator-rosters/186.json', import.meta.url), 'utf8'));
 
 function fixture(saved) {
   const source = readFileSync(new URL('../../../public/js/battlesim/battlesim186.js', import.meta.url), 'utf8')
@@ -12,7 +15,13 @@ function fixture(saved) {
     if (!elements.has(id)) elements.set(id, {});
     return elements.get(id);
   } };
-  const context = vm.createContext({ currentPlaythrough: () => pt, saveState: () => {}, document, t: k => k, escapeHtml: s => s });
+  const context = vm.createContext({ currentPlaythrough: () => pt, saveState: () => {}, document, t: k => k, escapeHtml: s => s,
+    createRosterLoader: (id, dataset, install) => {
+      assert.equal(id, 186); assert.equal(dataset, 'DAMAGE_RULES');
+      install(structuredClone(damageSeed.enemies.map(row => row.stats.entry)));
+      return async () => {};
+    },
+  });
   vm.runInContext(source + '\n_renderAll = () => {};', context);
   const run = s => vm.runInContext(s, context);
   return { run, d: run('_data()'), source, elements };
@@ -127,4 +136,19 @@ test('ship mode cannot fight an unselected enemy with zero maximum shields', () 
   f.run('_runShipRound(); _renderStatus()');
   assert.equal(f.d.roundsThisBattle, 0);
   assert.equal(f.elements.get('sim186-round').disabled, true);
+});
+
+test('nerve and armour damage use catalog settings while preserving saved variants', () => {
+  const f = fixture();
+  for (const [variant, expected] of [['nerve', [2, 2, 2, 4, 4, 4]], ['armor', [0, 0, 0, 0, 1, 1]]]) {
+    for (let die = 1; die <= 6; die++) {
+      f.run(`Math.random = () => ${(die - 1) / 6}`);
+      assert.equal(f.run(`_rollDamage('${variant}').amount`), expected[die - 1]);
+    }
+  }
+  f.d.enemyDamageVariant = 'nerve'; f.d.playerDamageVariant = 'armor';
+  f.run('STARSHIP_DAMAGE_RULES.nerve = {threshold: 6, damage: 7, ordinaryDamage: 1}; STARSHIP_DAMAGE_RULES.armor = {threshold: 6, damage: 3, blockedDamage: 0}; Math.random = () => 0.99');
+  assert.equal(f.run('_rollDamage(_data().enemyDamageVariant).amount'), 7);
+  assert.equal(f.run('_rollDamage(_data().playerDamageVariant).amount'), 3);
+  assert.equal(f.d.enemyDamageVariant, 'nerve'); assert.equal(f.d.playerDamageVariant, 'armor');
 });

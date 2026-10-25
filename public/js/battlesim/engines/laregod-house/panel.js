@@ -1,6 +1,6 @@
 import { createOpponentEditor } from '../../opponents.js';
 
-import { laregodPoints, startLaregodFight, laregodRound } from './core.js';
+import { laregodPoints, laregodOpponent, startLaregodFight, laregodRound } from './core.js';
 
 const ID = 'sim644';
 const equipmentKeys = ['sword', 'mail', 'dagger', 'scimitar', 'success', 'stone'];
@@ -92,7 +92,7 @@ export function createLaregodHousePanel({ document, t, getRun, getBookId, saveSt
     el('number').disabled = !active || !d.manualRandom;
     el('start').disabled = active; el('attack').disabled = !active; el('cancel').disabled = !active;
     const context = el('context').value;
-    const opponent = context === 'guard' ? 'other' : context === 'manual' ? el('opponent').value : 'wingrugur';
+    const opponent = laregodOpponent(context, el('opponent').value);
     const equipment = Object.fromEntries(equipmentKeys.map(key => [key, el(key).checked]));
     el('points').textContent = tk('points', { n: f && active ? f.player.points : laregodPoints(equipment, opponent, context) });
     el('status').textContent = f ? tk('status.' + f.status) + ' | ' + tk('health', {

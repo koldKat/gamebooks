@@ -1,5 +1,5 @@
 import { customFightingEncounter } from '../../engines/fighting-fantasy/opponents.js';
-import { ENCOUNTERS, RULES_REVISION, SWIFTSTINGER_DAMAGE } from './definition.js';
+import { ENCOUNTERS, DEEP_RULES, RULES_REVISION, SWIFTSTINGER_DAMAGE } from './definition.js';
 
 const clone = value => structuredClone(value);
 function integer(value, min = 0, max = 10000) {
@@ -44,14 +44,14 @@ export function startFight(section, character, options = {}) {
   if (!source) throw new RangeError('Unknown encounter');
   const config = clone(source), player = clone(character);
   let enemies = config.enemies.map(enemy => ({ ...enemy, staminaInitial: enemy.stamina }));
-  if (config.remainingBatFish) enemies = enemies.slice(0, integer(options.remainingBatFish ?? 4, 1, 4));
+  if (config.remainingBatFish) enemies = enemies.slice(0, integer(options.remainingBatFish ?? config.enemies.length, 1, config.enemies.length));
   if (config.injuredOgre && options.previousOgreStamina != null) {
-    enemies[0].stamina = integer(options.previousOgreStamina, 1) + 4;
+    enemies[0].stamina = integer(options.previousOgreStamina, 1) + DEEP_RULES.ogreRecovery;
     enemies[0].staminaInitial = enemies[0].stamina;
   }
   if (config.krakenInjuries) {
-    if (options.axeFish) enemies[0].stamina -= 4;
-    if (options.sawFish) { enemies[0].stamina -= 10; enemies[0].skill -= 2; }
+    if (options.axeFish) enemies[0].stamina -= DEEP_RULES.kraken.axeStamina;
+    if (options.sawFish) { enemies[0].stamina -= DEEP_RULES.kraken.sawStamina; enemies[0].skill -= DEEP_RULES.kraken.sawSkill; }
   }
   if (options.enemyStamina != null) {
     if (!Array.isArray(options.enemyStamina) || options.enemyStamina.length !== enemies.length) throw new RangeError('Invalid enemy health override');
@@ -61,7 +61,7 @@ export function startFight(section, character, options = {}) {
       enemy.staminaInitial = Math.max(enemy.stamina, enemy.staminaInitial);
     });
   }
-  if (config.training) player.stamina = Math.min(player.staminaInitial, Math.max(player.stamina + 2, 10));
+  if (config.training) player.stamina = Math.min(player.staminaInitial, Math.max(player.stamina + DEEP_RULES.training.recovery, DEEP_RULES.training.minimumStamina));
   if (config.preWound && !options.preWoundApplied) player.stamina = Math.max(0, player.stamina - config.preWound);
   const nextFightModifier = player.nextFightModifier;
   player.nextFightModifier = 0;
@@ -87,10 +87,10 @@ function finish(fight, outcome, reason, destination) {
   fight.pending = [];
   fight.mercyPending = false;
   if (outcome === 'loss' && !fight.player.stamina) fight.player.dead = true;
-  if (fight.config.anemoneRing && fight.ringWounds > 1) fight.player.anemoneRing = false;
+  if (fight.config.anemoneRing && fight.ringWounds > DEEP_RULES.ring.removeAfterWounds) fight.player.anemoneRing = false;
   if (fight.config.rememberOgre) fight.ogreStamina = fight.enemies[0].stamina;
   if (fight.config.training && ['win', 'loss'].includes(outcome)) {
-    const bonus = outcome === 'win' ? 1 : 2;
+    const bonus = outcome === 'win' ? DEEP_RULES.training.winSkill : DEEP_RULES.training.lossSkill;
     fight.player.skill += bonus;
     fight.player.skillInitial += bonus;
   }
@@ -142,18 +142,18 @@ function ready(input) {
 }
 function attackModifier(fight) {
   return fight.player.attackModifier + fight.player.weaponModifier + fight.nextFightModifier
-    + (fight.config.attackModifier ?? 0) - (fight.player.unarmed ? 3 : 0) - (fight.trapped ? 2 : 0);
+    + (fight.config.attackModifier ?? 0) - (fight.player.unarmed ? 3 : 0) - (fight.trapped ? DEEP_RULES.trap.penalty : 0);
 }
 function incoming(fight, enemy, roll) {
   if (fight.config.curse) {
     const value = die(roll);
     fight.events.push({ kind: 'curse', roll: value });
-    if (value >= 3) {
-      const key = value <= 4 ? 'skill' : 'luck', loss = value <= 4 ? 1 : 2;
+    if (value >= DEEP_RULES.curse.minimum) {
+      const key = value <= DEEP_RULES.curse.skillMaximum ? 'skill' : 'luck', loss = value <= DEEP_RULES.curse.skillMaximum ? DEEP_RULES.curse.skillLoss : DEEP_RULES.curse.luckLoss;
       fight.player[key] = Math.max(0, fight.player[key] - loss);
       return;
     }
-    fight.pending.push({ kind: 'incoming', enemy, damage: 2, noLuck: true });
+    fight.pending.push({ kind: 'incoming', enemy, damage: DEEP_RULES.curse.damage, noLuck: true });
     return;
   }
   fight.pending.push({ kind: 'incoming', enemy, damage: fight.config.incomingDamage ?? 2,
@@ -185,7 +185,7 @@ export function round(input, target, roll, { swiftstinger = false } = {}) {
     const opponents = swiftstinger ? active.filter(index => index !== target) : active;
     const playerAttack = opponents.length ? rollDice(roll) + fight.player.skill + attackModifier(fight) : null;
     for (const index of opponents) {
-      const ringPenalty = fight.config.anemoneRing && fight.player.anemoneRing ? 3 : 0;
+      const ringPenalty = fight.config.anemoneRing && fight.player.anemoneRing ? DEEP_RULES.ring.enemyPenalty : 0;
       const enemyAttack = rollDice(roll) + fight.enemies[index].skill - ringPenalty;
       fight.events.push({ kind: 'attack', enemy: index, playerAttack, enemyAttack });
       if (playerAttack > enemyAttack && index === target) fight.pending.push({ kind: 'outgoing', enemy: index, damage: 2 });
@@ -243,7 +243,7 @@ export function freeFoot(input) {
   const fight = clone(input);
   fight.trapped = false;
   fight.events = [];
-  fight.pending.push({ kind: 'incoming', enemy: 0, damage: 2 });
+  fight.pending.push({ kind: 'incoming', enemy: 0, damage: DEEP_RULES.trap.freeDamage });
   settle(fight);
   return fight;
 }

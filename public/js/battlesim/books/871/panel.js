@@ -16,7 +16,12 @@ import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";
 import { t } from "../../../i18n.js";
-import { startRinglasFight, resumeRinglasFight, ringlasRound } from "../.././engines/ringlas-saga.js";
+import { startRinglasFight as startFight, resumeRinglasFight as resumeFight, ringlasRound as playRound } from "../.././engines/ringlas-saga.js";
+
+// Resolve current database rules without rewriting existing saved fights.
+const startRinglasFight = (data, setup) => startFight(data, setup, _rival(data.enemyId), _rival('armoredknight').companion);
+const resumeRinglasFight = data => resumeFight(data, _rival(data.enemyId));
+const ringlasRound = (data, roll) => playRound(data, roll, _rival(data.enemyId));
 
 const SVG_SKULL  = `<svg class="sim-icon sim-icon-dead"  viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2C18.6 16.3 20 13.8 20 11a8 8 0 0 0-8-8zm-2.5 13v-1.5a.5.5 0 0 0-.5-.5H8l-.5-1 1-1-1-1 1-1H9a2.5 2.5 0 0 1 5 0h.5l1 1-1 1 1 1-.5 1h-1a.5.5 0 0 0-.5.5V16h-4z"/></svg>`;
 const SVG_TROPHY = `<svg class="sim-icon sim-icon-win"   viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h12v7a6 6 0 0 1-12 0V2zm-2 1H2v4a4 4 0 0 0 4 4v-1a3 3 0 0 1-3-3V3zm16 0h2v4a4 4 0 0 1-4 4v-1a3 3 0 0 0 3-3V3zm-7 13v2H9v2h6v-2h-2v-2a6 6 0 0 0 5-5.92V2H6v8.08A6 6 0 0 0 13 16z"/></svg>`;
@@ -35,7 +40,7 @@ function _renderStatus() {
   }
   document.getElementById('sim871-round').disabled = d.over || !d.started || d.rulesVersion === 1 && !!d.pausedSection;
   document.getElementById('sim871-start').disabled = _playerDead(d);
-  document.getElementById('sim871-resume').hidden = !(d.rulesVersion === 1 && d.pausedSection === 130 && !_playerDead(d));
+  document.getElementById('sim871-resume').hidden = !(d.rulesVersion === 1 && _rival(d.enemyId).pause?.resumable && d.pausedSection === _rival(d.enemyId).pause.section && !_playerDead(d));
 }
 
 function _renderInputs() {
@@ -49,12 +54,12 @@ function _renderInputs() {
   document.getElementById('sim871-enemy-stamina').value = d.enemyStamina;
   document.getElementById('sim871-enemy-penalty').value = d.enemyPenalty;
   document.getElementById('sim871-multi-cb').checked = !!d.multi;
-  document.getElementById('sim871-companion-settings').hidden = d.enemyId !== 'armoredknight';
+  document.getElementById('sim871-companion-settings').hidden = !_rival(d.enemyId).companion;
   document.getElementById('sim871-ally-cb').checked = !!d.allyEnabled;
-  document.getElementById('sim871-ally-stamina').value = d.allyStamina ?? 6;
-  document.getElementById('sim871-ally-target').value = d.allyTarget ?? 4;
+  document.getElementById('sim871-ally-stamina').value = d.allyStamina ?? _rival('armoredknight').companion.stamina;
+  document.getElementById('sim871-ally-target').value = d.allyTarget ?? _rival('armoredknight').companion.target;
   document.getElementById('sim871-drunk-cb').checked = !!d.drunk;
-  document.getElementById('sim871-simaut-settings').hidden = d.enemyId !== 'simaut';
+  document.getElementById('sim871-simaut-settings').hidden = !_rival(d.enemyId).playerBonus;
   document.getElementById('sim871-simaut-cb').checked = d.simautBonus !== false;
   _renderStatus();
 }

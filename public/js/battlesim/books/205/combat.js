@@ -63,11 +63,11 @@ function _bansheeCheck(d) {
 }
 
 function _extraRoundEffects(d) {
-  const { ICE_DEMON_GAS_DMG, WHITE_DRAGON_BREATH_DMG, _appendLog, _roll1d6, t } = getContext();
+  const { ICE_DEMON_GAS_DMG, SNOW_RULES, WHITE_DRAGON_BREATH_DMG, _appendLog, _roll1d6, t } = getContext();
 
   if (d.player.iceDemonGas && d.player.stamina > 0) {
     const roll = _roll1d6();
-    if (roll <= 3) {
+    if (roll <= SNOW_RULES.gasHitMax) {
       d.player.stamina = Math.max(0, d.player.stamina - ICE_DEMON_GAS_DMG);
       _appendLog(d, t('battlesim205.log.gas_hit', { roll, n: ICE_DEMON_GAS_DMG, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     } else {
@@ -76,10 +76,10 @@ function _extraRoundEffects(d) {
   }
   if (d.player.whiteDragonBreath && d.player.stamina > 0) {
     const roll = _roll1d6();
-    if (roll <= 2 && !d.player.hasGoldRing) {
+    if (roll <= SNOW_RULES.breathHitMax && !d.player.hasGoldRing) {
       d.player.stamina = Math.max(0, d.player.stamina - WHITE_DRAGON_BREATH_DMG);
       _appendLog(d, t('battlesim205.log.breath_hit', { roll, n: WHITE_DRAGON_BREATH_DMG, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
-    } else if (roll <= 2) {
+    } else if (roll <= SNOW_RULES.breathHitMax) {
       _appendLog(d, t('battlesim205.log.breath_blocked', { roll }));
     } else {
       _appendLog(d, t('battlesim205.log.breath_miss', { roll }));

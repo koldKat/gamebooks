@@ -1,3 +1,5 @@
+import { createRosterLoader } from '../../roster-data.js';
+
 // Book identity and declarative defaults; no DOM or saved-state access.
 export const definition = Object.freeze({
   "id": 696,
@@ -7,11 +9,7 @@ export const definition = Object.freeze({
   "i18nPrefix": "battlesim696"
 });
 
-export const CREATURE_ATTRIBUTES = {
-  'Обикновен човек': [3, 2], 'Полуджентри': [3, 3], 'Джентри': [5, 5],
-  'Обикновен вампир': [4, 3], 'Архвампир': [6, 6], 'Естер': [3, 2],
-  'Гном': [3, 2], 'Полугном': [3, 2], 'Верволф (таласъм-вълк)': [4, 3],
-  'Верфокс (таласъм-лисица)': [3, 3], 'Вербьор (таласъм-мечка)': [5, 2],
-  'Русалка (воден дух)': [2, 2], 'Вълк': [2, 2], 'Мечка': [5, 1],
-  'Глиган': [3, 2], 'Грифон': [5, 4], 'Барс': [3, 3], 'Еднорог': [3, 4],
-};
+export let CREATURE_ATTRIBUTES = {};
+export const loadRoster = createRosterLoader(696, 'CREATURE_ATTRIBUTES', entries => {
+  CREATURE_ATTRIBUTES = Object.fromEntries(entries.map(entry => [entry.name, entry.attributes]));
+});

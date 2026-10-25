@@ -1,6 +1,8 @@
 const checks = [], saves = [];
+const rosterSeed = ROSTER_SEEDS[710];
 const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
 window.fetch = async (url, options = {}) => {
+  if (url === '/api/books/710/enemies' && !options.method) return new Response(JSON.stringify(rosterSeed), {status: 200});
   assert(url === '/api/books/710/state' && options.method === 'PUT', 'only intercepted state saves');
   saves.push(JSON.parse(options.body)); return new Response('{}', {status: 200});
 };
@@ -26,7 +28,7 @@ assert(el('title').textContent === t('battlesim710.title'), 'translated title');
 assert(run.sim710.character === null && el('start').disabled, 'manual character required');
 const ids = [...el('overlay').querySelectorAll('[id]')].map(node => node.id);
 assert(new Set(ids).size === ids.length, 'unique controls');
-assert(el('encounter').options.length === 32, 'all named encounters');
+assert(el('encounter').options.length === 33, 'all named encounters');
 assert([...el('encounter').options].every(option => !/^(Section|Епизод)\s+\d/.test(option.textContent)), 'names before section numbers');
 for (const [field, value] of Object.entries({skill: 99, skillInitial: 99, stamina: 20, staminaInitial: 24,
   luck: 0, luckInitial: 12, provisions: 10, gold: 25, attackModifier: 0})) el(field).value = value;
@@ -47,7 +49,9 @@ assert(run.sim710.fight.outcome === 'win' && run.sim710.history.length === 1, 'b
 el('round').click(); assert(run.sim710.history.length === 1, 'disabled round cannot duplicate result');
 el('again').click(); assert(run.sim710.character.stamina === 20, 'next fight does not refill health');
 change('encounter', '346'); assert(!el('unknownStatNote').hidden, 'unreadable source value disclosed');
-el('manualStamina').value = '8'; el('start').click();
+const unknownStamina = el('overlay').querySelectorAll('.bsim-opponent-row [data-stat="stamina"]')[1];
+assert(unknownStamina.value === '' && !unknownStamina.disabled, 'unknown stamina stays blank and editable');
+unknownStamina.value = '8'; unknownStamina.dispatchEvent(new Event('input', {bubbles: true})); el('start').click();
 assert(run.sim710.fight.enemies[1].stamina === 8, 'explicit manual stamina used');
 for (let i = 0; i < 7; i++) el('round').click();
 assert(run.sim710.fight.outcome === 'win' && run.sim710.history.length === 2, 'sequential enemies both defeated');

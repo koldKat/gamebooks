@@ -2,7 +2,7 @@ import { loadFixtureRoster } from './roster-fixtures.mjs';
 await loadFixtureRoster(644);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { laregodPoints, startLaregodFight, laregodRound } from '../../../public/js/battlesim/engines/laregod-house/core.js';
+import { LAREGOD_RULES, LAREGOD_ENCOUNTERS, laregodOpponent, laregodPoints, startLaregodFight, laregodRound } from '../../../public/js/battlesim/engines/laregod-house/core.js';
 
 const rolls = (...values) => () => { assert.ok(values.length, 'Unexpected roll'); return values.shift(); };
 
@@ -103,4 +103,37 @@ test('restored fights preserve wounds and use captured enemy rules without addin
   assert.equal('encounter' in restored,false);
   assert.deepEqual(restored.legacyExtension,{retained:true});
   assert.equal(legacy.player.endurance,6);
+});
+
+test('roster settings control equipment bonuses and the shared preview/start opponent lookup', () => {
+  const rules=structuredClone(LAREGOD_RULES), opponent=LAREGOD_ENCOUNTERS.yard.opponent;
+  try {
+    LAREGOD_RULES.scimitar={wingrugur:7,butchersword:9,other:3};
+    LAREGOD_RULES.stone={market:4,guard:6};
+    assert.equal(laregodPoints({scimitar:true,stone:true},'wingrugur','market'),31);
+    assert.equal(laregodPoints({scimitar:true,stone:true},'other','guard'),29);
+    assert.equal(laregodPoints({scimitar:true},'butchersword','manual'),29);
+    LAREGOD_ENCOUNTERS.yard.opponent='other';
+    assert.equal(laregodOpponent('yard','butchersword'),'other');
+    assert.equal(startLaregodFight('yard',{enemyNumber:0,equipment:{scimitar:true}}).player.points,23);
+    assert.equal(laregodOpponent('manual','butchersword'),'butchersword');
+    assert.equal(laregodOpponent('manual'),'other');
+  } finally {
+    Object.assign(LAREGOD_RULES,rules);LAREGOD_ENCOUNTERS.yard.opponent=opponent;
+  }
+});
+
+test('changing master settings leaves a wounded serialized fight and its captured opponent intact', () => {
+  const original=startLaregodFight('market',{enemyNumber:1,equipment:{scimitar:true,stone:true}});
+  original.player.endurance=7;original.enemy.endurance=4;original.round=3;
+  original.extension={keep:['notes']};
+  const saved=JSON.stringify(original), fight=JSON.parse(saved), rules=structuredClone(LAREGOD_RULES);
+  try {
+    LAREGOD_RULES.scimitar.wingrugur=1;LAREGOD_RULES.stone.market=0;
+    const next=laregodRound(fight,{number:0}).fight;
+    assert.equal(next.player.points,60);assert.equal(next.player.endurance,7);
+    assert.equal(next.enemy.endurance,2);assert.equal(next.round,4);
+    assert.deepEqual(next.extension,original.extension);
+    assert.equal(JSON.stringify(fight),saved);
+  } finally {Object.assign(LAREGOD_RULES,rules);}
 });

@@ -279,7 +279,7 @@ export function initSim238() {
                 ${_numField(t('battlesim238.ui.stamina_max'), 'sim238-second-staminamax')}
                 <div class="inv-edit-row">
                   <span class="inv-edit-label bsim-stat-label">${t('battlesim238.ui.target')}</span>
-                  <select id="sim238-target" class="inv-edit-input">
+                  <select id="sim238-target" class="inv-edit-input bsim-select">
                     <option id="sim238-target-first" value="enemy">${t('battlesim238.ui.enemy')}</option>
                     <option id="sim238-target-second" value="secondEnemy">${t('battlesim238.ui.second_default')}</option>
                   </select>

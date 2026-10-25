@@ -1,4 +1,6 @@
 export function resolveCellarDragon(encounter, player, options, previous, roll, limit = 256) {
+  const settings = options.encounterSettings ?? {};
+  if (encounter.special && !settings[encounter.special]) throw new TypeError('Load special encounter settings before combat');
   const state = previous ? {
     ...previous, enemies: previous.enemies.map(enemy => ({ ...enemy })),
   } : {
@@ -18,7 +20,7 @@ export function resolveCellarDragon(encounter, player, options, previous, roll, 
     if (encounter.stopAfterLoss && state.startingEndurance - state.endurance >= encounter.stopAfterLoss) return 'loss';
     if (encounter.stopAt && state.endurance <= encounter.stopAt) return 'loss';
     if (!encounter.special && state.enemies.every(enemy => enemy.remaining <= 0)) return 'win';
-    if (encounter.special === 'wolfpack' && state.killed >= 3) return 'win';
+    if (encounter.special === 'wolfpack' && state.killed >= settings.wolfpack.kills) return 'win';
     return null;
   };
   if (!previous && encounter.special === 'knifeThrow' && options.magicKnife && state.endurance > 0) {
@@ -31,23 +33,23 @@ export function resolveCellarDragon(encounter, player, options, previous, roll, 
     state.rounds++;
     if (encounter.special === 'knifeThrow') {
       let dice = roll(), total = state.strength + dice;
-      if (total >= 10) {
+      if (total >= settings.knifeThrow.playerThreshold) {
         events.push({ key: 'knife_win', args: { roll: dice, total } });
         return finish('win');
       }
       events.push({ key: 'knife_miss', args: { roll: dice, total } });
       dice = roll(); total = encounter.enemySila + dice;
-      events.push({ key: total >= 10 ? 'knife_enemy_hit' : 'knife_enemy_miss', args: { roll: dice, total } });
-      if (total >= 10) { state.endurance = 0; return finish('loss'); }
+      events.push({ key: total >= settings.knifeThrow.enemyThreshold ? 'knife_enemy_hit' : 'knife_enemy_miss', args: { roll: dice, total } });
+      if (total >= settings.knifeThrow.enemyThreshold) { state.endurance = 0; return finish('loss'); }
       continue;
     }
     if (encounter.special === 'wolfpack') {
       const dice = roll(), total = state.strength + dice;
-      if (total >= 10) {
+      if (total >= settings.wolfpack.hitThreshold) {
         state.killed++;
         events.push({ key: 'wolf_hit', args: { roll: dice, total, killed: state.killed } });
       } else {
-        state.endurance = Math.max(0, state.endurance - 3);
+        state.endurance = Math.max(0, state.endurance - settings.wolfpack.missDamage);
         events.push({ key: 'wolf_miss', args: { roll: dice, total, izd: state.endurance } });
       }
       continue;

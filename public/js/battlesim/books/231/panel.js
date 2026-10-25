@@ -342,6 +342,10 @@ export function initSim231() {
               ${_numField(t('battlesim231.ui.stamina_max'), 'sim231-side-staminamax')}
             </div>
           </div>
+          <details class="bsim-history" open>
+            <summary>${t('battlesim231.ui.items')}</summary>
+            <div id="sim231-item-list" class="bsim-tech-list"></div>
+          </details>
           <div id="sim231-status" class="bsim-status"></div>
           <div id="sim231-luck-prompt" class="inv-edit-row bsim-heal-row" style="display:none">
             <span class="inv-edit-label bsim-stat-label">${t('battlesim231.btn.luck_prompt')}</span>
@@ -354,10 +358,6 @@ export function initSim231() {
           </div>
         </div>
         <div class="bsim-col bsim-col-right">
-          <details class="bsim-history" open>
-            <summary>${t('battlesim231.ui.items')}</summary>
-            <div id="sim231-item-list" class="bsim-tech-list"></div>
-          </details>
           <details class="bsim-history">
             <summary id="sim231-history-summary">${t('battlesim231.history.summary', { n: 0 })}</summary>
             <div id="sim231-history-list" class="bsim-history-list"></div>
@@ -517,23 +517,23 @@ export function initSim231() {
     saveState();
     _renderInputs();
   }
-  overlay.querySelectorAll('.inv-qty-input[id^="sim231-"]').forEach(input => {
-    if (!FIELD_MAP[input.id]) return;
+  // Item fields are rebuilt by rendering, so bind numeric controls on the overlay.
+  overlay.addEventListener('input', e => {
+    const input = e.target;
+    if (!input.matches('.inv-qty-input') || !FIELD_MAP[input.id]) return;
     const allowNegative = input.id === 'sim231-player-atkmod';
-    input.addEventListener('input', () => {
-      const raw = String(input.value).replace(allowNegative ? /[^0-9-]/g : /[^0-9]/g, '');
-      if (raw !== input.value) input.value = raw;
-      _applyField(input.id, Number(raw) || 0);
-    });
+    const raw = String(input.value).replace(allowNegative ? /[^0-9-]/g : /[^0-9]/g, '');
+    if (raw !== input.value) input.value = raw;
+    _applyField(input.id, Number(raw) || 0);
   });
-  overlay.querySelectorAll('.inv-qty-btn[data-id^="sim231-"]').forEach(btnEl => {
-    btnEl.addEventListener('click', () => {
-      const input = document.getElementById(btnEl.dataset.id);
-      if (!input || !FIELD_MAP[btnEl.dataset.id]) return;
-      const allowNegative = btnEl.dataset.id === 'sim231-player-atkmod';
-      const next = (allowNegative ? Math.max(-99, Number(input.value) || 0) : Math.max(0, Number(input.value) || 0)) + Number(btnEl.dataset.delta);
-      _applyField(btnEl.dataset.id, next);
-    });
+  overlay.addEventListener('click', e => {
+    const btnEl = e.target.closest('.inv-qty-btn');
+    if (!btnEl || !FIELD_MAP[btnEl.dataset.id]) return;
+    const input = document.getElementById(btnEl.dataset.id);
+    if (!input) return;
+    const allowNegative = btnEl.dataset.id === 'sim231-player-atkmod';
+    const next = (allowNegative ? Math.max(-99, Number(input.value) || 0) : Math.max(0, Number(input.value) || 0)) + Number(btnEl.dataset.delta);
+    _applyField(btnEl.dataset.id, next);
   });
 
   _setupEnemyAutocomplete('sim231-enemy-pick', 'sim231-enemy-pick-dropdown', enemy => {

@@ -1,4 +1,6 @@
 import { legendaryInteger, legendaryDie } from './character.js';
+import { VALLEY_SETTINGS } from './valley-roster.js';
+import { CROWN_SETTINGS } from './crown-roster.js';
 
 export const LEGENDARY_ZONES = Object.freeze(['left', 'centre', 'right']);
 
@@ -103,17 +105,18 @@ export function legendaryArmyStep(input, roll) {
     fight.log = [...fight.log.slice(-59),{round:fight.round,type:'enemyArmySpell',...scheduled,targetPresent:!!troop,check}];
     if (concludeArmy(fight)) return fight;
   }
-  if (zone === 0 && fight.rules.descantos && fight.descantosRound !== fight.round && fight.round <= 3) {
-    const target = fight.round === 1 ? 1 : 0;
+  if (zone === 0 && fight.rules.descantos && fight.descantosRound !== fight.round && fight.round <= VALLEY_SETTINGS.descantos.lastRound) {
+    const rules=VALLEY_SETTINGS.descantos;
+    const target = rules.targets[fight.round-1];
     const unit = fight.player[target][0];
     if (unit) {
-      if (fight.round === 1) unit.strength = Math.max(0, unit.strength - 1);
-      else if (fight.round === 2) unit.morale = Math.max(0, unit.morale - 1);
+      if (rules.effects[fight.round-1] === 'enfeeblement') unit.strength = Math.max(0, unit.strength - rules.amount);
+      else if (rules.effects[fight.round-1] === 'clingingDread') unit.morale = Math.max(0, unit.morale - rules.amount);
       else moraleCheck(fight, 'player', target, roll);
     }
     fight.descantosRound = fight.round;
     fight.log = [...fight.log.slice(-59), { round: fight.round, zone: target, type: 'descantos',
-      spell: ['enfeeblement', 'clingingDread', 'rout'][fight.round - 1], targetPresent: !!unit }];
+      spell: rules.effects[fight.round - 1], targetPresent: !!unit }];
     if (concludeArmy(fight)) return fight;
   }
   const position = fight.rules.twoFrontLines ? fight.position : 0;
@@ -122,8 +125,8 @@ export function legendaryArmyStep(input, roll) {
     const enemyDie = legendaryDie(roll), ownDie = legendaryDie(roll);
     const bonus = unit => fight.round === 1 && !(fight.rules.defensiveSiege && unit.type === 'cavalry') ? unit.firstRoundBonus ?? 0 : 0;
     let playerModifier = ['missile','longbow'].includes(own.type) ? enemy.missileVulnerability ?? 0 : 0;
-    if (fight.rules.flankClimbingPenalty && zone !== 1 && own.type !== 'longbow') playerModifier--;
-    if (fight.rules.defensiveSiege) playerModifier += own.type === 'cavalry' ? -1 : zone === 1 ? 0 : 1;
+    if (fight.rules.flankClimbingPenalty && zone !== 1 && own.type !== 'longbow') playerModifier-=CROWN_SETTINGS.terrain.flankClimbingPenalty;
+    if (fight.rules.defensiveSiege) playerModifier += own.type === 'cavalry' ? -CROWN_SETTINGS.terrain.defensiveCavalryPenalty : zone === 1 ? 0 : CROWN_SETTINGS.terrain.defensiveFlankBonus;
     const enemyModifier = own.type === 'cavalry' ? enemy.antiCavalryBonus ?? 0 : 0;
     const enemyScore = enemy.strength + bonus(enemy) + enemyModifier + enemyDie;
     const playerScore = Math.max(0,own.strength + playerModifier) + bonus(own) + ownDie;

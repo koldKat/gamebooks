@@ -3,7 +3,7 @@ await loadFixtureRoster(524);
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { GARDEN_ENCOUNTERS, createGardenFight, rollGardenRound, settleGardenRound,
-  escapeGardenFight, finishGardenFight, takeGardenHalberd } from '../../../public/js/battlesim/engines/skyfall/garden-of-madness.js';
+  escapeGardenFight, finishGardenFight, takeGardenHalberd, gardenSetupRules } from '../../../public/js/battlesim/engines/skyfall/garden-of-madness.js';
 
 const player = extra => ({ expertise: 12, vitality: 20, fortune: 10, weaponDamage: 2, ...extra });
 const heads = () => 0;
@@ -219,4 +219,93 @@ test('invalid Fortune selections leave the pending round intact', () => {
 test('hidden surprise selection cannot leak into unrelated encounters', () => {
   assert.equal(createGardenFight(325, player(), { surprise: 'enemy' }).surprise, 'none');
   assert.equal(createGardenFight(191, player(), { surprise: 'enemy' }).surprise, 'enemy');
+});
+
+test('all continuation sources preserve wounds and disease only for living opponents', () => {
+  for (const from of [41,105,190,374,384]) for (const section of [105,384]) {
+    const previous=createGardenFight(from,player(),{diseased:true});previous.encounter.foes[0].vitality=3;
+    const before=structuredClone(previous),next=createGardenFight(section,player(),{previous,companions:5});
+    assert.equal(next.encounter.foes[0].vitality,3);assert.equal(next.diseased,true);assert.deepEqual(previous,before);
+    previous.encounter.foes[0].vitality=0;
+    assert.equal(createGardenFight(section,player(),{previous}).encounter.foes[0].vitality,30);
+  }
+});
+
+test('saved bodyguard encounters resolve weapon damage without adding metadata to the save', () => {
+  const f=createGardenFight(297,player());delete f.encounter.fallenWeaponDamage;
+  f.encounter.foes[0].vitality=0;const before=structuredClone(f.encounter);
+  assert.equal(takeGardenHalberd(f),true);assert.equal(f.player.weaponDamage,4);assert.deepEqual(f.encounter,before);
+});
+
+test('renamed encounter metadata controls companion rounds, surprise, disease and fallen weapon', () => {
+  const entry=GARDEN_ENCOUNTERS.find(entry=>entry.section===297),before=structuredClone(entry);
+  try {
+    Object.assign(entry,{section:900,companionRounds:true,selectableSurprise:true,startsDiseased:true,fallenWeaponDamage:6,carryFrom:[901]});
+    const previous={encounter:{section:901,foes:[{vitality:3}]},diseased:false};
+    const f=createGardenFight(900,player(),{surprise:'enemy',companions:5,previous});
+    assert.equal(f.encounter.rounds,5);assert.equal(f.encounter.escapeAfter,5);assert.equal(f.surprise,'enemy');
+    assert.equal(f.diseased,true);assert.equal(f.encounter.foes[0].vitality,3);
+    f.encounter.foes[0].vitality=0;assert.equal(takeGardenHalberd(f),true);assert.equal(f.player.weaponDamage,6);
+  } finally {for(const key of Object.keys(entry))delete entry[key];Object.assign(entry,before);}
+});
+
+test('metadata supplies ordered companion choices, defaults and validation without accepting null', () => {
+  const carrier = GARDEN_ENCOUNTERS.find(e => e.setupRules), before = structuredClone(carrier);
+  try {
+    carrier.section = 900;
+    carrier.setupRules = { initialFlowers: 7, companionChoices: [
+      { labelKey: 'maid', rounds: 4 }, { labelKey: 'princess', rounds: 6 }, { labelKey: 'both', rounds: 9 },
+    ] };
+    assert.deepEqual(gardenSetupRules().companionChoices.map(c => c.rounds), [4, 6, 9]);
+    assert.equal(createGardenFight(900, player()).encounter.rounds, 4);
+    assert.equal(createGardenFight(900, player(), { companions: 9 }).encounter.escapeAfter, 9);
+    for (const companions of [null, false, '4', 3, 5, 8]) assert.throws(() => createGardenFight(900, player(), { companions }));
+    assert.equal(createGardenFight(325, player(), { companions: 6 }).encounter.section, 325);
+    const flowers = createGardenFight(141, player({ expertise: 30 }));
+    assert.equal(flowers.flowers, 7);
+    rollGardenRound(flowers, 0, heads); settleGardenRound(flowers);
+    assert.equal(flowers.flowers, 6); assert.equal(flowers.player.vitality, 14);
+  } finally { for (const key of Object.keys(carrier)) delete carrier[key]; Object.assign(carrier, before); }
+});
+
+test('renamed creature metadata supplies slug, guardian, crossbow and reinforcement settings', () => {
+  const original = structuredClone(GARDEN_ENCOUNTERS);
+  try {
+    const slug = GARDEN_ENCOUNTERS.find(e => e.mode === 'slug');
+    slug.section = 901; slug.npcRules = { dodgeCoins: 2, spittleThreshold: 11, spittleDamage: 6 };
+    const f = createGardenFight(901, player());
+    const p = rollGardenRound(f, 0, tails);
+    assert.equal(p.player.coins.length, 2); assert.equal(p.player.total, 10); assert.equal(p.enemyDamage, 6);
+    const guardian = GARDEN_ENCOUNTERS.find(e => e.mode === 'gaps');
+    guardian.section = 902; guardian.npcRules = { roundDamage: 7 };
+    assert.equal(rollGardenRound(createGardenFight(902, player()), 0, tails).enemyDamage, 7);
+    const crossbow = GARDEN_ENCOUNTERS.find(e => e.mode === 'crossbow');
+    crossbow.section = 903; crossbow.npcRules = { boltDamage: 5 };
+    const bolt = createGardenFight(903, player({ expertise: 30 }));
+    rollGardenRound(bolt, 0, tails); settleGardenRound(bolt);
+    assert.equal(bolt.player.vitality, 15);
+    const redirected = createGardenFight(903, player({ expertise: 30 }));
+    rollGardenRound(redirected, 0, tails); settleGardenRound(redirected, { preventSpecial: true });
+    assert.equal(redirected.encounter.foes[0].vitality, 0); assert.equal(redirected.player.vitality, 20);
+    const hobgoblins = GARDEN_ENCOUNTERS.find(e => e.mode === 'reinforcement');
+    hobgoblins.section = 904; hobgoblins.npcRules = { reinforcementRound: 1 };
+    const reinforcement = createGardenFight(904, player({ expertise: 30 }));
+    rollGardenRound(reinforcement, 0, tails); settleGardenRound(reinforcement);
+    assert.equal(reinforcement.encounter.foes.length, 3); assert.equal(reinforcement.round, 1);
+  } finally { GARDEN_ENCOUNTERS.splice(0, GARDEN_ENCOUNTERS.length, ...original); }
+});
+
+test('old pending bolts and companion timers survive lookup and serialization unchanged', () => {
+  const bolt = createGardenFight(348, player({ expertise: 30 }));
+  delete bolt.encounter.npcRules;
+  rollGardenRound(bolt, 0, tails);
+  const restored = JSON.parse(JSON.stringify(bolt)), before = structuredClone(restored);
+  assert.equal(rollGardenRound(restored), null); assert.deepEqual(restored, before);
+  settleGardenRound(restored, { preventSpecial: true });
+  assert.equal(restored.player.vitality, 20); assert.equal(restored.encounter.foes[0].vitality, 3);
+  assert.equal(restored.encounter.npcRules, undefined);
+  const companion = createGardenFight(384, player({ expertise: 30 }), { companions: 8, diseased: true });
+  delete companion.encounter.setupRules;
+  for (let i = 0; i < 3; i++) { rollGardenRound(companion, 0, heads); settleGardenRound(companion); }
+  assert.equal(companion.status, 'fighting'); assert.equal(companion.encounter.rounds, 8);
 });

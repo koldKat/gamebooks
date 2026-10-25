@@ -1,4 +1,5 @@
 import { fireWolfHitThreshold, fireWolfProtection, FIRE_WOLF_WEAPONS } from './fire-wolf.js';
+import { ANCIENT_EVIL_RULES } from './ancient-evil-roster.js';
 import { rollDemondoomCharacter, awardDemondoomSkill } from './demondoom-character.js';
 import { demondoomInitialOrder, demondoomDeathLuck } from './demondoom-rules.js';
 import { checkDemondoomInclination, attemptDemondoomSpell, demondoomCastAvailability,
@@ -67,9 +68,9 @@ export function determineAncientEvilInitiative(fight, random = Math.random) {
 
 function poisonTick(fight) {
   let damage = 0;
-  if (fight.slimePoison) damage += 8;
+  if (fight.slimePoison) damage += ANCIENT_EVIL_RULES.slime.tick;
   if (fight.player.freyaPoison > 0) {
-    const tick = Math.min(15, fight.player.freyaPoison);
+    const tick = Math.min(ANCIENT_EVIL_RULES.freya.tick, fight.player.freyaPoison);
     fight.player.freyaPoison -= tick; damage += tick;
   }
   fight.player.lifePoints -= damage;
@@ -114,40 +115,41 @@ export function rollAncientEvilAttack(fight, side, target = 0, random = Math.ran
   }
   const attacker = side === 'player' ? player : enemy, defender = side === 'player' ? enemy : player;
   const roll = dice(random);
-  const threshold = side === 'player' && rule === 'stalker' ? 10 : fireWolfHitThreshold(attacker);
+  const threshold = side === 'player' && rule === 'stalker' ? ANCIENT_EVIL_RULES.stalker.playerHit : fireWolfHitThreshold(attacker);
   const hit = roll >= threshold;
   let damage;
   try { damage = attackDamage(attacker, defender, roll, threshold, {
     halfDice: side === 'player' && player.weapon === 'doombringer' && rule === 'fiery-dragon',
     diceOnly: side === 'enemy' && rule === 'serpent',
-    weapon: side === 'player' && player.weapon === 'doombringer' && rule === 'demon' ? 20 : undefined,
+    weapon: side === 'player' && player.weapon === 'doombringer' && rule === 'demon' ? FIRE_WOLF_WEAPONS.doombringer : undefined,
   }); } catch { return { error: 'manual-weapon-required' }; }
   if (side === 'player') {
     if (fight.encounter.openingPlayerEach && !fight.openingHits.includes(target)) fight.openingHits.push(target);
     fight.attacks++;
-    if (rule === 'demon') damage = Math.max(0, damage - 5);
-    if (rule === 'sorcerers' && roll === 12) damage = enemy.lifePoints;
+    if (rule === 'demon') damage = Math.max(0, damage - ANCIENT_EVIL_RULES.demon.reduction);
+    if (rule === 'sorcerers' && roll === ANCIENT_EVIL_RULES.sorcerers.fatalRoll) damage = enemy.lifePoints;
     enemy.lifePoints -= damage;
-    if (player.weapon === 'doombringer' && rule !== 'demon') player.lifePoints = Math.min(player.maxLife, player.lifePoints + damage * (rule === 'sorcerers' ? .25 : 1));
+    if (player.weapon === 'doombringer' && rule !== 'demon') player.lifePoints = Math.min(player.maxLife, player.lifePoints + damage * (rule === 'sorcerers' ? ANCIENT_EVIL_RULES.sorcerers.lifeStealMultiplier : 1));
   } else {
     fight.enemyTurns++;
-    if (rule === 'club' && roll === 12) enemy.weapon = 10;
-    if (rule === 'lethal' && roll === 12) damage = player.lifePoints;
-    if (rule === 'stalker' && roll === 12) damage = 75;
-    if (rule === 'sorcerers' && hit) damage = 25;
-    if (rule === 'fiery-dragon' && [6, 12].includes(roll) && !player.fireproof) damage += Math.max(0, 25 - (player.magicArmour ?? 0));
-    if (rule === 'dragon-fumes' && [5, 6, 9].includes(roll)) damage += Math.floor(player.lifePoints / 10);
+    if (rule === 'club' && roll === ANCIENT_EVIL_RULES.club.roll) enemy.weapon = ANCIENT_EVIL_RULES.club.weapon;
+    if (rule === 'lethal' && roll === ANCIENT_EVIL_RULES.lethalRoll) damage = player.lifePoints;
+    if (rule === 'stalker' && roll === ANCIENT_EVIL_RULES.stalker.roll) damage = ANCIENT_EVIL_RULES.stalker.damage;
+    if (rule === 'sorcerers' && hit) damage = ANCIENT_EVIL_RULES.sorcerers.hitDamage;
+    if (rule === 'fiery-dragon' && ANCIENT_EVIL_RULES.fieryDragon.rolls.includes(roll) && !player.fireproof) damage += Math.max(0, ANCIENT_EVIL_RULES.fieryDragon.damage - (player.magicArmour ?? 0));
+    if (rule === 'dragon-fumes' && ANCIENT_EVIL_RULES.fumes.rolls.includes(roll)) damage += Math.floor(player.lifePoints / ANCIENT_EVIL_RULES.fumes.divisor);
     if (player.magicShield && !fight.shieldUsed && hit) { damage = 0; fight.shieldUsed = true; }
     player.lifePoints -= damage;
-    if (rule === 'slime-poison' && roll === 12) fight.slimePoison = true;
-    if (rule === 'freya' && hit && !(player.freyaPoison > 0)) player.freyaPoison = 100;
+    if (rule === 'slime-poison' && roll === ANCIENT_EVIL_RULES.slime.roll) fight.slimePoison = true;
+    if (rule === 'freya' && hit && !(player.freyaPoison > 0)) player.freyaPoison = ANCIENT_EVIL_RULES.freya.total;
     if (!fight.manualGroup && fight.rest && !--fight.rest) fight.attacks = 0;
   }
   const event = { kind: 'attack', side, target, roll, threshold, damage };
   if (rule === 'plank' && hit && defender.lifePoints > 0) {
-    const footing = dice(random) + Math.max(0, Math.floor((defender.skill - 50) / 5));
+    const check = ANCIENT_EVIL_RULES.plank;
+    const footing = dice(random) + Math.max(0, Math.floor((defender.skill - check.baseline) / check.divisor));
     event.footing = footing;
-    if (footing < 10) defender.lifePoints = 0;
+    if (footing < check.min) defender.lifePoints = 0;
   }
   const sequence = fight.sequence;
   checkAncientEvilFight(fight);
@@ -163,9 +165,10 @@ export function rollAncientEvilAttack(fight, side, target = 0, random = Math.ran
 export function checkAncientEvilSerpent(fight, random = Math.random) {
   if (!fight.encounter.openingCheck || fight.serpentChecked || fight.pending || fight.outcome) return null;
   fight.serpentChecked = true;
-  const roll = dice(random) + Math.max(0, Math.floor((fight.player.speed - 50) / 5));
-  if (roll < 10) { fight.player.lifePoints = 0; checkAncientEvilFight(fight); }
-  return log(fight, { kind: 'serpent', roll, success: roll >= 10 });
+  const check = ANCIENT_EVIL_RULES.serpent;
+  const roll = dice(random) + Math.max(0, Math.floor((fight.player.speed - check.baseline) / check.divisor));
+  if (roll < check.min) { fight.player.lifePoints = 0; checkAncientEvilFight(fight); }
+  return log(fight, { kind: 'serpent', roll, success: roll >= check.min });
 }
 
 export function resolveAncientEvilDeathLuck(fight, random = Math.random) {

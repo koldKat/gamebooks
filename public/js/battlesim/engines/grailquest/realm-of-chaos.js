@@ -1,5 +1,10 @@
 import { customGrailEncounter } from './opponents.js';
-import { REALM_EQUIPMENT, REALM_ASTRAL_KEY, REALM_ENCOUNTERS, REALM_DREAMS } from './realm-of-chaos-roster.js';
+import { REALM_EQUIPMENT, REALM_ASTRAL_KEY, REALM_ENCOUNTERS, REALM_DREAMS, REALM_RULES } from './realm-of-chaos-roster.js';
+export { REALM_RULES } from './realm-of-chaos-roster.js';
+
+export function realmDragonCallLimit(oneUse = false) {
+  return oneUse ? Math.min(REALM_RULES.dragon.oneUseCalls, REALM_RULES.dragon.maxCalls) : REALM_RULES.dragon.maxCalls;
+}
 
 const integer = (value, minimum = 0) => Number.isSafeInteger(value) && value >= minimum;
 const die = random => 1 + Math.floor(random() * 6);
@@ -84,10 +89,10 @@ export function realmWalkPath(character) {
 }
 
 export function realmDragonReaction(character, random = Math.random) {
-  if (!integer(character.dragonCalls) || character.dragonCalls >= 3) return null;
+  if (!integer(character.dragonCalls) || character.dragonCalls >= realmDragonCallLimit()) return null;
   character.dragonCalls++;
   const first = die(random), second = die(random);
-  return { first, second, friendly: second > first, callsLeft: 3 - character.dragonCalls };
+  return { first, second, friendly: second > first, callsLeft: realmDragonCallLimit() - character.dragonCalls };
 }
 
 export function realmHealingWand(character, random = Math.random) {
@@ -213,7 +218,7 @@ export function startRealmFight(character, encounterId, options = {}, random = M
   const spec = clone(original), player = clone(character), settings = clone(options);
   if (spec.manualStats) {
     const stats = settings.manualStats;
-    if (!stats || !integer(stats.life, 16) || !integer(stats.hit, 1) || stats.hit > 12 || !integer(stats.bonus)) {
+    if (!stats || !integer(stats.life, REALM_RULES.manualStatsMinLife) || !integer(stats.hit, 1) || stats.hit > 12 || !integer(stats.bonus)) {
       throw new RangeError('Enter the missing opponent LIFE, hit score and damage bonus');
     }
     Object.assign(spec.enemies[0], stats);
@@ -277,7 +282,7 @@ function playerBlow(fight, target, random) {
   let bonus=fight.playerBonus;
   if (fight.madActive && !fight.madUsed) { bonus+=5; fight.madUsed=true; }
   const strike=realmStrike(roll,fight.playerHit,bonus,foe.armour,
-    { fullDice: !!fight.options.ghastFullDice && fight.spec.id===137 });
+    { fullDice: !!fight.options.ghastFullDice && fight.spec.id===REALM_RULES.ghastFullDiceId });
   fight.playerStrikes++;
   if (strike.hit) {
     fight.consecutiveMisses=0;
@@ -398,10 +403,10 @@ export function realmUseCompanion(fight, source, index = 0) {
 
 export function realmCallDragon(fight, random = Math.random) {
   if(fight.status!=='fighting' || fight.spec.dream || !fight.player.dragonStone || fight.ally
-    || fight.options.oneUseStone && fight.player.dragonCalls>=1)return null;
+    || fight.options.oneUseStone && fight.player.dragonCalls>=realmDragonCallLimit(true))return null;
   const reaction=realmDragonReaction(fight.player,random);
   if(!reaction)return null;
-  const dragon=clone(REALM_ENCOUNTERS.find(spec=>spec.id===12).enemies[0]);
+  const dragon=clone(REALM_ENCOUNTERS.find(spec=>spec.id===REALM_RULES.dragon.encounterId).enemies[0]);
   dragon.maxLife=dragon.life;
   if(reaction.friendly)fight.ally={...dragon,source:'dragon'};
   else fight.foes.push({...dragon,summoned:true,bypassed:false});

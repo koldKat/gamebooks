@@ -1327,7 +1327,7 @@ const _shopItemDefaults = {
   heartbeat_xp: { cost: 0, col: 'bonus_heartbeat_xp',         delta: 1, stepCost: null },
   gc_chance:    { cost: 0, col: 'bonus_gc_chance_purchased',  delta: 1, stepCost: null },
   gc_mint:      { cost: 0, col: 'bonus_gc_mint_purchased',    delta: 1, stepCost: null },
-  diamond_dig:  { cost: 0, col: 'bonus_diamond_dig_purchased', delta: 1, stepCost: null },
+  diamond_dig:  { cost: 0, col: 'bonus_diamond_dig_purchased', delta: 1, stepCost: 10 },
 };
 db.transaction(() => {
   const ins = db.prepare('INSERT OR IGNORE INTO shop_items (id, cost, step_cost, col, delta) VALUES (?, ?, ?, ?, ?)');
@@ -1401,9 +1401,10 @@ const _purchaseShopItemTx = db.transaction((userId, item) => {
     cost = purchased + 1;
   }
   if (item === 'diamond_dig' || item === 'diamond_exchange') {
+    const jobLevel = computeLevel(db.prepare('SELECT xp FROM user_job_xp WHERE user_id=?').get(userId)?.xp || 0);
     const purchased = row[def.col] || 0;
-    if (purchased >= level) return { error: 'cap_reached', cap: level, level, item };
-    cost = purchased + 1;
+    if (purchased >= jobLevel) return { error: 'cap_reached', cap: jobLevel, level: jobLevel, item };
+    cost = 10 * (purchased + 1);
   }
   const balance = coinBalance(row);
   if (balance < cost) return { error: 'insufficient_coins' };
@@ -1438,6 +1439,7 @@ const _adminRefundShopItemTx = db.transaction((userId, item, all) => {
     const purchased = Math.max(0, current - freeBoosts);
     if (purchased < def.delta) return { error: 'nothing_to_refund' };
     refund = all ? (purchased * (purchased + 1)) / 2 : purchased;
+    if (item === 'diamond_dig') refund *= 10;
     if (all) {
       db.prepare(`UPDATE users SET coins_spent = MAX(0, coins_spent - ?), ${def.col} = ? WHERE id = ?`)
         .run(refund, freeBoosts, userId);

@@ -38,10 +38,10 @@ function _appendLog(d, msg) {
 }
 
 function _recordOutcome(d, side, outcome) {
-  const { MODES, _foeName, _selfMaxHp } = getContext();
+  const { MODES, _foeName, _selfMaxHp, t } = getContext();
 
   d.history.push({
-    enemy: `${_foeName(d)} (${MODES.find(m => m[0] === d.mode)[1]})`,
+    enemy: `${_foeName(d)} (${t(MODES.find(m => m[0] === d.mode)[1])})`,
     outcome,
     statLabel: side.label,
     statValue: side.self[side.selfHp], statMax: _selfMaxHp(d, side),

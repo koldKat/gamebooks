@@ -6,18 +6,14 @@ export const HOWLING_DEFAULTS = Object.freeze({ rank: 4, stamina: 20, shards: 65
   professions: BLOOD_DARK_PROFESSIONS });
 
 export let HOWLING_FIGHTS = [];
-export const loadRoster = createRosterLoader(677, 'FIGHTS', rows => { HOWLING_FIGHTS = rows; });
-
-const storm = (destinations, blessingDestination) => ({ kind: 'storm', destinations, blessingDestination });
-const wreck = destination => ({ kind: 'shipwreck', destinations: [7, destination] });
-export const HOWLING_SEA_CHECKS = Object.freeze({
-  11: storm([135, 106, 236], 236), 161: storm([314, 386, 296], 296),
-  512: storm([540, 453, 438], 438), 642: storm([608, 489, 580], 580),
-  645: storm([288, 358, 533], 533),
-  451: { kind: 'escape', destinations: [419, 236] },
-  338: { kind: 'naval', bounds: [15, 18], destinations: [282, 240, 149] },
-  392: { kind: 'naval', bounds: [10, 15], destinations: [282, 240, 149] },
-  135: wreck(436), 288: wreck(67), 314: wreck(524), 540: wreck(585), 608: wreck(549),
+export let HOWLING_SEA_CHECKS = Object.freeze({});
+export const HOWLING_RULES = {};
+export const loadRoster = createRosterLoader(677, 'FIGHTS', rows => {
+  const support = rows.find(row => row.support)?.support;
+  if (!support?.seaChecks || !support.rules) throw new Error('Incomplete Howling Darkness settings');
+  HOWLING_FIGHTS = rows.map(({support, ...row}) => row);
+  HOWLING_SEA_CHECKS = Object.freeze(support.seaChecks);
+  Object.assign(HOWLING_RULES, support.rules);
 });
 
 export function howlingSeaCheck(section, input, options = {}, roll) {
@@ -34,27 +30,23 @@ export function howlingSeaCheck(section, input, options = {}, roll) {
     return { character, total: null, damage: 0, destination: spec.blessingDestination,
       status: 'safe', kind: spec.kind, usedBlessing: true };
   }
-  const count = spec.kind === 'storm' ? ['barque', 'brigantine', 'galleon'].indexOf(ship) + 1
-    : spec.kind === 'naval' && character.profession === 'warrior' ? 3 : 2;
-  let total = 0;
-  if (spec.kind === 'naval') total = character.rank + ({ poor: -2, average: 0, good: 2, excellent: 3 })[crew];
-  else if (['storm', 'escape'].includes(spec.kind)) {
-    total = ({ poor: 0, average: 0, good: 1, excellent: 2 })[crew];
-    if (spec.kind === 'escape') total += character.rank;
-  }
+  const count = spec.kind === 'storm' ? HOWLING_RULES.shipDice[ship]
+    : spec.kind === 'naval' && character.profession === 'warrior' ? HOWLING_RULES.warriorNavalDice : HOWLING_RULES.otherDice;
+  let total = Object.hasOwn(HOWLING_RULES.crewModifiers, spec.kind) ? HOWLING_RULES.crewModifiers[spec.kind][crew] : 0;
+  if (HOWLING_RULES.rankKinds.includes(spec.kind)) total += character.rank;
   for (let index = 0; index < count; index++) total += fabledDie(roll);
   let destination, damage = 0, status = 'story';
   if (spec.kind === 'shipwreck') {
     if (total > character.rank) damage = character.stamina;
-    else damage = fabledDie(roll);
-    destination = spec.destinations[1];
+    else for (let index = 0; index < HOWLING_RULES.wreckDamageDice; index++) damage += fabledDie(roll);
+    destination = spec.destinations[HOWLING_RULES.wreckSurvivorOutcome];
   } else {
-    const bounds = spec.kind === 'storm' ? [3, 5] : spec.kind === 'escape' ? [10] : spec.bounds;
+    const bounds = spec.bounds ?? HOWLING_RULES.thresholds[spec.kind];
     const matched = bounds.findIndex(bound => total <= bound), outcome = matched < 0 ? bounds.length : matched;
     destination = spec.destinations[outcome];
-    if (spec.kind === 'naval') status = outcome === 2 ? 'win' : outcome === 0 ? 'loss' : 'draw';
+    if (spec.kind === 'naval') status = outcome === HOWLING_RULES.navalWinOutcome ? 'win' : outcome === HOWLING_RULES.navalLossOutcome ? 'loss' : 'draw';
   }
   character.stamina = Math.max(0, character.stamina - damage);
-  return { character, total, damage, destination: character.stamina ? destination : 7,
+  return { character, total, damage, destination: character.stamina ? destination : HOWLING_RULES.deathDestination,
     status, kind: spec.kind, usedBlessing: false };
 }

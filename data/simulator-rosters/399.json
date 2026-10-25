@@ -1,0 +1,598 @@
+{
+  "schemaVersion": 1,
+  "bookId": 399,
+  "family": "chronicles-of-orm",
+  "source": "All thirteen original enemy modes and physical/equipment attributes, including manual-value flags. The section-122 corporate employee stops either fighter strictly below ten endurance and suppresses the enemy critical threshold. Legacy fields and IDs remain unchanged.",
+  "enemies": [
+    {
+      "key": "profile:Гигантски гущер",
+      "name": "Гигантски гущер",
+      "attack": 0,
+      "defense": 8,
+      "hp": 56,
+      "pb": 28,
+      "adopt": {
+        "name": "Гигантски гущер",
+        "attack": 0,
+        "defense": 8,
+        "hp": 56,
+        "pb": 28
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "chronicles-of-orm",
+        "dataset": "ENEMY_PROFILES",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Гигантски гущер",
+          "mode": "unarmed",
+          "stats": {
+            "speed": 6,
+            "str": 10,
+            "reflex": 6
+          }
+        },
+        "part": {
+          "name": "Гигантски гущер",
+          "mode": "unarmed",
+          "stats": {
+            "speed": 6,
+            "str": 10,
+            "reflex": 6
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Служителка на \"Бионаги\"",
+      "name": "Служителка на \"Бионаги\"",
+      "attack": 4,
+      "defense": 3,
+      "hp": 18,
+      "pb": 12,
+      "adopt": {
+        "name": "Служителка на \"Бионаги\"",
+        "attack": 4,
+        "defense": 3,
+        "hp": 18,
+        "pb": 12
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "chronicles-of-orm",
+        "dataset": "ENEMY_PROFILES",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Служителка на \"Бионаги\"",
+          "mode": "cyber",
+          "stats": {
+            "speed": 2,
+            "str": 2,
+            "acc": 2,
+            "reflex": 2,
+            "power": 3,
+            "eqspeed": 3
+          }
+        },
+        "part": {
+          "name": "Служителка на \"Бионаги\"",
+          "mode": "cyber",
+          "stats": {
+            "speed": 2,
+            "str": 2,
+            "acc": 2,
+            "reflex": 2,
+            "power": 3,
+            "eqspeed": 3
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Виртуален фехтовач",
+      "name": "Виртуален фехтовач",
+      "attack": 5,
+      "defense": 2,
+      "hp": 15,
+      "pb": 6,
+      "adopt": {
+        "name": "Виртуален фехтовач",
+        "attack": 5,
+        "defense": 2,
+        "hp": 15,
+        "pb": 6
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "chronicles-of-orm",
+        "dataset": "ENEMY_PROFILES",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Виртуален фехтовач",
+          "mode": "melee",
+          "stats": {
+            "speed": 3,
+            "acc": 4,
+            "reflex": 3,
+            "power": 3,
+            "eqspeed": 4,
+            "manual": true
+          }
+        },
+        "part": {
+          "name": "Виртуален фехтовач",
+          "mode": "melee",
+          "stats": {
+            "speed": 3,
+            "acc": 4,
+            "reflex": 3,
+            "power": 3,
+            "eqspeed": 4,
+            "manual": true
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Киберчудовище",
+      "name": "Киберчудовище",
+      "attack": 0,
+      "defense": 9,
+      "hp": 36,
+      "pb": 16,
+      "adopt": {
+        "name": "Киберчудовище",
+        "attack": 0,
+        "defense": 9,
+        "hp": 36,
+        "pb": 16
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "chronicles-of-orm",
+        "dataset": "ENEMY_PROFILES",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Киберчудовище",
+          "mode": "unarmed",
+          "stats": {
+            "speed": 4,
+            "str": 8,
+            "reflex": 5
+          }
+        },
+        "part": {
+          "name": "Киберчудовище",
+          "mode": "unarmed",
+          "stats": {
+            "speed": 4,
+            "str": 8,
+            "reflex": 5
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Киберпаяк",
+      "name": "Киберпаяк",
+      "attack": 0,
+      "defense": 8,
+      "hp": 16,
+      "pb": 8,
+      "adopt": {
+        "name": "Киберпаяк",
+        "attack": 0,
+        "defense": 8,
+        "hp": 16,
+        "pb": 8
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "chronicles-of-orm",
+        "dataset": "ENEMY_PROFILES",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Киберпаяк",
+          "mode": "gunfight",
+          "stats": {
+            "speed": 4,
+            "acc": 8,
+            "reflex": 5,
+            "power": 4,
+            "eqspeed": 2
+          }
+        },
+        "part": {
+          "name": "Киберпаяк",
+          "mode": "gunfight",
+          "stats": {
+            "speed": 4,
+            "acc": 8,
+            "reflex": 5,
+            "power": 4,
+            "eqspeed": 2
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Виртуална котка-сънувач \"Баст\"",
+      "name": "Виртуална котка-сънувач \"Баст\"",
+      "attack": 5,
+      "defense": 3,
+      "hp": 8,
+      "pb": 4,
+      "adopt": {
+        "name": "Виртуална котка-сънувач \"Баст\"",
+        "attack": 5,
+        "defense": 3,
+        "hp": 8,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "chronicles-of-orm",
+        "dataset": "ENEMY_PROFILES",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Виртуална котка-сънувач \"Баст\"",
+          "mode": "cyber",
+          "stats": {
+            "speed": 4,
+            "acc": 4,
+            "reflex": 5,
+            "power": 4,
+            "eqspeed": 5
+          }
+        },
+        "part": {
+          "name": "Виртуална котка-сънувач \"Баст\"",
+          "mode": "cyber",
+          "stats": {
+            "speed": 4,
+            "acc": 4,
+            "reflex": 5,
+            "power": 4,
+            "eqspeed": 5
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Неизвестен корпоративен служител",
+      "name": "Неизвестен корпоративен служител",
+      "attack": 0,
+      "defense": 3,
+      "hp": 14,
+      "pb": 10,
+      "adopt": {
+        "name": "Неизвестен корпоративен служител",
+        "attack": 0,
+        "defense": 3,
+        "hp": 14,
+        "pb": 10
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "chronicles-of-orm",
+        "dataset": "ENEMY_PROFILES",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Неизвестен корпоративен служител",
+          "mode": "unarmed",
+          "stats": {
+            "speed": 2,
+            "str": 2,
+            "reflex": 2
+          },
+          "stopRule": {
+            "belowEndurance": 10,
+            "suppressCritical": true
+          }
+        },
+        "part": {
+          "name": "Неизвестен корпоративен служител",
+          "mode": "unarmed",
+          "stats": {
+            "speed": 2,
+            "str": 2,
+            "reflex": 2
+          },
+          "stopRule": {
+            "belowEndurance": 10,
+            "suppressCritical": true
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Уличен дилър",
+      "name": "Уличен дилър",
+      "attack": 0,
+      "defense": 2,
+      "hp": 6,
+      "pb": 2,
+      "adopt": {
+        "name": "Уличен дилър",
+        "attack": 0,
+        "defense": 2,
+        "hp": 6,
+        "pb": 2
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "chronicles-of-orm",
+        "dataset": "ENEMY_PROFILES",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Уличен дилър",
+          "mode": "unarmed",
+          "stats": {
+            "speed": 1,
+            "str": 2,
+            "reflex": 1
+          }
+        },
+        "part": {
+          "name": "Уличен дилър",
+          "mode": "unarmed",
+          "stats": {
+            "speed": 1,
+            "str": 2,
+            "reflex": 1
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Защитна програма",
+      "name": "Защитна програма",
+      "attack": 3,
+      "defense": 4,
+      "hp": 10,
+      "pb": 4,
+      "adopt": {
+        "name": "Защитна програма",
+        "attack": 3,
+        "defense": 4,
+        "hp": 10,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "chronicles-of-orm",
+        "dataset": "ENEMY_PROFILES",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Защитна програма",
+          "mode": "cyber",
+          "stats": {
+            "speed": 2,
+            "acc": 2,
+            "reflex": 2,
+            "power": 3,
+            "eqspeed": 3
+          }
+        },
+        "part": {
+          "name": "Защитна програма",
+          "mode": "cyber",
+          "stats": {
+            "speed": 2,
+            "acc": 2,
+            "reflex": 2,
+            "power": 3,
+            "eqspeed": 3
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Виртуални младежи (момче)",
+      "name": "Виртуални младежи (момче)",
+      "attack": 0,
+      "defense": 2,
+      "hp": 12,
+      "pb": 8,
+      "adopt": {
+        "name": "Виртуални младежи (момче)",
+        "attack": 0,
+        "defense": 2,
+        "hp": 12,
+        "pb": 8
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "chronicles-of-orm",
+        "dataset": "ENEMY_PROFILES",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Виртуални младежи (момче)",
+          "mode": "unarmed",
+          "stats": {
+            "speed": 1,
+            "str": 2,
+            "reflex": 2
+          }
+        },
+        "part": {
+          "name": "Виртуални младежи (момче)",
+          "mode": "unarmed",
+          "stats": {
+            "speed": 1,
+            "str": 2,
+            "reflex": 2
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Андроидка убиец",
+      "name": "Андроидка убиец",
+      "attack": 5,
+      "defense": 3,
+      "hp": 20,
+      "pb": 15,
+      "adopt": {
+        "name": "Андроидка убиец",
+        "attack": 5,
+        "defense": 3,
+        "hp": 20,
+        "pb": 15
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "chronicles-of-orm",
+        "dataset": "ENEMY_PROFILES",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Андроидка убиец",
+          "mode": "melee",
+          "stats": {
+            "speed": 2,
+            "str": 2,
+            "reflex": 2,
+            "power": 1,
+            "eqspeed": 5
+          }
+        },
+        "part": {
+          "name": "Андроидка убиец",
+          "mode": "melee",
+          "stats": {
+            "speed": 2,
+            "str": 2,
+            "reflex": 2,
+            "power": 1,
+            "eqspeed": 5
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Спецгард на \"Саурон\"",
+      "name": "Спецгард на \"Саурон\"",
+      "attack": 4,
+      "defense": 3,
+      "hp": 15,
+      "pb": 6,
+      "adopt": {
+        "name": "Спецгард на \"Саурон\"",
+        "attack": 4,
+        "defense": 3,
+        "hp": 15,
+        "pb": 6
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "chronicles-of-orm",
+        "dataset": "ENEMY_PROFILES",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Спецгард на \"Саурон\"",
+          "mode": "melee",
+          "stats": {
+            "speed": 2,
+            "acc": 4,
+            "reflex": 2,
+            "eqspeed": 5,
+            "manual": true
+          }
+        },
+        "part": {
+          "name": "Спецгард на \"Саурон\"",
+          "mode": "melee",
+          "stats": {
+            "speed": 2,
+            "acc": 4,
+            "reflex": 2,
+            "eqspeed": 5,
+            "manual": true
+          }
+        },
+        "count": 1
+      }
+    },
+    {
+      "key": "profile:Неизвестен противник",
+      "name": "Неизвестен противник",
+      "attack": 5,
+      "defense": 2,
+      "hp": 15,
+      "pb": 6,
+      "adopt": {
+        "name": "Неизвестен противник",
+        "attack": 5,
+        "defense": 2,
+        "hp": 15,
+        "pb": 6
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "chronicles-of-orm",
+        "dataset": "ENEMY_PROFILES",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "name": "Неизвестен противник",
+          "mode": "melee",
+          "stats": {
+            "speed": 3,
+            "acc": 3,
+            "reflex": 2,
+            "eqspeed": 5,
+            "manual": true
+          }
+        },
+        "part": {
+          "name": "Неизвестен противник",
+          "mode": "melee",
+          "stats": {
+            "speed": 3,
+            "acc": 3,
+            "reflex": 2,
+            "eqspeed": 5,
+            "manual": true
+          }
+        },
+        "count": 1
+      }
+    }
+  ]
+}

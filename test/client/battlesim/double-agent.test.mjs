@@ -1,3 +1,4 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { encounterPreset, ENCOUNTERS } from '../../../public/js/battlesim/books/873/definition.js';
@@ -9,6 +10,9 @@ import {encounterPreset as missionPreset, ENCOUNTERS as MISSION_ENCOUNTERS} from
 import {createState as createMissionState} from '../../../public/js/battlesim/books/896/state.js';
 import missionEn from '../../../public/js/i18n/en/battlesim/battlesim896.js';
 import missionBg from '../../../public/js/i18n/bg/battlesim/battlesim896.js';
+
+await loadFixtureRoster(873);
+await loadFixtureRoster(896);
 
 test('Dangerous Mission keeps its edition-specific exposure threshold', () => {
   assert.equal(MISSION_ENCOUNTERS.length, 12);

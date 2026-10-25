@@ -27,15 +27,18 @@ test('book 781 loads exact seeded data once before initialization and shares con
   const fetcher=async path=>{assert.equal(path,'/api/books/781/enemies');calls++;return {ok:true,json:async()=>seed.enemies};};
   await Promise.all([module.loadRoster(fetcher),module.loadRoster(fetcher)]);
   assert.equal(calls,1);
-  assert.deepEqual(module.ROSTER,seed.enemies.map(row=>row.stats.entry));
+  assert.deepEqual(module.ROSTER,seed.enemies.map(row=>{const {support,...profile}=row.stats.entry;return profile;}));
+  assert.deepEqual(module.FLESH_RULES,seed.enemies.find(row=>row.stats.entry.support).stats.entry.support.rules);
   await module.loadRoster(()=>{throw Error('must reuse loaded data');});
 });
 
-test('a legacy API response preserves every saved enemy ID, source ordering and database stats',async()=>{
+test('an obsolete API without encounter settings fails clearly and remains retryable',async()=>{
   const module=await import('../../../public/js/battlesim/books/781/definition.js?legacy-test');
   const rows=[...seed.enemies].reverse().map(({name,attack,hp})=>({name,attack,hp}));
-  await module.loadRoster(async()=>({ok:true,json:async()=>rows}));
-  assert.deepEqual(module.ROSTER,seed.enemies.map(row=>row.stats.entry));
+  await assert.rejects(module.loadRoster(async()=>({ok:true,json:async()=>rows})),/Incomplete Mutated Flesh settings/);
+  assert.deepEqual(module.ROSTER,[]);
+  await module.loadRoster(async()=>({ok:true,json:async()=>seed.enemies}));
+  assert.deepEqual(module.ROSTER.map(row=>row.id),seed.enemies.map(row=>row.stats.entry.id));
 });
 
 test('failed loading remains retryable without replacing a saved roster with partial data',async()=>{

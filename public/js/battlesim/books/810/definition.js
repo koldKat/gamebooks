@@ -1,3 +1,5 @@
+import { createRosterLoader } from '../../roster-data.js';
+
 export const definition = Object.freeze({
   id: 810,
   title: 'Пътят на Пъдпъдъка - промо',
@@ -6,9 +8,11 @@ export const definition = Object.freeze({
   i18nPrefix: 'battlesim810',
 });
 export const RULES_REVISION = 1;
-export const ENCOUNTERS = [
-  {section: 2, displayName: 'Пират', attack: 2, life: 6, destination: '13'},
-  {section: 3, displayName: 'Морска капа', attack: 1, life: 3, destination: '2'},
-  {section: 5, displayName: 'Варварин', attack: 2, life: 4, destination: '11'},
-  {section: 8, displayName: 'Гниещ бръмбар', attack: 1, life: 4, destination: '11', escape: true},
-];
+export let ENCOUNTERS = [];
+export const ESCAPE_RULES = {};
+export const loadRoster = createRosterLoader(810, 'ENCOUNTERS', entries => {
+  const rules = entries.find(entry => entry.support)?.support.rules;
+  if (!rules) throw new Error('Incomplete Quail escape settings');
+  Object.assign(ESCAPE_RULES, rules);
+  ENCOUNTERS = entries.map(({support,...entry}) => entry);
+});

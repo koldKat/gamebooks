@@ -1,4 +1,4 @@
-import { definition, ENCOUNTERS, SPELLS } from './definition.js';
+import { definition, ENCOUNTERS, SPELLS, TEMPLE_RULES } from './definition.js';
 import * as rules from './combat.js';
 import * as effects from './effects.js';
 import { createState } from './state.js';
@@ -91,9 +91,9 @@ export function createTemplePanel({ document, t, getRun, getBookId, saveState, s
     el('manualStamina').value = d.setup.manualStamina ?? '';
     el('manualStamina-row').style.display = 'none';
     el('unknownStatNote').hidden = !selected.manualStamina;
-    el('contextNote').textContent = selected.section === 13 || selected.partialImmunity || selected.paralysis || selected.fireBreath
+    el('contextNote').textContent = TEMPLE_RULES.noteSections.includes(selected.section) || selected.partialImmunity || selected.paralysis || selected.fireBreath
       || selected.fatalHit || selected.daggerPenalty || selected.simultaneous || selected.ally || selected.lightning
-      || selected.manualStamina || selected.section === 380 ? tk('encounterRule.' + selected.section) : '';
+      || selected.manualStamina ? tk('encounterRule.' + selected.section) : '';
     el('spell').value = d.setup.spell ?? 'door'; spellOptions(d.setup.cost);
     for (const key of ['encounter', 'manualStamina', 'spell', 'cost', 'apply', 'roll']) el(key).disabled = busy;
     const dead = !hero || hero.dead || !hero.stamina;

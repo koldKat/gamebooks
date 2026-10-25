@@ -1,0 +1,3557 @@
+{
+  "schemaVersion": 1,
+  "bookId": 735,
+  "family": "space-assassin",
+  "source": "All 26 Space Assassin encounters and 45 legacy profiles, including all six nested deity weapons, shot/damage and special weapon rules. The full 24-position tank encounter map, status cycle, shields and effects are also database-backed. Legacy deity attack remains null; its structured zero is only the original special-combat sentinel.",
+  "enemies": [
+    {
+      "key": "encounter:20:0",
+      "name": "Робот пазач (20)",
+      "attack": 5,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Робот пазач (20)",
+        "attack": 5,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 20,
+            "name": "Робот пазач",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Робот пазач",
+                "skill": 5,
+                "stamina": 5
+              }
+            ],
+            "win": 300
+          },
+          "support": {
+            "rules": {
+              "nerveGas": {
+                "sections": [
+                  108,
+                  312
+                ],
+                "ineffectiveSections": [
+                  312
+                ]
+              },
+              "gravityBombSections": [
+                267
+              ]
+            }
+          }
+        },
+        "part": {
+          "name": "Робот пазач",
+          "skill": 5,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "encounter:48:0",
+      "name": "Микрохеликоптер (48)",
+      "attack": 8,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Микрохеликоптер (48)",
+        "attack": 8,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 48,
+            "name": "Микрохеликоптер",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Микрохеликоптер",
+                "skill": 8,
+                "stamina": 2
+              }
+            ],
+            "win": 124
+          }
+        },
+        "part": {
+          "name": "Микрохеликоптер",
+          "skill": 8,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:61:0",
+      "name": "Първи чистач (61)",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Първи чистач (61)",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 61,
+            "name": "Тримата чистачи",
+            "mode": "melee",
+            "enemies": [
+              {
+                "name": "Първи чистач",
+                "skill": 8,
+                "stamina": 6
+              },
+              {
+                "name": "Втори чистач",
+                "skill": 9,
+                "stamina": 4
+              },
+              {
+                "name": "Трети чистач",
+                "skill": 7,
+                "stamina": 4
+              }
+            ],
+            "win": 290
+          }
+        },
+        "part": {
+          "name": "Първи чистач",
+          "skill": 8,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:61:1",
+      "name": "Втори чистач (61)",
+      "attack": 9,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Втори чистач (61)",
+        "attack": 9,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 61,
+            "name": "Тримата чистачи",
+            "mode": "melee",
+            "enemies": [
+              {
+                "name": "Първи чистач",
+                "skill": 8,
+                "stamina": 6
+              },
+              {
+                "name": "Втори чистач",
+                "skill": 9,
+                "stamina": 4
+              },
+              {
+                "name": "Трети чистач",
+                "skill": 7,
+                "stamina": 4
+              }
+            ],
+            "win": 290
+          }
+        },
+        "part": {
+          "name": "Втори чистач",
+          "skill": 9,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "encounter:61:2",
+      "name": "Трети чистач (61)",
+      "attack": 7,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Трети чистач (61)",
+        "attack": 7,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 61,
+            "name": "Тримата чистачи",
+            "mode": "melee",
+            "enemies": [
+              {
+                "name": "Първи чистач",
+                "skill": 8,
+                "stamina": 6
+              },
+              {
+                "name": "Втори чистач",
+                "skill": 9,
+                "stamina": 4
+              },
+              {
+                "name": "Трети чистач",
+                "skill": 7,
+                "stamina": 4
+              }
+            ],
+            "win": 290
+          }
+        },
+        "part": {
+          "name": "Трети чистач",
+          "skill": 7,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "encounter:65:0",
+      "name": "Растения-удушвачи (65)",
+      "attack": 0,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Растения-удушвачи (65)",
+        "attack": 0,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 65,
+            "name": "Растения-удушвачи",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Растения-удушвачи",
+                "skill": 0,
+                "stamina": 12,
+                "shots": 0
+              }
+            ],
+            "win": 173,
+            "roundDamage": 2
+          }
+        },
+        "part": {
+          "name": "Растения-удушвачи",
+          "skill": 0,
+          "stamina": 12,
+          "shots": 0
+        }
+      }
+    },
+    {
+      "key": "encounter:71:0",
+      "name": "Първо животно (71)",
+      "attack": 8,
+      "defense": null,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Първо животно (71)",
+        "attack": 8,
+        "defense": null,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 6,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 71,
+            "name": "Шестте механични животни",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първо животно",
+                "skill": 8,
+                "stamina": 3
+              },
+              {
+                "name": "Второ животно",
+                "skill": 8,
+                "stamina": 3
+              },
+              {
+                "name": "Трето животно",
+                "skill": 7,
+                "stamina": 3
+              },
+              {
+                "name": "Четвърто животно",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "name": "Пето животно",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "name": "Шесто животно",
+                "skill": 5,
+                "stamina": 2
+              }
+            ],
+            "win": 329
+          }
+        },
+        "part": {
+          "name": "Първо животно",
+          "skill": 8,
+          "stamina": 3
+        }
+      }
+    },
+    {
+      "key": "encounter:71:1",
+      "name": "Второ животно (71)",
+      "attack": 8,
+      "defense": null,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Второ животно (71)",
+        "attack": 8,
+        "defense": null,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 1,
+        "partCount": 6,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 71,
+            "name": "Шестте механични животни",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първо животно",
+                "skill": 8,
+                "stamina": 3
+              },
+              {
+                "name": "Второ животно",
+                "skill": 8,
+                "stamina": 3
+              },
+              {
+                "name": "Трето животно",
+                "skill": 7,
+                "stamina": 3
+              },
+              {
+                "name": "Четвърто животно",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "name": "Пето животно",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "name": "Шесто животно",
+                "skill": 5,
+                "stamina": 2
+              }
+            ],
+            "win": 329
+          }
+        },
+        "part": {
+          "name": "Второ животно",
+          "skill": 8,
+          "stamina": 3
+        }
+      }
+    },
+    {
+      "key": "encounter:71:2",
+      "name": "Трето животно (71)",
+      "attack": 7,
+      "defense": null,
+      "hp": 3,
+      "pb": null,
+      "adopt": {
+        "name": "Трето животно (71)",
+        "attack": 7,
+        "defense": null,
+        "hp": 3,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 2,
+        "partCount": 6,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 71,
+            "name": "Шестте механични животни",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първо животно",
+                "skill": 8,
+                "stamina": 3
+              },
+              {
+                "name": "Второ животно",
+                "skill": 8,
+                "stamina": 3
+              },
+              {
+                "name": "Трето животно",
+                "skill": 7,
+                "stamina": 3
+              },
+              {
+                "name": "Четвърто животно",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "name": "Пето животно",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "name": "Шесто животно",
+                "skill": 5,
+                "stamina": 2
+              }
+            ],
+            "win": 329
+          }
+        },
+        "part": {
+          "name": "Трето животно",
+          "skill": 7,
+          "stamina": 3
+        }
+      }
+    },
+    {
+      "key": "encounter:71:3",
+      "name": "Четвърто животно (71)",
+      "attack": 6,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Четвърто животно (71)",
+        "attack": 6,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 3,
+        "partCount": 6,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 71,
+            "name": "Шестте механични животни",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първо животно",
+                "skill": 8,
+                "stamina": 3
+              },
+              {
+                "name": "Второ животно",
+                "skill": 8,
+                "stamina": 3
+              },
+              {
+                "name": "Трето животно",
+                "skill": 7,
+                "stamina": 3
+              },
+              {
+                "name": "Четвърто животно",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "name": "Пето животно",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "name": "Шесто животно",
+                "skill": 5,
+                "stamina": 2
+              }
+            ],
+            "win": 329
+          }
+        },
+        "part": {
+          "name": "Четвърто животно",
+          "skill": 6,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:71:4",
+      "name": "Пето животно (71)",
+      "attack": 6,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Пето животно (71)",
+        "attack": 6,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 4,
+        "partCount": 6,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 71,
+            "name": "Шестте механични животни",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първо животно",
+                "skill": 8,
+                "stamina": 3
+              },
+              {
+                "name": "Второ животно",
+                "skill": 8,
+                "stamina": 3
+              },
+              {
+                "name": "Трето животно",
+                "skill": 7,
+                "stamina": 3
+              },
+              {
+                "name": "Четвърто животно",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "name": "Пето животно",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "name": "Шесто животно",
+                "skill": 5,
+                "stamina": 2
+              }
+            ],
+            "win": 329
+          }
+        },
+        "part": {
+          "name": "Пето животно",
+          "skill": 6,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:71:5",
+      "name": "Шесто животно (71)",
+      "attack": 5,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Шесто животно (71)",
+        "attack": 5,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 5,
+        "partCount": 6,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 71,
+            "name": "Шестте механични животни",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първо животно",
+                "skill": 8,
+                "stamina": 3
+              },
+              {
+                "name": "Второ животно",
+                "skill": 8,
+                "stamina": 3
+              },
+              {
+                "name": "Трето животно",
+                "skill": 7,
+                "stamina": 3
+              },
+              {
+                "name": "Четвърто животно",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "name": "Пето животно",
+                "skill": 6,
+                "stamina": 2
+              },
+              {
+                "name": "Шесто животно",
+                "skill": 5,
+                "stamina": 2
+              }
+            ],
+            "win": 329
+          }
+        },
+        "part": {
+          "name": "Шесто животно",
+          "skill": 5,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:74:0",
+      "name": "Първи часови (74)",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Първи часови (74)",
+        "attack": 8,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 74,
+            "name": "Роботи часови",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи часови",
+                "skill": 8,
+                "stamina": 9
+              },
+              {
+                "name": "Втори часови",
+                "skill": 8,
+                "stamina": 9
+              }
+            ],
+            "win": 351,
+            "grenadeAllowed": true,
+            "knowledgeBonus": 1
+          }
+        },
+        "part": {
+          "name": "Първи часови",
+          "skill": 8,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:74:1",
+      "name": "Втори часови (74)",
+      "attack": 8,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Втори часови (74)",
+        "attack": 8,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 74,
+            "name": "Роботи часови",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи часови",
+                "skill": 8,
+                "stamina": 9
+              },
+              {
+                "name": "Втори часови",
+                "skill": 8,
+                "stamina": 9
+              }
+            ],
+            "win": 351,
+            "grenadeAllowed": true,
+            "knowledgeBonus": 1
+          }
+        },
+        "part": {
+          "name": "Втори часови",
+          "skill": 8,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:85:0",
+      "name": "Рапанът (85)",
+      "attack": 9,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Рапанът (85)",
+        "attack": 9,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 85,
+            "name": "Рапанът",
+            "mode": "melee",
+            "enemies": [
+              {
+                "name": "Рапанът",
+                "skill": 9,
+                "stamina": 8
+              }
+            ],
+            "win": 182,
+            "knowledgeBonus": 1
+          }
+        },
+        "part": {
+          "name": "Рапанът",
+          "skill": 9,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "encounter:95:0",
+      "name": "Сайръс (95)",
+      "attack": 9,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Сайръс (95)",
+        "attack": 9,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 95,
+            "name": "Сайръс",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Сайръс",
+                "skill": 9,
+                "stamina": 12
+              }
+            ],
+            "win": 400,
+            "ballBearingPenalty": 1
+          }
+        },
+        "part": {
+          "name": "Сайръс",
+          "skill": 9,
+          "stamina": 12
+        }
+      }
+    },
+    {
+      "key": "encounter:101:0",
+      "name": "Раковината с шипове (101)",
+      "attack": 9,
+      "defense": null,
+      "hp": 10,
+      "pb": null,
+      "adopt": {
+        "name": "Раковината с шипове (101)",
+        "attack": 9,
+        "defense": null,
+        "hp": 10,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 101,
+            "name": "Раковината с шипове",
+            "mode": "melee",
+            "enemies": [
+              {
+                "name": "Раковината с шипове",
+                "skill": 9,
+                "stamina": 10
+              }
+            ],
+            "win": 196,
+            "escapeCost": 2,
+            "escapeDestination": 139
+          }
+        },
+        "part": {
+          "name": "Раковината с шипове",
+          "skill": 9,
+          "stamina": 10
+        }
+      }
+    },
+    {
+      "key": "encounter:108:0",
+      "name": "Първи часови (108)",
+      "attack": 6,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Първи часови (108)",
+        "attack": 6,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 108,
+            "name": "Часови по охраната",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи часови",
+                "skill": 6,
+                "stamina": 4
+              },
+              {
+                "name": "Втори часови",
+                "skill": 6,
+                "stamina": 4
+              }
+            ],
+            "win": 203,
+            "grenadeAllowed": true,
+            "grenadeCover": 1
+          }
+        },
+        "part": {
+          "name": "Първи часови",
+          "skill": 6,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "encounter:108:1",
+      "name": "Втори часови (108)",
+      "attack": 6,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Втори часови (108)",
+        "attack": 6,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 108,
+            "name": "Часови по охраната",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи часови",
+                "skill": 6,
+                "stamina": 4
+              },
+              {
+                "name": "Втори часови",
+                "skill": 6,
+                "stamina": 4
+              }
+            ],
+            "win": 203,
+            "grenadeAllowed": true,
+            "grenadeCover": 1
+          }
+        },
+        "part": {
+          "name": "Втори часови",
+          "skill": 6,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "encounter:138:0",
+      "name": "Режещият диск (138)",
+      "attack": 9,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Режещият диск (138)",
+        "attack": 9,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 138,
+            "name": "Режещият диск",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Режещият диск",
+                "skill": 9,
+                "stamina": 1
+              }
+            ],
+            "win": 195
+          }
+        },
+        "part": {
+          "name": "Режещият диск",
+          "skill": 9,
+          "stamina": 1
+        }
+      }
+    },
+    {
+      "key": "encounter:159:0",
+      "name": "Крилатият скорпион (159)",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Крилатият скорпион (159)",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 159,
+            "name": "Крилатият скорпион",
+            "mode": "melee",
+            "enemies": [
+              {
+                "name": "Крилатият скорпион",
+                "skill": 8,
+                "stamina": 6
+              }
+            ],
+            "win": 397
+          }
+        },
+        "part": {
+          "name": "Крилатият скорпион",
+          "skill": 8,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:165:0",
+      "name": "Тороид (165)",
+      "attack": 0,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Тороид (165)",
+        "attack": 0,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 165,
+            "name": "Тороид",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Тороид",
+                "skill": 0,
+                "stamina": 12,
+                "shots": 0
+              }
+            ],
+            "win": 332,
+            "roundLimit": 3,
+            "limitDestination": 384,
+            "limitFatal": true
+          }
+        },
+        "part": {
+          "name": "Тороид",
+          "skill": 0,
+          "stamina": 12,
+          "shots": 0
+        }
+      }
+    },
+    {
+      "key": "encounter:211:0",
+      "name": "Стражеви робот (211)",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Стражеви робот (211)",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 211,
+            "name": "Стражеви робот",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Стражеви робот",
+                "skill": 7,
+                "stamina": 6,
+                "shots": 2,
+                "damage": 2
+              }
+            ],
+            "win": 247,
+            "optionalOpeningArmourLoss": 1
+          }
+        },
+        "part": {
+          "name": "Стражеви робот",
+          "skill": 7,
+          "stamina": 6,
+          "shots": 2,
+          "damage": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:220:0",
+      "name": "Двойникът на Тарн (220)",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Двойникът на Тарн (220)",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 220,
+            "name": "Двойникът на Тарн",
+            "mode": "melee",
+            "enemies": [
+              {
+                "name": "Двойникът на Тарн",
+                "skill": 8,
+                "stamina": 6
+              }
+            ],
+            "win": 13,
+            "optionalOpeningArmourLoss": 1
+          }
+        },
+        "part": {
+          "name": "Двойникът на Тарн",
+          "skill": 8,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:228:0",
+      "name": "Стражеви робот (228)",
+      "attack": 7,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Стражеви робот (228)",
+        "attack": 7,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 228,
+            "name": "Стражеви робот при килиите",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Стражеви робот",
+                "skill": 7,
+                "stamina": 6
+              }
+            ],
+            "win": 264,
+            "grenadeAllowed": true
+          }
+        },
+        "part": {
+          "name": "Стражеви робот",
+          "skill": 7,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:239:0",
+      "name": "Първи часови (239)",
+      "attack": 6,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Първи часови (239)",
+        "attack": 6,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 239,
+            "name": "Часовите след предаването",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи часови",
+                "skill": 6,
+                "stamina": 4
+              },
+              {
+                "name": "Втори часови",
+                "skill": 6,
+                "stamina": 4
+              }
+            ],
+            "win": 203,
+            "openingLuckTest": true,
+            "openingShotsIfLucky": 1,
+            "openingShotsIfUnlucky": 2
+          }
+        },
+        "part": {
+          "name": "Първи часови",
+          "skill": 6,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "encounter:239:1",
+      "name": "Втори часови (239)",
+      "attack": 6,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "adopt": {
+        "name": "Втори часови (239)",
+        "attack": 6,
+        "defense": null,
+        "hp": 4,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 239,
+            "name": "Часовите след предаването",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи часови",
+                "skill": 6,
+                "stamina": 4
+              },
+              {
+                "name": "Втори часови",
+                "skill": 6,
+                "stamina": 4
+              }
+            ],
+            "win": 203,
+            "openingLuckTest": true,
+            "openingShotsIfLucky": 1,
+            "openingShotsIfUnlucky": 2
+          }
+        },
+        "part": {
+          "name": "Втори часови",
+          "skill": 6,
+          "stamina": 4
+        }
+      }
+    },
+    {
+      "key": "encounter:267:0",
+      "name": "Първи робот (267)",
+      "attack": 7,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Първи робот (267)",
+        "attack": 7,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 8,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 267,
+            "name": "Осем портативни робота",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Втори робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Трети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Четвърти робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Пети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Шести робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Седми робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Осми робот",
+                "skill": 7,
+                "stamina": 2
+              }
+            ],
+            "win": 303,
+            "grenadeAllowed": true,
+            "grenadeLimit": 2,
+            "gravityBombAllowed": true
+          }
+        },
+        "part": {
+          "name": "Първи робот",
+          "skill": 7,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:267:1",
+      "name": "Втори робот (267)",
+      "attack": 7,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Втори робот (267)",
+        "attack": 7,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 1,
+        "partCount": 8,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 267,
+            "name": "Осем портативни робота",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Втори робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Трети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Четвърти робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Пети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Шести робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Седми робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Осми робот",
+                "skill": 7,
+                "stamina": 2
+              }
+            ],
+            "win": 303,
+            "grenadeAllowed": true,
+            "grenadeLimit": 2,
+            "gravityBombAllowed": true
+          }
+        },
+        "part": {
+          "name": "Втори робот",
+          "skill": 7,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:267:2",
+      "name": "Трети робот (267)",
+      "attack": 7,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Трети робот (267)",
+        "attack": 7,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 2,
+        "partCount": 8,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 267,
+            "name": "Осем портативни робота",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Втори робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Трети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Четвърти робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Пети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Шести робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Седми робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Осми робот",
+                "skill": 7,
+                "stamina": 2
+              }
+            ],
+            "win": 303,
+            "grenadeAllowed": true,
+            "grenadeLimit": 2,
+            "gravityBombAllowed": true
+          }
+        },
+        "part": {
+          "name": "Трети робот",
+          "skill": 7,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:267:3",
+      "name": "Четвърти робот (267)",
+      "attack": 7,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Четвърти робот (267)",
+        "attack": 7,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 3,
+        "partCount": 8,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 267,
+            "name": "Осем портативни робота",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Втори робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Трети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Четвърти робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Пети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Шести робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Седми робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Осми робот",
+                "skill": 7,
+                "stamina": 2
+              }
+            ],
+            "win": 303,
+            "grenadeAllowed": true,
+            "grenadeLimit": 2,
+            "gravityBombAllowed": true
+          }
+        },
+        "part": {
+          "name": "Четвърти робот",
+          "skill": 7,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:267:4",
+      "name": "Пети робот (267)",
+      "attack": 7,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Пети робот (267)",
+        "attack": 7,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 4,
+        "partCount": 8,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 267,
+            "name": "Осем портативни робота",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Втори робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Трети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Четвърти робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Пети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Шести робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Седми робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Осми робот",
+                "skill": 7,
+                "stamina": 2
+              }
+            ],
+            "win": 303,
+            "grenadeAllowed": true,
+            "grenadeLimit": 2,
+            "gravityBombAllowed": true
+          }
+        },
+        "part": {
+          "name": "Пети робот",
+          "skill": 7,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:267:5",
+      "name": "Шести робот (267)",
+      "attack": 7,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Шести робот (267)",
+        "attack": 7,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 5,
+        "partCount": 8,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 267,
+            "name": "Осем портативни робота",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Втори робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Трети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Четвърти робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Пети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Шести робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Седми робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Осми робот",
+                "skill": 7,
+                "stamina": 2
+              }
+            ],
+            "win": 303,
+            "grenadeAllowed": true,
+            "grenadeLimit": 2,
+            "gravityBombAllowed": true
+          }
+        },
+        "part": {
+          "name": "Шести робот",
+          "skill": 7,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:267:6",
+      "name": "Седми робот (267)",
+      "attack": 7,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Седми робот (267)",
+        "attack": 7,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 6,
+        "partCount": 8,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 267,
+            "name": "Осем портативни робота",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Втори робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Трети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Четвърти робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Пети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Шести робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Седми робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Осми робот",
+                "skill": 7,
+                "stamina": 2
+              }
+            ],
+            "win": 303,
+            "grenadeAllowed": true,
+            "grenadeLimit": 2,
+            "gravityBombAllowed": true
+          }
+        },
+        "part": {
+          "name": "Седми робот",
+          "skill": 7,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:267:7",
+      "name": "Осми робот (267)",
+      "attack": 7,
+      "defense": null,
+      "hp": 2,
+      "pb": null,
+      "adopt": {
+        "name": "Осми робот (267)",
+        "attack": 7,
+        "defense": null,
+        "hp": 2,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 7,
+        "partCount": 8,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 267,
+            "name": "Осем портативни робота",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Втори робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Трети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Четвърти робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Пети робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Шести робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Седми робот",
+                "skill": 7,
+                "stamina": 2
+              },
+              {
+                "name": "Осми робот",
+                "skill": 7,
+                "stamina": 2
+              }
+            ],
+            "win": 303,
+            "grenadeAllowed": true,
+            "grenadeLimit": 2,
+            "gravityBombAllowed": true
+          }
+        },
+        "part": {
+          "name": "Осми робот",
+          "skill": 7,
+          "stamina": 2
+        }
+      }
+    },
+    {
+      "key": "encounter:279:0",
+      "name": "Първи часови (279)",
+      "attack": 4,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Първи часови (279)",
+        "attack": 4,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 279,
+            "name": "Часовите под решетката",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи часови",
+                "skill": 4,
+                "stamina": 9
+              },
+              {
+                "name": "Втори часови",
+                "skill": 4,
+                "stamina": 9
+              }
+            ],
+            "win": 351,
+            "knowledgeBonus": 1
+          }
+        },
+        "part": {
+          "name": "Първи часови",
+          "skill": 4,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:279:1",
+      "name": "Втори часови (279)",
+      "attack": 4,
+      "defense": null,
+      "hp": 9,
+      "pb": null,
+      "adopt": {
+        "name": "Втори часови (279)",
+        "attack": 4,
+        "defense": null,
+        "hp": 9,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 279,
+            "name": "Часовите под решетката",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Първи часови",
+                "skill": 4,
+                "stamina": 9
+              },
+              {
+                "name": "Втори часови",
+                "skill": 4,
+                "stamina": 9
+              }
+            ],
+            "win": 351,
+            "knowledgeBonus": 1
+          }
+        },
+        "part": {
+          "name": "Втори часови",
+          "skill": 4,
+          "stamina": 9
+        }
+      }
+    },
+    {
+      "key": "encounter:308:0",
+      "name": "Божеството (308)",
+      "attack": null,
+      "defense": null,
+      "hp": 12,
+      "pb": null,
+      "adopt": {
+        "name": "Божеството (308)",
+        "attack": null,
+        "defense": null,
+        "hp": 12,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 308,
+            "name": "Шесторъко божество",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Божеството",
+                "skill": 0,
+                "stamina": 12,
+                "weapons": [
+                  {
+                    "name": "whip",
+                    "skill": 10,
+                    "damage": 3
+                  },
+                  {
+                    "name": "machete",
+                    "skill": 9,
+                    "damage": 2
+                  },
+                  {
+                    "name": "spear",
+                    "skill": 7,
+                    "damage": 1
+                  },
+                  {
+                    "name": "lash",
+                    "skill": 8,
+                    "damage": 2
+                  },
+                  {
+                    "name": "blaster",
+                    "skill": 6,
+                    "weapon": "blaster"
+                  },
+                  {
+                    "name": "disintegrator",
+                    "skill": 5,
+                    "instant": true
+                  }
+                ]
+              }
+            ],
+            "win": 344,
+            "grenadeAllowed": true
+          }
+        },
+        "part": {
+          "name": "Божеството",
+          "skill": 0,
+          "stamina": 12,
+          "weapons": [
+            {
+              "name": "whip",
+              "skill": 10,
+              "damage": 3
+            },
+            {
+              "name": "machete",
+              "skill": 9,
+              "damage": 2
+            },
+            {
+              "name": "spear",
+              "skill": 7,
+              "damage": 1
+            },
+            {
+              "name": "lash",
+              "skill": 8,
+              "damage": 2
+            },
+            {
+              "name": "blaster",
+              "skill": 6,
+              "weapon": "blaster"
+            },
+            {
+              "name": "disintegrator",
+              "skill": 5,
+              "instant": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "encounter:312:0",
+      "name": "Първи мутант (312)",
+      "attack": 8,
+      "defense": null,
+      "hp": 8,
+      "pb": null,
+      "adopt": {
+        "name": "Първи мутант (312)",
+        "attack": 8,
+        "defense": null,
+        "hp": 8,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 312,
+            "name": "Мутанти от басейна",
+            "mode": "melee",
+            "enemies": [
+              {
+                "name": "Първи мутант",
+                "skill": 8,
+                "stamina": 8
+              },
+              {
+                "name": "Втори мутант",
+                "skill": 8,
+                "stamina": 6
+              }
+            ],
+            "win": 366,
+            "grenadeAllowed": true,
+            "grenadeArmourOnEven": true,
+            "knowledgeBonus": 1
+          }
+        },
+        "part": {
+          "name": "Първи мутант",
+          "skill": 8,
+          "stamina": 8
+        }
+      }
+    },
+    {
+      "key": "encounter:312:1",
+      "name": "Втори мутант (312)",
+      "attack": 8,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Втори мутант (312)",
+        "attack": 8,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 312,
+            "name": "Мутанти от басейна",
+            "mode": "melee",
+            "enemies": [
+              {
+                "name": "Първи мутант",
+                "skill": 8,
+                "stamina": 8
+              },
+              {
+                "name": "Втори мутант",
+                "skill": 8,
+                "stamina": 6
+              }
+            ],
+            "win": 366,
+            "grenadeAllowed": true,
+            "grenadeArmourOnEven": true,
+            "knowledgeBonus": 1
+          }
+        },
+        "part": {
+          "name": "Втори мутант",
+          "skill": 8,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:319:0",
+      "name": "Лазерен глобус (319)",
+      "attack": 9,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "adopt": {
+        "name": "Лазерен глобус (319)",
+        "attack": 9,
+        "defense": null,
+        "hp": 1,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 319,
+            "name": "Лазерен глобус",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Лазерен глобус",
+                "skill": 9,
+                "stamina": 1
+              }
+            ],
+            "win": 4,
+            "initialArmourLoss": 1
+          }
+        },
+        "part": {
+          "name": "Лазерен глобус",
+          "skill": 9,
+          "stamina": 1
+        }
+      }
+    },
+    {
+      "key": "encounter:338:0",
+      "name": "Техникът (338)",
+      "attack": 8,
+      "defense": null,
+      "hp": 5,
+      "pb": null,
+      "adopt": {
+        "name": "Техникът (338)",
+        "attack": 8,
+        "defense": null,
+        "hp": 5,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 338,
+            "name": "Техникът",
+            "mode": null,
+            "enemies": [
+              {
+                "name": "Техникът",
+                "skill": 8,
+                "stamina": 5
+              }
+            ],
+            "win": 248,
+            "requiresModeChoice": true,
+            "requiresEnemyWeaponChoice": true
+          }
+        },
+        "part": {
+          "name": "Техникът",
+          "skill": 8,
+          "stamina": 5
+        }
+      }
+    },
+    {
+      "key": "encounter:359:0",
+      "name": "Месоядно растение (359)",
+      "attack": 0,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Месоядно растение (359)",
+        "attack": 0,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 359,
+            "name": "Месоядно растение",
+            "mode": null,
+            "enemies": [
+              {
+                "name": "Месоядно растение",
+                "skill": 0,
+                "stamina": 6,
+                "shots": 0,
+                "damage": 0
+              }
+            ],
+            "win": 8,
+            "requiresModeChoice": true,
+            "openingLuckTest": true,
+            "luckAvoidsFight": true,
+            "luckDestination": 8,
+            "roundLimit": 3,
+            "limitFatal": true
+          }
+        },
+        "part": {
+          "name": "Месоядно растение",
+          "skill": 0,
+          "stamina": 6,
+          "shots": 0,
+          "damage": 0
+        }
+      }
+    },
+    {
+      "key": "encounter:364:0",
+      "name": "Двойникът на Тарн (364)",
+      "attack": 9,
+      "defense": null,
+      "hp": 6,
+      "pb": null,
+      "adopt": {
+        "name": "Двойникът на Тарн (364)",
+        "attack": 9,
+        "defense": null,
+        "hp": 6,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 364,
+            "name": "Разяреният двойник на Тарн",
+            "mode": "melee",
+            "enemies": [
+              {
+                "name": "Двойникът на Тарн",
+                "skill": 9,
+                "stamina": 6
+              }
+            ],
+            "win": 13
+          }
+        },
+        "part": {
+          "name": "Двойникът на Тарн",
+          "skill": 9,
+          "stamina": 6
+        }
+      }
+    },
+    {
+      "key": "encounter:383:0",
+      "name": "Зарк (383)",
+      "attack": 5,
+      "defense": null,
+      "hp": 7,
+      "pb": null,
+      "adopt": {
+        "name": "Зарк (383)",
+        "attack": 5,
+        "defense": null,
+        "hp": 7,
+        "pb": null
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "fight",
+          "spec": {
+            "section": 383,
+            "name": "Зарк",
+            "mode": "gunfire",
+            "enemies": [
+              {
+                "name": "Зарк",
+                "skill": 5,
+                "stamina": 7,
+                "weapon": "disintegrator",
+                "instant": true
+              }
+            ],
+            "win": 392
+          }
+        },
+        "part": {
+          "name": "Зарк",
+          "skill": 5,
+          "stamina": 7,
+          "weapon": "disintegrator",
+          "instant": true
+        }
+      }
+    },
+    {
+      "key": "tank:enemy",
+      "name": "Танк на противника (223)",
+      "attack": null,
+      "defense": null,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "space-assassin",
+        "dataset": "CATALOG",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "kind": "tank",
+          "rules": {
+            "statusCycle": 16,
+            "playerShields": 5,
+            "enemyShields": 4,
+            "startSection": 223,
+            "winSection": 190,
+            "positions": {
+              "22": {
+                "marker": "E",
+                "facing": "S",
+                "routes": [
+                  265,
+                  193,
+                  216,
+                  386
+                ],
+                "encounters": [
+                  {
+                    "section": 261,
+                    "statuses": [
+                      7
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      6,
+                      13,
+                      14
+                    ]
+                  },
+                  {
+                    "section": 188,
+                    "statuses": [
+                      5,
+                      12
+                    ]
+                  }
+                ]
+              },
+              "53": {
+                "marker": "C",
+                "facing": "S",
+                "routes": [
+                  136,
+                  365
+                ],
+                "encounters": [
+                  {
+                    "section": 188,
+                    "statuses": [
+                      10,
+                      11
+                    ]
+                  },
+                  {
+                    "section": 161,
+                    "statuses": [
+                      15
+                    ]
+                  },
+                  {
+                    "section": 9,
+                    "statuses": [
+                      16
+                    ]
+                  },
+                  {
+                    "section": 33,
+                    "statuses": [
+                      1,
+                      2
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      3
+                    ]
+                  }
+                ]
+              },
+              "73": {
+                "marker": "G",
+                "facing": "N",
+                "routes": [
+                  374,
+                  355
+                ],
+                "encounters": [
+                  {
+                    "section": 188,
+                    "statuses": [
+                      7,
+                      16
+                    ]
+                  },
+                  {
+                    "section": 123,
+                    "statuses": [
+                      9,
+                      10
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      8
+                    ]
+                  }
+                ]
+              },
+              "82": {
+                "marker": "E",
+                "facing": "N",
+                "routes": [
+                  167,
+                  331,
+                  216,
+                  386
+                ],
+                "encounters": [
+                  {
+                    "section": 9,
+                    "statuses": [
+                      4,
+                      11
+                    ]
+                  },
+                  {
+                    "section": 33,
+                    "statuses": [
+                      5,
+                      12
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      6,
+                      13,
+                      14
+                    ]
+                  }
+                ]
+              },
+              "91": {
+                "marker": "B",
+                "facing": "S",
+                "routes": [
+                  22,
+                  167,
+                  331
+                ],
+                "encounters": [
+                  {
+                    "section": 66,
+                    "statuses": [
+                      4,
+                      5,
+                      11,
+                      12
+                    ]
+                  },
+                  {
+                    "section": 188,
+                    "statuses": [
+                      3,
+                      10
+                    ]
+                  },
+                  {
+                    "section": 123,
+                    "statuses": [
+                      6,
+                      7
+                    ]
+                  },
+                  {
+                    "section": 176,
+                    "statuses": [
+                      13,
+                      14
+                    ]
+                  }
+                ]
+              },
+              "110": {
+                "marker": "F",
+                "facing": "N",
+                "routes": [
+                  365,
+                  391
+                ],
+                "encounters": [
+                  {
+                    "section": 176,
+                    "statuses": [
+                      3
+                    ]
+                  },
+                  {
+                    "section": 188,
+                    "statuses": [
+                      1,
+                      14
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      2,
+                      15
+                    ]
+                  }
+                ]
+              },
+              "130": {
+                "marker": "D",
+                "facing": "S",
+                "routes": [
+                  355,
+                  380
+                ],
+                "encounters": [
+                  {
+                    "section": 33,
+                    "statuses": [
+                      8
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      9
+                    ]
+                  }
+                ]
+              },
+              "136": {
+                "marker": "F",
+                "facing": "S",
+                "routes": [
+                  277,
+                  391
+                ],
+                "encounters": [
+                  {
+                    "section": 188,
+                    "statuses": [
+                      14
+                    ]
+                  },
+                  {
+                    "section": 9,
+                    "statuses": [
+                      16
+                    ]
+                  },
+                  {
+                    "section": 33,
+                    "statuses": [
+                      1
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      2,
+                      15
+                    ]
+                  }
+                ]
+              },
+              "167": {
+                "marker": "B",
+                "facing": "W",
+                "routes": [
+                  349,
+                  91
+                ],
+                "encounters": [
+                  {
+                    "section": 188,
+                    "statuses": [
+                      3
+                    ]
+                  },
+                  {
+                    "section": 33,
+                    "statuses": [
+                      10
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      4,
+                      5,
+                      11,
+                      12
+                    ]
+                  }
+                ]
+              },
+              "193": {
+                "marker": "H",
+                "facing": "W",
+                "routes": [
+                  73,
+                  313
+                ],
+                "encounters": [
+                  {
+                    "section": 188,
+                    "statuses": [
+                      5,
+                      6,
+                      12,
+                      13,
+                      16
+                    ]
+                  },
+                  {
+                    "section": 261,
+                    "statuses": [
+                      8
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      7
+                    ]
+                  }
+                ]
+              },
+              "216": {
+                "marker": "E",
+                "facing": "W",
+                "routes": [
+                  374,
+                  130,
+                  82,
+                  22
+                ],
+                "encounters": [
+                  {
+                    "section": 188,
+                    "statuses": [
+                      5,
+                      12
+                    ]
+                  },
+                  {
+                    "section": 261,
+                    "statuses": [
+                      9
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      6,
+                      13,
+                      14
+                    ]
+                  }
+                ]
+              },
+              "223": {
+                "marker": "A",
+                "facing": "E",
+                "routes": [
+                  331,
+                  349
+                ],
+                "encounters": [
+                  {
+                    "section": 33,
+                    "statuses": [
+                      3,
+                      4
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      10
+                    ]
+                  },
+                  {
+                    "section": 261,
+                    "statuses": [
+                      5,
+                      11,
+                      12
+                    ]
+                  },
+                  {
+                    "section": 188,
+                    "statuses": [
+                      8,
+                      9
+                    ]
+                  }
+                ]
+              },
+              "241": {
+                "marker": "I",
+                "facing": "N",
+                "routes": [
+                  110,
+                  277
+                ],
+                "encounters": [
+                  {
+                    "section": 28,
+                    "statuses": [
+                      2,
+                      3
+                    ]
+                  },
+                  {
+                    "section": 33,
+                    "statuses": [
+                      15
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      1,
+                      16
+                    ]
+                  }
+                ]
+              },
+              "265": {
+                "marker": "H",
+                "facing": "E",
+                "routes": [
+                  241,
+                  313
+                ],
+                "encounters": [
+                  {
+                    "section": 188,
+                    "statuses": [
+                      5,
+                      6,
+                      12,
+                      13
+                    ]
+                  },
+                  {
+                    "section": 176,
+                    "statuses": [
+                      1
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      7
+                    ]
+                  },
+                  {
+                    "section": 33,
+                    "statuses": [
+                      16
+                    ]
+                  }
+                ]
+              },
+              "277": {
+                "marker": "I",
+                "facing": "W",
+                "routes": [
+                  193,
+                  241
+                ],
+                "encounters": [
+                  {
+                    "section": 123,
+                    "statuses": [
+                      7,
+                      8
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      1,
+                      16
+                    ]
+                  },
+                  {
+                    "section": 188,
+                    "statuses": [
+                      15
+                    ]
+                  }
+                ]
+              },
+              "313": {
+                "marker": "H",
+                "facing": "N",
+                "routes": [
+                  82,
+                  193,
+                  265
+                ],
+                "encounters": [
+                  {
+                    "section": 9,
+                    "statuses": [
+                      4,
+                      11
+                    ]
+                  },
+                  {
+                    "section": 261,
+                    "statuses": [
+                      14
+                    ]
+                  },
+                  {
+                    "section": 188,
+                    "statuses": [
+                      16
+                    ]
+                  },
+                  {
+                    "section": 33,
+                    "statuses": [
+                      5,
+                      6,
+                      12,
+                      13
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      7
+                    ]
+                  }
+                ]
+              },
+              "331": {
+                "marker": "B",
+                "facing": "E",
+                "routes": [
+                  53,
+                  91
+                ],
+                "encounters": [
+                  {
+                    "section": 33,
+                    "statuses": [
+                      3
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      4,
+                      5,
+                      11,
+                      12
+                    ]
+                  },
+                  {
+                    "section": 188,
+                    "statuses": [
+                      10
+                    ]
+                  }
+                ]
+              },
+              "349": {
+                "marker": "A",
+                "facing": "S",
+                "routes": [
+                  130,
+                  223
+                ],
+                "encounters": [
+                  {
+                    "section": 188,
+                    "statuses": [
+                      3,
+                      4
+                    ]
+                  },
+                  {
+                    "section": 33,
+                    "statuses": [
+                      8,
+                      9
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      10
+                    ]
+                  }
+                ]
+              },
+              "355": {
+                "marker": "G",
+                "facing": "E",
+                "routes": [
+                  265,
+                  73
+                ],
+                "encounters": [
+                  {
+                    "section": 28,
+                    "statuses": [
+                      1
+                    ]
+                  },
+                  {
+                    "section": 33,
+                    "statuses": [
+                      7,
+                      16
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      8
+                    ]
+                  }
+                ]
+              },
+              "365": {
+                "marker": "C",
+                "facing": "W",
+                "routes": [
+                  167,
+                  53
+                ],
+                "encounters": [
+                  {
+                    "section": 176,
+                    "statuses": [
+                      4,
+                      5,
+                      12
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      3
+                    ]
+                  },
+                  {
+                    "section": 33,
+                    "statuses": [
+                      10,
+                      11
+                    ]
+                  },
+                  {
+                    "section": 188,
+                    "statuses": [
+                      1,
+                      2
+                    ]
+                  }
+                ]
+              },
+              "374": {
+                "marker": "D",
+                "facing": "N",
+                "routes": [
+                  223,
+                  380
+                ],
+                "encounters": [
+                  {
+                    "section": 188,
+                    "statuses": [
+                      8
+                    ]
+                  },
+                  {
+                    "section": 261,
+                    "statuses": [
+                      10
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      9
+                    ]
+                  }
+                ]
+              },
+              "380": {
+                "marker": "D",
+                "facing": "E",
+                "routes": [
+                  386,
+                  374,
+                  130
+                ],
+                "encounters": [
+                  {
+                    "section": 188,
+                    "statuses": [
+                      8
+                    ]
+                  },
+                  {
+                    "section": 261,
+                    "statuses": [
+                      6
+                    ]
+                  },
+                  {
+                    "section": 123,
+                    "statuses": [
+                      14,
+                      15
+                    ]
+                  },
+                  {
+                    "section": 161,
+                    "statuses": [
+                      13
+                    ]
+                  },
+                  {
+                    "section": 28,
+                    "statuses": [
+                      2
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      9
+                    ]
+                  }
+                ]
+              },
+              "386": {
+                "marker": "E",
+                "facing": "E",
+                "routes": [
+                  110,
+                  136,
+                  82,
+                  22
+                ],
+                "encounters": [
+                  {
+                    "section": 66,
+                    "statuses": [
+                      6,
+                      13,
+                      14
+                    ]
+                  },
+                  {
+                    "section": 188,
+                    "statuses": [
+                      5,
+                      12
+                    ]
+                  },
+                  {
+                    "section": 176,
+                    "statuses": [
+                      2
+                    ]
+                  },
+                  {
+                    "section": 261,
+                    "statuses": [
+                      15
+                    ]
+                  }
+                ]
+              },
+              "391": {
+                "marker": "F",
+                "facing": "W",
+                "routes": [
+                  216,
+                  110,
+                  136
+                ],
+                "encounters": [
+                  {
+                    "section": 176,
+                    "statuses": [
+                      6
+                    ]
+                  },
+                  {
+                    "section": 123,
+                    "statuses": [
+                      9
+                    ]
+                  },
+                  {
+                    "section": 9,
+                    "statuses": [
+                      13
+                    ]
+                  },
+                  {
+                    "section": 188,
+                    "statuses": [
+                      1
+                    ]
+                  },
+                  {
+                    "section": 66,
+                    "statuses": [
+                      2,
+                      15
+                    ]
+                  },
+                  {
+                    "section": 33,
+                    "statuses": [
+                      14
+                    ]
+                  }
+                ]
+              }
+            },
+            "effects": {
+              "9": {
+                "kind": "playerShot"
+              },
+              "28": {
+                "kind": "playerShot"
+              },
+              "33": {
+                "kind": "enemyFirst",
+                "missRoll": 1
+              },
+              "66": {
+                "kind": "enemyFirst",
+                "missRoll": 1
+              },
+              "123": {
+                "kind": "playerShot"
+              },
+              "161": {
+                "kind": "playerShot"
+              },
+              "176": {
+                "kind": "playerShot"
+              },
+              "188": {
+                "kind": "unseenHit"
+              },
+              "261": {
+                "kind": "playerShot"
+              }
+            }
+          }
+        },
+        "part": {
+          "shields": 4
+        }
+      }
+    }
+  ]
+}

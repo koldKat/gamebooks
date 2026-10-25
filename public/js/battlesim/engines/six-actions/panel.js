@@ -2,7 +2,7 @@ import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { sixActionsOpponentFields } from './opponents.js';
 import { newSixActionsCharacter, sixActionsCheck, startSixActionsFight,
   sixActionsRound, sixActionsPostCheck } from './core.js';
-import { SIX_ACTIONS_FIGHTS, SIX_ACTIONS_CHECKS, SIX_ACTIONS_WEAPONS } from './roster.js';
+import { SIX_ACTIONS_FIGHTS, SIX_ACTIONS_CHECKS, SIX_ACTIONS_WEAPONS, SIX_ACTIONS_RULES } from './roster.js';
 
 const ID = 'sim658';
 const escape = value => String(value).replace(/[&<>"']/g,
@@ -73,7 +73,7 @@ export function createSixActionsPanel({ document, t, getRun, getBookId, saveStat
     const entry = SIX_ACTIONS_FIGHTS.find(c => c.section === Number(el('context').value));
     el('secondThreshold-row').hidden = !entry?.manualSecondThreshold;
     el('remainingEnemies-row').hidden = !entry?.manualEnemies;
-    if (entry?.manualEnemies && data()?.fight?.config.section === 90) {
+    if (entry?.manualEnemies && data()?.fight?.config.section === SIX_ACTIONS_RULES.carryRemainingFrom) {
       el('remainingEnemies').value = String(data().fight.remaining);
     }
     el('contextNote').textContent = entry?.manualShots ? tk('manualShotsNote')

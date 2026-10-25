@@ -17,7 +17,7 @@ function fixture() {
     pending: { events: [], player: { total: 16 }, rolls: [{ total: 13 }], enemyDamage: 0,
       hits: [{ index: 0, damage: 2 }], selection: { attackBonus: true, bonusHit: 0, defensePoints: 2, preventSpecial: true } },
   };
-  const context = vm.createContext({ currentBookId: 524, pt: { sim524: { fight, log: [], history: [], potions: 3, provisions: 2 } },
+  const context = vm.createContext({ GARDEN_ENCOUNTERS: JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/524.json', import.meta.url), 'utf8')).enemies.map(row => row.stats.entry), currentBookId: 524, pt: { sim524: { fight, log: [], history: [], potions: 3, provisions: 2 } },
     document: { getElementById: node, activeElement: null }, t: key => key, escapeHtml: String });
   context.currentPlaythrough = () => context.pt;
   const source = readFileSync(new URL('../../../public/js/battlesim/battlesim524.js', import.meta.url), 'utf8')

@@ -9,7 +9,7 @@ import { createRealmCharacter, initialRealmLife, realmStrike, realmChooseEquipme
   realmSleep, realmStrengthContest, realmVisit, realmReincarnate,
   realmUseCompanion, realmUseSpookBasher, realmUseHorrorgem, realmCallDragon }
   from '../../../public/js/battlesim/engines/grailquest/realm-of-chaos.js';
-import { REALM_ENCOUNTERS, REALM_DREAMS, REALM_EQUIPMENT, REALM_COMPANION }
+import { REALM_ENCOUNTERS, REALM_DREAMS, REALM_EQUIPMENT, REALM_COMPANION, REALM_RULES }
   from '../../../public/js/battlesim/engines/grailquest/realm-of-chaos-roster.js';
 
 const rolls = (...values) => {
@@ -295,4 +295,39 @@ test('Paralysis of Pip does not also silence an unaffected companion',()=>{
   realmUseCompanion(f,'mastiff');f.paralysis=1;
   const events=rollRealmRound(f,0,rolls(3,3,1,1,1,1,1,1));
   assert.equal(f.playerStrikes,0);assert.equal(events.filter(event=>event.kind==='ally').length,1);
+});
+
+test('dragon metadata controls source and limits while saved summons retain their stats',()=>{
+  const original=structuredClone(REALM_RULES);
+  try{
+    REALM_RULES.dragon={encounterId:40,maxCalls:4,oneUseCalls:2};
+    const f=start(40,{dragonStone:true,dragonCalls:1},{oneUseStone:true});
+    assert.equal(realmCallDragon(f,rolls(1,6)).friendly,true);
+    const source=REALM_ENCOUNTERS.find(spec=>spec.id===40).enemies[0];
+    assert.equal(f.ally.name,source.name);assert.equal(f.ally.hit,source.hit);
+    assert.equal(f.player.dragonCalls,2);
+    f.ally.life=7;f.ally.extension={keep:true};
+    const saved=JSON.parse(JSON.stringify(f));REALM_RULES.dragon.encounterId=12;
+    rollRealmRound(saved,0,()=>0);
+    assert.equal(saved.ally.life,7);assert.equal(saved.ally.hit,source.hit);
+    assert.deepEqual(saved.ally.extension,{keep:true});
+    saved.ally=null;assert.equal(realmCallDragon(saved,rolls()),null);
+    const p=character({dragonCalls:3});assert.equal(realmDragonReaction(p,rolls(1,6)).callsLeft,0);
+    assert.equal(realmDragonReaction(p,rolls()),null);
+  }finally{Object.assign(REALM_RULES,original);}
+});
+
+test('metadata controls manual-stat minimum and strict Ghast mode eligibility',()=>{
+  const original=structuredClone(REALM_RULES);
+  try{
+    REALM_RULES.manualStatsMinLife=8;
+    const manual=start(16,{}, {manualStats:{life:9,hit:6,bonus:0}});
+    assert.equal(manual.foes[0].maxLife,9);
+    REALM_RULES.ghastFullDiceId=40;
+    const full=start(40,{}, {ghastFullDice:true}),normal=JSON.parse(JSON.stringify(full));
+    normal.spec.id='40';
+    const fullHit=rollRealmRound(full,0,()=>.5).find(e=>e.kind==='player');
+    const normalHit=rollRealmRound(normal,0,()=>.5).find(e=>e.kind==='player');
+    assert.equal(fullHit.damage-normalHit.damage,full.playerHit);
+  }finally{Object.assign(REALM_RULES,original);}
 });

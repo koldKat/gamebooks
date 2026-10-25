@@ -1,6 +1,8 @@
 const checks = [], saves = [];
+const rosterSeed = ROSTER_SEEDS[724];
 const assert = (value, label) => { if (!value) throw Error(label); checks.push(label); };
 window.fetch = async (url, options = {}) => {
+  if (url === '/api/books/724/enemies' && !options.method) return new Response(JSON.stringify(rosterSeed), {status: 200});
   assert(url === '/api/books/724/state' && options.method === 'PUT', 'only intercepted state saves');
   saves.push(JSON.parse(options.body)); return new Response('{}', { status: 200 });
 };
@@ -17,7 +19,6 @@ if (language === 'bg') registerTranslations((await import('REPO/public/js/i18n/b
 app.setCurrentBookId(724);
 const run = { startedAt: 123, path: [1], sim723: { preserved: true } };
 app.state.playthroughs = [run]; app.state.activePtIndex = 0;
-const sim = await import('REPO/public/js/battlesim/battlesim724.js');
 const open = async () => {
   if (mode === 'mobile') await mobile.openSimForBook(724);
   else { await desktop.showBattleSimForBook(724); el('btn').click(); }
@@ -33,14 +34,15 @@ const apply = () => {
   el('role').value = 'wizard'; el('apply').click();
 };
 await open();
+const sim = await import('REPO/public/js/battlesim/battlesim724.js');
 assert(el('overlay').classList.contains('active'), 'panel opens');
 assert(!el('overlay').textContent.includes('battlesim724.'), 'translated labels: ' + (el('overlay').textContent.match(/battlesim724\.[\w.]+/g) ?? []).join(', '));
 assert(run.sim724.character === null && el('start').disabled, 'opening never rolls character');
-assert(el('encounter').options.length === 126, 'all encounter and spell entries');
+assert(el('encounter').options.length === 127, 'all encounter and spell entries');
 assert([...el('encounter').options].every(option => !/^(Section|Епизод)\s+\d/.test(option.textContent)), 'descriptive encounter names');
 assert(el('dartsGames').max === '2', 'darts count capped at two');
 apply(); assert(run.sim724.character.stamina === 99, 'manual stats save');
-el('start').click(); assert(el('apply').disabled && el('encounter').disabled, 'active fight locks setup');
+change('encounter', '29'); el('start').click(); assert(el('apply').disabled && el('encounter').disabled, 'active fight locks setup');
 for (let n = 0; n < 4; n++) { el('round').click(); el('skipLuck').click(); }
 assert(run.sim724.fight.outcome === 'win' && run.sim724.fight.destination === 209, 'ordinary encounter wins');
 assert(run.sim724.history.length === 1, 'victory recorded once');

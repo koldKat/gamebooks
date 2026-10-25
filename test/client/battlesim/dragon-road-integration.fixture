@@ -1,6 +1,8 @@
 const checks=[],saves=[],readingRequests=[];
+const rosterSeed=ROSTER_SEEDS[768];
 const assert=(value,label)=>{if(!value)throw Error(label);checks.push(label);};
 window.fetch=async(url,options={})=>{
+  if(url==='/api/books/768/enemies'&&!options.method)return new Response(JSON.stringify(rosterSeed),{status:200});
   if(url==='/api/books/768/reading-access'&&(!options.method||options.method==='GET')) {
     readingRequests.push(url);return new Response('{}',{status:200,headers:{'Content-Type':'application/json'}});
   }
@@ -12,7 +14,6 @@ const desktop=await import('REPO/public/js/battlesim/loader.js');
 const mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
 const {loadBattleSimTranslations}=await import('REPO/public/js/i18n/battlesim.js');
 const mode='MODE',language='LANGUAGE',el=key=>document.getElementById('sim768-'+key);
-const module=await import('REPO/public/js/battlesim/battlesim768.js');
 await loadBattleSimTranslations(768);
 app.setCurrentBookId(768);
 const run={startedAt:123,path:[1],sim757:{preserved:true}};
@@ -21,6 +22,7 @@ const open=async()=>{if(mode==='mobile')await mobile.openSimForBook(768);else{aw
 const change=(key,value)=>{el(key).value=value;el(key).dispatchEvent(new Event('change'));};
 const key=(target,code,name)=>target.dispatchEvent(new KeyboardEvent('keydown',{code,key:name,bubbles:true}));
 await open();
+const module=await import('REPO/public/js/battlesim/battlesim768.js');
 assert(el('overlay').classList.contains('active'),'real lazy loader opens');
 assert(el('title').textContent==='Пътят на дракона','Bulgarian source title in either app language');
 assert(!el('overlay').textContent.includes('battlesim768.'),'all labels translated');
@@ -30,7 +32,7 @@ for(const [key,value]of Object.entries({attack:12,defence:4,shooting:8,life:24,m
 el('apply').click();
 const enemyEditor=el('enemies').querySelector('.bsim-opponent-editor');
 const name=enemyEditor.querySelector('[role="combobox"]');
-name.focus();assert(enemyEditor.querySelector('[role="option"]'),'roster suggestions');
+name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));assert(enemyEditor.querySelector('[role="option"]'),'roster suggestions '+JSON.stringify({value:name.value,disabled:name.disabled}));
 key(name,'Escape','Escape');assert(el('overlay').classList.contains('active')&&name.getAttribute('aria-expanded')==='false','Escape closes suggestions first');
 name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));
 enemyEditor.querySelector('[role="option"]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));

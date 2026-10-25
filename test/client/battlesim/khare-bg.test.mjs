@@ -1,3 +1,4 @@
+import { loadFixtureRoster } from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -11,6 +12,8 @@ import { eat, nextDay, useLibra, healingSpell, herbs, scaldedMeal, prediction, w
 import { createState } from '../../../public/js/battlesim/books/722/state.js';
 import english from '../../../public/js/i18n/en/battlesim/battlesim722.js';
 import bulgarian from '../../../public/js/i18n/bg/battlesim/battlesim722.js';
+
+await loadFixtureRoster(722);
 
 const rolls = (...values) => () => { assert.ok(values.length, 'Unexpected die'); return values.shift(); };
 const hero = changes => ({ ...newCharacter('wizard', () => 6), luck: 0, ...changes });
@@ -43,6 +46,10 @@ test('722: actual backend rewards only fresh player wins/losses, never spectator
     get: () => ({id: 722, total_sections: 511, is_container: 0})})};
   const context = {module: {exports: {}}, events, require(name) {
     if (name === './connection') return {db};
+    if (name === './diamonds') return {diamondInfoForUser: () => ({})};
+    if (name === './rubies') return {rubyInfoForUser: () => ({}), createRubyCompletionChecker: () => () => 0};
+    if (name === './heartbeat-coins') return {advanceHeartbeatCoins: () => 0};
+    if (name === './job-xp') return {getJobTitle: () => 'test'};
     if (name === './auth') return {generateToken: () => 'test-only'};
     if (name === '../impersonation-context') return {isImpersonatingContext: () => false};
     if (name === '../clean-run') return {isCleanRun: () => false};

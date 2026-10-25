@@ -1,3 +1,4 @@
+import {loadFixtureRoster} from './roster-fixtures.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {ENCOUNTERS} from '../../../public/js/battlesim/books/903/definition.js';
@@ -5,6 +6,8 @@ import {createCharacter, lookupCode, startFight, applyCode} from '../../../publi
 import {createState} from '../../../public/js/battlesim/books/903/state.js';
 import en from '../../../public/js/i18n/en/battlesim/battlesim903.js';
 import bg from '../../../public/js/i18n/bg/battlesim/battlesim903.js';
+
+await loadFixtureRoster(903);
 
 test('all fifty codes preserve the original lookup symbols', () => {
   const rows = ['.-...', '-..+.', '..-.+', '..+--', '.+-.-', '+..-.', '-.--.', '..+..', '++-.-', '.-.-+'];

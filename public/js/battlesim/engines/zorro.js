@@ -1,11 +1,11 @@
 const number = value => Math.max(0, Number(value) || 0);
 
-export function startZorroFight(player, encounter, removed = 0, priorDamage = 0) {
+export function startZorroFight(player, encounter, removed = 0, priorDamage = 0, settings = {}) {
   const p = Object.fromEntries(Object.entries(player).map(([key, value]) => [key, number(value)]));
   const enemies = (encounter.enemies || [encounter.enemy]).map(enemy => ({ ...enemy, life: enemy.zhivot }));
   const count = Math.min(enemies.length - 1, Math.max(0, Math.floor(number(removed))));
   enemies.splice(enemies.length - count, count);
-  if (encounter.id === 'rosario') enemies[0].life = Math.max(0, enemies[0].life - priorDamage);
+  if (settings.priorDamage) enemies[0].life = Math.max(0, enemies[0].life - priorDamage);
   return {
     player: p, enemies, type: encounter.type, encounterId: encounter.id,
     playerLife: p.zhivot, initialLife: p.zhivot, nextEnemy: 0, rounds: 0,

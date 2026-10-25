@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "bookId": 716,
+  "family": "standalone",
+  "source": "Original exact named-opponent predicate and dynamic enemy-stat subtraction relationships. Adopts one existing row without changing its printed stats; player stats, zero floors and procedural combat remain code.",
+  "enemies": [
+    {
+      "key": "conditional-player-stats",
+      "name": "Бързака",
+      "attack": 18,
+      "defense": 12,
+      "hp": 10,
+      "pb": 4,
+      "adopt": {
+        "name": "Бързака",
+        "attack": 18,
+        "defense": 12,
+        "hp": 10,
+        "pb": 4
+      },
+      "stats": {
+        "schemaVersion": 1,
+        "family": "standalone",
+        "dataset": "ENCOUNTER_RULES",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "enemyName": "Бързака",
+          "subtractPlayerStats": {
+            "ataka": "barzina",
+            "zashtita": "reflekt"
+          }
+        },
+        "part": {
+          "enemyName": "Бързака",
+          "subtractPlayerStats": {
+            "ataka": "barzina",
+            "zashtita": "reflekt"
+          }
+        },
+        "count": 1
+      }
+    }
+  ]
+}
