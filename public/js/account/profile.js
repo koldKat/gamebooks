@@ -257,6 +257,12 @@ function _renderJobXpSummary(data, displayedXp, visible) {
     const bar = document.getElementById(`${prefix}-job-xp-bar`);
     const nextRuby = document.getElementById(`${prefix}-job-xp-next-ruby`);
     if (nextRuby) nextRuby.hidden = !visible || !Number.isSafeInteger(data?.diamondEventsUntilNext);
+    const rubyCost = document.getElementById(`${prefix}-job-xp-ruby-cost`);
+    if (rubyCost) {
+      const rate = data?.diamondEventsPerDiamond;
+      rubyCost.hidden = !visible || !Number.isFinite(rate) || rate <= 0;
+      if (!rubyCost.hidden) rubyCost.textContent = `${Math.ceil(rate).toLocaleString()} EV / ruby`;
+    }
     if (bar && visible && Number.isSafeInteger(data?.diamondEventsUntilNext)) {
       const events = data.diamondEventsUntilNext;
       bar.setAttribute('data-tooltip', `${events.toLocaleString()} XP event${events === 1 ? '' : 's'} until next ruby`);
