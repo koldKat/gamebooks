@@ -23,6 +23,7 @@
 /* Use a fixed desktop height so controls and logs do not resize the dialog during combat. */
 .bsim-modal { --bsim-text-size: 0.75rem; width: min(720px, 95vw); height: min(860px, 90vh); color-scheme: dark; }
 .bsim-modal [hidden] { display: none !important; }
+:where(.bsim-modal) fieldset { border: 1px solid #374151; border-radius: 6px; min-width: 0; }
 :where(.bsim-modal) button:where(:not(.inv-close-btn, .inv-qty-btn, .bsim-sync-btn)) {
   appearance: none;
   background: #1f2937;

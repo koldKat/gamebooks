@@ -194,9 +194,52 @@ export function renderBooksXpSummary(data, opts = {}) {
 }
 
 // Separate progression: one point per recorded non-heartbeat event, without XP boosts.
+let _jobToken = null, _jobDisplayedXp = null, _jobTargetXp = null, _jobData = null;
+let _jobFrame = null, _jobAnimationGeneration = 0;
+
+function _animateJobXp() {
+  if (_jobFrame !== null || _jobDisplayedXp === _jobTargetXp) return;
+  const from = _jobDisplayedXp, to = _jobTargetXp;
+  const level = Math.floor((-1 + Math.sqrt(1 + 8 * to / 1000)) / 2);
+  const duration = Math.max(1, level) * XP_ANIM_MS_PER_LEVEL;
+  const start = performance.now(), generation = _jobAnimationGeneration;
+  function step(now) {
+    if (generation !== _jobAnimationGeneration) return;
+    _jobFrame = null;
+    if (getToken() !== _jobToken) { renderJobXpSummary(null); return; }
+    const progress = Math.min(1, Math.max(0, (now - start) / duration));
+    _jobDisplayedXp = from + (to - from) * progress;
+    _renderJobXpSummary(_jobData, _jobDisplayedXp, true);
+    if (progress < 1) _jobFrame = requestAnimationFrame(step);
+    else _animateJobXp();
+  }
+  _jobFrame = requestAnimationFrame(step);
+}
+
 export function renderJobXpSummary(data) {
-  const visible = !!getToken() && Number.isSafeInteger(data?.jobXp);
+  const token = getToken();
+  const visible = !!token && Number.isSafeInteger(data?.jobXp);
   const xp = visible ? Math.max(0, data.jobXp) : 0;
+  _jobData = data;
+  if (!visible || token !== _jobToken || _jobDisplayedXp === null || xp < _jobTargetXp) {
+    if (_jobFrame !== null) cancelAnimationFrame(_jobFrame);
+    _jobFrame = null;
+    _jobAnimationGeneration++;
+    _jobToken = visible ? token : null;
+    _jobDisplayedXp = visible ? xp : null;
+    _jobTargetXp = visible ? xp : null;
+    _renderJobXpSummary(data, xp, visible);
+    return;
+  }
+  _jobTargetXp = xp;
+  // Retain the current tween on repeat snapshots; coalesce subsequent gains
+  // into one next target instead of accumulating a queue for every SSE event.
+  _renderJobXpSummary(data, _jobDisplayedXp, true);
+  _animateJobXp();
+}
+
+function _renderJobXpSummary(data, displayedXp, visible) {
+  const xp = Math.floor(displayedXp);
   const level = Math.floor((-1 + Math.sqrt(1 + 8 * xp / 1000)) / 2);
   const { levelXp, nextLevelXp } = _xpLevelBounds(xp);
   for (const prefix of ['books', 'play']) {
@@ -211,8 +254,8 @@ export function renderJobXpSummary(data) {
     const titleEl = document.getElementById(`${prefix}-job-xp-title`);
     if (titleEl) titleEl.textContent = visible ? t('job.title.' + Math.min(level, 20)) : '';
     const label = document.getElementById(`${prefix}-job-xp-label`);
-    if (label) label.textContent = visible ? `${xp.toLocaleString()} XP · ${(nextLevelXp - xp).toLocaleString()} to next LVL` : '';
-    wrap.setAttribute('aria-label', visible ? `Job XP: level ${level}, ${xp} of ${nextLevelXp}` : 'Job XP');
+    if (label) label.innerHTML = visible ? `<span class="job-xp-val">${xp.toLocaleString()} EV</span> · ${(nextLevelXp - xp).toLocaleString()} to next LVL` : '';
+    wrap.setAttribute('aria-label', visible ? `Job events: level ${level}, ${xp} of ${nextLevelXp}` : 'Job events');
   }
 }
 

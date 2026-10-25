@@ -425,6 +425,85 @@
                          New encounter setup copies metadata; existing serialized fights stay intact.
                          Book definitions supply initial hero attributes and the equipment-slot list;
                          rendering applies defaults only to absent setup values and never rewrites saves.
+                         Optional book ability catalogs and combat rules are copied into each new
+                         fight. Resuming keeps that snapshot; omitted options retain the original
+                         family rules. Catalogs bound the inventory and equipment ability choices.
+                         Book rules can omit death penalties and death moves without deleting saved
+                         character metadata. Panel factories and book actions remain transient
+                         dependencies rather than functions stored in player state.
+                         Ability specifications also supply timed stat changes, fixed-stat damage,
+                         status schedules and end-of-round effects. Opening attacks retain their
+                         damage kind and declared career or weapon restrictions; deferred opening
+                         dice remain editable and serializable before their damage is applied.
+                         Catalog rules also describe stat spending and matching, temporary speed
+                         locks, incoming-hit replacement, recoil and health-triggered passives.
+                         Their roll data and effects survive JSON resume; panel choices validate
+                         the currently available stat budget without changing stored player data.
+                         catalog-actions.js resolves charged attacks and responses to declared
+                         opponent actions. Passive target choices use the encounter queue, retaining
+                         one choice per triggering die through save and resume. Doubles, revival,
+                         summons and exploding score dice are catalog-driven. travel-rules.js keeps
+                         discovered gold, loot conversion and equipment replacement within the book
+                         character; it has no account-currency or player-database access. Backpack
+                         effects consume an existing character item with the normal round limit.
+                         Encounter catalogs may declare named ability immunity, piercing, accepted
+                         reroll faces, roll-triggered healing and a survival-round victory. Consecutive
+                         combats pause at an explicit transition, retaining wounds and consumables
+                         while resetting combat abilities. Declared retreats record a neutral outcome
+                         without a defeat or win reward. Legion profiles and exceptions remain in
+                         the database roster; its family factory never embeds encounter tables.
+                         Source roll rules distinguish newly rolled dice from accepted speed results,
+                         allowing rerolls before a declared falling hazard is resolved. Declared
+                         round-start regeneration, hit-triggered healing and health thresholds retain
+                         their source timing. Rune actions check possession and per-combat usage.
+                         Legion outcome recording prepares the next setup with the actual remaining
+                         health or declared defeat recovery, preserving the historical fight itself.
+                         Fixed enemy attacks resolve without damage dice, committing their charge
+                         only after reactions; reversing a round cancels its charge. Explicit attack
+                         proxies let a hero select a resource after winning against its attacker.
+                         End effects honor their declared armour handling. Accepted-roll hazards,
+                         recursive enemy damage dice and round-specific recovery remain roster data.
+                         Resource Armour and unused damage attributes may retain printed nulls;
+                         damage calculations treat missing Armour as no absorption without changing
+                         its stored value. Named death rules remove only their own effects. Round-win
+                         hooks also run after a reversing ability, and same-battle form transitions
+                         retain wounds and ability usage. Face-triggered extra dice and healing are
+                         declared independently from recursive damage-die explosions.
+                         Accepted Speed and damage hazards resolve after eligible rerolls, with
+                         revival checked before any surviving attack. Named weaknesses scale only
+                         their declared ability effects. Resource-dependent stats keep their printed
+                         baseline and apply existing modifiers afterward. Rod placements validate
+                         unique passages and preserve missing stats; companion survival adds to
+                         damage scores without changing damage dice.
+                         Ally-led combats retain a separate player snapshot. A fallen ally pauses
+                         for explicit takeover against the wounded enemy; ally ability usage does
+                         not consume the player&#39;s uses. Victory restores the player before normal
+                         recovery and outcome recording. Companion survival stays in character data.
+                         Declared group attacks resolve each living enemy&#39;s damage separately after
+                         one lost Speed contest, preserving round ability limits and delaying end
+                         effects until all attacks finish. Roster rules can keep the highest damage
+                         dice, define alternate resource victories and carry actual Armour between
+                         encounters with a separate recovery checkpoint.
+                         Round-start form tables preserve one enemy Health pool while replacing
+                         only declared form stats and rules. Absorption can replace a winning
+                         attack with a stat-reduction test against an indestructible opponent.
+                         Friendly objectives have separate Health and survival outcomes. Rolled
+                         retaliation is saved as a pending response, with declared killing-blow
+                         exceptions, rather than consuming hidden random rolls during rendering.
+                         Roster conditions can apply explicit flanking Armour and limited protection
+                         against piercing, without changing the stored printed profile. Round-local
+                         shields spend a combat stat and suppress only their named end effect.
+                         Periodic objective strikes reset their source wave on schedule; controlled
+                         end effects retain their new target and stop repeating the control test.
+                         Optional panel controls collect source encounter choices without changing
+                         the default family panel. Book state adapters delegate to a shared guard
+                         that verifies book, run and fight identity before saving. Simulator item
+                         modifiers remain separate from the universal inventory and equipment UI;
+                         they do not replace its items, slots or capacity.
+                         Potion-effect counters record strength, duration and remaining uses inside
+                         combat setup. They share the one-potion-per-round limit and Good Taste
+                         calculation, retain spent uses after defeat, and never create or consume
+                         entries in the universal inventory or equipment.
                          Aspect cycles expose one stored form at a time, pausing their main-opponent
                          timer during aspect fights. Target previews run against copies of that state.
                          Ice-lake encounters store position and crack progress; optional advances and

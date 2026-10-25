@@ -7,6 +7,7 @@ import {resolveDestinyAbilityRoll} from './ability-rolls.js';
 import {applyDestinyChallengeAction} from './challenges.js';
 import {createWinterFight, useWinterAction} from './winters-fury.js';
 import {createDestinyCharacter, attachDestinyCharacter, recordDestinyOutcome, resolveDestinyRingLoss} from './character.js';
+import {applyDestinyTravelAction} from './travel-rules.js';
 
 export function createDestinySession(input = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new RangeError('Invalid simulator session');
@@ -18,7 +19,7 @@ export function createDestinySession(input = {}) {
   return next;
 }
 
-export function beginDestinySession(session, setup, {roster, outcomeId} = {}) {
+export function beginDestinySession(session, setup, {roster, outcomeId, catalog, bookRules, createFight = createWinterFight} = {}) {
   if (session.challenge?.status === 'active') throw new RangeError('Finish the active challenge first');
   if (session.fight?.status === 'active') throw new RangeError('Finish the active fight before changing setup');
   if (session.fight && !session.character?.outcomeIds?.includes(session.fightId)) throw new RangeError('Record the finished outcome before starting again');
@@ -30,17 +31,18 @@ export function beginDestinySession(session, setup, {roster, outcomeId} = {}) {
   const equipment = setup.equipment ?? next.character.equipment ?? {};
   next.character = createDestinyCharacter({...next.character, attributes: setup.hero, abilities: owned, equipment});
   const options = {abilities: owned, equipment, character: next.character,
-    roster, fimbulwinter: !!setup.fimbulwinter, bannerLit: !!setup.bannerLit, roughRide: !!setup.roughRide};
-  if (setup.section) next.fight = createWinterFight(setup.hero, setup.section, options);
+    roster, catalog, bookRules, encounterOptions:structuredClone(setup.encounterOptions||{}), fimbulwinter: !!setup.fimbulwinter, bannerLit: !!setup.bannerLit, roughRide: !!setup.roughRide};
+  if (setup.section) next.fight = createFight(setup.hero, setup.section, options);
   else next.fight = attachDestinyCharacter(abilities.configureDestinyAbilities(
-    combat.createDestinyFight(setup.hero, setup.opponents), options.abilities, options.equipment), next.character);
+    combat.createDestinyFight(setup.hero, setup.opponents), options.abilities, options.equipment, { catalog, bookRules }), next.character);
   next.fightId = outcomeId;
   delete next.challenge;
   delete next.outcome;
   return next;
 }
 
-export function applyDestinySessionAction(session, action, payload = {}, {roster, roll, timestamp = Date.now()} = {}) {
+export function applyDestinySessionAction(session, action, payload = {}, {roster, roll, timestamp = Date.now(), useBookAction = useWinterAction, catalog} = {}) {
+  if(action==='story-action')return applyDestinyTravelAction(session,payload.name,payload.options,catalog??session.fight?.abilityCatalog);
   if (action.startsWith('challenge-')) return applyDestinyChallengeAction(session, action, {roll,timestamp});
   const next = createDestinySession(session), fight = next.fight;
   if (!fight) throw new RangeError('Start a fight first');
@@ -58,6 +60,7 @@ export function applyDestinySessionAction(session, action, payload = {}, {roster
       combat.settleDestinyFight(next.fight, roll);
       break;
     case 'start-round': next.fight = combat.startDestinyRound(fight, payload.target, roll, options); break;
+    case 'next-combat': next.fight = combat.continueDestinyCombat(fight); break;
     case 'retarget': next.fight = combat.retargetDestinyRound(fight, payload.target); break;
     case 'roll-speed': next.fight = combat.rollDestinySpeed(fight, roll); break;
     case 'resolve-speed': next.fight = combat.resolveDestinySpeed(fight, roll); break;
@@ -71,16 +74,32 @@ export function applyDestinySessionAction(session, action, payload = {}, {roster
     case 'advance-path': next.fight = path.advanceDestinyPath(fight); break;
     case 'path-orb': next.fight = path.useDestinyPathOrb(fight, payload.socket, payload.target); break;
     case 'ability': next.fight = abilities.useDestinyAbility(fight, payload.name, options, roll); break;
+    case 'backpack-item': next.fight = abilities.useDestinyBackpackItem(fight,payload.index,roll); break;
+    case 'potion-modifier': next.fight = abilities.useDestinyPotionModifier(fight,payload.attribute,roll); break;
     case 'resolve-ability': next.fight = resolveDestinyAbilityRoll(fight, roll, {roster}); break;
     case 'defeat-choice': next.fight = abilities.resolveDestinyDefeatChoice(fight, payload.target, roll); break;
+    case 'damage-choice': next.fight = abilities.resolveDestinyDamageChoice(fight, payload.target, roll); break;
     case 'sacrifice-choice': next.fight = abilities.resolveDestinyAbilitySacrifice(fight, payload.name ?? null, roll); break;
     case 'gambit-choice': next.fight = abilities.resolveDestinyGambit(fight, payload.name ?? null); break;
-    case 'book-action': next.fight = useWinterAction(fight, payload.name, {...options, roster}, roll); break;
+    case 'book-action': next.fight = useBookAction(fight, payload.name, {...options, roster}, roll); break;
     case 'record-outcome': {
       const character = fight.character || next.character;
       const result = recordDestinyOutcome(character, fight, next.fightId, roll);
       next.character = result.character;
-      next.fight.character = structuredClone(result.character);
+      const preserveHealth=(fight.encounter?.persistHeroHealth||fight.encounter?.carryHeroHealth)&&['win','retreat'].includes(fight.status);
+      const recoverHealth=fight.encounter?.recoverOnDefeat&&fight.status==='loss';
+      if(result.recorded&&(preserveHealth||recoverHealth)){
+        const health=fight.status==='loss'?fight.hero.maxHealth:fight.hero.health;
+        next.setup.hero={...next.setup.hero,health};
+        next.character.attributes={...next.character.attributes,health};
+      }
+      if(result.recorded){
+        const recoverArmour=fight.status==='loss'&&fight.encounter?.recoverArmourOnDefeat||fight.status==='win'&&fight.encounter?.recoverArmourOnVictory;
+        const armour=recoverArmour ? character.combatRecovery?.armour ?? fight.hero.normal.armour :
+          fight.status==='win'&&fight.encounter?.persistHeroArmour ? fight.encounter.remainingHeroArmour : undefined;
+        if(armour!==undefined){next.setup.hero={...next.setup.hero,armour};next.character.attributes={...next.character.attributes,armour};}
+      }
+      next.fight.character = structuredClone(next.character);
       if (result.recorded || !next.outcome) next.outcome = Object.fromEntries(Object.entries(result).filter(([key]) => key !== 'character'));
       if (result.recorded) {
         const ts=Math.max(timestamp,next.history.reduce((max,entry)=>Math.max(max,entry.ts??entry.timestamp??0),0)+1);

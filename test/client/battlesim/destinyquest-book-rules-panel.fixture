@@ -1,0 +1,59 @@
+localStorage.setItem('gamebook_lang','en');
+const app=await import('REPO/public/js/core/state.js');
+const {t}=await import('REPO/public/js/i18n.js');
+const {loadBattleSimTranslations}=await import('REPO/public/js/i18n/battlesim.js');
+const {prepareBattleSimLayout}=await import('REPO/public/js/battlesim/layout.js');
+const {definition:base}=await import('REPO/public/js/battlesim/books/1285/definition.js');
+const {createState}=await import('REPO/public/js/battlesim/books/1285/state.js');
+const {createDestinyPanel}=await import('REPO/public/js/battlesim/engines/destinyquest/panel.js');
+await loadBattleSimTranslations(1285);
+app.setCurrentBookId(1285);
+const penalties=['weeping-wounds','head-blow','chronic-convulsions'];
+app.state.playthroughs=[{startedAt:1,path:[1],notebook:'preserve',sim1285:{
+  character:{defeats:4,nextPenaltyAt:5,penalties,pendingRingDestruction:true,outcomeIds:[],notes:'keep'},
+  setup:{hero:{speed:20,brawn:3,magic:1,armour:0,health:5,maxHealth:30},abilities:{adrenaline:1}},fight:null,history:[],
+}}];app.state.activePtIndex=0;
+let saves=0;
+const definition={...base,bookRules:{deathPenalties:false,deathMoves:false},abilityCatalog:{
+  adrenaline:{category:'sp',phases:['speed'],attribute:'speed',amount:2,duration:2},
+  savagery:{category:'mo',phases:['speed','damage','end'],chooseAttribute:['brawn','magic'],amount:2},
+}};
+const state=createState(()=>({getRun:app.currentPlaythrough,getBookId:()=>1285,saveState:()=>{saves++;}}));
+const panel=createDestinyPanel({document,definition,state,getRoster:()=>[],t,
+  showAlert:message=>{throw Error(message);},showConfirm:(_message,confirmed)=>confirmed(),
+  getButtonRow:()=>document.getElementById('m-sim-btn-row')||document.getElementById('main-screen'),
+});
+const el=key=>document.getElementById('sim1285-'+key),data=()=>app.currentPlaythrough().sim1285;
+let scenarios=0;
+const check=(condition,message)=>{if(!condition)throw Error(message);scenarios++;};
+const click=key=>{if(!el(key))throw Error('Missing control '+key);el(key).click();};
+const before=JSON.stringify(app.currentPlaythrough());
+panel.init();panel.setVisible(true);click('btn');prepareBattleSimLayout(el('overlay'));
+check(JSON.stringify(app.currentPlaythrough())===before,'rendering preserves the existing run and character');
+check(!el('penalty-head-blow')&&!el('penalty-weeping-wounds'),'penalties absent from books without that rule');
+check(!el('ring-loss')&&!el('setup').disabled,'foreign pending ring metadata does not lock the book');
+check([...el('owned').querySelector('select').options].map(option=>option.value).sort().join(',')==='adrenaline,savagery','ability picker uses exactly the book catalog');
+const editor=el('manualOpponent');editor.querySelector('[role=combobox]').value='Custom opponent';
+editor.querySelector('[data-stat=health]').value='100';
+click('start');
+check(data().fight.bookRules.deathPenalties===false&&data().fight.bookRules.deathMoves===false,'new custom fight receives the book rules');
+check(Object.keys(data().fight.abilityCatalog).length===2,'fight saves its exact catalog');
+check(el('setup').disabled,'active fight locks setup');
+click('next');el('useAbility').value='adrenaline';el('useAbility').dispatchEvent(new Event('change',{bubbles:true}));click('ability');
+check(data().fight.used.adrenaline===1&&data().fight.phase==='speed'&&!data().fight.turn.pendingAbility,'speed ability ignores foreign head-blow penalty');
+const saved=JSON.stringify(data());app.currentPlaythrough().sim1285=JSON.parse(saved);panel.render();
+check(JSON.stringify(data())===saved,'rendering a resumed fight does not rewrite its rule snapshot');
+click('finishFight');click('record-outcome');
+check(data().character.defeats===5&&data().character.nextPenaltyAt===10,'fifth loss records without a penalty roll');
+check(data().character.penalties.join(',')===penalties.join(',')&&data().character.pendingRingDestruction,'saved foreign metadata is preserved');
+check(!el('setup').disabled&&!el('ring-loss'),'recorded result unlocks setup without a ring-loss action');
+check(data().history.length===1&&data().character.outcomeIds.length===1,'outcome recorded once');
+check(app.currentPlaythrough().notebook==='preserve'&&data().character.notes==='keep','unrelated data preserved');
+check(!el('overlay').querySelector('.bsim-col-right input,.bsim-col-right select'),'all setup controls remain on the left');
+const left=el('overlay').querySelector('.bsim-col-left').getBoundingClientRect();
+for(const control of el('overlay').querySelectorAll('input,select,button:not(.inv-close-btn)'))
+  if(control.getClientRects().length&&control.getBoundingClientRect().right>left.right+1)throw Error('Overflowing control '+control.id);
+check(document.documentElement.scrollWidth<=innerWidth+1,'no page horizontal overflow');
+const style=getComputedStyle(el('start'));
+check(style.borderTopStyle==='solid'&&style.backgroundColor==='rgb(31, 41, 55)','standard themed button');
+document.body.dataset.test=JSON.stringify({width:innerWidth,scenarios,saves,playerDatabaseWrites:0,panelOnly:true,bookOptions:true});

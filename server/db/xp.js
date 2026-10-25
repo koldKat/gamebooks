@@ -691,6 +691,7 @@ SIM_HISTORY_KEYS.push('sim903');
 SIM_HISTORY_KEYS.push('sim904');
 SIM_HISTORY_KEYS.push('sim906');
 SIM_HISTORY_KEYS.push('sim1285');
+SIM_HISTORY_KEYS.push('sim1286');
 const RETIRED_SIM_HISTORY_KEYS = ['sim758', 'sim2116'];
 
 function processStateXp(userId, bookId, oldState, newState, totalSections) {

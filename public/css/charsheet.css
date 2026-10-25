@@ -139,6 +139,9 @@ body.sidebar-collapsed #play-bottom-stack {
   background: #f5a623;
   border-radius: 3px;
 }
+#play-job-xp .job-xp-bar {
+  background: #374151;
+}
 #play-xp-sub-row {
   display: flex;
   flex-wrap: wrap;

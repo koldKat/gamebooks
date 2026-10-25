@@ -1,5 +1,5 @@
 import { destinyDie } from './damage.js';
-import { addDestinyStatEffect, destinyStat, observeDestinyHealth, isDestinyOpponentActive, destinyAttackerTarget } from './effects.js';
+import { addDestinyStatEffect, destinyStat, observeDestinyHealth, isDestinyOpponentActive, destinyAttackerTarget, hasDestinyAbility, onDestinyHeroDice, applyDestinyHeroRoll } from './effects.js';
 import { queueDestinyEncounterEvent } from './encounter-events.js';
 
 const doubles = values => values.length > 1 && new Set(values).size < values.length;
@@ -24,6 +24,18 @@ export function onDestinyHeroSpeedRoll(fight, indices, roll) {
       values[index] = destinyDie(roll);
       fight.history.push({ type: 'forced-speed-reroll', name: forced.name, round: fight.round, index, previous, result: values[index] });
     }
+  }
+  if (fight.turn.speedFace) for (const index of indices) {
+    if (values[index]===fight.turn.speedFace.from) values[index]=fight.turn.speedFace.to;
+  }
+  applyDestinyHeroRoll(fight,values,'speed',indices);onDestinyHeroDice(fight,values);
+  for (const [name,spec] of Object.entries(fight.abilityCatalog||{})) {
+    const strike=spec.heroSpeedFaceStrike;
+    if(!strike || !hasDestinyAbility(fight,name) || fight.equipment?.mainHand?.type!==strike.requiresMainHand || fight.equipment?.leftHand?.type!==strike.requiresLeftHand)continue;
+    const amount=strike.damageFromFastestWeapon?Math.max(fight.equipment.mainHand.speed||0,fight.equipment.leftHand.speed||0):strike.amount;
+    if(!amount)continue;
+    const returnPhase=fight.phase;
+    for(const index of indices)if(values[index]===strike.face)queueDestinyEncounterEvent(fight,{kind:'damage-choice',name,amount},returnPhase,roll);
   }
   for (const rule of fight.encounter?.heroSpeedFaces || []) {
     if (rule.requiresAlive?.some(target => !isDestinyOpponentActive(fight, target))) continue;
@@ -53,6 +65,7 @@ export function onDestinyOpponentSpeedRoll(fight, values) {
   const target = destinyAttackerTarget(fight);
   for (const rule of fight.encounter?.opponentSpeedDoubles || []) {
     if (rule.targets && !rule.targets.includes(target)) continue;
+    if (rule.amount) hurt(fight, rule.amount, rule.name);
     if (rule.forceLoss) {
       fight.turn.forcedOpponentWin = true;
       if (rule.blockCategories) fight.encounter.blockedRounds = { from: fight.round, until: fight.round, categories: [...rule.blockCategories] };

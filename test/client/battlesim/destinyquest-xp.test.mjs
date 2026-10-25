@@ -7,9 +7,9 @@ const source=readFileSync(new URL('../../../server/db/xp.js',import.meta.url),'u
 const registry=source.slice(source.indexOf('const SIM_HISTORY_KEYS ='),source.indexOf('function processStateXp('));
 const start=source.indexOf('    for (const simKey of SIM_HISTORY_KEYS) {');
 const end=source.indexOf('\n  }\n\n  // Award every increase',start);
-const awards=(oldSession,newSession)=>{
+const awards=(oldSession,newSession,key='sim1285')=>{
   assert(start>0&&end>start);const result=[];
-  runInNewContext(registry+'\n'+source.slice(start,end),{oldPt:{sim1285:oldSession},newPt:{sim1285:newSession},userId:123,awardXp:(...args)=>result.push(args)});
+  runInNewContext(registry+'\n'+source.slice(start,end),{oldPt:{[key]:oldSession},newPt:{[key]:newSession},userId:123,awardXp:(...args)=>result.push(args)});
   return result;
 };
 const finish=(session=createDestinySession(),id='first',lose=false)=>{
@@ -37,4 +37,11 @@ test('challenge results and an unfinished battle do not earn combat XP',()=>{
   assert.deepEqual(awards(null,{history:[{outcome:'success',timestamp:1234},{outcome:'failure',timestamp:1235}]}),[]);
   const active=beginDestinySession(createDestinySession(),{hero:{health:100},opponents:[{health:1}]},{outcomeId:'active'});
   assert.deepEqual(awards(null,active),[]);
+});
+
+test('Legion outcomes use their own registered XP references and remain idempotent',()=>{
+  const win=finish(),loss=finish(createDestinySession(),'loss',true);
+  assert.deepEqual(awards(null,win,'sim1286'),[[123,'battlesim_win','sim1286:1234']]);
+  assert.deepEqual(awards(null,loss,'sim1286'),[[123,'battlesim_loss','sim1286:1234']]);
+  assert.deepEqual(awards(win,JSON.parse(JSON.stringify(win)),'sim1286'),[]);
 });

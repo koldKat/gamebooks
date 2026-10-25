@@ -52,7 +52,7 @@ export function configureWinterEncounter(fight, section, { roster, fimbulwinter 
   return next;
 }
 
-export function createWinterFight(hero, section, { roster, abilities = {}, equipment = {}, character = null, fimbulwinter = false, bannerLit = false, roughRide = false } = {}) {
+export function createWinterFight(hero, section, { roster, abilities = {}, equipment = {}, character = null, fimbulwinter = false, bannerLit = false, roughRide = false, catalog, bookRules } = {}) {
   if (!WINTER_IMPLEMENTED_ENCOUNTERS.includes(String(section))) throw new RangeError('This encounter still needs its complete rules adapter');
   const preset = winterRosterFor(roster, section);
   const parts = preset.parts.filter(part => !preset.adapter?.selectRoles || preset.adapter.selectRoles.includes(part.role));
@@ -63,7 +63,7 @@ export function createWinterFight(hero, section, { roster, abilities = {}, equip
     for (const key of ['brawn', 'magic']) if (part[key] !== undefined) enemy[key] = part[key];
     return enemy;
   });
-  let fight = configureDestinyAbilities(createDestinyFight(hero, opponents), abilities, equipment);
+  let fight = configureDestinyAbilities(createDestinyFight(hero, opponents), abilities, equipment, { catalog, bookRules });
   if (character) fight = attachDestinyCharacter(fight, character);
   fight = configureWinterEncounter(fight, section, { roster, fimbulwinter, bannerLit, roughRide });
   return fight;

@@ -18,6 +18,56 @@ const win = fight => resolveDestinySpeed(rollDestinySpeed(fight, rolls(6, 6, 1, 
 const lose = fight => resolveDestinySpeed(rollDestinySpeed(fight, rolls(1, 1, 6, 6)));
 const hit = (fight, value = 1) => resolveDestinyDamage(rollDestinyDamage(fight, rolls(value)));
 
+test('books without death penalties record repeated losses without rolling penalties or destroying saved gear', () => {
+  const original = { defeats: 4, penalties: ['crippled'], pendingRingDestruction: true,
+    equipment: { ring1: { name: 'Keep this ring', brawn: 2 } }, notes: ['Keep these notes'], outcomeIds: ['earlier'] };
+  const before = structuredClone(original);
+  let character = original;
+  for (let index = 0; index < 20; index++) {
+    const result = recordDestinyOutcome(character, { status: 'loss' }, 'legion-loss-' + index, rolls(), { deathPenalties: false });
+    assert.equal(result.recorded, true);
+    assert.equal(result.penalty, null);
+    assert.equal(result.penaltyDie, undefined);
+    character = result.character;
+  }
+  assert.equal(character.defeats, 24);
+  assert.equal(character.nextPenaltyAt, 25);
+  assert.deepEqual(character.penalties, before.penalties);
+  assert.deepEqual(character.equipment, before.equipment);
+  assert.equal(character.pendingRingDestruction, true);
+  assert.deepEqual(character.notes, before.notes);
+  assert.equal(character.outcomeIds.length, 21);
+  assert.deepEqual(original, before);
+  const replay = recordDestinyOutcome(character, { status: 'loss' }, 'legion-loss-19', rolls(), { deathPenalties: false });
+  assert.equal(replay.recorded, false);
+  assert.deepEqual(replay.character, character);
+});
+
+test('a book without death penalties ignores their combat restrictions while preserving the saved character', () => {
+  const character = { defeats: 4, penalties: ['crippled', 'nervous-twitch'], pendingRingDestruction: true,
+    equipment: { ring1: { name: 'Preserved' } } };
+  const fight = setup({ haste: 1, heal: 1 }, {
+    feet: { abilities: ['haste'] }, mainHand: { abilities: ['heal'] },
+  });
+  const before = structuredClone({ fight, character });
+  const attached = attachDestinyCharacter(fight, character, { deathPenalties: false });
+  assert.deepEqual(attached.abilities, { haste: 1, heal: 1 });
+  assert.deepEqual(attached.character.penalties, character.penalties);
+  assert.equal(attached.character.pendingRingDestruction, true);
+  assert.deepEqual({ fight, character }, before);
+  assert.throws(() => attachDestinyCharacter(fight, character), /lost ring/);
+});
+
+test('invalid book death rules cannot change a saved character or fight', () => {
+  const fight = setup(), character = createDestinyCharacter();
+  const before = structuredClone({ fight, character });
+  for (const deathPenalties of ['false', 0, null]) {
+    assert.throws(() => attachDestinyCharacter(fight, character, { deathPenalties }), /Invalid death penalty rule/);
+    assert.throws(() => recordDestinyOutcome(character, { status: 'loss' }, 'invalid', rolls(), { deathPenalties }), /Invalid death penalty rule/);
+  }
+  assert.deepEqual({ fight, character }, before);
+});
+
 test('each outcome is recorded once even if an old finished fight is submitted again', () => {
   const original = { defeats: 4, penalties: [], notes: { untouched: 'yes' }, equipment: { ring1: { brawn: 2 } } };
   const before = structuredClone(original);

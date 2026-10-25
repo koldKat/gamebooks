@@ -215,6 +215,8 @@
 .job-xp-level { color: #c084fc; font-weight: 700; }
 .job-xp-bar { height: 5px; background: #1f2937; border-radius: 3px; overflow: hidden; }
 .job-xp-bar > div { height: 100%; width: 0; background: #c084fc; border-radius: inherit; }
+[id$="-job-xp-label"] { font-size: 0.76rem; color: #9ca3af; line-height: 1.15; white-space: nowrap; }
+.job-xp-val { color: #c084fc; }
 #books-xp-level-row {
   display: flex;
   align-items: baseline;

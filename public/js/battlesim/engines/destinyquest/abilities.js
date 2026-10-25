@@ -1,12 +1,15 @@
 import { queueDestinyEncounterEvent } from './encounter-events.js';
-import { addDestinyStatEffect, healDestinyHero, hasDestinyAbility, destinyStrike, destinyRollOpponentDice, destinyDieLocked, isDestinyOpponentActive, destinyAttackerTarget, observeDestinyHealth } from './effects.js';
-import { settleDestinyFight } from './core.js';
+import { addDestinyStatEffect, healDestinyHero, hasDestinyAbility, destinyStrike, destinyRollOpponentDice, destinyDieLocked, isDestinyOpponentActive, destinyAttackerTarget, observeDestinyHealth, destinyStat, destinyScoreExtraDice, onDestinyHeroDice, applyDestinyHeroRoll } from './effects.js';
+import { settleDestinyFight,onDestinyHeroRoundWon } from './core.js';
 import { applyDestinyAdvancedAbility } from './advanced.js';
 import { prepareDestinyDamage } from './damage.js';
 import { prepareDestinyAbilityRoll, finishDestinyAbilityAction } from './ability-rolls.js';
 import { useDestinyOpening } from './openings.js';
 import { cureDestinyCharacter } from './character.js';
 import { onDestinyHeroSpeedRoll } from './roll-events.js';
+import { destinyBookOptionSnapshot, destinyPenaltyApplies, destinyDeathMovesEnabled } from './book-rules.js';
+import {applyDestinyCatalogAction} from './catalog-actions.js';
+import {destinyCanEquipItem} from './travel-rules.js';
 
 const rule = (category, phases, extra = {}) => Object.freeze({ category, phases, ...extra });
 const anytime = ['speed', 'speed-rolled', 'damage', 'damage-rolled', 'ability-rolled', 'end', 'death-move'];
@@ -179,10 +182,12 @@ function draw(roll) {
   return value;
 }
 
-export function configureDestinyAbilities(fight, inventory, equipment = {}) {
+export function configureDestinyAbilities(fight, inventory, equipment = {}, options = {}) {
   if (fight?.status !== 'active' || fight.round !== 0 || fight.phase !== 'start' || fight.character || Object.keys(fight.used).length ||
       !inventory || typeof inventory !== 'object' || Array.isArray(inventory)) throw new RangeError('Configure abilities before combat');
   const next = structuredClone(fight);
+  Object.assign(next, destinyBookOptionSnapshot(options));
+  const catalog = next.abilityCatalog ?? DESTINY_ABILITIES;
   if (!equipment || typeof equipment !== 'object' || Array.isArray(equipment)) throw new RangeError('Invalid equipment');
   next.equipment = {};
   for (const slot of ['mainHand', 'leftHand', 'transport', 'feet', 'head', 'chest', 'cloak', 'gloves', 'talisman', 'necklace', 'ring1', 'ring2']) {
@@ -190,7 +195,11 @@ export function configureDestinyAbilities(fight, inventory, equipment = {}) {
     const item = equipment[slot];
     if (typeof item !== 'object' || Array.isArray(item)) throw new RangeError('Invalid equipment');
     next.equipment[slot] = { type: String(item.type || ''), id: String(item.id || '') };
-    if (item.abilities !== undefined && (!Array.isArray(item.abilities) || item.abilities.some(name => typeof name !== 'string' || !Object.hasOwn(definitions, name)))) throw new RangeError('Invalid item abilities');
+    if(item.hand!==undefined){
+      if(!destinyCanEquipItem(inventory,catalog,item,slot))throw new RangeError('Cannot equip this item in that hand');
+      next.equipment[slot].hand=item.hand;
+    }
+    if (item.abilities !== undefined && (!Array.isArray(item.abilities) || item.abilities.some(name => typeof name !== 'string' || !Object.hasOwn(catalog, name)))) throw new RangeError('Invalid item abilities');
     next.equipment[slot].abilities = [...new Set(item.abilities || [])];
     for (const stat of ['brawn', 'speed', 'magic', 'armour', 'health', 'toughness', 'stability']) {
       const value = item[stat] ?? 0;
@@ -200,7 +209,8 @@ export function configureDestinyAbilities(fight, inventory, equipment = {}) {
   }
   next.abilities = {};
   for (const [name, count] of Object.entries(inventory)) {
-    if (!Object.hasOwn(DESTINY_ABILITIES, name) || !Number.isInteger(count) || count < 1 || count > 100) {
+    if (!Object.hasOwn(catalog, name) || !Number.isInteger(count) || count < 1 || count > 100 ||
+        catalog[name].category === 'dm' && !destinyDeathMovesEnabled(next)) {
       throw new RangeError('Invalid ability inventory');
     }
     next.abilities[name] = count;
@@ -213,11 +223,52 @@ function dieIndex(values, index) {
   return index;
 }
 
-export const destinyAbilitySpec = (fight, name) => fight.encounter?.grantedAbilities?.[name]?.spec ?? DESTINY_ABILITIES[name];
+export const destinyAbilitySpec = (fight, name) => fight.encounter?.grantedAbilities?.[name]?.spec ??
+  (fight.abilityCatalog ?? DESTINY_ABILITIES)[name];
+
+export function useDestinyBackpackItem(fight,index,roll=()=>Math.floor(Math.random()*6)+1){
+  if(fight?.status!=='active'||fight.encounter?.disableBackpack||!fight.turn||fight.turn.used.backpack||!anytime.includes(fight.phase))throw new RangeError('A backpack item is unavailable this round');
+  const item=fight.character?.backpack?.[index];
+  if(!Number.isInteger(index)||index<0||!item||!Number.isSafeInteger(item.quantity??1)||(item.quantity??1)<1)throw new RangeError('Choose an available backpack item');
+  const next=applyDestinyPotionEffect(fight,item,roll);
+  const remaining=(item.quantity??1)-1;
+  if(remaining)next.character.backpack[index].quantity=remaining;else next.character.backpack.splice(index,1);
+  return next;
+}
+
+// Potion-effect counters are simulator modifiers, not an item inventory. The
+// universal inventory and equipment are never read, replaced or consumed here.
+export function useDestinyPotionModifier(fight,attribute,roll=()=>Math.floor(Math.random()*6)+1){
+  if(!['health','speed','brawn','magic','armour'].includes(attribute))throw new RangeError('Choose a potion effect');
+  if(fight?.status!=='active'||fight.encounter?.disableBackpack||!fight.turn||fight.turn.used.backpack||!anytime.includes(fight.phase))throw new RangeError('A potion is unavailable this round');
+  const modifier=fight.character?.potionModifiers?.[attribute];
+  if(!modifier||!Number.isSafeInteger(modifier.uses)||modifier.uses<1)throw new RangeError('No uses of this potion remain');
+  const item={name:attribute+' potion',duration:modifier.duration,
+    ...(attribute==='health'?{heal:modifier.amount}:{stats:{[attribute]:modifier.amount}})};
+  const next=applyDestinyPotionEffect(fight,item,roll);
+  next.character.potionModifiers[attribute].uses--;
+  return next;
+}
+
+function applyDestinyPotionEffect(fight,item,roll){
+  const stats=item.stats||{},health=item.heal||0,duration=item.duration===undefined?1:item.duration;
+  if((duration!==null&&(!Number.isSafeInteger(duration)||duration<1||duration>100))||!Number.isSafeInteger(health)||health<0||health>1000000||
+    Object.entries(stats).some(([key,value])=>!['speed','brawn','magic','armour'].includes(key)||!Number.isSafeInteger(value)||value<0||value>1000000)||(!health&&!Object.values(stats).some(value=>value>0)))throw new RangeError('Invalid backpack item effects');
+  const next=structuredClone(fight);
+  for(const [attribute,base] of Object.entries(stats)){
+    let value=base;
+    if(attribute==='magic'&&base>0)for(const[name,spec]of Object.entries(next.abilityCatalog||{}))if(spec.backpackMagicBonusDice&&hasDestinyAbility(next,name))for(let i=0;i<spec.backpackMagicBonusDice;i++)value+=applyDestinyHeroRoll(next,[draw(roll)],'potion')[0];
+    addDestinyStatEffect(next,'hero',attribute,value,duration,'backpack');
+  }
+  if(health)healDestinyHero(next,health);
+  next.turn.used.backpack=true;
+  next.history.push({type:'backpack',round:next.round,name:String(item.name||'Backpack item')});
+  return next;
+}
 
 export function useDestinyAbility(fight, name, options = {}, roll = () => Math.floor(Math.random() * 6) + 1) {
   const spec = destinyAbilitySpec(fight, name);
-  if (spec?.opening) return useDestinyOpening(fight, name, options, roll);
+  if (spec?.opening) return useDestinyOpening(fight, name, options, roll, spec);
   if (!spec || fight?.status !== 'active' || !fight.turn || !hasDestinyAbility(fight, name) || !spec.phases.includes(fight.phase)) {
     throw new RangeError('Ability unavailable at this combat stage');
   }
@@ -226,14 +277,18 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     throw new RangeError('Resolve the ability interception first');
   }
   if (fight.turn.used[spec.category]) throw new RangeError('Only one ability of this category per round');
+  if(fight.turn.blockedAbilities?.includes(name))throw new RangeError('This ability cannot avoid this attack');
+  if(spec.speedDie&&fight.turn.heroSpeedDiceLocked)throw new RangeError('Abilities cannot change the Speed dice count this round');
+  if (spec.category === 'sp' && fight.effects.some(effect => effect.lockSpeedAbilities && fight.round >= effect.from && fight.round <= effect.until)) throw new RangeError('The current speed ability has not faded');
   if (fight.turn.rerollsLocked && fight.phase === 'speed-rolled' && spec.reroll) throw new RangeError('Rerolls cannot alter this round');
-  if (spec.fewerOpponentDice && fight.encounter?.speedDiceReductionImmune?.includes(destinyAttackerTarget(fight))) throw new RangeError('This opponent is immune to reducing speed dice');
+  if ((spec.fewerOpponentDice || spec.opponentSpeedDiceReduction) && fight.encounter?.speedDiceReductionImmune?.includes(destinyAttackerTarget(fight))) throw new RangeError('This opponent is immune to reducing speed dice');
   const blocked = fight.encounter?.blockedRounds;
   if (blocked && fight.round >= blocked.from && fight.round <= blocked.until && blocked.categories.includes(spec.category)) throw new RangeError('This ability type is blocked this round');
   if (fight.encounter?.blockAbilitiesWhileAlive?.some(rule => rule.categories.includes(spec.category) && isDestinyOpponentActive(fight, rule.target))) throw new RangeError('Defeat the opponent blocking this ability type');
   if (spec.firstRound && fight.round !== 1) throw new RangeError('Ability requires the first combat round');
   if (spec.heroWon && fight.turn.winner !== 'hero' && !(fight.phase === 'ability-rolled' && fight.turn.pendingAbility.type === 'damage')) throw new RangeError('Win the round first');
   if (spec.enemyWon && fight.turn.winner !== 'opponent') throw new RangeError('Opponent must win the round');
+  if ((!spec.hit||spec.hit==='one')&&fight.encounter?.abilityImmunityByTarget?.[options.target??fight.target]?.includes(name)) throw new RangeError('This opponent is immune to that ability');
   if (spec.attackInterruption && fight.phase === 'ability-rolled' && !fight.turn.pendingAbility.event?.attackChoice) throw new RangeError('The attack choice has already resolved');
   if (spec.afterHit && (fight.turn.winner !== 'hero' || !fight.turn.healthDamage)) throw new RangeError('Cause health damage with a damage score first');
   if (spec.afterEnemyHit && (fight.turn.winner !== 'opponent' || !fight.turn.healthDamage)) throw new RangeError('Take health damage from the opponent first');
@@ -245,10 +300,10 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
   if (spec.abilityRoll && fight.phase === 'ability-rolled') throw new RangeError('Resolve the pending roll first');
   const limit = spec.perItem ? fight.abilities[name] : spec.limit === null ? Infinity :
     spec.limit || ((name === 'curse' || name === 'fear') && hasDestinyAbility(fight, 'anguish') ? 2 : 1);
-  if ((fight.used[name] || 0) >= limit) throw new RangeError('Ability has no uses left');
+  if ((fight.used[name] || 0) >= limit && !(spec.chargeDice && fight.chargedAttacks?.[name])) throw new RangeError('Ability has no uses left');
   // Sacrifices are paid while alive. They cannot be used to heal back from zero.
   if (spec.sacrifice && fight.hero.health < spec.sacrifice) throw new RangeError('Not enough health to sacrifice');
-  if (spec.category === 'sp' && fight.character?.penalties.includes('head-blow')) {
+  if (spec.category === 'sp' && destinyPenaltyApplies(fight, 'head-blow')) {
     if (fight.turn.passedSpeedAbility && fight.turn.passedSpeedAbility !== name) throw new RangeError('Finish the checked speed ability first');
     if (fight.turn.passedSpeedAbility !== name) {
       const next = structuredClone(fight);
@@ -288,17 +343,57 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     next.character = cureDestinyCharacter(next.character);
   }
   if (spec.backpack) next.turn.used.backpack = true;
-  if (spec.chooseAttribute) addDestinyStatEffect(next, 'hero', options.attribute, spec.amount, spec.duration, name);
-  if (spec.attribute) addDestinyStatEffect(next, target, spec.attribute, spec.amount, spec.duration || 1, name);
+  const duration = spec.duration === undefined ? 1 : spec.duration;
+  if (spec.chooseAttribute && !spec.matchOpponent) addDestinyStatEffect(next, 'hero', options.attribute, spec.amount, duration, name);
+  if (spec.matchOpponent) {
+    const attribute = options.attribute ?? spec.matchAttribute;
+    const opponent = destinyAttackerTarget(next);
+    const value = destinyStat(next, opponent, attribute);
+    if (value < destinyStat(next, 'hero', attribute)) throw new RangeError('This ability can only raise an attribute');
+    next.effects.push({kind:'stat',target:'hero',attribute,set:value,from:next.round,until:next.round+duration-1,source:name,lockSpeedAbilities:!!spec.lockSpeedAbilities});
+  }
+  if (spec.rollStat) addDestinyStatEffect(next,'hero',spec.rollStat,applyDestinyHeroRoll(next,[draw(roll)],spec.rollStat)[0],duration,name);
+  if (spec.multiplyStat) addDestinyStatEffect(next,'hero',spec.multiplyStat,destinyStat(next,'hero',spec.multiplyStat)*(spec.multiplier-1),duration,name);
+  if (spec.spendStat) {
+    const amount=options.amount;
+    if (!Number.isSafeInteger(amount) || amount < 1 || amount > spec.maxSpend || amount > destinyStat(next,'hero',spec.spendStat)) throw new RangeError('Choose an available amount to spend');
+    addDestinyStatEffect(next,'hero',spec.spendStat,-amount,null,name);
+    next.turn.damageScoreBonus=(next.turn.damageScoreBonus||0)+amount;
+  }
+  if (spec.healLastHitDivisor) {
+    const lost=next.turn.lastHeroDamage?.[options.target ?? next.target];
+    if (!(lost>0)) throw new RangeError('Cause health damage first');
+    healDestinyHero(next,Math.ceil(lost/spec.healLastHitDivisor));
+  }
+  if (spec.replaceIncomingDamage !== undefined) next.turn.replaceIncomingDamage=spec.replaceIncomingDamage;
+  if (spec.speedFace) next.turn.speedFace={...spec.speedFace};
+  if (spec.opponentDieReduction) next.effects.push({kind:'opponent-die-reduction',amount:spec.opponentDieReduction,from:next.round,until:Number.MAX_SAFE_INTEGER,source:name});
+  if (spec.attribute) addDestinyStatEffect(next, target, spec.attribute, spec.amount, duration, name);
+  for (const change of spec.statChanges || []) {
+    const actor = target === 'hero' ? next.hero : next.opponents[target];
+    if (actor[change.attribute] !== null) addDestinyStatEffect(next, target, change.attribute, change.amount,
+      change.duration === undefined ? duration : change.duration, name, change.delay || 0);
+  }
   if (spec.heal) healDestinyHero(next, spec.heal + (hasDestinyAbility(next, 'salvation') ? 1 : 0));
+  if (spec.cleanse) {
+    next.effects = next.effects.filter(effect => effect.target !== 'hero' || !spec.cleanse.includes(effect.status || effect.kind));
+    if (next.encounter?.heroStatuses) for (const status of spec.cleanse) delete next.encounter.heroStatuses[status];
+    if (spec.cleanse.includes(next.encounter?.growingStatus?.status || next.encounter?.growingStatus?.name)) delete next.encounter.growingStatus;
+  }
   if (spec.speedDie) next.turn.heroSpeedCount = (next.turn.heroSpeedCount || 2) + 1;
   if (name === 'reckless') next.turn.reckless = true;
   if (spec.fewerOpponentDice) next.turn.opponentSpeedCount = 1;
+  if (spec.opponentSpeedDiceReduction) next.turn.opponentSpeedReduction = spec.opponentSpeedDiceReduction;
   if (spec.damageDie) {
-    if (next.phase === 'damage-rolled') next.turn.damageDice.push(draw(roll));
+    if (next.phase === 'damage-rolled') {
+      const face=applyDestinyHeroRoll(next,[draw(roll)],'damage')[0];next.turn.damageDice.push(face,...destinyScoreExtraDice(next,[face],roll));
+      onDestinyHeroDice(next,next.turn.damageDice);
+    }
     else next.turn.extraDamageDice = (next.turn.extraDamageDice || 0) + 1;
   }
   if (spec.scoreBonus) next.turn.damageScoreBonus = (next.turn.damageScoreBonus || 0) + spec.scoreBonus;
+  if (spec.scoreEquipmentSpeed) next.turn.damageScoreBonus = (next.turn.damageScoreBonus || 0) +
+    (next.equipment?.mainHand?.speed || 0) + (next.equipment?.leftHand?.speed || 0);
   if (spec.scoreEffect) next.effects.push({ kind: 'score-flat', amount: spec.scoreEffect,
     hero: spec.scoreHero, from: next.round, until: next.round, source: name });
   if (spec.scorePerDie) next.effects.push({ kind: 'score-per-die', amount: spec.scorePerDie,
@@ -309,7 +404,9 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
   if (spec.avoidDamage) next.turn.avoidDamage = true;
   if (spec.reverse) {
     next.turn.winner = 'hero';
+    delete next.turn.enemyFixedDamage;delete next.turn.pendingEnemyCharge;delete next.turn.blockedAbilities;
     if (next.phase === 'ability-rolled') { delete next.turn.pendingAbility; next.phase = 'damage'; }
+    onDestinyHeroRoundWon(next,roll);
   }
   if (spec.freeze) next.effects.push({ kind: 'freeze', from: next.round, until: next.round + 1, source: name });
   const action = spec.dieAction;
@@ -345,6 +442,16 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
   }
   if (spec.reroll) {
     const mode = spec.reroll;
+    if (mode === 'opponent-all') {
+      if (next.phase === 'speed-rolled') {
+        if (next.turn.lockedOpponentDice || next.turn.rerollsLocked) throw new RangeError('Saved dice cannot be rerolled');
+        next.turn.opponentSpeedDice=destinyRollOpponentDice(next,next.turn.opponentSpeedDice.length,roll,'speed');
+      } else {
+        if (next.turn.winner !== 'opponent') throw new RangeError('Choose an opponent roll');
+        if (next.turn.damageDice.some((_,index)=>destinyDieLocked(next,'opponent','damage',index))) throw new RangeError('Saved dice cannot be rerolled');
+        next.turn.damageDice=destinyRollOpponentDice(next,next.turn.damageDice.length,roll,'damage');
+      }
+    }
     if (mode === 'both-speed' || mode === 'opponent-speed') {
       if (next.turn.lockedOpponentDice && mode === 'opponent-speed') throw new RangeError('Frozen dice cannot be rerolled');
       if (!next.turn.lockedOpponentDice) {
@@ -374,6 +481,10 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
       if (next.phase !== 'ability-rolled' && destinyDieLocked(next, next.turn.winner === 'opponent' && next.phase === 'damage-rolled' ? 'opponent' : 'hero',
         next.phase === 'speed-rolled' ? 'speed' : 'damage', index)) throw new RangeError('Saved dice cannot be rerolled');
       values[index] = draw(roll);
+      if(next.phase!=='speed-rolled')applyDestinyHeroRoll(next,values,'damage',[index]);
+      if(next.phase==='damage-rolled'&&next.turn.winner==='hero'){
+        values.push(...destinyScoreExtraDice(next,[values[index]],roll));onDestinyHeroDice(next,values);
+      } else if(next.phase==='ability-rolled'&&pendingGroup)onDestinyHeroDice(next,values);
       if (next.phase === 'speed-rolled') heroSpeedRolls.push(index);
       if (mode === 'damage-plus-two') {
         const bonuses = pendingGroup ? pendingGroup.bonuses : (next.turn.damageDieBonuses ??= {});
@@ -389,6 +500,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
     return index;
   };
   if (spec.advanced) applyDestinyAdvancedAbility(next, name, options, roll);
+  applyDestinyCatalogAction(next,name,spec,options,roll);
   if (spec.regain) {
     const restored = options.restore;
     if (!destinyAbilitySpec(next, restored) || !hasDestinyAbility(next, restored) ||
@@ -412,6 +524,9 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
       addDestinyStatEffect(next, index, attribute, -spec.weaken, null, name);
     }
     if (spec.frostbite) addDestinyStatEffect(next, index, 'speed', -1, 2, name, 1);
+    for (const change of spec.afterHitStats || []) {
+      addDestinyStatEffect(next, index, change.attribute, change.amount, change.duration, name, change.delay || 0);
+    }
     if (spec.shatter) {
       if (!['armour-minus-two', 'armour-zero-next-round'].includes(options.variant)) throw new RangeError('Choose the printed Shatter variant');
       if (options.variant === 'armour-minus-two') addDestinyStatEffect(next, index, 'armour', -2, null, name);
@@ -438,7 +553,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
   }
   next.used[name] = (next.used[name] || 0) + 1;
   if (['sp', 'co', 'dm'].includes(spec.category)) next.turn.used[spec.category] = true;
-  if (spec.fewerOpponentDice) next.turn.controlledOpponent = destinyAttackerTarget(next);
+  if (spec.fewerOpponentDice || spec.opponentSpeedDiceReduction) next.turn.controlledOpponent = destinyAttackerTarget(next);
   if (['evade', 'sidestep', 'vanish'].includes(name) && hasDestinyAbility(next, 'veiled-strike')) next.turn.veiledStrikeAvailable = true;
   if (spec.category === 'co' && hasDestinyAbility(next, 'weaver')) healDestinyHero(next, 2);
   if (spec.category === 'sp' && hasDestinyAbility(next, 'wind-chill')) {
@@ -453,7 +568,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
   onDestinyHeroSpeedRoll(next, heroSpeedRolls, roll);
   if (['speed-rolled', 'damage', 'damage-rolled'].includes(next.phase) && !isDestinyOpponentActive(next, next.target)) next.phase = 'end';
   if (spec.category === 'dm' && next.phase !== 'ability-rolled') next.phase = next.turn.afterDeathMove;
-  else if (next.phase === 'end' && !next.turn.pendingPassiveDeath && next.turn.deaths.length > next.turn.deathMoveDeathsSeen) {
+  else if (destinyDeathMovesEnabled(next) && next.phase === 'end' && !next.turn.pendingPassiveDeath && next.turn.deaths.length > next.turn.deathMoveDeathsSeen) {
     next.phase = 'death-move';
     next.turn.afterDeathMove = 'end';
   }
@@ -462,6 +577,7 @@ export function useDestinyAbility(fight, name, options = {}, roll = () => Math.f
       suspendedAbility: next.turn.pendingAbility || null, options: {} };
     next.phase = 'ability-rolled';
   }
+  if(spec.cancelCounterstrike||spec.cancelIncoming||spec.reflectIncoming)return finishDestinyAbilityAction(next,roll);
   settleDestinyFight(next, roll);
   return next;
 }
@@ -547,4 +663,13 @@ export function resolveDestinyDefeatChoice(fight, target, roll = () => Math.floo
   destinyStrike(next, target, next.opponents[target].health, pending.name);
   next.history.push({ type: 'defeat-choice', name: pending.name, round: next.round, target });
   return finishDestinyAbilityAction(next, roll);
+}
+
+export function resolveDestinyDamageChoice(fight,target,roll=()=>Math.floor(Math.random()*6)+1){
+  if(fight?.status!=='active'||fight.phase!=='ability-choice'||fight.turn?.pendingAbility?.type!=='damage-choice')throw new RangeError('No damage target choice pending');
+  if(!Number.isInteger(target)||!isDestinyOpponentActive(fight,target))throw new RangeError('Choose a living opponent');
+  const next=structuredClone(fight),pending=next.turn.pendingAbility;
+  delete next.turn.pendingAbility;next.phase=pending.returnPhase;
+  destinyStrike(next,target,pending.event.amount,pending.name,'passive');
+  return finishDestinyAbilityAction(next,roll);
 }

@@ -3,6 +3,7 @@ import { destinyDie, prepareDestinyDamage, applyDestinyDamage } from './damage.j
 import { settleDestinyFight } from './core.js';
 import { resolveDestinyEncounterEvent, resumeDestinyEncounterQueue } from './encounter-events.js';
 import { applyDestinyAbilityInterception } from './abilities.js';
+import { destinyDeathMovesEnabled } from './book-rules.js';
 
 export function prepareDestinyAbilityRoll(fight, name, options, roll) {
   const target = options.target ?? fight.target;
@@ -15,7 +16,7 @@ export function prepareDestinyAbilityRoll(fight, name, options, roll) {
 
 export function finishDestinyAbilityAction(fight, roll = () => Math.floor(Math.random() * 6) + 1) {
   if (['speed-rolled', 'damage', 'damage-rolled'].includes(fight.phase) && !isDestinyOpponentActive(fight, fight.target)) fight.phase = 'end';
-  if (fight.phase === 'end' && !fight.turn.pendingPassiveDeath && !fight.turn.used.dm &&
+  if (destinyDeathMovesEnabled(fight) && fight.phase === 'end' && !fight.turn.pendingPassiveDeath && !fight.turn.used.dm &&
       fight.turn.deaths.length > fight.turn.deathMoveDeathsSeen) {
     fight.phase = 'death-move';
     fight.turn.afterDeathMove = 'end';

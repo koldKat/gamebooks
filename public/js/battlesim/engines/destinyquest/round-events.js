@@ -1,5 +1,14 @@
-import { destinyStrike, addDestinyStatEffect, isDestinyOpponentActive } from './effects.js';
+import { destinyStrike, addDestinyStatEffect, isDestinyOpponentActive, destinyImmuneToAbility } from './effects.js';
 import { destinyDie, applyDestinyDamage } from './damage.js';
+import { queueDestinyEncounterEvent } from './encounter-events.js';
+
+export function applyDestinyOpponentForm(fight, form) {
+  const rule=fight.encounter.roundForms;
+  Object.assign(fight.opponents[rule.target],structuredClone(form.stats));
+  for(const key of new Set(rule.profiles.flatMap(profile=>Object.keys(profile.rules||{}))))delete fight.encounter[key];
+  Object.assign(fight.encounter,structuredClone(form.rules||{}));
+  rule.current=form.id;
+}
 
 export function advanceDestinyAspectCycle(fight, round) {
   const cycle=fight.encounter?.aspectCycle;
@@ -41,6 +50,17 @@ export function spawnDestinyOpponents(fight, rule, round, createOpponent) {
 }
 
 export function applyDestinyRoundEvents(fight, options, roll) {
+  const forms=fight.encounter?.roundForms;
+  if(forms&&fight.round>=forms.fromRound&&isDestinyOpponentActive(fight,forms.target))queueDestinyEncounterEvent(fight,
+    {kind:'opponent-form',name:forms.name,dice:1},'speed',roll);
+  for(const rule of fight.encounter?.roundSettings||[])if(rule.round===fight.round)Object.assign(fight.encounter,structuredClone(rule.set));
+  for(const rule of fight.encounter?.startFullRecovery||[]){
+    if(rule.round===fight.round&&isDestinyOpponentActive(fight,rule.target))fight.opponents[rule.target].health=fight.opponents[rule.target].maxHealth;
+  }
+  for(const rule of fight.encounter?.startRegeneration||[]){
+    if(!isDestinyOpponentActive(fight,rule.target))continue;
+    const opponent=fight.opponents[rule.target];opponent.health=Math.min(opponent.maxHealth,opponent.health+rule.amount);
+  }
   const ranged = fight.encounter?.rangedCombat;
   if (ranged) {
     fight.encounter.disableHeroAbilities = fight.round <= ranged.throughRound;
@@ -53,6 +73,7 @@ export function applyDestinyRoundEvents(fight, options, roll) {
   }
   for (const effect of fight.encounter?.startStats || []) {
     if (effect.round !== fight.round) continue;
+    if (destinyImmuneToAbility(fight,effect.ability)) continue;
     for (const [attribute, amount] of Object.entries(effect.changes)) addDestinyStatEffect(fight, effect.target, attribute, amount, null, 'encounter-start');
   }
   let trapTargets = null;

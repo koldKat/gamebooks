@@ -39,20 +39,24 @@ export function destinyCharacterAbilityCounts(character, inventory, equipment = 
   return counts;
 }
 
-export function attachDestinyCharacter(fight, character) {
+export function attachDestinyCharacter(fight, character, { deathPenalties = fight?.bookRules?.deathPenalties ?? true } = {}) {
+  if (typeof deathPenalties !== 'boolean') throw new RangeError('Invalid death penalty rule');
   if (fight?.status !== 'active' || fight.round !== 0 || fight.phase !== 'start' || Object.keys(fight.used).length) throw new RangeError('Attach the character before combat');
   if (fight.character) throw new RangeError('Character already attached');
   const profile = createDestinyCharacter(character);
-  if (profile.pendingRingDestruction) throw new RangeError('Resolve the lost ring before another fight');
+  if (deathPenalties && profile.pendingRingDestruction) throw new RangeError('Resolve the lost ring before another fight');
   const next = structuredClone(fight);
+  if (next.bookRules || !deathPenalties) next.bookRules = { ...next.bookRules, deathPenalties };
   next.character = profile;
-  if (next.abilities) next.abilities = destinyCharacterAbilityCounts(profile, next.abilities, next.equipment);
+  if (deathPenalties && next.abilities) next.abilities = destinyCharacterAbilityCounts(profile, next.abilities, next.equipment);
   return next;
 }
 
-export function recordDestinyOutcome(character, fight, outcomeId, roll = () => Math.floor(Math.random() * 6) + 1) {
+export function recordDestinyOutcome(character, fight, outcomeId, roll = () => Math.floor(Math.random() * 6) + 1,
+  { deathPenalties = fight?.bookRules?.deathPenalties ?? true } = {}) {
+  if (typeof deathPenalties !== 'boolean') throw new RangeError('Invalid death penalty rule');
   const next = createDestinyCharacter(character);
-  if (!['win', 'loss'].includes(fight?.status) || typeof outcomeId !== 'string' || !outcomeId || outcomeId.length > 128) throw new RangeError('A finished fight needs an outcome ID');
+  if ((!['win', 'loss'].includes(fight?.status)&&!(fight?.status==='retreat'&&fight.encounter?.retreatSection)) || typeof outcomeId !== 'string' || !outcomeId || outcomeId.length > 128) throw new RangeError('A finished fight needs an outcome ID');
   if (next.outcomeIds.includes(outcomeId)) return { character: next, recorded: false, escaped: false, penalty: null };
   const receipt = { character: next, recorded: true, escaped: false, penalty: null };
   if (fight.status === 'loss') {
@@ -62,7 +66,7 @@ export function recordDestinyOutcome(character, fight, outcomeId, roll = () => M
     }
     if (!receipt.escaped) {
       next.defeats++;
-      if (next.defeats >= next.nextPenaltyAt) {
+      if (next.defeats >= next.nextPenaltyAt && deathPenalties) {
         let selected = null;
         for (let attempt = 0; attempt < 1000; attempt++) {
           const face = destinyDie(roll);
@@ -75,9 +79,11 @@ export function recordDestinyOutcome(character, fight, outcomeId, roll = () => M
         if (!selected) throw new RangeError('No new penalty was rolled');
         if (selected === 'fingerless') next.pendingRingDestruction = true;
         else next.penalties.push(selected);
-        next.nextPenaltyAt += 5;
         receipt.penalty = selected;
       }
+      // Keep the saved threshold valid even in books without death penalties.
+      // Existing penalties and equipment remain untouched by that rule choice.
+      if (next.defeats >= next.nextPenaltyAt) next.nextPenaltyAt += 5;
     }
   }
   next.outcomeIds.push(outcomeId);

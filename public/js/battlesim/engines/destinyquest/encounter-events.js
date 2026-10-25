@@ -1,16 +1,18 @@
 import { createDestinyOpponent } from './core.js';
-import { spawnDestinyOpponents } from './round-events.js';
+import { spawnDestinyOpponents, applyDestinyOpponentForm } from './round-events.js';
 import { destinyDie } from './damage.js';
 import { destinyEncounterEventSettings } from './encounter-settings.js';
-import { destinyStat, addDestinyStatEffect, observeDestinyHealth, hasDestinyAbility, destinyStrike, isDestinyOpponentActive, isDestinyOpponentDead, recordDestinyDefeat, destinyAttackerTarget } from './effects.js';
+import { destinyDeathMovesEnabled } from './book-rules.js';
+import { destinyStat, addDestinyStatEffect, observeDestinyHealth, hasDestinyAbility, destinyStrike, isDestinyOpponentActive, isDestinyOpponentDead, recordDestinyDefeat, destinyAttackerTarget, destinyImmuneToAbility, destinyOpponentDamageTotal } from './effects.js';
 
 export function queueDestinyEncounterEvent(fight, event, returnPhase, roll) {
+  if(destinyImmuneToAbility(fight,event.ability))return;
   const suspended = ['ability-rolled', 'ability-choice'].includes(fight.phase) ? fight.turn.pendingAbility : null;
   if (suspended && !event.interruptsPending) {
     (fight.turn.afterAbilityEvents ??= []).push({ event: structuredClone(event), returnPhase });
     return;
   }
-  if (['ability-sacrifice', 'defeat-choice'].includes(event.kind)) {
+  if (['ability-sacrifice', 'defeat-choice', 'damage-choice'].includes(event.kind)) {
     fight.turn.pendingAbility = { type: event.kind, name: event.name, event: structuredClone(event), returnPhase };
     fight.phase = 'ability-choice';
     return;
@@ -39,7 +41,7 @@ function heroDamage(fight, amount, enemyDice = false, attacker = destinyAttacker
 
 export function resolveDestinyEncounterEvent(fight, pending, roll, { roster } = {}) {
   const { event, dice } = pending;
-  const total = dice.reduce((sum, value, index) => sum + value + (pending.bonuses?.[index] || 0), 0);
+  const total = event.owner==='opponent'&&event.damageDice ? destinyOpponentDamageTotal(fight,dice,pending.bonuses) : dice.reduce((sum, value, index) => sum + value + (pending.bonuses?.[index] || 0), 0);
   fight.phase = pending.returnPhase;
   fight.history.push({ type: 'encounter-roll', name: pending.name, round: fight.round, dice: [...dice], total });
   const stageDamage = amount => {
@@ -49,6 +51,59 @@ export function resolveDestinyEncounterEvent(fight, pending, roll, { roster } = 
   let eventSettings;
   const settings = () => eventSettings ??= destinyEncounterEventSettings(fight, roster, event.kind);
   switch (event.kind) {
+    case 'opponent-form': {
+      const form=fight.encounter.roundForms.profiles.find(profile=>profile.faces.includes(total));
+      if(!form)throw new RangeError('Missing opponent form for this roll');
+      applyDestinyOpponentForm(fight,form);
+      break;
+    }
+    case 'absorb-stat':
+      if(total>=event.minimum)addDestinyStatEffect(fight,event.target,event.attribute,-event.amount,null,event.name);
+      if(destinyStat(fight,event.target,event.attribute)===0)fight.encounter.forcedVictory=true;
+      fight.turn.normalDamageReplaced=true;fight.phase='end';
+      break;
+    case 'skip-attack-if-low':
+      if(total<=event.limit){fight.turn.normalDamageReplaced=true;fight.phase='end';}
+      break;
+    case 'damage-if-roll-above-stat':
+      if(total>destinyStat(fight,'hero',event.attribute))stageDamage(Math.max(0,event.amount-(event.armourDivisor?Math.ceil((fight.hero.armour===null?0:destinyStat(fight,'hero','armour'))/event.armourDivisor):0)));
+      break;
+    case 'change-end-target':
+      if(event.faces.includes(total)){
+        const effect=fight.encounter.endEffects.find(effect=>effect.source===event.effectSource);
+        if(!effect)throw new RangeError('Missing controlled effect');
+        effect.target=event.target;fight.encounter[event.flag]=true;
+      }
+      break;
+    case 'damage-if-high':
+      if(total>event.limit)stageDamage(event.amount);
+      break;
+    case 'victory-after-faces':
+      if (event.faces.includes(total)) {
+        fight.encounter.victorySuccesses = (fight.encounter.victorySuccesses || 0) + 1;
+        if (fight.encounter.victorySuccesses >= event.required) fight.encounter.forcedVictory = true;
+      }
+      break;
+    case 'attack-variation': {
+      const outcome=event.outcomes.find(item=>item.faces.includes(total));
+      if(!outcome)throw new RangeError('No attack variation for this roll');
+      for(const change of outcome.stats||[])addDestinyStatEffect(fight,change.target,change.attribute,change.amount,change.duration,event.name,change.delay||0);
+      if(outcome.extraDamageDice)fight.turn.extraDamageDice=(fight.turn.extraDamageDice||0)+outcome.extraDamageDice;
+      if(outcome.skipAttack){fight.turn.normalDamageReplaced=true;fight.phase='end';}
+      break;
+    }
+    case 'next-round-speed-dice':
+      if(event.faces.includes(total))fight.nextHeroSpeedDice={round:fight.round+1,count:event.count};
+      break;
+    case 'opponent-dodge':
+      if(event.limit===undefined||total<=event.limit){fight.turn.opponentDodged=event.name;fight.turn.normalDamageReplaced=true;fight.phase='end';}
+      break;
+    case 'opponent-ability':
+      if(event.limit===undefined||total<=event.limit){
+        if(event.ignoreArmour){fight.turn.ignoreArmour=true;fight.turn.opponentArmourAbility=event.ability;}
+        if(event.heroSpeedCount)fight.turn.heroSpeedCount=event.heroSpeedCount;
+      }
+      break;
     case 'loss-if-low':
       if(total<=event.limit)fight.encounter.forcedLoss=true;
       break;
@@ -68,7 +123,7 @@ export function resolveDestinyEncounterEvent(fight, pending, roll, { roster } = 
         if (fight.phase === 'death-move' && fight.turn.deaths.length <= fight.turn.deathMoveDeathsSeen) fight.phase = fight.turn.afterDeathMove;
         fight.history.push({ type: 'revival', round: fight.round, target: event.target, health: event.health });
       } else recordDestinyDefeat(fight, event.target);
-      if (['start', 'encounter-start'].includes(fight.phase) && fight.turn.deaths.length > fight.turn.deathMoveDeathsSeen && !fight.turn.used.dm) {
+      if (destinyDeathMovesEnabled(fight) && ['start', 'encounter-start'].includes(fight.phase) && fight.turn.deaths.length > fight.turn.deathMoveDeathsSeen && !fight.turn.used.dm) {
         fight.turn.afterDeathMove = fight.phase;
         fight.phase = 'death-move';
       }

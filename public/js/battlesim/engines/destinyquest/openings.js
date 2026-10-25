@@ -1,13 +1,25 @@
-import { hasDestinyAbility, destinyStrike, addDestinyStatEffect, isDestinyOpponentActive } from './effects.js';
-import { destinyDie } from './damage.js';
+import { hasDestinyAbility, destinyStrike, addDestinyStatEffect, isDestinyOpponentActive, destinyDamageAllowed } from './effects.js';
+import { destinyDie, prepareDestinyDamage } from './damage.js';
 import { settleDestinyFight } from './core.js';
+import { destinyDeathMovesEnabled } from './book-rules.js';
 
-export function useDestinyOpening(fight, name, options, roll) {
+export function useDestinyOpening(fight, name, options, roll, spec = {}) {
   if (fight?.status !== 'active' || (fight.round !== 0 && !(fight.encounter?.pathProgress && !fight.encounter.pathProgress.combatStarted)) || fight.phase !== 'start' ||
       !hasDestinyAbility(fight, name) || fight.used[name]) throw new RangeError('Use this ability once before combat');
+  if (spec.excludedCareer && fight.character?.career === spec.excludedCareer) throw new RangeError('This career cannot use that opening');
+  if (spec.requiresMainHand && fight.equipment?.mainHand?.type !== spec.requiresMainHand) throw new RangeError('Required main-hand weapon is missing');
+  if ((!spec.exclusiveCareer || fight.character?.career === spec.exclusiveCareer) &&
+      spec.openingExclusiveWith?.some(ability => fight.used[ability])) throw new RangeError('These opening attacks cannot be combined');
   const next = structuredClone(fight);
   next.turn ??= { used: { sp: false, co: false, dm: false, backpack: false }, deaths: [], deathMoveDeathsSeen: 0 };
-  if (name === 'first-blood' || name === 'first-cut') {
+  if (spec.openingDamage !== undefined || spec.openingDice) {
+    const target = options.target;
+    if (!Number.isInteger(target) || !isDestinyOpponentActive(next, target)) throw new RangeError('Choose a living opponent');
+    if (spec.openingDice) prepareDestinyDamage(next, name, {...spec,hit:'one',dice:spec.openingDice,damageKind:'first-strike'}, options, roll);
+    else if (!spec.passiveAttack || destinyDamageAllowed(next, target, 'passive')) {
+      destinyStrike(next, target, spec.openingDamage, name, spec.openingKind || 'first-strike');
+    }
+  } else if (name === 'first-blood' || name === 'first-cut') {
     const target = options.target;
     if (!Number.isInteger(target) || !isDestinyOpponentActive(next, target)) throw new RangeError('Choose a living opponent');
     destinyStrike(next, target, name === 'first-blood' ? 4 : 1, name, 'first-strike');
@@ -27,10 +39,10 @@ export function useDestinyOpening(fight, name, options, roll) {
       next.hero.normal.armour += 2;
     }
     next.iceMantle = true;
-  } else throw new RangeError('Unknown opening ability');
+  } else if (!spec.openingPassive) throw new RangeError('Unknown opening ability');
   next.used[name] = 1;
   next.history.push({ type: 'opening', name, round: next.round });
-  if (!settleDestinyFight(next, roll) && next.turn.deaths.length > next.turn.deathMoveDeathsSeen) {
+  if (!settleDestinyFight(next, roll) && destinyDeathMovesEnabled(next) && next.turn.deaths.length > next.turn.deathMoveDeathsSeen) {
     next.phase = 'death-move';
     next.turn.afterDeathMove = 'start';
   }

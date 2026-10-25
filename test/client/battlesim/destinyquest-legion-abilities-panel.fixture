@@ -1,0 +1,157 @@
+localStorage.setItem('gamebook_lang','en');
+const app=await import('REPO/public/js/core/state.js');
+const {t}=await import('REPO/public/js/i18n.js');
+const {loadBattleSimTranslations}=await import('REPO/public/js/i18n/battlesim.js');
+const {prepareBattleSimLayout}=await import('REPO/public/js/battlesim/layout.js');
+const {definition:base}=await import('REPO/public/js/battlesim/books/1285/definition.js');
+const {createState}=await import('REPO/public/js/battlesim/books/1285/state.js');
+const {createDestinyPanel}=await import('REPO/public/js/battlesim/engines/destinyquest/panel.js');
+const {LEGION_ABILITIES:catalog}=await import('REPO/public/js/battlesim/engines/destinyquest/legion-abilities.js');
+const {createDestinyFight,startDestinyRound}=await import('REPO/public/js/battlesim/engines/destinyquest/core.js');
+const {configureDestinyAbilities}=await import('REPO/public/js/battlesim/engines/destinyquest/abilities.js');
+const {createLegionFight,useLegionAction}=await import('REPO/public/js/battlesim/engines/destinyquest/legion.js');
+const {decodeDestinyRoster}=await import('REPO/public/js/battlesim/engines/destinyquest/winters-fury-roster.js');
+const stagedRoster=decodeDestinyRoster(LEGION_ENEMIES);
+await loadBattleSimTranslations(1285);app.setCurrentBookId(1285);
+app.state.playthroughs=[{startedAt:1,path:[1],notebook:'preserve',sim1285:{
+  character:{defeats:0,penalties:[],outcomeIds:[],notes:'keep'},history:[],fight:null,
+  setup:{hero:{speed:20,brawn:3,magic:1,armour:4,health:20,maxHealth:30},
+    abilities:{'first-strike':1,'critical-strike':1,vitriol:1,'ice-shards':1,focus:1,'brain-drain':1},
+    equipment:{mainHand:{type:'dagger'}},
+    opponents:[{name:'First foe',displayName:'First foe',speed:0,brawn:2,magic:0,armour:5,health:3,damageStat:'brawn'},
+      {name:'Second foe',displayName:'Second foe',speed:0,brawn:2,magic:0,armour:5,health:100,damageStat:'brawn'}]},
+}}];app.state.activePtIndex=0;
+const definition={...base,abilityCatalog:catalog,bookRules:{deathPenalties:false,deathMoves:false}};
+const state=createState(()=>({getRun:app.currentPlaythrough,getBookId:()=>1285,saveState:()=>{}}));
+let lastAlert='';
+const panel=createDestinyPanel({document,definition,state,getRoster:()=>stagedRoster,t,createFight:createLegionFight,useBookAction:useLegionAction,
+  showAlert:message=>{lastAlert=message;},showConfirm:(_text,fn)=>fn(),
+  getButtonRow:()=>document.getElementById('m-sim-btn-row')||document.getElementById('main-screen')});
+const el=key=>document.getElementById('sim1285-'+key),data=()=>app.currentPlaythrough().sim1285;
+let scenarios=0;const check=(value,message)=>{if(!value)throw Error(message);scenarios++;};
+const click=key=>{if(!el(key))throw Error('Missing control '+key);el(key).click();if(lastAlert)throw Error(lastAlert);};
+const ability=name=>{if(![...el('useAbility').options].some(option=>option.value===name))throw Error('Unavailable ability '+name);
+  el('useAbility').value=name;el('useAbility').dispatchEvent(new Event('change',{bubbles:true}));};
+panel.init();panel.setVisible(true);click('btn');prepareBattleSimLayout(el('overlay'));
+check(el('owned').querySelector('select').options.length===Object.keys(catalog).length,'picker contains the actual compiled catalog');
+click('start');ability('first-strike');
+check(el('abilityTarget')?.options.length===2,'new source opening exposes its target choice');
+el('manualDice').value='2';click('ability');
+check(data().fight.phase==='ability-rolled'&&data().fight.turn.pendingAbility.groups[0].dice[0]===2,'opening pauses with its editable die');
+ability('critical-strike');click('ability');
+check(data().fight.turn.pendingAbility.groups[0].dice[0]===6,'source modifier changes opening damage die');
+const saved=JSON.stringify(data());app.currentPlaythrough().sim1285=JSON.parse(saved);panel.render();
+check(JSON.stringify(data())===saved,'pending opening survives render and JSON resume');
+click('next');check(data().fight.opponents[0].health===0&&data().fight.phase==='start','opening kill leaves no death-move stage');
+check(![...el('useAbility').options].some(option=>option.value==='first-strike'),'spent opening is hidden');
+ability('vitriol');check(!el('abilityTarget'),'optional coating needs no damage target');click('ability');
+check(data().fight.used.vitriol===1,'coating explicitly activated');
+el('target').value='1';click('next');
+check(![...el('useAbility').options].some(option=>option.value==='vitriol'),'opening action disappears once combat starts');
+el('manualDice').value='6 6 1 1';click('next');click('next');
+ability('focus');click('ability');ability('ice-shards');el('abilityTarget').value='1';click('ability');
+check(data().fight.phase==='end'&&!data().fight.turn.pendingAbility,'fixed-stat spell has no empty dice stage');
+check(data().fight.opponents[1].health===96,'spell uses boosted magic and ignores armour');
+click('next');check(data().fight.hero.health===19&&data().fight.opponents[1].health===95,'activated coating applies both source effects');
+check(app.currentPlaythrough().notebook==='preserve'&&data().character.notes==='keep','unrelated player fields preserved');
+click('next');el('manualDice').value='6 6 1 1';click('next');click('next');
+ability('brain-drain');
+check(el('spendAmount')?.options.length===1,'Magic spending offers only the available amount');
+el('spendAmount').value='1';click('ability');
+check(data().fight.turn.damageScoreBonus===1,'Magic spending reads the selected amount');
+const spent=JSON.stringify(data());app.currentPlaythrough().sim1285=JSON.parse(spent);panel.render();
+check(JSON.stringify(data())===spent,'spent Magic and score bonus survive render without save changes');
+data().fight=startDestinyRound(configureDestinyAbilities(createDestinyFight(
+  {speed:20,brawn:3,magic:1,armour:4,health:20,maxHealth:30},
+  [{name:'A',speed:0,brawn:1,armour:1,health:100},{name:'B',speed:0,brawn:1,armour:1,health:100}]),
+  {'swift-strikes':1},{mainHand:{type:'sword',speed:2},leftHand:{type:'sword',speed:5}},{catalog,bookRules:definition.bookRules}),0);
+panel.render();el('manualDice').value='6 6 1 2';click('next');
+check(data().fight.phase==='ability-choice'&&el('damage-choice')?.textContent==='Swift Strikes','passive speed strike has a named target-choice button');
+check(el('target').options.length===2,'each strike exposes both living opponents');
+el('target').value='1';click('damage-choice');
+check(data().fight.phase==='ability-choice'&&data().fight.opponents[1].health===95,'first target choice applies exactly one strike');
+el('target').value='0';click('damage-choice');
+check(data().fight.phase==='speed-rolled'&&data().fight.opponents[0].health===95,'second choice resumes the original combat stage');
+data().fight=createLegionFight({speed:20,brawn:30,magic:0,armour:4,health:10,maxHealth:30},'138',{roster:stagedRoster});
+panel.render();click('next');el('manualDice').value='6 5 1 2';click('next');click('next');el('manualDice').value='4';click('next');click('next');
+check(data().fight.phase==='between-combats'&&el('next'),'separate-combat encounter offers continuation without recording a premature win');
+click('next');check(data().fight.phase==='start'&&data().fight.hero.health===10,'continuation preserves remaining Health');
+check(el('target').value==='1','next ghoul is the only active target');
+data().fight=createLegionFight({speed:20,brawn:100,magic:0,armour:4,health:10,maxHealth:30},'302',{roster:stagedRoster,character:data().character});
+panel.render();click('next');el('manualDice').value='6 5 1 2';click('next');click('next');el('manualDice').value='4';click('next');click('next');
+check(data().fight.status==='win'&&data().fight.hero.health===10,'vampire victory preserves remaining health');
+click('record-outcome');check(data().setup.hero.health===10&&el('health').value==='10','recording wounded victory updates the next setup field');
+data().fight=createLegionFight({speed:20,brawn:3,magic:0,armour:4,health:10,maxHealth:30},'207',{roster:stagedRoster,character:data().character,encounterOptions:{runeAllura:true}});
+panel.render();el('bookAction').value='rune-allura';click('book-action');
+check(data().fight.hero.health===30&&data().fight.usedBookActions['rune-allura']===1,'owned rune action works through the actual panel controls');
+data().fight=createLegionFight({speed:0,brawn:0,magic:0,armour:100,health:30,maxHealth:30},'491',{roster:stagedRoster,abilities:{vanish:1,evade:1,sidestep:1}});
+panel.render();
+check(data().fight.opponents[0].magic===null&&el('combatants').textContent.includes('-'),'missing printed Magic renders without replacing it with a stat');
+for(let charge=1;charge<=2;charge++){
+  click('next');el('manualDice').value='1 2 6 5';click('next');click('next');
+  check(el('next').textContent===t('battlesim1285.resolve-damage'),'automatic bolt resolves without a damage-roll control');
+  check(!el('useAbility'),'forbidden dodges are absent during the automatic attack');
+  el('manualDice').value='';click('next');
+  check(data().fight.hero.health===(charge===1?30:20),'only each second enemy win inflicts its fixed ten damage');
+  if(charge===1)click('next');
+}
+data().fight=createLegionFight({speed:20,brawn:20,magic:0,armour:4,health:30,maxHealth:30},'366',{roster:stagedRoster});
+panel.render();click('next');el('manualDice').value='6 1 2';click('next');click('next');
+check(el('retarget')&&data().fight.turn.heroSpeedDice.length===1,'net fight permits a target choice after the one-die Speed roll wins');
+el('target').value='1';click('retarget');el('manualDice').value='4';click('next');click('next');
+check(data().fight.opponents[1].health===0&&data().fight.status==='active','destroying the net preserves the separate hunter fight');
+data().fight=createLegionFight({speed:20,brawn:30,magic:0,armour:4,health:30,maxHealth:30},'470',{roster:stagedRoster});
+panel.render();click('next');el('manualDice').value='6 5 1 2';click('next');click('next');el('target').value='2';click('retarget');
+el('manualDice').value='4';click('next');click('next');
+check(data().fight.opponents[2].health===0&&data().fight.opponents[2].armour===null,'a parasite can be damaged through its printed missing Armour');
+click('next');check(data().fight.hero.health===28,'destroying Poison Needles removes its damage while Snappers remain active');
+data().fight=createLegionFight({speed:20,brawn:3,magic:0,armour:4,health:100,maxHealth:100},'582',{roster:stagedRoster,abilities:{charm:1}});
+panel.render();click('next');el('manualDice').value='1 1 1 2';click('next');
+check(data().fight.hero.health===100,'Flay waits for accepted Speed dice before applying its hazard');
+ability('charm');el('manualDice').value='4';click('ability');click('next');
+check(data().fight.hero.health===92,'rerolling one hazardous die prevents its eight damage through the actual controls');
+data().fight=createLegionFight({speed:20,brawn:3,magic:0,armour:4,health:30,maxHealth:30},'625',{roster:stagedRoster});
+panel.render();click('next');el('manualDice').value='6 5 1 2';click('next');click('next');
+el('bookAction').value='dismantle';click('book-action');
+check(data().fight.phase==='end'&&data().fight.opponents[0].health===50,'Dismantle replaces the attack through the actual controls');
+check(data().fight.effects.some(effect=>effect.attribute==='armour'&&effect.amount===-4),'Dismantle retains its permanent armour reduction');
+data().fight=createLegionFight({speed:20,brawn:3,magic:0,armour:4,health:17,maxHealth:30},'712',{roster:stagedRoster,abilities:{mend:1},character:{notes:'keep'}});
+panel.render();
+check(el('combatants').textContent.includes('Laine')&&data().fight.hero.armour===null,'the companion name and missing Armour render without inventing a value');
+data().fight.hero.health=1;data().fight.opponents[0].health=77;
+click('next');el('manualDice').value='1 2 6 5';click('next');click('next');el('manualDice').value='6';click('next');click('next');
+check(data().fight.phase==='between-combats'&&data().fight.status==='active','companion defeat offers takeover without recording a player defeat');
+click('next');
+check(data().fight.hero.health===17&&data().fight.opponents[0].health===77,'takeover restores player Health and retains enemy wounds');
+click('next');ability('mend');click('ability');
+check(data().fight.hero.health===30&&data().fight.character.notes==='keep','the player can use their own Mend after takeover without losing character notes');
+data().fight=createLegionFight({speed:0,brawn:3,magic:0,armour:4,health:100,maxHealth:100},'717',{roster:stagedRoster,encounterOptions:{northRod:'slowing'}});
+panel.render();click('next');el('manualDice').value='1 2 6 5';click('next');click('next');el('manualDice').value='4';click('next');click('next');
+check(data().fight.hero.health===88,'the selected packmasters resolve their own attack');
+click('next');check(data().fight.phase==='damage'&&data().fight.round===1,'the second enemy attacks without rolling Speed again');
+el('manualDice').value='2 5';click('next');click('next');
+check(data().fight.hero.health===74&&data().fight.turn.damageScore===14,'the ghoul pack keeps its highest die and ignores Armour');
+click('next');check(data().fight.phase==='start','round-end effects wait until both attacks finish');
+data().fight=createLegionFight({speed:0,brawn:0,magic:0,armour:100,health:100,maxHealth:100},'807',{roster:stagedRoster});
+panel.render();click('next');el('manualDice').value='1 2 6 5';click('next');click('next');el('manualDice').value='4';click('next');click('next');click('next');
+el('manualDice').value='3';click('next');
+check(data().fight.phase==='ability-rolled'&&data().fight.turn.pendingAbility.dice[0]===3,'Daarko exposes its saved round-start form roll');
+click('next');check(data().fight.opponents[0].magic===16&&data().fight.opponents[0].armour===10,'the form roll changes both printed stats through the actual panel');
+data().fight=createLegionFight({speed:20,brawn:3,magic:0,armour:4,health:100,maxHealth:100},'818',{roster:stagedRoster});
+panel.render();check(data().fight.opponents[0].health===null&&el('combatants').textContent.includes('-/-'),'the anomaly renders without invented Health');
+click('next');el('manualDice').value='6 5 1 2';click('next');el('manualDice').value='3';click('next');click('next');
+check(data().fight.phase==='end'&&data().fight.effects.some(effect=>effect.attribute==='magic'&&effect.amount===-4),'Absorption replaces normal damage through the actual panel');
+data().fight=createLegionFight({speed:20,brawn:3,magic:6,armour:4,health:100,maxHealth:100},'877',{roster:stagedRoster});
+panel.render();click('next');el('manualDice').value='6 5 1 2';click('next');click('next');el('manualDice').value='4';click('next');click('next');
+el('bookAction').value='magic-shield';click('book-action');click('next');
+check(data().fight.hero.health===100&&data().fight.effects.some(effect=>effect.attribute==='magic'&&effect.amount===-2),'Magic Shield spends Magic and blocks the blast through the actual controls');
+data().fight=createLegionFight({speed:20,brawn:60,magic:0,armour:4,health:100,maxHealth:100},'921',{roster:stagedRoster});
+panel.render();
+check([...el('target').options].every(option=>option.value!=='0'),'the indestructible sentries are excluded from target controls');
+click('next');el('manualDice').value='6 5 1 2';click('next');click('next');el('target').value='2';click('retarget');el('manualDice').value='4';click('next');click('next');
+check(data().fight.opponents[2].health===0&&data().fight.opponents[1].health===80,'the player can destroy poison nodes after winning against sentry Speed');
+const left=el('overlay').querySelector('.bsim-col-left').getBoundingClientRect();
+for(const control of el('overlay').querySelectorAll('input,select,button:not(.inv-close-btn)'))
+  if(control.getClientRects().length&&control.getBoundingClientRect().right>left.right+1)throw Error('Overflowing control '+control.id);
+check(document.documentElement.scrollWidth<=innerWidth+1,'no page horizontal overflow');
+document.body.dataset.test=JSON.stringify({width:innerWidth,scenarios,compiledAbilities:Object.keys(catalog).length,playerDatabaseWrites:0,panelOnly:true});

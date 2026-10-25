@@ -1,4 +1,5 @@
-import { destinyStat, destinyStrike, addDestinyStatEffect, healDestinyHero, isDestinyOpponentActive, isDestinyOpponentDead } from './effects.js';
+import { destinyStat, destinyStrike, addDestinyStatEffect, healDestinyHero, isDestinyOpponentActive, isDestinyOpponentDead, destinyDamageAllowed, destinyPassiveDamageBonus, onDestinyHeroDice, applyDestinyHeroRoll, destinyArmour, applyDestinyAcceptedHeroRoll } from './effects.js';
+import {reviveDestinyHero} from './core.js';
 
 const living = fight => fight.opponents.map((opponent, index) => isDestinyOpponentActive(fight, index) ? index : -1).filter(index => index >= 0);
 function target(fight, index) {
@@ -26,17 +27,23 @@ export function prepareDestinyDamage(fight, name, spec, options, roll) {
     if (spec.hit === 'adjacent' && Math.abs(targets[0] - targets[1]) !== 1) throw new RangeError('Choose adjacent opponents');
   } else targets = [target(fight, chosen)];
   if (spec.hit === 'dragon') target(fight, chosen);
-  const group = (count, affected) => ({ dice: Array.from({ length: count }, () => destinyDie(roll)), targets: [...affected], bonuses: {} });
+  const group = (count, affected) => {
+    const dice=applyDestinyHeroRoll(fight,Array.from({length:count},()=>destinyDie(roll)),'damage');onDestinyHeroDice(fight,dice);
+    return {dice,targets:[...affected],bonuses:{}};
+  };
   const countBonus = fight.turn.torrentFor === name ? 1 : 0;
-  const groups = spec.shared ? [group(spec.dice + countBonus, targets)] : targets.map((index, order) => {
+  const groups = spec.fixedDamageStat ? [{ dice: [], bonuses: {}, targets, amount:
+    Math.ceil((spec.fixedDamageOwner==='opponent'&&spec.fixedDamageStat==='armour'?destinyArmour(fight,chosen):destinyStat(fight, spec.fixedDamageOwner === 'opponent' ? chosen : 'hero', spec.fixedDamageStat, {ignoreModifierIncreases:!!spec.unmodified})) / (spec.fixedDamageDivisor || 1)) }] :
+    spec.shared ? [group(spec.dice + countBonus, targets)] : targets.map((index, order) => {
     let count = spec.dice;
     if (spec.hit === 'dragon' && index !== chosen) count = 1;
     if (spec.hit === 'below') count = Math.max(1, 3 - order);
     if (spec.speedDifference) count += Math.max(0, destinyStat(fight, 'hero', 'speed') - destinyStat(fight, index, 'speed'));
     return group(count, [index]);
   });
-  const pending = { type: 'damage', name, spec: { ...spec }, options: structuredClone(options), groups, returnPhase: fight.phase };
-  if (options.deferDamage && !spec.unmodified) {
+  const selfDamage=spec.selfDamageDice ? applyDestinyHeroRoll(fight,Array.from({length:spec.selfDamageDice},()=>destinyDie(roll)),'damage') : [];
+  const pending = { type: 'damage', name, spec: { ...spec }, options: structuredClone(options), groups, selfDamage, returnPhase: fight.phase };
+  if (options.deferDamage && !spec.unmodified && groups.some(group => group.dice.length)) {
     fight.turn.pendingAbility = pending;
     fight.phase = 'ability-rolled';
   } else applyDestinyDamage(fight, pending);
@@ -44,14 +51,22 @@ export function prepareDestinyDamage(fight, name, spec, options, roll) {
 
 export function applyDestinyDamage(fight, pending) {
   const { name, spec, options, groups } = pending;
-  const bonus = spec.unmodified ? 0 : fight.effects.filter(effect => effect.kind === 'damage-per-die' &&
-    effect.from <= fight.round && effect.until >= fight.round).reduce((sum, effect) => sum + effect.amount, 0);
+  const bonus = destinyPassiveDamageBonus(fight)+(spec.unmodified ? 0 : fight.effects.filter(effect => effect.kind === 'damage-per-die' &&
+    effect.from <= fight.round && effect.until >= fight.round).reduce((sum, effect) => sum + effect.amount, 0));
   for (const group of groups) {
-    const damage = group.dice.reduce((sum, face, index) => sum + face + bonus + (group.bonuses[index] || 0), 0);
+    const healthBeforeHazard = fight.hero.health;
+    applyDestinyAcceptedHeroRoll(fight,group.dice,'damage');
+    if (fight.hero.health < healthBeforeHazard) {
+      reviveDestinyHero(fight);
+      if (fight.hero.health <= 0) return;
+    }
+    const damage = group.dice.reduce((sum, face, index) => sum + face + bonus + (group.bonuses[index] || 0), group.amount || 0);
     for (const index of group.targets) {
-      const lost = destinyStrike(fight, index, damage, name);
+      const lost = spec.passiveAttack && !destinyDamageAllowed(fight, index, 'passive') ? 0 :
+        destinyStrike(fight, index, damage, name, spec.damageKind || (spec.fixedDamageStat ? 'fixed-ability' : 'dice'));
       if (spec.passive && isDestinyOpponentDead(fight, index)) fight.turn.pendingPassiveDeath = true;
       if (spec.category === 'co' && lost) fight.turn.combatAbilityDamage = true;
+      if (spec.ignite && lost && !fight.effects.some(effect=>effect.kind==='burn'&&effect.target===index)) fight.effects.push({kind:'burn',target:index,from:fight.round,until:Number.MAX_SAFE_INTEGER,source:name});
       if (spec.drain && lost) healDestinyHero(fight, 2);
       if (spec.recoil && lost) fight.hero.health = Math.max(0, fight.hero.health - 1);
       if (spec.armourLoss) addDestinyStatEffect(fight, index, 'armour', -spec.armourLoss, null, name);
@@ -66,6 +81,11 @@ export function applyDestinyDamage(fight, pending) {
       if (spec.delayed) fight.effects.push({ kind: 'delayed-dice', target: index,
         from: fight.round + 1, until: fight.round + 1, source: name });
     }
+  }
+  if (pending.selfDamage?.length) {
+    const damage=Math.min(fight.hero.health,pending.selfDamage.reduce((sum,face)=>sum+face,0));
+    fight.hero.health-=damage;
+    fight.history.push({type:'ability-recoil',round:fight.round,source:name,dice:[...pending.selfDamage],damage});
   }
   if (spec.slowHero) addDestinyStatEffect(fight, 'hero', 'speed', -1, 1, name, 1);
 }

@@ -1,0 +1,52 @@
+localStorage.setItem('gamebook_lang','en');
+const enemies=LEGION_ENEMIES;let interceptedSaves=0,rosterLoads=0;
+globalThis.fetch=async(url,options={})=>{
+  if(String(url)==='/api/books/1286/enemies'){rosterLoads++;return new Response(JSON.stringify(enemies),{status:200});}
+  if(String(url)==='/api/books/1286/state'&&options.method==='PUT'){interceptedSaves++;return new Response('{}',{status:200});}
+  throw Error('Unexpected network request '+url);
+};
+const app=await import('REPO/public/js/core/state.js');
+const {loadBattleSimTranslations}=await import('REPO/public/js/i18n/battlesim.js');
+const {t}=await import('REPO/public/js/i18n.js');
+const {prepareBattleSimLayout}=await import('REPO/public/js/battlesim/layout.js');
+await loadBattleSimTranslations(1286);app.setCurrentBookId(1286);
+app.state.playthroughs=[{startedAt:1,path:[1],notebook:'preserve',sim1285:{untouched:true},inventory:[{itemId:7,qty:12,note:'keep'}],equipment:{primary:{itemId:9,qty:1,label:'keep sword'}}}];app.state.activePtIndex=0;
+const sharedItems=JSON.stringify([app.currentPlaythrough().inventory,app.currentPlaythrough().equipment]);
+const entry=await import('REPO/public/js/battlesim/battlesim1286.js');
+await entry.loadData();entry.init();entry.setVisible(true);
+const el=key=>document.getElementById('sim1286-'+key),data=()=>app.currentPlaythrough().sim1286;
+let scenarios=0;const check=(value,message)=>{if(!value)throw Error(message);scenarios++;};
+const click=key=>{if(!el(key))throw Error('Missing control '+key);el(key).click();};
+const change=(key,value)=>{el(key).value=value;el(key).dispatchEvent(new Event('change',{bubbles:true}));};
+click('btn');prepareBattleSimLayout(el('overlay'));
+check(el('health').value==='30'&&el('maxHealth').value==='30','new heroes use the printed thirty Health default');
+check(!el('synsHeart')&&!el('fimbulwinter')&&!el('tarBarrels'),'Winter-specific setup controls are absent');
+check(el('encounter').options.length===173,'all 172 roster encounters plus custom combat are available');
+check(el('owned').querySelector('select').options.length===141,'the real book entry exposes the full source catalog');
+change('encounter','207');
+check(el('condition-runeVoldring')&&el('condition-runeTalos'),'rune conditions have source-specific names');
+el('condition-runeAllura').checked=true;el('condition-runeAllura').dispatchEvent(new Event('change',{bubbles:true}));
+check(data().setup.encounterOptions.runeAllura===true,'the selected rune choice is saved');
+check(!el('pack0Name')&&!el('backpackItem'),'no duplicate backpack manager is created');
+change('health','10');change('speed','20');
+change('potion-health-amount','4');change('potion-health-uses','2');
+click('start');
+check(data().fight.encounter.availableItems.includes('rune-of-allura'),'starting through the real entry passes encounter choices to the factory');
+click('next');click('potion-modifier');
+check(data().fight.hero.health===14&&data().character.potionModifiers.health.uses===1,'the simulator potion effect heals and spends one use');
+check(!Object.hasOwn(data().character,'backpack'),'potion effect counters do not create a second inventory');
+const fight=JSON.stringify(data().fight);entry.render();check(JSON.stringify(data().fight)===fight,'rendering never rewrites the fight');
+data().fight=null;delete data().fightId;entry.render();change('encounter','650');
+change('rod-north','enfeeblement');change('rod-east','rending');change('rod-west','slowing');
+click('start');
+check(data().fight.encounter.rodChoice==='rending','the east passage uses its selected rod through the real setup');
+check(data().fight.effects.some(effect=>effect.source==='rod-east'&&effect.amount===-4),'the selected rod affects the saved fight');
+check(app.currentPlaythrough().notebook==='preserve'&&app.currentPlaythrough().sim1285.untouched,'other simulator state and notebook remain untouched');
+check(JSON.stringify([app.currentPlaythrough().inventory,app.currentPlaythrough().equipment])===sharedItems,'shared inventory and equipment are preserved, including quantities above five');
+check(rosterLoads===1,'the real entry fetches the roster only once');
+const left=el('overlay').querySelector('.bsim-col-left').getBoundingClientRect();
+for(const control of el('overlay').querySelectorAll('input,select,button:not(.inv-close-btn)'))
+  if(control.getClientRects().length&&control.getBoundingClientRect().right>left.right+1)throw Error('Overflowing control '+control.id);
+check(document.documentElement.scrollWidth<=innerWidth+1,'no horizontal overflow');
+check(!el('overlay').textContent.includes('battlesim1286.'),'untranslated labels: '+[...new Set(el('overlay').textContent.match(/battlesim1286\.[\w.-]+/g)||[])].join(', '));
+document.body.dataset.test=JSON.stringify({width:innerWidth,scenarios,rosterLoads,interceptedSaves,playerDatabaseWrites:0,actualBookEntry:true,panelOnly:true});
