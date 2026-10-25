@@ -212,8 +212,9 @@
 .job-xp-summary { display: flex; flex-direction: column; gap: 0.18rem; margin-top: 0.18rem; font-size: 0.76rem; color: #d1d5db; }
 .job-xp-summary[hidden] { display: none; }
 .job-xp-level-row { display: flex; align-items: baseline; gap: 0.42rem; font-size: 0.8rem; }
-.job-xp-level { color: #c084fc; font-weight: 700; }
-[id$="-job-xp-title"] { color: #fff; }
+.job-xp-level { color: #c084fc; font-weight: 700; flex-shrink: 0; white-space: nowrap; }
+[id$="-job-xp-title"] { color: #fff; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[id$="-job-xp-next-ruby"] { margin-left: auto; flex-shrink: 0; font-size: 0.7rem; color: #fb7185; white-space: nowrap; }
 .job-xp-bar { height: 5px; background: #1f2937; border-radius: 3px; overflow: hidden; }
 .job-xp-bar > div { height: 100%; width: 0; background: #c084fc; border-radius: inherit; }
 [id$="-job-xp-label"] { font-size: 0.76rem; color: #9ca3af; line-height: 1.15; white-space: nowrap; }

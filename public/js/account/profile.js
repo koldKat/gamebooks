@@ -255,9 +255,12 @@ function _renderJobXpSummary(data, displayedXp, visible) {
     wrap.title = '';
     wrap.removeAttribute('data-tooltip');
     const bar = document.getElementById(`${prefix}-job-xp-bar`);
+    const nextRuby = document.getElementById(`${prefix}-job-xp-next-ruby`);
+    if (nextRuby) nextRuby.hidden = !visible || !Number.isSafeInteger(data?.diamondEventsUntilNext);
     if (bar && visible && Number.isSafeInteger(data?.diamondEventsUntilNext)) {
       const events = data.diamondEventsUntilNext;
       bar.setAttribute('data-tooltip', `${events.toLocaleString()} XP event${events === 1 ? '' : 's'} until next ruby`);
+      if (nextRuby) nextRuby.textContent = `${events.toLocaleString()} EV to next ruby`;
     } else bar?.removeAttribute('data-tooltip');
     const fill = document.getElementById(`${prefix}-job-xp-fill`);
     if (fill) fill.style.width = `${100 * (xp - levelXp) / (nextLevelXp - levelXp)}%`;
