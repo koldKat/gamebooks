@@ -1,12 +1,10 @@
 import { destinyDie } from './damage.js';
-import { addDestinyStatEffect, destinyStat, observeDestinyHealth, isDestinyOpponentActive, destinyAttackerTarget, hasDestinyAbility, onDestinyHeroDice, applyDestinyHeroRoll } from './effects.js';
+import { damageDestinyHero, addDestinyStatEffect, destinyStat, observeDestinyHealth, isDestinyOpponentActive, destinyAttackerTarget, hasDestinyAbility, onDestinyHeroDice, applyDestinyHeroRoll } from './effects.js';
 import { queueDestinyEncounterEvent } from './encounter-events.js';
 
 const doubles = values => values.length > 1 && new Set(values).size < values.length;
 function hurt(fight, amount, name) {
-  const damage = Math.min(fight.hero.health, amount);
-  fight.hero.health -= damage;
-  observeDestinyHealth(fight);
+  const damage = damageDestinyHero(fight,amount);
   fight.history.push({ type: 'roll-hazard', name, round: fight.round, damage });
 }
 

@@ -3,7 +3,7 @@ import { spawnDestinyOpponents, applyDestinyOpponentForm } from './round-events.
 import { destinyDie } from './damage.js';
 import { destinyEncounterEventSettings } from './encounter-settings.js';
 import { destinyDeathMovesEnabled } from './book-rules.js';
-import { destinyStat, addDestinyStatEffect, observeDestinyHealth, hasDestinyAbility, destinyStrike, isDestinyOpponentActive, isDestinyOpponentDead, recordDestinyDefeat, destinyAttackerTarget, destinyImmuneToAbility, destinyOpponentDamageTotal } from './effects.js';
+import { damageDestinyHero, destinyStat, addDestinyStatEffect, observeDestinyHealth, hasDestinyAbility, destinyStrike, isDestinyOpponentActive, isDestinyOpponentDead, recordDestinyDefeat, destinyAttackerTarget, destinyImmuneToAbility, destinyOpponentDamageTotal } from './effects.js';
 
 export function queueDestinyEncounterEvent(fight, event, returnPhase, roll) {
   if(destinyImmuneToAbility(fight,event.ability))return;
@@ -31,9 +31,7 @@ export function resumeDestinyEncounterQueue(fight, roll) {
 }
 
 function heroDamage(fight, amount, enemyDice = false, attacker = destinyAttackerTarget(fight)) {
-  const lost = Math.min(fight.hero.health, amount);
-  fight.hero.health -= lost;
-  observeDestinyHealth(fight);
+  const lost = damageDestinyHero(fight,amount);
   if (enemyDice && lost && hasDestinyAbility(fight, 'lightning') && isDestinyOpponentActive(fight, attacker)) {
     destinyStrike(fight, attacker, 2, 'lightning', 'passive');
   }

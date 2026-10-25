@@ -29,9 +29,8 @@ export function applyDestinyHeroRoll(fight,values,kind,indices=values.map((_,ind
   }
   for(const rule of fight.encounter?.heroRollFaces||[]){
     if(rule.kinds&&!rule.kinds.includes(kind)||rule.requiresAlive?.some(target=>!isDestinyOpponentActive(fight,target)))continue;
-    const amount=Math.min(fight.hero.health,indices.filter(index=>rule.faces.includes(values[index])).length*rule.amount);
+    const amount=damageDestinyHero(fight,indices.filter(index=>rule.faces.includes(values[index])).length*rule.amount);
     if(!amount)continue;
-    fight.hero.health-=amount;observeDestinyHealth(fight);
     fight.history.push({type:'roll-hazard',name:rule.name,round:fight.round,damage:amount});
   }
   for (const rule of fight.encounter?.heroRollHealing || []) {
@@ -46,8 +45,8 @@ export function applyDestinyAcceptedHeroRoll(fight,values,kind){
   for(const rule of fight.encounter?.acceptedHeroRollFaces||[]){
     if(rule.kinds&&!rule.kinds.includes(kind))continue;
     const hits=values.filter(face=>rule.faces.includes(face)).length;
-    const damage=Math.min(fight.hero.health,hits*rule.amount);
-    if(damage){fight.hero.health-=damage;observeDestinyHealth(fight);fight.history.push({type:'roll-hazard',name:rule.name,round:fight.round,damage});}
+    const damage=damageDestinyHero(fight,hits*rule.amount);
+    if(damage)fight.history.push({type:'roll-hazard',name:rule.name,round:fight.round,damage});
   }
 }
 
@@ -128,12 +127,41 @@ export function addDestinyStatEffect(fight, target, attribute, amount, duration,
     until: duration === null ? Number.MAX_SAFE_INTEGER : from + duration - 1, source });
 }
 
+// Story blessings expire by combats, independently of the entered base stats.
+// Spend them when the player's first round begins, never on setup or rendering.
+export function beginDestinyCombatBoosts(fight){
+  if(fight.round!==1||fight.combatBoostsApplied||fight.encounter?.heroRelay?.active||!fight.character?.combatBoosts)return;
+  for(const [attribute,boost] of Object.entries(fight.character?.combatBoosts||{})){
+    if(!['speed','brawn','magic','armour'].includes(attribute)||!boost||
+      !Number.isSafeInteger(boost.amount)||boost.amount<0||boost.amount>1000000||
+      !Number.isSafeInteger(boost.combats)||boost.combats<0||boost.combats>100)throw new RangeError('Invalid story combat boost');
+    if(!boost.combats||!boost.amount)continue;
+    addDestinyStatEffect(fight,'hero',attribute,boost.amount,null,'story-blessing');
+    boost.combats--;
+  }
+  fight.combatBoostsApplied=true;
+}
+
 export function healDestinyHero(fight, amount) {
   observeDestinyHealth(fight);
   if (fight.hero.health <= 0) return 0;
   const restored = Math.min(amount, fight.hero.maxHealth - fight.hero.health);
   fight.hero.health += restored;
   return restored;
+}
+
+// Absorb combat damage before health is deducted. Explicit health costs and
+// sacrifices deliberately keep their separate, direct health deductions.
+export function damageDestinyHero(fight, amount){
+  const absorbed=Math.min(fight.portableShieldHealth||0,Math.max(0,amount));
+  if(absorbed){
+    fight.portableShieldHealth-=absorbed;
+    fight.history.push({type:'shield-absorption',round:fight.round,damage:absorbed,remaining:fight.portableShieldHealth});
+  }
+  const lost=Math.min(fight.hero.health,Math.max(0,amount-absorbed));
+  fight.hero.health-=lost;
+  observeDestinyHealth(fight);
+  return lost;
 }
 
 export function observeDestinyHealth(fight) {
@@ -222,9 +250,8 @@ export function reflectDestinyDamage(fight, target, damage, kind) {
       continue;
     }
     const amount = rule.divisor ? Math.ceil(damage / rule.divisor) : rule.amount;
-    fight.hero.health = Math.max(0, fight.hero.health - amount);
-    fight.history.push({ type: 'reflected-damage', round: fight.round, target, damage: amount });
-    observeDestinyHealth(fight);
+    const lost=damageDestinyHero(fight,amount);
+    fight.history.push({ type: 'reflected-damage', round: fight.round, target, damage: lost });
   }
 }
 
@@ -332,7 +359,7 @@ export function recordDestinyDefeat(fight, target) {
   }
   if (hasDestinyAbility(fight, 'malefic-runes')) addDestinyStatEffect(fight, 'hero', 'magic', 1, null, 'malefic-runes');
   const explosion = fight.encounter?.deathDamageByTarget?.[target] || 0;
-  if (explosion) { fight.hero.health = Math.max(0, fight.hero.health - explosion); observeDestinyHealth(fight); }
+  if (explosion) damageDestinyHero(fight,explosion);
   for (const effect of fight.encounter?.onDeathStatChanges || []) {
     if (effect.dead !== target || !isDestinyOpponentActive(fight, effect.target)) continue;
     for (const [attribute, amount] of Object.entries(effect.changes)) addDestinyStatEffect(fight, effect.target, attribute, amount, null, 'encounter-death');
@@ -352,8 +379,8 @@ export function destinyOnOpponentRoll(fight, values, kind) {
   if (!isDestinyOpponentActive(fight, target)) return;
   for(const rule of fight.encounter?.opponentRollHeroDamage||[]){
     if(rule.target!==target||rule.kind&&rule.kind!==kind)continue;
-    const damage=Math.min(fight.hero.health,values.filter(face=>rule.faces.includes(face)).length*rule.amount);
-    if(damage){fight.hero.health-=damage;observeDestinyHealth(fight);fight.history.push({type:'roll-hazard',round:fight.round,name:rule.name,damage});}
+    const damage=damageDestinyHero(fight,values.filter(face=>rule.faces.includes(face)).length*rule.amount);
+    if(damage)fight.history.push({type:'roll-hazard',round:fight.round,name:rule.name,damage});
   }
   for(const rule of fight.encounter?.opponentRollHealing||[]){
     if(rule.target!==target||rule.kind&&rule.kind!==kind)continue;

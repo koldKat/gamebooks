@@ -1,6 +1,6 @@
 // Shared DestinyQuest combat sequence. Book abilities and encounter exceptions
 // are applied between these explicit stages, rather than hidden inside a roll.
-import { destinyStat, destinyDamageScore, destinyOnHeroHit, destinyPassiveEffects,
+import { damageDestinyHero, beginDestinyCombatBoosts, destinyStat, destinyDamageScore, destinyOnHeroHit, destinyPassiveEffects,
   destinyPassiveProtection, hasDestinyAbility, healDestinyHero, recordDestinyDefeat, destinyStrike, observeDestinyHealth, destinyRollOpponentDice, addDestinyStatEffect,
   isDestinyOpponentActive, isDestinyOpponentDead, destinyDamageAllowed, destinyAttackerTarget, reflectDestinyDamage, destinyScoreExtraDice, onDestinyHeroDice, destinyImmuneToAbility, applyDestinyHeroRoll, destinyArmour, applyDestinyAcceptedHeroRoll } from './effects.js';
 import { applyDestinyRoundEvents, spawnDestinyRoundOpponents, reformDestinyOpponent, advanceDestinyAspectCycle } from './round-events.js';
@@ -197,6 +197,8 @@ export function continueDestinyCombat(fight){
   const target=sequence.targets[++sequence.index];
   next.encounter.inactiveTargets=(next.encounter.inactiveTargets||[]).filter(index=>index!==target);
   next.round=0;next.phase='start';next.target=target;next.turn=null;next.used={};next.effects=[];
+  delete next.combatBoostsApplied;
+  delete next.portableShieldHealth;
   Object.assign(next.hero,next.hero.normal);
   for(const key of ['chargedAttacks','sacrificedSummons','lastHealthHitRound','nextHeroSpeedDice'])delete next[key];
   delete next.encounter.heroStatuses;delete next.encounter.growingStatus;
@@ -240,6 +242,7 @@ export function startDestinyRound(fight, target, roll = randomDie, options = {})
   else { next.round++; next.turn = createDestinyTurn(); }
   next.target = target;
   next.phase = 'speed';
+  beginDestinyCombatBoosts(next);
   if(next.encounter?.startVictoryAtRound&&next.round>=next.encounter.startVictoryAtRound){
     next.encounter.forcedVictory=true;settleDestinyFight(next,roll);return next;
   }
@@ -323,7 +326,7 @@ export function resolveDestinySpeed(fight, roll = randomDie) {
   for(const rule of next.encounter?.acceptedHeroSpeedFaces||[]){
     const hits=next.turn.heroSpeedDice.filter(face=>rule.faces.includes(face)).length;
     if(!hits)continue;
-    const damage=Math.min(next.hero.health,rule.amount*(rule.perDie?hits:1));next.hero.health-=damage;
+    const damage=damageDestinyHero(next,rule.amount*(rule.perDie?hits:1));
     next.history.push({type:'roll-hazard',round:next.round,name:rule.name,damage});
   }
   for(const rule of next.encounter?.acceptedSpeedEffects||[])if(next.turn.heroSpeedDice.some(face=>rule.faces.includes(face))){
@@ -351,8 +354,7 @@ export function resolveDestinySpeed(fight, roll = randomDie) {
     next.turn.blockedAbilities=[...(charged.blockedAbilities||[])];
   }
   if (next.encounter?.heroDamageWithoutSpeedAbility && !next.turn.playedSpeedAbility) {
-    const damage = Math.min(next.hero.health, next.encounter.heroDamageWithoutSpeedAbility);
-    next.hero.health -= damage;
+    const damage = damageDestinyHero(next,next.encounter.heroDamageWithoutSpeedAbility);
     next.history.push({ type: 'encounter-damage', name: 'Head rush', round: next.round, damage });
     if (settleDestinyFight(next, roll)) return next;
   }
@@ -432,12 +434,12 @@ export function resolveDestinyDamage(fight, roll = randomDie) {
   const faceBonus=heroWon?0:(next.encounter?.opponentDamageFaceBonus||[]).filter(rule=>rule.target===attacker).reduce((total,rule)=>total+next.turn.damageDice.filter(face=>rule.faces.includes(face)).length*rule.amount,0);
   const damage = next.turn.avoidDamage || heroWon && !destinyDamageAllowed(next, next.target) ? 0 :
     !heroWon && next.turn.replaceIncomingDamage !== undefined ? next.turn.replaceIncomingDamage : Math.max(0, score - armour)+faceBonus;
-  let healthLost = Math.min(defender.health, damage);
+  let healthLost = heroWon ? Math.min(defender.health, damage) : damageDestinyHero(next,damage);
   if (heroWon) reflectDestinyDamage(next, next.target, healthLost, 'score');
-  defender.health -= healthLost;
+  if(heroWon)defender.health -= healthLost;
   if(!heroWon&&healthLost&&next.encounter?.extraHeroDamagePerArmour){
-    const extra=Math.min(defender.health,Math.ceil(destinyArmour(next,'hero')/next.encounter.extraHeroDamagePerArmour));
-    defender.health-=extra;healthLost+=extra;
+    const extra=damageDestinyHero(next,Math.ceil(destinyArmour(next,'hero')/next.encounter.extraHeroDamagePerArmour));
+    healthLost+=extra;
   }
   if (heroWon && isDestinyOpponentDead(next, next.target)) recordDestinyDefeat(next, next.target);
   next.turn.damageScore = score;
@@ -552,11 +554,11 @@ export function endDestinyRound(fight, effects = [], roll = randomDie, {advanceO
       next.phantomHealth -= absorbed;
       applied -= absorbed;
     }
-    const actual = Math.min(defender.health, applied);
+    const actual = target==='hero' ? damageDestinyHero(next,applied) : Math.min(defender.health, applied);
     if(target!=='hero')reflectDestinyDamage(next,target,actual,'passive');
     next.turn.passiveDamageByTarget ??= {};
     next.turn.passiveDamageByTarget[target] = actual;
-    defender.health = Math.max(0, defender.health - applied);
+    if(target!=='hero')defender.health = Math.max(0, defender.health - applied);
     if (target !== 'hero' && isDestinyOpponentDead(next, target)) {
       recordDestinyDefeat(next, target);
       next.turn.deaths.push(target);

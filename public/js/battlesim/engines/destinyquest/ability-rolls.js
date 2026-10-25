@@ -1,4 +1,4 @@
-import { destinyStat, destinyStrike, addDestinyStatEffect, isDestinyOpponentActive } from './effects.js';
+import { damageDestinyHero, destinyStat, destinyStrike, addDestinyStatEffect, isDestinyOpponentActive } from './effects.js';
 import { destinyDie, prepareDestinyDamage, applyDestinyDamage } from './damage.js';
 import { settleDestinyFight } from './core.js';
 import { resolveDestinyEncounterEvent, resumeDestinyEncounterQueue } from './encounter-events.js';
@@ -101,7 +101,7 @@ export function resolveDestinyAbilityRoll(fight, roll = () => Math.floor(Math.ra
       if (result <= 4) {
         next.crystalArmour = false;
         next.effects = next.effects.filter(effect => effect.source !== 'crystal-armour');
-        if (result <= 2) next.hero.health = Math.max(0, next.hero.health - 4);
+        if (result <= 2) damageDestinyHero(next,4);
       }
       next.phase = pending.returnPhase;
     } else if (name === 'pick-n-mix') {

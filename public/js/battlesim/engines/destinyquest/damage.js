@@ -1,4 +1,4 @@
-import { destinyStat, destinyStrike, addDestinyStatEffect, healDestinyHero, isDestinyOpponentActive, isDestinyOpponentDead, destinyDamageAllowed, destinyPassiveDamageBonus, onDestinyHeroDice, applyDestinyHeroRoll, destinyArmour, applyDestinyAcceptedHeroRoll } from './effects.js';
+import { damageDestinyHero, destinyStat, destinyStrike, addDestinyStatEffect, healDestinyHero, isDestinyOpponentActive, isDestinyOpponentDead, destinyDamageAllowed, destinyPassiveDamageBonus, onDestinyHeroDice, applyDestinyHeroRoll, destinyArmour, applyDestinyAcceptedHeroRoll } from './effects.js';
 import {reviveDestinyHero} from './core.js';
 
 const living = fight => fight.opponents.map((opponent, index) => isDestinyOpponentActive(fight, index) ? index : -1).filter(index => index >= 0);
@@ -68,7 +68,7 @@ export function applyDestinyDamage(fight, pending) {
       if (spec.category === 'co' && lost) fight.turn.combatAbilityDamage = true;
       if (spec.ignite && lost && !fight.effects.some(effect=>effect.kind==='burn'&&effect.target===index)) fight.effects.push({kind:'burn',target:index,from:fight.round,until:Number.MAX_SAFE_INTEGER,source:name});
       if (spec.drain && lost) healDestinyHero(fight, 2);
-      if (spec.recoil && lost) fight.hero.health = Math.max(0, fight.hero.health - 1);
+      if (spec.recoil && lost) damageDestinyHero(fight,1);
       if (spec.armourLoss) addDestinyStatEffect(fight, index, 'armour', -spec.armourLoss, null, name);
       if (spec.weaken) {
         const attribute = options.attribute ?? fight.opponents[index].damageStat;
@@ -83,8 +83,7 @@ export function applyDestinyDamage(fight, pending) {
     }
   }
   if (pending.selfDamage?.length) {
-    const damage=Math.min(fight.hero.health,pending.selfDamage.reduce((sum,face)=>sum+face,0));
-    fight.hero.health-=damage;
+    const damage=damageDestinyHero(fight,pending.selfDamage.reduce((sum,face)=>sum+face,0));
     fight.history.push({type:'ability-recoil',round:fight.round,source:name,dice:[...pending.selfDamage],damage});
   }
   if (spec.slowHero) addDestinyStatEffect(fight, 'hero', 'speed', -1, 1, name, 1);

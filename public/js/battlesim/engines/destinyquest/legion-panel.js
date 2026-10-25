@@ -1,5 +1,7 @@
 // Source-specific controls opt into the shared DestinyQuest panel. Combat and
 // saved-state changes still pass through the common session coordinator.
+import {LEGION_CONSUMABLES} from './legion-consumables.js';
+import {isDestinyOpponentActive} from './effects.js';
 export function createLegionBookControls({id,tk,escape,number,select,check,textInput,button,el,data,apply,integer,getRoster}){
   const potionStats=['health','speed','brawn','magic','armour'];
   const flags=()=>{
@@ -25,19 +27,27 @@ export function createLegionBookControls({id,tk,escape,number,select,check,textI
   }
   return {
     setupFields:()=>`<details><summary>${escape(tk('storyConditions'))}</summary><div id="${id}-sourceConditions"></div></details>`,
-    characterFields:()=>`${textInput('career')}${textInput('keywords')}${number('gold')}${number('defeats')}<details><summary>${escape(tk('potionEffects'))}</summary><p>${escape(tk('potionNote'))}</p>${potionStats.map(stat=>`<details><summary>${escape(tk('potion.'+stat))}</summary>${number('potion-'+stat+'-amount',0,0,1000000,tk('effectAmount'))}${number('potion-'+stat+'-uses',0,0,1000000,tk('remainingUses'))}${stat==='health'?'':number('potion-'+stat+'-duration',1,0,100,tk('effectRounds'))}</details>`).join('')}</details>`,
+    characterFields:()=>`${textInput('career')}${textInput('keywords')}${number('gold')}${number('defeats')}<details><summary>${escape(tk('potionEffects'))}</summary><p>${escape(tk('potionNote'))}</p>${potionStats.map(stat=>`<details><summary>${escape(tk('potion.'+stat))}</summary>${number('potion-'+stat+'-amount',0,0,1000000,tk('effectAmount'))}${number('potion-'+stat+'-uses',0,0,1000000,tk('remainingUses'))}${stat==='health'?'':number('potion-'+stat+'-duration',1,0,100,tk('effectRounds'))}</details>`).join('')}</details><details><summary>${escape(tk('consumableEffects'))}</summary><p>${escape(tk('consumableNote'))}</p>${Object.keys(LEGION_CONSUMABLES).map(name=>number('consumable-'+name,0,0,1000000,tk('consumable.'+name))).join('')}</details><details><summary>${escape(tk('combatBoosts'))}</summary><p>${escape(tk('combatBoostNote'))}</p>${['brawn','magic'].map(stat=>`<details><summary>${escape(tk(stat))}</summary>${number('boost-'+stat+'-amount',0,0,1000000,tk('effectAmount'))}${number('boost-'+stat+'-combats',0,0,100,tk('remainingCombats'))}</details>`).join('')}</details>`,
     readSetup(){
       const encounterOptions={...data().setup.encounterOptions};
       for(const [key]of flags().result)encounterOptions[key]=!!el('condition-'+key)?.checked;
       if(el('rod-north'))encounterOptions.rodPlacements=Object.fromEntries(['north','east','west'].map(direction=>[direction,el('rod-'+direction).value]));
       return {encounterOptions};
     },
-    readCharacter(){return {potionModifiers:Object.fromEntries(potionStats.map(stat=>{
+    readCharacter(){return {
+      combatConsumables:{...data().character.combatConsumables,...Object.fromEntries(Object.keys(LEGION_CONSUMABLES).map(name=>[name,integer('consumable-'+name)]))},
+      combatBoosts:{...data().character.combatBoosts,...Object.fromEntries(['brawn','magic'].map(stat=>[stat,{amount:integer('boost-'+stat+'-amount'),combats:integer('boost-'+stat+'-combats',0,100)}]))},
+      potionModifiers:Object.fromEntries(potionStats.map(stat=>{
       const duration=stat==='health'?1:integer('potion-'+stat+'-duration',0,100);
       return [stat,{...data().character.potionModifiers?.[stat],amount:integer('potion-'+stat+'-amount'),uses:integer('potion-'+stat+'-uses'),duration:duration||null}];
     }))};},
     hydrate(d){
       conditions(d.setup.encounterOptions||{});
+      for(const name of Object.keys(LEGION_CONSUMABLES))el('consumable-'+name).value=d.character.combatConsumables?.[name]??0;
+      for(const stat of ['brawn','magic']){
+        el('boost-'+stat+'-amount').value=d.character.combatBoosts?.[stat]?.amount??0;
+        el('boost-'+stat+'-combats').value=d.character.combatBoosts?.[stat]?.combats??0;
+      }
       for(const stat of potionStats){
         const modifier=d.character.potionModifiers?.[stat];el('potion-'+stat+'-amount').value=modifier?.amount??0;el('potion-'+stat+'-uses').value=modifier?.uses??0;
         if(stat!=='health')el('potion-'+stat+'-duration').value=modifier?.duration===null?0:modifier?.duration??1;
@@ -45,9 +55,16 @@ export function createLegionBookControls({id,tk,escape,number,select,check,textI
     },
     combatFields(fight){
       const available=potionStats.filter(stat=>fight.character?.potionModifiers?.[stat]?.uses>0&&fight.character.potionModifiers[stat].amount>0);
-      return available.length&&!fight.encounter?.disableBackpack?`<details><summary>${escape(tk('potionEffects'))}</summary>${select('potionEffect',available.map(stat=>[stat,`${tk('potion.'+stat)} (${fight.character.potionModifiers[stat].uses})`]),undefined,tk('effect'))}${button('potion-modifier',tk('usePotion'))}</details>`:'';
+      if(fight.encounter?.disableBackpack)return '';
+      const consumables=Object.keys(LEGION_CONSUMABLES).filter(name=>fight.character?.combatConsumables?.[name]>0&&(LEGION_CONSUMABLES[name].kind!=='mushroom'||!fight.used['consumable:'+name]));
+      const targets=fight.opponents.map((foe,index)=>[String(index),foe.name]).filter(([index])=>isDestinyOpponentActive(fight,Number(index)));
+      return (available.length?`<details><summary>${escape(tk('potionEffects'))}</summary>${select('potionEffect',available.map(stat=>[stat,`${tk('potion.'+stat)} (${fight.character.potionModifiers[stat].uses})`]),undefined,tk('effect'))}${button('potion-modifier',tk('usePotion'))}</details>`:'')+
+        (consumables.length?`<details><summary>${escape(tk('consumableEffects'))}</summary>${select('consumableEffect',consumables.map(name=>[name,`${tk('consumable.'+name)} (${fight.character.combatConsumables[name]})`]),undefined,tk('effect'))}${select('consumableTarget',targets,String(fight.target),tk('target'))}${consumables.includes('spirit-tincture')?select('consumableAttribute',['brawn','magic'].map(stat=>[stat,tk(stat)]),'brawn',tk('tinctureAttribute')):''}${button('consumable-effect',tk('useEffect'))}</details>`:'');
     },
-    action(name){if(name!=='potion-modifier')return false;apply(name,{attribute:el('potionEffect').value});return true;},
+    action(name){
+      if(name==='consumable-effect'){apply('book-action',{name:el('consumableEffect').value,options:{target:integer('consumableTarget',0,99),attribute:el('consumableAttribute')?.value}});return true;}
+      if(name!=='potion-modifier')return false;apply(name,{attribute:el('potionEffect').value});return true;
+    },
     change(event){if(event.target.id===id+'-encounter')conditions();},
   };
 }

@@ -1,4 +1,4 @@
-import { destinyStrike, addDestinyStatEffect, isDestinyOpponentActive, destinyImmuneToAbility } from './effects.js';
+import { damageDestinyHero, destinyStrike, addDestinyStatEffect, isDestinyOpponentActive, destinyImmuneToAbility } from './effects.js';
 import { destinyDie, applyDestinyDamage } from './damage.js';
 import { queueDestinyEncounterEvent } from './encounter-events.js';
 
@@ -91,7 +91,7 @@ export function applyDestinyRoundEvents(fight, options, roll) {
     const result = destinyDie(roll);
     fight.history.push({ type: 'round-event', name: effect.kind, round: fight.round, result, unmodifiable: effect.kind === 'vortex' });
     if (effect.kind === 'vortex') {
-      if (result <= 2) fight.hero.health = Math.max(0, fight.hero.health - 2);
+      if (result <= 2) damageDestinyHero(fight,2);
       else fight.opponents.forEach((opponent, target) => {
         if (isDestinyOpponentActive(fight, target)) destinyStrike(fight, target, 2, 'vortex', 'passive');
       });

@@ -8,6 +8,7 @@ import {LEGION_ABILITIES} from './legion-abilities.js';
 import {destinyStrike,addDestinyStatEffect,healDestinyHero,destinyStat} from './effects.js';
 import {beginDestinyHeroRelay} from './hero-relay.js';
 import {applyDestinyOpponentForm} from './round-events.js';
+import {LEGION_CONSUMABLES,useLegionConsumable} from './legion-consumables.js';
 
 export const LEGION_BOOK_RULES=Object.freeze({deathMoves:false,deathPenalties:false});
 
@@ -85,8 +86,9 @@ export function createLegionFight(hero,section,{roster,abilities={},equipment={}
   return fight;
 }
 
-export function useLegionAction(fight,action,{roster}={}){
+export function useLegionAction(fight,action,{roster,...options}={},roll=()=>Math.floor(Math.random()*6)+1){
   if(fight?.status!=='active')throw new RangeError('No active encounter');
+  if(Object.hasOwn(LEGION_CONSUMABLES,action))return useLegionConsumable(fight,action,options,roll);
   const settings=destinyEncounterAction(fight,legionRosterFor(roster,fight.encounter?.sourceSection),action);
   const next=structuredClone(fight);
   if(settings.kind==='spend-stat-shield'){

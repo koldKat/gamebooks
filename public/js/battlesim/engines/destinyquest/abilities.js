@@ -1,5 +1,5 @@
 import { queueDestinyEncounterEvent } from './encounter-events.js';
-import { addDestinyStatEffect, healDestinyHero, hasDestinyAbility, destinyStrike, destinyRollOpponentDice, destinyDieLocked, isDestinyOpponentActive, destinyAttackerTarget, observeDestinyHealth, destinyStat, destinyScoreExtraDice, onDestinyHeroDice, applyDestinyHeroRoll } from './effects.js';
+import { damageDestinyHero, addDestinyStatEffect, healDestinyHero, hasDestinyAbility, destinyStrike, destinyRollOpponentDice, destinyDieLocked, isDestinyOpponentActive, destinyAttackerTarget, observeDestinyHealth, destinyStat, destinyScoreExtraDice, onDestinyHeroDice, applyDestinyHeroRoll } from './effects.js';
 import { settleDestinyFight,onDestinyHeroRoundWon } from './core.js';
 import { applyDestinyAdvancedAbility } from './advanced.js';
 import { prepareDestinyDamage } from './damage.js';
@@ -643,9 +643,7 @@ export function resolveDestinyAbilitySacrifice(fight, name = null, roll = () => 
   const next = structuredClone(fight), pending = next.turn.pendingAbility;
   let damage = 0;
   if (name === null) {
-    damage = Math.min(next.hero.health, pending.event.damageOnDecline);
-    next.hero.health -= damage;
-    observeDestinyHealth(next);
+    damage = damageDestinyHero(next,pending.event.damageOnDecline);
   } else (next.encounter.sacrificedAbilities ??= []).push(name);
   next.history.push({ type: 'ability-sacrifice', round: next.round, name, damage });
   delete next.turn.pendingAbility;

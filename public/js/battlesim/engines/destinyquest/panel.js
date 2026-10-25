@@ -252,6 +252,7 @@ export function createDestinyPanel({document, definition, state, getRoster, t, s
     if(event.type==='damage')return tk('damageResult',{name:event.attacker==='hero'?who:tk('hero'),n:event.damage});
     if(event.type==='ability-damage'||event.type==='passive')return tk('damageResult',{name:event.target==='hero'?tk('hero'):who,n:event.damage});
     if(event.type==='outcome')return tk(event.status);
+    if(event.type==='shield-absorption')return tk('shieldAbsorption',{n:event.damage,remaining:event.remaining});
     if(event.dice)return `${event.name||tk('dice')}: ${event.dice.join(', ')}${event.total!==undefined?' = '+event.total:''}`;
     if(event.name)return `${label(event.name)}${who?' · '+who:''}`;
     return title(event.type);
