@@ -93,3 +93,16 @@ test('one atomic event advances Job XP then applies its digging bonus; normal XP
   initializeDiamondBalances(h.db);initializeJobXp(h.db);assert.deepEqual(wallet(),before,'restart never recalculates progress or awards');
   event('add_note','third');assert.equal(wallet().dig_progress,3008,'restart retains exactly one counting trigger');
 });
+
+test('ruby countdown uses saved fractional progress and anticipates the next Job Level bonus',()=>{
+  const count=(progress,jobXp=0,purchased=0,cap=99)=>diamondInfoForUser(1,{dig_progress:progress,job_xp:jobXp,bonus_diamond_dig_purchased:purchased,job_level_cap:cap},99).diamondEventsUntilNext;
+  assert.equal(count(0),1000);
+  assert.equal(count(999999),1);
+  assert.equal(count(900123,3001,1),100);
+  assert.equal(count(0,999,10,0),1000,'a capped level cannot grant a future digging bonus');
+  for(const [progress,xp,purchased] of [[0,990,10],[300000,2950,10],[900123,3001,1],[999000,999,0]]){
+    let remaining=1000000-progress,events=0;
+    while(remaining>0){events++;const level=Math.floor((-1+Math.sqrt(1+8*(xp+events)/1000))/2);remaining-=1000+level+Math.min(purchased,level);}
+    assert.equal(count(progress,xp,purchased),events);
+  }
+});

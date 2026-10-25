@@ -93,10 +93,32 @@ function diamondInfoForUser(userId, row, level) {
     diamondExchangePurchased: row?.bonus_diamond_exchange_purchased || 0,
     diamondDigPct: (jobLevel + dig) * 0.1,
     diamondEventsPerDiamond: 1000000 / (1000 + jobLevel + dig),
+    diamondEventsUntilNext: eventsUntilNextMinedGem(row?.dig_progress || 0, row?.job_xp || 0, row?.bonus_diamond_dig_purchased || 0, row?.job_level_cap || 0),
     diamondExchangeRate: level,
     diamondBuyRate: level,
     diamondPurchaseStock: row?.diamond_purchase_stock || 0,
   };
+}
+
+function eventsUntilNextMinedGem(progress, jobXp, purchased, cap) {
+  let remaining = 1000000 - progress, events = 0;
+  const ceiling = Math.max(cap, Math.floor((-1 + Math.sqrt(1 + 8 * jobXp / 1000)) / 2));
+  const maxXp = 1000 * (ceiling + 1) * (ceiling + 2) / 2 - 1;
+  // An event reaching a Job Level receives the new level's bonus. Account for
+  // that boundary without simulating or recording future events.
+  while (remaining > 0) {
+    const level = Math.floor((-1 + Math.sqrt(1 + 8 * Math.min(jobXp + 1, maxXp) / 1000)) / 2);
+    const units = 1000 + level + Math.min(purchased, level);
+    const nextLevelXp = 1000 * (level + 1) * (level + 2) / 2;
+    const atRate = nextLevelXp - jobXp - 1;
+    const needed = Math.ceil(remaining / units);
+    if (nextLevelXp > maxXp) return events + needed;
+    if (needed <= atRate) return events + needed;
+    remaining -= atRate * units;
+    events += atRate;
+    jobXp += atRate;
+  }
+  return events;
 }
 
 module.exports = { initializeDiamondBalances, hasDiamondAccess, diamondInfoForUser };

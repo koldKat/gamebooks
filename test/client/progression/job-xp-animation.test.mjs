@@ -6,13 +6,13 @@ import vm from 'node:vm';
 function setup() {
   const source=fs.readFileSync('public/js/account/profile.js','utf8');
   const elements=new Map(),frames=new Map();let now=0,id=0,token='first';
-  for(const prefix of ['books','play'])for(const suffix of ['','-fill','-level','-title','-label'])elements.set(`${prefix}-job-xp${suffix}`,{style:{},setAttribute(name,value){this[name]=value;}});
+  for(const prefix of ['books','play'])for(const suffix of ['','-fill','-level','-title','-label'])elements.set(`${prefix}-job-xp${suffix}`,{style:{},setAttribute(name,value){this[name]=value;},removeAttribute(name){delete this[name];}});
   const context=vm.createContext({document:{getElementById:id=>elements.get(id)},getToken:()=>token,
     t:key=>key,XP_ANIM_MS_PER_LEVEL:100,performance:{now:()=>now},
     requestAnimationFrame:fn=>{frames.set(++id,fn);return id;},cancelAnimationFrame:id=>frames.delete(id)});
   vm.runInContext(source.slice(source.indexOf('function _xpLevelBounds'),source.indexOf('function _xpLabelParts'))+
     source.slice(source.indexOf('// Separate progression:'),source.indexOf('function renderXpBlock')).replaceAll('export ',''),context);
-  return {render:xp=>context.renderJobXpSummary({jobXp:xp,jobLevelCap:9,level:90}),elements,frames,
+  return {render:(xp,data={})=>context.renderJobXpSummary({jobXp:xp,jobLevelCap:9,level:90,...data}),elements,frames,
     token:value=>{token=value;},step:ms=>{now+=ms;const pending=[...frames.values()];frames.clear();for(const fn of pending)fn(now);}};
 }
 
@@ -21,6 +21,18 @@ test('Job XP loads immediately and animates later gains using job level rather t
   s.render(1100);s.step(50);
   for(const prefix of ['books','play'])assert.match(s.elements.get(`${prefix}-job-xp-label`).innerHTML,/1,050 EV/);
   s.step(50);assert.match(s.elements.get('play-job-xp-label').innerHTML,/1,100 EV/);assert.equal(s.frames.size,0);
+});
+
+test('Job bars use the themed ruby countdown from the live snapshot, independently of animation',()=>{
+  const s=setup();s.render(1000,{diamondEventsUntilNext:432});
+  for(const prefix of ['books','play']){
+    const el=s.elements.get(`${prefix}-job-xp`);
+    assert.equal(el.title,'');assert.equal(el['data-tooltip'],'432 XP events until next ruby');
+  }
+  s.render(1100,{diamondEventsUntilNext:1});
+  assert.equal(s.elements.get('play-job-xp')['data-tooltip'],'1 XP event until next ruby');
+  s.token(null);s.render(1100);
+  assert.equal(s.elements.get('play-job-xp')['data-tooltip'],undefined);
 });
 
 test('repeated SSE snapshots preserve the tween and subsequent gains use one pending target',()=>{

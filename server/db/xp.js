@@ -466,6 +466,7 @@ function getUserXpInfo(userId) {
     COALESCE((SELECT diamonds_earned FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_earned,
     COALESCE((SELECT diamonds_spent FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_spent,
     COALESCE((SELECT diamonds_bought FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_bought,
+    COALESCE((SELECT dig_progress FROM user_diamonds WHERE user_id = users.id), 0) AS dig_progress,
     COALESCE((SELECT diamonds FROM diamond_market WHERE id=1),0) AS diamond_purchase_stock,
     COALESCE((SELECT heartbeat_count FROM user_heartbeat_coins WHERE user_id=users.id),0) AS heartbeat_count
     FROM users WHERE id = ?`).get(userId);

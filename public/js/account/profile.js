@@ -246,7 +246,11 @@ function _renderJobXpSummary(data, displayedXp, visible) {
     const wrap = document.getElementById(`${prefix}-job-xp`);
     if (!wrap) continue;
     wrap.hidden = !visible;
-    wrap.title = visible ? `Job level cap: ${data.jobLevelCap ?? 0}` : '';
+    wrap.title = '';
+    if (visible && Number.isSafeInteger(data?.diamondEventsUntilNext)) {
+      const events = data.diamondEventsUntilNext;
+      wrap.setAttribute('data-tooltip', `${events.toLocaleString()} XP event${events === 1 ? '' : 's'} until next ruby`);
+    } else wrap.removeAttribute('data-tooltip');
     const fill = document.getElementById(`${prefix}-job-xp-fill`);
     if (fill) fill.style.width = `${100 * (xp - levelXp) / (nextLevelXp - levelXp)}%`;
     const levelEl = document.getElementById(`${prefix}-job-xp-level`);
