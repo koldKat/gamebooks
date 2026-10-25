@@ -6,7 +6,7 @@ import vm from 'node:vm';
 function setup() {
   const source=fs.readFileSync('public/js/account/profile.js','utf8');
   const elements=new Map(),frames=new Map();let now=0,id=0,token='first';
-  for(const prefix of ['books','play'])for(const suffix of ['','-fill','-level','-title','-label'])elements.set(`${prefix}-job-xp${suffix}`,{style:{},setAttribute(name,value){this[name]=value;},removeAttribute(name){delete this[name];}});
+  for(const prefix of ['books','play'])for(const suffix of ['','-bar','-fill','-level','-title','-label'])elements.set(`${prefix}-job-xp${suffix}`,{style:{},setAttribute(name,value){this[name]=value;},removeAttribute(name){delete this[name];}});
   const context=vm.createContext({document:{getElementById:id=>elements.get(id)},getToken:()=>token,
     t:key=>key,XP_ANIM_MS_PER_LEVEL:100,performance:{now:()=>now},
     requestAnimationFrame:fn=>{frames.set(++id,fn);return id;},cancelAnimationFrame:id=>frames.delete(id)});
@@ -27,12 +27,14 @@ test('Job bars use the themed ruby countdown from the live snapshot, independent
   const s=setup();s.render(1000,{diamondEventsUntilNext:432});
   for(const prefix of ['books','play']){
     const el=s.elements.get(`${prefix}-job-xp`);
-    assert.equal(el.title,'');assert.equal(el['data-tooltip'],'432 XP events until next ruby');
+    assert.equal(el.title,'');assert.equal(el['data-tooltip'],undefined);
+    assert.equal(s.elements.get(`${prefix}-job-xp-bar`)['data-tooltip'],'432 XP events until next ruby');
+    for(const suffix of ['-level','-title','-label'])assert.equal(s.elements.get(`${prefix}-job-xp${suffix}`)['data-tooltip'],undefined);
   }
   s.render(1100,{diamondEventsUntilNext:1});
-  assert.equal(s.elements.get('play-job-xp')['data-tooltip'],'1 XP event until next ruby');
+  assert.equal(s.elements.get('play-job-xp-bar')['data-tooltip'],'1 XP event until next ruby');
   s.token(null);s.render(1100);
-  assert.equal(s.elements.get('play-job-xp')['data-tooltip'],undefined);
+  assert.equal(s.elements.get('play-job-xp-bar')['data-tooltip'],undefined);
 });
 
 test('repeated SSE snapshots preserve the tween and subsequent gains use one pending target',()=>{
