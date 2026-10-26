@@ -2,14 +2,17 @@ import { hasDestinyAbility, destinyStrike, addDestinyStatEffect, isDestinyOppone
 import { destinyDie, prepareDestinyDamage } from './damage.js';
 import { settleDestinyFight } from './core.js';
 import { destinyDeathMovesEnabled } from './book-rules.js';
+import {checkDestinyAbilityQuota,recordDestinyQuotaAbility} from './ability-quota.js';
 
 export function useDestinyOpening(fight, name, options, roll, spec = {}) {
   if (fight?.status !== 'active' || (fight.round !== 0 && !(fight.encounter?.pathProgress && !fight.encounter.pathProgress.combatStarted)) || fight.phase !== 'start' ||
       !hasDestinyAbility(fight, name) || fight.used[name]) throw new RangeError('Use this ability once before combat');
   if (spec.excludedCareer && fight.character?.career === spec.excludedCareer) throw new RangeError('This career cannot use that opening');
   if (spec.requiresMainHand && fight.equipment?.mainHand?.type !== spec.requiresMainHand) throw new RangeError('Required main-hand weapon is missing');
+  if (spec.requiresLeftHand && fight.equipment?.leftHand?.type !== spec.requiresLeftHand) throw new RangeError('Required left-hand weapon is missing');
   if ((!spec.exclusiveCareer || fight.character?.career === spec.exclusiveCareer) &&
       spec.openingExclusiveWith?.some(ability => fight.used[ability])) throw new RangeError('These opening attacks cannot be combined');
+  checkDestinyAbilityQuota(fight,name);
   const next = structuredClone(fight);
   next.turn ??= { used: { sp: false, co: false, dm: false, backpack: false }, deaths: [], deathMoveDeathsSeen: 0 };
   if (spec.openingDamage !== undefined || spec.openingDice) {
@@ -40,6 +43,7 @@ export function useDestinyOpening(fight, name, options, roll, spec = {}) {
     }
     next.iceMantle = true;
   } else if (!spec.openingPassive) throw new RangeError('Unknown opening ability');
+  recordDestinyQuotaAbility(next,name);
   next.used[name] = 1;
   next.history.push({ type: 'opening', name, round: next.round });
   if (!settleDestinyFight(next, roll) && destinyDeathMovesEnabled(next) && next.turn.deaths.length > next.turn.deathMoveDeathsSeen) {

@@ -1,0 +1,65 @@
+localStorage.setItem('gamebook_lang','en');
+const enemies=HEART_ENEMIES;let interceptedSaves=0,rosterLoads=0;
+globalThis.fetch=async(url,options={})=>{
+  if(String(url)==='/api/books/1287/enemies'){rosterLoads++;return new Response(JSON.stringify(enemies),{status:200});}
+  if(String(url)==='/api/books/1287/state'&&options.method==='PUT'){interceptedSaves++;return new Response('{}',{status:200});}
+  if(String(url)==='/api/items/8')return new Response(JSON.stringify({id:8,name:'Rope'}),{status:200});
+  throw Error('Unexpected network request '+url);
+};
+const app=await import('REPO/public/js/core/state.js');
+const {loadBattleSimTranslations}=await import('REPO/public/js/i18n/battlesim.js');
+const {prepareBattleSimLayout}=await import('REPO/public/js/battlesim/layout.js');
+const {createDestinySession}=await import('REPO/public/js/battlesim/engines/destinyquest/session.js');
+await loadBattleSimTranslations(1287);app.setCurrentBookId(1287);
+const hero={speed:30,brawn:4,magic:0,armour:20,health:30,maxHealth:30};
+const run={startedAt:1,path:[1],notebook:'keep',inventory:[{itemId:8,qty:2}],equipment:{head:{itemId:9,label:'Hat'}},sim1286:{keep:true},sim1287:createDestinySession({setup:{hero,abilities:{'tome-raider':1,'demon-blood':1,'strength-in-numbers':1,heal:1}}})};
+app.state.playthroughs=[run];app.state.activePtIndex=0;
+const shared=JSON.stringify([run.inventory,run.equipment,run.notebook,run.sim1286]);
+const entry=await import('REPO/public/js/battlesim/battlesim1287.js');
+await entry.loadData();entry.init();entry.setVisible(true);
+const el=key=>document.getElementById('sim1287-'+key),data=()=>run.sim1287;
+let scenarios=0;const check=(value,message)=>{if(!value)throw Error(message);scenarios++;};
+const click=key=>{if(!el(key))throw Error('Missing control '+key);el(key).click();};
+const change=(key,value)=>{el(key).value=value;el(key).dispatchEvent(new Event('change',{bubbles:true}));};
+click('btn');prepareBattleSimLayout(el('overlay'));
+check(el('overlay').textContent.includes('The Heart of Fire'),'actual book title is translated');
+check(el('encounter').options.length===131,'all 130 source encounters and custom combat are offered');
+check(el('owned').querySelector('select').options.length===210,'actual book exposes the full compiled source catalog');
+check(['fist','fist weapon','snake','spell book'].every(type=>[...el('gearType').options].some(option=>option.value===type)),'source weapon requirements are configurable');
+check(!el('tarBarrels')&&!el('fimbulwinter')&&!el('consumable-glittercap'),'other volumes do not leak their story controls');
+click('permanent-demon-blood');check(data().setup.hero.maxHealth===40,'Demon Blood applies its ten Health once');
+click('permanent-demon-blood');check(data().setup.hero.maxHealth===40,'repeating an applied permanent bonus cannot duplicate it');
+change('permanentCount-tome-raider','2');click('permanent-tome-raider');check(data().setup.hero.magic===4,'two spellbooks grant four lasting Magic');
+change('sourceCount-strength-in-numbers','2');click('counter-strength-in-numbers');check(data().character.sourceCounters.freedTigrisCarts===2,'story objective counter is saved');
+
+const reset=(section,options={})=>{run.sim1287=createDestinySession({setup:{hero:{...hero,...options.hero},section,abilities:options.abilities||{heal:1},encounterOptions:options.encounterOptions||{}},character:options.character||{}});entry.render();};
+reset('298');check(el('priorChallengeRounds')&&el('priorChallengeAbilities'),'challenge carryover has explicit controls');
+change('priorChallengeRounds','1');el('priorChallengeAbilities').querySelector('input[value="heal"]').checked=true;el('priorChallengeAbilities').querySelector('input').dispatchEvent(new Event('change',{bubbles:true}));
+click('start');check(data().fight?.encounter.consecutiveCombats.completedRounds===1&&data().fight.used.heal===1,'actual entry resumes challenge rounds and spent abilities');
+reset('616');const totems=[...el('sourceAbilities').querySelectorAll('input')];
+for(const input of totems.slice(0,3))input.checked=true;totems[0].dispatchEvent(new Event('change',{bubbles:true}));
+click('start');check(data().fight?.encounter.selectedEncounterAbilities.length===3,'three totem choices reach the native factory');
+check(Object.keys(data().fight.abilities).length===3,'totem encounter uses its selected source abilities');
+reset('792');change('source-spriteRounds','3');click('start');check(data().fight?.encounter.sourceCounters.spriteRounds===3,'sprite round carryover reaches the source health adjustment');
+reset('482');change('attackAttribute','magic');click('start');check(data().fight?.encounter.heroDamageStat==='magic','chosen attack attribute reaches the fight');
+reset('307');change('resource-boreholeCharges','2');click('start');check(data().fight?.encounter.resources.boreholeCharges===2,'source consumable charges reach the fight');
+reset('371');el('condition-goldenMirror').checked=true;el('condition-goldenMirror').dispatchEvent(new Event('change',{bubbles:true}));click('start');
+check(data().fight?.encounter.availableItems.includes('golden-mirror'),'source item flag grants the encounter option without creating an inventory item');
+
+reset('775',{hero:{health:20},character:{potionModifiers:{health:{amount:4,uses:2,duration:1}}}});click('start');
+check(el('gridPosition')?.options.length===36,'source grid begins with 36 clear squares');
+change('gridPosition','1,1');el('manualDice').value='1 2';click('next');
+check(data().fight?.turn.pendingAbility.event.kind==='persistent-grid-hazard','grid rolls pause through the native resolver');click('next');
+check(data().fight.encounter.gridHazard.occupied[0].join(',')==='1,2','rolled bile square is retained');
+click('potion-modifier');check(data().fight.hero.health===24&&data().character.potionModifiers.health.uses===1,'source potion modifier heals and spends its own use');
+const saved=JSON.stringify(data());run.sim1287=JSON.parse(saved);entry.render();check(JSON.stringify(data())===saved,'actual entry rendering never rewrites saved state');
+check(!el('overlay').textContent.includes('battlesim1287.'),'visible controls have translated labels');
+check(JSON.stringify([run.inventory,run.equipment,run.notebook,run.sim1286])===shared,'universal inventory, equipment and unrelated state are preserved');
+reset('66',{hero:{speed:0,armour:100,health:20}});click('start');click('next');
+el('manualDice').value='1 2 6 5';click('next');click('next');el('manualDice').value='6';click('next');click('next');
+for(let i=0;i<20&&!el('sharedItem')?.options[0].textContent.includes('Rope');i++)await new Promise(resolve=>setTimeout(resolve,25));
+check(el('sharedItem')?.options[0].textContent.includes('Rope'),'source item loss resolves the actual item name');
+click('shared-item-loss');check(run.inventory[0].qty===1&&data().fight.phase==='end','actual entry removes one shared item and resolves the fight together');
+check(run.equipment.head.itemId===9&&run.notebook==='keep'&&run.sim1286.keep,'item loss preserves unrelated data');
+check(document.documentElement.scrollWidth<=innerWidth,'no viewport overflow');
+document.body.dataset.test=JSON.stringify({width:innerWidth,scenarios,rosterLoads,interceptedSaves,actualBookEntry:true,panelOnly:true,playerDatabaseWrites:0});

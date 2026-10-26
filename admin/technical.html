@@ -422,12 +422,58 @@
                          attack proxies supply the actual opponent rolls without inventing stats.
                          encounter-settings.js expands database rule templates for the current group;
                          ability, equipment and explicit-choice conditions select stored overrides.
+                         Scheduled transitions can replace a printed stat and its earlier modifiers;
+                         death damage declares armour handling, and reflection declares damage kinds
+                         and immunity. Rolled environmental hits on components carry no hero-hit credit.
+                         Approach challenges keep consecutive-success progress in the saved encounter;
+                         explicit hero challenge rolls support modifiers and suspended automatic checks.
+                         Per-round positions are chosen before rolling. Source consumable counters and
+                         their combat actions never mutate the application&#39;s shared inventory or equipment.
+                         Declarative roll-face counters use accepted hero or opponent dice, including
+                         ability checks and replacement damage. Rerolled faces and reused saved dice
+                         do not add a second result; reaching a threshold ends the encounter explicitly.
+                         Health-hit reactions preserve the phase to resume after end-of-round effects,
+                         preventing a saved reaction from applying the passive batch twice. Stored rules
+                         can select Brawn or Magic, grant an automatic enemy round, temporarily disable
+                         abilities, or allow a surviving opponent to heal beyond its starting Health.
+                         Interceptions can block one attempted ability until the next round without
+                         consuming its charge. Component targets retain the initiative opponent and
+                         their own ability immunities when winning damage is redirected. Unavoidable
+                         reinforcement events replace damage and bypass damage-avoidance stances.
+                         Living-opponent thresholds can queue one-time recovery tables with saved dice
+                         and capped story bonuses. Thresholds discovered during end settlement retain
+                         the next-round resume phase. Status-bound attribute growth resets immediately
+                         when its status is cleansed; explicit dice-only damage preserves null stats.
+                         Outcome tables can defer capped healing until after passive damage, use a
+                         hero attribute for damage, or exempt a named active ability. Round stat cycles
+                         preserve other modifiers; reflection and end effects may use current attributes
+                         or a reduced amount granted by an active protection ability.
+                         Periodic opening damage can use an opponent&#39;s current attribute. Damage-face
+                         triggers distinguish automatic healing from healing that requires a Health hit.
+                         Round category blocks also suppress automatic modifiers. Protection markers
+                         require explicit encounter rules rather than a damage type inferred from prose.
+                         Opponent Health-hit rules share one path for scores, separate damage dice and
+                         Speed hazards, with living-support conditions and actual-loss checks. Conditional
+                         end stat losses remain separate from removable statuses, preserving losses after
+                         a cleanse; Speed-subtracted end damage is clamped at zero.
+                         score-immunity.js records score contributions only for encounters declaring
+                         category immunity. A temporary calculation view excludes blocked ability dice,
+                         bonuses and stat effects after retargeting, while preserving stored rolls and
+                         permitted categories. Required prior-round counts can adjust new-opponent Health;
+                         this setup never rewrites saved fights or application inventory.
+                         Encounter-local ability selections extend the saved catalog and replace playable
+                         abilities while retaining forced statuses and the character&#39;s normal collection.
+                         Source-limited stat restoration preserves unrelated curses. Mirrored setup stats
+                         remain snapshots; zero-Health opponents may remain active until an explicit
+                         victory test, without generating premature defeat rewards.
                          New encounter setup copies metadata; existing serialized fights stay intact.
                          Book definitions supply initial hero attributes and the equipment-slot list;
                          rendering applies defaults only to absent setup values and never rewrites saves.
                          Optional book ability catalogs and combat rules are copied into each new
                          fight. Resuming keeps that snapshot; omitted options retain the original
                          family rules. Catalogs bound the inventory and equipment ability choices.
+                         The roster factory also accepts an explicit catalog and combat-rule snapshot,
+                         so another volume can reuse encounter resolution without inheriting abilities.
                          Book rules can omit death penalties and death moves without deleting saved
                          character metadata. Panel factories and book actions remain transient
                          dependencies rather than functions stored in player state.
@@ -439,6 +485,73 @@
                          locks, incoming-hit replacement, recoil and health-triggered passives.
                          Their roll data and effects survive JSON resume; panel choices validate
                          the currently available stat budget without changing stored player data.
+                         Catalog extensions cover paired-weapon requirements and healing, fixed stat
+                         costs, health thresholds, next-round set values and attacker-specific responses.
+                         Optional passive rules use owned abilities for die-face healing and stat boosts;
+                         target traits and current attributes can determine end-of-round damage.
+                         allies.js keeps independent combat snapshots for recipient healing, buffs,
+                         cleansing, revival and ability restoration; charges belong to the caster.
+                         Passive recovery can retain a per-source ledger capped at actual Health loss.
+                         catalog-dice.js separates new rolls, face changes and reused Speed dice.
+                         Reused dice retain declared locks and do not repeat accepted-roll hazards;
+                         book-specific modifiers can opt out of an older volume&#39;s automatic effect.
+                         Persistent score rerolls use a separate session action and lock accepted
+                         dice. Catalog roll tables retain an editable outcome roll before separate
+                         damage rolls; outcome bonuses survive nested status checks and save/resume.
+                         sustained.js keeps consecutive damage sequences and removable combat
+                         stances in the saved fight. Continuations retain their original target;
+                         other played abilities interrupt them. Stance defense rolls resolve before
+                         an enemy attack, and separate combats clear these temporary combat modes.
+                         team-state.js keeps stable actor identities while projecting the selected
+                         hero into the shared engine. Hero effects, charges, curses and combat modes
+                         remain separate; opponent effects stay shared and stacked statuses retain
+                         their caster. team-combat.js declares attack/support roles and resolves
+                         individual hero Speed rolls against one shared enemy roll, retaining explicit
+                         hero tie choices and accepted-roll state through save/resume.
+                         team-end.js collects both heroes&#39; passive effects before applying damage,
+                         retains status ownership for stacking and reflection, and applies each hero&#39;s
+                         healing separately. Encounter regeneration and round advancement still run
+                         once through the shared core after coordinated team effects are marked done.
+                         team-defender.js transfers an enemy score attack or damage-dice event to
+                         the defender&#39;s context, retaining their armour and Health-hit consequences.
+                         A selected passive packet can also be redirected at round end. Nested enemy
+                         events resume the protected caster&#39;s pending action afterward. Session saves
+                         always project actor zero for the player&#39;s character and outcome record,
+                         regardless of which ally is selected in the combat view.
+                         Outcome receipts can roll catalog-declared victory rewards once per fight.
+                         Story gold stays in the simulator character; item rewards remain receipts
+                         for manual handling. Team first-win eligibility is tracked per character and
+                         source encounter. Explicit story actions track permanent bonus counts and
+                         already-included totals, so repeat setup does not duplicate stat bonuses.
+                         automatic-modifiers.js queues triggered modifier checks, effect rolls and
+                         optional attribute choices without losing a suspended combat roll. Status
+                         failures block repeat triggers for the round. Cleared rune curses update the
+                         simulator&#39;s next-fight setup; temporary Health penalties retain their base
+                         value so saving an uncleared curse does not apply its deduction twice.
+                         Encounter settings can declare one-use threshold rescues with cleansing,
+                         end-round resource growth, and periodic replacement of resource components.
+                         Replacement components clear their predecessor&#39;s effects. Roster actions can
+                         clear or spend source counters in place of a winning damage score.
+                         Scheduled transitions can expose a new opponent, suspend another and clear
+                         selected conditions before the next round starts. Companion roster actions
+                         keep their attack sequence and availability in encounter state; companion
+                         damage does not trigger the hero&#39;s on-hit passives or recovery credit.
+                         Encounter damage events can explicitly permit Armour absorption.
+                         Health thresholds can also suspend a damaged opponent while another joins
+                         combat. Protected regeneration is explicit and cannot revive a dead target.
+                         Status-gated win tests distinguish a harmless marker from recurring damage,
+                         and component powers can require named components to remain alive.
+                         ability-quota.js tracks distinct activations independently from remaining
+                         charges. Quotas include openings and explicitly enabled automatic passives;
+                         restoring a charge or disabling a passive does not refund its distinct slot.
+                         Set selections can grant abilities or exempt named abilities from a quota
+                         without constructing equipment. Each ally retains its own quota snapshot.
+                         ability-checks.js suspends an attempted ability for a status check before
+                         spending its charge. Nested rerolls retain their parent check and reserve
+                         pending quota slots. Paid exemptions fund a named unused ability without
+                         casting it, creating equipment or bypassing its own timing and checks.
+                         Encounter data can declare conditional round-start defeat, bounded revival
+                         rolls, forced damage attributes, and counters whose damage starts next round.
                          catalog-actions.js resolves charged attacks and responses to declared
                          opponent actions. Passive target choices use the encounter queue, retaining
                          one choice per triggering die through save and resume. Doubles, revival,
@@ -469,6 +582,98 @@
                          hooks also run after a reversing ability, and same-battle form transitions
                          retain wounds and ability usage. Face-triggered extra dice and healing are
                          declared independently from recursive damage-die explosions.
+                         Consecutive encounters can explicitly restore abilities between stages while
+                         carrying Health and forced curses. Stage metadata sets its own rules and
+                         round deadline without recording an intermediate victory. Armour-spell resets
+                         change the printed base value while retaining separate ability modifiers.
+                         Component escape schedules retain surviving Health and never award defeat
+                         credit. Winning-round damage restrictions and final destroyed-objective counts
+                         are declared separately. Component-dependent piercing and regeneration stop
+                         when their source is destroyed, without reviving fallen components.
+                         Saved encounter reward rolls accumulate story gold receipts, applied once
+                         when recording the outcome on either victory or defeat. Source-specific
+                         defeat flags can disable rewards in later attempts; these never affect app
+                         currencies. Sacrifices requiring a never-used ability inspect activation
+                         history and passive state, so restoring charges does not make an ability
+                         unused again. Opponent Speed doubles can heal declared living components
+                         before or after rerolls, capped at their original Health.
+                         Linked challenges may carry spent abilities and enforce one activation
+                         across every stage, including explicitly selected automatic passives.
+                         Each stage resets temporary combat effects and its local quota while
+                         retaining Health, forced curses, grant provenance and the challenge ledger.
+                         A shared round deadline includes completed stages; later-stage setup must
+                         supply prior rounds and consumed abilities. Matching-dice defences retain
+                         their rolled faces beside score or ability damage, filtering only the
+                         calculation so saved rolls and unrelated targets remain intact.
+                         Team phase transitions reset both combat snapshots while carrying each
+                         hero&#39;s Health, ability charges, equipment and optional quota state. They
+                         pause before final victory rewards and retain a surviving ally when the
+                         selected hero falls. Score-hit stuns prevent the affected hero attacking
+                         for one round; a sole stunned survivor loses automatically. Shared enemy
+                         stat modifiers remain visible to both heroes during end damage, while
+                         caster-owned ongoing damage ticks once. First-defeat team modifiers apply
+                         to both heroes once, and defeat recovery records both character profiles.
+                         Independent team contests retain each hero&#39;s assigned opponent, Speed dice
+                         and pending attack until every contest finishes, then apply shared end effects
+                         once. Source metadata can assign opponents by starting Speed, join a freed
+                         hero to normal team combat, or require one boss attacker while another strikes
+                         an objective without a Speed roll. Defender preserves its own unresolved
+                         attack when taking the other contest&#39;s hit. Destroyed objectives can grant
+                         team healing, score-only die bonuses or a stat bonus to the slowest hero.
+                         Combined source statuses retain their printed damage total and condition
+                         names; partial cleansing removes only the named condition, while removing
+                         every condition ends the effect. Roster clarifications disclose such choices.
+                         Persistent grid hazards validate a clear starting square each round and
+                         retain the hero&#39;s coordinates, occupied cells and pending coordinate dice.
+                         Duplicate references queue another visible roll without adding a cell or
+                         applying damage; a hit uses the normal armourless damage/shield boundary.
+                         Shared-item destruction pauses an accepted enemy score before damage is
+                         calculated. The state guard validates the selected shared inventory/equipment
+                         entry and matching simulator acknowledgement, then saves both changes once.
+                         Stale selections, mismatched receipts and failed resolutions leave items
+                         intact. Stacks lose one unit; lost simulator modifiers are explicit inputs
+                         because shared equipment slots are visual-only. Empty-item acknowledgement
+                         requires both shared collections to be empty.
+                         Absorption queue helpers retain capture order, next-round eligibility and
+                         category use separately from effect execution. Copied catalog metadata can
+                         omit weapon/career requirements while retaining timing and companion gates.
+                         Declared growing Health-hit statuses may accept score/dice hits and cap their
+                         per-round damage without restarting growth on subsequent hits.
+                         Opponent ability contexts reuse the native dispatcher with separate charges,
+                         turn modifiers and sustained modes. A hero proxy applies the real player&#39;s
+                         shields, raw-roll passives and Health-hit reactions; projection keeps buffs,
+                         costs and damage on the correct side. Pending opponent views survive saves
+                         and project completed effects once, including table-to-damage sequences.
+                         Player responses use a foreign-roll event, preserving native timing checks
+                         while rejecting hero-only dice modifiers on opponent dice. A saved baseline
+                         merges player healing, charges and effects into the pending view. Effect
+                         origins are reindexed after cleansing between stages; nested player rolls
+                         resume the deferred opponent action without duplicating costs or damage.
+                         The shared panel displays opponent ability dice separately and uses the
+                         same transient response context as the dispatcher. It exposes quota passive
+                         activation, paid exemptions, automatic attribute choices, consecutive
+                         attacks, stance exit and unlocked score rerolls. Source clarifications
+                         accompany printed encounter rules. Shared item destruction uses a captured
+                         choice and the state adapter&#39;s atomic acknowledgement/save boundary;
+                         closing discards that selection. Combat logs accept both rolled dice lists
+                         and declared dice counts.
+                         Optional two-hero setup uses a separate modifier editor and builds both
+                         native actor snapshots in one session update. Team controls delegate
+                         roles, individual Speed rolls, tied strikers, independent targets and
+                         Defender interception to the existing team actions. Support heroes are
+                         offered modifiers; ally healing/restoration uses an explicit recipient.
+                         Passive interception lists native effect sources on private previews,
+                         without consuming actual dice or writing player state during rendering.
+                         Book controls read resource inputs, challenge carryover, selected encounter
+                         abilities and attack attributes from roster metadata. Grid choices feed the
+                         native round action; lasting bonuses and objective counters use story
+                         actions. Equipment type choices may be declared by the book definition.
+                         Shared item names load through a bounded, deduplicated lookup and refresh
+                         only a still-current pending choice. Simulator modifier editors never
+                         create a second application inventory.
+                         Session scheduling handles copied Speed dice, normal-score modifiers,
+                         consecutive attacks, stance defence and subsequent round events. Nested
+                         opponent-context outcomes remain distinct from the actual battle outcome.
                          Accepted Speed and damage hazards resolve after eligible rerolls, with
                          revival checked before any surviving attack. Named weaknesses scale only
                          their declared ability effects. Resource-dependent stats keep their printed

@@ -20,6 +20,12 @@ function fixture(t) {
   return db;
 }
 
+test('an explicitly unfinished roster cannot migrate or write the database',t=>{
+  const db=fixture(t),before=db.serialize();
+  assert.throws(()=>seedEnemyRoster(db,{...seed,rosterComplete:false}),/still being completed/);
+  assert.deepEqual(db.serialize(),before);
+});
+
 test('schema migration and legacy API results preserve old enemy rows and player state exactly', t => {
   const db = fixture(t);
   const before = db.prepare('SELECT * FROM players').all();

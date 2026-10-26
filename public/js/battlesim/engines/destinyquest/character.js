@@ -1,4 +1,5 @@
 import { destinyDie } from './damage.js';
+import {hasDestinyAbility} from './effects.js';
 
 export const DESTINY_PENALTIES = Object.freeze({
   1: 'weeping-wounds', 2: 'crippled', 3: 'head-blow',
@@ -59,7 +60,40 @@ export function recordDestinyOutcome(character, fight, outcomeId, roll = () => M
   if ((!['win', 'loss'].includes(fight?.status)&&!(fight?.status==='retreat'&&fight.encounter?.retreatSection)) || typeof outcomeId !== 'string' || !outcomeId || outcomeId.length > 128) throw new RangeError('A finished fight needs an outcome ID');
   if (next.outcomeIds.includes(outcomeId)) return { character: next, recorded: false, escaped: false, penalty: null };
   const receipt = { character: next, recorded: true, escaped: false, penalty: null };
+  for(const reward of fight.encounter?.storyRewards||[]){
+    const gold=next.gold??0;
+    if(!Number.isSafeInteger(gold)||gold<0||!Number.isSafeInteger(reward.gold)||reward.gold<0||!Number.isSafeInteger(gold+reward.gold))throw new RangeError('Invalid story gold balance');
+    next.gold=gold+reward.gold;
+    (receipt.rewards??=[]).push({...structuredClone(reward),source:'encounter'});
+  }
+  if(fight.status==='win'){
+    const rewardContext={...fight,encounter:{...fight.encounter,disableHeroAbilities:false}};
+    for(const [name,spec] of Object.entries(fight.abilityCatalog||{})){
+      const reward=spec.victoryReward;
+      if(!reward||!hasDestinyAbility(rewardContext,name))continue;
+      const dice=Array.from({length:reward.dice},()=>destinyDie(roll)),total=dice.reduce((sum,face)=>sum+face,0);
+      const outcome=reward.goldFromDice?{gold:total}:reward.outcomes.find(outcome=>total<=outcome.maximum);
+      if(!outcome)throw new RangeError('Unknown victory reward');
+      if(outcome.gold){
+        const gold=next.gold??0;
+        if(!Number.isSafeInteger(gold)||gold<0||!Number.isSafeInteger(gold+outcome.gold))throw new RangeError('Invalid story gold balance');
+        next.gold=gold+outcome.gold;
+      }
+      (receipt.rewards??=[]).push({ability:name,dice,gold:outcome.gold||0,...(outcome.item?{item:structuredClone(outcome.item)}:{})});
+    }
+    if(fight.team&&Number.isSafeInteger(fight.encounter?.sourceBookId)&&fight.encounter.sourceSection){
+      const key=`${fight.encounter.sourceBookId}:${fight.encounter.sourceSection}`;
+      next.teamVictories??=[];
+      if(!Array.isArray(next.teamVictories)||next.teamVictories.some(key=>typeof key!=='string'))throw new RangeError('Invalid team victory history');
+      receipt.teamLootEligible=!next.teamVictories.includes(key);
+      if(receipt.teamLootEligible)next.teamVictories.push(key);
+    }
+  }
   if (fight.status === 'loss') {
+    for(const flag of fight.encounter?.onDefeatCharacterFlags||[]){
+      if(typeof flag!=='string'||!flag)throw new RangeError('Invalid encounter flag');
+      (next.encounterFlags??={})[flag]=true;
+    }
     if (!fight.encounter?.disableHeroAbilities && (fight.abilities?.getaway || 0) > 0) {
       receipt.getawayDie = destinyDie(roll);
       receipt.escaped = receipt.getawayDie >= 5;

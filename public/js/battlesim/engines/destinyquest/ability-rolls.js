@@ -1,9 +1,14 @@
-import { damageDestinyHero, destinyStat, destinyStrike, addDestinyStatEffect, isDestinyOpponentActive } from './effects.js';
+import { damageDestinyHero, destinyStat, destinyStrike, addDestinyStatEffect, isDestinyOpponentActive,healDestinyHero,applyDestinyAcceptedHeroRoll } from './effects.js';
+import {destinyHeroRecipient,healDestinyRecipient} from './allies.js';
 import { destinyDie, prepareDestinyDamage, applyDestinyDamage } from './damage.js';
+import {prepareDestinyCancellation} from './damage-cancellation.js';
 import { settleDestinyFight } from './core.js';
 import { resolveDestinyEncounterEvent, resumeDestinyEncounterQueue } from './encounter-events.js';
-import { applyDestinyAbilityInterception } from './abilities.js';
+import { applyDestinyAbilityInterception,useDestinyAbility } from './abilities.js';
+import {resolveDestinyAbilityCheck} from './ability-checks.js';
 import { destinyDeathMovesEnabled } from './book-rules.js';
+import {resolveDestinyStanceDefense} from './sustained.js';
+import {resolveDestinyAutomaticModifier} from './automatic-modifiers.js';
 
 export function prepareDestinyAbilityRoll(fight, name, options, roll) {
   const target = options.target ?? fight.target;
@@ -31,6 +36,26 @@ export function resolveDestinyAbilityRoll(fight, roll = () => Math.floor(Math.ra
   const next = structuredClone(fight);
   const pending = next.turn.pendingAbility;
   delete next.turn.pendingAbility;
+  if(pending.type==='automatic-modifier')return finishDestinyAbilityAction(resolveDestinyAutomaticModifier(next,pending,roll),roll);
+  if(pending.type==='ability-check')return finishDestinyAbilityAction(resolveDestinyAbilityCheck(next,pending,roll,useDestinyAbility),roll);
+  if(pending.type==='stance-defense')return finishDestinyAbilityAction(resolveDestinyStanceDefense(next,pending,roll),roll);
+  if(pending.type==='catalog-table'){
+    applyDestinyAcceptedHeroRoll(next,pending.dice,'ability');
+    if(next.hero.health<=0||next.encounter?.forcedLoss||next.encounter?.forcedVictory)return finishDestinyAbilityAction(next,roll);
+    const result=Math.min(pending.spec.rollTable.maximum,pending.dice.reduce((sum,face)=>sum+face,0)+(pending.resultBonus||0));
+    const outcome=pending.spec.rollTable.outcomes.find(outcome=>result<=outcome.maximum);
+    if(!outcome)throw new RangeError('Unknown ability outcome');
+    next.history.push({type:'ability-roll',name:pending.name,round:next.round,dice:[...pending.dice],result});
+    if(outcome.heal)healDestinyHero(next,outcome.heal);
+    if(outcome.allyHeal){
+      const ally=pending.options.ally??next.allies?.findIndex(ally=>ally.hero.health>0);
+      if(ally!==undefined&&ally>=0)healDestinyRecipient(next,destinyHeroRecipient(next,{ally}),outcome.allyHeal);
+    }
+    next.phase=pending.returnPhase;
+    prepareDestinyDamage(next,pending.name,{category:pending.spec.category,replacement:pending.spec.replacement,hit:'one',dice:outcome.dice,selfDamageDice:outcome.selfDamageDice}, {...pending.options,target:pending.target},roll);
+    if(next.phase!=='ability-rolled'&&pending.spec.replacement)next.phase='end';
+    return finishDestinyAbilityAction(next,roll);
+  }
   if (pending.type === 'ability-interception') return applyDestinyAbilityInterception(next, pending, roll);
   if (pending.type === 'encounter') {
     resolveDestinyEncounterEvent(next, pending, roll, { roster });
@@ -40,6 +65,8 @@ export function resolveDestinyAbilityRoll(fight, roll = () => Math.floor(Math.ra
     }
   }
   else if (pending.type === 'resource') {
+    applyDestinyAcceptedHeroRoll(next,pending.dice,'ability');
+    if(next.encounter?.forcedLoss||next.encounter?.forcedVictory)return finishDestinyAbilityAction(next,roll);
     const before = next.encounter.resources[pending.resource];
     next.encounter.resources[pending.resource] = Math.max(0, before - pending.dice.reduce((sum, value) => sum + value, 0));
     if (before > 0 && next.encounter.resources[pending.resource] === 0) {
@@ -49,11 +76,14 @@ export function resolveDestinyAbilityRoll(fight, roll = () => Math.floor(Math.ra
     }
     next.phase = pending.returnPhase;
   } else if (pending.type === 'damage') {
+    for(const group of pending.groups)for(const target of group.targets)prepareDestinyCancellation(next,target,group,roll);
     applyDestinyDamage(next, pending);
     next.phase = pending.spec.replacement ? 'end' : pending.returnPhase;
     if (pending.spec.category === 'dm') next.phase = next.turn.afterDeathMove;
   } else {
     const { name, target, dice, options } = pending;
+    applyDestinyAcceptedHeroRoll(next,dice,'ability');
+    if(next.encounter?.forcedLoss||next.encounter?.forcedVictory)return finishDestinyAbilityAction(next,roll);
     const result = dice.reduce((total, value) => total + value, 0);
     next.phase = 'end';
     next.history.push({ type: 'ability-roll', name, round: next.round, dice: [...dice], result });

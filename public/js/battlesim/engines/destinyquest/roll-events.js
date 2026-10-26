@@ -1,11 +1,12 @@
 import { destinyDie } from './damage.js';
-import { damageDestinyHero, addDestinyStatEffect, destinyStat, observeDestinyHealth, isDestinyOpponentActive, destinyAttackerTarget, hasDestinyAbility, onDestinyHeroDice, applyDestinyHeroRoll } from './effects.js';
+import { damageDestinyHero, addDestinyStatEffect, destinyStat, observeDestinyHealth, isDestinyOpponentActive, destinyAttackerTarget, hasDestinyAbility, onDestinyHeroDice, applyDestinyHeroRoll, destinyStrike, recordDestinyDefeat,onDestinyOpponentHealthHit } from './effects.js';
 import { queueDestinyEncounterEvent } from './encounter-events.js';
 
 const doubles = values => values.length > 1 && new Set(values).size < values.length;
 function hurt(fight, amount, name) {
   const damage = damageDestinyHero(fight,amount);
   fight.history.push({ type: 'roll-hazard', name, round: fight.round, damage });
+  return damage;
 }
 
 // Only newly rolled dice trigger face effects. Doubles inspect the resulting
@@ -40,6 +41,10 @@ export function onDestinyHeroSpeedRoll(fight, indices, roll) {
     hurt(fight, indices.filter(index => rule.faces.includes(values[index])).length * rule.amount, rule.name);
   }
   if (!doubles(values)) return;
+  for(const name of Object.keys(fight.abilities||{})){
+    const amount=fight.abilityCatalog?.[name]?.heroSpeedDoublesStrike;
+    if(amount&&hasDestinyAbility(fight,name)&&isDestinyOpponentActive(fight,fight.target))destinyStrike(fight,fight.target,amount,name,'passive');
+  }
   for (const rule of fight.encounter?.heroSpeedDoubles || []) {
     if (rule.requiresAlive?.some(target => !isDestinyOpponentActive(fight, target))) continue;
     if (rule.choiceGroup) {
@@ -63,7 +68,18 @@ export function onDestinyOpponentSpeedRoll(fight, values) {
   const target = destinyAttackerTarget(fight);
   for (const rule of fight.encounter?.opponentSpeedDoubles || []) {
     if (rule.targets && !rule.targets.includes(target)) continue;
-    if (rule.amount) hurt(fight, rule.amount, rule.name);
+    for(const healing of rule.healing||[]){
+      if(!isDestinyOpponentActive(fight,healing.target))continue;
+      const opponent=fight.opponents[healing.target];
+      opponent.health=Math.min(opponent.maxHealth,opponent.health+healing.amount);
+    }
+    if (rule.amount) onDestinyOpponentHealthHit(fight,target,hurt(fight,rule.amount,rule.name),'ability');
+    if(rule.selfDamage&&fight.opponents[target].health!==null&&isDestinyOpponentActive(fight,target)){
+      const damage=Math.min(rule.selfDamage,fight.opponents[target].health);
+      fight.opponents[target].health-=damage;observeDestinyHealth(fight);
+      if(fight.opponents[target].health===0){recordDestinyDefeat(fight,target);fight.turn.deaths.push(target);}
+      fight.history.push({type:'roll-hazard',name:rule.name,round:fight.round,target,damage});
+    }
     if (rule.forceLoss) {
       fight.turn.forcedOpponentWin = true;
       if (rule.blockCategories) fight.encounter.blockedRounds = { from: fight.round, until: fight.round, categories: [...rule.blockCategories] };

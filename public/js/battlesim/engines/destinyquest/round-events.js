@@ -1,6 +1,33 @@
-import { damageDestinyHero, destinyStrike, addDestinyStatEffect, isDestinyOpponentActive, destinyImmuneToAbility } from './effects.js';
+import { damageDestinyHero, destinyStrike, addDestinyStatEffect, isDestinyOpponentActive, destinyImmuneToAbility,applyDestinyAcceptedHeroRoll,destinyHeroHasStatus,destinyStat } from './effects.js';
 import { destinyDie, applyDestinyDamage } from './damage.js';
 import { queueDestinyEncounterEvent } from './encounter-events.js';
+
+export function prepareDestinyGridRound(fight,options,roll){
+  const grid=fight.encounter?.gridHazard;if(!grid)return;
+  const position=options.gridPosition;
+  if(!Array.isArray(position)||position.length!==2||position.some((value,index)=>!Number.isSafeInteger(value)||value<1||value>(index===0?grid.columns:grid.rows)))throw new RangeError('Choose a valid clear grid square');
+  if(grid.occupied.some(cell=>cell[0]===position[0]&&cell[1]===position[1]))throw new RangeError('Choose a clear grid square');
+  grid.hero=[...position];
+  queueDestinyEncounterEvent(fight,{kind:'persistent-grid-hazard',name:grid.name,dice:2},'speed',roll);
+}
+
+export function applyDestinyScheduledTransitions(fight,round,target){
+  let chosen=target;
+  for(const rule of fight.encounter?.scheduledTransitions||[]){
+    if(rule.used||round<rule.round||rule.requiresAlive?.some(index=>!isDestinyOpponentActive(fight,index)))continue;
+    rule.used=true;
+    if(rule.set)Object.assign(fight.encounter,structuredClone(rule.set));
+    for(const change of rule.setStats||[]){
+      fight.effects=fight.effects.filter(effect=>!(effect.kind==='stat'&&effect.target===change.target&&effect.attribute===change.attribute));
+      fight.opponents[change.target][change.attribute]=change.value;
+    }
+    fight.encounter.inactiveTargets=[...new Set([...(fight.encounter.inactiveTargets||[]).filter(index=>!rule.activate?.includes(index)),...(rule.suspend||[])])];
+    fight.effects=fight.effects.filter(effect=>!rule.clearTargetEffects?.some(clear=>effect.target===clear.target&&clear.kinds.includes(effect.kind)));
+    if(rule.suspend?.includes(chosen))chosen=rule.defaultTarget;
+    fight.history.push({type:'encounter-transition',round,name:rule.name});
+  }
+  return chosen;
+}
 
 export function applyDestinyOpponentForm(fight, form) {
   const rule=fight.encounter.roundForms;
@@ -50,6 +77,25 @@ export function spawnDestinyOpponents(fight, rule, round, createOpponent) {
 }
 
 export function applyDestinyRoundEvents(fight, options, roll) {
+  for(const rule of fight.encounter?.startAttributeDamage||[]){
+    if(rule.every&&fight.round%rule.every!==0||rule.requiresAlive?.some(target=>!isDestinyOpponentActive(fight,target)))continue;
+    const damage=damageDestinyHero(fight,destinyStat(fight,rule.actor,rule.attribute));
+    fight.history.push({type:'attribute-damage',name:rule.name,round:fight.round,damage});
+    if(fight.hero.health<=0)return;
+  }
+  for(const rule of fight.encounter?.roundStatCycles||[])if(isDestinyOpponentActive(fight,rule.target))fight.opponents[rule.target][rule.attribute]=rule.values[(fight.round-1)%rule.values.length];
+  for(const rule of fight.encounter?.statusAttributeGrowth||[])if(isDestinyOpponentActive(fight,rule.target)&&destinyHeroHasStatus(fight,rule.status)){
+    const opponent=fight.opponents[rule.target];opponent[rule.attribute]=Math.min(rule.maximum,opponent[rule.attribute]+rule.amount);
+  }
+  for(const rule of fight.encounter?.startResourceDamage||[]){
+    if(rule.requiresAlive?.some(target=>!isDestinyOpponentActive(fight,target)))continue;
+    const amount=(fight.encounter.resources?.[rule.resource]||0)*rule.amount;
+    if(amount){
+      const lost=damageDestinyHero(fight,amount);
+      fight.history.push({type:'resource-damage',round:fight.round,resource:rule.resource,damage:lost,source:rule.name});
+    }
+    if(fight.hero.health<=0)return;
+  }
   const forms=fight.encounter?.roundForms;
   if(forms&&fight.round>=forms.fromRound&&isDestinyOpponentActive(fight,forms.target))queueDestinyEncounterEvent(fight,
     {kind:'opponent-form',name:forms.name,dice:1},'speed',roll);
@@ -89,6 +135,8 @@ export function applyDestinyRoundEvents(fight, options, roll) {
   for (const effect of fight.effects) {
     if (!['vortex', 'dry-ice'].includes(effect.kind) || fight.round < effect.from) continue;
     const result = destinyDie(roll);
+    applyDestinyAcceptedHeroRoll(fight,[result],'ability');
+    if(fight.encounter?.forcedLoss||fight.encounter?.forcedVictory)return;
     fight.history.push({ type: 'round-event', name: effect.kind, round: fight.round, result, unmodifiable: effect.kind === 'vortex' });
     if (effect.kind === 'vortex') {
       if (result <= 2) damageDestinyHero(fight,2);

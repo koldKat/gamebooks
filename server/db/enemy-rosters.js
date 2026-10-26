@@ -21,6 +21,7 @@ function getBookEnemyRows(db, bookId) {
 // Existing IDs, unrelated enemy rows and player state are preserved. Repeating
 // a seed is a no-op.
 function seedEnemyRoster(db, document) {
+  if(document?.rosterComplete===false)throw new RangeError('This simulator roster is still being completed');
   if (document?.schemaVersion !== 1 || !Number.isSafeInteger(document.bookId) || document.bookId < 1 ||
       typeof document.family !== 'string' || !document.family || !Array.isArray(document.enemies) || !document.enemies.length) throw new TypeError('Invalid roster document');
   const keys = new Set();

@@ -1,5 +1,6 @@
-import { damageDestinyHero, destinyStat, destinyStrike, addDestinyStatEffect, healDestinyHero, isDestinyOpponentActive, isDestinyOpponentDead, destinyDamageAllowed, destinyPassiveDamageBonus, onDestinyHeroDice, applyDestinyHeroRoll, destinyArmour, applyDestinyAcceptedHeroRoll } from './effects.js';
+import { damageDestinyHero, destinyStat, destinyStrike, addDestinyStatEffect, healDestinyHero, isDestinyOpponentActive, isDestinyOpponentDead, destinyDamageAllowed, destinyPassiveDamageBonus, onDestinyHeroDice, applyDestinyHeroRoll, destinyArmour, applyDestinyAcceptedHeroRoll, hasDestinyAbility } from './effects.js';
 import {reviveDestinyHero} from './core.js';
+import {prepareDestinyCancellation,destinyUncancelledDice} from './damage-cancellation.js';
 
 const living = fight => fight.opponents.map((opponent, index) => isDestinyOpponentActive(fight, index) ? index : -1).filter(index => index >= 0);
 function target(fight, index) {
@@ -29,7 +30,9 @@ export function prepareDestinyDamage(fight, name, spec, options, roll) {
   if (spec.hit === 'dragon') target(fight, chosen);
   const group = (count, affected) => {
     const dice=applyDestinyHeroRoll(fight,Array.from({length:count},()=>destinyDie(roll)),'damage');onDestinyHeroDice(fight,dice);
-    return {dice,targets:[...affected],bonuses:{}};
+    const result={dice,targets:[...affected],bonuses:{}};
+    for(const target of affected)prepareDestinyCancellation(fight,target,result,roll);
+    return result;
   };
   const countBonus = fight.turn.torrentFor === name ? 1 : 0;
   const groups = spec.fixedDamageStat ? [{ dice: [], bonuses: {}, targets, amount:
@@ -56,20 +59,28 @@ export function applyDestinyDamage(fight, pending) {
   for (const group of groups) {
     const healthBeforeHazard = fight.hero.health;
     applyDestinyAcceptedHeroRoll(fight,group.dice,'damage');
+    if(fight.encounter?.forcedLoss||fight.encounter?.forcedVictory)return;
     if (fight.hero.health < healthBeforeHazard) {
       reviveDestinyHero(fight);
       if (fight.hero.health <= 0) return;
     }
-    const damage = group.dice.reduce((sum, face, index) => sum + face + bonus + (group.bonuses[index] || 0), group.amount || 0);
+    const weaponBonus=spec.addWeaponStat?(fight.equipment?.mainHand?.[spec.addWeaponStat]||0)+(fight.equipment?.leftHand?.[spec.addWeaponStat]||0):0;
+    const upgradeBonus=spec.usageUpgrade&&hasDestinyAbility(fight,spec.usageUpgrade.ability)?spec.usageUpgrade.damageBonus||0:0;
+    const damage = group.dice.reduce((sum, face, index) => sum + face + bonus + (group.bonuses[index] || 0), (group.amount || 0)+weaponBonus+upgradeBonus);
     for (const index of group.targets) {
+      if(fight.encounter?.abilityCategoryImmunityByTarget?.[index]?.includes(spec.category??fight.abilityCatalog?.[name]?.category))continue;
+      const extra=spec.bonusAgainstStatus;
+      const statusBonus=extra&&fight.effects.some(effect=>effect.target===index&&effect.kind===extra.status&&effect.from<=fight.round&&effect.until>=fight.round&&(!extra.priorRound||effect.from<fight.round))?extra.amount:0;
+      const targetDamage=group.cancellationDiceByTarget?.[index]?destinyUncancelledDice(group,index).reduce((sum,i)=>sum+group.dice[i]+bonus+(group.bonuses[i]||0),(group.amount||0)+weaponBonus+upgradeBonus):damage;
       const lost = spec.passiveAttack && !destinyDamageAllowed(fight, index, 'passive') ? 0 :
-        destinyStrike(fight, index, damage, name, spec.damageKind || (spec.fixedDamageStat ? 'fixed-ability' : 'dice'));
+        destinyStrike(fight, index, targetDamage+statusBonus, name, spec.damageKind || (spec.fixedDamageStat ? 'fixed-ability' : 'dice'));
       if (spec.passive && isDestinyOpponentDead(fight, index)) fight.turn.pendingPassiveDeath = true;
       if (spec.category === 'co' && lost) fight.turn.combatAbilityDamage = true;
       if (spec.ignite && lost && !fight.effects.some(effect=>effect.kind==='burn'&&effect.target===index)) fight.effects.push({kind:'burn',target:index,from:fight.round,until:Number.MAX_SAFE_INTEGER,source:name});
       if (spec.drain && lost) healDestinyHero(fight, 2);
       if (spec.recoil && lost) damageDestinyHero(fight,1);
       if (spec.armourLoss) addDestinyStatEffect(fight, index, 'armour', -spec.armourLoss, null, name);
+      if(spec.setArmour!==undefined)fight.effects.push({kind:'stat',target:index,attribute:'armour',set:spec.setArmour,from:fight.round,until:Number.MAX_SAFE_INTEGER,source:name});
       if (spec.weaken) {
         const attribute = options.attribute ?? fight.opponents[index].damageStat;
         if (!['brawn', 'magic'].includes(attribute)) throw new RangeError('Choose brawn or magic');
@@ -83,6 +94,8 @@ export function applyDestinyDamage(fight, pending) {
     }
   }
   if (pending.selfDamage?.length) {
+    applyDestinyAcceptedHeroRoll(fight,pending.selfDamage,'damage');
+    if(fight.encounter?.forcedLoss||fight.encounter?.forcedVictory)return;
     const damage=damageDestinyHero(fight,pending.selfDamage.reduce((sum,face)=>sum+face,0));
     fight.history.push({type:'ability-recoil',round:fight.round,source:name,dice:[...pending.selfDamage],damage});
   }
