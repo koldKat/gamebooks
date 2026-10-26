@@ -49,6 +49,13 @@ const labels = {
   'netted':'Caught in the net',
   'netFreed':'You escape the net.',
   'netThrown':'Net: {dice} = {total}, {result}.',
+  retrievedWeaponDice:'Retrieved weapon damage D6', retrievedWeaponAdd:'Retrieved weapon adjustment',
+  pursue:'Catch opponent',continueFight:'Keep fighting',subdue:'Try to subdue',
+  holdAttempt:'Break hold: {dice} = {total}, damage roll {damage}; {result}.',holdBroken:'hold broken',holdRemains:'still held',
+  enemyDrawsWeapon:'{name} draws a weapon. Recover your own weapon next.',
+  enemyRetreat:'{name} tries to run. Resolve the pursuit before continuing.',enemiesSurrender:'The remaining opponents surrender.',
+  pursuitPending:'Pursuit check pending',opponentCaught:'Caught: fight or subdue',
+  'struggle.held':'Breaking the hold','struggle.unarmed':'Unarmed struggle','struggle.retrieve':'Recovering your weapon','struggle.fencing':'Fencing',
   'status.escaped':'Escaped',
   'status.surrendered':'Surrendered',
 };

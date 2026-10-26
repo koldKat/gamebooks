@@ -33,7 +33,7 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     if (!result.maxHp || result.hp>result.maxHp)throw new RangeError('Invalid hit points');
     return result;
   }
-  function setup(){return {section:el('encounter').value,opponents:editor.snapshot(),weaponDice:el('weaponDice').value,weaponAdd:el('weaponAdd').value,weaponChoice:el('weaponChoice').value,...(definition.getCustomRules?{useGauntlet:el('useGauntlet').checked}:{}),...(preset()?.repeatFirstEnemy?{enemyCount:el('enemyCount').value}:{})};}
+  function setup(){return {section:el('encounter').value,opponents:editor.snapshot(),weaponDice:el('weaponDice').value,weaponAdd:el('weaponAdd').value,weaponChoice:el('weaponChoice').value,...(preset()?.rules.mechanics?.struggle?{retrievedWeaponDice:el('retrievedWeaponDice').value,retrievedWeaponAdd:el('retrievedWeaponAdd').value}:{}),...(definition.getCustomRules?{useGauntlet:el('useGauntlet').checked}:{}),...(preset()?.repeatFirstEnemy?{enemyCount:el('enemyCount').value}:{})};}
   function saveSetup(){
     if (shownRun!==getRun() || active(state.read()?.fight))return;
     state.change(data=>{data.setup=setup();});
@@ -50,6 +50,8 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     const damage=weapons[Number(el('weaponChoice').value)]?.damage??entry?.rules.heroDamage;
     el('sourceNotes').textContent=(entry?.rules.sourceNotes ?? []).join(' ');
     el('weaponNote').textContent=entry?.rules.enemyOnly?tk('noHeroAttack'):damage?tk('printedDamage'):tk('chooseDamage');
+    el('retrievedWeaponRow').hidden=!entry?.rules.mechanics?.struggle;
+    for(const key of ['retrievedWeaponDice','retrievedWeaponAdd'])el(key).disabled=active(state.read()?.fight);
     for(const key of ['weaponDice','weaponAdd'])el(key).disabled=active(state.read()?.fight)||Boolean(damage)||Boolean(entry?.rules.enemyOnly);
     if(damage){el('weaponDice').value=damage.dice;el('weaponAdd').value=damage.add;}
   }
@@ -67,6 +69,10 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
       if(event.kind==='fled')data.log.push(tk('fled',{name:event.name}));
       if(event.kind==='shape')data.log.push(tk('shape',{name:event.name}));
       if(event.kind==='phaseChanged')data.log.push(tk('phaseChanged',{name:event.name}));
+      if(event.kind==='holdAttempt')data.log.push(tk('holdAttempt',{dice:event.dice.join('+'),total:event.total,damage:event.amount,result:tk(event.passed?'holdBroken':'holdRemains')}));
+      if(event.kind==='enemyDrawsWeapon')data.log.push(tk('enemyDrawsWeapon',{name:event.name}));
+      if(event.kind==='enemyRetreat')data.log.push(tk('enemyRetreat',{name:event.name}));
+      if(event.kind==='enemiesSurrender')data.log.push(tk('enemiesSurrender'));
       if(event.kind==='disarmed')data.log.push(tk('disarmed',{name:event.name}));
       if(event.kind==='openingDamage')data.log.push(tk('openingDamage',{n:event.amount}));
       if(['weaponRetrieved','gripFreed','gripped','netFreed'].includes(event.kind))data.log.push(tk(event.kind));
@@ -88,6 +94,7 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
       editorRun=shownRun;el('encounter').value=data.setup.section ?? 'custom';
       const entry=preset();editor.set(data.setup.opponents ?? (entry?editorRows(entry.enemies):[{}]));
       el('weaponDice').value=data.setup.weaponDice ?? '';el('weaponAdd').value=data.setup.weaponAdd ?? 0;
+      el('retrievedWeaponDice').value=data.setup.retrievedWeaponDice??'';el('retrievedWeaponAdd').value=data.setup.retrievedWeaponAdd??0;
       el('weaponChoice').innerHTML=(entry?.weapons??[]).map((weapon,index)=>`<option value="${index}">${escape(weapon.label)}</option>`).join('');
       el('weaponChoice').value=data.setup.weaponChoice??'0';
       el('enemyCount').value=data.setup.enemyCount??'';
@@ -96,7 +103,8 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     for(const key of characterFields){el(key).value=key==='hp'&&locked?fight.hero.hp:hero?.[key]??'';el(key).disabled=locked;}
     editor.lock(locked||Boolean(preset()?.rules.mechanics?.abilityOutcome));editor.fixCount(Boolean(preset()));el('encounter').disabled=locked;
     el('start').disabled=locked||!hero?.hp;el('saveCharacter').disabled=locked;el('newCharacter').disabled=locked;
-    el('round').disabled=!locked;el('cancel').disabled=!locked;
+    const retreatPending=Boolean(locked&&fight?.encounter?.retreatPending),retreatCaught=Boolean(locked&&fight?.encounter?.retreatCaught);
+    el('round').disabled=!locked||retreatPending||retreatCaught;el('cancel').disabled=!locked;
     const mechanics=fight?.rules.mechanics;
     const resources=(locked?mechanics:preset()?.rules.mechanics??definition.getCustomRules?.()?.mechanics)?.resources;
     const resourceHero=locked?fight.hero:hero;
@@ -118,7 +126,12 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     el('escapeCheck').hidden=!mechanics?.escapeCheck;
     el('escapeCheck').disabled=!locked||fight.round<1||fight.encounter?.escapeCheckedRound===fight.round;
     el('sourceExit').hidden=!mechanics?.sourceExit;el('sourceExit').disabled=!locked;
-    el('heal').disabled=!resourceHero?.hp||Boolean(resources?.healingPool&&(resourceHero.hp>=resourceHero.maxHp||!resourceHero[resources.healingPool.field]))||Boolean(locked&&(fight.rules.enemyOnly||fight.encounter?.netTurns||mechanics?.openingEnemyTurn&&fight.round===0));
+    const struggleStage=locked&&mechanics?.struggle?(fight.encounter?.struggleStage??'held'):null;
+    for(const key of ['pursue','continueFight','subdue']){
+      el(key).hidden=!mechanics?.enemyRetreat||(key==='pursue'?!retreatPending:!retreatCaught||key==='subdue'&&!mechanics.enemyRetreat.subdueAbility);
+      el(key).disabled=!locked;
+    }
+    el('heal').disabled=!resourceHero?.hp||retreatPending||retreatCaught||['held','retrieve'].includes(struggleStage)||Boolean(resources?.healingPool&&(resourceHero.hp>=resourceHero.maxHp||!resourceHero[resources.healingPool.field]))||Boolean(locked&&(fight.rules.enemyOnly||fight.encounter?.netTurns||mechanics?.openingEnemyTurn&&fight.round===0));
     el('healing').max=resources?.healingPool?Math.min(resourceHero?.[resources.healingPool.field]??0,(resourceHero?.maxHp??0)-(resourceHero?.hp??0)):1000000;
     el('abilityCheck').disabled=locked||!hero?.hp;
     const currentTarget=Number(el('target').value),targets=encounterTargets(fight).map(index=>({enemy:fight.enemies[index],index}));
@@ -135,6 +148,9 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     if(gripped)el('status').textContent+=' · '+tk('gripped');
     if(fight?.encounter?.netTurns)el('status').textContent+=' · '+tk('netted');
     if(fight?.encounter?.engulfed)el('status').textContent+=' · '+tk('engulfed');
+    if(struggleStage)el('status').textContent+=' · '+tk('struggle.'+struggleStage);
+    if(retreatPending)el('status').textContent+=' · '+tk('pursuitPending');
+    if(retreatCaught)el('status').textContent+=' · '+tk('opponentCaught');
     if(locked&&mechanics?.graceRounds&&!targets.length)el('status').textContent+=' · '+tk('graceRound');
     el('destination').textContent=fight?.destination?tk('destination',{n:fight.destination}):'';
     el('opponents').innerHTML=fight?fight.enemies.map(enemy=>'<div>'+escape(tk('enemyHp',{name:enemy.name,n:enemy.hp,max:enemy.maxHp}))+'</div>').join(''):'';
@@ -158,11 +174,11 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
       <label class="inv-edit-row" id="${ID}-enemyCountRow" hidden><span>${escape(tk('enemyCount'))}</span><input class="inv-edit-input" id="${ID}-enemyCount" type="number" min="1" max="98" step="1"></label>
       <div id="${ID}-editor"></div><p class="bsim-note" id="${ID}-sourceNotes"></p>
       <label class="inv-edit-row" id="${ID}-weaponChoiceRow" hidden><span>${escape(tk('weaponChoice'))}</span><select class="inv-edit-input" id="${ID}-weaponChoice"></select></label>
-      ${field('weaponDice',0,10)}${field('weaponAdd',-100,1000)}<p class="bsim-note" id="${ID}-weaponNote"></p>${button('start')}
+      ${field('weaponDice',0,10)}${field('weaponAdd',-100,1000)}<p class="bsim-note" id="${ID}-weaponNote"></p><div id="${ID}-retrievedWeaponRow" hidden>${field('retrievedWeaponDice',0,10)}${field('retrievedWeaponAdd',-100,1000)}</div>${button('start')}
       <label class="bsim-checkbox" id="${ID}-useGauntletRow" hidden><input type="checkbox" id="${ID}-useGauntlet">${escape(tk('useGauntlet'))}</label><div class="bsim-btn-row">${['healingSpell','misdirection','repulsion'].map(button).join('')}</div>
       <label class="inv-edit-row"><span>${escape(tk('target'))}</span><select class="inv-edit-input" id="${ID}-target"></select></label><div class="bsim-btn-row">${button('round')}${button('cancel')}</div>
       <label class="inv-edit-row" id="${ID}-allyTargetRow" hidden><span>${escape(tk('allyTarget'))}</span><select class="inv-edit-input" id="${ID}-allyTarget"></select></label>
-      <div class="bsim-btn-row">${['retrieve','escapeGrip','flee','surrender','partingShot','escapeCheck','sourceExit'].map(button).join('')}</div>
+      <div class="bsim-btn-row">${['retrieve','escapeGrip','flee','surrender','partingShot','escapeCheck','sourceExit','pursue','continueFight','subdue'].map(button).join('')}</div>
       ${field('healing',1)}${button('heal')}<p class="bsim-note">${escape(tk('healingNote'))}</p>
       <label class="inv-edit-row"><span>${escape(tk('ability'))}</span><select class="inv-edit-input" id="${ID}-ability">${abilities.map(key=>`<option value="${key}">${escape(tk(key))}</option>`).join('')}</select></label>${field('abilityModifier',-100,100)}${button('abilityCheck')}
       </div><div class="bsim-col bsim-col-right"><p id="${ID}-status" role="status"></p><p id="${ID}-destination"></p><div id="${ID}-opponents"></div><h3 class="bsim-side-title">${escape(tk('log'))}</h3><div class="bsim-log" id="${ID}-log"></div><h3 class="bsim-side-title">${escape(tk('history'))}</h3><div class="bsim-history-list" id="${ID}-history"></div></div></div></div>`;
@@ -175,14 +191,15 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     el('close').addEventListener('click',close);
     overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
     overlay.addEventListener('keydown',event=>{if(event.key==='Escape'){event.stopPropagation();close();}});
-    el('encounter').addEventListener('change',()=>{if(active(state.read()?.fight))return;const entry=preset();editor.set(entry?editorRows(entry.enemies):[{}]);editor.fixCount(Boolean(entry));editor.lock(Boolean(entry?.rules.mechanics?.abilityOutcome));el('weaponDice').value='';el('weaponAdd').value=0;el('enemyCount').value='';setupNotes();saveSetup();});
+    el('encounter').addEventListener('change',()=>{if(active(state.read()?.fight))return;const entry=preset();editor.set(entry?editorRows(entry.enemies):[{}]);editor.fixCount(Boolean(entry));editor.lock(Boolean(entry?.rules.mechanics?.abilityOutcome));el('weaponDice').value='';el('weaponAdd').value=0;el('retrievedWeaponDice').value='';el('retrievedWeaponAdd').value=0;el('enemyCount').value='';setupNotes();saveSetup();});
     editor.element.addEventListener('input',saveSetup);editor.element.addEventListener('change',saveSetup);
-    for(const key of ['weaponDice','weaponAdd','enemyCount'])el(key).addEventListener('change',saveSetup);
+    for(const key of ['weaponDice','weaponAdd','retrievedWeaponDice','retrievedWeaponAdd','enemyCount'])el(key).addEventListener('change',saveSetup);
     el('weaponChoice').addEventListener('change',()=>{setupNotes();saveSetup();});
     el('saveCharacter').addEventListener('click',()=>change(data=>{if(active(data.fight))return;data.character=readCharacter();data.fight=null;}));
     el('newCharacter').addEventListener('click',()=>confirm('resetConfirm',data=>{if(active(data.fight))return;data.character=structuredClone(definition.defaultHero);data.fight=null;}));
     el('start').addEventListener('click',()=>change(data=>{
       if(active(data.fight))return;data.character=readCharacter();const entry=preset(),rules=structuredClone(entry?.rules??definition.getCustomRules?.()??{});
+      if(rules.mechanics?.struggle)rules.mechanics.struggle.retrievedDamage={dice:number('retrievedWeaponDice',0,10),add:number('retrievedWeaponAdd',-100,1000)};
       const weapon=entry?.weapons?.[Number(el('weaponChoice').value)];if(weapon)rules.heroDamage=structuredClone(weapon.damage);
       if(weapon?.attackBonus){rules.mechanics??={};rules.mechanics.heroAttackBonus=(rules.mechanics.heroAttackBonus??0)+weapon.attackBonus;}
       if(weapon?.winSection)rules.winSection=weapon.winSection;
@@ -213,7 +230,7 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
         data.character.hp+=event.amount;data.fight=null;data.log.push(tk('restored',{n:event.amount}));
       }
     }));
-    for(const action of ['retrieve','escapeGrip','flee','surrender','partingShot','escapeCheck','sourceExit'])el(action).addEventListener('click',()=>change(data=>logEvents(data,crossroadsRound(data.fight,{target:Number(el('target').value),action}))));
+    for(const action of ['retrieve','escapeGrip','flee','surrender','partingShot','escapeCheck','sourceExit','pursue','continueFight','subdue'])el(action).addEventListener('click',()=>change(data=>logEvents(data,crossroadsRound(data.fight,{target:Number(el('target').value),action}))));
     el('heal').addEventListener('click',()=>change(data=>{
       const amount=number('healing',1);
       if(active(data.fight))logEvents(data,crossroadsRound(data.fight,{healing:amount,allyTarget:selectedAlly(data.fight)}));

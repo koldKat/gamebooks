@@ -235,6 +235,10 @@ gamebooks/
                          automatic kill; individual opponents can alternate attack types.
                          Finite healing pools consume the chosen number of doses per action
                          and persist with the character, independently of shared inventory.
+                         Staged struggles separate hold-breaking rolls, unarmed wounds and
+                         weapon retrieval before fencing, with explicit setup for unprinted damage.
+                         Retreat thresholds pause combat for pursuit and optional subdual;
+                         group morale and nonlethal surrender floors preserve actual injuries.
                          V1 saved fights keep their original transitions.
                          The panel uses the same availability rules as combat. Database roster
                          entries own stats and exceptions.

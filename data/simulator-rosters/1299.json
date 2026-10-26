@@ -1,0 +1,1672 @@
+{
+  "schemaVersion": 1,
+  "bookId": 1299,
+  "family": "crossroads",
+  "sourceSha256": "272651c68c8c03d0831f046dc4a92d0eae9562c2e90e982f85c1e35f9ebfaf88",
+  "rosterComplete": true,
+  "expectedEncounterCount": 6,
+  "source": "All six Seven No-Trump combat encounters, with source omissions left blank for player input. Shared inventory and equipment unchanged.",
+  "enemies": [
+    {
+      "key": "33-0",
+      "name": "Brand",
+      "attack": 14,
+      "defense": 14,
+      "hp": 42,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "33",
+          "label": "Brand (§33)",
+          "enemies": [
+            {
+              "name": "Brand",
+              "hp": 42,
+              "toBeHit": 14,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "mechanics": {
+              "struggle": {
+                "enemy": 0,
+                "breakHoldDamage": 3,
+                "drawWeaponDamage": 4,
+                "retrieveAbility": "dexterity",
+                "retrievedDamage": null,
+                "fencing": {
+                  "toBeHit": 6,
+                  "attacks": [
+                    {
+                      "toHit": 6,
+                      "damage": {
+                        "dice": 2,
+                        "add": 2
+                      }
+                    }
+                  ]
+                }
+              },
+              "enemyRetreat": {
+                "enemy": 0,
+                "hpAtMost": 3,
+                "catchAbility": "dexterity",
+                "escapedStatus": "loss",
+                "escapedSection": "36",
+                "subdueAbility": "strength",
+                "subduedSection": "31"
+              }
+            },
+            "winSection": "31",
+            "lossSection": "36",
+            "sourceNotes": [
+              "Enter Random’s unarmed damage in Weapon damage, and his sword damage in Retrieved weapon. Neither is printed in this encounter. A successful hit with a damage roll above 2 breaks the initial hold instead of wounding Brand. The next attacks are normal unarmed combat. A damage roll of at least 4 makes Brand draw his sword.",
+              "After Brand draws, Random uses each round to attempt Dexterity and recover his sword. Once successful, fencing uses the second table. Brand keeps all wounds between stages; the repeated 42 HP does not heal him. A surviving Brand tries to flee at 3 HP or less. Catch him with Dexterity, then choose to keep fighting or try Strength to subdue him. A failed subdual resumes combat; it cannot be retried for free."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine the winner of the",
+            ".",
+            "fight.",
+            "The fight is in two parts. In the first, Random must",
+            "break free of Brand and find his sword. In the second,",
+            "the two men fence. Brand will try to kill Random, but",
+            "will try to flee as soon as his (i.e. Brand's) hit points",
+            "total sinks to 3 or less. If he flees, Random will have to",
+            "succeed at a Dexterity roll to catch him: If Random",
+            "catches him, he can either keep fighting him or he can",
+            "attempt to subdue him. The latter requires a successful",
+            "Strength roll.",
+            "Part 1: The Struggle",
+            "BRAND",
+            "To hit Random: 14",
+            "To be hit: 14 Hit points: 42",
+            "Damage with body: 1 D6",
+            "When the struggle starts, Brand is holding Random by",
+            "the throat. To begin, Random 's rounds consist solely of",
+            "breaking the hold. To do so, he must score a successful",
+            "'To be hit' on Brand, then obtain a Damage result",
+            "higher than 2. As soon as he does this, the hold is",
+            "broken. Until he does so, Brand gets one hit per round,",
+            "as is normal.",
+            "After breaking the hold, Random fights normally. As",
+            "soon as he scores a Damage result on Brand of 4 or",
+            "higher, Brand will draw his sword. At this point,",
+            "Random tries a Dexterity roll each round. As soon as",
+            "he succeeds, he retrieves his own sword. Once this",
+            "happens, the fencing battle begins:",
+            "Part 2: The Fencing Battle",
+            "BRAND",
+            "To hit Random: 6 To be hit: 6 Hit points: 42",
+            "Damage with sword· 2 D6+ 2",
+            "If Random wins, turn to section 31 ! .",
+            "If not, turn to section 36."
+          ],
+          "sourcePages": [
+            129,
+            130
+          ]
+        }
+      }
+    },
+    {
+      "key": "35-0",
+      "name": "Church leader",
+      "attack": 8,
+      "defense": 9,
+      "hp": 14,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 7,
+        "entry": {
+          "section": "35",
+          "label": "The church people (§35)",
+          "enemies": [
+            {
+              "name": "Church leader",
+              "hp": 14,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 8,
+                  "damage": {
+                    "dice": 1,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 1",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 2",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 3",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 4",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 5",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 6",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "mechanics": {
+              "enemyMorale": {
+                "afterDeaths": 1,
+                "attackThresholdChange": -1,
+                "surrenderAfter": 2
+              },
+              "capture": {
+                "hpAtMost": 3,
+                "floorHp": 1,
+                "section": "25"
+              }
+            },
+            "winSection": "23",
+            "lossSection": "25",
+            "sourceNotes": [
+              "Seven opponents, each with one attack per round. After the first death, their to-hit-Random number decreases by one, exactly as printed. After the second death, the survivors surrender. Random surrenders at 3 HP or less; a potentially lethal blow leaves him alive, not restored to his starting Health. Enter his actual weapon damage."
+            ]
+          },
+          "printedRules": [
+            "Use the combat ·rules·to determine the outcome of the",
+            "fight. Each character attempts one hit per round. If one",
+            "of the church people gets killed, decrease the To-hit- .",
+            "Random number of all the rest by one (they 're getting",
+            "·demoralized). If a second dies, the rest will surrender.",
+            "Note: Once Random 's hit points are reduced to 3 or",
+            "lower, he will surrender. The church people will not kill",
+            "him.",
+            "THE LEADER",
+            "To hit Random: 8 To be hit: 9 Hit points: 14",
+            "Damage· with dagger: 1 D6+ 1",
+            "-",
+            "THE OTHER CHURCH PEOPLE",
+            "To hit Random: 6 To be hit: 12 · Hit points: 10",
+            "Damage with fists and random objects: 1 D6- 1",
+            "If Random wins, turn to section 23.",
+            "If he loses, turn to section 25."
+          ],
+          "sourcePages": [
+            132,
+            133
+          ]
+        }
+      }
+    },
+    {
+      "key": "35-1",
+      "name": "Church person 1",
+      "attack": 6,
+      "defense": 12,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 1,
+        "partCount": 7,
+        "entry": {
+          "section": "35",
+          "label": "The church people (§35)",
+          "enemies": [
+            {
+              "name": "Church leader",
+              "hp": 14,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 8,
+                  "damage": {
+                    "dice": 1,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 1",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 2",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 3",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 4",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 5",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 6",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "mechanics": {
+              "enemyMorale": {
+                "afterDeaths": 1,
+                "attackThresholdChange": -1,
+                "surrenderAfter": 2
+              },
+              "capture": {
+                "hpAtMost": 3,
+                "floorHp": 1,
+                "section": "25"
+              }
+            },
+            "winSection": "23",
+            "lossSection": "25",
+            "sourceNotes": [
+              "Seven opponents, each with one attack per round. After the first death, their to-hit-Random number decreases by one, exactly as printed. After the second death, the survivors surrender. Random surrenders at 3 HP or less; a potentially lethal blow leaves him alive, not restored to his starting Health. Enter his actual weapon damage."
+            ]
+          },
+          "printedRules": [
+            "Use the combat ·rules·to determine the outcome of the",
+            "fight. Each character attempts one hit per round. If one",
+            "of the church people gets killed, decrease the To-hit- .",
+            "Random number of all the rest by one (they 're getting",
+            "·demoralized). If a second dies, the rest will surrender.",
+            "Note: Once Random 's hit points are reduced to 3 or",
+            "lower, he will surrender. The church people will not kill",
+            "him.",
+            "THE LEADER",
+            "To hit Random: 8 To be hit: 9 Hit points: 14",
+            "Damage· with dagger: 1 D6+ 1",
+            "-",
+            "THE OTHER CHURCH PEOPLE",
+            "To hit Random: 6 To be hit: 12 · Hit points: 10",
+            "Damage with fists and random objects: 1 D6- 1",
+            "If Random wins, turn to section 23.",
+            "If he loses, turn to section 25."
+          ],
+          "sourcePages": [
+            132,
+            133
+          ]
+        }
+      }
+    },
+    {
+      "key": "35-2",
+      "name": "Church person 2",
+      "attack": 6,
+      "defense": 12,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 2,
+        "partCount": 7,
+        "entry": {
+          "section": "35",
+          "label": "The church people (§35)",
+          "enemies": [
+            {
+              "name": "Church leader",
+              "hp": 14,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 8,
+                  "damage": {
+                    "dice": 1,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 1",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 2",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 3",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 4",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 5",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 6",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "mechanics": {
+              "enemyMorale": {
+                "afterDeaths": 1,
+                "attackThresholdChange": -1,
+                "surrenderAfter": 2
+              },
+              "capture": {
+                "hpAtMost": 3,
+                "floorHp": 1,
+                "section": "25"
+              }
+            },
+            "winSection": "23",
+            "lossSection": "25",
+            "sourceNotes": [
+              "Seven opponents, each with one attack per round. After the first death, their to-hit-Random number decreases by one, exactly as printed. After the second death, the survivors surrender. Random surrenders at 3 HP or less; a potentially lethal blow leaves him alive, not restored to his starting Health. Enter his actual weapon damage."
+            ]
+          },
+          "printedRules": [
+            "Use the combat ·rules·to determine the outcome of the",
+            "fight. Each character attempts one hit per round. If one",
+            "of the church people gets killed, decrease the To-hit- .",
+            "Random number of all the rest by one (they 're getting",
+            "·demoralized). If a second dies, the rest will surrender.",
+            "Note: Once Random 's hit points are reduced to 3 or",
+            "lower, he will surrender. The church people will not kill",
+            "him.",
+            "THE LEADER",
+            "To hit Random: 8 To be hit: 9 Hit points: 14",
+            "Damage· with dagger: 1 D6+ 1",
+            "-",
+            "THE OTHER CHURCH PEOPLE",
+            "To hit Random: 6 To be hit: 12 · Hit points: 10",
+            "Damage with fists and random objects: 1 D6- 1",
+            "If Random wins, turn to section 23.",
+            "If he loses, turn to section 25."
+          ],
+          "sourcePages": [
+            132,
+            133
+          ]
+        }
+      }
+    },
+    {
+      "key": "35-3",
+      "name": "Church person 3",
+      "attack": 6,
+      "defense": 12,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 3,
+        "partCount": 7,
+        "entry": {
+          "section": "35",
+          "label": "The church people (§35)",
+          "enemies": [
+            {
+              "name": "Church leader",
+              "hp": 14,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 8,
+                  "damage": {
+                    "dice": 1,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 1",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 2",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 3",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 4",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 5",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 6",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "mechanics": {
+              "enemyMorale": {
+                "afterDeaths": 1,
+                "attackThresholdChange": -1,
+                "surrenderAfter": 2
+              },
+              "capture": {
+                "hpAtMost": 3,
+                "floorHp": 1,
+                "section": "25"
+              }
+            },
+            "winSection": "23",
+            "lossSection": "25",
+            "sourceNotes": [
+              "Seven opponents, each with one attack per round. After the first death, their to-hit-Random number decreases by one, exactly as printed. After the second death, the survivors surrender. Random surrenders at 3 HP or less; a potentially lethal blow leaves him alive, not restored to his starting Health. Enter his actual weapon damage."
+            ]
+          },
+          "printedRules": [
+            "Use the combat ·rules·to determine the outcome of the",
+            "fight. Each character attempts one hit per round. If one",
+            "of the church people gets killed, decrease the To-hit- .",
+            "Random number of all the rest by one (they 're getting",
+            "·demoralized). If a second dies, the rest will surrender.",
+            "Note: Once Random 's hit points are reduced to 3 or",
+            "lower, he will surrender. The church people will not kill",
+            "him.",
+            "THE LEADER",
+            "To hit Random: 8 To be hit: 9 Hit points: 14",
+            "Damage· with dagger: 1 D6+ 1",
+            "-",
+            "THE OTHER CHURCH PEOPLE",
+            "To hit Random: 6 To be hit: 12 · Hit points: 10",
+            "Damage with fists and random objects: 1 D6- 1",
+            "If Random wins, turn to section 23.",
+            "If he loses, turn to section 25."
+          ],
+          "sourcePages": [
+            132,
+            133
+          ]
+        }
+      }
+    },
+    {
+      "key": "35-4",
+      "name": "Church person 4",
+      "attack": 6,
+      "defense": 12,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 4,
+        "partCount": 7,
+        "entry": {
+          "section": "35",
+          "label": "The church people (§35)",
+          "enemies": [
+            {
+              "name": "Church leader",
+              "hp": 14,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 8,
+                  "damage": {
+                    "dice": 1,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 1",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 2",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 3",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 4",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 5",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 6",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "mechanics": {
+              "enemyMorale": {
+                "afterDeaths": 1,
+                "attackThresholdChange": -1,
+                "surrenderAfter": 2
+              },
+              "capture": {
+                "hpAtMost": 3,
+                "floorHp": 1,
+                "section": "25"
+              }
+            },
+            "winSection": "23",
+            "lossSection": "25",
+            "sourceNotes": [
+              "Seven opponents, each with one attack per round. After the first death, their to-hit-Random number decreases by one, exactly as printed. After the second death, the survivors surrender. Random surrenders at 3 HP or less; a potentially lethal blow leaves him alive, not restored to his starting Health. Enter his actual weapon damage."
+            ]
+          },
+          "printedRules": [
+            "Use the combat ·rules·to determine the outcome of the",
+            "fight. Each character attempts one hit per round. If one",
+            "of the church people gets killed, decrease the To-hit- .",
+            "Random number of all the rest by one (they 're getting",
+            "·demoralized). If a second dies, the rest will surrender.",
+            "Note: Once Random 's hit points are reduced to 3 or",
+            "lower, he will surrender. The church people will not kill",
+            "him.",
+            "THE LEADER",
+            "To hit Random: 8 To be hit: 9 Hit points: 14",
+            "Damage· with dagger: 1 D6+ 1",
+            "-",
+            "THE OTHER CHURCH PEOPLE",
+            "To hit Random: 6 To be hit: 12 · Hit points: 10",
+            "Damage with fists and random objects: 1 D6- 1",
+            "If Random wins, turn to section 23.",
+            "If he loses, turn to section 25."
+          ],
+          "sourcePages": [
+            132,
+            133
+          ]
+        }
+      }
+    },
+    {
+      "key": "35-5",
+      "name": "Church person 5",
+      "attack": 6,
+      "defense": 12,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 5,
+        "partCount": 7,
+        "entry": {
+          "section": "35",
+          "label": "The church people (§35)",
+          "enemies": [
+            {
+              "name": "Church leader",
+              "hp": 14,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 8,
+                  "damage": {
+                    "dice": 1,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 1",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 2",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 3",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 4",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 5",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 6",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "mechanics": {
+              "enemyMorale": {
+                "afterDeaths": 1,
+                "attackThresholdChange": -1,
+                "surrenderAfter": 2
+              },
+              "capture": {
+                "hpAtMost": 3,
+                "floorHp": 1,
+                "section": "25"
+              }
+            },
+            "winSection": "23",
+            "lossSection": "25",
+            "sourceNotes": [
+              "Seven opponents, each with one attack per round. After the first death, their to-hit-Random number decreases by one, exactly as printed. After the second death, the survivors surrender. Random surrenders at 3 HP or less; a potentially lethal blow leaves him alive, not restored to his starting Health. Enter his actual weapon damage."
+            ]
+          },
+          "printedRules": [
+            "Use the combat ·rules·to determine the outcome of the",
+            "fight. Each character attempts one hit per round. If one",
+            "of the church people gets killed, decrease the To-hit- .",
+            "Random number of all the rest by one (they 're getting",
+            "·demoralized). If a second dies, the rest will surrender.",
+            "Note: Once Random 's hit points are reduced to 3 or",
+            "lower, he will surrender. The church people will not kill",
+            "him.",
+            "THE LEADER",
+            "To hit Random: 8 To be hit: 9 Hit points: 14",
+            "Damage· with dagger: 1 D6+ 1",
+            "-",
+            "THE OTHER CHURCH PEOPLE",
+            "To hit Random: 6 To be hit: 12 · Hit points: 10",
+            "Damage with fists and random objects: 1 D6- 1",
+            "If Random wins, turn to section 23.",
+            "If he loses, turn to section 25."
+          ],
+          "sourcePages": [
+            132,
+            133
+          ]
+        }
+      }
+    },
+    {
+      "key": "35-6",
+      "name": "Church person 6",
+      "attack": 6,
+      "defense": 12,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 6,
+        "partCount": 7,
+        "entry": {
+          "section": "35",
+          "label": "The church people (§35)",
+          "enemies": [
+            {
+              "name": "Church leader",
+              "hp": 14,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 8,
+                  "damage": {
+                    "dice": 1,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 1",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 2",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 3",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 4",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 5",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Church person 6",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 6,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "mechanics": {
+              "enemyMorale": {
+                "afterDeaths": 1,
+                "attackThresholdChange": -1,
+                "surrenderAfter": 2
+              },
+              "capture": {
+                "hpAtMost": 3,
+                "floorHp": 1,
+                "section": "25"
+              }
+            },
+            "winSection": "23",
+            "lossSection": "25",
+            "sourceNotes": [
+              "Seven opponents, each with one attack per round. After the first death, their to-hit-Random number decreases by one, exactly as printed. After the second death, the survivors surrender. Random surrenders at 3 HP or less; a potentially lethal blow leaves him alive, not restored to his starting Health. Enter his actual weapon damage."
+            ]
+          },
+          "printedRules": [
+            "Use the combat ·rules·to determine the outcome of the",
+            "fight. Each character attempts one hit per round. If one",
+            "of the church people gets killed, decrease the To-hit- .",
+            "Random number of all the rest by one (they 're getting",
+            "·demoralized). If a second dies, the rest will surrender.",
+            "Note: Once Random 's hit points are reduced to 3 or",
+            "lower, he will surrender. The church people will not kill",
+            "him.",
+            "THE LEADER",
+            "To hit Random: 8 To be hit: 9 Hit points: 14",
+            "Damage· with dagger: 1 D6+ 1",
+            "-",
+            "THE OTHER CHURCH PEOPLE",
+            "To hit Random: 6 To be hit: 12 · Hit points: 10",
+            "Damage with fists and random objects: 1 D6- 1",
+            "If Random wins, turn to section 23.",
+            "If he loses, turn to section 25."
+          ],
+          "sourcePages": [
+            132,
+            133
+          ]
+        }
+      }
+    },
+    {
+      "key": "51-0",
+      "name": "Sentry",
+      "attack": 8,
+      "defense": 14,
+      "hp": 14,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "51",
+          "label": "Sentry (§51)",
+          "enemies": [
+            {
+              "name": "Sentry",
+              "hp": 14,
+              "toBeHit": 14,
+              "attacks": [
+                {
+                  "toHit": 8,
+                  "damage": {
+                    "dice": 1,
+                    "add": 3
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "mechanics": {
+              "enemyRetreat": {
+                "enemy": 0,
+                "hpAtMost": 5,
+                "minimumHp": 1,
+                "catchAbility": "dexterity",
+                "caughtSection": "48",
+                "escapedStatus": "draw",
+                "escapedSection": "59"
+              }
+            },
+            "winSection": "48",
+            "lossSection": "54",
+            "sourceNotes": [
+              "When the sentry reaches 5 HP or the blow would cross that threshold, resolve the printed Dexterity check. Success captures him (48); failure lets him raise the alarm (59). This is the source’s capture encounter. Losing the sword fight leads to 54. Enter Random’s actual sword damage."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine the winner. The",
+            "sentry will fight until his hit points are reduced to 5, at",
+            "which point he will try to run. To prevent his getting",
+            "away, make a Dexterity roll. If it succeeds, Random",
+            "has captured the sentry and will tie him up out of the",
+            "way (he has no useful information). If the Dexterity roll",
+            "fails, the sentry gets away and raises the alarm.",
+            "THE SENTRY",
+            "To hit Random: 8",
+            "To be hit.~ 14 Hit points: 14",
+            "Damage with sword: 1 D6+ 3",
+            "If Random wins the fight and the Dexterity roll, turn to",
+            "section 48.",
+            "If he loses the sword fight, turn to section 54.",
+            "If he wins the fight but loses the Dexterity roll, turn to",
+            "section 59."
+          ],
+          "sourcePages": [
+            163,
+            164
+          ]
+        }
+      }
+    },
+    {
+      "key": "76-0",
+      "name": "Soldier",
+      "attack": 10,
+      "defense": 11,
+      "hp": 14,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "76",
+          "label": "Soldier (§76)",
+          "enemies": [
+            {
+              "name": "Soldier",
+              "hp": 14,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 10,
+                  "damage": {
+                    "dice": 2,
+                    "add": -2
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "mechanics": {},
+            "winSection": "79",
+            "lossSection": "77",
+            "sourceNotes": [
+              "Both fighters fight to the death. Enter Random’s actual weapon damage."
+            ]
+          },
+          "printedRules": [
+            "I'm sliding. Nothing I can do about it. I fall to my",
+            "stomach .. Grab the stuff with my hands. It doesn't .",
+            "work. I keep sliding, and my fingers ache.",
+            "Below me stands a single soldier. He hasn't seen me",
+            "yet, but I'm sliding right toward him. With all my",
+            "strength, I try to force myself sideways, closer to the",
+            "mud's end, out of his reach. I might be able to beat",
+            "him in a fight, but I'm tired -and I'd rather not chance",
+            "it.",
+            "I'm moving, but not fast enough. I'm sliding harder,",
+            "faster. And my hands and feet are. dislodging hunks of",
+            "mud that fall ahead of me. He can't miss me now.",
+            "I drop practically on top of him. Summoning my",
+            "strength, I draw my sword and prepare to strike. His",
+            "hand is on his own sword, and he draws it swiftly.",
+            "Use the combat rules to· determine the winner. The",
+            "enemy soldier will fight, to the death.",
+            "SOLDIER",
+            "To hit Random: 10 To be hit: 11 Hit points: 14 ·",
+            "Damage with sword: 2 D6-_2",
+            "If Random wins, turn to section 79:",
+            "If not, turn to section 77."
+          ],
+          "sourcePages": [
+            193,
+            194
+          ]
+        }
+      }
+    },
+    {
+      "key": "89-0",
+      "name": "Benedict",
+      "attack": 5,
+      "defense": 5,
+      "hp": 25,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "89",
+          "label": "Benedict and Bleys (§89)",
+          "enemies": [
+            {
+              "name": "Benedict",
+              "hp": 25,
+              "toBeHit": 5,
+              "attacks": [
+                {
+                  "toHit": 5,
+                  "damage": {
+                    "dice": 2,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Bleys",
+              "hp": 23,
+              "toBeHit": 7,
+              "attacks": [
+                {
+                  "toHit": 5,
+                  "damage": {
+                    "dice": 2,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "mechanics": {},
+            "winSection": "99",
+            "lossSection": "28",
+            "sourceNotes": [
+              "Both brothers attack each round while alive. Defeat both to win. Enter Random’s actual weapon damage."
+            ]
+          },
+          "printedRules": [
+            "Before I reach the door, my brothers are upon me.",
+            "Tackling me to the floor, Bleys struggles to pin me,",
+            "while Benedict draws his sword and advances toward",
+            "me. Somehow, because I am merely thrashing and",
+            "pushing, I manage to throw Bleys off of me, and in",
+            "one motion I leap to my feet and draw my sword.",
+            "\"What do you want?\" I shout. ,",
+            "\"You can't leave, Random,\" Benedict snarls. \"You",
+            "can't get us out of here, and we hate you for that. And",
+            "I kill what I hate.\"",
+            "Staring into my brother's eyes, I realize that he is",
+            "telling the truth. He doesn't intend to let a failed king",
+            "go.",
+            "\"Fine,\" I reply. \"But at least let me take you on one",
+            "at a time.\" A useless plea, I sense, but one worth",
+            "trying.",
+            "Benedict laughs. \"What for? To be fair? I've never",
+            "had any use for fairness, not if I want something badly",
+            "enough. And I want you, brother. I want you dead.\"",
+            "With that he strikes, and Bleys with him.",
+            "BENEDICT",
+            "To hit Random: 5 To be hit: 5 Hit points: 25",
+            "Damage with sword: 2 D6+ 1",
+            "BLEYS",
+            "To be hit: 7 Hit points: 23",
+            "To hit Random: 5",
+            "Damage with sword: 2 D6",
+            "Use the combat rules to determine the winner. All will",
+            "·",
+            "fight to the death.",
+            "If Random wins, turn to section 99.",
+            "If Random loses, turn to section 28."
+          ],
+          "sourcePages": [
+            227,
+            228
+          ]
+        }
+      }
+    },
+    {
+      "key": "89-1",
+      "name": "Bleys",
+      "attack": 5,
+      "defense": 7,
+      "hp": 23,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "89",
+          "label": "Benedict and Bleys (§89)",
+          "enemies": [
+            {
+              "name": "Benedict",
+              "hp": 25,
+              "toBeHit": 5,
+              "attacks": [
+                {
+                  "toHit": 5,
+                  "damage": {
+                    "dice": 2,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Bleys",
+              "hp": 23,
+              "toBeHit": 7,
+              "attacks": [
+                {
+                  "toHit": 5,
+                  "damage": {
+                    "dice": 2,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "mechanics": {},
+            "winSection": "99",
+            "lossSection": "28",
+            "sourceNotes": [
+              "Both brothers attack each round while alive. Defeat both to win. Enter Random’s actual weapon damage."
+            ]
+          },
+          "printedRules": [
+            "Before I reach the door, my brothers are upon me.",
+            "Tackling me to the floor, Bleys struggles to pin me,",
+            "while Benedict draws his sword and advances toward",
+            "me. Somehow, because I am merely thrashing and",
+            "pushing, I manage to throw Bleys off of me, and in",
+            "one motion I leap to my feet and draw my sword.",
+            "\"What do you want?\" I shout. ,",
+            "\"You can't leave, Random,\" Benedict snarls. \"You",
+            "can't get us out of here, and we hate you for that. And",
+            "I kill what I hate.\"",
+            "Staring into my brother's eyes, I realize that he is",
+            "telling the truth. He doesn't intend to let a failed king",
+            "go.",
+            "\"Fine,\" I reply. \"But at least let me take you on one",
+            "at a time.\" A useless plea, I sense, but one worth",
+            "trying.",
+            "Benedict laughs. \"What for? To be fair? I've never",
+            "had any use for fairness, not if I want something badly",
+            "enough. And I want you, brother. I want you dead.\"",
+            "With that he strikes, and Bleys with him.",
+            "BENEDICT",
+            "To hit Random: 5 To be hit: 5 Hit points: 25",
+            "Damage with sword: 2 D6+ 1",
+            "BLEYS",
+            "To be hit: 7 Hit points: 23",
+            "To hit Random: 5",
+            "Damage with sword: 2 D6",
+            "Use the combat rules to determine the winner. All will",
+            "·",
+            "fight to the death.",
+            "If Random wins, turn to section 99.",
+            "If Random loses, turn to section 28."
+          ],
+          "sourcePages": [
+            227,
+            228
+          ]
+        }
+      }
+    },
+    {
+      "key": "102-0",
+      "name": "Young monk",
+      "attack": null,
+      "defense": null,
+      "hp": null,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "102",
+          "label": "Young monk (§102)",
+          "enemies": [
+            {
+              "name": "Young monk",
+              "hp": null,
+              "toBeHit": null,
+              "attacks": [
+                {
+                  "toHit": null,
+                  "damage": {
+                    "dice": 1,
+                    "add": -2
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "mechanics": {},
+            "winSection": "104",
+            "lossSection": "105",
+            "sourceNotes": [
+              "The source prints only 1 D6 minus 2 damage for both fighters. It omits the monk’s hit points and both hit targets. Fill those blank stats from your chosen ruling before starting; none are invented. Damage cannot fall below zero."
+            ],
+            "heroDamage": {
+              "dice": 1,
+              "add": -2
+            }
+          },
+          "printedRules": [
+            "Use the combat rules to resolve the combat. The monk",
+            "fights primarily with his feet, doing 1 D6-2 damage.",
+            "Random uses his fists, with 1 D6-2 damage.",
+            "If Random wins, turn to section 104.",
+            "If he loses, turn to section 105."
+          ],
+          "sourcePages": [
+            242
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -41,7 +41,7 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
     };
   });
   if (config.mechanics) {
-    if (config.mechanics.grip) player.strength=integer(hero.strength,0,100);
+    if (config.mechanics.grip || config.mechanics.enemyRetreat?.subdueAbility==='strength') player.strength=integer(hero.strength,0,100);
     player.wisdom=integer(hero.wisdom,0,100);
     player.dexterity=integer(hero.dexterity,0,100);
     validateEncounterRules(config.mechanics,enemies.length);
