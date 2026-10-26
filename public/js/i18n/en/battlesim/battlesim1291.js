@@ -1,0 +1,23 @@
+const labels = {
+  character:'Robinton', strength:'Strength', intelligence:'Intelligence', wisdom:'Wisdom', constitution:'Constitution', dexterity:'Dexterity', charisma:'Charisma',
+  hp:'Hit points', maxHp:'Starting hit points', attackBonus:'Attack roll bonus', defenceBonus:'Defence roll bonus',
+  saveCharacter:'Save stats', newCharacter:'Reset stats', encounter:'Encounter', custom:'Custom fight', opponent:'Opponent',
+  toBeHit:'To be hit (3D6)', toHit:'To hit Robinton (3D6)', damageDice:'Damage D6', damageAdd:'Damage adjustment',
+  weaponDice:'Weapon damage D6', weaponAdd:'Weapon adjustment',
+  printedDamage:'Weapon damage follows this encounter’s printed rules.',
+  chooseDamage:'Enter the weapon damage you are using; no damage value is assumed.',
+  noHeroAttack:'Robinton does not attack during this sequence.',
+  start:'Start fight', target:'Target', round:'Next round', cancel:'End fight', healing:'Healing amount', heal:'Use healing',
+  healingNote:'Use only healing you actually have. In combat, healing replaces your attack. Manage carried items in your shared inventory.',
+  ability:'Ability check', abilityCheck:'Roll 3D6 check', log:'Battle log', history:'Battle history', hero:'Robinton',
+  invalid:'Check the numbers, weapon damage and selected target.',
+  resetConfirm:'Reset Robinton’s simulator stats? Battle history and shared inventory are kept.',
+  cancelConfirm:'End this fight? Lethal damage already taken is kept; nonfatal brawl damage is discarded.',
+  'status.ready':'Ready', 'status.active':'Fighting', 'status.win':'Won', 'status.loss':'Lost', 'status.draw':'Draw; the book gives no destination', 'status.cancelled':'Ended',
+  roundNumber:'Round {n}', destination:'Continue at section {n}.', enemyHp:'{name}: {n}/{max} HP',
+  hit:'hit', miss:'miss', passed:'passed', failed:'failed',
+  attack:'{name}: {dice} = {total}, {result}; {damage} damage.',
+  poison:'Constitution check: {dice}, {result}; {damage} poison damage.',
+  restored:'Restored {n} HP.', check:'{name}: {dice}, {result}.',
+};
+export default Object.fromEntries(Object.entries(labels).map(([key,value])=>['battlesim1291.'+key,value]));

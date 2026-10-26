@@ -210,6 +210,11 @@ gamebooks/
         engines/sorcery/  Pure Sorcery character, Luck, damage and recovery primitives, plus
                          transactional run-scoped persistence. Book modules own encounter
                          exceptions; stale run/book updates are rejected before saving.
+        engines/crossroads/ Pure 3D6 threshold combat and ability checks; serializable
+                         round transitions, nonfatal damage, timed fights, venom and grouped
+                         enemy attacks. Database roster entries own stats and exceptions.
+                         Shared panel supports custom opponents without changing global items;
+                         state commits guard the active book/run and record outcomes once.
         engines/destinyquest/ Pure, serializable combat stages with explicit windows for speed,
                          damage modifiers, passive effects and death moves. Transitions return
                          copies; book modules supply abilities and encounter exceptions.
@@ -2114,7 +2119,7 @@ Desktop XP widgets, reward snapshots/floaties and the Gold Coin shop are grouped
 
 `handleAppXpEvent` accumulates per-username over a 750ms window (`_appRewardAccum`/`_appRewardFlushTimers`, same window and combining shape as `progression/rewards.js`'s single-user `_queueRewardFloater`, just keyed per-username here since this feed mixes events from every user at once) before spawning one combined chip, rather than one chip per SSE event, so a user racking up several awards in a burst produces one chip, not a spam of them. The admin/visibility gate is checked again at flush time, not just when the event first arrives, since up to 750ms can pass between the two and the admin may have navigated away from either eligible screen in the meantime.
 
-`#app-job-xp-summary` shares the App XP visibility gate and response. App Job Level uses the same player-count-scaled triangular thresholds as App Level, with `SUM(user_job_xp.xp)` instead of normal XP: level `n` starts at `max(1, users * 1000) * n * (n + 1) / 2`. It uses recorded Job EV, including personal progression caps, rather than normal XP, heartbeats or a sum of player levels. Stats for Nerds exposes the aggregate level, trade title and total Job EV. The App Job countdown reads actual `diamond_market.dig_events` (internal legacy name for Ruby mining), with one shared-pool Ruby per 10,000 eligible events. It animates the cumulative counter through reward boundaries, independently of capped Job EV. Its separate average-player EV/Ruby label uses `1000000 / (1000 + AVG(jobLevel + MIN(digPurchases, jobLevel)))`, including players without job records at base rate; it does not change rewards or pool generation. The bars share one animation frame loop, with independent durations based on their respective levels and only the latest pending snapshot retained during bursts.
+`#app-job-xp-summary` shares the App XP visibility gate and response. App Job Level uses the same player-count-scaled triangular thresholds as App Level, with `SUM(user_job_xp.xp)` instead of normal XP: level `n` starts at `max(1, users * 1000) * n * (n + 1) / 2`. It uses recorded Job EV, including personal progression caps, rather than normal XP, heartbeats or a sum of player levels. Stats for Nerds exposes the aggregate level and trade title. The App Job countdown reads actual `diamond_market.dig_events` (internal legacy name for Ruby mining), with one shared-pool Ruby per 10,000 eligible events. It animates the cumulative counter through reward boundaries, independently of capped Job EV. Its separate average-player EV/Ruby label uses `1000000 / (1000 + AVG(jobLevel + MIN(digPurchases, jobLevel)))`, including players without job records at base rate; it does not change rewards or pool generation. The bars share one animation frame loop, with independent durations based on their respective levels and only the latest pending snapshot retained during bursts.
 
 ### Avg User Level widget (`progression/app-xp.js`)
 

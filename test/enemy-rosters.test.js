@@ -26,6 +26,23 @@ test('an explicitly unfinished roster cannot migrate or write the database',t=>{
   assert.deepEqual(db.serialize(),before);
 });
 
+test('Dragonharper round-trips all 13 encounters without changing players or unrelated enemies',t=>{
+  const db=fixture(t);db.exec('INSERT INTO books VALUES(1291)');
+  const document=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/simulator-rosters/1291.json'),'utf8'));
+  const players=db.prepare('SELECT * FROM players').all(),old=db.prepare('SELECT * FROM book_enemies').all();
+  assert.deepEqual(seedEnemyRoster(db,document),{inserted:18,updated:0});
+  const rows=getBookEnemyRows(db,1291);assert.equal(rows.length,18);
+  assert.equal(new Set(rows.map(row=>row.stats.entry.section)).size,13);
+  for(const expected of document.enemies){
+    const actual=rows.find(row=>row.stats.roster.key===expected.key);
+    assert.deepEqual(actual.stats.entry,expected.stats.entry);
+    assert.equal(actual.attack,expected.attack);assert.equal(actual.defense,expected.defense);assert.equal(actual.hp,expected.hp);
+  }
+  assert.deepEqual(seedEnemyRoster(db,document),{inserted:0,updated:0});assert.deepEqual(getBookEnemyRows(db,1291),rows);
+  assert.deepEqual(db.prepare('SELECT * FROM players').all(),players);
+  assert.deepEqual(db.prepare('SELECT id,book_id,name,attack,defense,hp,pb,created_at FROM book_enemies WHERE book_id<>1291').all(),old);
+});
+
 test('schema migration and legacy API results preserve old enemy rows and player state exactly', t => {
   const db = fixture(t);
   const before = db.prepare('SELECT * FROM players').all();
