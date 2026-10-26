@@ -9,6 +9,10 @@ export function validateEncounterRules(rules,count) {
   const change = value => integer(value,-100,100);
   const check = value => { if (!abilities.includes(value)) throw new RangeError('Unknown ability'); };
   if(rules.escapeCheck)check(rules.escapeCheck.ability);
+  if(rules.surpriseRounds!==undefined)integer(rules.surpriseRounds,1,1000);
+  if(rules.openingEnemyTurn)integer(rules.openingEnemyTurn.count,1,count);
+  if(rules.enemyEscape){index(rules.enemyEscape.enemy);integer(rules.enemyEscape.afterRound,1,1000);}
+  if(rules.engulf){index(rules.engulf.enemy);integer(rules.engulf.consecutive,1,100);damageSpec(rules.engulf.damage);}
   if(rules.reinforcements)index(rules.reinforcements.template);
   if(rules.duplicates){
     integer(rules.duplicates.rounds,1,1000);integer(rules.duplicates.attacks,1,10);
@@ -111,11 +115,13 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
   if ((original?.status !== 'active'&&!partingShot) || original.rulesVersion !== 2) throw new RangeError('No active fight');
   const fight=structuredClone(original),rules=fight.rules.mechanics;
   validateEncounterRules(rules,fight.enemies.length);
-  const escapeCheck=action==='escapeCheck';
-  const round=fight.round+(partingShot||escapeCheck?0:1),available=availableEnemies(fight,round);
-  if(!['attack','retrieve','escapeGrip','flee','surrender','partingShot','escapeCheck'].includes(action)||action==='partingShot'&&!partingShot||healing!==null&&action!=='attack')throw new RangeError('Invalid action');
+  const escapeCheck=action==='escapeCheck',sourceExit=action==='sourceExit';
+  const round=fight.round+(partingShot||escapeCheck||sourceExit?0:1),available=availableEnemies(fight,round);
+  const openingEnemyTurn=round===1&&rules.openingEnemyTurn;
+  if(!['attack','retrieve','escapeGrip','flee','surrender','partingShot','escapeCheck','sourceExit'].includes(action)||action==='partingShot'&&!partingShot||healing!==null&&action!=='attack')throw new RangeError('Invalid action');
   if (action==='attack' && healing === null && available.length && !encounterTargets(fight,round).includes(target)) throw new RangeError('Choose an available target');
   if (rules.abilityOutcome && healing!==null) throw new RangeError('This encounter is an ability check');
+  if(openingEnemyTurn&&healing!==null)throw new RangeError('No healing during the surprise attack');
   if (healing !== null) {
     integer(healing,1);
     if (fight.hero.hp >= fight.hero.maxHp) throw new RangeError('Already at maximum hit points');
@@ -127,6 +133,11 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
   const route = (status,section) => {
     finish(fight,status);fight.destination=section;fight.events.at(-1).destination=section;
   };
+  if(sourceExit){
+    if(!rules.sourceExit)throw new RangeError('No source item available');
+    state.sourceExitUsed=true;route('escaped',rules.sourceExit.section);return fight;
+  }
+  const afterArmour=amount=>Math.max(0,amount-(rules.guardLethalDamageReduction&&fight.hero.hp-amount<0?0:fight.hero.damageReduction??0));
   if (rules.vessel && state.vesselHits===undefined) state.vesselHits=rules.vessel.initialHits;
   if (round===1 && rules.openingDamage) {
     const lost=Math.min(fight.hero.hp,rules.openingDamage);
@@ -181,6 +192,7 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
     fight.events.at(-1).destination=fight.destination;return fight;
   }
   function heroAttack(index,{automatic=false,ally=false,attackBonus=0,multiplier=1}={}) {
+    if(rules.enemyEscape&&!ally){state.engagedTargets??=[];if(!state.engagedTargets.includes(index))state.engagedTargets.push(index);}
     const enemy=fight.enemies[index];
     const values=automatic ? [] : dice(3,roll),total=values.reduce((sum,value)=>sum+value,fight.hero.attackBonus+attackBonus+(ally?0:rules.heroAttackBonus ?? 0));
     const hit=automatic || total>=enemy.toBeHit+hitChange(index);
@@ -211,6 +223,7 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
     const value=dice(1,roll)[0];state.freeRounds=value<=rules.freeRounds.threshold?rules.freeRounds.low:rules.freeRounds.high;
     fight.events.push({kind:'freeRounds',dice:[value],amount:state.freeRounds});
   }
+  if(rules.surpriseRounds&&round===1)state.freeRounds=rules.surpriseRounds;
   if (rules.ally && state.allyRound===null && check(rules.ally.ability)) state.allyRound=round+rules.ally.delay;
   if (rules.fatigue) fatigued=!check(rules.fatigue.ability);
   let damageMultiplier=1;
@@ -223,7 +236,7 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
   }
   const extraEnemy=rules.extraEnemyAttack && round===1 && !check(rules.extraEnemyAttack.ability) ? rules.extraEnemyAttack.enemy : null;
   let heroMiss=false,disarming=false;
-  let skipHero=false,fleeing=false;
+  let skipHero=Boolean(openingEnemyTurn),fleeing=false;
   if(action==='surrender'){
     if(!rules.surrender)throw new RangeError('Cannot surrender');
     route('surrendered',rules.surrender.section);return fight;
@@ -290,7 +303,9 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
     fight.events.push({kind:'attack',side:'ally',target:index,name:rules.holdOff.name,dice:[],total:0,hit:true,automatic:true,damageDice:[],damage:lost});
     if(done())return fight;
   }
-  for (const index of partition().attackers) {
+  let engulfDamage=false;
+  const attackers=openingEnemyTurn?partition().attackers.slice(0,openingEnemyTurn.count):partition().attackers;
+  for (const index of attackers) {
     if (!fight.enemies[index].hp || fight.enemies[index].fled || round<=state.freeRounds) continue;
     const enemy=fight.enemies[index],schedule=rules.enemies?.[index] ?? {};
     if (rules.vessel?.enemy===index && healing===null && !heroMiss) continue;
@@ -299,8 +314,9 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
     if (round<first || (round-first)%(schedule.attackEvery ?? 1)!==0) continue;
     const repetitions=extraEnemy===index?2:1;
     for (let repeat=0;repeat<repetitions;repeat++) {
+      let previousHit=false;
       for (const attack of enemy.attacks) {
-        if (attack.when==='heroMiss' && !heroMiss || attack.when==='otherwise' && heroMiss) continue;
+        if (attack.when==='heroMiss' && !heroMiss || attack.when==='otherwise' && heroMiss || attack.when==='previousHit'&&!previousHit) continue;
         if (allyHere && index===rules.ally.enemy) {
           const value=dice(1,roll)[0];
           if (rules.ally.absorbOn.includes(value)) { fight.events.push({kind:'absorbed',name:rules.ally.name,dice:[value]});continue; }
@@ -316,8 +332,9 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
         if (attack.check==='constitution') {
           values=dice(3,roll);total=values.reduce((sum,value)=>sum+value,0);hit=total>fight.hero.constitution;
         } else {
-          values=dice(3,roll);total=values.reduce((sum,value)=>sum+value,-fight.hero.defenceBonus);hit=total>=attack.toHit+attackChange(index);
+          values=dice(3,roll);total=values.reduce((sum,value)=>sum+value,openingEnemyTurn?.ignoreDefence?0:-fight.hero.defenceBonus);hit=total>=attack.toHit+attackChange(index);
         }
+        previousHit=hit;
         if(hit&&rules.duplicates&&round<=rules.duplicates.rounds){
           const selection=dice(1,roll);
           if(!rules.duplicates.hitHeroOn.includes(selection[0])){
@@ -327,10 +344,11 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
         }
         const result=hit?damage(attack.damage,roll):{dice:[],amount:0};
         if (hit && rules.firstHitWin?.enemy===index && !state.firstHitter) state.firstHitter='enemy';
-        const amount=Math.max(0,result.amount*damageMultiplier-(fight.hero.damageReduction??0));
+        const amount=afterArmour(result.amount*damageMultiplier);
         const remaining=fight.hero.hp-amount;
         const lost=Math.min(fight.hero.hp,amount);
         fight.hero.hp-=lost;fight.damageTaken+=lost;
+        if(rules.engulf?.enemy===index&&lost>0)engulfDamage=true;
         fight.events.push({kind:'attack',side:'enemy',target:index,name:enemy.name,dice:values,total,hit,damageDice:result.dice,damage:lost});
         if(hit&&rules.grip?.enemy===index&&rules.grip.onFirstHit&&!state.gripApplied){state.gripped=true;state.gripApplied=true;fight.events.push({kind:'gripped'});}
         if(hit&&rules.capture){
@@ -347,6 +365,19 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
         }
       }
     }
+  }
+  if(rules.engulf){
+    state.engulfStreak=engulfDamage?(state.engulfStreak??0)+1:0;
+    if(!state.engulfed&&state.engulfStreak>=rules.engulf.consecutive){state.engulfed=true;fight.events.push({kind:'engulfed'});}
+    if(state.engulfed&&fight.enemies[rules.engulf.enemy].hp>0){
+      const result=damage(rules.engulf.damage,roll),lost=Math.min(fight.hero.hp,afterArmour(result.amount));
+      fight.hero.hp-=lost;fight.damageTaken+=lost;
+      fight.events.push({kind:'attack',side:'enemy',target:rules.engulf.enemy,name:rules.engulf.name,dice:[],total:0,hit:true,automatic:true,damageDice:result.dice,damage:lost});
+      if(!fight.hero.hp){finish(fight,'loss');return fight;}
+    }
+  }
+  if(rules.enemyEscape&&round>=rules.enemyEscape.afterRound&&fight.enemies[rules.enemyEscape.enemy].hp>0&&!(state.engagedTargets??[]).includes(rules.enemyEscape.enemy)){
+    route('draw',rules.enemyEscape.section);return fight;
   }
   if(fleeing){route('escaped',rules.flee.section);return fight;}
   if(rules.reinforcements&&fight.status==='active'&&living(fight).length){

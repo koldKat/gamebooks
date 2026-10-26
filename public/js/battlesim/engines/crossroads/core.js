@@ -29,7 +29,7 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
         if (config.mechanics && attack.check === 'constitution') result.check = attack.check;
         else result.toHit = integer(attack.toHit, 3, 18);
         if (config.mechanics && attack.when) {
-          if (!['heroMiss','otherwise'].includes(attack.when)) throw new RangeError('Unknown attack condition');
+          if (!['heroMiss','otherwise','previousHit'].includes(attack.when)) throw new RangeError('Unknown attack condition');
           result.when = attack.when;
         }
         if (attack.poison) result.poison = damageSpec(attack.poison);
