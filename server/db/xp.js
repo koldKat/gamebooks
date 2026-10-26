@@ -416,7 +416,7 @@ function awardXp(userId, event, ref, amountOverride = null) {
   const awarded = _awardXpTx(userId, event, String(ref), amount);
   if (awarded && before) {
     const after = snapshot();
-    if (after.jobXp > before.jobXp && after.normalXp === before.normalXp) {
+    if (event !== 'idle_heartbeat' && after.normalXp === before.normalXp) {
       try { _appXpHook?.({ userId, jobXpDelta: after.jobXp - before.jobXp }); } catch (_) {}
     }
     if (after.earned > before.earned) {

@@ -9,7 +9,9 @@ const { getJobTitle } = require('../server/db/job-xp');
 test('app job progression mirrors app XP thresholds and includes players without job records', t => {
   const db = new Database(':memory:'); t.after(() => db.close());
   db.exec(`CREATE TABLE users(id INTEGER PRIMARY KEY,xp INTEGER,xp_from_boost INTEGER DEFAULT 0,
-    xp_boost_pct INTEGER DEFAULT 0,bonus_heartbeat_xp INTEGER DEFAULT 0);
+    xp_boost_pct INTEGER DEFAULT 0,bonus_heartbeat_xp INTEGER DEFAULT 0, bonus_diamond_dig_purchased INTEGER DEFAULT 0);
+    CREATE TABLE diamond_market(id INTEGER PRIMARY KEY,dig_events INTEGER);
+    INSERT INTO diamond_market VALUES(1,9999);
     CREATE TABLE user_job_xp(user_id INTEGER PRIMARY KEY,xp INTEGER);
     INSERT INTO users(id,xp) VALUES(1,3000),(2,3000),(3,3000);
     INSERT INTO user_job_xp VALUES(1,1000),(2,2000);`);
@@ -22,8 +24,13 @@ test('app job progression mirrors app XP thresholds and includes players without
   assert.equal(queries,1); assert.equal(summary.users,3);
   assert.equal(summary.xp,9000); assert.equal(summary.level,2);
   assert.equal(summary.jobXp,3000); assert.equal(summary.jobLevel,1);
-  assert.equal(summary.jobTitle,'Digger'); assert.equal(summary.jobLevelXp,3000); assert.equal(summary.jobNextLevelXp,9000);
+  assert.equal(summary.jobRubyMiningEvents,9999);
+  assert.equal(summary.jobRubyMiningInterval,10000);
+  assert.equal(summary.jobAverageEventsPerRuby,1000000/(1000+2/3));
   assert.equal(db.prepare('SELECT total_changes() n').get().n,before);
+  db.prepare('UPDATE users SET bonus_diamond_dig_purchased=99 WHERE id=1').run();
+  assert.equal(context.getAppXpSummary().jobAverageEventsPerRuby,1000000/1001);
+  assert.equal(summary.jobTitle,'Digger'); assert.equal(summary.jobLevelXp,3000); assert.equal(summary.jobNextLevelXp,9000);
   for (const users of [1,3,89]) for (const level of [0,1,2,8,20]) {
     const threshold = users*1000*level*(level+1)/2;
     assert.equal(context.appJobProgression(threshold,users).jobLevel,level);
@@ -45,7 +52,8 @@ test('app SSE sends only aggregate refreshes to the restricted non-admin viewer'
   assert.match(viewer[0],/summaryChanged/);
   onReward({userId:1,xpDelta:5});assert.match(admin[1],/summaryChanged/);
   onReward({userId:2,jobXpDelta:1});assert.match(admin[2],/summaryChanged/);
-  context.appXpUnregister(viewer);onReward({userId:2,xpDelta:1});assert.equal(viewer.length,3);
+  onReward({userId:2,jobXpDelta:0});assert.match(admin[3],/summaryChanged/);
+  context.appXpUnregister(viewer);onReward({userId:2,xpDelta:1});assert.equal(viewer.length,4);
 });
 
 test('the app stream uses the existing narrow app XP permission and redacts non-admin events', async () => {

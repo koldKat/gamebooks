@@ -989,6 +989,8 @@ function getAppXpSummary() {
   const row = db.prepare(
     `SELECT COUNT(*) AS users, COALESCE(SUM(u.xp), 0) AS totalXp,
             COALESCE(SUM(j.xp), 0) AS totalJobXp,
+            COALESCE(SUM(COALESCE(jobDigLevel, 0) + MIN(u.bonus_diamond_dig_purchased, COALESCE(jobDigLevel, 0))), 0) AS totalJobDigBonus,
+            COALESCE((SELECT dig_events FROM diamond_market WHERE id=1), 0) AS jobRubyMiningEvents,
             COALESCE(SUM(u.xp_from_boost), 0) AS totalXpFromBoost,
             COALESCE(SUM(u.xp_boost_pct), 0) AS totalXpBoostPct,
             COALESCE(SUM(u.bonus_heartbeat_xp), 0) AS totalBonusHeartbeatXp,
@@ -1001,7 +1003,10 @@ function getAppXpSummary() {
             COALESCE(SUM(CASE WHEN u.xp <= 0 THEN 0 ELSE CAST(floor((-1 + sqrt(1 + 8.0 * u.xp / 1000.0)) / 2) AS INTEGER) END), 0) AS sumLevels,
             COALESCE(MIN(CASE WHEN u.xp <= 0 THEN 0 ELSE CAST(floor((-1 + sqrt(1 + 8.0 * u.xp / 1000.0)) / 2) AS INTEGER) END), 0) AS minLevel,
             COALESCE(MAX(CASE WHEN u.xp <= 0 THEN 0 ELSE CAST(floor((-1 + sqrt(1 + 8.0 * u.xp / 1000.0)) / 2) AS INTEGER) END), 0) AS maxLevel
-     FROM users u LEFT JOIN user_job_xp j ON j.user_id=u.id`
+     FROM users u LEFT JOIN (
+       SELECT user_id, xp, CAST(floor((-1 + sqrt(1 + 8.0 * xp / 1000.0)) / 2) AS INTEGER) AS jobDigLevel
+       FROM user_job_xp
+     ) j ON j.user_id=u.id`
   ).get();
   const users        = row.users || 0;
   const totalXp      = row.totalXp || 0;
@@ -1026,6 +1031,9 @@ function getAppXpSummary() {
 
   return {
     ...appJobProgression(row.totalJobXp || 0, users),
+    jobRubyMiningEvents: row.jobRubyMiningEvents || 0,
+    jobRubyMiningInterval: 10000,
+    jobAverageEventsPerRuby: 1000000 / (1000 + (users > 0 ? row.totalJobDigBonus / users : 0)),
     users, level, title, xp: totalXp, levelXp, nextLevelXp, xpFromBoost: totalXpFromBoost, xpBoostPct, heartbeatRatePerMin,
     sumLevels, minLevel: row.minLevel || 0, maxLevel: row.maxLevel || 0,
     avgLevel: avgLevelFloor, avgLevelTitle, avgLevelFraction, levelsNeededForNextAvg,

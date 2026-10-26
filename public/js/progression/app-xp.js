@@ -41,7 +41,7 @@ function _paintBoost(boostXp, data) {
     : '';
 }
 
-function _paintJobXp(xp, data) {
+function _paintJobXp(xp, data, miningEvents = data?.jobRubyMiningEvents) {
   const wrap = document.getElementById('app-job-xp-summary');
   if (!wrap) return;
   wrap.hidden = !Number.isFinite(data?.jobXp);
@@ -55,11 +55,27 @@ function _paintJobXp(xp, data) {
   document.getElementById('app-job-xp-title').textContent = t('job.title.' + Math.min(level, 20));
   document.getElementById('app-job-xp-label').innerHTML =
     `<span class="job-xp-val">${Math.floor(xp).toLocaleString()} EV</span> · ${Math.ceil(nextLevelXp - xp).toLocaleString()} to next LVL`;
+  const nextRuby = document.getElementById('app-job-xp-next-ruby');
+  const rubyCost = document.getElementById('app-job-xp-ruby-cost');
+  const bar = document.getElementById('app-job-xp-bar');
+  const interval = data.jobRubyMiningInterval;
+  const hasMining = Number.isSafeInteger(interval) && interval > 0 && Number.isFinite(miningEvents);
+  if (nextRuby) {
+    nextRuby.hidden = !hasMining;
+    if (hasMining) nextRuby.textContent = t('appxp.next_ruby', { n: (interval - Math.floor(miningEvents) % interval).toLocaleString() });
+  }
+  if (bar && hasMining) bar.setAttribute('data-tooltip', t('appxp.next_ruby', { n: (interval - Math.floor(miningEvents) % interval).toLocaleString() }));
+  else bar?.removeAttribute('data-tooltip');
+  if (rubyCost) {
+    rubyCost.hidden = !Number.isFinite(data.jobAverageEventsPerRuby) || data.jobAverageEventsPerRuby <= 0;
+    if (!rubyCost.hidden) rubyCost.textContent = t('appxp.average_ruby_cost', { n: Math.ceil(data.jobAverageEventsPerRuby).toLocaleString() });
+  }
 }
 
 let _displayedXp      = null; // last value actually painted (may be mid-tween)
 let _displayedBoostXp = null;
 let _displayedJobXp = null;
+let _displayedRubyMineEvents = null;
 let _animQueue    = []; // pending {toXp, toBoostXp, data} segments, played back to back
 let _animRunning  = false;
 let _animGen      = 0; // bumped only on a hard reset (see _render's !data branch)
@@ -73,23 +89,25 @@ function _runAnimQueue(gen) {
   const next = _animQueue.shift();
   if (!next) return;
   _animRunning = true;
-  const { toXp, toBoostXp, toJobXp, data } = next;
+  const { toXp, toBoostXp, toJobXp, toRubyMineEvents, data } = next;
   const fromXp      = _displayedXp != null ? _displayedXp : toXp;
   const fromBoostXp = _displayedBoostXp != null ? _displayedBoostXp : toBoostXp;
   const fromJobXp = _displayedJobXp != null ? _displayedJobXp : toJobXp;
+  const fromRubyMineEvents = _displayedRubyMineEvents ?? toRubyMineEvents;
   const animLevel = Math.min(Math.max(0, Number(data.level) || 0), ANIM_DURATION_LEVEL_CAP);
   const durationMs = toXp === fromXp && toBoostXp === fromBoostXp ? 0 : animLevel * XP_ANIM_MS_PER_LEVEL;
-  const jobDurationMs = toJobXp === fromJobXp ? 0 : Math.min(Math.max(0, Number(data.jobLevel) || 0), ANIM_DURATION_LEVEL_CAP) * XP_ANIM_MS_PER_LEVEL;
+  const jobDurationMs = toJobXp === fromJobXp && toRubyMineEvents === fromRubyMineEvents ? 0 : Math.min(Math.max(0, Number(data.jobLevel) || 0), ANIM_DURATION_LEVEL_CAP) * XP_ANIM_MS_PER_LEVEL;
   const finish = () => {
     _displayedXp = toXp;
     _displayedBoostXp = toBoostXp;
     _displayedJobXp = toJobXp;
+    _displayedRubyMineEvents = toRubyMineEvents;
     _animRunning = false;
     _runAnimQueue(gen);
   };
   // Animate every positive delta; snap zero deltas without suppressing small awards.
   if (durationMs <= 0 && jobDurationMs <= 0) {
-    _paintXp(toXp, data); _paintBoost(toBoostXp, data); _paintJobXp(toJobXp, data);
+    _paintXp(toXp, data); _paintBoost(toBoostXp, data); _paintJobXp(toJobXp, data, toRubyMineEvents);
     finish();
     return;
   }
@@ -103,10 +121,12 @@ function _runAnimQueue(gen) {
     _paintXp(current, data);
     _paintBoost(currentBoost, data);
     const currentJob = fromJobXp + (toJobXp - fromJobXp) * jobT;
-    _paintJobXp(currentJob, data);
+    const currentMining = fromRubyMineEvents + (toRubyMineEvents - fromRubyMineEvents) * jobT;
+    _paintJobXp(currentJob, data, currentMining);
     _displayedXp = current;
     _displayedBoostXp = currentBoost;
     _displayedJobXp = currentJob;
+    _displayedRubyMineEvents = currentMining;
     if (t < 1 || jobT < 1) requestAnimationFrame(step);
     else finish();
   }
@@ -117,8 +137,9 @@ function _enqueueXpAnim(data) {
   const toXp      = Math.floor(Number(data.xp) || 0);
   const toBoostXp = Math.floor(Number(data.xpFromBoost) || 0);
   const toJobXp = Math.max(0, Math.floor(Number(data.jobXp) || 0));
+  const toRubyMineEvents = Math.max(0, Math.floor(Number(data.jobRubyMiningEvents) || 0));
   // Keep one latest pending snapshot while the current animation finishes.
-  _animQueue.splice(0, _animQueue.length, { toXp, toBoostXp, toJobXp, data });
+  _animQueue.splice(0, _animQueue.length, { toXp, toBoostXp, toJobXp, toRubyMineEvents, data });
   _runAnimQueue(_animGen);
 }
 
@@ -131,7 +152,7 @@ function _render(data) {
     if (jobWrap) jobWrap.hidden = true;
     _animGen++; // hard reset: invalidate any in-flight animation
     _animQueue = []; _animRunning = false;
-    _displayedXp = null; _displayedBoostXp = null; _displayedJobXp = null;
+    _displayedXp = null; _displayedBoostXp = null; _displayedJobXp = null; _displayedRubyMineEvents = null;
     return;
   }
   const { level = 0, title = '', heartbeatRatePerMin = 0 } = data;
@@ -177,7 +198,7 @@ export function refreshAppXp({ immediate = false } = {}) {
     if (jobWrap) jobWrap.hidden = true;
     _animGen++; // hard reset: invalidate any in-flight animation
     _animQueue = []; _animRunning = false;
-    _displayedXp = null; _displayedBoostXp = null; _displayedJobXp = null;
+    _displayedXp = null; _displayedBoostXp = null; _displayedJobXp = null; _displayedRubyMineEvents = null;
     return Promise.resolve();
   }
   if (_appXpFetchPromise) return _appXpFetchPromise; // a merged fetch is already in flight - join it

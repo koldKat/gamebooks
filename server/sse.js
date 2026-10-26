@@ -84,7 +84,7 @@ function appXpPush(payload) {
 db.setAppXpHook(({ userId, xpDelta, coinDelta, diamondDelta, rubyDelta, jobXpDelta }) => {
   if (_appXpClients.size === 0) return; // nobody watching - skip the lookups entirely
   const adminUserId = db.getUserByUsername(db.getAdminUsername())?.id ?? null;
-  if (userId === adminUserId || jobXpDelta > 0) {
+  if (userId === adminUserId || Number.isFinite(jobXpDelta)) {
     appXpPush({ summaryChanged: true });
     return; // Refresh aggregate bars without duplicating personal reward floaters.
   }

@@ -489,3 +489,8 @@
 .black-market-tabs #exchange-shop-ruby-tab[aria-selected="true"] { color: #67e8f9; border-color: #22d3ee; background: #102a33; }
 .black-market-tabs button:disabled { cursor: default; opacity: 0.5; }
 .black-market-tabs button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+/* Keep the aggregate bars close together above personal progression. */
+.books-container > #avg-lvl-summary,
+.books-container > #app-xp-summary,
+.books-container > #app-job-xp-summary { margin-top: 0; margin-bottom: -0.8rem; }

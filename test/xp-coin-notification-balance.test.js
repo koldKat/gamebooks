@@ -91,6 +91,10 @@ test('admin hooks report committed mining and Job EV changes, never duplicate or
  const code=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');vm.runInContext(code.slice(code.indexOf('function awardXp('),code.indexOf('function awardIdleHeartbeatXp(')),f.context);
  assert.equal(f.context.awardXp(1,'visit_node','diamond-test',0),true);assert.deepEqual(events,[{userId:1,jobXpDelta:1},{userId:1,diamondDelta:1}]);
  assert.equal(f.context.awardXp(1,'visit_node','diamond-test',0),false);assert.equal(events.length,2);
+ f.db.exec('UPDATE user_job_xp SET xp=999 WHERE user_id=1; UPDATE user_diamonds SET dig_progress=0 WHERE user_id=1');
+ assert.equal(f.context.awardXp(1,'visit_node','job-capped',0),true);
+ assert.equal(f.db.prepare('SELECT xp FROM user_job_xp WHERE user_id=1').get().xp,999);
+ assert.deepEqual(events.at(-1),{userId:1,jobXpDelta:0});
  f.db.exec("CREATE TRIGGER reject_xp BEFORE INSERT ON xp_events BEGIN SELECT RAISE(ABORT,'fail xp');END");
- assert.throws(()=>f.context.awardXp(1,'visit_node','diamond-fail',0),/fail xp/);assert.equal(events.length,2);
+ assert.throws(()=>f.context.awardXp(1,'visit_node','diamond-fail',0),/fail xp/);assert.equal(events.length,3);
 });
