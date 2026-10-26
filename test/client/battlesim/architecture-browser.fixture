@@ -4788,6 +4788,43 @@ for(const id of BOOK_IDS){
       check(JSON.stringify(data())===saved,'Witchfires stale confirmation preserves saved state');app.setCurrentBookId(1294);button.click();
     }finally{Math.random=random;}
   }
+  if(id===1295){
+    const el=key=>document.getElementById('sim1295-'+key),data=()=>app.currentPlaythrough().sim1295;
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1295/definition.js');
+    const run=app.currentPlaythrough();run.inventory={sentinel:['shared-item']};run.equipment={sentinel:'shared-slot'};
+    const items=JSON.stringify([run.inventory,run.equipment]),random=Math.random;
+    const choose=section=>{el('encounter').value=String(section);el('encounter').dispatchEvent(new Event('change'));};
+    const cancel=()=>{if(data().fight?.status==='active'){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    try{
+      Math.random=()=>0;choose('custom');
+      const fields={toBeHit:3,toHit:18,hp:1,damageDice:0,damageAdd:0};
+      el('editor').querySelector('[role="combobox"]').value='Custom opponent';
+      for(const field of el('editor').querySelectorAll('[data-stat]'))field.value=fields[field.dataset.stat];
+      el('weaponDice').value=0;el('weaponAdd').value=1;el('start').click();el('round').click();
+      check(data().fight?.status==='win'&&data().history.length===1,'Prospero custom fight and one outcome');
+      for(const entry of getRoster()){
+        choose(entry.section);if(entry.section==='19'){el('weaponDice').value=1;el('weaponAdd').value=0;}
+        el('start').click();check(data().fight?.status==='active','Prospero starts '+entry.section);
+        check(data().fight.enemies.length===entry.enemies.length,'Prospero correct group '+entry.section);
+        el('round').click();check(data().fight.round===1,'Prospero round '+entry.section);cancel();
+      }
+      choose('18');el('weaponChoice').value='1';el('weaponChoice').dispatchEvent(new Event('change'));el('start').click();
+      check(data().fight.weaponDamage.add===1&&data().fight.rules.mechanics.heroAttackBonus===1&&data().fight.rules.winSection==='38','Prospero sword damage bonus and route');
+      check(!el('allyTargetRow').hidden,'Prospero companion target visible');
+      el('allyTarget').value='0';el('round').click();check(data().fight.enemies[0].hp===2,'Prospero companion chosen opponent');cancel();
+      choose('84');el('weaponChoice').value='1';el('weaponChoice').dispatchEvent(new Event('change'));el('start').click();
+      check(data().fight.rules.winSection==='56'&&el('escapeCheck').disabled,'Prospero wolf sword route and escape timing');
+      el('round').click();check(!el('escapeCheck').disabled,'Prospero escape available after round');
+      const round=data().fight.round;Math.random=()=>.999;el('escapeCheck').click();
+      check(data().fight.status==='active'&&data().fight.round===round&&el('escapeCheck').disabled,'Prospero failed escape has no enemy turn or retry');
+      Math.random=()=>0;el('round').click();el('escapeCheck').click();check(data().fight.status==='escaped'&&data().fight.destination==='46','Prospero successful escape');
+      choose('10');el('start').click();el('round').click();check(data().fight.enemies.length===3&&data().fight.events.filter(e=>e.kind==='attack'&&e.side==='hero').length===3,'Prospero decoys and reinforcement through UI');cancel();
+      choose('34');el('damageReduction').value='1';el('start').click();check(data().fight.hero.damageReduction===1&&el('damageReduction').disabled,'Prospero vest modifier saved and locked');cancel();
+      check(JSON.stringify([run.inventory,run.equipment])===items,'Prospero universal inventory and equipment unchanged');
+      const saved=JSON.stringify(data());el('newCharacter').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();
+      check(JSON.stringify(data())===saved,'Prospero stale reset ignored');app.setCurrentBookId(1295);button.click();
+    }finally{Math.random=random;}
+  }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   for(const key of overlay.textContent.match(/battlesim(?:\d+)?\.[\w.]+/g)??[])missingTranslations.add(key);
   check(JSON.stringify(app.currentPlaythrough())===before,'repeat render preserves state '+id);

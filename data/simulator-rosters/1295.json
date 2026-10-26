@@ -1,0 +1,2058 @@
+{
+  "schemaVersion": 1,
+  "bookId": 1295,
+  "family": "crossroads",
+  "sourceSha256": "9648002fcc0d42f4ad0fa1ce4e6ab417929ab5c3fa30ff1538e2273f08fe41a4",
+  "rosterComplete": true,
+  "expectedEncounterCount": 7,
+  "source": "All seven original Prospero’s Isle combat tables; enemy values and encounter mechanics come from this database roster. No universal inventory or equipment changes.",
+  "enemies": [
+    {
+      "key": "10-0",
+      "name": "Goblin 1",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "10",
+          "label": "2 goblins (§10)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "Bare hands",
+              "damage": {
+                "dice": 1,
+                "add": -1
+              }
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "duplicates": {
+                "rounds": 2,
+                "attacks": 3,
+                "hitHeroOn": [
+                  1,
+                  2
+                ],
+                "name": "Simulacron"
+              },
+              "reinforcements": {
+                "template": 0,
+                "name": "Fresh goblin guard"
+              },
+              "flee": {
+                "section": "23",
+                "finalAttack": false
+              }
+            },
+            "winSection": "36",
+            "lossSection": "29",
+            "sourceNotes": [
+              "For the first two rounds, Shea and his duplicates make three attacks; each goblin hit reaches the real Shea only on D6 = 1 or 2. Duplicate injuries need no record. One fresh guard joins next round whenever guards survive. Flee goes to section 23, where you resolve the fall.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "Shea is not about to follow a disgruntled goblin into the depths of a volcano. \"Sorry, pal,\" says Shea. \"My path lies yonder,\" and he sprints off for the entrance, preferring daylight to darkness. Along the way, he is joined by two of his own simula- crons who obviously share the same thought. Moments later, he and himselves dash out into the blinding daylight ·and run headlong into the two guards at the door. TWO GOBLINS To hit Shea: 14 To be hit: 11 Hit points: 3 each Damage with clubs: D6 Shea fights with his bare hands and does D6-1 damage if he hits. Shea's simulacrons fight alongside him (giving him three rolls to hit) for the first two rounds, then they disappear. For these }~first two rounds, roll D6 each time a goblin scores a hit. On a roll of a 1 or 2, the goblin hits the real Shea. Any other result is ·a hit on a simulacron. You don't need to keep a record of their hits. If all the goblin guards are not dead at the end of a round, they· are joined in the next round by one more (fresh) guard. If Harold decides to jump down the side of the hill and take his chances on the fall, turn to section 23. If Harold wins .the fight, turn to section 36. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            74,
+            75
+          ]
+        }
+      }
+    },
+    {
+      "key": "10-1",
+      "name": "Goblin 2",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "10",
+          "label": "2 goblins (§10)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "Bare hands",
+              "damage": {
+                "dice": 1,
+                "add": -1
+              }
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "duplicates": {
+                "rounds": 2,
+                "attacks": 3,
+                "hitHeroOn": [
+                  1,
+                  2
+                ],
+                "name": "Simulacron"
+              },
+              "reinforcements": {
+                "template": 0,
+                "name": "Fresh goblin guard"
+              },
+              "flee": {
+                "section": "23",
+                "finalAttack": false
+              }
+            },
+            "winSection": "36",
+            "lossSection": "29",
+            "sourceNotes": [
+              "For the first two rounds, Shea and his duplicates make three attacks; each goblin hit reaches the real Shea only on D6 = 1 or 2. Duplicate injuries need no record. One fresh guard joins next round whenever guards survive. Flee goes to section 23, where you resolve the fall.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "Shea is not about to follow a disgruntled goblin into the depths of a volcano. \"Sorry, pal,\" says Shea. \"My path lies yonder,\" and he sprints off for the entrance, preferring daylight to darkness. Along the way, he is joined by two of his own simula- crons who obviously share the same thought. Moments later, he and himselves dash out into the blinding daylight ·and run headlong into the two guards at the door. TWO GOBLINS To hit Shea: 14 To be hit: 11 Hit points: 3 each Damage with clubs: D6 Shea fights with his bare hands and does D6-1 damage if he hits. Shea's simulacrons fight alongside him (giving him three rolls to hit) for the first two rounds, then they disappear. For these }~first two rounds, roll D6 each time a goblin scores a hit. On a roll of a 1 or 2, the goblin hits the real Shea. Any other result is ·a hit on a simulacron. You don't need to keep a record of their hits. If all the goblin guards are not dead at the end of a round, they· are joined in the next round by one more (fresh) guard. If Harold decides to jump down the side of the hill and take his chances on the fall, turn to section 23. If Harold wins .the fight, turn to section 36. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            74,
+            75
+          ]
+        }
+      }
+    },
+    {
+      "key": "18-0",
+      "name": "Goblin 1",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "section": "18",
+          "label": "4 goblins (§18)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 3",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 4",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "No sword",
+              "damage": {
+                "dice": 1,
+                "add": 0
+              },
+              "winSection": "30"
+            },
+            {
+              "label": "+1 sword",
+              "damage": {
+                "dice": 1,
+                "add": 1
+              },
+              "attackBonus": 1,
+              "winSection": "38"
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "holdOff": {
+                "name": "Belphebe",
+                "count": 1,
+                "maximumAttackers": 2,
+                "damage": 1
+              }
+            },
+            "winSection": "30",
+            "lossSection": "29",
+            "sourceNotes": [
+              "Belphebe keeps one or two goblins occupied. Choose the goblin she engages; she deals one automatic damage per round. At most two goblins attack Shea, dropping to one when two remain. If your chosen goblin falls, she engages another survivor. The sword damage follows the explicit sword rule in section 84.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "\"Pentacles near and pentacles far, Now disappear from where you are! Shemhamporesh~ \" The door creaks inward slightly. Just then, however, the sound of bare feet slapping· against clay comes from all directions. Shea turns to see several yellow-eyed gob- lins coming toward them out of the dark- ness. FOUR GOBLINS To be hit: 1-1 To hit Shea: 14 Hit points: 3 each Damage with clubs: D6 (If Shea has no sword, he also does D6 damage when he hits.) Belphebe keeps one or two of the goblins.busy until there-is only one left. Two goblins attack _ Shea each round until two are slain. ?\" Belphebe inflicts one point of damage to _any one goblin she engages during a round (your · choice). If Harold wins using a + 1 sword, turn to section 38. If Harold wins without having a sword, turn to section 30. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            101,
+            102
+          ]
+        }
+      }
+    },
+    {
+      "key": "18-1",
+      "name": "Goblin 2",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "section": "18",
+          "label": "4 goblins (§18)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 3",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 4",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "No sword",
+              "damage": {
+                "dice": 1,
+                "add": 0
+              },
+              "winSection": "30"
+            },
+            {
+              "label": "+1 sword",
+              "damage": {
+                "dice": 1,
+                "add": 1
+              },
+              "attackBonus": 1,
+              "winSection": "38"
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "holdOff": {
+                "name": "Belphebe",
+                "count": 1,
+                "maximumAttackers": 2,
+                "damage": 1
+              }
+            },
+            "winSection": "30",
+            "lossSection": "29",
+            "sourceNotes": [
+              "Belphebe keeps one or two goblins occupied. Choose the goblin she engages; she deals one automatic damage per round. At most two goblins attack Shea, dropping to one when two remain. If your chosen goblin falls, she engages another survivor. The sword damage follows the explicit sword rule in section 84.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "\"Pentacles near and pentacles far, Now disappear from where you are! Shemhamporesh~ \" The door creaks inward slightly. Just then, however, the sound of bare feet slapping· against clay comes from all directions. Shea turns to see several yellow-eyed gob- lins coming toward them out of the dark- ness. FOUR GOBLINS To be hit: 1-1 To hit Shea: 14 Hit points: 3 each Damage with clubs: D6 (If Shea has no sword, he also does D6 damage when he hits.) Belphebe keeps one or two of the goblins.busy until there-is only one left. Two goblins attack _ Shea each round until two are slain. ?\" Belphebe inflicts one point of damage to _any one goblin she engages during a round (your · choice). If Harold wins using a + 1 sword, turn to section 38. If Harold wins without having a sword, turn to section 30. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            101,
+            102
+          ]
+        }
+      }
+    },
+    {
+      "key": "18-2",
+      "name": "Goblin 3",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "section": "18",
+          "label": "4 goblins (§18)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 3",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 4",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "No sword",
+              "damage": {
+                "dice": 1,
+                "add": 0
+              },
+              "winSection": "30"
+            },
+            {
+              "label": "+1 sword",
+              "damage": {
+                "dice": 1,
+                "add": 1
+              },
+              "attackBonus": 1,
+              "winSection": "38"
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "holdOff": {
+                "name": "Belphebe",
+                "count": 1,
+                "maximumAttackers": 2,
+                "damage": 1
+              }
+            },
+            "winSection": "30",
+            "lossSection": "29",
+            "sourceNotes": [
+              "Belphebe keeps one or two goblins occupied. Choose the goblin she engages; she deals one automatic damage per round. At most two goblins attack Shea, dropping to one when two remain. If your chosen goblin falls, she engages another survivor. The sword damage follows the explicit sword rule in section 84.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "\"Pentacles near and pentacles far, Now disappear from where you are! Shemhamporesh~ \" The door creaks inward slightly. Just then, however, the sound of bare feet slapping· against clay comes from all directions. Shea turns to see several yellow-eyed gob- lins coming toward them out of the dark- ness. FOUR GOBLINS To be hit: 1-1 To hit Shea: 14 Hit points: 3 each Damage with clubs: D6 (If Shea has no sword, he also does D6 damage when he hits.) Belphebe keeps one or two of the goblins.busy until there-is only one left. Two goblins attack _ Shea each round until two are slain. ?\" Belphebe inflicts one point of damage to _any one goblin she engages during a round (your · choice). If Harold wins using a + 1 sword, turn to section 38. If Harold wins without having a sword, turn to section 30. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            101,
+            102
+          ]
+        }
+      }
+    },
+    {
+      "key": "18-3",
+      "name": "Goblin 4",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "section": "18",
+          "label": "4 goblins (§18)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 3",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 4",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "No sword",
+              "damage": {
+                "dice": 1,
+                "add": 0
+              },
+              "winSection": "30"
+            },
+            {
+              "label": "+1 sword",
+              "damage": {
+                "dice": 1,
+                "add": 1
+              },
+              "attackBonus": 1,
+              "winSection": "38"
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "holdOff": {
+                "name": "Belphebe",
+                "count": 1,
+                "maximumAttackers": 2,
+                "damage": 1
+              }
+            },
+            "winSection": "30",
+            "lossSection": "29",
+            "sourceNotes": [
+              "Belphebe keeps one or two goblins occupied. Choose the goblin she engages; she deals one automatic damage per round. At most two goblins attack Shea, dropping to one when two remain. If your chosen goblin falls, she engages another survivor. The sword damage follows the explicit sword rule in section 84.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "\"Pentacles near and pentacles far, Now disappear from where you are! Shemhamporesh~ \" The door creaks inward slightly. Just then, however, the sound of bare feet slapping· against clay comes from all directions. Shea turns to see several yellow-eyed gob- lins coming toward them out of the dark- ness. FOUR GOBLINS To be hit: 1-1 To hit Shea: 14 Hit points: 3 each Damage with clubs: D6 (If Shea has no sword, he also does D6 damage when he hits.) Belphebe keeps one or two of the goblins.busy until there-is only one left. Two goblins attack _ Shea each round until two are slain. ?\" Belphebe inflicts one point of damage to _any one goblin she engages during a round (your · choice). If Harold wins using a + 1 sword, turn to section 38. If Harold wins without having a sword, turn to section 30. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            101,
+            102
+          ]
+        }
+      }
+    },
+    {
+      "key": "19-0",
+      "name": "Goblin 1",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "19",
+          "label": "2 goblins (§19)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "mechanics": {
+              "escapeCheck": {
+                "ability": "dexterity",
+                "section": "58"
+              }
+            },
+            "winSection": "53",
+            "lossSection": "29",
+            "sourceNotes": [
+              "The source gives enemy fist damage but does not state Shea’s damage here. Enter the damage for the weapon you are using; no weapon is assumed. The table lists two opponents, despite the later victory narrative focusing on one.",
+              "After each completed round you may try one Dexterity-or-less escape check. A failed check continues the fight without an extra enemy turn.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "Harold recalls, from one of his earlier adven- tures, the way Heimdall had used magic to cheat in· the cockroach races back in Surt's stronghold. Shea is fairly certain he can do likewise at shuffleboard. He mumbles dis- creetly and makes passes with his left hand. The large goblin's rocks consistently slide past the mark, while Shea's stones stop with mysterious regularity on the highest _score. When his total score becomes larger than that of the goblin, it throws its stick to the deck in anger. \"Damnation! You cozen me, and would dance out of your true debt,\" the goblin snarls. \"Gretio, this sheep-biter needeth thrashing!\" It motions to the smaller goblin. TWO GOBLINS To hit Shea: 14 To be hit: 11 Hit points: 3 each Damage with fists: D6-1 After each round of this fight, Harold may try to escape. Roll 3 D6. If the total of the dice is the same as or lower than Harold's Dexterity value, turn to section 58. If the total of the dice is higher than Harold's Dexterity, the fight continues. If Harold wins the fight, turn to section 53. If Harold dies, turn to section 29."
+          ],
+          "sourcePages": [
+            103,
+            104
+          ]
+        }
+      }
+    },
+    {
+      "key": "19-1",
+      "name": "Goblin 2",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "19",
+          "label": "2 goblins (§19)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "mechanics": {
+              "escapeCheck": {
+                "ability": "dexterity",
+                "section": "58"
+              }
+            },
+            "winSection": "53",
+            "lossSection": "29",
+            "sourceNotes": [
+              "The source gives enemy fist damage but does not state Shea’s damage here. Enter the damage for the weapon you are using; no weapon is assumed. The table lists two opponents, despite the later victory narrative focusing on one.",
+              "After each completed round you may try one Dexterity-or-less escape check. A failed check continues the fight without an extra enemy turn.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "Harold recalls, from one of his earlier adven- tures, the way Heimdall had used magic to cheat in· the cockroach races back in Surt's stronghold. Shea is fairly certain he can do likewise at shuffleboard. He mumbles dis- creetly and makes passes with his left hand. The large goblin's rocks consistently slide past the mark, while Shea's stones stop with mysterious regularity on the highest _score. When his total score becomes larger than that of the goblin, it throws its stick to the deck in anger. \"Damnation! You cozen me, and would dance out of your true debt,\" the goblin snarls. \"Gretio, this sheep-biter needeth thrashing!\" It motions to the smaller goblin. TWO GOBLINS To hit Shea: 14 To be hit: 11 Hit points: 3 each Damage with fists: D6-1 After each round of this fight, Harold may try to escape. Roll 3 D6. If the total of the dice is the same as or lower than Harold's Dexterity value, turn to section 58. If the total of the dice is higher than Harold's Dexterity, the fight continues. If Harold wins the fight, turn to section 53. If Harold dies, turn to section 29."
+          ],
+          "sourcePages": [
+            103,
+            104
+          ]
+        }
+      }
+    },
+    {
+      "key": "25-0",
+      "name": "Goblin 1",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": "25",
+          "label": "3 goblins (§25)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 3",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "Club",
+              "damage": {
+                "dice": 1,
+                "add": 0
+              }
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "holdOff": {
+                "name": "Belphebe",
+                "count": 1,
+                "maximumAttackers": 2
+              }
+            },
+            "winSection": "9",
+            "lossSection": "29",
+            "sourceNotes": [
+              "Shea picks up a club. Belphebe holds one goblin off until only one remains; initially two attack Shea, then one after the first death. Club damage follows section 18.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "More cautiously than ever, Shea follows Bel- phebe's · carefully chosen footsteps. She adroitly sidesteps a pile of human skulls. Unfortunately, Harold manages to clip the bottom of the pile with his toe. The skulls rattle noisily as they tumble across the floor. \"Harold!\" hisses Belphebe angrily. The goblins are stirring. One of them cries out. Shea spies a goblin club near the skulls and picks it up. He and Belphebe back away slowly as three goblins come out of the darkness. THREE GOBLINS To hit Shea: 14 To be hit: 11 Hit points: · 3 each Damage with clubs: D6 · Belphebe keeps one of the goblins at bay with her torch until there is only one goblin left. Until one goblin is slain, two attack Shea each · round. If Harold .wins the fight, turn to section 9. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            115
+          ]
+        }
+      }
+    },
+    {
+      "key": "25-1",
+      "name": "Goblin 2",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": "25",
+          "label": "3 goblins (§25)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 3",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "Club",
+              "damage": {
+                "dice": 1,
+                "add": 0
+              }
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "holdOff": {
+                "name": "Belphebe",
+                "count": 1,
+                "maximumAttackers": 2
+              }
+            },
+            "winSection": "9",
+            "lossSection": "29",
+            "sourceNotes": [
+              "Shea picks up a club. Belphebe holds one goblin off until only one remains; initially two attack Shea, then one after the first death. Club damage follows section 18.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "More cautiously than ever, Shea follows Bel- phebe's · carefully chosen footsteps. She adroitly sidesteps a pile of human skulls. Unfortunately, Harold manages to clip the bottom of the pile with his toe. The skulls rattle noisily as they tumble across the floor. \"Harold!\" hisses Belphebe angrily. The goblins are stirring. One of them cries out. Shea spies a goblin club near the skulls and picks it up. He and Belphebe back away slowly as three goblins come out of the darkness. THREE GOBLINS To hit Shea: 14 To be hit: 11 Hit points: · 3 each Damage with clubs: D6 · Belphebe keeps one of the goblins at bay with her torch until there is only one goblin left. Until one goblin is slain, two attack Shea each · round. If Harold .wins the fight, turn to section 9. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            115
+          ]
+        }
+      }
+    },
+    {
+      "key": "25-2",
+      "name": "Goblin 3",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": "25",
+          "label": "3 goblins (§25)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 3",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "Club",
+              "damage": {
+                "dice": 1,
+                "add": 0
+              }
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "holdOff": {
+                "name": "Belphebe",
+                "count": 1,
+                "maximumAttackers": 2
+              }
+            },
+            "winSection": "9",
+            "lossSection": "29",
+            "sourceNotes": [
+              "Shea picks up a club. Belphebe holds one goblin off until only one remains; initially two attack Shea, then one after the first death. Club damage follows section 18.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "More cautiously than ever, Shea follows Bel- phebe's · carefully chosen footsteps. She adroitly sidesteps a pile of human skulls. Unfortunately, Harold manages to clip the bottom of the pile with his toe. The skulls rattle noisily as they tumble across the floor. \"Harold!\" hisses Belphebe angrily. The goblins are stirring. One of them cries out. Shea spies a goblin club near the skulls and picks it up. He and Belphebe back away slowly as three goblins come out of the darkness. THREE GOBLINS To hit Shea: 14 To be hit: 11 Hit points: · 3 each Damage with clubs: D6 · Belphebe keeps one of the goblins at bay with her torch until there is only one goblin left. Until one goblin is slain, two attack Shea each · round. If Harold .wins the fight, turn to section 9. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            115
+          ]
+        }
+      }
+    },
+    {
+      "key": "34-0",
+      "name": "Pholantus",
+      "attack": 13,
+      "defense": 12,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "34",
+          "label": "Pholantus (§34)",
+          "enemies": [
+            {
+              "name": "Pholantus",
+              "hp": 10,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "Trident",
+              "damage": {
+                "dice": 1,
+                "add": 1
+              }
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "escapeCheck": {
+                "ability": "dexterity",
+                "section": "94"
+              }
+            },
+            "winSection": "42",
+            "lossSection": "87",
+            "sourceNotes": [
+              "Both fighters use tridents for D6 + 1 damage. The printed defeat destination is 87, not the ordinary death section.",
+              "After each completed round you may try one Dexterity-or-less escape check. A failed check continues the fight without an extra enemy turn.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "''Well then, it shall be sport,\" Pholantus says, ominously squinting several eyes. He snaps his fingers. \"Ephesia, my toys!\" One of the demon's ugly little helpers patters off. Shea doesn't like the look of this. \"Thy skill with the blade interests me. We , shall test it .... \" Shea winces. The helper returns, carrying two iron tridents. \"Using my weapons, of course!\" the demon contin- ues. One of the tridents is thrust into Shea's hands. DEMON To be hit: 12 Hit points: To hit Shea: 13 10 Damage per attack: (both using tridents) D6+ 1 After each round of this fight, Harold may try to escape. Roll 3 D6. If the result is the same as or lower than Harold's Dexterity value, turn to section 94. Otherwise the fight continues. If Harold is victorious, turn to section 42. If Harold is killed, turn to section 87."
+          ],
+          "sourcePages": [
+            133
+          ]
+        }
+      }
+    },
+    {
+      "key": "68-0",
+      "name": "Goblin 1",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 5,
+        "entry": {
+          "section": "68",
+          "label": "5 goblins (§68)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 3",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 4",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 5",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "Club",
+              "damage": {
+                "dice": 1,
+                "add": 0
+              }
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "enemies": [
+                {
+                  "fromRound": 1
+                },
+                {
+                  "fromRound": 2
+                },
+                {
+                  "fromRound": 3
+                },
+                {
+                  "fromRound": 4
+                },
+                {
+                  "fromRound": 5
+                }
+              ],
+              "escapeCheck": {
+                "ability": "dexterity",
+                "section": "92"
+              }
+            },
+            "winSection": "81",
+            "lossSection": "29",
+            "sourceNotes": [
+              "The opening prose describes two goblins entering, but the explicit combat instructions say one at a time, with one additional attacker after each round. This preset follows those detailed combat instructions: one in round one, two in round two, and so on through five.",
+              "After each completed round you may try one Dexterity-or-less escape check. A failed check continues the fight without an extra enemy turn.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "Shea stands behind the sarcophagus as the door smashes open. In rushes an angry goblin, yelling oaths and cursing Shea for defiling his dead Another one follows. FIVE GOBLINS Hit points: To hit Shea: 14 To be hit: 11 3 eaeh Damage with clubs: D6 (Shea uses the club that was on the table.) The goblins enter the room one at a time. After each round of combat, one additional goblin will be attacking Shea until. all five have en- tered the room. After each round of this ;fight, Harold may try to escape. Roll 3 D6. If the result is the same as or lower than Harold's Dexterity value, turn to section 92. If the result is higher, the fight continues . . If Harold wins the fight, turn to section 81. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            204
+          ]
+        }
+      }
+    },
+    {
+      "key": "68-1",
+      "name": "Goblin 2",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 1,
+        "partCount": 5,
+        "entry": {
+          "section": "68",
+          "label": "5 goblins (§68)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 3",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 4",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 5",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "Club",
+              "damage": {
+                "dice": 1,
+                "add": 0
+              }
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "enemies": [
+                {
+                  "fromRound": 1
+                },
+                {
+                  "fromRound": 2
+                },
+                {
+                  "fromRound": 3
+                },
+                {
+                  "fromRound": 4
+                },
+                {
+                  "fromRound": 5
+                }
+              ],
+              "escapeCheck": {
+                "ability": "dexterity",
+                "section": "92"
+              }
+            },
+            "winSection": "81",
+            "lossSection": "29",
+            "sourceNotes": [
+              "The opening prose describes two goblins entering, but the explicit combat instructions say one at a time, with one additional attacker after each round. This preset follows those detailed combat instructions: one in round one, two in round two, and so on through five.",
+              "After each completed round you may try one Dexterity-or-less escape check. A failed check continues the fight without an extra enemy turn.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "Shea stands behind the sarcophagus as the door smashes open. In rushes an angry goblin, yelling oaths and cursing Shea for defiling his dead Another one follows. FIVE GOBLINS Hit points: To hit Shea: 14 To be hit: 11 3 eaeh Damage with clubs: D6 (Shea uses the club that was on the table.) The goblins enter the room one at a time. After each round of combat, one additional goblin will be attacking Shea until. all five have en- tered the room. After each round of this ;fight, Harold may try to escape. Roll 3 D6. If the result is the same as or lower than Harold's Dexterity value, turn to section 92. If the result is higher, the fight continues . . If Harold wins the fight, turn to section 81. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            204
+          ]
+        }
+      }
+    },
+    {
+      "key": "68-2",
+      "name": "Goblin 3",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 2,
+        "partCount": 5,
+        "entry": {
+          "section": "68",
+          "label": "5 goblins (§68)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 3",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 4",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 5",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "Club",
+              "damage": {
+                "dice": 1,
+                "add": 0
+              }
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "enemies": [
+                {
+                  "fromRound": 1
+                },
+                {
+                  "fromRound": 2
+                },
+                {
+                  "fromRound": 3
+                },
+                {
+                  "fromRound": 4
+                },
+                {
+                  "fromRound": 5
+                }
+              ],
+              "escapeCheck": {
+                "ability": "dexterity",
+                "section": "92"
+              }
+            },
+            "winSection": "81",
+            "lossSection": "29",
+            "sourceNotes": [
+              "The opening prose describes two goblins entering, but the explicit combat instructions say one at a time, with one additional attacker after each round. This preset follows those detailed combat instructions: one in round one, two in round two, and so on through five.",
+              "After each completed round you may try one Dexterity-or-less escape check. A failed check continues the fight without an extra enemy turn.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "Shea stands behind the sarcophagus as the door smashes open. In rushes an angry goblin, yelling oaths and cursing Shea for defiling his dead Another one follows. FIVE GOBLINS Hit points: To hit Shea: 14 To be hit: 11 3 eaeh Damage with clubs: D6 (Shea uses the club that was on the table.) The goblins enter the room one at a time. After each round of combat, one additional goblin will be attacking Shea until. all five have en- tered the room. After each round of this ;fight, Harold may try to escape. Roll 3 D6. If the result is the same as or lower than Harold's Dexterity value, turn to section 92. If the result is higher, the fight continues . . If Harold wins the fight, turn to section 81. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            204
+          ]
+        }
+      }
+    },
+    {
+      "key": "68-3",
+      "name": "Goblin 4",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 3,
+        "partCount": 5,
+        "entry": {
+          "section": "68",
+          "label": "5 goblins (§68)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 3",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 4",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 5",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "Club",
+              "damage": {
+                "dice": 1,
+                "add": 0
+              }
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "enemies": [
+                {
+                  "fromRound": 1
+                },
+                {
+                  "fromRound": 2
+                },
+                {
+                  "fromRound": 3
+                },
+                {
+                  "fromRound": 4
+                },
+                {
+                  "fromRound": 5
+                }
+              ],
+              "escapeCheck": {
+                "ability": "dexterity",
+                "section": "92"
+              }
+            },
+            "winSection": "81",
+            "lossSection": "29",
+            "sourceNotes": [
+              "The opening prose describes two goblins entering, but the explicit combat instructions say one at a time, with one additional attacker after each round. This preset follows those detailed combat instructions: one in round one, two in round two, and so on through five.",
+              "After each completed round you may try one Dexterity-or-less escape check. A failed check continues the fight without an extra enemy turn.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "Shea stands behind the sarcophagus as the door smashes open. In rushes an angry goblin, yelling oaths and cursing Shea for defiling his dead Another one follows. FIVE GOBLINS Hit points: To hit Shea: 14 To be hit: 11 3 eaeh Damage with clubs: D6 (Shea uses the club that was on the table.) The goblins enter the room one at a time. After each round of combat, one additional goblin will be attacking Shea until. all five have en- tered the room. After each round of this ;fight, Harold may try to escape. Roll 3 D6. If the result is the same as or lower than Harold's Dexterity value, turn to section 92. If the result is higher, the fight continues . . If Harold wins the fight, turn to section 81. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            204
+          ]
+        }
+      }
+    },
+    {
+      "key": "68-4",
+      "name": "Goblin 5",
+      "attack": 14,
+      "defense": 11,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 4,
+        "partCount": 5,
+        "entry": {
+          "section": "68",
+          "label": "5 goblins (§68)",
+          "enemies": [
+            {
+              "name": "Goblin 1",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 2",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 3",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 4",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Goblin 5",
+              "hp": 3,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "Club",
+              "damage": {
+                "dice": 1,
+                "add": 0
+              }
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "enemies": [
+                {
+                  "fromRound": 1
+                },
+                {
+                  "fromRound": 2
+                },
+                {
+                  "fromRound": 3
+                },
+                {
+                  "fromRound": 4
+                },
+                {
+                  "fromRound": 5
+                }
+              ],
+              "escapeCheck": {
+                "ability": "dexterity",
+                "section": "92"
+              }
+            },
+            "winSection": "81",
+            "lossSection": "29",
+            "sourceNotes": [
+              "The opening prose describes two goblins entering, but the explicit combat instructions say one at a time, with one additional attacker after each round. This preset follows those detailed combat instructions: one in round one, two in round two, and so on through five.",
+              "After each completed round you may try one Dexterity-or-less escape check. A failed check continues the fight without an extra enemy turn.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "Shea stands behind the sarcophagus as the door smashes open. In rushes an angry goblin, yelling oaths and cursing Shea for defiling his dead Another one follows. FIVE GOBLINS Hit points: To hit Shea: 14 To be hit: 11 3 eaeh Damage with clubs: D6 (Shea uses the club that was on the table.) The goblins enter the room one at a time. After each round of combat, one additional goblin will be attacking Shea until. all five have en- tered the room. After each round of this ;fight, Harold may try to escape. Roll 3 D6. If the result is the same as or lower than Harold's Dexterity value, turn to section 92. If the result is higher, the fight continues . . If Harold wins the fight, turn to section 81. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            204
+          ]
+        }
+      }
+    },
+    {
+      "key": "84-0",
+      "name": "Wolf 1",
+      "attack": 13,
+      "defense": 12,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "84",
+          "label": "2 wolves (§84)",
+          "enemies": [
+            {
+              "name": "Wolf 1",
+              "hp": 6,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Wolf 2",
+              "hp": 6,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "Club",
+              "damage": {
+                "dice": 1,
+                "add": 0
+              },
+              "winSection": "44"
+            },
+            {
+              "label": "+1 sword",
+              "damage": {
+                "dice": 1,
+                "add": 1
+              },
+              "attackBonus": 1,
+              "winSection": "56"
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "holdOff": {
+                "name": "Belphebe",
+                "count": 1,
+                "maximumAttackers": 1
+              },
+              "escapeCheck": {
+                "ability": "dexterity",
+                "section": "46"
+              }
+            },
+            "winSection": "44",
+            "lossSection": "29",
+            "sourceNotes": [
+              "Belphebe keeps one wolf occupied while both live, so only one attacks Shea. Club and sword damage and their different victory destinations follow the source.",
+              "After each completed round you may try one Dexterity-or-less escape check. A failed check continues the fight without an extra enemy turn.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "To his amazement, Harold's hand passes right through the staff and robe. His finger- tips brush against an unseen glass object, knocking it to the floor with a crash. Blue smoke rises from the hissing mess and awak- ens Caliban .. The baby lets out a dreadful howl. ''Damn!'' curses Shea as he steps back from the smoking mess. \"It was an illu- sion.\" \"Methinks we'd best leave,\" says Belphebe urgently as she tugs at his sleeve. Across the room, two goblins wearing what· look like burlap sacks appear from behind a dark curtain. They see the intruders and scream in high-pitched voices as they run to the baby's crib. Goblin nursemaids, muses Shea as he and Belphebe hot-foot it around the far side of the room and sprint for the door. Before they can reach it, however, some unexpected watchdogs race in from outside and square off in front of them. Shea finds himself face to face with two snarling wolves. It is obvious there can be no escape without a fight . TWO WOLVES To hit Shea: 13 To be hit: 12 Hit points: 6 each Damage per bite: D6 + 1. Shea does D6 damage with a club. If he has a sword, he can do D6 + 1 damage. As long as there are two wolves, Belphebe keeps one wolf busy so that only one wolf attacks Harold each round . . After each round, Harold may attempt to es- cape. Roll 3 D6 and compare the result to Harold's Dexterity value. If the total of the dice is the same as or lower than Harold's Dexterity, turn to section 46. If the total is higher, the fight continues. If Harold ·wins using a + 1 sword, turn to section 56. If Harold wins using a club, turn to section 44. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            229,
+            230
+          ]
+        }
+      }
+    },
+    {
+      "key": "84-1",
+      "name": "Wolf 2",
+      "attack": 13,
+      "defense": 12,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "84",
+          "label": "2 wolves (§84)",
+          "enemies": [
+            {
+              "name": "Wolf 1",
+              "hp": 6,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Wolf 2",
+              "hp": 6,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [
+            {
+              "label": "Club",
+              "damage": {
+                "dice": 1,
+                "add": 0
+              },
+              "winSection": "44"
+            },
+            {
+              "label": "+1 sword",
+              "damage": {
+                "dice": 1,
+                "add": 1
+              },
+              "attackBonus": 1,
+              "winSection": "56"
+            }
+          ],
+          "rules": {
+            "mechanics": {
+              "holdOff": {
+                "name": "Belphebe",
+                "count": 1,
+                "maximumAttackers": 1
+              },
+              "escapeCheck": {
+                "ability": "dexterity",
+                "section": "46"
+              }
+            },
+            "winSection": "44",
+            "lossSection": "29",
+            "sourceNotes": [
+              "Belphebe keeps one wolf occupied while both live, so only one attacks Shea. Club and sword damage and their different victory destinations follow the source.",
+              "After each completed round you may try one Dexterity-or-less escape check. A failed check continues the fight without an extra enemy turn.",
+              "If wearing the magic vest, set damage blocked to 1; otherwise leave it at 0. This is a simulator modifier only. The healing potion restores 2D6 HP, up to 17; enter the rolled healing instead of attacking, then remove the potion from your shared inventory."
+            ]
+          },
+          "printedRules": [
+            "To his amazement, Harold's hand passes right through the staff and robe. His finger- tips brush against an unseen glass object, knocking it to the floor with a crash. Blue smoke rises from the hissing mess and awak- ens Caliban .. The baby lets out a dreadful howl. ''Damn!'' curses Shea as he steps back from the smoking mess. \"It was an illu- sion.\" \"Methinks we'd best leave,\" says Belphebe urgently as she tugs at his sleeve. Across the room, two goblins wearing what· look like burlap sacks appear from behind a dark curtain. They see the intruders and scream in high-pitched voices as they run to the baby's crib. Goblin nursemaids, muses Shea as he and Belphebe hot-foot it around the far side of the room and sprint for the door. Before they can reach it, however, some unexpected watchdogs race in from outside and square off in front of them. Shea finds himself face to face with two snarling wolves. It is obvious there can be no escape without a fight . TWO WOLVES To hit Shea: 13 To be hit: 12 Hit points: 6 each Damage per bite: D6 + 1. Shea does D6 damage with a club. If he has a sword, he can do D6 + 1 damage. As long as there are two wolves, Belphebe keeps one wolf busy so that only one wolf attacks Harold each round . . After each round, Harold may attempt to es- cape. Roll 3 D6 and compare the result to Harold's Dexterity value. If the total of the dice is the same as or lower than Harold's Dexterity, turn to section 46. If the total is higher, the fight continues. If Harold ·wins using a + 1 sword, turn to section 56. If Harold wins using a club, turn to section 44. If Harold is killed, turn to section 29."
+          ],
+          "sourcePages": [
+            229,
+            230
+          ]
+        }
+      }
+    }
+  ]
+}

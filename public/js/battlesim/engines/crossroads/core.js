@@ -10,6 +10,7 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
   const player = {
     hp:integer(hero.hp, 1), maxHp:integer(hero.maxHp, 1), constitution:integer(hero.constitution, 0, 100),
     attackBonus:integer(hero.attackBonus ?? 0, -100, 100), defenceBonus:integer(hero.defenceBonus ?? 0, -100, 100),
+    damageReduction:integer(hero.damageReduction ?? 0,0,100),
   };
   if (player.hp > player.maxHp) throw new RangeError('Hit points exceed maximum');
   const config = clone(rules);
@@ -48,8 +49,8 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
 }
 
 // Pure transitions make an invalid roll/action harmless to the saved run.
-export function crossroadsRound(original, {target = 0, healing = null, action = 'attack', roll = () => Math.floor(Math.random()*6)+1} = {}) {
-  if (original?.rulesVersion === 2) return encounterRound(original,{target,healing,action,roll});
+export function crossroadsRound(original, {target = 0, allyTarget = null, healing = null, action = 'attack', roll = () => Math.floor(Math.random()*6)+1} = {}) {
+  if (original?.rulesVersion === 2) return encounterRound(original,{target,allyTarget,healing,action,roll});
   if (action!=='attack') throw new RangeError('Unsupported action');
   if (original?.status !== 'active' || original.rulesVersion !== 1) throw new RangeError('No active fight');
   const fight = clone(original);
@@ -87,7 +88,7 @@ export function crossroadsRound(original, {target = 0, healing = null, action = 
       const values = dice(3, roll), total = values.reduce((a,b) => a+b, -fight.hero.defenceBonus);
       const hit = total >= attack.toHit;
       const result = hit ? damage(attack.damage, roll) : {dice:[], amount:0};
-      const lost = Math.min(fight.hero.hp, result.amount);
+      const lost = Math.min(fight.hero.hp, Math.max(0,result.amount-(fight.hero.damageReduction??0)));
       fight.hero.hp -= lost; fight.damageTaken += lost;
       fight.events.push({kind:'attack', side:'enemy', target:index, name:enemy.name, dice:values, total, hit, damageDice:result.dice, damage:lost});
       if (hit && attack.poison && fight.hero.hp > 0) {
