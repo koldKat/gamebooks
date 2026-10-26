@@ -32,6 +32,20 @@
 .reading-frontmatter--structured figure { margin: 0 0 1rem; }
 .reading-frontmatter--structured figure img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
 .reading-art-parts { display: flex; align-items: flex-start; justify-content: center; gap: 0; width: 100%; max-width: 100%; margin: 1em 0; padding: 0; border: 0; }
+.liveread-body table.reading-encounter-table,
+.m-top table.reading-encounter-table {
+  width: 100%;
+  font-size: 1em;
+}
+.reading-encounter-table th,
+.reading-encounter-table td {
+  padding: 0.25em 0.3em;
+  text-align: center;
+}
+.reading-encounter-table th:first-child {
+  width: 32%;
+  text-align: left;
+}
 .reading-art-parts > img,
 .reading-frontmatter--structured figure.reading-art-parts > img { display: block; flex: 0 1 auto; min-width: 0; max-width: none; height: auto; margin: 0; padding: 0; border: 0; }
 .reading-art-stack,
