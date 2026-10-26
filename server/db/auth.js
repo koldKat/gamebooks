@@ -72,7 +72,7 @@ function searchUsers(query, excludeUserId, limit = 8) {
 
 async function adminUpdateUser(userId, fields) {
   const user = db.prepare('SELECT id, is_author FROM users WHERE id = ?').get(userId);
-  if (!user) return { ok: false, error: 'User not found' };
+  if (!user) return { ok: false, error: 'Player not found' };
 
   if (fields.username !== undefined) {
     const trimmed = (fields.username || '').trim();

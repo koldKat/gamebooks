@@ -61,7 +61,7 @@ export default {
     'appxp.next_ruby':  '{n} EV to next ruby',
     'appxp.average_ruby_cost': 'Avg {n} EV / ruby',
     'appxp.job_level':  'App Job Lvl {n}',
-    'appxp.users':      '{n} user{s}',
+    'appxp.users':      '{n} player{s}',
     'appxp.total_levels': '{n} total levels',
     'appxp.more_to_lvl':  '{n} more to Lvl {lvl}',
     'appxp.range':        'range: Lvl {min}-{max}',

@@ -175,8 +175,8 @@ async function _submitGift() {
   const users  = _tableData['users'] || [];
   const usernameFold = foldForSearch(username);
   const target = users.find(u => foldForSearch(u.username) === usernameFold);
-  if (!target) { _setGiftStatus(`User "${username}" not found. Open the Users tab first if needed.`, 'error'); return; }
-  if (target.id === _giftSourceId) { _setGiftStatus('Source and target are the same user.', 'error'); return; }
+  if (!target) { _setGiftStatus(`Player "${username}" not found. Open the Players tab first if needed.`, 'error'); return; }
+  if (target.id === _giftSourceId) { _setGiftStatus('Source and target are the same player.', 'error'); return; }
   _setGiftStatus('', '');
   try {
     await api('POST', `/api/admin/books/${_giftBookId}/gift`, { sourceUserId: _giftSourceId, targetUserId: target.id });
@@ -278,7 +278,7 @@ export function renderUsersTable(data) {
   const colCount = document.querySelectorAll('#users-table thead th').length;
   const searching = !!document.getElementById('users-search')?.value.trim();
   tbody.innerHTML = '';
-  if (!data.length) { emptyRow(tbody, colCount, searching ? 'No users found.' : 'No users yet.'); return; }
+  if (!data.length) { emptyRow(tbody, colCount, searching ? 'No players found.' : 'No players yet.'); return; }
 
   const visible = searching ? data : data.filter(u => daysInactiveClass(u.days_inactive) !== 'act-stale');
   const hidden  = searching ? [] : data.filter(u => daysInactiveClass(u.days_inactive) === 'act-stale');
@@ -291,7 +291,7 @@ export function renderUsersTable(data) {
     moreTd.colSpan = colCount;
     moreTd.style.textAlign = 'center';
     moreTd.style.padding = '10px';
-    const moreBtn = mkBtn(`Show ${hidden.length} inactive user${hidden.length !== 1 ? 's' : ''} (31+ days)`, 'btn-info', () => {
+    const moreBtn = mkBtn(`Show ${hidden.length} inactive player${hidden.length !== 1 ? 's' : ''} (31+ days)`, 'btn-info', () => {
       moreTr.remove();
       for (const u of hidden) renderUserRow(tbody, u);
     });
@@ -456,11 +456,11 @@ export async function loadUsers() {
       u.days_inactive = u.last_active ? Math.floor((now - u.last_active) / 86400) : null;
       u.coinsSpent    = (u.coinsEarned || 0) - (u.coinsBalance || 0);
     }
-    meta.textContent = `${users.length} user${users.length !== 1 ? 's' : ''}`;
+    meta.textContent = `${users.length} player${users.length !== 1 ? 's' : ''}`;
     storeData('users', users);
     renderUsersTable(getFiltered('users'));
     renderLockedTable(users, now);
-  } catch (e) { meta.textContent = 'Error loading users.'; console.error(e); }
+  } catch (e) { meta.textContent = 'Error loading players.'; console.error(e); }
 }
 
 // ── Main view - Books ─────────────────────────────────────────────────────────
@@ -938,7 +938,7 @@ export async function loadUserDetail(userId, edit = false) {
         }));
       }
       if (!user.is_author && !user.is_contributor) {
-        actionBar.appendChild(mkBtn('Delete user', 'btn-danger', () => confirmDeleteUser(user.id, user.username)));
+        actionBar.appendChild(mkBtn('Delete player', 'btn-danger', () => confirmDeleteUser(user.id, user.username)));
       }
     }
 
@@ -1448,7 +1448,7 @@ function confirmClearSessions(id, username) {
 
 function confirmDeleteUser(id, username) {
   showConfirm(
-    `Delete user "${username}"? This permanently removes the account and all their books.`,
+    `Delete player "${username}"? This permanently removes the account and all their books.`,
     async () => {
       await api('DELETE', `/api/admin/users/${id}`);
       showView('main'); loadAll();

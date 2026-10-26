@@ -1,4 +1,4 @@
-# Gamebook Tracker - User Guide
+# Gamebook Tracker - Guide
 
 Keep track of every branch, every choice, and every playthrough in your favourite gamebooks. Works with Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, and anything else that uses numbered sections.
 
@@ -47,17 +47,17 @@ Each day's card shows the covers of the public books played that day, faded behi
 
 | Event | What it means |
 |-------|---------|
-| *user* **created / added book** *book* | A new book was added to the library |
-| *user* **created / added series** *series* | A series was created or added |
-| *user* **began run N of** *book* | Someone started a new playthrough |
-| *user* **won / lost / died in** *book* run N | A playthrough ended |
-| *user* **won** *book* **run N for the first time** | First ever victory in that book, showing which run achieved it |
-| *user* **lost in** *book* **for the first time** | First ever loss (non-battle) in that book |
-| *user* **fell in battle in** *book* **for the first time** | First ever battle-death in that book |
-| *user* **won in all books of** *series / anthology* | Every book in a collection completed |
-| *user* **discovered / visited every section of** *book* | Reached 100% mapping or 100% visiting |
-| *user* **reached level N** | Someone levelled up |
-| *user* **joined** | A new player registered |
+| *player* **created / added book** *book* | A new book was added to the library |
+| *player* **created / added series** *series* | A series was created or added |
+| *player* **began run N of** *book* | Someone started a new playthrough |
+| *player* **won / lost / died in** *book* run N | A playthrough ended |
+| *player* **won** *book* **run N for the first time** | First ever victory in that book, showing which run achieved it |
+| *player* **lost in** *book* **for the first time** | First ever loss (non-battle) in that book |
+| *player* **fell in battle in** *book* **for the first time** | First ever battle-death in that book |
+| *player* **won in all books of** *series / anthology* | Every book in a collection completed |
+| *player* **discovered / visited every section of** *book* | Reached 100% mapping or 100% visiting |
+| *player* **reached level N** | Someone levelled up |
+| *player* **joined** | A new player registered |
 
 **Clicking things in the feed:**
 - **A username** (if that player has a public profile) → see their books and completed playthroughs
@@ -601,7 +601,7 @@ You can edit a book from two places:
 
 Books need a minimum of **5 sections**. You can't lower the section count below the highest section number already in use.
 
-Identifiers (ISBN, ASIN, ISSN) appear next to the section count in the books list. Books that share the same ISBN or ISSN are treated as the same title across all users.
+Identifiers (ISBN, ASIN, ISSN) appear next to the section count in the books list. Books that share the same ISBN or ISSN are treated as the same title across all players.
 
 ### Discoverable sections
 
@@ -613,11 +613,11 @@ Upload a cover in the Create Book window or the edit dialog. Images are compress
 
 ### Make public
 
-The **Make public** checkbox (creator only) makes the book findable by other users:
+The **Make public** checkbox (creator only) makes the book findable by other players:
 - It appears on the covers wall and in the public book list
 - Others can click **+ Add to my library** to start tracking it
 - Everyone tracking the book sees your changes immediately
-- If you delete it while others are tracking it, ownership passes to the next user
+- If you delete it while others are tracking it, ownership passes to the next player
 
 When you open a public book, signed-in players see **+ Add to my library**, or **Open Book** if they already have it. On mobile, **Open Book** opens the mobile reader. Signed-out visitors see **Log in or sign up to add book**, which opens the login screen with the registration option.
 
@@ -625,8 +625,8 @@ When you open a public book, signed-in players see **+ Add to my library**, or *
 
 Create a series with **Create Series**. Add a book to a series via the **Series** dropdown in the Edit Book dialog. Books in the same series group together under a collapsible amber header. Suggestions include public series and your own series. A private series belonging only to another account stays hidden; you can create a separate series with the same name.
 
-- Only the creator can edit a series; other users can add a public series to their own library
-- The creator earns **150 XP** each time another user adds their series
+- Only the creator can edit a series; other players can add a public series to their own library
+- The creator earns **150 XP** each time another player adds their series
 - **Delete Series** - removes only your series (books stay as standalone items)
 - **Delete Series & Contents** - removes the series and its books from your library
 
@@ -648,7 +648,7 @@ An anthology is a physical book containing several separate adventures - each tr
 1. Create the anthology first.
 2. Click **✎** on each book → set **Part of anthology** → Save.
 
-Private anthologies stay hidden from other users, even when one of their stories is public. Public anthology previews show only public stories.
+Private anthologies stay hidden from other players, even when one of their stories is public. Public anthology previews show only public stories.
 
 **Adding someone else's anthology:** click **+ Add to my library** on any public anthology to add it and all its public stories in one step.
 
@@ -784,13 +784,13 @@ In map-driven books, some passages include a marker field and the original map. 
 
 ## Play Together
 
-Link two or more users' copies of a book so all progress is shared in real time.
+Link two or more players' copies of a book so all progress is shared in real time.
 
 ### Starting a party
 
 1. Open the book → click **Play Together**
-2. Type a username and click **Invite** (a dropdown suggests matching users as you type)
-3. The other user sees an invite card above their books list
+2. Type a username and click **Invite** (a dropdown suggests matching players as you type)
+3. The other player sees an invite card above their books list
 
 ### Accepting an invite
 

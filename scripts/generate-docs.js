@@ -24,8 +24,8 @@ const documents = [
   {
     source: 'docs/user-guide.md',
     output: 'public/guide.html',
-    title: 'Gamebook Tracker - User Guide',
-    subtitle: 'User Guide',
+    title: 'Gamebook Tracker - Guide',
+    subtitle: 'Guide',
     extraHead: fs.readFileSync(path.join(ROOT, 'scripts/docs-head/guide-seo.html'), 'utf8'),
     header: false,
     backLink: null,

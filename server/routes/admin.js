@@ -221,7 +221,7 @@ async function handleAdminRefundShopItem(req, res, userId) {
   const { item, all } = await readBody(req);
   const result = db.adminRefundShopItem(userId, item, !!all);
   if (result.error === 'invalid_item')     return send(res, 400, { error: 'Invalid item' });
-  if (result.error === 'not_found')        return send(res, 404, { error: 'User not found' });
+  if (result.error === 'not_found')        return send(res, 404, { error: 'Player not found' });
   if (result.error === 'nothing_to_refund') return send(res, 409, { error: 'Nothing to refund' });
   send(res, 200, result);
 }
@@ -233,7 +233,7 @@ async function handleAdminGiftGc(req, res, userId) {
   const supply = db.getAdminGcSupply(getAppBirthAt());
   if (amount > supply.available) return send(res, 409, { error: 'Insufficient admin GC supply', available: supply.available });
   const result = db.adminGiftGc(userId, amount, message || null);
-  if (!result) return send(res, 404, { error: 'User not found' });
+  if (!result) return send(res, 404, { error: 'Player not found' });
   userBadgePush(userId);
   send(res, 200, result);
 }
@@ -269,8 +269,8 @@ async function handleAdminGiftBook(req, res, bookId) {
     return send(res, 400, { error: 'targetUserId required' });
   const result = db.giftBook(bookId, sourceUserId || null, targetUserId);
   if (result.error === 'book_not_found') return send(res, 404, { error: 'Book not found' });
-  if (result.error === 'user_not_found') return send(res, 404, { error: 'User not found' });
-  if (result.error === 'already_tracking') return send(res, 409, { error: 'User already has this book' });
+  if (result.error === 'user_not_found') return send(res, 404, { error: 'Player not found' });
+  if (result.error === 'already_tracking') return send(res, 409, { error: 'Player already has this book' });
   send(res, 200, { ok: true });
 }
 

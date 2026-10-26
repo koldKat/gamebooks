@@ -522,7 +522,7 @@ async function poll() {
     const res = await fetch(`/api/admin/watch/${userId}/${requestedBookId}`);
     if (!res.ok) { statusEl.textContent = `error (${res.status})`; statusEl.classList.add('stale'); return; }
     const data = await res.json();
-    titleEl.textContent = `Watching ${data.username || 'user #' + userId}`;
+    titleEl.textContent = `Watching ${data.username || 'player #' + userId}`;
     subEl.textContent   = data.state?.bookName ? `- ${data.state.bookName}` : '';
     if (data.bookId != null && data.bookId !== currentBookId) {
       if (currentBookId != null) subEl.textContent += ' (followed to another book)';

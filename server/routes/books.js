@@ -802,10 +802,10 @@ async function handleInviteToParty(req, res, bookId) {
   const { username } = await readBody(req);
   if (!username) return send(res, 400, { error: 'username required' });
   const profile = db.getUserByUsername(username);
-  if (!profile) return send(res, 404, { error: 'User not found' });
+  if (!profile) return send(res, 404, { error: 'Player not found' });
   const result = db.inviteToParty(party.partyId, userId, profile.id);
-  if (result.error === 'already_tracking') return send(res, 409, { error: 'User already tracking this book independently' });
-  if (result.error === 'already_invited')  return send(res, 409, { error: 'User already has a pending invite' });
+  if (result.error === 'already_tracking') return send(res, 409, { error: 'Player already tracking this book independently' });
+  if (result.error === 'already_invited')  return send(res, 409, { error: 'Player already has a pending invite' });
   if (result.error) return send(res, 400, { error: result.error });
   send(res, 200, { ok: true });
   userBadgePush(profile.id);
