@@ -3,6 +3,7 @@
 const clone = value => structuredClone(value);
 import {integer,damageSpec,dice,damage,finish} from './values.js';
 import {validateEncounterRules,encounterRound,encounterTargets} from './encounter-rules.js';
+import {resourceFields} from './resources.js';
 export {encounterTargets};
 
 export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
@@ -33,6 +34,8 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
           result.when = attack.when;
         }
         if (attack.poison) result.poison = damageSpec(attack.poison);
+        if (attack.metal) result.metal=true;
+        if (attack.ignoreArmour) result.ignoreArmour=true;
         return result;
       }),
     };
@@ -42,6 +45,8 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
     player.wisdom=integer(hero.wisdom,0,100);
     player.dexterity=integer(hero.dexterity,0,100);
     validateEncounterRules(config.mechanics,enemies.length);
+    for (const field of resourceFields(config.mechanics.resources)) player[field]=integer(hero[field]??0,0,1000000);
+    if(config.mechanics.resources?.armour?.override!==undefined)player[config.mechanics.resources.armour.field]=config.mechanics.resources.armour.override;
   }
   return {rulesVersion:config.mechanics ? 2 : 1, hero:player, startingHp:player.hp, enemies:opponents, rules:config,
     weaponDamage:config.enemyOnly ? null : damageSpec(config.heroDamage ?? weaponDamage),
@@ -49,8 +54,8 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
 }
 
 // Pure transitions make an invalid roll/action harmless to the saved run.
-export function crossroadsRound(original, {target = 0, allyTarget = null, healing = null, action = 'attack', roll = () => Math.floor(Math.random()*6)+1} = {}) {
-  if (original?.rulesVersion === 2) return encounterRound(original,{target,allyTarget,healing,action,roll});
+export function crossroadsRound(original, {target = 0, allyTarget = null, healing = null, action = 'attack', useGauntlet = false, roll = () => Math.floor(Math.random()*6)+1} = {}) {
+  if (original?.rulesVersion === 2) return encounterRound(original,{target,allyTarget,healing,action,useGauntlet,roll});
   if (action!=='attack') throw new RangeError('Unsupported action');
   if (original?.status !== 'active' || original.rulesVersion !== 1) throw new RangeError('No active fight');
   const fight = clone(original);

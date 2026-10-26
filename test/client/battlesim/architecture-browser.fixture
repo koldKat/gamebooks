@@ -4825,6 +4825,43 @@ for(const id of BOOK_IDS){
       check(JSON.stringify(data())===saved,'Prospero stale reset ignored');app.setCurrentBookId(1295);button.click();
     }finally{Math.random=random;}
   }
+  if(id===1297){
+    const el=key=>document.getElementById('sim1297-'+key),data=()=>app.currentPlaythrough().sim1297;
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1297/definition.js');
+    const run=app.currentPlaythrough();run.inventory={sentinel:['shared-item']};run.equipment={sentinel:'shared-slot'};
+    const items=JSON.stringify([run.inventory,run.equipment]),random=Math.random;
+    const choose=section=>{el('encounter').value=String(section);el('encounter').dispatchEvent(new Event('change'));};
+    const cancel=()=>{if(data().fight?.status==='active'){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    try{
+      Math.random=()=>0;choose('custom');
+      const fields={toBeHit:3,toHit:18,hp:1,damageDice:0,damageAdd:0};el('editor').querySelector('[role="combobox"]').value='Custom opponent';
+      for(const field of el('editor').querySelectorAll('[data-stat]'))field.value=fields[field.dataset.stat];
+      el('weaponDice').value='0';el('weaponAdd').value='1';el('start').click();el('round').click();
+      check(data().fight?.status==='win'&&data().history.length===1,'Warlock custom fight and one outcome');
+      for(const entry of getRoster()){
+        choose(entry.section);el('start').click();check(data().fight?.status==='active','Warlock starts '+entry.section);
+        check(data().fight.enemies.length===entry.enemies.length,'Warlock source group '+entry.section);
+        el('round').click();check(data().fight.round===1,'Warlock advances '+entry.section);cancel();
+      }
+      el('hp').value='20';el('saveCharacter').click();choose('10');el('start').click();el('healingSpell').click();
+      check(data().fight.hero.hp===21&&data().character.healingSpells===1&&el('healingSpells').value==='1','Warlock healing and remaining spell uses update together');cancel();
+      choose('54');el('start').click();el('target').value='1';el('misdirection').click();
+      check(data().fight.encounter.misdirectionTarget===1&&data().character.misdirectionSpells===2&&!data().fight.events.some(e=>e.side==='hero'),'Warlock targeted Misdirection replaces attack');cancel();
+      el('gauntletRounds').value='2';el('shortSwordBonus').value='1';el('saveCharacter').click();choose('69');el('useGauntlet').checked=true;el('start').click();
+      check(el('gauntletRounds').disabled&&!el('useGauntlet').disabled,'Warlock setup locks while attack choice remains available');
+      el('round').click();check(data().character.gauntletRounds===1,'Warlock missed attack spends one gauntlet charge');
+      el('healingSpell').click();check(data().character.gauntletRounds===1&&data().character.healingSpells===0,'Warlock healing spends no gauntlet charge');
+      Math.random=()=>.999;el('round').click();check(data().fight.events.find(e=>e.side==='hero').damage===17&&data().character.gauntletRounds===0&&el('useGauntlet').disabled&&!el('useGauntlet').checked,'Warlock river bonus and exhausted charges');cancel();Math.random=()=>0;
+      el('repulsionPotion').value='1';el('saveCharacter').click();choose('1');el('start').click();el('repulsion').click();
+      check(data().fight.round===0&&data().fight.encounter.repulsionActive&&data().character.repulsionPotion===0&&el('repulsion').disabled,'Warlock potion consumed once without an extra turn');cancel();
+      choose('66');el('start').click();check(el('healingSpell').disabled&&el('misdirection').disabled,'Warlock Donal negates both spells');cancel();
+      el('armourBonus').value='2';el('saveCharacter').click();choose('76');el('start').click();
+      check(data().character.armourBonus===0&&data().fight.rules.mechanics.enemyAttackBonus===1,'Warlock captors remove armour and apply source modifier');cancel();
+      check(JSON.stringify([run.inventory,run.equipment])===items,'Warlock universal inventory and equipment preserved');
+      const saved=JSON.stringify(data());el('newCharacter').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();
+      check(JSON.stringify(data())===saved,'Warlock stale reset ignored');app.setCurrentBookId(1297);button.click();
+    }finally{Math.random=random;}
+  }
   if(id===1296){
     const el=key=>document.getElementById('sim1296-'+key),data=()=>app.currentPlaythrough().sim1296;
     const {getRoster}=await import('REPO/public/js/battlesim/books/1296/definition.js');

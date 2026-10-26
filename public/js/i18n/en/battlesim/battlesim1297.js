@@ -1,0 +1,4 @@
+import shared from './battlesim1291.js';
+const labels=Object.fromEntries(Object.entries(shared).map(([key,value])=>[key.replace(/^battlesim1291\./,'battlesim1297.'),value.replaceAll('Robinton','Bran')]));
+Object.assign(labels,{"battlesim1297.armourBonus": "Chainmail bonus", "battlesim1297.healingSpells": "Healing spells left today", "battlesim1297.misdirectionSpells": "Misdirection spells left today", "battlesim1297.shortSwordBonus": "Brother’s sword (0 or 1)", "battlesim1297.gauntletRounds": "Gauntlet charges left", "battlesim1297.repulsionPotion": "Metal-repulsion potions", "battlesim1297.useGauntlet": "Use gauntlet this attack", "battlesim1297.healingSpell": "Healing spell (D3)", "battlesim1297.misdirection": "Misdirection", "battlesim1297.repulsion": "Use potion", "battlesim1297.misdirected": "Misdirection protects against {name} this round.", "battlesim1297.repulsionUsed": "Metal-repulsion potion used for this fight."});
+export default labels;

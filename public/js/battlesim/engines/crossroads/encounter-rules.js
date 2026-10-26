@@ -1,4 +1,5 @@
 import {integer,dice,damage,damageSpec,finish} from './values.js';
+import {validateResources,healingSpell,resourceDefence,resourceDamage} from './resources.js';
 
 const abilities = ['strength','intelligence','wisdom','constitution','dexterity','charisma'];
 const living = fight => fight.enemies.map((enemy,index) => enemy.hp > 0 && !enemy.fled ? index : -1).filter(index => index >= 0);
@@ -8,6 +9,11 @@ export function validateEncounterRules(rules,count) {
   const index = value => integer(value,0,count-1);
   const change = value => integer(value,-100,100);
   const check = value => { if (!abilities.includes(value)) throw new RangeError('Unknown ability'); };
+  if(rules.resources)validateResources(rules.resources);
+  if(rules.enemyOpeningDamage){index(rules.enemyOpeningDamage.enemy);damageSpec(rules.enemyOpeningDamage.damage);}
+  if(rules.reducedHeroDamage){integer(rules.reducedHeroDamage.rounds,1,1000);integer(rules.reducedHeroDamage.divisor,2,100);}
+  if(rules.enemyAttackBonus!==undefined)change(rules.enemyAttackBonus);
+  if(rules.groupAttack){integer(rules.groupAttack.minimumAlive,1,count);integer(rules.groupAttack.toHit,3,18);damageSpec(rules.groupAttack.damage);}
   if(rules.escapeCheck)check(rules.escapeCheck.ability);
   if(rules.surpriseRounds!==undefined)integer(rules.surpriseRounds,1,1000);
   if(rules.openingEnemyTurn)integer(rules.openingEnemyTurn.count,1,count);
@@ -110,15 +116,15 @@ export function encounterTargets(fight,round = (fight?.round ?? 0)+1) {
   return fight?.rules.mechanics?.orderedTargets ? available.slice(0,1) : available;
 }
 
-export function encounterRound(original,{target = 0,allyTarget = null,healing = null,action = 'attack',roll = () => Math.floor(Math.random()*6)+1} = {}) {
+export function encounterRound(original,{target = 0,allyTarget = null,healing = null,action = 'attack',useGauntlet = false,roll = () => Math.floor(Math.random()*6)+1} = {}) {
   const partingShot=action==='partingShot'&&original?.status==='win'&&original.rules.mechanics?.partingShot&&original.round>=original.rules.roundLimit&&!original.encounter?.partingShotUsed;
   if ((original?.status !== 'active'&&!partingShot) || original.rulesVersion !== 2) throw new RangeError('No active fight');
   const fight=structuredClone(original),rules=fight.rules.mechanics;
   validateEncounterRules(rules,fight.enemies.length);
   const escapeCheck=action==='escapeCheck',sourceExit=action==='sourceExit';
-  const round=fight.round+(partingShot||escapeCheck||sourceExit?0:1),available=availableEnemies(fight,round);
+  const round=fight.round+(partingShot||escapeCheck||sourceExit||action==='repulsion'?0:1),available=availableEnemies(fight,round);
   const openingEnemyTurn=round===1&&rules.openingEnemyTurn;
-  if(!['attack','retrieve','escapeGrip','flee','surrender','partingShot','escapeCheck','sourceExit'].includes(action)||action==='partingShot'&&!partingShot||healing!==null&&action!=='attack')throw new RangeError('Invalid action');
+  if(!['attack','retrieve','escapeGrip','flee','surrender','partingShot','escapeCheck','sourceExit','healingSpell','misdirection','repulsion'].includes(action)||action==='partingShot'&&!partingShot||healing!==null&&action!=='attack')throw new RangeError('Invalid action');
   if (action==='attack' && healing === null && available.length && !encounterTargets(fight,round).includes(target)) throw new RangeError('Choose an available target');
   if (rules.abilityOutcome && healing!==null) throw new RangeError('This encounter is an ability check');
   if(openingEnemyTurn&&healing!==null)throw new RangeError('No healing during the surprise attack');
@@ -128,6 +134,24 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
   }
   fight.events=[];fight.round=round;
   const state=fight.encounter ??= {arrivals:{},allyRound:null,freeRounds:0,blinded:false,bonusAttack:false};
+  const resources=rules.resources;
+  if(action==='repulsion'){
+    if(!resources?.repulsion||!fight.hero[resources.repulsion.field]||state.repulsionActive)throw new RangeError('No potion available');
+    fight.hero[resources.repulsion.field]--;state.repulsionActive=true;fight.events.push({kind:'repulsion'});return fight;
+  }
+  state.misdirectionTarget=null;state.gauntletActive=false;
+  if(action==='healingSpell'){
+    if(fight.rules.enemyOnly||openingEnemyTurn||state.netTurns)throw new RangeError('No healing during this action');
+    const event=healingSpell(fight.hero,resources,roll);healing=event.amount;
+  }
+  if(action==='misdirection'){
+    if(!resources?.misdirection||resources.spellsDisabled||!fight.hero[resources.misdirection.field]||!available.includes(target)||openingEnemyTurn||fight.rules.enemyOnly||state.netTurns)throw new RangeError('No misdirection available');
+    fight.hero[resources.misdirection.field]--;state.misdirectionTarget=target;fight.events.push({kind:'misdirection',name:fight.enemies[target].name});
+  }
+  if(useGauntlet&&action==='attack'&&healing===null&&available.length&&!openingEnemyTurn&&!state.netTurns){
+    if(!resources?.gauntlet||!fight.hero[resources.gauntlet.field])throw new RangeError('No gauntlet charge');
+    state.gauntletActive=true;
+  }
   if(healing!==null&&(fight.rules.enemyOnly||state.netTurns))throw new RangeError('No healing during this action');
   if(rules.grip&&state.gripped===undefined){state.gripped=Boolean(rules.grip.initiallyHeld);state.gripApplied=state.gripped;}
   const route = (status,section) => {
@@ -178,6 +202,11 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
     if (!living(fight).length) { finish(fight,'win'); return true; }
     return false;
   };
+  if(round===1&&rules.enemyOpeningDamage){
+    const opening=rules.enemyOpeningDamage,enemy=fight.enemies[opening.enemy],result=damage(opening.damage,roll),lost=Math.min(enemy.hp,result.amount);
+    enemy.hp-=lost;fight.damageDealt+=lost;fight.events.push({kind:'attack',side:'hero',target:opening.enemy,name:enemy.name,dice:[],total:0,hit:true,automatic:true,damageDice:result.dice,damage:lost});
+    if(done())return fight;
+  }
   const hitChange = index => (rules.grip?.enemy===index&&state.gripped&&rules.grip.proneToBeHit!==undefined?rules.grip.proneToBeHit-fight.enemies[index].toBeHit:0)
     +(rules.mount?.rider===index && !fight.enemies[rules.mount.mount].hp ? rules.mount.hitChange : 0)
     +(fatigued && rules.fatigue.enemy===index ? rules.fatigue.hitChange : 0);
@@ -192,12 +221,15 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
     fight.events.at(-1).destination=fight.destination;return fight;
   }
   function heroAttack(index,{automatic=false,ally=false,attackBonus=0,multiplier=1}={}) {
+    if(!ally&&state.gauntletActive&&state.gauntletSpentRound!==round){fight.hero[resources.gauntlet.field]--;state.gauntletSpentRound=round;}
     if(rules.enemyEscape&&!ally){state.engagedTargets??=[];if(!state.engagedTargets.includes(index))state.engagedTargets.push(index);}
     const enemy=fight.enemies[index];
     const values=automatic ? [] : dice(3,roll),total=values.reduce((sum,value)=>sum+value,fight.hero.attackBonus+attackBonus+(ally?0:rules.heroAttackBonus ?? 0));
     const hit=automatic || total>=enemy.toBeHit+hitChange(index);
     const result=hit ? damage(fight.weaponDamage,roll) : {dice:[],amount:0};
-    const lost=Math.min(enemy.hp,Math.max(0,result.amount*multiplier+(hit&&ally ? rules.ally.damageBonus : 0)));
+    let amount=Math.max(0,result.amount*multiplier+(hit&&ally ? rules.ally.damageBonus : 0)+(hit&&!ally?resourceDamage(fight):0));
+    if(!ally&&rules.reducedHeroDamage&&round<=rules.reducedHeroDamage.rounds)amount=Math.floor(amount/rules.reducedHeroDamage.divisor);
+    const lost=Math.min(enemy.hp,amount);
     enemy.hp-=lost;fight.damageDealt+=lost;
     fight.events.push({kind:'attack',side:ally?'ally':'hero',target:index,name:ally?rules.ally.name:enemy.name,dice:values,total,hit,automatic,damageDice:result.dice,damage:lost});
     if (hit && !ally && rules.firstHitWin?.enemy===index && !state.firstHitter) {
@@ -236,7 +268,7 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
   }
   const extraEnemy=rules.extraEnemyAttack && round===1 && !check(rules.extraEnemyAttack.ability) ? rules.extraEnemyAttack.enemy : null;
   let heroMiss=false,disarming=false;
-  let skipHero=Boolean(openingEnemyTurn),fleeing=false;
+  let skipHero=Boolean(openingEnemyTurn)||action==='misdirection',fleeing=false;
   if(action==='surrender'){
     if(!rules.surrender)throw new RangeError('Cannot surrender');
     route('surrendered',rules.surrender.section);return fight;
@@ -332,7 +364,7 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
         if (attack.check==='constitution') {
           values=dice(3,roll);total=values.reduce((sum,value)=>sum+value,0);hit=total>fight.hero.constitution;
         } else {
-          values=dice(3,roll);total=values.reduce((sum,value)=>sum+value,openingEnemyTurn?.ignoreDefence?0:-fight.hero.defenceBonus);hit=total>=attack.toHit+attackChange(index);
+          values=dice(3,roll);total=values.reduce((sum,value)=>sum+value,openingEnemyTurn?.ignoreDefence?0:-resourceDefence(fight,index,attack)+(rules.enemyAttackBonus??0));hit=total>=attack.toHit+attackChange(index);
         }
         previousHit=hit;
         if(hit&&rules.duplicates&&round<=rules.duplicates.rounds){
@@ -365,6 +397,12 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
         }
       }
     }
+  }
+  if(rules.groupAttack&&living(fight).length>=rules.groupAttack.minimumAlive){
+    const attack=rules.groupAttack,values=dice(3,roll),total=values.reduce((a,b)=>a+b,-resourceDefence(fight,null,attack)+(rules.enemyAttackBonus??0)),hit=total>=attack.toHit,result=hit?damage(attack.damage,roll):{dice:[],amount:0},lost=Math.min(fight.hero.hp,afterArmour(result.amount));
+    fight.hero.hp-=lost;fight.damageTaken+=lost;
+    fight.events.push({kind:'attack',side:'enemy',name:attack.name,dice:values,total,hit,damageDice:result.dice,damage:lost});
+    if(!fight.hero.hp){finish(fight,'loss');return fight;}
   }
   if(rules.engulf){
     state.engulfStreak=engulfDamage?(state.engulfStreak??0)+1:0;

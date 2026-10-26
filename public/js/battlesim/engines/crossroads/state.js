@@ -1,3 +1,5 @@
+import {resourceFields} from './resources.js';
+
 export function createCrossroadsState(definition, getContext) {
   function current() {
     const context = getContext();
@@ -19,6 +21,7 @@ export function createCrossroadsState(definition, getContext) {
       const fight = data.fight;
       if (fight && data.character) {
         data.character.hp = fight.status === 'active' && fight.rules.nonfatal ? fight.startingHp : fight.hero.hp;
+        for(const field of resourceFields(fight.rules.mechanics?.resources))data.character[field]=fight.hero[field];
         if (!fight.recorded && ['win','loss','draw'].includes(fight.status)) {
           fight.recorded = true;
           data.history.push({enemy:data.encounterName,outcome:fight.status,ts:Math.max(Date.now(),(data.history.at(-1)?.ts ?? 0)+1)});
