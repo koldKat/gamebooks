@@ -114,6 +114,19 @@ if (!baseline) {
     [...Array.from({length:6}, () => ({...base,type:'run_started'})), jobEntry], 'job-test');
   assert.ok(jobDay.includes('feed-entry--joblevel'), 'Job promotions remain outside collapsed run groups');
   const render = modules.get(resolve(root, 'feed/render.js')).namespace.renderFeedContents;
+  const news=(id,title,published,updated)=>({type:'announcement',id,title,body:'News body',completedAt:Date.parse(published),updatedAt:updated?Date.parse(updated):null});
+  const originalNews=[
+    news(901,'today-later','2026-10-02T11:30:00Z'),
+    news(902,'today-unchanged','2026-10-02T10:00:00Z'),
+    news(903,'today-edited','2026-10-02T09:00:00Z','2026-10-02T11:00:00Z'),
+    news(904,'yesterday-unchanged','2026-10-01T11:00:00Z'),
+    news(905,'yesterday-edited','2026-10-01T09:00:00Z','2026-10-02T12:00:00Z'),
+  ];
+  const newsHtml=render(originalNews,{title:'pinned-news',body:'Pinned body'},'').html;
+  const newsOrder=['pinned-news','today-later','today-edited','today-unchanged','yesterday-edited','yesterday-unchanged'];
+  for(let i=1;i<newsOrder.length;i++)assert.ok(newsHtml.indexOf(newsOrder[i-1])<newsHtml.indexOf(newsOrder[i]),'edited news rises only within its original day');
+  assert.equal(originalNews[2].completedAt,Date.parse('2026-10-02T09:00:00Z'),'rendering does not rewrite publication times');
+  assert.ok(newsHtml.indexOf('feed.day_yesterday')<newsHtml.indexOf('yesterday-edited'),'an older announcement stays under its original day heading');
   const renderDay = modules.get(resolve(root, 'feed/groups.js')).namespace.createDayRenderer();
   const creations = (kind, count, overrides = {}) => Array.from({ length: count }, (_, i) => ({
     ...base, username: 'Creator', parentBookId: null, parentBookName: null,

@@ -1250,8 +1250,11 @@ function createAnnouncement(title, body) {
 
 function updateAnnouncement(id, title, body) {
   const r = db.prepare(
-    'UPDATE announcements SET title = ?, body = ? WHERE id = ?'
-  ).run(title, body, id);
+    `UPDATE announcements SET
+       updated_at = CASE WHEN is_draft = 0 AND (title <> ? OR body <> ?)
+         THEN MAX(COALESCE(updated_at, 0) + 1, ?) ELSE updated_at END,
+       title = ?, body = ? WHERE id = ?`
+  ).run(title, body, Date.now(), title, body, id);
   if (r.changes === 0) return null;
   return db.prepare('SELECT * FROM announcements WHERE id = ?').get(id);
 }
@@ -1259,7 +1262,7 @@ function updateAnnouncement(id, title, body) {
 function publishAnnouncement(id) {
   const now = Math.floor(Date.now() / 1000);
   const r = db.prepare(
-    'UPDATE announcements SET is_draft = 0, published_at = ? WHERE id = ?'
+    'UPDATE announcements SET is_draft = 0, published_at = ?, updated_at = NULL WHERE id = ?'
   ).run(now, id);
   if (r.changes === 0) return null;
   return db.prepare('SELECT * FROM announcements WHERE id = ?').get(id);

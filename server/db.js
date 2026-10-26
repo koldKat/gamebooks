@@ -675,8 +675,25 @@ db.exec(`
     is_draft     INTEGER NOT NULL DEFAULT 1,
     pinned       INTEGER NOT NULL DEFAULT 0,
     created_at   INTEGER DEFAULT (strftime('%s', 'now')),
-    published_at INTEGER DEFAULT NULL
+    published_at INTEGER DEFAULT NULL,
+    updated_at   INTEGER DEFAULT NULL
   );
+`);
+
+if (!db.prepare('PRAGMA table_info(announcements)').all().some(column => column.name === 'updated_at')) {
+  db.exec('ALTER TABLE announcements ADD COLUMN updated_at INTEGER DEFAULT NULL');
+}
+// Release tools can edit content outside the admin route. Preserve the original
+// publication date while giving those edits the same feed ordering timestamp.
+db.exec(`
+  CREATE TRIGGER IF NOT EXISTS announcement_edited_at
+  AFTER UPDATE OF title, body ON announcements
+  WHEN NEW.is_draft = 0 AND (NEW.title IS NOT OLD.title OR NEW.body IS NOT OLD.body)
+    AND NEW.updated_at IS OLD.updated_at
+  BEGIN
+    UPDATE announcements SET updated_at = MAX(COALESCE(OLD.updated_at, 0) + 1,
+      CAST((julianday('now') - 2440587.5) * 86400000 AS INTEGER)) WHERE id = NEW.id;
+  END;
 `);
 
 db.exec(`

@@ -806,11 +806,11 @@ function getFeed() {
 
   // ── Announcements ─────────────────────────────────────────────────────────
   const annRows = db.prepare(
-    'SELECT id, title, body, published_at FROM announcements WHERE is_draft = 0 AND pinned = 0 AND published_at >= ?'
+    'SELECT id, title, body, published_at, updated_at FROM announcements WHERE is_draft = 0 AND pinned = 0 AND published_at >= ?'
   ).all(cutoffSec);
   for (const row of annRows) {
     entries.push({ type: 'announcement', id: row.id, title: row.title, body: row.body,
-      completedAt: row.published_at * 1000 });
+      completedAt: row.published_at * 1000, updatedAt: row.updated_at });
   }
 
   // Merge party run entries by party, book, and run index.
@@ -916,7 +916,7 @@ function getFeedVersion() {
     'SELECT COUNT(*) AS n, COALESCE(MAX(created_at), 0) AS m FROM users'
   ).get();
   const an = db.prepare(
-    'SELECT COUNT(*) AS n, COALESCE(MAX(published_at), 0) AS m FROM announcements WHERE is_draft = 0'
+    'SELECT COUNT(*) AS n, COALESCE(MAX(published_at), 0) AS m, COALESCE(SUM(updated_at), 0) AS u FROM announcements WHERE is_draft = 0'
   ).get();
   const pin = db.prepare(
     'SELECT id FROM announcements WHERE pinned = 1 AND is_draft = 0 LIMIT 1'
@@ -924,7 +924,7 @@ function getFeedVersion() {
   // Include the date in the fingerprint so Today/Yesterday labels refresh after midnight.
   return [
     jobs.n, jobs.m, xe.n, xe.m, us.n, us.m, us.p, sr.n, sr.s, sr.c,
-    ub.n, ub.m, uu.n, uu.m, an.n, an.m, pin?.id ?? 0,
+    ub.n, ub.m, uu.n, uu.m, an.n, an.m, an.u, pin?.id ?? 0,
     new Date().toISOString().slice(0, 10), _squireRevision,
   ].join(':');
 }

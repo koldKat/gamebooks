@@ -26,6 +26,9 @@ export function renderFeedContents(entries, pinned, feedHeaderHtml, emptyMessage
     if (label !== lastLabel) { groups.push({ label, key: new Date(e.completedAt).toDateString(), items: [] }); lastLabel = label; }
     groups[groups.length - 1].items.push(e);
   }
+  // Keep the original local-calendar day, then order edits within that day.
+  const activityTime = entry => entry.type === 'announcement' ? entry.updatedAt || entry.completedAt : entry.completedAt;
+  for (const group of groups) group.items.sort((a, b) => activityTime(b) - activityTime(a));
 
   // Use distinct public books for day-card covers; never expose private-book art.
   function _dayCovers(items) {
