@@ -1,0 +1,1793 @@
+{
+  "schemaVersion": 1,
+  "bookId": 1292,
+  "family": "crossroads",
+  "sourceSha256": "51c601529468b9708f3ba3c718368bce246d5c63a89d6faec914c2e0be321dcd",
+  "rosterComplete": true,
+  "expectedEncounterCount": 16,
+  "source": "Original Storm of Dust combat tables and instructions, with the two printed preparation variants. Instructional brigands excluded. Global inventory and equipment remain universal.",
+  "enemies": [
+    {
+      "key": "3-0",
+      "name": "Red Beard",
+      "attack": 10,
+      "defense": 9,
+      "hp": 12,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "3",
+          "label": "Red Beard / Blackbeard (§3)",
+          "enemies": [
+            {
+              "name": "Red Beard",
+              "hp": 12,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 10,
+                  "damage": {
+                    "dice": 1,
+                    "add": 3
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Blackbeard",
+              "hp": 10,
+              "toBeHit": 8,
+              "attacks": [
+                {
+                  "toHit": 9,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "12",
+            "lossSection": "90",
+            "mechanics": {
+              "enemies": [
+                {},
+                {
+                  "fromRound": 4
+                }
+              ]
+            },
+            "sourceNotes": [
+              "Use the combat rules to determine who wins the fight. Niall and Redbeard fight for three rounds before Black- beard joins in. RED BEARD To hit: 10 To be hit: 9 Hit points: 12 Damage with sword: 1 D6 + 3 BLACKBEARD To hit Niall: 9 To be hit: 8 Hit points: 10 Damage with knife: 1 D6 If Niall wins, turn to section 12. If he loses, turn to section 90."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine who wins the fight. Niall and Redbeard fight for three rounds before Black- beard joins in. RED BEARD To hit: 10 To be hit: 9 Hit points: 12 Damage with sword: 1 D6 + 3 BLACKBEARD To hit Niall: 9 To be hit: 8 Hit points: 10 Damage with knife: 1 D6 If Niall wins, turn to section 12. If he loses, turn to section 90."
+          ],
+          "sourcePages": [
+            59,
+            60,
+            61
+          ]
+        }
+      }
+    },
+    {
+      "key": "3-1",
+      "name": "Blackbeard",
+      "attack": 9,
+      "defense": 8,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "3",
+          "label": "Red Beard / Blackbeard (§3)",
+          "enemies": [
+            {
+              "name": "Red Beard",
+              "hp": 12,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 10,
+                  "damage": {
+                    "dice": 1,
+                    "add": 3
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Blackbeard",
+              "hp": 10,
+              "toBeHit": 8,
+              "attacks": [
+                {
+                  "toHit": 9,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "12",
+            "lossSection": "90",
+            "mechanics": {
+              "enemies": [
+                {},
+                {
+                  "fromRound": 4
+                }
+              ]
+            },
+            "sourceNotes": [
+              "Use the combat rules to determine who wins the fight. Niall and Redbeard fight for three rounds before Black- beard joins in. RED BEARD To hit: 10 To be hit: 9 Hit points: 12 Damage with sword: 1 D6 + 3 BLACKBEARD To hit Niall: 9 To be hit: 8 Hit points: 10 Damage with knife: 1 D6 If Niall wins, turn to section 12. If he loses, turn to section 90."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine who wins the fight. Niall and Redbeard fight for three rounds before Black- beard joins in. RED BEARD To hit: 10 To be hit: 9 Hit points: 12 Damage with sword: 1 D6 + 3 BLACKBEARD To hit Niall: 9 To be hit: 8 Hit points: 10 Damage with knife: 1 D6 If Niall wins, turn to section 12. If he loses, turn to section 90."
+          ],
+          "sourcePages": [
+            59,
+            60,
+            61
+          ]
+        }
+      }
+    },
+    {
+      "key": "5-0",
+      "name": "Lightbeard",
+      "attack": 10,
+      "defense": 9,
+      "hp": 12,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "5",
+          "label": "Lightbeard / Darkbeard (§5)",
+          "enemies": [
+            {
+              "name": "Lightbeard",
+              "hp": 12,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 10,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Darkbeard",
+              "hp": 10,
+              "toBeHit": 8,
+              "attacks": [
+                {
+                  "toHit": 9,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "4",
+            "lossSection": "89",
+            "attackGroups": [
+              [
+                0,
+                1
+              ]
+            ],
+            "mechanics": {},
+            "sourceNotes": [
+              "Lightbeard’s printed To Hit is 10 (12); the preset uses 10. Adjust the editable To Hit field if using the parenthetical value.",
+              "Use the combat rules' to determine the outcome of this fight. Because of Niall's speed, Lightbeard is not able to reach his sword and is forced to use his knife. If Niall defeats Lightbeard, Darkbeard awakens to carry on the fight. He attacks with his knife only, as he· is untrained with the sword. LIGHTBEARD To be hit: 9 Hit points: 12 To hit Niall: JO (12) Damage with · knife: 1 D6 DARKBEARD To be hit: 8 Hit points: 10 To hit Niall: 9 Damage with knife: 1 D6 If Niall wins, turn to section 4. If he loses, turn _to section 89."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules' to determine the outcome of this fight. Because of Niall's speed, Lightbeard is not able to reach his sword and is forced to use his knife. If Niall defeats Lightbeard, Darkbeard awakens to carry on the fight. He attacks with his knife only, as he· is untrained with the sword. LIGHTBEARD To be hit: 9 Hit points: 12 To hit Niall: JO (12) Damage with · knife: 1 D6 DARKBEARD To be hit: 8 Hit points: 10 To hit Niall: 9 Damage with knife: 1 D6 If Niall wins, turn to section 4. If he loses, turn _to section 89."
+          ],
+          "sourcePages": [
+            63,
+            64
+          ]
+        }
+      }
+    },
+    {
+      "key": "5-1",
+      "name": "Darkbeard",
+      "attack": 9,
+      "defense": 8,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "5",
+          "label": "Lightbeard / Darkbeard (§5)",
+          "enemies": [
+            {
+              "name": "Lightbeard",
+              "hp": 12,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 10,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Darkbeard",
+              "hp": 10,
+              "toBeHit": 8,
+              "attacks": [
+                {
+                  "toHit": 9,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "4",
+            "lossSection": "89",
+            "attackGroups": [
+              [
+                0,
+                1
+              ]
+            ],
+            "mechanics": {},
+            "sourceNotes": [
+              "Lightbeard’s printed To Hit is 10 (12); the preset uses 10. Adjust the editable To Hit field if using the parenthetical value.",
+              "Use the combat rules' to determine the outcome of this fight. Because of Niall's speed, Lightbeard is not able to reach his sword and is forced to use his knife. If Niall defeats Lightbeard, Darkbeard awakens to carry on the fight. He attacks with his knife only, as he· is untrained with the sword. LIGHTBEARD To be hit: 9 Hit points: 12 To hit Niall: JO (12) Damage with · knife: 1 D6 DARKBEARD To be hit: 8 Hit points: 10 To hit Niall: 9 Damage with knife: 1 D6 If Niall wins, turn to section 4. If he loses, turn _to section 89."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules' to determine the outcome of this fight. Because of Niall's speed, Lightbeard is not able to reach his sword and is forced to use his knife. If Niall defeats Lightbeard, Darkbeard awakens to carry on the fight. He attacks with his knife only, as he· is untrained with the sword. LIGHTBEARD To be hit: 9 Hit points: 12 To hit Niall: JO (12) Damage with · knife: 1 D6 DARKBEARD To be hit: 8 Hit points: 10 To hit Niall: 9 Damage with knife: 1 D6 If Niall wins, turn to section 4. If he loses, turn _to section 89."
+          ],
+          "sourcePages": [
+            63,
+            64
+          ]
+        }
+      }
+    },
+    {
+      "key": "25-0",
+      "name": "The Ghost Of Uther Pendragon",
+      "attack": 15,
+      "defense": 5,
+      "hp": 32,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "25",
+          "label": "The Ghost Of Uther Pendragon / The Horse (§25)",
+          "enemies": [
+            {
+              "name": "The Ghost Of Uther Pendragon",
+              "hp": 32,
+              "toBeHit": 5,
+              "attacks": [
+                {
+                  "toHit": 15,
+                  "damage": {
+                    "dice": 2,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "The Horse",
+              "hp": 58,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 3
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "26",
+            "lossSection": "91",
+            "mechanics": {
+              "mount": {
+                "rider": 0,
+                "mount": 1,
+                "hitChange": -3,
+                "attackChange": -1
+              },
+              "enemies": [
+                {},
+                {
+                  "attackAfterDeathOf": 0
+                }
+              ],
+              "fatigue": {
+                "ability": "constitution",
+                "enemy": 0,
+                "hitChange": 1,
+                "attackChange": -3
+              }
+            },
+            "sourceNotes": [
+              "The printed To Be Hit values are 5 for Uther and 12 for the horse. Either can be targeted; the horse attacks only after Uther is killed.",
+              "Use the combat rules to determine who wins the fight. To reflect the fact that the chase has tired Niall out, make a Constitution roll at the beginning of each round. If it succeeds, Niall fights normally. If it fails, decrease Uther's To Hit number by 3 and increase his To Be Hit number by 1. Remember to make this roll each round. The horse will not attack unless. Uther is killed. Uther will not dismount (which is why he is so difficult to hit). Niall can attack the horse instead of Uther. If the horse dies, decrease Uther's To Be Hit number by 3 and his To Hit number by 1 (it's easier to fight dismounted, but it's also easier to get hit). THE GHOST OF UTHER PENDRAGON To hit Niall: 15 To be hit: 5 Hit points: 32 Damage with sword: 2 D6-1 THE HORSE To hit Niall: 13 To be hit: 12 Hit points: 58 Damage with hooves: 1 D6 + 3 If Niall wins, turn to section 26. If Niall loses, turn to section 91."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine who wins the fight. To reflect the fact that the chase has tired Niall out, make a Constitution roll at the beginning of each round. If it succeeds, Niall fights normally. If it fails, decrease Uther's To Hit number by 3 and increase his To Be Hit number by 1. Remember to make this roll each round. The horse will not attack unless. Uther is killed. Uther will not dismount (which is why he is so difficult to hit). Niall can attack the horse instead of Uther. If the horse dies, decrease Uther's To Be Hit number by 3 and his To Hit number by 1 (it's easier to fight dismounted, but it's also easier to get hit). THE GHOST OF UTHER PENDRAGON To hit Niall: 15 To be hit: 5 Hit points: 32 Damage with sword: 2 D6-1 THE HORSE To hit Niall: 13 To be hit: 12 Hit points: 58 Damage with hooves: 1 D6 + 3 If Niall wins, turn to section 26. If Niall loses, turn to section 91."
+          ],
+          "sourcePages": [
+            89,
+            90
+          ]
+        }
+      }
+    },
+    {
+      "key": "25-1",
+      "name": "The Horse",
+      "attack": 13,
+      "defense": 12,
+      "hp": 58,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "25",
+          "label": "The Ghost Of Uther Pendragon / The Horse (§25)",
+          "enemies": [
+            {
+              "name": "The Ghost Of Uther Pendragon",
+              "hp": 32,
+              "toBeHit": 5,
+              "attacks": [
+                {
+                  "toHit": 15,
+                  "damage": {
+                    "dice": 2,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "The Horse",
+              "hp": 58,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 3
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "26",
+            "lossSection": "91",
+            "mechanics": {
+              "mount": {
+                "rider": 0,
+                "mount": 1,
+                "hitChange": -3,
+                "attackChange": -1
+              },
+              "enemies": [
+                {},
+                {
+                  "attackAfterDeathOf": 0
+                }
+              ],
+              "fatigue": {
+                "ability": "constitution",
+                "enemy": 0,
+                "hitChange": 1,
+                "attackChange": -3
+              }
+            },
+            "sourceNotes": [
+              "The printed To Be Hit values are 5 for Uther and 12 for the horse. Either can be targeted; the horse attacks only after Uther is killed.",
+              "Use the combat rules to determine who wins the fight. To reflect the fact that the chase has tired Niall out, make a Constitution roll at the beginning of each round. If it succeeds, Niall fights normally. If it fails, decrease Uther's To Hit number by 3 and increase his To Be Hit number by 1. Remember to make this roll each round. The horse will not attack unless. Uther is killed. Uther will not dismount (which is why he is so difficult to hit). Niall can attack the horse instead of Uther. If the horse dies, decrease Uther's To Be Hit number by 3 and his To Hit number by 1 (it's easier to fight dismounted, but it's also easier to get hit). THE GHOST OF UTHER PENDRAGON To hit Niall: 15 To be hit: 5 Hit points: 32 Damage with sword: 2 D6-1 THE HORSE To hit Niall: 13 To be hit: 12 Hit points: 58 Damage with hooves: 1 D6 + 3 If Niall wins, turn to section 26. If Niall loses, turn to section 91."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine who wins the fight. To reflect the fact that the chase has tired Niall out, make a Constitution roll at the beginning of each round. If it succeeds, Niall fights normally. If it fails, decrease Uther's To Hit number by 3 and increase his To Be Hit number by 1. Remember to make this roll each round. The horse will not attack unless. Uther is killed. Uther will not dismount (which is why he is so difficult to hit). Niall can attack the horse instead of Uther. If the horse dies, decrease Uther's To Be Hit number by 3 and his To Hit number by 1 (it's easier to fight dismounted, but it's also easier to get hit). THE GHOST OF UTHER PENDRAGON To hit Niall: 15 To be hit: 5 Hit points: 32 Damage with sword: 2 D6-1 THE HORSE To hit Niall: 13 To be hit: 12 Hit points: 58 Damage with hooves: 1 D6 + 3 If Niall wins, turn to section 26. If Niall loses, turn to section 91."
+          ],
+          "sourcePages": [
+            89,
+            90
+          ]
+        }
+      }
+    },
+    {
+      "key": "28-0",
+      "name": "The Ghost Of Uther Pendragon",
+      "attack": 14,
+      "defense": 4,
+      "hp": 32,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "28",
+          "label": "The Ghost Of Uther Pendragon / The Horse (§28)",
+          "enemies": [
+            {
+              "name": "The Ghost Of Uther Pendragon",
+              "hp": 32,
+              "toBeHit": 4,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 2,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "The Horse",
+              "hp": 58,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 3
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "26",
+            "lossSection": "91",
+            "mechanics": {
+              "mount": {
+                "rider": 0,
+                "mount": 1,
+                "hitChange": -3,
+                "attackChange": -1
+              },
+              "enemies": [
+                {},
+                {
+                  "attackAfterDeathOf": 0
+                }
+              ],
+              "charge": {
+                "ability": "dexterity",
+                "failedDamageMultiplier": 2
+              }
+            },
+            "sourceNotes": [
+              "The printed To Be Hit values are 4 for Uther and 12 for the horse. Either can be targeted; the horse attacks only after Uther is killed.",
+              "Use the combat rules to determine who wins the fight. For the first round only, to simulate the charge, make a Dexterity roll. If it fails, Niall takes double damage that round. If the roll succeeds, Niall jumps out of the way and takes no damage. In this case, make a second Dexterity roll. If this one succeeds, Niall gets a free attack this next round. The horse will not attack unless Uther is killed. Uther will not dismount (which is why he is so difficult to hit). Niall can attack the horse instead of Uther. If the horse dies, decrease Uther's To Be Hit number by 3 and his To Hit number by 1 (it's easier to fight dismounted, but it's also easier to get hit). THE GHOST OF UTHER PENDRAGON To hit Niall: 14 To, be hit: 4 Hit points: 32 Damage with sword: 2 D6- 1 THE HORSE To hit Niall: 13 To be hit: 12 Hit points: 58 Damage with hooves: 1 D6 + 3 If Niall wins, turn to section 26. If he loses, turn to section 91."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine who wins the fight. For the first round only, to simulate the charge, make a Dexterity roll. If it fails, Niall takes double damage that round. If the roll succeeds, Niall jumps out of the way and takes no damage. In this case, make a second Dexterity roll. If this one succeeds, Niall gets a free attack this next round. The horse will not attack unless Uther is killed. Uther will not dismount (which is why he is so difficult to hit). Niall can attack the horse instead of Uther. If the horse dies, decrease Uther's To Be Hit number by 3 and his To Hit number by 1 (it's easier to fight dismounted, but it's also easier to get hit). THE GHOST OF UTHER PENDRAGON To hit Niall: 14 To, be hit: 4 Hit points: 32 Damage with sword: 2 D6- 1 THE HORSE To hit Niall: 13 To be hit: 12 Hit points: 58 Damage with hooves: 1 D6 + 3 If Niall wins, turn to section 26. If he loses, turn to section 91."
+          ],
+          "sourcePages": [
+            96
+          ]
+        }
+      }
+    },
+    {
+      "key": "28-1",
+      "name": "The Horse",
+      "attack": 13,
+      "defense": 12,
+      "hp": 58,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "28",
+          "label": "The Ghost Of Uther Pendragon / The Horse (§28)",
+          "enemies": [
+            {
+              "name": "The Ghost Of Uther Pendragon",
+              "hp": 32,
+              "toBeHit": 4,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 2,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "The Horse",
+              "hp": 58,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 3
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "26",
+            "lossSection": "91",
+            "mechanics": {
+              "mount": {
+                "rider": 0,
+                "mount": 1,
+                "hitChange": -3,
+                "attackChange": -1
+              },
+              "enemies": [
+                {},
+                {
+                  "attackAfterDeathOf": 0
+                }
+              ],
+              "charge": {
+                "ability": "dexterity",
+                "failedDamageMultiplier": 2
+              }
+            },
+            "sourceNotes": [
+              "The printed To Be Hit values are 4 for Uther and 12 for the horse. Either can be targeted; the horse attacks only after Uther is killed.",
+              "Use the combat rules to determine who wins the fight. For the first round only, to simulate the charge, make a Dexterity roll. If it fails, Niall takes double damage that round. If the roll succeeds, Niall jumps out of the way and takes no damage. In this case, make a second Dexterity roll. If this one succeeds, Niall gets a free attack this next round. The horse will not attack unless Uther is killed. Uther will not dismount (which is why he is so difficult to hit). Niall can attack the horse instead of Uther. If the horse dies, decrease Uther's To Be Hit number by 3 and his To Hit number by 1 (it's easier to fight dismounted, but it's also easier to get hit). THE GHOST OF UTHER PENDRAGON To hit Niall: 14 To, be hit: 4 Hit points: 32 Damage with sword: 2 D6- 1 THE HORSE To hit Niall: 13 To be hit: 12 Hit points: 58 Damage with hooves: 1 D6 + 3 If Niall wins, turn to section 26. If he loses, turn to section 91."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine who wins the fight. For the first round only, to simulate the charge, make a Dexterity roll. If it fails, Niall takes double damage that round. If the roll succeeds, Niall jumps out of the way and takes no damage. In this case, make a second Dexterity roll. If this one succeeds, Niall gets a free attack this next round. The horse will not attack unless Uther is killed. Uther will not dismount (which is why he is so difficult to hit). Niall can attack the horse instead of Uther. If the horse dies, decrease Uther's To Be Hit number by 3 and his To Hit number by 1 (it's easier to fight dismounted, but it's also easier to get hit). THE GHOST OF UTHER PENDRAGON To hit Niall: 14 To, be hit: 4 Hit points: 32 Damage with sword: 2 D6- 1 THE HORSE To hit Niall: 13 To be hit: 12 Hit points: 58 Damage with hooves: 1 D6 + 3 If Niall wins, turn to section 26. If he loses, turn to section 91."
+          ],
+          "sourcePages": [
+            96
+          ]
+        }
+      }
+    },
+    {
+      "key": "34-0",
+      "name": "The Man-Bear (And Body)",
+      "attack": 12,
+      "defense": 9,
+      "hp": 65,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "34",
+          "label": "Man-bear after the lightning bolts (§34 → §32 → §36)",
+          "enemies": [
+            {
+              "name": "The Man-Bear (And Body)",
+              "hp": 65,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 12,
+                  "damage": {
+                    "dice": 1,
+                    "add": 2
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "40",
+            "lossSection": "29",
+            "mechanics": {
+              "ally": {
+                "name": "The body",
+                "enemy": 0,
+                "ability": "wisdom",
+                "delay": 2,
+                "damageBonus": 1,
+                "absorbOn": [
+                  1,
+                  2
+                ]
+              },
+              "freeRounds": {
+                "threshold": 3,
+                "low": 2,
+                "high": 3
+              }
+            },
+            "sourceNotes": [
+              "The bolts have stunned the man-bear and damaged it as well. During the combat, described in section 32 and section 36, Niall gets two or three free rounds before the man-bear fights back. Roll 1 D6. !(If you roll 1-3, he gets two swings; on a 4-6, he gets three. After the free rounds, combat continues normally. Turn to section 32.",
+              "During combat with the man-bear in section 36, the body eventually joins the fight on Niall's side. At the start of each round, make a Wisdom (Luck) roll. If it succeeds, the body begins fighting two rounds later. For example', if the Wisdom roll succeeds at the start of the second round, the body joins the fight at the start of the fourth round. The body enters the fight bearing a gleaming sword. Use the man-bear's To Hit and To Be Hit numbers for attacks by the body 'as well as by Niall. (Note that these numbers may already be modified.) The body does one more point of damage than Niall. Both Niall and the body may attack once each round. Once the body joins the fight, roll 1 d6 before each attack by the man-bear. On a 1 or 2, it attacks the body. On a 3-6 it attacks Niall. The body cannot be killed (it is already dead), and therefore has no hit points. It helps Niall by attacking the man-bear and by absorbing some attacks. Turn to section 36.",
+              "Use the combat rules to determine who wins the fight. The man-bear fights to the death. THE MAN-BEAR (AND BODY) To hit Niall: 12 To be hit: 9 Hit points: 65 Damage with claws: 1 D6 + 2 If Niall wins, turn to section 40. If he loses, turn to section 29."
+            ]
+          },
+          "printedRules": [
+            "The bolts have stunned the man-bear and damaged it as well. During the combat, described in section 32 and section 36, Niall gets two or three free rounds before the man-bear fights back. Roll 1 D6. !(If you roll 1-3, he gets two swings; on a 4-6, he gets three. After the free rounds, combat continues normally. Turn to section 32.",
+            "During combat with the man-bear in section 36, the body eventually joins the fight on Niall's side. At the start of each round, make a Wisdom (Luck) roll. If it succeeds, the body begins fighting two rounds later. For example', if the Wisdom roll succeeds at the start of the second round, the body joins the fight at the start of the fourth round. The body enters the fight bearing a gleaming sword. Use the man-bear's To Hit and To Be Hit numbers for attacks by the body 'as well as by Niall. (Note that these numbers may already be modified.) The body does one more point of damage than Niall. Both Niall and the body may attack once each round. Once the body joins the fight, roll 1 d6 before each attack by the man-bear. On a 1 or 2, it attacks the body. On a 3-6 it attacks Niall. The body cannot be killed (it is already dead), and therefore has no hit points. It helps Niall by attacking the man-bear and by absorbing some attacks. Turn to section 36.",
+            "Use the combat rules to determine who wins the fight. The man-bear fights to the death. THE MAN-BEAR (AND BODY) To hit Niall: 12 To be hit: 9 Hit points: 65 Damage with claws: 1 D6 + 2 If Niall wins, turn to section 40. If he loses, turn to section 29."
+          ],
+          "sourcePages": [
+            102,
+            105
+          ]
+        }
+      }
+    },
+    {
+      "key": "36-0",
+      "name": "The Man-Bear (And Body)",
+      "attack": 12,
+      "defense": 9,
+      "hp": 65,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "36",
+          "label": "The Man-Bear (And Body) (§36)",
+          "enemies": [
+            {
+              "name": "The Man-Bear (And Body)",
+              "hp": 65,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 12,
+                  "damage": {
+                    "dice": 1,
+                    "add": 2
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "40",
+            "lossSection": "29",
+            "mechanics": {
+              "ally": {
+                "name": "The body",
+                "enemy": 0,
+                "ability": "wisdom",
+                "delay": 2,
+                "damageBonus": 1,
+                "absorbOn": [
+                  1,
+                  2
+                ]
+              }
+            },
+            "sourceNotes": [
+              "During combat with the man-bear in section 36, the body eventually joins the fight on Niall's side. At the start of each round, make a Wisdom (Luck) roll. If it succeeds, the body begins fighting two rounds later. For example', if the Wisdom roll succeeds at the start of the second round, the body joins the fight at the start of the fourth round. The body enters the fight bearing a gleaming sword. Use the man-bear's To Hit and To Be Hit numbers for attacks by the body 'as well as by Niall. (Note that these numbers may already be modified.) The body does one more point of damage than Niall. Both Niall and the body may attack once each round. Once the body joins the fight, roll 1 d6 before each attack by the man-bear. On a 1 or 2, it attacks the body. On a 3-6 it attacks Niall. The body cannot be killed (it is already dead), and therefore has no hit points. It helps Niall by attacking the man-bear and by absorbing some attacks. Turn to section 36.",
+              "Use the combat rules to determine who wins the fight. The man-bear fights to the death. THE MAN-BEAR (AND BODY) To hit Niall: 12 To be hit: 9 Hit points: 65 Damage with claws: 1 D6 + 2 If Niall wins, turn to section 40. If he loses, turn to section 29."
+            ]
+          },
+          "printedRules": [
+            "During combat with the man-bear in section 36, the body eventually joins the fight on Niall's side. At the start of each round, make a Wisdom (Luck) roll. If it succeeds, the body begins fighting two rounds later. For example', if the Wisdom roll succeeds at the start of the second round, the body joins the fight at the start of the fourth round. The body enters the fight bearing a gleaming sword. Use the man-bear's To Hit and To Be Hit numbers for attacks by the body 'as well as by Niall. (Note that these numbers may already be modified.) The body does one more point of damage than Niall. Both Niall and the body may attack once each round. Once the body joins the fight, roll 1 d6 before each attack by the man-bear. On a 1 or 2, it attacks the body. On a 3-6 it attacks Niall. The body cannot be killed (it is already dead), and therefore has no hit points. It helps Niall by attacking the man-bear and by absorbing some attacks. Turn to section 36.",
+            "Use the combat rules to determine who wins the fight. The man-bear fights to the death. THE MAN-BEAR (AND BODY) To hit Niall: 12 To be hit: 9 Hit points: 65 Damage with claws: 1 D6 + 2 If Niall wins, turn to section 40. If he loses, turn to section 29."
+          ],
+          "sourcePages": [
+            105
+          ]
+        }
+      }
+    },
+    {
+      "key": "38-0",
+      "name": "The Man-Bear",
+      "attack": 12,
+      "defense": 9,
+      "hp": 65,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "38",
+          "label": "The Man-Bear (§38)",
+          "enemies": [
+            {
+              "name": "The Man-Bear",
+              "hp": 65,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 12,
+                  "damage": {
+                    "dice": 1,
+                    "add": 2
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "35",
+            "lossSection": "92",
+            "mechanics": {},
+            "sourceNotes": [
+              "Use the combat rules to determine who wins the fight. The man-bear will fight to the death. THE MAN-BEAR To be hit: 9 Hit points: 65 · To hit Niall: 12 Damage with claws: 1 D6 + 2 If Niall wins, turn to section 35. If he loses, turn to sectiOn 9 2."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine who wins the fight. The man-bear will fight to the death. THE MAN-BEAR To be hit: 9 Hit points: 65 · To hit Niall: 12 Damage with claws: 1 D6 + 2 If Niall wins, turn to section 35. If he loses, turn to sectiOn 9 2."
+          ],
+          "sourcePages": [
+            106
+          ]
+        }
+      }
+    },
+    {
+      "key": "42-0",
+      "name": "The Horseman",
+      "attack": 13,
+      "defense": 5,
+      "hp": 48,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "42",
+          "label": "The Horseman (§42)",
+          "enemies": [
+            {
+              "name": "The Horseman",
+              "hp": 48,
+              "toBeHit": 5,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 4
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "52",
+            "lossSection": "29",
+            "mechanics": {
+              "enemies": [
+                {
+                  "attackEvery": 2,
+                  "firstAttackRound": 1
+                }
+              ],
+              "blindness": {
+                "enemy": 0,
+                "damage": 10,
+                "avoidAbility": "dexterity",
+                "continueAbility": "constitution",
+                "lossSection": "56"
+              }
+            },
+            "sourceNotes": [
+              "Use the combat rules to determine the winner. The horseman attacks with his whip only. He does not use the horse to kick, trample, or charge. Mael[ does not enter the battle. Niall can damage the horseman only with his sword. He .cannot damage the horse at all. THE HORSEMAN To be hit: 5 Hit points: 48 To hit Niall: 13 Damage with whip: 1 D6 + 4 The horseman gets one crack of the whip every two rounds beginning _with the first round. If, in any round, the horseman obtains a damage result of 10 (rolls a 6), make a Dexterity roll. If it succeeds, Niall ducks under the whip and takes normal damage. If it fails, Niall is struck in the eyes. In that case, Niall must make a Constitution roll each round thereafter. If the Constitution roll succeeds, Niall fights normally for that round. If the roll fails in any round, turn to section 56. If Niall defeats the horseman, turn to section 52 . . If Niall is defeated, turn to section 29."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine the winner. The horseman attacks with his whip only. He does not use the horse to kick, trample, or charge. Mael[ does not enter the battle. Niall can damage the horseman only with his sword. He .cannot damage the horse at all. THE HORSEMAN To be hit: 5 Hit points: 48 To hit Niall: 13 Damage with whip: 1 D6 + 4 The horseman gets one crack of the whip every two rounds beginning _with the first round. If, in any round, the horseman obtains a damage result of 10 (rolls a 6), make a Dexterity roll. If it succeeds, Niall ducks under the whip and takes normal damage. If it fails, Niall is struck in the eyes. In that case, Niall must make a Constitution roll each round thereafter. If the Constitution roll succeeds, Niall fights normally for that round. If the roll fails in any round, turn to section 56. If Niall defeats the horseman, turn to section 52 . . If Niall is defeated, turn to section 29."
+          ],
+          "sourcePages": [
+            116,
+            117
+          ]
+        }
+      }
+    },
+    {
+      "key": "49-0",
+      "name": "The Horseman",
+      "attack": 13,
+      "defense": 5,
+      "hp": 48,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "49",
+          "label": "Horseman with the opening sword strike (§49 → §50)",
+          "enemies": [
+            {
+              "name": "The Horseman",
+              "hp": 48,
+              "toBeHit": 5,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 4
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "54",
+            "lossSection": "29",
+            "mechanics": {
+              "enemies": [
+                {
+                  "attackEvery": 2,
+                  "firstAttackRound": 1
+                }
+              ],
+              "blindness": {
+                "enemy": 0,
+                "damage": 10,
+                "avoidAbility": "dexterity",
+                "continueAbility": "constitution",
+                "lossSection": "56"
+              },
+              "opening": {
+                "enemy": 0
+              }
+            },
+            "sourceNotes": [
+              "Niall leaps toward the mounted figure, drawing his sword as he runs. The lash of the whip cracks above him, but he manages to avoid it. Suddenly the black horse rears, and Niall strikes at it. His sword passes through it. Frightened and desperate, Niall raises his sword above his head and swings at the horse's rider. This time the sword strikes something, but it is not nearly the blow it should have been. The horse rears again.- and Niall jumps aside to avoid its hooves. He sees the whip rise in the air once more, and he braces for its sting. Roll for damage from Niall's sword on the horseman. Then turn to section 50 and continue the combat.",
+              "Use the combat rules to determine the winner. The horseman attacks with his whip only. He does not use the horse to kick, trample, or charge. No matter where Mael is, he does not enter the battle. Niall can damage the horseman only with his sword. He cannot damage the horse at all. THE HORSEMAN To be hit: 5 Hit points: 48 To hit Niall: 13 Damage with whip: 1 D6+4 The horseman gets one crack of the whip every two rounds beginning with the first round. If, in any round, the horseman obtains a damage result of 10 (rolls a 6), make a Dexterity roll. If it succeeds, Niall ducks under the whip and takes normal damage. If it fails, Niall is struck in the eyes. In that case, Niall must make a Constitution roll each round thereafter. If the Constitu- tion roll succeeds, Niall fights normally for that round. If the roll fails in any round, turn to section 56. If Niall defeats the' horseman, turn to section 54. If Niall is defeated, turn to section 29."
+            ]
+          },
+          "printedRules": [
+            "Niall leaps toward the mounted figure, drawing his sword as he runs. The lash of the whip cracks above him, but he manages to avoid it. Suddenly the black horse rears, and Niall strikes at it. His sword passes through it. Frightened and desperate, Niall raises his sword above his head and swings at the horse's rider. This time the sword strikes something, but it is not nearly the blow it should have been. The horse rears again.- and Niall jumps aside to avoid its hooves. He sees the whip rise in the air once more, and he braces for its sting. Roll for damage from Niall's sword on the horseman. Then turn to section 50 and continue the combat.",
+            "Use the combat rules to determine the winner. The horseman attacks with his whip only. He does not use the horse to kick, trample, or charge. No matter where Mael is, he does not enter the battle. Niall can damage the horseman only with his sword. He cannot damage the horse at all. THE HORSEMAN To be hit: 5 Hit points: 48 To hit Niall: 13 Damage with whip: 1 D6+4 The horseman gets one crack of the whip every two rounds beginning with the first round. If, in any round, the horseman obtains a damage result of 10 (rolls a 6), make a Dexterity roll. If it succeeds, Niall ducks under the whip and takes normal damage. If it fails, Niall is struck in the eyes. In that case, Niall must make a Constitution roll each round thereafter. If the Constitu- tion roll succeeds, Niall fights normally for that round. If the roll fails in any round, turn to section 56. If Niall defeats the' horseman, turn to section 54. If Niall is defeated, turn to section 29."
+          ],
+          "sourcePages": [
+            142,
+            143
+          ]
+        }
+      }
+    },
+    {
+      "key": "50-0",
+      "name": "The Horseman",
+      "attack": 13,
+      "defense": 5,
+      "hp": 48,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "50",
+          "label": "The Horseman (§50)",
+          "enemies": [
+            {
+              "name": "The Horseman",
+              "hp": 48,
+              "toBeHit": 5,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 4
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "54",
+            "lossSection": "29",
+            "mechanics": {
+              "enemies": [
+                {
+                  "attackEvery": 2,
+                  "firstAttackRound": 1
+                }
+              ],
+              "blindness": {
+                "enemy": 0,
+                "damage": 10,
+                "avoidAbility": "dexterity",
+                "continueAbility": "constitution",
+                "lossSection": "56"
+              }
+            },
+            "sourceNotes": [
+              "Use the combat rules to determine the winner. The horseman attacks with his whip only. He does not use the horse to kick, trample, or charge. No matter where Mael is, he does not enter the battle. Niall can damage the horseman only with his sword. He cannot damage the horse at all. THE HORSEMAN To be hit: 5 Hit points: 48 To hit Niall: 13 Damage with whip: 1 D6+4 The horseman gets one crack of the whip every two rounds beginning with the first round. If, in any round, the horseman obtains a damage result of 10 (rolls a 6), make a Dexterity roll. If it succeeds, Niall ducks under the whip and takes normal damage. If it fails, Niall is struck in the eyes. In that case, Niall must make a Constitution roll each round thereafter. If the Constitu- tion roll succeeds, Niall fights normally for that round. If the roll fails in any round, turn to section 56. If Niall defeats the' horseman, turn to section 54. If Niall is defeated, turn to section 29."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine the winner. The horseman attacks with his whip only. He does not use the horse to kick, trample, or charge. No matter where Mael is, he does not enter the battle. Niall can damage the horseman only with his sword. He cannot damage the horse at all. THE HORSEMAN To be hit: 5 Hit points: 48 To hit Niall: 13 Damage with whip: 1 D6+4 The horseman gets one crack of the whip every two rounds beginning with the first round. If, in any round, the horseman obtains a damage result of 10 (rolls a 6), make a Dexterity roll. If it succeeds, Niall ducks under the whip and takes normal damage. If it fails, Niall is struck in the eyes. In that case, Niall must make a Constitution roll each round thereafter. If the Constitu- tion roll succeeds, Niall fights normally for that round. If the roll fails in any round, turn to section 56. If Niall defeats the' horseman, turn to section 54. If Niall is defeated, turn to section 29."
+          ],
+          "sourcePages": [
+            142,
+            143
+          ]
+        }
+      }
+    },
+    {
+      "key": "53-0",
+      "name": "The Horseman",
+      "attack": 13,
+      "defense": 5,
+      "hp": 48,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "53",
+          "label": "The Horseman (§53)",
+          "enemies": [
+            {
+              "name": "The Horseman",
+              "hp": 48,
+              "toBeHit": 5,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 4
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "52",
+            "lossSection": "29",
+            "mechanics": {
+              "enemies": [
+                {
+                  "attackEvery": 2,
+                  "firstAttackRound": 1
+                }
+              ],
+              "blindness": {
+                "enemy": 0,
+                "damage": 10,
+                "avoidAbility": "dexterity",
+                "continueAbility": "constitution",
+                "lossSection": "56"
+              },
+              "extraEnemyAttack": {
+                "enemy": 0,
+                "ability": "dexterity"
+              }
+            },
+            "sourceNotes": [
+              "Use the combat rules to determine the winner. The horseman attacks with a whip only. He .does not use the horse to kick, trample, or charge. Mael does not enter the battle. Niall can damage the horseman only with his sword. He cannot damage the horse at all. THE HORSEMAN ( To be hit: 5 Hit points: 48 To hit Niall: 13 Damage with whip: 1 D6+4 The horseman gets one crack of the whip every two rounds beginning with the first round. For the first round, make a Dexterity roll. If it succeeds, Niall fights normally this round. If it fails, the horseman gets an extra attack this round. If, in any round, the horseman obtains a damage result of 10 (rolls a 6), make a Dexterity roll. If it succeeds, Niall ducks under the whip and takes normal damage. If it fails, Niall is struck in the eyes. In that case, Niall must make a Constitution roll each round thereafter. If the Constitution roll succeeds, Niall fights normally for that round. If the roll fails in any round, turn to section 56. If Niall defeats the horseman, turn to section 52. If Niall is defeated, turn to section 29."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine the winner. The horseman attacks with a whip only. He .does not use the horse to kick, trample, or charge. Mael does not enter the battle. Niall can damage the horseman only with his sword. He cannot damage the horse at all. THE HORSEMAN ( To be hit: 5 Hit points: 48 To hit Niall: 13 Damage with whip: 1 D6+4 The horseman gets one crack of the whip every two rounds beginning with the first round. For the first round, make a Dexterity roll. If it succeeds, Niall fights normally this round. If it fails, the horseman gets an extra attack this round. If, in any round, the horseman obtains a damage result of 10 (rolls a 6), make a Dexterity roll. If it succeeds, Niall ducks under the whip and takes normal damage. If it fails, Niall is struck in the eyes. In that case, Niall must make a Constitution roll each round thereafter. If the Constitution roll succeeds, Niall fights normally for that round. If the roll fails in any round, turn to section 56. If Niall defeats the horseman, turn to section 52. If Niall is defeated, turn to section 29."
+          ],
+          "sourcePages": [
+            149,
+            150
+          ]
+        }
+      }
+    },
+    {
+      "key": "63-0",
+      "name": "Morrigan",
+      "attack": 7,
+      "defense": 13,
+      "hp": 12,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "63",
+          "label": "Morrigan (§63)",
+          "enemies": [
+            {
+              "name": "Morrigan",
+              "hp": 12,
+              "toBeHit": 13,
+              "attacks": [
+                {
+                  "toHit": 7,
+                  "damage": {
+                    "dice": 1,
+                    "add": 1
+                  },
+                  "when": "otherwise"
+                },
+                {
+                  "toHit": 7,
+                  "damage": {
+                    "dice": 2,
+                    "add": 0
+                  },
+                  "when": "heroMiss"
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "71",
+            "lossSection": "29",
+            "mechanics": {
+              "enemies": [
+                {
+                  "firstAttackRound": 2
+                }
+              ]
+            },
+            "sourceNotes": [
+              "Use the combat rules to determine who wins the fight. MORRIGAN To hit Niall: 7 To be hit: 13 Hit points: 12 Damage with knife: 1 D6 + 1; damage with magic: 2 D6 Because Morrigan 's back is turned, she gets no attack the first round. Morrigan can only use her magic when she has time to concentrate. Therefore, she attacks magically only in rounds following a failed attack by Niall . .If Niall wins, turn to section 71. If he loses, turn to section 29."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine who wins the fight. MORRIGAN To hit Niall: 7 To be hit: 13 Hit points: 12 Damage with knife: 1 D6 + 1; damage with magic: 2 D6 Because Morrigan 's back is turned, she gets no attack the first round. Morrigan can only use her magic when she has time to concentrate. Therefore, she attacks magically only in rounds following a failed attack by Niall . .If Niall wins, turn to section 71. If he loses, turn to section 29."
+          ],
+          "sourcePages": [
+            179
+          ]
+        }
+      }
+    },
+    {
+      "key": "74-0",
+      "name": "Mael Mac Ronan",
+      "attack": 14,
+      "defense": 9,
+      "hp": 29,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": "74",
+          "label": "Mael Mac Ronan / Starkad The Dane / Veleda (§74)",
+          "enemies": [
+            {
+              "name": "Mael Mac Ronan",
+              "hp": 29,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 2,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Starkad The Dane",
+              "hp": 38,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 2,
+                    "add": 5
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Veleda",
+              "hp": 17,
+              "toBeHit": 8,
+              "attacks": [
+                {
+                  "check": "constitution",
+                  "damage": {
+                    "dice": 2,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "73",
+            "lossSection": "29",
+            "mechanics": {
+              "enemies": [
+                {},
+                {},
+                {
+                  "afterDeathOf": [
+                    0,
+                    1
+                  ],
+                  "delay": 1
+                }
+              ]
+            },
+            "sourceNotes": [
+              "Use the combat rules to determine the winner. MAEL MAC RONAN To hit Niall: 14 To be hit: 9 Hit points: 29 Damage with sword: 2 D6 + 1 STARKAD THE DANE To hit Niall: 13 To be hit: 10 Hit points: 38 Damage with axe: 2 D6 + 5 VELEDA To hit Niall: Make a Constitution roll To Be Hit: 8 Hit points: 17 Damage with magic: 2 D6 per round Both men are fighting to the death. If one of them dies, the woman joins the battle, using magic only, beginning the very next round. To determine if she hits with magic, make a Constitution roll each round. If it succeeds, she does not hit that round; if it fails, she does. If Niall wins, turn to section 73. If he loses, turn to section 29."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine the winner. MAEL MAC RONAN To hit Niall: 14 To be hit: 9 Hit points: 29 Damage with sword: 2 D6 + 1 STARKAD THE DANE To hit Niall: 13 To be hit: 10 Hit points: 38 Damage with axe: 2 D6 + 5 VELEDA To hit Niall: Make a Constitution roll To Be Hit: 8 Hit points: 17 Damage with magic: 2 D6 per round Both men are fighting to the death. If one of them dies, the woman joins the battle, using magic only, beginning the very next round. To determine if she hits with magic, make a Constitution roll each round. If it succeeds, she does not hit that round; if it fails, she does. If Niall wins, turn to section 73. If he loses, turn to section 29."
+          ],
+          "sourcePages": [
+            200,
+            201,
+            202
+          ]
+        }
+      }
+    },
+    {
+      "key": "74-1",
+      "name": "Starkad The Dane",
+      "attack": 13,
+      "defense": 10,
+      "hp": 38,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": "74",
+          "label": "Mael Mac Ronan / Starkad The Dane / Veleda (§74)",
+          "enemies": [
+            {
+              "name": "Mael Mac Ronan",
+              "hp": 29,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 2,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Starkad The Dane",
+              "hp": 38,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 2,
+                    "add": 5
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Veleda",
+              "hp": 17,
+              "toBeHit": 8,
+              "attacks": [
+                {
+                  "check": "constitution",
+                  "damage": {
+                    "dice": 2,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "73",
+            "lossSection": "29",
+            "mechanics": {
+              "enemies": [
+                {},
+                {},
+                {
+                  "afterDeathOf": [
+                    0,
+                    1
+                  ],
+                  "delay": 1
+                }
+              ]
+            },
+            "sourceNotes": [
+              "Use the combat rules to determine the winner. MAEL MAC RONAN To hit Niall: 14 To be hit: 9 Hit points: 29 Damage with sword: 2 D6 + 1 STARKAD THE DANE To hit Niall: 13 To be hit: 10 Hit points: 38 Damage with axe: 2 D6 + 5 VELEDA To hit Niall: Make a Constitution roll To Be Hit: 8 Hit points: 17 Damage with magic: 2 D6 per round Both men are fighting to the death. If one of them dies, the woman joins the battle, using magic only, beginning the very next round. To determine if she hits with magic, make a Constitution roll each round. If it succeeds, she does not hit that round; if it fails, she does. If Niall wins, turn to section 73. If he loses, turn to section 29."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine the winner. MAEL MAC RONAN To hit Niall: 14 To be hit: 9 Hit points: 29 Damage with sword: 2 D6 + 1 STARKAD THE DANE To hit Niall: 13 To be hit: 10 Hit points: 38 Damage with axe: 2 D6 + 5 VELEDA To hit Niall: Make a Constitution roll To Be Hit: 8 Hit points: 17 Damage with magic: 2 D6 per round Both men are fighting to the death. If one of them dies, the woman joins the battle, using magic only, beginning the very next round. To determine if she hits with magic, make a Constitution roll each round. If it succeeds, she does not hit that round; if it fails, she does. If Niall wins, turn to section 73. If he loses, turn to section 29."
+          ],
+          "sourcePages": [
+            200,
+            201,
+            202
+          ]
+        }
+      }
+    },
+    {
+      "key": "74-2",
+      "name": "Veleda",
+      "attack": null,
+      "defense": 8,
+      "hp": 17,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": "74",
+          "label": "Mael Mac Ronan / Starkad The Dane / Veleda (§74)",
+          "enemies": [
+            {
+              "name": "Mael Mac Ronan",
+              "hp": 29,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 2,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Starkad The Dane",
+              "hp": 38,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 2,
+                    "add": 5
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Veleda",
+              "hp": 17,
+              "toBeHit": 8,
+              "attacks": [
+                {
+                  "check": "constitution",
+                  "damage": {
+                    "dice": 2,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "73",
+            "lossSection": "29",
+            "mechanics": {
+              "enemies": [
+                {},
+                {},
+                {
+                  "afterDeathOf": [
+                    0,
+                    1
+                  ],
+                  "delay": 1
+                }
+              ]
+            },
+            "sourceNotes": [
+              "Use the combat rules to determine the winner. MAEL MAC RONAN To hit Niall: 14 To be hit: 9 Hit points: 29 Damage with sword: 2 D6 + 1 STARKAD THE DANE To hit Niall: 13 To be hit: 10 Hit points: 38 Damage with axe: 2 D6 + 5 VELEDA To hit Niall: Make a Constitution roll To Be Hit: 8 Hit points: 17 Damage with magic: 2 D6 per round Both men are fighting to the death. If one of them dies, the woman joins the battle, using magic only, beginning the very next round. To determine if she hits with magic, make a Constitution roll each round. If it succeeds, she does not hit that round; if it fails, she does. If Niall wins, turn to section 73. If he loses, turn to section 29."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine the winner. MAEL MAC RONAN To hit Niall: 14 To be hit: 9 Hit points: 29 Damage with sword: 2 D6 + 1 STARKAD THE DANE To hit Niall: 13 To be hit: 10 Hit points: 38 Damage with axe: 2 D6 + 5 VELEDA To hit Niall: Make a Constitution roll To Be Hit: 8 Hit points: 17 Damage with magic: 2 D6 per round Both men are fighting to the death. If one of them dies, the woman joins the battle, using magic only, beginning the very next round. To determine if she hits with magic, make a Constitution roll each round. If it succeeds, she does not hit that round; if it fails, she does. If Niall wins, turn to section 73. If he loses, turn to section 29."
+          ],
+          "sourcePages": [
+            200,
+            201,
+            202
+          ]
+        }
+      }
+    },
+    {
+      "key": "76-0",
+      "name": "Mael Mac Ronan",
+      "attack": 14,
+      "defense": 9,
+      "hp": 29,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": "76",
+          "label": "Mael Mac Ronan / Starkad The Dane / Veleda (§76)",
+          "enemies": [
+            {
+              "name": "Mael Mac Ronan",
+              "hp": 29,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 2,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Starkad The Dane",
+              "hp": 38,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 2,
+                    "add": 5
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Veleda",
+              "hp": 17,
+              "toBeHit": 8,
+              "attacks": [
+                {
+                  "check": "constitution",
+                  "damage": {
+                    "dice": 2,
+                    "add": 5
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "73",
+            "lossSection": "29",
+            "attackGroups": [
+              [
+                0,
+                1,
+                2
+              ]
+            ],
+            "mechanics": {},
+            "sourceNotes": [
+              "Use the combat rules to determine the winner. Mael begins the fight with Niall. If Mael is killed, Starkad takes his place, also fighting to the death. If both are killed, Veleda attacks Niall with magic. MAEL MAC RONAN To hit Niall: 14 To be hit: 9 Hit points: 29 _Damage with sword: 2 D6 + 1 STARKAD THE DANE To hit Niall: 13 To be hit: 10 Hit points: 38 Damage with axe: 2 D6 + 5 VELEDA To hit Niall: Make a Constitution roll To be hit: 8 Hit points: 17 Damage with magic: ·2 D6 + 5 per round If Niall wins, turn to section 73. If he loses, turn to section 29."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine the winner. Mael begins the fight with Niall. If Mael is killed, Starkad takes his place, also fighting to the death. If both are killed, Veleda attacks Niall with magic. MAEL MAC RONAN To hit Niall: 14 To be hit: 9 Hit points: 29 _Damage with sword: 2 D6 + 1 STARKAD THE DANE To hit Niall: 13 To be hit: 10 Hit points: 38 Damage with axe: 2 D6 + 5 VELEDA To hit Niall: Make a Constitution roll To be hit: 8 Hit points: 17 Damage with magic: ·2 D6 + 5 per round If Niall wins, turn to section 73. If he loses, turn to section 29."
+          ],
+          "sourcePages": [
+            204,
+            205,
+            206
+          ]
+        }
+      }
+    },
+    {
+      "key": "76-1",
+      "name": "Starkad The Dane",
+      "attack": 13,
+      "defense": 10,
+      "hp": 38,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": "76",
+          "label": "Mael Mac Ronan / Starkad The Dane / Veleda (§76)",
+          "enemies": [
+            {
+              "name": "Mael Mac Ronan",
+              "hp": 29,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 2,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Starkad The Dane",
+              "hp": 38,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 2,
+                    "add": 5
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Veleda",
+              "hp": 17,
+              "toBeHit": 8,
+              "attacks": [
+                {
+                  "check": "constitution",
+                  "damage": {
+                    "dice": 2,
+                    "add": 5
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "73",
+            "lossSection": "29",
+            "attackGroups": [
+              [
+                0,
+                1,
+                2
+              ]
+            ],
+            "mechanics": {},
+            "sourceNotes": [
+              "Use the combat rules to determine the winner. Mael begins the fight with Niall. If Mael is killed, Starkad takes his place, also fighting to the death. If both are killed, Veleda attacks Niall with magic. MAEL MAC RONAN To hit Niall: 14 To be hit: 9 Hit points: 29 _Damage with sword: 2 D6 + 1 STARKAD THE DANE To hit Niall: 13 To be hit: 10 Hit points: 38 Damage with axe: 2 D6 + 5 VELEDA To hit Niall: Make a Constitution roll To be hit: 8 Hit points: 17 Damage with magic: ·2 D6 + 5 per round If Niall wins, turn to section 73. If he loses, turn to section 29."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine the winner. Mael begins the fight with Niall. If Mael is killed, Starkad takes his place, also fighting to the death. If both are killed, Veleda attacks Niall with magic. MAEL MAC RONAN To hit Niall: 14 To be hit: 9 Hit points: 29 _Damage with sword: 2 D6 + 1 STARKAD THE DANE To hit Niall: 13 To be hit: 10 Hit points: 38 Damage with axe: 2 D6 + 5 VELEDA To hit Niall: Make a Constitution roll To be hit: 8 Hit points: 17 Damage with magic: ·2 D6 + 5 per round If Niall wins, turn to section 73. If he loses, turn to section 29."
+          ],
+          "sourcePages": [
+            204,
+            205,
+            206
+          ]
+        }
+      }
+    },
+    {
+      "key": "76-2",
+      "name": "Veleda",
+      "attack": null,
+      "defense": 8,
+      "hp": 17,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": "76",
+          "label": "Mael Mac Ronan / Starkad The Dane / Veleda (§76)",
+          "enemies": [
+            {
+              "name": "Mael Mac Ronan",
+              "hp": 29,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 2,
+                    "add": 1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Starkad The Dane",
+              "hp": 38,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 2,
+                    "add": 5
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Veleda",
+              "hp": 17,
+              "toBeHit": 8,
+              "attacks": [
+                {
+                  "check": "constitution",
+                  "damage": {
+                    "dice": 2,
+                    "add": 5
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "73",
+            "lossSection": "29",
+            "attackGroups": [
+              [
+                0,
+                1,
+                2
+              ]
+            ],
+            "mechanics": {},
+            "sourceNotes": [
+              "Use the combat rules to determine the winner. Mael begins the fight with Niall. If Mael is killed, Starkad takes his place, also fighting to the death. If both are killed, Veleda attacks Niall with magic. MAEL MAC RONAN To hit Niall: 14 To be hit: 9 Hit points: 29 _Damage with sword: 2 D6 + 1 STARKAD THE DANE To hit Niall: 13 To be hit: 10 Hit points: 38 Damage with axe: 2 D6 + 5 VELEDA To hit Niall: Make a Constitution roll To be hit: 8 Hit points: 17 Damage with magic: ·2 D6 + 5 per round If Niall wins, turn to section 73. If he loses, turn to section 29."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine the winner. Mael begins the fight with Niall. If Mael is killed, Starkad takes his place, also fighting to the death. If both are killed, Veleda attacks Niall with magic. MAEL MAC RONAN To hit Niall: 14 To be hit: 9 Hit points: 29 _Damage with sword: 2 D6 + 1 STARKAD THE DANE To hit Niall: 13 To be hit: 10 Hit points: 38 Damage with axe: 2 D6 + 5 VELEDA To hit Niall: Make a Constitution roll To be hit: 8 Hit points: 17 Damage with magic: ·2 D6 + 5 per round If Niall wins, turn to section 73. If he loses, turn to section 29."
+          ],
+          "sourcePages": [
+            204,
+            205,
+            206
+          ]
+        }
+      }
+    },
+    {
+      "key": "85-0",
+      "name": "Starkad The Dane",
+      "attack": 13,
+      "defense": 10,
+      "hp": 38,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "85",
+          "label": "Starkad The Dane (§85)",
+          "enemies": [
+            {
+              "name": "Starkad The Dane",
+              "hp": 38,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 2,
+                    "add": 5
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "87",
+            "lossSection": "29",
+            "mechanics": {},
+            "sourceNotes": [
+              "Use the combat rules to determine the winner. STARKAD THE DANE To hit Niall: 13 To be hit: 10 Hit points: 38 Damage with axe: 2 D6 + 5 If Niall wins, turn to section 87. If he loses, turn to section 29."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine the winner. STARKAD THE DANE To hit Niall: 13 To be hit: 10 Hit points: 38 Damage with axe: 2 D6 + 5 If Niall wins, turn to section 87. If he loses, turn to section 29."
+          ],
+          "sourcePages": [
+            226
+          ]
+        }
+      }
+    },
+    {
+      "key": "87-0",
+      "name": "Mael Mac Ronan",
+      "attack": 14,
+      "defense": 9,
+      "hp": 29,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "87",
+          "label": "Mael Mac Ronan (§87)",
+          "enemies": [
+            {
+              "name": "Mael Mac Ronan",
+              "hp": 29,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 2,
+                    "add": 1
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "winSection": "88",
+            "lossSection": "29",
+            "mechanics": {},
+            "sourceNotes": [
+              "Use the combat rules to determine the winner. MAEL MAC RONAN To be hit: 9 Hit points: 29 To hit Niall: 14 Damage with sword: 2 D6 + 1 If Niall wins, turn to section 88. If he loses, turn to section 29."
+            ]
+          },
+          "printedRules": [
+            "Use the combat rules to determine the winner. MAEL MAC RONAN To be hit: 9 Hit points: 29 To hit Niall: 14 Damage with sword: 2 D6 + 1 If Niall wins, turn to section 88. If he loses, turn to section 29."
+          ],
+          "sourcePages": [
+            229,
+            230
+          ]
+        }
+      }
+    }
+  ]
+}

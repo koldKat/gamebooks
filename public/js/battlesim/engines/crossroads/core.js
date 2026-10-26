@@ -1,21 +1,9 @@
 // Crossroads Adventures: attack rolls are 3D6 >= threshold; ability checks
 // are 3D6 <= ability. Encounter stats and exceptions come from the roster.
 const clone = value => structuredClone(value);
-const integer = (value, min = 0, max = 1000000) => {
-  if (!Number.isSafeInteger(value) || value < min || value > max) throw new RangeError('Invalid combat value');
-  return value;
-};
-const damageSpec = value => {
-  if (!value || typeof value !== 'object') throw new RangeError('Choose weapon damage');
-  return {dice:integer(value.dice, 0, 10), add:integer(value.add, -100, 1000)};
-};
-function dice(count, roll) {
-  return Array.from({length:count}, () => integer(roll(), 1, 6));
-}
-function damage(spec, roll) {
-  const values = dice(spec.dice, roll);
-  return {dice:values, amount:Math.max(0, values.reduce((a,b) => a+b, spec.add))};
-}
+import {integer,damageSpec,dice,damage,finish} from './values.js';
+import {validateEncounterRules,encounterRound,encounterTargets} from './encounter-rules.js';
+export {encounterTargets};
 
 export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
   if (!hero || !Array.isArray(enemies) || !enemies.length || enemies.length > 100) throw new RangeError('Invalid combatants');
@@ -36,28 +24,31 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
       name:String(enemy.name ?? enemy.displayName ?? '').slice(0,200),
       hp:integer(enemy.hp, 1), maxHp:enemy.hp, toBeHit:integer(enemy.toBeHit, 3, 18),
       attacks:enemy.attacks.map(attack => {
-        const result = {toHit:integer(attack.toHit, 3, 18), damage:damageSpec(attack.damage)};
+        const result = {damage:damageSpec(attack.damage)};
+        if (config.mechanics && attack.check === 'constitution') result.check = attack.check;
+        else result.toHit = integer(attack.toHit, 3, 18);
+        if (config.mechanics && attack.when) {
+          if (!['heroMiss','otherwise'].includes(attack.when)) throw new RangeError('Unknown attack condition');
+          result.when = attack.when;
+        }
         if (attack.poison) result.poison = damageSpec(attack.poison);
         return result;
       }),
     };
   });
-  return {rulesVersion:1, hero:player, startingHp:player.hp, enemies:opponents, rules:config,
+  if (config.mechanics) {
+    player.wisdom=integer(hero.wisdom,0,100);
+    player.dexterity=integer(hero.dexterity,0,100);
+    validateEncounterRules(config.mechanics,enemies.length);
+  }
+  return {rulesVersion:config.mechanics ? 2 : 1, hero:player, startingHp:player.hp, enemies:opponents, rules:config,
     weaponDamage:config.enemyOnly ? null : damageSpec(config.heroDamage ?? weaponDamage),
     status:'active', round:0, damageDealt:0, damageTaken:0, events:[], destination:null};
 }
 
-function finish(fight, status) {
-  fight.status = status;
-  fight.destination = status === 'win' ? fight.rules.winSection ?? null : status === 'loss' ? fight.rules.lossSection ?? null : null;
-  if (fight.rules.nonfatal) {
-    fight.hero.hp = Math.max(0, fight.startingHp - (status === 'loss' ? fight.rules.nonfatalLossDamage ?? 0 : 0));
-  }
-  fight.events.push({kind:'outcome', status, destination:fight.destination});
-}
-
 // Pure transitions make an invalid roll/action harmless to the saved run.
 export function crossroadsRound(original, {target = 0, healing = null, roll = () => Math.floor(Math.random()*6)+1} = {}) {
+  if (original?.rulesVersion === 2) return encounterRound(original,{target,healing,roll});
   if (original?.status !== 'active' || original.rulesVersion !== 1) throw new RangeError('No active fight');
   const fight = clone(original);
   fight.events = [];

@@ -412,7 +412,11 @@
                          exceptions; stale run/book updates are rejected before saving.
         engines/crossroads/ Pure 3D6 threshold combat and ability checks; serializable
                          round transitions, nonfatal damage, timed fights, venom and grouped
-                         enemy attacks. Database roster entries own stats and exceptions.
+                         enemy attacks. Optional v2 encounter rules add delayed or sequential arrivals,
+                         mounted targets, temporary ability checks, allies, opening attacks and
+                         conditional magic; v1 saved fights keep their original transitions.
+                         The panel uses the same availability rules as combat. Database roster
+                         entries own stats and exceptions.
                          Shared panel supports custom opponents without changing global items;
                          state commits guard the active book/run and record outcomes once.
         engines/destinyquest/ Pure, serializable combat stages with explicit windows for speed,

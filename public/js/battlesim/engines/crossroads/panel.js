@@ -1,4 +1,4 @@
-import {startCrossroadsFight, crossroadsRound, crossroadsAbilityCheck} from './core.js';
+import {startCrossroadsFight, crossroadsRound, crossroadsAbilityCheck,encounterTargets} from './core.js';
 import {createOpponentEditor} from '../../opponents.js';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -49,7 +49,11 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     data.fight=fight;
     for(const event of fight.events){
       if(event.kind==='attack')data.log.push(tk('attack',{name:event.side==='hero'?tk('hero'):event.name,
-        dice:event.dice.join('+'),total:event.total,result:tk(event.hit?'hit':'miss'),damage:event.damage}));
+        dice:event.automatic?tk('automatic'):event.dice.join('+'),total:event.total,result:tk(event.hit?'hit':'miss'),damage:event.damage}));
+      if(event.kind==='check')data.log.push(tk('check',{name:tk(event.ability),dice:event.dice.join('+'),result:tk(event.passed?'passed':'failed')}));
+      if(event.kind==='freeRounds')data.log.push(tk('freeRounds',{n:event.amount}));
+      if(event.kind==='absorbed')data.log.push(tk('absorbed',{name:event.name}));
+      if(event.kind==='blinded')data.log.push(tk('blinded'));
       if(event.kind==='poison')data.log.push(tk('poison',{dice:event.dice.join('+'),result:tk(event.passed?'passed':'failed'),damage:event.damage}));
       if(event.kind==='healing')data.log.push(tk('restored',{n:event.amount}));
       if(event.kind==='outcome')data.log.push(tk('status.'+event.status)+(event.destination?' '+tk('destination',{n:event.destination}):''));
@@ -71,7 +75,7 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     el('round').disabled=!locked;el('cancel').disabled=!locked;
     el('heal').disabled=!hero?.hp||Boolean(locked&&fight.rules.enemyOnly);
     el('abilityCheck').disabled=locked||!hero?.hp;
-    const currentTarget=Number(el('target').value),targets=fight?.enemies.map((enemy,index)=>({enemy,index})).filter(({enemy})=>enemy.hp>0)??[];
+    const currentTarget=Number(el('target').value),targets=encounterTargets(fight).map(index=>({enemy:fight.enemies[index],index}));
     el('target').innerHTML=targets.map(({enemy,index})=>`<option value="${index}">${escape(enemy.name)}</option>`).join('');
     el('target').value=targets.some(({index})=>index===currentTarget)?currentTarget:targets[0]?.index??'';
     el('target').disabled=!locked||Boolean(fight.rules.enemyOnly);
@@ -99,10 +103,12 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
       ${field('weaponDice',0,10)}${field('weaponAdd',-100,1000)}<p class="bsim-note" id="${ID}-weaponNote"></p>${button('start')}
       <label class="inv-edit-row"><span>${escape(tk('target'))}</span><select class="inv-edit-input" id="${ID}-target"></select></label><div class="bsim-btn-row">${button('round')}${button('cancel')}</div>
       ${field('healing',1)}${button('heal')}<p class="bsim-note">${escape(tk('healingNote'))}</p>
-      <label class="inv-edit-row"><span>${escape(tk('ability'))}</span><select class="inv-edit-input" id="${ID}-ability">${abilities.map(key=>`<option value="${key}">${escape(tk(key))}</option>`).join('')}</select></label>${button('abilityCheck')}
+      <label class="inv-edit-row"><span>${escape(tk('ability'))}</span><select class="inv-edit-input" id="${ID}-ability">${abilities.map(key=>`<option value="${key}">${escape(tk(key))}</option>`).join('')}</select></label>${field('abilityModifier',-100,100)}${button('abilityCheck')}
       </div><div class="bsim-col bsim-col-right"><p id="${ID}-status" role="status"></p><p id="${ID}-destination"></p><div id="${ID}-opponents"></div><h3 class="bsim-side-title">${escape(tk('log'))}</h3><div class="bsim-log" id="${ID}-log"></div><h3 class="bsim-side-title">${escape(tk('history'))}</h3><div class="bsim-history-list" id="${ID}-history"></div></div></div></div>`;
     document.body.append(overlay);
-    editor=createOpponentEditor({document,id:ID,t,fields:[{key:'toBeHit',label:tk('toBeHit'),min:3,max:18},{key:'toHit',label:tk('toHit'),min:3,max:18},{key:'hp',label:tk('hp'),min:1},{key:'damageDice',label:tk('damageDice'),min:0,max:10},{key:'damageAdd',label:tk('damageAdd'),min:-100,max:1000}],presets:getRoster().flatMap(entry=>editorRows(entry.enemies))});
+    el('abilityModifier').value=0;
+    editor=createOpponentEditor({document,id:ID,t,fields:[{key:'toBeHit',label:tk('toBeHit'),min:3,max:18},{key:'toHit',label:tk('toHit'),min:3,max:18},{key:'hp',label:tk('hp'),min:1},{key:'damageDice',label:tk('damageDice'),min:0,max:10},{key:'damageAdd',label:tk('damageAdd'),min:-100,max:1000}],presets:getRoster().flatMap(entry=>editorRows(entry.enemies)),
+      isStatUnavailable:(key,row)=>key==='toHit'&&row.attacks?.every(attack=>attack.check==='constitution')});
     el('editor').append(editor.element);
     const trigger=document.createElement('button');trigger.id=ID+'-btn';trigger.style.display='none';trigger.textContent=t('battlesim.title');getButtonRow().append(trigger);trigger.addEventListener('click',open);
     el('close').addEventListener('click',close);
@@ -114,13 +120,14 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     el('saveCharacter').addEventListener('click',()=>change(data=>{if(active(data.fight))return;data.character=readCharacter();data.fight=null;}));
     el('newCharacter').addEventListener('click',()=>confirm('resetConfirm',data=>{if(active(data.fight))return;data.character=structuredClone(definition.defaultHero);data.fight=null;}));
     el('start').addEventListener('click',()=>change(data=>{
-      if(active(data.fight))return;data.character=readCharacter();const entry=preset(),rules=entry?.rules??{};
+      if(active(data.fight))return;data.character=readCharacter();const entry=preset(),rules=structuredClone(entry?.rules??{});
       const enemies=editor.read().map(enemy=>{
         const attacks=structuredClone(enemy.attacks??[{toHit:enemy.toHit,damage:{dice:enemy.damageDice,add:enemy.damageAdd}}]);
-        for(const attack of attacks)attack.toHit=enemy.toHit;
+        for(const attack of attacks)if(!attack.check)attack.toHit=enemy.toHit;
         attacks[0].damage={dice:enemy.damageDice,add:enemy.damageAdd};
         return {name:enemy.displayName||tk('opponent'),hp:enemy.hp,toBeHit:enemy.toBeHit,attacks};
       });
+      if(enemies.some(enemy=>enemy.attacks.some(attack=>attack.check||attack.when)))rules.mechanics??={};
       data.setup=setup();data.encounterName=entry?.label??enemies.map(enemy=>enemy.name).join(' / ');
       data.fight=startCrossroadsFight(data.character,enemies,rules,rules.enemyOnly?null:rules.heroDamage??{dice:number('weaponDice',0,10),add:number('weaponAdd',-100,1000)});
       data.log.push(data.encounterName);
@@ -131,7 +138,7 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
       if(active(data.fight))logEvents(data,crossroadsRound(data.fight,{healing:amount}));
       else {const restored=Math.min(amount,data.character.maxHp-data.character.hp);data.character.hp+=restored;data.fight=null;data.log.push(tk('restored',{n:restored}));}
     }));
-    el('abilityCheck').addEventListener('click',()=>change(data=>{if(active(data.fight))return;const key=el('ability').value;if(!abilities.includes(key))return;const result=crossroadsAbilityCheck(data.character[key]);data.log.push(tk('check',{name:tk(key),dice:result.dice.join('+'),result:tk(result.passed?'passed':'failed')}));}));
+    el('abilityCheck').addEventListener('click',()=>change(data=>{if(active(data.fight))return;const key=el('ability').value;if(!abilities.includes(key))return;const result=crossroadsAbilityCheck(Math.max(0,Math.min(100,data.character[key]+number('abilityModifier',-100,100))));data.log.push(tk('check',{name:tk(key),dice:result.dice.join('+'),result:tk(result.passed?'passed':'failed')}));}));
     el('cancel').addEventListener('click',()=>confirm('cancelConfirm',data=>{if(!active(data.fight))return;if(data.fight.rules.nonfatal)data.fight.hero.hp=data.fight.startingHp;data.fight.status='cancelled';data.fight.events=[];}));
     registerShortcut({button:trigger,overlay,open,close});
   }
