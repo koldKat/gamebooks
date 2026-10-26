@@ -1018,6 +1018,7 @@ function getAppXpSummary() {
 function adminGetUsers() {
   const users = db.prepare(`
     SELECT u.id, u.username, u.display_name, u.is_author, u.is_contributor, u.is_moderator, u.is_squire, u.created_at, u.last_country, u.last_city,
+           u.bonus_diamond_dig_purchased AS diamondDigPurchased,
            u.active_country, u.active_city, u.last_domain, u.failed_login_attempts, u.locked_until, u.is_protected, u.is_admin,
            COALESCE(library.book_count, 0) AS book_count,
            COALESCE(s.session_count, 0) AS session_count,

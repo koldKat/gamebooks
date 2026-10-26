@@ -267,21 +267,29 @@ export function userProgressTooltipHtml(u) {
   };
   const job = number(u.jobLevel);
   const fact = (label, value, cls = '') => `<dt>${label}</dt><dd class="${cls}">${esc(value)}</dd>`;
+  const upgrade = (label, count, bonus) => `<tr><th scope="row">${label}</th><td>${number(count).toLocaleString()}</td><td>${esc(bonus)}</td></tr>`;
+  const percent = (count, step = 0.1) => `+${(number(count) * step).toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
   const balance = Number.isFinite(+u.coinsBalance) ? +u.coinsBalance : 0;
   return `<div class="admin-progress-tooltip"><strong>${esc(u.username)}</strong>`
     + (u.display_name && u.display_name !== u.username ? `<div class="admin-progress-alias">${esc(u.display_name)}</div>` : '')
     + section('Level', number(u.level), u.title, number(u.xp), number(u.levelXp), number(u.nextLevelXp), 'admin-progress-main')
     + section('Job Level', job, u.jobTitle, number(u.jobXp), 1000*job*(job+1)/2, 1000*(job+1)*(job+2)/2, 'admin-progress-job', 'EV')
-    + `<div class="admin-progress-caption"><span>XP boost: ${number(u.xpBoostPct)}%</span><span>Job cap: ${number(u.jobLevelCap)}</span></div>`
+    + `<div class="admin-progress-caption"><span>XP boost: ${number(u.xpBoostPct)}%</span></div>`
     + '<dl class="admin-progress-facts">'
     + fact('GC balance', balance.toLocaleString(), 'val-amber')
     + fact('XP to next GC', number(u.coinXpUntilNext).toLocaleString())
     + fact('Coin mint bonus', `${number(u.gcMintPct).toLocaleString(undefined, { maximumFractionDigits: 1 })}%`, 'val-amber')
     + fact('XP from boosts', number(u.xpFromBoost).toLocaleString())
-    + fact('Extra undos / run', `+${number(u.bonusUndos).toLocaleString()}`)
-    + fact('Extra fast travels / run', `+${number(u.bonusFastTravels).toLocaleString()}`)
     + fact('Lucky coin', u.pendingBonusGc ? 'Ready to claim' : 'None waiting', u.pendingBonusGc ? 'val-amber' : '')
-    + '</dl></div>';
+    + '</dl><table class="admin-progress-upgrades"><caption>Shop upgrades</caption><thead><tr><th>Upgrade</th><th>Bought</th><th>Bonus</th></tr></thead><tbody>'
+    + upgrade('XP Boost', u.xpBoostPurchased, percent(u.xpBoostPurchased))
+    + upgrade('Heartbeat XP', u.bonusHeartbeatXp, `+${(number(u.bonusHeartbeatXp) * 0.1).toLocaleString(undefined, { maximumFractionDigits: 1 })} XP/min`)
+    + upgrade('Lucky Coin Chance', u.bonusGcChancePurchased, percent(u.bonusGcChancePurchased, 0.01))
+    + upgrade('Coin Mint', u.bonusGcMintPurchased, percent(u.bonusGcMintPurchased))
+    + upgrade('Ruby Digging', u.diamondDigPurchased, percent(u.diamondDigPurchased))
+    + upgrade('Extra Undo', u.bonusUndos, `+${number(u.bonusUndos).toLocaleString()}/run`)
+    + upgrade('Extra Fast Travel', u.bonusFastTravels, `+${number(u.bonusFastTravels).toLocaleString()}/run`)
+    + '</tbody></table></div>';
 }
 
 const _countryNames = new Intl.DisplayNames(['en'], { type: 'region' });

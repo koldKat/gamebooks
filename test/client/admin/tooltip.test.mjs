@@ -23,13 +23,19 @@ test('user hover shows escaped normal and Job progression with independent progr
     esc: value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'),
   });
   const user={username:'<Reader>',level:3,title:'<Ranger>',xp:8000,levelXp:6000,nextLevelXp:10000,
-    jobLevel:1,jobTitle:'Digger',jobXp:1500,jobLevelCap:8,xpBoostPct:12.5};
+    jobLevel:1,jobTitle:'Digger',jobXp:1500,jobLevelCap:8,xpBoostPct:12.5,
+    xpBoostPurchased:4,bonusHeartbeatXp:7,bonusGcChancePurchased:3,bonusGcMintPurchased:5,
+    diamondDigPurchased:2,bonusUndos:1,bonusFastTravels:2};
   const html=helper(user);
   assert.match(html,/&lt;Reader&gt;/);assert.match(html,/&lt;Ranger&gt;/);assert.ok(!html.includes('<Reader>'));
   assert.match(html,/Level 3/);assert.match(html,/Job Level 1/);assert.match(html,/Digger/);
   assert.match(html,/width:50%/);assert.match(html,/width:25%/);
   assert.match(html,/8,000 \/ 10,000 XP/);assert.match(html,/1,500 \/ 3,000 EV/);
-  assert.match(html,/XP boost: 12.5%/);assert.match(html,/Job cap: 8/);
+  assert.match(html,/XP boost: 12.5%/);assert.ok(!html.includes('Job cap'));
+  for (const label of ['XP Boost','Heartbeat XP','Lucky Coin Chance','Coin Mint','Ruby Digging','Extra Undo','Extra Fast Travel']) assert.ok(html.includes(label), label);
+  assert.match(html,/Heartbeat XP<\/th><td>7<\/td><td>\+0.7 XP\/min/);
+  assert.match(html,/Ruby Digging<\/th><td>2<\/td><td>\+0.2%/);
+  assert.match(html,/Lucky Coin Chance<\/th><td>3<\/td><td>\+0.03%/);
   assert.ok(!helper({}).includes('NaN'));
   const handlers={},tip={style:{},offsetWidth:300,offsetHeight:180};
   const source=readFileSync('admin/js/boot.js','utf8');
