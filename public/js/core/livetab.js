@@ -68,12 +68,24 @@ function _refreshAppXpStaggered() {
 
 // Use feed versions to avoid unchanged DOM rebuilds; reload on version-check failure.
 
+function _setHeaderVersion(version) {
+  if(typeof version!=='string'||!version)return;
+  const header=document.getElementById('app-version');
+  if(header&&header.textContent!==version)header.textContent=version;
+}
+
 async function _fetchFeedVersion() {
   const res = getToken()
     ? await apiFetch('/api/feed/version')
     : await _hooks.publicFetch?.('/api/feed/version');
   if (!res || !res.ok) throw new Error('feed version fetch failed');
   const data = await res.json();
+  // Version events are transient. Reconcile after reconnect, focus or polling
+  // even when the activity-feed fingerprint itself has not changed.
+  if(data.appVersion) {
+    _setHeaderVersion(data.appVersion);
+    if(_isLiveLeader)_broadcastLiveEvent('config_changed',{version:data.appVersion});
+  }
   return data.version;
 }
 
@@ -183,7 +195,7 @@ function _takeLiveLeadership() {
 
 function _applyFollowerLiveEvent(type, payload = null) {
   if (type === 'config_changed') {
-    if (payload?.version) document.getElementById('app-version').textContent = payload.version;
+    _setHeaderVersion(payload?.version);
     return;
   }
   if (type === 'feed_changed') {
@@ -263,7 +275,7 @@ function _connectFeedSSE() {
       onMessage: e => {
         let payload; try { payload = JSON.parse(e.data); } catch { payload = {}; }
         if (payload.type === 'config_changed') {
-          if (payload.version) document.getElementById('app-version').textContent = payload.version;
+          _setHeaderVersion(payload.version);
           _broadcastLiveEvent('config_changed', { version: payload.version });
           return;
         }

@@ -38,7 +38,7 @@ async function tab() {
   const fetchVersion = async url => {
     calls.push(['request', url]);
     assert.equal(url, '/api/feed/version');
-    return { ok: !state.failVersion, json: async () => ({ version: state.version }) };
+    return { ok: !state.failVersion, json: async () => ({ version: state.version, appVersion: state.appVersion }) };
   };
   const deps = {
     './state.js': { getToken: () => state.token, apiFetch: fetchVersion },
@@ -110,6 +110,11 @@ a.emit('/api/feed/stream', { type: 'config_changed', version: 'v2' });
 assert.equal(a.elements['app-version'].textContent, 'v2');
 assert.equal(b.elements['app-version'].textContent, 'v2');
 assert.equal(a.count('feed'), 0);
+a.state.appVersion='v2.1';
+await a.api._syncFeedVersionBaseline();
+assert.equal(a.elements['app-version'].textContent,'v2.1','an unchanged feed fingerprint still reconciles a missed header version');
+assert.equal(b.elements['app-version'].textContent,'v2.1','the leader relays the recovered header version to followers');
+assert.equal(a.count('feed'),0,'a header-only catch-up does not rebuild the feed');
 a.emit('/api/feed/stream'); a.emit('/api/feed/stream');
 await a.timeout(1500); await b.timeout(1500);
 assert.equal(a.count('feed'), 1, 'feed event bursts coalesced');
@@ -172,14 +177,19 @@ assert.equal(storage.has(lockKey), false, 'pagehide releases own lock');
 b.event('storage', { key: lockKey });
 assert.equal(b.active().length, 4, 'remaining tab claims released lock');
 b.open();
+const c=await tab();c.api._ensureLiveTabControllerStarted();
+assert.equal(c.active().length,0,'a newly opened follower owns no streams');
 const rewardsBefore = b.count('app-xp-event'), badgesBefore = b.count('badges');
 const followerStreamsBefore = a.streams.length;
 b.state.version = 'v4';
+b.state.appVersion='v4.1';
 b.fail();
 assert.equal(b.active().length, 0, 'failed connections close before retry');
 await b.timeout(1000);
 assert.equal(b.active().length, 4, 'all four streams recover after a server restart');
 b.open(); await flush();
+assert.equal(b.elements['app-version'].textContent,'v4.1','reconnecting catches up a version event lost during a restart');
+assert.equal(c.elements['app-version'].textContent,'v4.1','reconnect catch-up also reaches a live follower tab');
 assert.equal(b.count('badges'), badgesBefore + 1, 'recovery refreshes personal XP, coins and badges');
 assert.equal(b.count('app-xp-event'), rewardsBefore, 'recovery does not replay XP floaties');
 assert.equal(a.streams.length, followerStreamsBefore, 'recovery preserves single-tab ownership');

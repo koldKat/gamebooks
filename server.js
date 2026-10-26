@@ -385,7 +385,7 @@ const _routeRequest = async (req, res) => {
     }
     // The feed poll compares a cheap version fingerprint before rebuilding the feed.
     if (method === 'GET'    && urlPath === '/api/feed/version') {
-      return send(res, 200, { version: db.getFeedVersion() });
+      return send(res, 200, { version: db.getFeedVersion(), appVersion: db.getAdminSetting('app_version') });
     }
     // Award heartbeat on its own 60s clock, never as a feed-GET side effect.
     // The server deduplicates overlapping requests per minute.
