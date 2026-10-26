@@ -36,7 +36,7 @@ test('stats renders all ten half-star bins for all categories in balanced column
   assert.match(columns[0], /Rubies mined<\/td><td class="stats-val"><span class="stats-diamonds">123<\/span>/);
   assert.match(columns[0], /Diamonds mined<\/td><td class="stats-val"><span class="stats-rubies">7<\/span>/);
   assert.match(body.innerHTML,/App Job Level<\/td><td class="stats-val">2 - &lt;Sifter&gt;/);
-  assert.match(body.innerHTML,/Total Job EV<\/td><td class="stats-val">9,000/);
+  assert.doesNotMatch(body.innerHTML,/Total Job EV/);
   assert.ok(body.innerHTML.includes('4.5 / 5'));
   assert.ok(body.innerHTML.includes('0.5 / 5'));
   assert.ok(body.innerHTML.includes('4.50'));

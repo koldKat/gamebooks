@@ -174,7 +174,6 @@ export async function openStatsModal() {
           [t('stats.total_xp_earned'), fmt(s.totalXp)],
           [t('stats.app_level'), `${fmt(s.appLevel)} - ${escapeHtml(s.appTitle)}`],
           [t('stats.app_job_level'), `${fmt(s.appJobLevel)} - ${escapeHtml(s.appJobTitle || '')}`],
-          [t('stats.total_job_events'), fmt(s.totalJobXp)],
           [t('stats.avg_player_level'), `${fmt(Math.floor(Number(s.avgLevel || 0)))} - ${escapeHtml(s.avgTitle)}`],
           [t('stats.level_ups'), fmt(s.levelUps)],
           [t('stats.xp_event_types'), fmt(s.xpEventTypes)],

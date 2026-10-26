@@ -81,7 +81,6 @@ export default {
     'stats.total_xp_earned':  'Total XP earned',
     'stats.app_level':        'App level',
     'stats.app_job_level':    'App Job Level',
-    'stats.total_job_events': 'Total Job EV',
     'stats.avg_player_level': 'Avg player level',
     'stats.level_ups':        'Total levels',
     'stats.xp_event_types':   'XP event types',
