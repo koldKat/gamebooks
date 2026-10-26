@@ -4,14 +4,16 @@ export const integer = (value, min = 0, max = 1000000) => {
 };
 export const damageSpec = value => {
   if (!value || typeof value !== 'object') throw new RangeError('Choose weapon damage');
-  return {dice:integer(value.dice, 0, 10), add:integer(value.add, -100, 1000)};
+  const result={dice:integer(value.dice, 0, 10), add:integer(value.add, -100, 1000)};
+  if(value.divideBy !== undefined)result.divideBy=integer(value.divideBy,1,100);
+  return result;
 };
 export function dice(count, roll) {
   return Array.from({length:count}, () => integer(roll(), 1, 6));
 }
 export function damage(spec, roll) {
   const values = dice(spec.dice, roll);
-  return {dice:values, amount:Math.max(0, values.reduce((a,b) => a+b, spec.add))};
+  return {dice:values, amount:Math.max(0, Math.ceil(values.reduce((a,b) => a+b, spec.add)/(spec.divideBy ?? 1)))};
 }
 export function finish(fight, status) {
   fight.status = status;

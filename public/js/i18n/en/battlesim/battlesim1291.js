@@ -11,6 +11,7 @@ const labels = {
   healingNote:'Use only healing you actually have. In combat, healing replaces your attack. Manage carried items in your shared inventory.',
   ability:'Ability check', abilityModifier:'Temporary check modifier', abilityCheck:'Roll 3D6 check', log:'Battle log', history:'Battle history', hero:'Robinton',
   automatic:'automatic', freeRounds:'Free opening rounds: {n}.', absorbed:'{name} absorbs the attack.', blinded:'Blinded. Check Constitution at the start of each following round.',
+  fled:'{name} flees.', shape:'The opponent changes into {name}.', disarmed:'{name} is disarmed.',
   invalid:'Check the numbers, weapon damage and selected target.',
   resetConfirm:'Reset Robinton’s simulator stats? Battle history and shared inventory are kept.',
   cancelConfirm:'End this fight? Lethal damage already taken is kept; nonfatal brawl damage is discarded.',

@@ -19,7 +19,7 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
   if (config.attackGroups && (!Array.isArray(config.attackGroups) || config.attackGroups.some(group =>
     !Array.isArray(group) || !group.length || group.some(i => !Number.isSafeInteger(i) || i < 0 || i >= enemies.length)))) throw new RangeError('Invalid attack groups');
   const opponents = enemies.map(enemy => {
-    if (!Array.isArray(enemy.attacks) || !enemy.attacks.length || enemy.attacks.length > 10) throw new RangeError('Missing enemy attacks');
+    if (!Array.isArray(enemy.attacks) || !enemy.attacks.length && !config.mechanics?.abilityOutcome || enemy.attacks.length > 10) throw new RangeError('Missing enemy attacks');
     return {
       name:String(enemy.name ?? enemy.displayName ?? '').slice(0,200),
       hp:integer(enemy.hp, 1), maxHp:enemy.hp, toBeHit:integer(enemy.toBeHit, 3, 18),

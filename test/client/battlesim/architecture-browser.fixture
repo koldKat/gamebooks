@@ -4591,6 +4591,50 @@ for(const id of BOOK_IDS){
       el('atk-combined').click();check(d.rulesVersion===1&&d._liveEnemy.defLeg===null&&d._liveEnemy.defHand===17&&d.roundIdx===4,'Kung Fu legacy cached stats survive resumed combat');
     }finally{Math.random=random;}
   }
+  if(id===1290){
+    const el=key=>document.getElementById('sim1290-'+key),data=()=>app.currentPlaythrough().sim1290;
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1290/definition.js');
+    const run=app.currentPlaythrough();run.inventory={sentinel:['shared-item']};run.equipment={sentinel:'shared-slot'};
+    const inventory=JSON.stringify([run.inventory,run.equipment]),random=Math.random;
+    const choose=section=>{el('encounter').value=String(section);el('encounter').dispatchEvent(new Event('change'));};
+    try{
+      Math.random=()=>0;
+      choose('custom');
+      const fields={toBeHit:3,toHit:18,hp:1,damageDice:0,damageAdd:0};
+      const editor=el('editor');editor.querySelector('[role="combobox"]').value='Custom opponent';
+      for(const field of editor.querySelectorAll('[data-stat]'))field.value=fields[field.dataset.stat];
+      el('weaponDice').value=0;el('weaponAdd').value=1;el('start').click();
+      check(data().fight?.status==='active','Xanth ordinary custom fight starts without a preset');
+      el('round').click();check(data().fight.status==='win'&&data().history.length===1,'Xanth custom fight records one win');
+      el('round').click();check(data().history.length===1,'Xanth completed fight cannot award twice');
+      for(const entry of getRoster()){
+        choose(entry.section);
+        if(!entry.rules.heroDamage&&!entry.rules.enemyOnly){el('weaponDice').value=1;el('weaponAdd').value=0;}
+        el('start').click();check(data().fight?.status==='active','Xanth source preset starts '+entry.section);
+        check(data().fight.enemies.length===entry.enemies.length,'Xanth correct group size '+entry.section);
+        el('round').click();check(data().fight.round===1,'Xanth source round button '+entry.section);
+        if(data().fight.status==='active'){
+          el('cancel').click();document.getElementById('confirm-ok').click();
+          check(data().fight.status==='cancelled','Xanth confirmed cancellation '+entry.section);
+        }
+      }
+      choose(60);el('weaponDice').value='';el('weaponAdd').value='';el('start').click();const hp=data().character.hp;
+      check(data().fight?.rules.enemyOnly&&data().fight.enemies[0].attacks.length===0,'Xanth basilisk starts without invented damage');
+      el('round').click();check(data().fight.destination==='44'&&data().character.hp===hp,'Xanth source Constitution branch');
+      choose(1);el('start').click();el('round').click();el('round').click();
+      check(data().fight.enemies[0].name==='Hippocampus'&&data().fight.enemies[0].hp===12,'Xanth shared HP and second-round shape');
+      const shapeSaved=JSON.stringify(data());el('close').click();button.click();check(JSON.stringify(data())===shapeSaved,'Xanth active shape restored without reset');
+      el('cancel').click();document.getElementById('confirm-ok').click();
+      choose(77);el('start').click();
+      check(el('target').options.length===1&&el('target').value==='0','Xanth first live head only');
+      el('round').click();check(data().fight.events.filter(event=>event.side==='enemy').length===3,'Xanth every remaining head attacks');
+      el('cancel').click();document.getElementById('confirm-ok').click();
+      check(JSON.stringify([run.inventory,run.equipment])===inventory,'Xanth never customizes shared inventory or equipment');
+      const saved=JSON.stringify(data());el('newCharacter').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();
+      check(JSON.stringify(data())===saved,'Xanth stale reset cannot change another book');
+      app.setCurrentBookId(1290);button.click();
+    }finally{Math.random=random;}
+  }
   if(id===1291){
     const el=key=>document.getElementById('sim1291-'+key),data=()=>app.currentPlaythrough().sim1291;
     const {getRoster}=await import('REPO/public/js/battlesim/books/1291/definition.js');

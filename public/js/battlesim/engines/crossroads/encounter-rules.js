@@ -1,7 +1,7 @@
-import {integer,dice,damage,finish} from './values.js';
+import {integer,dice,damage,damageSpec,finish} from './values.js';
 
 const abilities = ['strength','intelligence','wisdom','constitution','dexterity','charisma'];
-const living = fight => fight.enemies.map((enemy,index) => enemy.hp > 0 ? index : -1).filter(index => index >= 0);
+const living = fight => fight.enemies.map((enemy,index) => enemy.hp > 0 && !enemy.fled ? index : -1).filter(index => index >= 0);
 
 export function validateEncounterRules(rules,count) {
   if (!rules || typeof rules !== 'object' || Array.isArray(rules)) throw new RangeError('Invalid encounter rules');
@@ -16,6 +16,7 @@ export function validateEncounterRules(rules,count) {
       if (enemy.attackAfterDeathOf !== undefined) index(enemy.attackAfterDeathOf);
       if (enemy.attackEvery !== undefined) integer(enemy.attackEvery,1,1000);
       if (enemy.firstAttackRound !== undefined) integer(enemy.firstAttackRound,1,1000);
+      if (enemy.fleeBelowHp !== undefined) integer(enemy.fleeBelowHp,1);
     }
   }
   if (rules.mount) { index(rules.mount.rider); index(rules.mount.mount); change(rules.mount.hitChange); change(rules.mount.attackChange); }
@@ -30,11 +31,28 @@ export function validateEncounterRules(rules,count) {
   }
   if (rules.freeRounds) { integer(rules.freeRounds.threshold,1,6); integer(rules.freeRounds.low,0,1000); integer(rules.freeRounds.high,0,1000); }
   if (rules.opening) index(rules.opening.enemy);
+  if (rules.abilityOutcome) check(rules.abilityOutcome.ability);
+  const attacks = values => {
+    if (!Array.isArray(values) || !values.length) throw new RangeError('Missing form attacks');
+    for (const attack of values) { integer(attack.toHit,3,18);damageSpec(attack.damage); }
+  };
+  if (rules.shapeshift) {
+    index(rules.shapeshift.enemy);integer(rules.shapeshift.every,1,1000);
+    if (!Array.isArray(rules.shapeshift.forms) || rules.shapeshift.forms.length<2) throw new RangeError('Missing shapes');
+    for (const [i,form] of rules.shapeshift.forms.entries()) {
+      integer(form.toBeHit,3,18);
+      if (i<rules.shapeshift.forms.length-1) attacks(form.attacks);
+    }
+  }
+  if (rules.disarm) {
+    index(rules.disarm.enemy);check(rules.disarm.ability);integer(rules.disarm.requiredConsecutive,1,100);
+    attacks(rules.disarm.afterAttacks);
+  }
 }
 
 // Availability is shared by the UI and transitions. A future reinforcement
 // remains in the fight even when every currently available enemy is defeated.
-export function encounterTargets(fight,round = (fight?.round ?? 0)+1) {
+function availableEnemies(fight,round) {
   if (!fight) return [];
   if (fight.rulesVersion !== 2) return living(fight);
   const groups = fight.rules.attackGroups;
@@ -47,20 +65,26 @@ export function encounterTargets(fight,round = (fight?.round ?? 0)+1) {
   });
 }
 
+export function encounterTargets(fight,round = (fight?.round ?? 0)+1) {
+  const available=availableEnemies(fight,round);
+  return fight?.rules.mechanics?.orderedTargets ? available.slice(0,1) : available;
+}
+
 export function encounterRound(original,{target = 0,healing = null,roll = () => Math.floor(Math.random()*6)+1} = {}) {
   if (original?.status !== 'active' || original.rulesVersion !== 2) throw new RangeError('No active fight');
   const fight=structuredClone(original),rules=fight.rules.mechanics;
   validateEncounterRules(rules,fight.enemies.length);
-  const round=fight.round+1,available=encounterTargets(fight,round);
-  if (healing === null && available.length && !available.includes(target)) throw new RangeError('Choose an available target');
+  const round=fight.round+1,available=availableEnemies(fight,round);
+  if (healing === null && available.length && !encounterTargets(fight,round).includes(target)) throw new RangeError('Choose an available target');
+  if (rules.abilityOutcome && healing!==null) throw new RangeError('This encounter is an ability check');
   if (healing !== null) {
     integer(healing,1);
     if (fight.hero.hp >= fight.hero.maxHp) throw new RangeError('Already at maximum hit points');
   }
   fight.events=[];fight.round=round;
   const state=fight.encounter ??= {arrivals:{},allyRound:null,freeRounds:0,blinded:false,bonusAttack:false};
-  const check = ability => {
-    const values=dice(3,roll),total=values.reduce((sum,value)=>sum+value,0),passed=total<=fight.hero[ability];
+  const check = (ability,strict=false) => {
+    const values=dice(3,roll),total=values.reduce((sum,value)=>sum+value,0),passed=strict?total<fight.hero[ability]:total<=fight.hero[ability];
     fight.events.push({kind:'check',ability,dice:values,total,passed});
     return passed;
   };
@@ -71,6 +95,12 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
   };
   const done = () => {
     announceDeaths();
+    (rules.enemies ?? []).forEach((rule,index)=>{
+      const enemy=fight.enemies[index];
+      if (rule.fleeBelowHp && enemy.hp>0 && enemy.hp<rule.fleeBelowHp && !enemy.fled) {
+        enemy.fled=true;fight.events.push({kind:'fled',name:enemy.name});
+      }
+    });
     if (!living(fight).length) { finish(fight,'win'); return true; }
     return false;
   };
@@ -79,6 +109,12 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
   const attackChange = index => (rules.mount?.rider===index && !fight.enemies[rules.mount.mount].hp ? rules.mount.attackChange : 0)
     +(fatigued && rules.fatigue.enemy===index ? rules.fatigue.attackChange : 0);
   let fatigued=false;
+  if (rules.abilityOutcome) {
+    const passed=check(rules.abilityOutcome.ability);
+    finish(fight,passed?'win':'loss');
+    fight.destination=passed?rules.abilityOutcome.successSection:rules.abilityOutcome.failureSection;
+    fight.events.at(-1).destination=fight.destination;return fight;
+  }
   function heroAttack(index,{automatic=false,ally=false}={}) {
     const enemy=fight.enemies[index];
     const values=automatic ? [] : dice(3,roll),total=values.reduce((sum,value)=>sum+value,fight.hero.attackBonus);
@@ -112,11 +148,19 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
     } else damageMultiplier=rules.charge.failedDamageMultiplier;
   }
   const extraEnemy=rules.extraEnemyAttack && round===1 && !check(rules.extraEnemyAttack.ability) ? rules.extraEnemyAttack.enemy : null;
-  let heroMiss=false;
+  let heroMiss=false,disarming=false;
+  if (rules.disarm && !state.disarmed && healing===null) {
+    disarming=true;
+    state.disarmStreak=check(rules.disarm.ability,rules.disarm.strict)?(state.disarmStreak ?? 0)+1:0;
+    if (state.disarmStreak>=rules.disarm.requiredConsecutive) {
+      state.disarmed=true;fight.enemies[rules.disarm.enemy].attacks=structuredClone(rules.disarm.afterAttacks);
+      fight.events.push({kind:'disarmed',name:fight.enemies[rules.disarm.enemy].name});
+    }
+  }
   if (healing !== null) {
     const restored=Math.min(healing,fight.hero.maxHp-fight.hero.hp);
     fight.hero.hp+=restored;fight.events.push({kind:'healing',amount:restored});
-  } else if (available.length) {
+  } else if (available.length && !disarming) {
     heroMiss=!heroAttack(target);
     if (done()) return fight;
     if (extraAttack) {
@@ -131,7 +175,7 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
     heroAttack(rules.ally.enemy,{ally:true});if (done()) return fight;
   }
   for (const index of available) {
-    if (!fight.enemies[index].hp || round<=state.freeRounds) continue;
+    if (!fight.enemies[index].hp || fight.enemies[index].fled || round<=state.freeRounds) continue;
     const enemy=fight.enemies[index],schedule=rules.enemies?.[index] ?? {};
     if (schedule.attackAfterDeathOf!==undefined && fight.enemies[schedule.attackAfterDeathOf].hp>0) continue;
     const first=schedule.firstAttackRound ?? 1;
@@ -159,6 +203,15 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
           state.blinded=true;fight.events.push({kind:'blinded'});
         }
       }
+    }
+  }
+  if (rules.shapeshift && round%rules.shapeshift.every===0) {
+    state.formIndex=(state.formIndex ?? 0)+1;
+    const form=rules.shapeshift.forms[state.formIndex],enemy=fight.enemies[rules.shapeshift.enemy];
+    enemy.name=form.name;enemy.toBeHit=form.toBeHit;enemy.attacks=structuredClone(form.attacks);
+    fight.events.push({kind:'shape',name:form.name});
+    if (state.formIndex===rules.shapeshift.forms.length-1) {
+      finish(fight,'win');fight.destination=rules.shapeshift.lastSection;fight.events.at(-1).destination=fight.destination;
     }
   }
   return fight;
