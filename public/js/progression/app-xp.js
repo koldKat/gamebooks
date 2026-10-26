@@ -135,7 +135,7 @@ function _render(data) {
     return;
   }
   const { level = 0, title = '', heartbeatRatePerMin = 0 } = data;
-  document.getElementById('app-xp-level').textContent   = t('feed.hover_level', { n: level });
+  document.getElementById('app-xp-level').textContent   = t('appxp.level', { n: level });
   document.getElementById('app-xp-title').textContent    = title || '';
   document.getElementById('app-xp-hb-rate').textContent  = _hbRateText(heartbeatRatePerMin);
   _enqueueXpAnim(data);
