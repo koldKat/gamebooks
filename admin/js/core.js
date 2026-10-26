@@ -281,7 +281,6 @@ export function userProgressTooltipHtml(u) {
     + fact('GC balance', balance.toLocaleString(), 'val-amber')
     + fact('Rubies', number(u.diamondsBalance).toLocaleString(), 'val-gem-red')
     + fact('Diamonds', number(u.rubiesBalance).toLocaleString(), 'val-ruby')
-    + fact('XP to next GC', number(u.coinXpUntilNext).toLocaleString())
     + fact('Coin mint bonus', `${number(u.gcMintPct).toLocaleString(undefined, { maximumFractionDigits: 1 })}%`, 'val-amber')
     + fact('XP from boosts', number(u.xpFromBoost).toLocaleString())
     + fact('Lucky coin', u.pendingBonusGc ? 'Ready to claim' : 'None waiting', u.pendingBonusGc ? 'val-amber' : '')
