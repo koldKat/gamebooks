@@ -28,7 +28,7 @@ test('user hover shows escaped normal and Job progression with independent progr
   assert.match(html,/&lt;Reader&gt;/);assert.match(html,/&lt;Ranger&gt;/);assert.ok(!html.includes('<Reader>'));
   assert.match(html,/Level 3/);assert.match(html,/Job Level 1/);assert.match(html,/Digger/);
   assert.match(html,/width:50%/);assert.match(html,/width:25%/);
-  assert.match(html,/8,000 \/ 10,000 XP/);assert.match(html,/1,500 \/ 3,000 XP/);
+  assert.match(html,/8,000 \/ 10,000 XP/);assert.match(html,/1,500 \/ 3,000 EV/);
   assert.match(html,/XP boost: 12.5%/);assert.match(html,/Job cap: 8/);
   assert.ok(!helper({}).includes('NaN'));
   const handlers={},tip={style:{},offsetWidth:300,offsetHeight:180};
