@@ -1,4 +1,5 @@
 import {configureDestinyAbilityQuota} from './ability-quota.js';
+import {resetDestinyPetCombatStats} from './pets.js';
 
 // Mutates only the action's private combat snapshot. Health, equipment,
 // character data and carried charges remain separate from temporary effects.
@@ -9,6 +10,7 @@ export function resetDestinyCombatActor(fight,sequence){
   if(!sequence.carryAbilities)fight.used={};
   delete fight.combatBoostsApplied;delete fight.portableShieldHealth;
   Object.assign(fight.hero,fight.hero.normal);
+  resetDestinyPetCombatStats(fight);
   for(const key of ['chargedAttacks','sacrificedSummons','lastHealthHitRound','nextHeroSpeedDice','sustainedDamage','combatStance','scoreRerollAbility'])delete fight[key];
   delete fight.encounter.heroStatuses;delete fight.encounter.growingStatus;
   if(reset){

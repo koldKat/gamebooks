@@ -7,6 +7,9 @@ export const hasDestinyAbility = (fight, name) => (!fight.abilityCatalog || Obje
   (!fight.combatStance||fight.abilityCatalog?.[name]?.quotaStatus||fight.combatStance.allowedAbilities.includes(name)||fight.combatStance.passives.includes(name))&&
   destinyQuotaPassiveActive(fight,name)&&(!fight.abilityGrantSources?.[name]||destinyAbilityGrantActive(fight,name))&&
   (!fight.abilityCatalog?.[name]?.activeWithLeftHand || fight.equipment?.leftHand?.type===fight.abilityCatalog[name].activeWithLeftHand) &&
+  (!fight.abilityCatalog?.[name]?.activeWithMainHand || fight.equipment?.mainHand?.type===fight.abilityCatalog[name].activeWithMainHand) &&
+  (!fight.abilityCatalog?.[name]?.activeWithWeapons || Object.entries(fight.abilityCatalog[name].activeWithWeapons).every(([hand,type])=>fight.equipment?.[hand]?.type===type)) &&
+  (fight.abilityCatalog?.[name]?.activeHealthAtMost===undefined || fight.hero.health<=fight.abilityCatalog[name].activeHealthAtMost) &&
   !fight.encounter?.disableHeroAbilities && !fight.encounter?.sacrificedAbilities?.includes(name) && !fight.encounter?.cancelledAbilities?.includes(name) && (fight.abilities?.[name] || 0) -
   (!fight.encounter?.grantedAbilities?.[name]?.ignoreTransport && fight.equipment?.transport?.stability === 0 && fight.equipment.transport.abilities?.includes(name) ? 1 : 0) > 0;
 
@@ -23,8 +26,24 @@ export function destinyCategoryBlocked(fight,category){
 }
 
 export function destinyPassiveDamageBonus(fight) {
-  return Object.entries(fight.abilityCatalog||{}).reduce((sum,[name,spec])=>sum+
+  const encounter=(fight.encounter?.damagePerDieWhenDefeated||[]).filter(rule=>(rule.targets||[rule.target]).every(index=>!isDestinyOpponentActive(fight,index)))
+    .reduce((sum,rule)=>sum+rule.amount,0);
+  return encounter+Object.entries(fight.abilityCatalog||{}).reduce((sum,[name,spec])=>sum+
     (spec.damagePerDie&&hasDestinyAbility(fight,name)&&!fight.sacrificedSummons?.includes(name)?spec.damagePerDie:0),0);
+}
+
+export const destinyPetHasAbility=(fight,name)=>!!(name&&fight.pet?.health>0&&!fight.encounter?.disablePet&&fight.pet.abilities?.includes(name));
+
+export function destinyPetDamageBonus(fight,name,perDie=false) {
+  if(!(fight.pet?.health>0)||fight.encounter?.disablePet) return 0;
+  return (fight.pet.abilities||[]).reduce((sum,ability)=>{
+    const bonus=fight.abilityCatalog?.[ability]?.petDamageBonus;
+    return sum+(bonus?.abilities.includes(name)?(perDie?bonus.perDie||0:bonus.flat||0):0);
+  },0);
+}
+
+export function destinyAbilityHealthCost(fight,spec) {
+  return spec.sacrificeWaiverPetAbility&&destinyPetHasAbility(fight,spec.sacrificeWaiverPetAbility)?0:spec.sacrifice||0;
 }
 
 export function destinyOpponentDamageTotal(fight,values,bonuses={}){
@@ -59,7 +78,7 @@ export function onDestinyHeroDice(fight,values) {
       if(checked)(fight.turn.automaticModifiers??=[]).push({name,action:{heal:spec.doublesHeal}});
       else{if(spec.category==='mo')delete fight.sustainedDamage;healDestinyHero(fight,spec.doublesHeal);}
     }
-    if(spec.restoreOnDoubles&&fight.used[name]>0)fight.used[name]=0;
+    if(spec.restoreOnDoubles&&fight.used[name]>0&&!fight.encounter?.unrestorableAbilities?.includes(name))restoreDestinyAbilityCharge(fight,name,Number.MAX_SAFE_INTEGER);
   }
 }
 
@@ -111,6 +130,30 @@ export function recordDestinyRollFaces(fight,values,owner,kind){
 }
 
 export const destinyAbilityDamageMultiplier=(fight,target,name)=>fight.encounter?.abilityDamageMultiplierByTarget?.[target]?.[name]??1;
+
+export function applyDestinyDamageSourceRules(fight,target,amount,kind,source) {
+  if(amount<=0)return;
+  for(const rule of fight.encounter?.damageSourceRules||[]) {
+    if(rule.triggered||rule.target!==target)continue;
+    const matches=rule.abilities.includes(source)||kind==='score'&&rule.scoreAbilities?.some(name=>hasDestinyAbility(fight,name)&&!fight.encounter?.abilityImmunityByTarget?.[target]?.includes(name));
+    if(matches){rule.triggered=true;Object.assign(fight.encounter,structuredClone(rule.set));}
+  }
+}
+
+export function recordDestinyOpponentDamage(fight,target,amount,kind) {
+  if(amount<=0)return;
+  if(fight.encounter?.trackActiveDamage&&!['passive','pet-passive','companion','encounter-destruction'].includes(kind))
+    (fight.turn.activeDamageByTarget??={})[target]=((fight.turn.activeDamageByTarget||{})[target]||0)+amount;
+  if(kind==='encounter-destruction')return;
+  for(const rule of fight.encounter?.healthLossGroupDamage||[])if(rule.target===target){
+    const previous=rule.healthLost||0;rule.healthLost=previous+amount;
+    rule.pending=(rule.pending||0)+Math.floor(rule.healthLost/rule.every)-Math.floor(previous/rule.every);
+  }
+  for(const rule of fight.encounter?.onDamageResources||[])if(rule.targets.includes(target)&&(!rule.kinds||rule.kinds.includes(kind)))fight.encounter.resources[rule.resource]+=rule.amount;
+}
+
+export const destinyRoundMatches=(fight,rule)=>(rule.fromRound===undefined||fight.round>=rule.fromRound)&&
+  (rule.untilRound===undefined||fight.round<=rule.untilRound)&&(!rule.every||fight.round%rule.every===(rule.roundRemainder??0));
 
 export function onDestinyOpponentHealthHit(fight,attacker,damage,kind){
   if(!damage||!isDestinyOpponentActive(fight,attacker))return;
@@ -172,27 +215,37 @@ export const destinyAttackerTarget = fight => fight.turn?.enemyAttackTarget ?? f
 export function destinyDamageAllowed(fight, target, kind = 'score') {
   if (!isDestinyOpponentActive(fight, target)) return false;
   if (fight.opponents[target].role === 'indestructible') return false;
+  if(fight.encounter?.shieldsByTarget?.[target]?.health>0&&['passive','pet-passive'].includes(kind))return false;
+  if(fight.encounter?.damageOnlyFromActions?.includes(target)&&kind!=='book-action')return false;
+  if(fight.phase!=='start'&&['score','single-ability'].includes(kind)&&fight.turn?.blockedSingleTargets?.includes(target))return false;
   if(fight.encounter?.damageRequiresHeroWinTargets?.includes(target)&&fight.turn?.winner!=='hero')return false;
   if(kind!=='score'&&fight.encounter?.normalScoreOnlyTargets?.includes(target))return false;
   if (fight.encounter?.damageShieldWhileAlive?.some(rule => rule.target === target &&
+      (!rule.kinds||rule.kinds.includes(kind)) &&
       rule.protectors.some(index => isDestinyOpponentActive(fight, index)))) return false;
-  return kind !== 'passive' || !fight.encounter?.passiveImmuneTargets?.includes(target);
+  return !['passive','pet-passive'].includes(kind) || !fight.encounter?.passiveImmuneTargets?.includes(target);
 }
 
 export function destinyStat(fight, target, attribute, {ignoreModifierIncreases = false} = {}) {
   const actor = target === 'hero' ? fight.hero : fight.opponents[target];
-  let value = actor[attribute];
+  let value = attribute==='armour'&&fight.encounter?.shieldsByTarget?.[target]?.health>0?fight.encounter.shieldsByTarget[target].armour:actor[attribute];
   if (value === null) throw new RangeError('This component has no such combat attribute');
   if (fight.status !== 'active') return value;
+  if(target==='hero') for(const name of Object.keys(fight.abilities||{})) {
+    const spec=fight.abilityCatalog?.[name];
+    if(spec?.attributeBonuses?.[attribute]&&hasDestinyAbility(fight,name)) value+=spec.attributeBonuses[attribute];
+  }
   const flank=attribute==='armour'&&fight.encounter?.armourByHeroSpeedAbility?.[target];
   if(flank)value=fight.turn?.winner==='hero'&&fight.turn.playedSpeedAbility?flank.flanked:flank.normal;
   for(const rule of fight.encounter?.statWhenAllDead||[])if(rule.target===target&&rule.attribute===attribute&&rule.dead.every(index=>isDestinyOpponentDead(fight,index)))value=rule.set;
   for (const effect of fight.effects) {
-    if (effect.kind !== 'stat' || effect.target !== target || effect.attribute !== attribute ||
+    if (effect.blockedByShield || effect.kind !== 'stat' || effect.target !== target || effect.attribute !== attribute ||
         fight.round < effect.from || fight.round > effect.until) continue;
     if(target==='hero'&&destinyImmuneToAbility(fight,effect.status||effect.source))continue;
+    if(fight.encounter?.statAbilityImmunityByTarget?.[target]?.includes(attribute)&&fight.abilityCatalog?.[effect.source])continue;
     if (ignoreModifierIncreases && fight.abilityCatalog?.[effect.source]?.category === 'mo' &&
         (effect.amount > 0 || effect.set !== undefined && effect.set > value)) continue;
+    if(attribute==='armour'&&fight.encounter?.permanentArmourReductionImmune?.includes(target)&&effect.until===Number.MAX_SAFE_INTEGER&&fight.abilityCatalog?.[effect.source]&&(effect.amount<0||effect.set!==undefined&&effect.set<value))continue;
     if (attribute === 'armour' && fight.encounter?.armourReductionImmune?.includes(target) &&
         effect.source !== 'encounter-health' && (effect.amount < 0 || effect.set !== undefined && effect.set < value)) continue;
     if (target === 'hero' && attribute === 'armour' && hasDestinyAbility(fight, 'ice-mantle') &&
@@ -211,17 +264,28 @@ export function destinyStat(fight, target, attribute, {ignoreModifierIncreases =
     const boost=spec.lowHealthBoost;
     if (boost?.attribute===attribute && fight.hero.health<=boost.health && hasDestinyAbility(fight,name)) value+=boost.amount;
   }
-  return Math.max(0, value);
+  return Math.max(fight.encounter?.statMinimumByTarget?.[target]?.[attribute] ?? 0, value);
 }
 
 // A printed dash stays null on the component. It supplies no absorption when
 // calculating a hit; it is never replaced with a fabricated armour attribute.
 export const destinyArmour=(fight,target)=>((target==='hero'?fight.hero:fight.opponents[target]).armour===null?0:destinyStat(fight,target,'armour'));
 
+export function destinyOpponentSpeedResult(fight) {
+  const target=destinyAttackerTarget(fight),saved=fight.savedOpponentDice;
+  if(saved?.round===fight.round&&saved.target===target&&Number.isFinite(saved.result)) return saved.result;
+  return fight.turn.opponentSpeedDice.reduce((sum,face)=>sum+face,0)+destinyStat(fight,target,'speed')+(fight.turn.opponentSpeedBonus||0);
+}
+
 export function addDestinyStatEffect(fight, target, attribute, amount, duration, source, delay = 0) {
   const from = fight.round + delay;
   fight.effects.push({ kind: 'stat', target, attribute, amount, from,
-    until: duration === null ? Number.MAX_SAFE_INTEGER : from + duration - 1, source });
+    until: duration === null ? Number.MAX_SAFE_INTEGER : from + duration - 1, source, ...(fight.encounter?.shieldsByTarget?.[target]?.health>0&&fight.abilityCatalog?.[source]?{blockedByShield:true}:{}) });
+  if (target==='hero' && attribute==='armour' && amount>0 && delay===0) {
+    for (const name of Object.keys(fight.abilities||{})) {
+      if (fight.abilityCatalog?.[name]?.healOnArmourIncrease && hasDestinyAbility(fight,name)) healDestinyHero(fight,amount);
+    }
+  }
 }
 
 // Story blessings expire by combats, independently of the entered base stats.
@@ -261,7 +325,30 @@ export function damageDestinyHero(fight, amount){
   return lost;
 }
 
+// Restore paid attribute costs without undoing enemy debuffs or adding a new
+// bonus on top of the hero's starting attributes.
+export function restoreDestinySpentStat(fight,attribute,amount) {
+  let restored=0;
+  for(const effect of fight.effects) {
+    if(restored>=amount) break;
+    if(effect.kind!=='stat'||effect.target!=='hero'||effect.attribute!==attribute||!(effect.amount<0)||
+      fight.abilityCatalog?.[effect.source]?.fixedStatCost?.attribute!==attribute||effect.from>fight.round||effect.until<fight.round) continue;
+    const value=Math.min(amount-restored,-effect.amount);effect.amount+=value;restored+=value;
+  }
+  return restored;
+}
+
+export function restoreDestinyAbilityCharge(fight,name,count=1){
+  if(fight.abilityCatalog?.[name]?.unrestorable||fight.encounter?.unrestorableAbilities?.includes(name))throw new RangeError('This ability cannot be restored');
+  const restored=Math.min(fight.used[name]||0,count);fight.used[name]=(fight.used[name]||0)-restored;
+  if(fight.encounter?.soulStolenAbilities?.[name])fight.encounter.soulStolenAbilities[name]=Math.max(0,fight.encounter.soulStolenAbilities[name]-restored);
+  return restored;
+}
+
 export function observeDestinyHealth(fight) {
+  for(const target of fight.encounter?.regrowingTargets||[])if(fight.opponents[target].health===0&&!fight.encounter.inactiveTargets?.includes(target)){
+    (fight.encounter.inactiveTargets??=[]).push(target);
+  }
   for(const rule of fight.encounter?.heroThresholdHealing||[])if(!rule.used&&fight.hero.health<=rule.health){
     rule.used=true;fight.hero.health=rule.full?fight.hero.maxHealth:Math.min(fight.hero.maxHealth,fight.hero.health+rule.amount);
     fight.effects=fight.effects.filter(effect=>effect.target!=='hero'||!rule.cleanse?.includes(effect.status||effect.kind));
@@ -277,8 +364,10 @@ export function observeDestinyHealth(fight) {
     if (rule.triggered || !opponent || opponent.health > rule.health || rule.requiresLiving&&opponent.health<=0) continue;
     if(rule.event&&!fight.turn)continue;
     rule.triggered = true;
+    if(rule.set)Object.assign(fight.encounter,structuredClone(rule.set));
     if(rule.event)(fight.turn.afterHealthDamageEvents??=[]).push({...structuredClone(rule.event),target:rule.target});
     for (const [attribute, amount] of Object.entries(rule.changes || {})) addDestinyStatEffect(fight, rule.target, attribute, amount, null, 'encounter-health');
+    for (const [attribute, amount] of Object.entries(rule.heroChanges || {})) addDestinyStatEffect(fight, 'hero', attribute, amount, null, 'encounter-health');
     if (rule.activateTargets) fight.encounter.inactiveTargets = (fight.encounter.inactiveTargets || []).filter(target => !rule.activateTargets.includes(target));
     if(rule.suspendTargets)fight.encounter.inactiveTargets=[...new Set([...(fight.encounter.inactiveTargets||[]),...rule.suspendTargets])];
     if(rule.clearTargetEffects)fight.effects=fight.effects.filter(effect=>effect.target!==rule.target||!rule.clearTargetEffects.includes(effect.kind));
@@ -298,18 +387,21 @@ export function destinyDamageScore(fight) {
   const statusBonus=hero ? Object.entries(fight.abilityCatalog || {}).filter(([name,spec])=>spec.scorePerDieAgainstStatuses && hasDestinyAbility(fight,name) &&
     fight.effects.some(effect=>effect.target===fight.target && spec.scorePerDieAgainstStatuses.includes(effect.kind) && effect.from<=fight.round && effect.until>=fight.round)).length : 0;
   const reduction=hero ? 0 : fight.effects.filter(effect=>effect.kind==='opponent-die-reduction'&&effect.from<=fight.round&&effect.until>=fight.round).reduce((sum,effect)=>sum+effect.amount,0);
-  const perDie = statusBonus + (hero?destinyPassiveDamageBonus(fight):0) + (fight.turn.damagePerDie || 0) + (hero ?
+  const scorePassives=hero?Object.keys(fight.abilities||{}).map(name=>[name,fight.abilityCatalog?.[name]]).filter(([name,spec])=>(spec?.passiveScorePerDie||spec?.passiveScoreFaceBonus)&&hasDestinyAbility(fight,name)&&!fight.encounter?.abilityImmunityByTarget?.[fight.target]?.includes(name)):[];
+  const perDie = statusBonus + (hero?fight.encounter?.heroScorePerDie||0:0) + scorePassives.reduce((sum,[name,spec])=>sum+(spec.passiveScorePerDie||0)+(spec.passiveScorePerDie?fight.encounter?.abilityDamageBonusByTarget?.[fight.target]?.[name]||0:0),0) + (hero?destinyPassiveDamageBonus(fight):0) + (fight.turn.damagePerDie || 0) + (hero ?
     fight.effects.filter(effect => ['score-per-die', 'damage-per-die'].includes(effect.kind) && effect.from <= fight.round && effect.until >= fight.round && !fight.encounter?.abilityImmunityByTarget?.[fight.target]?.includes(effect.source))
       .reduce((total, effect) => total + effect.amount*destinyAbilityDamageMultiplier(fight,fight.target,effect.source), 0) : 0);
-  const kept = fight.turn.damageKeepHighest && !hero ? new Set(fight.turn.damageDice.map((face,index)=>({face,index}))
+  const kept = fight.turn.damageKeepHighest && !hero && !(fight.turn.keepAllDamageDoubles&&new Set(fight.turn.damageDice).size<fight.turn.damageDice.length) ? new Set(fight.turn.damageDice.map((face,index)=>({face,index}))
     .sort((a,b)=>b.face-a.face).slice(0,fight.turn.damageKeepHighest).map(item=>item.index)) : null;
   const dice = fight.turn.damageDice.reduce((total, face, index) => kept && !kept.has(index) ? total : total + Math.max(0,face-reduction) + perDie +
     (fight.turn.damageDieBonuses?.[index] || 0) +
     (hero && face === 6 && hasDestinyAbility(fight, 'mangle') && !fight.abilityCatalog?.mangle?.scoreFaceBonus ? 2 : 0) +
-    (hero ? (fight.turn.scoreFaceBonuses||[]).filter(rule=>rule.face===face).reduce((sum,rule)=>sum+rule.amount,0) : 0), 0);
+    (hero ? (fight.turn.scoreFaceBonuses||[]).filter(rule=>rule.face===face).reduce((sum,rule)=>sum+rule.amount,0) : 0) +
+    scorePassives.reduce((sum,[,spec])=>sum+(spec.passiveScoreFaceBonus?.face===face?spec.passiveScoreFaceBonus.amount:0),0), 0);
   const bonus = fight.effects.filter(effect => effect.kind === 'score-flat' && effect.hero === hero && (effect.opponent===undefined||effect.opponent===fight.target) &&
     effect.from <= fight.round && effect.until >= fight.round).reduce((total, effect) => total + effect.amount, 0);
-  const encounter = hero ? 0 : -(fight.encounter?.scoreReductionByTarget?.[target] || 0) +
+  const resourceBonus=hero?0:(fight.encounter?.opponentScoreFromResource||[]).filter(rule=>rule.target===target).reduce((sum,rule)=>sum+(fight.encounter.resources?.[rule.resource]||0)*rule.amount,0);
+  const encounter = hero ? 0 : resourceBonus-(fight.encounter?.scoreReductionByTarget?.[target] || 0) +
     (fight.encounter?.mirrorBonusTarget === target ? fight.opponents.filter((opponent, index) => index !== target && isDestinyOpponentActive(fight, index)).length : 0);
   const conditional = hero ? (fight.encounter?.heroScoreWhenDefeated || []).filter(rule => (rule.targets || [rule.target]).every(index => !isDestinyOpponentActive(fight, index)))
     .reduce((total, rule) => total + rule.amount, 0) : 0;
@@ -321,7 +413,7 @@ export function destinyDamageScore(fight) {
 }
 
 export function destinyOnHeroHit(fight, target, damage, kind = 'score') {
-  if (damage<=0||kind==='companion')return;
+  if (damage<=0||['companion','pet','pet-passive'].includes(kind))return;
   if(fight.team&&kind!=='passive')fight.team.lastDamageByTarget[target]=fight.team.active;
   if (fight.round > 0 && fight.turn.winner==='hero') for (const [name,spec] of Object.entries(fight.abilityCatalog || {})) {
     const boost=spec.consecutiveHitBoost;
@@ -340,6 +432,12 @@ export function destinyOnHeroHit(fight, target, damage, kind = 'score') {
   if (healing) healDestinyHero(fight, healing);
   if(fight.encounter?.inactiveTargets?.includes(target))return;
   if (fight.encounter?.passiveImmuneTargets?.includes(target)) return;
+  for(const name of Object.keys(fight.abilities||{})) {
+    const status=fight.abilityCatalog?.[name]?.onHealthHitStatus;
+    if(!status||!hasDestinyAbility(fight,name)||fight.encounter?.passiveImmunityByTarget?.[target]?.includes(name)||
+      fight.effects.some(effect=>effect.target===target&&effect.status===status.name)) continue;
+    fight.effects.push({kind:'ongoing-damage',status:status.name,source:name,target,amount:status.amount,from:fight.round,until:Number.MAX_SAFE_INTEGER});
+  }
   if(kind==='score')for(const name of Object.keys(fight.abilities||{})){
     const status=fight.abilityCatalog?.[name]?.scoreHitStatus;
     if(!status||!hasDestinyAbility(fight,name)||fight.encounter?.passiveImmunityByTarget?.[target]?.includes(name)||fight.effects.some(effect=>effect.kind===status.kind&&effect.target===target&&effect.source===name))continue;
@@ -359,8 +457,10 @@ export function destinyOnHeroHit(fight, target, damage, kind = 'score') {
 }
 
 export function reflectDestinyDamage(fight, target, damage, kind) {
+  if (['pet','pet-passive'].includes(kind)) return;
   if (!damage) return;
   for (const rule of fight.encounter?.reflectDamage || []) {
+    if(!destinyRoundMatches(fight,rule))continue;
     if(rule.immuneAbility&&hasDestinyAbility(fight,rule.immuneAbility))continue;
     if(rule.kinds&&!rule.kinds.includes(kind))continue;
     if(!rule.allDamage&&!['score','dice','first-strike'].includes(kind))continue;
@@ -375,10 +475,17 @@ export function reflectDestinyDamage(fight, target, damage, kind) {
       (fight.turn.afterHealthDamageEvents??=[]).push({kind:'enemy-dice-damage',name:rule.name,dice:rule.dice,owner:'opponent',damageDice:true,attacker:target});
       continue;
     }
-    const amount = rule.heroAttribute ? (rule.heroAttribute==='armour'?destinyArmour(fight,'hero'):destinyStat(fight,'hero',rule.heroAttribute)) : rule.divisor ? Math.ceil(damage / rule.divisor) : rule.amount;
+    const amount = rule.resource ? fight.encounter.resources?.[rule.resource]||0 : rule.heroAttribute ? (rule.heroAttribute==='armour'?destinyArmour(fight,'hero'):destinyStat(fight,'hero',rule.heroAttribute)) : rule.divisor ? Math.ceil(damage / rule.divisor) : rule.amount;
     const lost=damageDestinyHero(fight,amount);
     fight.history.push({ type: 'reflected-damage', round: fight.round, target, damage: lost });
   }
+}
+
+export function absorbDestinyShieldDamage(fight,target,amount){
+  const shield=fight.encounter?.shieldsByTarget?.[target];if(!(shield?.health>0))return false;
+  const damage=Math.min(shield.health,amount);shield.health-=damage;
+  fight.history.push({type:'shield-damage',round:fight.round,target,damage,health:shield.health});
+  return true;
 }
 
 export function destinyStrike(fight, target, amount, source, kind = 'dice') {
@@ -386,6 +493,8 @@ export function destinyStrike(fight, target, amount, source, kind = 'dice') {
   if (!isDestinyOpponentActive(fight, target)) throw new RangeError('Choose a living opponent');
   if(fight.encounter?.abilityImmunityByTarget?.[target]?.includes(source))return 0;
   if (!destinyDamageAllowed(fight, target, kind)) return 0;
+  amount=Math.max(0,amount+(fight.encounter?.abilityDamageBonusByTarget?.[target]?.[source]||0));
+  if(absorbDestinyShieldDamage(fight,target,amount))return 0;
   const proxy=fight.opponentProxies?.[target];
   if(proxy)proxy.opponents=[fight.hero];
   const lost = proxy?damageDestinyHero(proxy,amount):Math.min(opponent.health, amount);
@@ -394,16 +503,18 @@ export function destinyStrike(fight, target, amount, source, kind = 'dice') {
     opponent.health=proxy.hero.health;onDestinyOpponentHealthHit(proxy,0,lost,kind);
     if(lost&&['score','dice'].includes(kind)&&hasDestinyAbility(proxy,'lightning'))damageDestinyHero(fight,2);
   }else opponent.health -= lost;
+  recordDestinyOpponentDamage(fight,target,lost,kind);
+  applyDestinyDamageSourceRules(fight,target,lost,kind,source);
   observeDestinyHealth(fight);
   destinyOnHeroHit(fight, target, lost, kind);
-  if(kind!=='companion'){
+  if(!['companion','pet','pet-passive'].includes(kind)){
     fight.turn.lastHeroDamage ??= {};
     fight.turn.lastHeroDamage[target] = (fight.turn.lastHeroDamage[target] || 0) + lost;
   }
   if (isDestinyOpponentDead(fight, target)) {
     recordDestinyDefeat(fight, target);
     fight.turn.deaths.push(target);
-    if (kind === 'passive') fight.turn.pendingPassiveDeath = true;
+    if (['passive','pet-passive'].includes(kind)) fight.turn.pendingPassiveDeath = true;
   }
   fight.history.push({ type: 'ability-damage', round: fight.round, target, damage: lost, source });
   return lost;
@@ -469,6 +580,12 @@ export function recordDestinyDefeat(fight, target) {
   fight.defeated ??= [];
   if (fight.defeated.includes(target)) return;
   fight.defeated.push(target);
+  for(const rule of fight.encounter?.onDeathDestroyAdjacent||[])if(rule.targets.includes(target)) {
+    for(const adjacent of [target-1,target+1]) if(rule.victims.includes(adjacent)&&isDestinyOpponentActive(fight,adjacent)) {
+      if(rule.resource)fight.encounter.resources[rule.resource]+=rule.amount;
+      destinyStrike(fight,adjacent,fight.opponents[adjacent].health,rule.name,'encounter-destruction');
+    }
+  }
   const actors=[fight,...(fight.allies||[])];
   for(const rule of fight.encounter?.onDeathTeamEffects||[])if(rule.dead===target){
     for(const actor of actors)actor.effects.push({...structuredClone(rule.effect),target:'hero',from:fight.round,until:Number.MAX_SAFE_INTEGER,source:rule.name});
@@ -518,6 +635,7 @@ export function recordDestinyDefeat(fight, target) {
     const damage=damageDestinyHero(fight,amount);
     fight.history.push({type:'death-damage',round:fight.round,target,damage});
   }
+  for(const rule of fight.encounter?.onDeathTests||[])if(rule.dead===target)(fight.turn.afterHealthDamageEvents??=[]).push(structuredClone(rule.event));
   for (const effect of fight.encounter?.onDeathStatChanges || []) {
     if (effect.dead !== target || !isDestinyOpponentActive(fight, effect.target)) continue;
     for (const [attribute, amount] of Object.entries(effect.changes)) addDestinyStatEffect(fight, effect.target, attribute, amount, null, 'encounter-death');
@@ -563,12 +681,13 @@ export function destinyOnOpponentRoll(fight, values, kind) {
 }
 
 export function destinyDieLocked(fight, owner, kind, index) {
+  if(owner==='opponent'&&fight.encounter?.immutableOpponentDiceTargets?.includes(destinyAttackerTarget(fight)))return true;
   if (kind === 'speed') return owner === 'hero' ? (fight.turn.lockedHeroDice || []).includes(index) : Boolean(fight.turn.lockedOpponentDice);
   return owner === 'hero' && (fight.turn.lockedDamageDice || []).includes(index);
 }
 
-export function rollDestinyDamageDice(fight, count, roll, unmodified = false) {
-  const bonus = destinyPassiveDamageBonus(fight)+(unmodified ? 0 : fight.effects.filter(effect => effect.kind === 'damage-per-die' &&
+export function rollDestinyDamageDice(fight, count, roll, unmodified = false, source) {
+  const bonus = destinyPassiveDamageBonus(fight)+destinyPetDamageBonus(fight,source,true)+(unmodified ? 0 : fight.effects.filter(effect => effect.kind === 'damage-per-die' &&
     effect.from <= fight.round && effect.until >= fight.round).reduce((total, effect) => total + effect.amount, 0));
   let total = 0;
   for (let i = 0; i < count; i++) {
@@ -584,8 +703,15 @@ export function rollDestinyDamageDice(fight, count, roll, unmodified = false) {
 export function destinyPassiveEffects(fight, roll, {effectOwner} = {}) {
   const result=(fight.encounter?.endResourceDamage||[])
     .filter(rule=>!rule.requiresAlive?.some(target=>!isDestinyOpponentActive(fight,target)))
-    .map(rule=>({target:'hero',amount:(fight.encounter.resources?.[rule.resource]||0)*rule.amount,
-      ignoreArmour:rule.ignoreArmour??true,source:rule.name})).filter(effect=>effect.amount>0);
+    .map(rule=>({target:rule.target??'hero',amount:(fight.encounter.resources?.[rule.resource]||0)*rule.amount,
+      ignoreArmour:rule.ignoreArmour??true,source:rule.name,recordMaximum:rule.recordMaximum})).filter(effect=>effect.amount>0);
+  for(const rule of fight.encounter?.endDamagePerLivingGroup||[])if(destinyRoundMatches(fight,rule)) {
+    const count=rule.targets.filter(target=>isDestinyOpponentActive(fight,target)).length;
+    if(count)result.push({target:'hero',amount:count*rule.amount,ignoreArmour:rule.ignoreArmour??true,source:rule.name});
+  }
+  if(fight.encounter?.endDamageAllOpponents)fight.opponents.forEach((_,target)=>{
+    if(isDestinyOpponentActive(fight,target))result.push({target,amount:fight.encounter.endDamageAllOpponents,ignoreArmour:true,source:'encounter'});
+  });
   const objective=fight.encounter?.friendlyObjective;
   if(objective)result.push({target:objective.target,amount:objective.damagePerSource*objective.sources.filter(target=>isDestinyOpponentActive(fight,target)).length,
     ignoreArmour:true,allowInactive:true,source:objective.name});
@@ -610,6 +736,7 @@ export function destinyPassiveEffects(fight, roll, {effectOwner} = {}) {
     target: 'hero', amount: rule.current ?? rule.initial, ignoreArmour: true, source: rule.name,
   });
   for (const effect of fight.encounter?.endEffects || []) {
+    if(!destinyRoundMatches(fight,effect))continue;
     if(effect.pairedCaptive&&fight.team?.active!==fight.team?.pairing?.prisonActor)continue;
     if(effect.immuneAbility&&hasDestinyAbility(fight,effect.immuneAbility))continue;
     if(effect.requiresFlag&&!fight.encounter[effect.requiresFlag])continue;
@@ -630,7 +757,7 @@ export function destinyPassiveEffects(fight, roll, {effectOwner} = {}) {
     if (spec.openingPassive && !fight.used[name]) continue;
     if (spec.endSelfDamage) result.push({target:'hero',amount:spec.endSelfDamage,ignoreArmour:true,source:name});
     if (spec.endDamage||spec.endDamageFromStat) fight.opponents.forEach((opponent, target) => {
-      if (isDestinyOpponentActive(fight, target) && !fight.encounter?.passiveImmunityByTarget?.[target]?.includes(name)) {
+      if (isDestinyOpponentActive(fight, target) && !fight.encounter?.passiveImmunityByTarget?.[target]?.includes(name) && !fight.encounter?.abilityImmunityByTarget?.[target]?.includes(name)) {
         if(spec.endDamageTargetTrait&&!fight.encounter?.traitsByTarget?.[target]?.includes(spec.endDamageTargetTrait))return;
         let amount=spec.endDamageFromStat?Math.floor(destinyStat(fight,'hero',spec.endDamageFromStat.attribute)/spec.endDamageFromStat.divisor):spec.endDamage;
         for(const upgrade of spec.endDamageUpgrades||[])if(hasDestinyAbility(fight,upgrade.ability))amount+=upgrade.amount;
@@ -664,9 +791,13 @@ export function destinyPassiveEffects(fight, roll, {effectOwner} = {}) {
       amount=Math.max(...base,...Object.entries(fight.abilityCatalog || {}).filter(([name,spec])=>spec.burnUpgrade && hasDestinyAbility(fight,name)).map(([,spec])=>spec.burnUpgrade));
       amount*=destinyAbilityDamageMultiplier(fight,effect.target,'burn');
     }
-    if (effect.kind === 'bleed') amount += fight.bleedBonus || 0;
+    if (effect.kind === 'bleed') {
+      amount += fight.bleedBonus || 0;
+      if(fight.bloodMark?.target===effect.target) amount+=fight.bloodMark.amount;
+      for(const name of Object.keys(fight.abilities||{})) if(fight.abilityCatalog?.[name]?.bleedEndBonus&&hasDestinyAbility(fight,name)) amount+=fight.abilityCatalog[name].bleedEndBonus;
+    }
     if (effect.kind === 'delayed-dice') {
-      amount = rollDestinyDamageDice(fight, 1, roll);
+      amount = rollDestinyDamageDice(fight, 1, roll, false, effect.source);
     }
     result.push({ target: effect.target, amount, ignoreArmour: true, source: effect.source || effect.kind });
   }

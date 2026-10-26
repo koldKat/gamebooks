@@ -20,6 +20,7 @@ export function queueDestinyEncounterEvent(fight, event, returnPhase, roll) {
   const boosted = event.boostFromPreviousStep && fight.encounter?.[event.boostFromPreviousStep] === fight.encounter?.hazardStep - 1;
   fight.turn.pendingAbility = { type: 'encounter', name: event.name, event: structuredClone(event), returnPhase,
     dice: Array.from({ length: boosted ? event.boostDice : event.dice ?? 1 }, () => destinyDie(roll)), bonuses: {}, options: {} };
+  if(event.snapshotAttribute)fight.turn.pendingAbility.event.attributeSnapshot=destinyStat(fight,'hero',event.snapshotAttribute);
   if (suspended) fight.turn.pendingAbility.suspendedAbility = structuredClone(suspended);
   fight.phase = 'ability-rolled';
   if(event.heroRoll){
@@ -103,7 +104,7 @@ export function resolveDestinyEncounterEvent(fight, pending, roll, { roster } = 
       break;
     }
     case 'heal-opponent-if-low':
-      if(total<=event.limit&&isDestinyOpponentActive(fight,event.target)){
+      if((event.faces?event.faces.includes(total):total<=event.limit)&&isDestinyOpponentActive(fight,event.target)){
         const healing={target:event.target,amount:event.amount,uncapped:!!event.uncapped};
         if(event.atEnd)(fight.turn.encounterEndOpponentHealing??=[]).push(healing);
         else{
@@ -173,6 +174,9 @@ export function resolveDestinyEncounterEvent(fight, pending, roll, { roster } = 
     case 'damage-if-high':
       if(total>event.limit){
         stageDamage(event.amount);
+        for(const healing of event.healing||[])if(isDestinyOpponentActive(fight,healing.target)) {
+          const recipient=fight.opponents[healing.target];recipient.health=Math.min(recipient.maxHealth,recipient.health+healing.amount);
+        }
         for(const change of event.changes||[])addDestinyStatEffect(fight,change.target,change.attribute,change.amount,change.duration,event.name,change.delay||0);
       }
       break;
@@ -187,15 +191,34 @@ export function resolveDestinyEncounterEvent(fight, pending, roll, { roster } = 
       const outcome=event.outcomes.find(item=>item.faces.includes(total));
       if(!outcome)throw new RangeError('No attack variation for this roll');
       if(outcome.unlessHeroAbility&&hasDestinyAbility(fight,outcome.unlessHeroAbility))break;
+      if(outcome.requiresAlive?.some(target=>!isDestinyOpponentActive(fight,target)))break;
+      if(outcome.heroDamage)stageDamage(outcome.heroDamage);
+      if(outcome.heroStatus&&!destinyImmuneToAbility(fight,outcome.heroStatus.name)) {
+        const status=outcome.heroStatus,previous=fight.encounter.heroStatuses?.[status.name];
+        (fight.encounter.heroStatuses??={})[status.name]=previous===undefined?status.initial:previous+status.increment;
+      }
+      for(const healing of outcome.healing||[])if(isDestinyOpponentActive(fight,healing.target)){
+        const recipient=fight.opponents[healing.target];recipient.health=Math.min(recipient.maxHealth,recipient.health+healing.amount);
+      }
       if(outcome.healOpponent){
         const target=event.attacker??destinyAttackerTarget(fight),opponent=fight.opponents[target];
         if(outcome.deferHealing)(fight.turn.encounterEndOpponentHealing??=[]).push({target,amount:outcome.healOpponent});
         else opponent.health=Math.min(opponent.maxHealth,opponent.health+outcome.healOpponent);
       }
       if(outcome.heroDamageAttribute&&!(outcome.immuneAbility&&hasDestinyAbility(fight,outcome.immuneAbility)))stageDamage(outcome.heroDamageAttribute==='armour'?destinyArmour(fight,'hero'):destinyStat(fight,'hero',outcome.heroDamageAttribute));
-      for(const change of outcome.stats||[])addDestinyStatEffect(fight,change.target,change.attribute,change.amount,change.duration,event.name,change.delay||0);
+      for(const change of outcome.stats||[]){
+        addDestinyStatEffect(fight,change.target,change.attribute,change.amount,change.duration,event.name,change.delay||0);
+        if(change.set!==undefined)fight.effects[fight.effects.length-1].set=change.set;
+      }
       if(outcome.extraDamageDice)fight.turn.extraDamageDice=(fight.turn.extraDamageDice||0)+outcome.extraDamageDice;
       if(outcome.skipAttack){fight.turn.normalDamageReplaced=true;fight.phase='end';}
+      if(outcome.damageDice)queueDestinyEncounterEvent(fight,{kind:'enemy-dice-damage',name:event.name,dice:outcome.damageDice,owner:'opponent',damageDice:true},fight.phase,roll);
+      break;
+    }
+    case 'opponent-stat-table': {
+      const outcome=event.outcomes.find(row=>total<=row.maximum);
+      if(!outcome)throw new RangeError('Unknown opponent stat result');
+      fight.opponents[event.target??fight.target][event.attribute]=outcome.value;
       break;
     }
     case 'next-round-speed-dice':
@@ -239,16 +262,20 @@ export function resolveDestinyEncounterEvent(fight, pending, roll, { roster } = 
     }
     case 'damage-if-low': {
       const limit = event.limit === 'round' ? Math.min(6, fight.round) : event.limit;
-      const score = total + (event.attribute ? destinyStat(fight, 'hero', event.attribute) : 0);
+      const score = total + (event.attribute ? destinyStat(fight, 'hero', event.attribute) : 0) + (event.attributeModifier || 0);
       if (score <= limit) {
-        stageDamage(event.amount);
+        const bonus=event.damageBonusAttribute?(event.damageBonusAttribute==='armour'?destinyArmour(fight,'hero'):destinyStat(fight,'hero',event.damageBonusAttribute)):0;
+        const amount=event.amountFromTargetHealth?((fight.opponents[event.amountFromTargetHealth.target].health>=event.amountFromTargetHealth.minimum)?event.amountFromTargetHealth.high:event.amountFromTargetHealth.low):event.amount;
+        stageDamage(amount+bonus);
         if(event.skipAttack){fight.turn.normalDamageReplaced=true;fight.phase='end';}
         for (const change of event.changes || []) addDestinyStatEffect(fight, change.target, change.attribute, change.amount, change.duration, event.name, change.delay || 0);
       }
+      if(event.replacesAttack){fight.turn.normalDamageReplaced=true;fight.phase='end';}
+      for(const change of event.alwaysChanges||[])addDestinyStatEffect(fight,change.target,change.attribute,change.amount,change.duration,event.name,change.delay||0);
       break;
     }
     case 'faces-damage':
-      stageDamage(dice.filter(value => event.faces.includes(value)).reduce((sum, value) => sum + value, 0));
+      stageDamage(dice.filter(value => event.faces.includes(value)).reduce((sum, value) => sum + value, 0) * (event.multiplier ?? 1));
       break;
     case 'transport-damage': {
       const rule = settings();
@@ -265,6 +292,75 @@ export function resolveDestinyEncounterEvent(fight, pending, roll, { roster } = 
         for (const change of event.changes || []) addDestinyStatEffect(fight, change.target, change.attribute, change.amount, change.duration, event.name, change.delay || 0);
       }else for(const change of event.otherwiseChanges||[])addDestinyStatEffect(fight,change.target,change.attribute,change.amount,change.duration,event.name,change.delay||0);
       break;
+    case 'pursuit': {
+      const rule=fight.encounter.pursuit,score=total+destinyStat(fight,'hero','speed'),success=score>=rule.difficulty;
+      fight.turn.winner=success?'hero':'standoff';fight.phase=success?'damage':'end';
+      if(!success){rule.difficulty+=rule.increment;fight.turn.normalDamageReplaced=true;}
+      fight.history.push({type:'pursuit-challenge',name:event.name,round:fight.round,score,success});break;
+    }
+    case 'entangle-targets': {
+      if(total>=destinyStat(fight,'hero','speed')) {
+        fight.turn.blockedSingleTargets=[...event.targets];
+        if(event.targets.includes(fight.target)) {
+          fight.target=fight.opponents.findIndex((_,i)=>!event.targets.includes(i)&&isDestinyOpponentActive(fight,i));
+          fight.turn.autoWin=!!fight.encounter.automaticHitTargets?.includes(fight.target);
+        }
+      }
+      break;
+    }
+    case 'redirect-attack': {
+      if(total<=event.limit&&isDestinyOpponentActive(fight,event.target)) {
+        fight.turn.enemyAttackTarget=destinyAttackerTarget(fight);
+        fight.turn.singleTargetRedirect={target:event.target,protectedTargets:[...event.whenTargets]};fight.target=event.target;
+      }
+      break;
+    }
+    case 'numbered-strike': {
+      const target=total-1;
+      if(isDestinyOpponentActive(fight,target))stageDamage(event.amount);
+      break;
+    }
+    case 'resource-loss': {
+      const before=fight.encounter.resources[event.resource];
+      fight.encounter.resources[event.resource]=Math.max(0,before-total);
+      fight.history.push({type:'resource-change',round:fight.round,resource:event.resource,previous:before,value:fight.encounter.resources[event.resource],source:event.name});
+      break;
+    }
+    case 'arcane-control': {
+      const rule=fight.encounter.arcaneControl,score=total+event.attributeSnapshot+(event.surgeBonus||0),success=score>=rule.difficulty;
+      const target=success?rule.enemyArmy:rule.friendlyArmy;fight.opponents[target].health=Math.max(0,fight.opponents[target].health-rule.controlDamage);
+      fight.history.push({type:'arcane-control',round:fight.round,score,success,target,damage:rule.controlDamage});
+      queueDestinyEncounterEvent(fight,{kind:'arcane-backlash',name:'Backlash',dice:1,heroRoll:'ability',modifier:success?1:-1},'end',roll);
+      break;
+    }
+    case 'arcane-backlash': {
+      const rule=fight.encounter.arcaneControl,result=total+event.modifier;
+      if(result>=rule.enemyMinimum){
+        const opponent=fight.opponents[rule.druid];opponent.health=Math.max(0,opponent.health-rule.backlashDamage);
+        let available=rule.restoreMagic;
+        for(const effect of fight.effects)if(available>0&&effect.kind==='stat'&&effect.target==='hero'&&effect.attribute==='magic'&&effect.source===rule.surgeName&&effect.amount<0){const restored=Math.min(available,-effect.amount);effect.amount+=restored;available-=restored;}
+      }else if(result>=rule.heroMinimum)stageDamage(rule.backlashDamage);
+      if(fight.opponents[rule.druid].health===0||fight.opponents[rule.enemyArmy].health===0)fight.encounter.forcedVictory=true;
+      fight.history.push({type:'arcane-backlash',round:fight.round,result});break;
+    }
+    case 'objective-damage-table': {
+      const count=event.opponents.filter(target=>isDestinyOpponentActive(fight,target)).length;
+      const face=Math.max(1,total-(count===1?event.singleOpponentReduction||0:0));
+      const row=event.outcomes.find(outcome=>outcome.faces.includes(face));
+      if(!row)throw new RangeError('Unknown objective damage roll');
+      const objective=fight.opponents[event.target];objective.health=Math.max(0,objective.health-row.damage);
+      fight.history.push({type:'objective-damage',round:fight.round,target:event.target,damage:row.damage,health:objective.health});
+      break;
+    }
+    case 'ability-drain': {
+      if(total<=event.limit){fight.used[event.abilityName]=(fight.used[event.abilityName]||0)+1;stageDamage(event.amount);}
+      break;
+    }
+    case 'resource-dodge': {
+      const count=fight.encounter.resources[event.resource]||0;
+      if(total<=count){fight.encounter.resources[event.resource]=Math.max(0,count-1);fight.turn.normalDamageReplaced=true;fight.phase='end';}
+      break;
+    }
     case 'resource-if-low': {
       const before=fight.encounter.resources?.[event.resource];
       if(!Number.isSafeInteger(before)||before<0)throw new RangeError('Missing encounter resource');
@@ -314,7 +410,12 @@ export function resolveDestinyEncounterEvent(fight, pending, roll, { roster } = 
       break;
     }
     case 'enemy-dice-damage':
-      heroDamage(fight, total, true, event.attacker ?? destinyAttackerTarget(fight));
+      if(event.explodeAcceptedFaces?.includes(dice[dice.length-1])){
+        queueDestinyEncounterEvent(fight,{...event,dice:1,accumulatedDamage:(event.accumulatedDamage||0)+total},pending.returnPhase,roll);break;
+      }
+      heroDamage(fight,total+(event.accumulatedDamage||0)+(event.bonusAttribute==='armour'?destinyArmour(fight,'hero'):event.bonusAttribute?destinyStat(fight,'hero',event.bonusAttribute):0),true,event.attacker??destinyAttackerTarget(fight));
+      if(event.replacesAttack){fight.turn.normalDamageReplaced=true;fight.phase='end';}
+      if(event.healAttacker){const recipient=fight.opponents[event.attacker??destinyAttackerTarget(fight)];if(recipient.health>0)recipient.health=Math.min(recipient.maxHealth,recipient.health+total);}
       if (event.markStep) fight.encounter[event.markStep] = fight.encounter.hazardStep;
       if (event.nextStepStats) (fight.encounter.nextStepStats ??= []).push(...structuredClone(event.nextStepStats));
       if (fight.hero.health > 0 && event.followUp) queueDestinyEncounterEvent(fight, event.followUp, pending.returnPhase, roll);
@@ -381,11 +482,13 @@ export function prepareDestinyEndEvents(fight, roll) {
   if (fight.turn.encounterEndPrepared) return false;
   fight.turn.encounterEndPrepared = true;
   for (const event of fight.encounter?.endTests || []) {
+    if(event.skipWhenTurnFlag&&fight.turn[event.skipWhenTurnFlag])continue;
+    if(event.requiresWounded&&fight.opponents[event.target].health>=fight.opponents[event.target].maxHealth)continue;
     if (event.every && fight.round % event.every !== 0) continue;
     if (event.requiresAnyAlive && !event.requiresAnyAlive.some(target => isDestinyOpponentActive(fight, target))) continue;
     if (event.kind === 'ice-prison' && fight.encounter.skollFreed) continue;
     if (event.requiresAlive?.some(target => !isDestinyOpponentActive(fight, target))) continue;
     queueDestinyEncounterEvent(fight, { ...event, atEnd: true }, 'end', roll);
   }
-  return fight.phase === 'ability-rolled';
+  return ['ability-rolled','ability-choice'].includes(fight.phase);
 }

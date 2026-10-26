@@ -213,6 +213,11 @@ gamebooks/
         engines/destinyquest/ Pure, serializable combat stages with explicit windows for speed,
                          damage modifiers, passive effects and death moves. Transitions return
                          copies; book modules supply abilities and encounter exceptions.
+                         Optional prepareFight hooks attach source-roster companions to preset and
+                         custom fights. Book controls receive the active catalog and provide additional
+                         setup, action, ability and status fields through the shared panel builders.
+                         Companion Health and lowered lasting attributes can carry through declared
+                         linked encounters; charge resets and Health bonuses remain separate.
                          Pending ability tests and separate/shared damage groups retain editable
                          dice across saves; resolving them spends no second ability charge.
                          Encounter tests queue behind pending rolls; end hazards share the passive

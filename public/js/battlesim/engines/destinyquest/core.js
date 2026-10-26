@@ -13,9 +13,13 @@ import {prepareDestinyStanceDefense} from './sustained.js';
 import {prepareDestinyAutomaticModifiers} from './automatic-modifiers.js';
 import {destinyScoreContext,markDestinyScoreDice} from './score-immunity.js';
 import {resetDestinyCombatActor} from './combat-reset.js';
+import {destinyOpponentSpeedResult} from './effects.js';
+import {recordDestinyOpponentDamage,destinyRoundMatches,applyDestinyDamageSourceRules,absorbDestinyShieldDamage} from './effects.js';
 import {prepareDestinyScoreCancellation,destinyCancellationScoreContext} from './damage-cancellation.js';
 import {updateDestinyPairOutcome} from './team-pairs.js';
 import {destinyEnemyTurn,createDestinyEnemyContext} from './enemy-context.js';
+import {prepareDestinyPetRound,routeDestinyPetAttack,finishDestinyPetRound,restoreDestinyPet,applyDestinyPetSpeedLoss,prepareDestinyPetDeath,prepareDestinyMirageDefense} from './pets.js';
+import {applyDestinyRoundAbilityEffects} from './ability-reactions.js';
 const attributes = ['speed', 'brawn', 'magic', 'armour'];
 const clone = value => structuredClone(value);
 
@@ -87,7 +91,7 @@ function stage(fight, expected) {
 
 export function reviveDestinyHero(fight){
   if (fight.status==='active' && fight.hero.health<=0 && !fight.encounter?.forcedLoss) for (const [name,spec] of Object.entries(fight.abilityCatalog||{})) {
-    if (!spec.reviveHealth || fight.used[name] || !hasDestinyAbility(fight,name)) continue;
+    if (!spec.reviveHealth || spec.reviveDamageDice || fight.used[name] || !hasDestinyAbility(fight,name)) continue;
     fight.used[name]=1;
     fight.hero.health=Math.min(fight.hero.maxHealth,spec.reviveHealth);
     if (spec.cleanseOnRevive) {
@@ -100,13 +104,39 @@ export function reviveDestinyHero(fight){
 }
 
 export function settleDestinyFight(fight, roll = randomDie, revivalReturnPhase) {
+  for(const rule of fight.encounter?.healthLossGroupDamage||[]){
+    const triggers=rule.pending||0;rule.pending=0;
+    for(let i=0;i<triggers;i++)for(const target of rule.attackers)if(isDestinyOpponentActive(fight,target)){
+      const damage=damageDestinyHero(fight,Math.max(0,rule.amount-(rule.ignoreArmour?0:destinyArmour(fight,'hero'))));
+      fight.history.push({type:'encounter-retaliation',round:fight.round,target,damage,source:rule.name});
+    }
+  }
+  const objective=fight.encounter?.scoreHitsObjective;
+  if(objective&&!fight.encounter?.forcedLoss&&((objective.count||0)>=objective.required||fight.hero.health<=0)) {
+    fight.encounter.forcedVictory=true;fight.encounter.winSection=objective.section;
+    fight.encounter.allowZeroHealthVictory=!!objective.allowZeroHealth;
+  }
   if(fight.encounter?.lossAtOpponentHealth?.some(rule=>fight.opponents[rule.target].health>=rule.minimum))fight.encounter.forcedLoss=true;
   if(fight.encounter?.friendlyObjective&&fight.opponents[fight.encounter.friendlyObjective.target].health<=0)fight.encounter.forcedLoss=true;
   if (fight.encounter?.heroRelay?.active && fight.hero.health <= 0) {
     fight.phase = 'between-combats';
     return true;
   }
+  if(fight.turn?.pendingAbility?.type==='hero-revival'&&!fight.encounter?.forcedLoss)return true;
+  if(fight.hero.health<=0&&!fight.encounter?.forcedLoss) for(const name of Object.keys(fight.abilities||{})) {
+    const spec=fight.abilityCatalog?.[name];
+    if(!spec?.reviveDamageDice||fight.used[name]||!hasDestinyAbility(fight,name))continue;
+    const target=fight.opponents.findIndex((_,i)=>isDestinyOpponentActive(fight,i));
+    fight.used[name]=1;
+    if(target<0){fight.hero.health=Math.min(fight.hero.maxHealth,spec.reviveHealth);break;}
+    const suspendedAbility=fight.turn.pendingAbility?structuredClone(fight.turn.pendingAbility):null;
+    fight.turn.pendingAbility={type:'hero-revival',name,target,health:spec.reviveHealth,
+      dice:applyDestinyHeroRoll(fight,dice(roll,spec.reviveDamageDice),'damage'),suspendedAbility,
+      returnPhase:revivalReturnPhase??(['damage-rolled','speed-rolled'].includes(fight.phase)?'end':fight.phase)};
+    fight.phase='ability-rolled';return true;
+  }
   reviveDestinyHero(fight);
+  if(prepareDestinyPetDeath(fight,roll))return true;
   observeDestinyHealth(fight);
   updateDestinyPairOutcome(fight);
   if(revivalReturnPhase&&fight.turn?.afterHealthDamageEvents?.length)fight.turn.afterHealthDamageReturnPhase=revivalReturnPhase;
@@ -130,7 +160,7 @@ export function settleDestinyFight(fight, roll = randomDie, revivalReturnPhase) 
     fight.phase='between-combats';
     return true;
   }
-  if (!livingHero || fight.encounter?.forcedLoss) fight.status = 'loss';
+  if ((!livingHero&&!(fight.encounter?.allowZeroHealthVictory&&fight.encounter?.forcedVictory)) || fight.encounter?.forcedLoss) fight.status = 'loss';
   else if (fight.encounter?.revivalChecks?.some(rule => !rule.used && isDestinyOpponentDead(fight, rule.target))) {
     // Return true when the action pauses too: callers must not overwrite the
     // saved encounter-roll phase or declare victory before this check resolves.
@@ -151,15 +181,34 @@ export function settleDestinyFight(fight, roll = randomDie, revivalReturnPhase) 
     if (fight.status === 'win') restoreDestinyPrimaryHero(fight);
     fight.phase = 'finished';
     if(fight.status==='win'){
+      for(const [resource,counter] of Object.entries(fight.encounter?.persistResources||{})){
+        fight.character??={};(fight.character.sourceCounters??={})[counter]=fight.encounter.resources[resource];
+      }
+      if(fight.encounter?.carryLostAbilitiesToSection){
+        fight.character??={};fight.character.pendingAbilityLosses={fromSection:fight.encounter.sourceSection,section:fight.encounter.carryLostAbilitiesToSection,
+          abilities:Object.fromEntries(Object.entries(fight.encounter.soulStolenAbilities||{}).filter(([,count])=>count>0))};
+      }
+      if(fight.encounter?.recordRoundsAs) {
+        fight.character??={};(fight.character.sourceCounters??={})[fight.encounter.recordRoundsAs]=fight.round;
+      }
       const alternative=fight.encounter?.winSectionWhenNoActions;
       const section=alternative&&!alternative.actions.some(name=>fight.usedBookActions?.[name])?alternative.section:fight.encounter?.winSection;
       if(section)fight.encounter.outcomeSection=section;
+      const record=fight.encounter?.winSectionFromDamageRecord;
+      if(record&&(fight.encounter[record.key]||0)>=record.minimum)fight.encounter.outcomeSection=record.section;
       const surviving=fight.encounter?.winSectionWhenTargetsAlive;
       if(surviving&&surviving.targets.every(target=>!isDestinyOpponentDead(fight,target)))fight.encounter.outcomeSection=surviving.section;
+      const defeated=fight.encounter?.winSectionWhenTargetsDead;
+      if(defeated&&defeated.targets.every(target=>isDestinyOpponentDead(fight,target)))fight.encounter.outcomeSection=defeated.section;
       const early=fight.encounter?.winSectionBeforeRound;
       if(early&&fight.round<early.round&&(!early.requiresDead||early.requiresDead.every(target=>isDestinyOpponentDead(fight,target))))fight.encounter.outcomeSection=early.section;
     }
     if(fight.status==='loss'&&fight.encounter?.lossSection)fight.encounter.outcomeSection=fight.encounter.lossSection;
+    if(fight.status==='loss'&&fight.encounter?.lossKeywords) {
+      fight.character??={};const current=fight.character.keywords;
+      const keywords=Array.isArray(current)?current:typeof current==='string'?current.split(',').map(word=>word.trim()).filter(Boolean):[];
+      fight.character.keywords=[...new Set([...keywords,...fight.encounter.lossKeywords])];
+    }
     if (fight.status === 'win' && fight.encounter?.pathProgress && !fight.encounter.pathProgress.reachedExit) fight.encounter.pathProgress.achievementSection = fight.encounter.pathChallenge.earlyVictorySection;
     if (fight.status === 'win' && fight.encounter?.surrenderRemainingOnVictory) {
       const targets = fight.opponents.map((_, target) => target).filter(target => isDestinyOpponentActive(fight, target));
@@ -180,6 +229,7 @@ export function settleDestinyFight(fight, roll = randomDie, revivalReturnPhase) 
     if (fight.status === 'win' && fight.restoreOnVictory) {
       fight.hero.health = fight.hero.maxHealth;
       Object.assign(fight.hero, fight.hero.normal);
+      restoreDestinyPet(fight);
       if(fight.team)for(const ally of fight.allies){ally.hero.health=ally.hero.maxHealth;Object.assign(ally.hero,ally.hero.normal);}
     }
     fight.history.push({ type: 'outcome', round: fight.round, status: fight.status });
@@ -263,14 +313,19 @@ export function rollDestinyApproachTest(fight,roll=randomDie){
 export function startDestinyRound(fight, target, roll = randomDie, options = {}) {
   const next = stage(fight, ['start']);
   if(next.encounter?.requiresTeam&&!next.team)throw new RangeError('Configure the source team battle before combat');
+  const regrowing=next.encounter?.regrowingTargets;
+  if(regrowing?.length&&regrowing.every(target=>next.encounter.inactiveTargets?.includes(target))){next.encounter.forcedVictory=true;settleDestinyFight(next,roll);return next;}
   advanceDestinyAspectCycle(next, next.round + 1);
   reformDestinyOpponent(next, next.round + 1);
   spawnDestinyRoundOpponents(next, next.round + 1, value => actor(value, true));
   target=applyDestinyScheduledTransitions(next,next.round+1,target);
+  if(next.encounter?.autoTargetAfterSpawning&&!isDestinyOpponentActive(next,target))target=next.opponents.findIndex((_,i)=>isDestinyOpponentActive(next,i));
   if(next.encounter?.nextTarget!==undefined){
     if(target===next.target&&!isDestinyOpponentActive(next,target))target=next.encounter.nextTarget;
     delete next.encounter.nextTarget;
   }
+  const oneRound=next.encounter?.oneRoundSequence;
+  if(oneRound&&target!==oneRound.targets[oneRound.index||0])throw new RangeError('Fight the current opponent in sequence');
   integer(target, 'target');
   if (!isDestinyOpponentActive(next, target)) throw new RangeError('Choose a living opponent');
   if (next.encounter?.unselectableTargets?.includes(target)) throw new RangeError('Choose the exposed combat component');
@@ -287,12 +342,14 @@ export function startDestinyRound(fight, target, roll = randomDie, options = {})
   }
   if(next.encounter?.disableAbilitiesThroughRound!==undefined)next.encounter.disableHeroAbilities=next.round<=next.encounter.disableAbilitiesThroughRound;
   if(!next.encounter?.disableHeroAbilities)beginDestinyCombatBoosts(next);
+  prepareDestinyPetRound(next,options);
   for(const rule of next.encounter?.startLossRules||[])if(next.round>=rule.round&&(!rule.requiresAlive||rule.requiresAlive.every(index=>isDestinyOpponentActive(next,index)))){
     next.encounter.forcedLoss=true;settleDestinyFight(next,roll);return next;
   }
   if(next.encounter?.startVictoryAtRound&&next.round>=next.encounter.startVictoryAtRound){
     next.encounter.forcedVictory=true;settleDestinyFight(next,roll);return next;
   }
+  if(applyDestinyRoundAbilityEffects(next,options)&&settleDestinyFight(next,roll)) return next;
   if(next.nextHeroSpeedDice?.round===next.round){next.turn.heroSpeedCount=next.nextHeroSpeedDice.count;next.turn.heroSpeedDiceLocked=!!next.nextHeroSpeedDice.locked;delete next.nextHeroSpeedDice;}
   for(const rule of next.encounter?.heroSpeedDiceWhileAlive||[])if(isDestinyOpponentActive(next,rule.target))next.turn.heroSpeedCount=Math.min(next.turn.heroSpeedCount||2,rule.count);
   if(next.encounter?.iceLake){
@@ -312,7 +369,14 @@ export function startDestinyRound(fight, target, roll = randomDie, options = {})
   if (next.encounter?.automaticHitsRemaining > 0) next.turn.autoWin = true;
   applyDestinyRoundEvents(next, options, roll);
   prepareDestinyGridRound(next,options,roll);
+  if(next.encounter?.pursuit)queueDestinyEncounterEvent(next,{kind:'pursuit',name:next.encounter.pursuit.name,dice:2,heroRoll:'challenge'},'damage',roll);
+  const drain=next.encounter?.startAbilityDrain;
+  if(drain&&next.round===(drain.round??1))for(const [name,count] of Object.entries(next.abilities||{})){
+    if(next.abilityCatalog?.[name]?.category!==drain.category||!hasDestinyAbility(next,name))continue;
+    for(let i=0;i<count;i++)queueDestinyEncounterEvent(next,{kind:'ability-drain',name:drain.name,abilityName:name,dice:1,limit:drain.limit,amount:drain.damage,heroRoll:'ability'},'speed',roll);
+  }
   for (const event of next.encounter?.startTests || []) {
+    if(!destinyRoundMatches(next,event)||event.whenTargets&&!event.whenTargets.includes(next.target))continue;
     if(event.skipWhenFlag&&next.encounter[event.skipWhenFlag])continue;
     if (event.requiresAlive?.some(target => !isDestinyOpponentActive(next, target))) continue;
     if (event.every && next.round % event.every !== 0) continue;
@@ -351,6 +415,7 @@ export function rollDestinySpeed(fight, roll = randomDie) {
   const count = controlled ? next.turn.opponentSpeedCount || Math.max(1, opponentDice - (next.turn.opponentSpeedReduction || 0)) : opponentDice;
   next.turn.opponentSpeedDice = savedOpponent ? [...next.savedOpponentDice.dice] : destinyRollOpponentDice(next, count, roll, 'speed');
   if (savedOpponent) next.turn.lockedOpponentDice = true;
+  if(next.encounter?.immutableOpponentDiceTargets?.includes(attacker))next.turn.lockedOpponentDice=true;
   next.phase = 'speed-rolled';
   onDestinyHeroSpeedRoll(next, next.turn.heroSpeedDice.map((_, index) => index).filter(index => !savedHero || index !== 0), roll);
   if (!isDestinyOpponentActive(next, next.target) && !['ability-rolled','ability-choice'].includes(next.phase)) next.phase = 'end';
@@ -381,14 +446,25 @@ export function retargetDestinyRound(fight, target) {
 export function onDestinyHeroRoundWon(fight,roll){
   if(fight.encounter?.heroWinNextSpeedDice)fight.nextHeroSpeedDice={...fight.encounter.heroWinNextSpeedDice,round:fight.round+1};
   const test=fight.encounter?.heroWinTest;
-  if(test&&(!test.whenHeroStatus||Object.hasOwn(fight.encounter.heroStatuses||{},test.whenHeroStatus))&&(!test.whenOpponentHealthAtMost||fight.opponents[test.whenOpponentHealthAtMost.target].health<=test.whenOpponentHealthAtMost.health)&&!fight.turn.heroWinTestQueued){fight.turn.heroWinTestQueued=true;queueDestinyEncounterEvent(fight,test,'damage',roll);}
+  if(test&&(!test.whenTargets||test.whenTargets.includes(fight.target))&&!test.requiresAlive?.some(target=>!isDestinyOpponentActive(fight,target))&&(!test.whenHeroStatus||Object.hasOwn(fight.encounter.heroStatuses||{},test.whenHeroStatus))&&(!test.whenOpponentHealthAtMost||fight.opponents[test.whenOpponentHealthAtMost.target].health<=test.whenOpponentHealthAtMost.health)&&!fight.turn.heroWinTestQueued){fight.turn.heroWinTestQueued=true;queueDestinyEncounterEvent(fight,test,'damage',roll);}
 }
 
 export function acceptDestinySpeedRoll(next,roll=randomDie){
   if(next.turn.speedAccepted)return;
   next.turn.speedAccepted=true;
+  if(next.encounter?.copyLowestHeroSpeedDie?.includes(destinyAttackerTarget(next))) {
+    const hero=next.turn.heroSpeedDice,enemy=next.turn.opponentSpeedDice;
+    if(hero.length&&enemy.length&&new Set(hero).size===hero.length&&new Set(enemy).size===enemy.length)
+      enemy[enemy.indexOf(Math.min(...enemy))]=Math.min(...hero);
+  }
   applyDestinyAcceptedHeroRoll(next,next.turn.heroSpeedDice,'speed');reviveDestinyHero(next);
   if(next.savedOpponentDice?.round!==next.round||next.savedOpponentDice.target!==destinyAttackerTarget(next))recordDestinyRollFaces(next,next.turn.opponentSpeedDice,'opponent','speed');
+  for(const rule of next.encounter?.opponentLowestSpeedDamage||[]) {
+    const values=next.turn.opponentSpeedDice,opponent=next.opponents[rule.target];
+    if(rule.target!==destinyAttackerTarget(next)||opponent.health<=rule.aboveHealth||values.length<2||new Set(values).size<values.length)continue;
+    const damage=damageDestinyHero(next,Math.min(...values));
+    next.history.push({type:'roll-hazard',name:rule.name,round:next.round,damage});
+  }
   if(next.encounter?.forcedLoss||next.encounter?.forcedVictory){settleDestinyFight(next,roll);return;}
   if(next.encounter?.heroSpeedLossFaces&&next.turn.heroSpeedDice.some(face=>next.encounter.heroSpeedLossFaces.includes(face))){next.encounter.forcedLoss=true;settleDestinyFight(next,roll);return next;}
   for(const rule of next.encounter?.acceptedHeroSpeedFaces||[]){
@@ -407,11 +483,12 @@ export function resolveDestinySpeed(fight, roll = randomDie) {
   const next = stage(fight, ['speed-rolled']);
   acceptDestinySpeedRoll(next,roll);
   if(next.status!=='active')return next;
-  if(next.hero.health<=0){settleDestinyFight(next,roll);return next;}
-  const hero = sum(next.turn.heroSpeedDice) + destinyStat(next, 'hero', 'speed');
-  const opponent = sum(next.turn.opponentSpeedDice) + destinyStat(next, destinyAttackerTarget(next), 'speed')+(next.turn.opponentSpeedBonus||0);
+  if(next.hero.health<=0){settleDestinyFight(next,roll,'speed-rolled');return next;}
+  const hero = sum(next.turn.heroSpeedDice) + destinyStat(next, 'hero', 'speed')+(next.turn.heroSpeedResultBonus||0);
+  const opponent = next.turn.autoWin?0:destinyOpponentSpeedResult(next);
   const losesDoubles=next.turn.opponentSpeedDice.length>1&&new Set(next.turn.opponentSpeedDice).size<next.turn.opponentSpeedDice.length&&next.effects.some(effect=>effect.kind==='lose-speed-doubles'&&effect.target===destinyAttackerTarget(next)&&effect.from<=next.round&&effect.until>=next.round);
   next.turn.winner = next.turn.forcedOpponentWin ? 'opponent' : next.turn.autoWin||losesDoubles ? 'hero' : hero === opponent ? 'standoff' : hero > opponent ? 'hero' : 'opponent';
+  if(next.turn.winner==='hero') for(const change of next.turn.speedWinChanges||[]) addDestinyStatEffect(next,'hero',change.attribute,change.amount,change.duration,change.source);
   if(next.turn.winner!=='hero'||next.sustainedDamage?.target!==next.target)delete next.sustainedDamage;
   if (next.turn.winner === 'hero' && !next.turn.autoWin && next.encounter?.automaticHitsAfterWin) next.encounter.automaticHitsRemaining = next.encounter.automaticHitsAfterWin;
   next.phase = next.turn.winner === 'standoff' ? 'end' : 'damage';
@@ -423,6 +500,21 @@ export function resolveDestinySpeed(fight, roll = randomDie) {
   next.history.push({ type: 'speed', round: next.round, target: next.target,
     heroDice: [...next.turn.heroSpeedDice], opponentDice: [...next.turn.opponentSpeedDice],
     hero, opponent, winner: next.turn.winner });
+  if(next.turn.winner==='opponent') {
+    const attacker=destinyAttackerTarget(next),petAttack=applyDestinyPetSpeedLoss(next,attacker,roll);
+    if(petAttack&&!isDestinyOpponentActive(next,attacker)) {next.phase='end';settleDestinyFight(next,roll);return next;}
+    const drain=next.encounter?.enemyWinStatDrain;
+    if(drain) {
+      const current=destinyStat(next,'hero',drain.attribute);
+      const damage=current>0?0:damageDestinyHero(next,drain.overflowDamage);
+      if(current>0)addDestinyStatEffect(next,'hero',drain.attribute,-Math.min(current,drain.amount),null,drain.name);
+      next.history.push({type:'encounter-drain',name:drain.name,round:next.round,damage});
+      next.phase='end';settleDestinyFight(next,roll);return next;
+    }
+  }
+  if(next.turn.winner==='opponent')for(const rule of next.encounter?.enemyWinResourceIncrement||[]) {
+    next.encounter.resources[rule.resource]=(next.encounter.resources[rule.resource]||0)+rule.amount;
+  }
   const charged=next.encounter?.enemyWinCharge;
   if(charged&&next.turn.winner==='opponent'){
     next.turn.pendingEnemyCharge=true;
@@ -448,6 +540,7 @@ export function resolveDestinySpeed(fight, roll = randomDie) {
   const event = next.turn.winner === 'opponent' ? next.encounter?.enemyWinTest : null;
   if(!event?.unavoidable&&prepareDestinyStanceDefense(next,event,roll))return next;
   if (event) queueDestinyEncounterEvent(next, event, 'damage', roll);
+  for(const test of next.encounter?.speedResultTests||[])if(test.winners.includes(next.turn.winner)&&!test.requiresAlive?.some(target=>!isDestinyOpponentActive(next,target)))queueDestinyEncounterEvent(next,test,next.phase,roll);
   return next;
 }
 
@@ -467,6 +560,7 @@ export function rollDestinyDamage(fight, roll = randomDie, { soundCharge = true 
     (!rule.requiresAlive||rule.requiresAlive.every(target=>isDestinyOpponentActive(next,target))));
   if(damageRule?.keepHighest)next.turn.damageKeepHighest=damageRule.keepHighest;
   else delete next.turn.damageKeepHighest;
+  next.turn.keepAllDamageDoubles=!!damageRule?.keepAllOnDoubles;
   const count = (next.turn.winner === 'opponent' ? damageRule?.dice || next.encounter?.damageDiceByTarget?.[destinyAttackerTarget(next)] || 1 : next.turn.rangedDamageDice || 1) + extra + (next.turn.winner === 'opponent' && next.turn.reckless || next.turn.winner==='hero'&&enemyTurn?.reckless ? 1 : 0);
   next.turn.damageDice = next.turn.winner === 'hero' ? dice(roll, count) : destinyRollOpponentDice(next, count, roll, 'damage');
   if(next.turn.winner==='hero')markDestinyScoreDice(next,count);
@@ -494,7 +588,11 @@ export function resolveDestinyDamage(fight, roll = randomDie) {
   const next = stage(fight, fixed?['damage']:['damage-rolled']);
   if(fixed)next.turn.damageDice=[];
   const heroWon = next.turn.winner === 'hero';
-  if(heroWon){applyDestinyAcceptedHeroRoll(next,next.turn.damageFromSpeedDiceCount?next.turn.damageDice.slice(next.turn.damageFromSpeedDiceCount):next.turn.damageDice,'damage');reviveDestinyHero(next);if(next.hero.health<=0){settleDestinyFight(next,roll);return next;}}
+  if(heroWon&&!next.turn.heroScoreAccepted){
+    applyDestinyAcceptedHeroRoll(next,next.turn.damageFromSpeedDiceCount?next.turn.damageDice.slice(next.turn.damageFromSpeedDiceCount):next.turn.damageDice,'damage');
+    next.turn.heroScoreAccepted=true;reviveDestinyHero(next);
+    if(next.hero.health<=0){settleDestinyFight(next,roll,'damage-rolled');return next;}
+  }
   else if(!fixed&&!next.turn.enemyScoreAccepted){recordDestinyRollFaces(next,next.turn.damageDice,'opponent','damage');next.turn.enemyScoreAccepted=true;}
   if(next.encounter?.forcedLoss||next.encounter?.forcedVictory){settleDestinyFight(next,roll);return next;}
   const attacker = destinyAttackerTarget(next);
@@ -516,6 +614,9 @@ export function resolveDestinyDamage(fight, roll = randomDie) {
   if(fixed)armour=0;
   const piercingRule=!heroWon&&next.encounter?.opponentIgnoreArmourByTarget?.[attacker];
   const piercing=typeof piercingRule==='object'?piercingRule.ability:piercingRule;
+  const facePiercing=!heroWon&&next.encounter?.opponentArmourIgnoringFacesByTarget?.[attacker];
+  const activeFacePiercing=facePiercing&&next.turn.damageDice.some(face=>facePiercing.faces.includes(face))&&!destinyImmuneToAbility(next,facePiercing.ability);
+  if(activeFacePiercing)armour=0;
   if(piercing&&!piercingRule.requiresAlive?.some(target=>!isDestinyOpponentActive(next,target))&&!destinyImmuneToAbility(next,piercing)){
     const protection=next.encounter?.armourThroughPiercing;
     armour=protection&&hasDestinyAbility(next,protection.ability)?Math.ceil(armour/protection.divisor):0;
@@ -528,14 +629,18 @@ export function resolveDestinyDamage(fight, roll = randomDie) {
   const faceBonus=heroWon?0:(next.encounter?.opponentDamageFaceBonus||[]).filter(rule=>rule.target===attacker).reduce((total,rule)=>total+next.turn.damageDice.filter(face=>rule.faces.includes(face)).length*rule.amount,0);
   const damage = next.turn.avoidDamage || heroWon && (enemyTurn?.avoidDamage||!destinyDamageAllowed(next, next.target)) ? 0 :
     !heroWon && next.turn.replaceIncomingDamage !== undefined ? next.turn.replaceIncomingDamage : Math.max(0, score - armour)+faceBonus;
+  if(!heroWon&&prepareDestinyMirageDefense(next,{score,heroDamage:damage,
+    ignorePetArmour:!!next.encounter?.opponentIgnorePetArmourByTarget?.[attacker]||!!(activeFacePiercing&&facePiercing.includePets),returnPhase:fixed?'damage':'damage-rolled'},roll))return next;
   if(!heroWon)for(const change of next.encounter?.onEnemyDamageFaceStats||[]){
     if(change.target!==attacker||!next.turn.damageDice.some(face=>change.faces.includes(face)))continue;
     const current=destinyStat(next,attacker,change.attribute),amount=change.maximum===undefined?change.amount:Math.max(0,Math.min(change.amount,change.maximum-current));
     if(amount)addDestinyStatEffect(next,attacker,change.attribute,amount,null,change.name||'encounter-roll');
   }
-  let healthLost = heroWon ? Math.min(defender.health, damage) : damageDestinyHero(next,damage);
+  const petIntercept = !heroWon && routeDestinyPetAttack(next,{attacker,score,heroDamage:damage,
+    ignoreArmour:!!next.encounter?.opponentIgnorePetArmourByTarget?.[attacker]||!!(activeFacePiercing&&facePiercing.includePets)},roll);
+  let healthLost = heroWon ? absorbDestinyShieldDamage(next,next.target,damage)?0:Math.min(defender.health, damage) : petIntercept ? 0 : damageDestinyHero(next,damage);
   if (heroWon) reflectDestinyDamage(next, next.target, healthLost, 'score');
-  if(heroWon)defender.health -= healthLost;
+  if(heroWon){defender.health -= healthLost;recordDestinyOpponentDamage(next,next.target,healthLost,'score');applyDestinyDamageSourceRules(next,next.target,healthLost,'score');}
   if(!heroWon&&healthLost&&next.encounter?.extraHeroDamagePerArmour){
     const extra=damageDestinyHero(next,Math.ceil(destinyArmour(next,'hero')/next.encounter.extraHeroDamagePerArmour));
     healthLost+=extra;
@@ -543,6 +648,7 @@ export function resolveDestinyDamage(fight, roll = randomDie) {
   if (heroWon && isDestinyOpponentDead(next, next.target)) recordDestinyDefeat(next, next.target);
   next.turn.damageScore = score;
   next.turn.healthDamage = healthLost;
+  if(!heroWon&&healthLost&&next.encounter?.scoreHitsObjective)next.encounter.scoreHitsObjective.count=(next.encounter.scoreHitsObjective.count||0)+1;
   if(!heroWon&&healthLost){
     onDestinyOpponentHealthHit(next,attacker,healthLost,'score');
     if(next.turn.faceTriggeredHealing&&isDestinyOpponentActive(next,attacker)){
@@ -591,6 +697,7 @@ export function resolveDestinyDamage(fight, roll = randomDie) {
         if(destinyImmuneToAbility(next,change.ability))continue;
         const attribute=change.highestOf?change.highestOf.reduce((best,name)=>destinyStat(next,change.target,name)>destinyStat(next,change.target,best)?name:best):change.attribute;
         addDestinyStatEffect(next, change.target, attribute, change.amount, change.duration, 'encounter-hit', change.delay || 0);
+        if(change.set!==undefined)next.effects[next.effects.length-1].set=change.set;
       }
       if (next.encounter?.heroStatusOnHit&&(next.encounter.heroStatusOnHit.attacker===undefined||next.encounter.heroStatusOnHit.attacker===attacker)&&!next.encounter.heroStatusOnHit.requiresAlive?.some(target=>!isDestinyOpponentActive(next,target))&&!destinyImmuneToAbility(next,next.encounter.heroStatusOnHit.name)&&!next.turn.suppressHitStatuses?.includes(next.encounter.heroStatusOnHit.name)) (next.encounter.heroStatuses ??= {})[next.encounter.heroStatusOnHit.name] = next.encounter.heroStatusOnHit.amount;
       if (next.encounter?.growingStatusOnHit && !next.encounter.growingStatus&&!destinyImmuneToAbility(next,next.encounter.growingStatusOnHit.status||next.encounter.growingStatusOnHit.name)) next.encounter.growingStatus = { ...next.encounter.growingStatusOnHit, from: next.round };
@@ -628,9 +735,22 @@ export function endDestinyRound(fight, effects = [], roll = randomDie, {advanceO
       return next;
     }
   }
+  for(const rule of next.encounter?.consumeGroupAfterCombat||[]){
+    if(rule.used||next.round!==rule.round||!isDestinyOpponentActive(next,rule.target))continue;
+    rule.used=true;const targets=(next.encounter.opponentGroups?.[rule.group]||[]).filter(target=>isDestinyOpponentActive(next,target));
+    for(const target of targets){next.opponents[target].health=0;recordDestinyDefeat(next,target);}
+    const recipient=next.opponents[rule.target];recipient.health=Math.min(recipient.maxHealth,recipient.health+targets.length*rule.healPer);
+    next.history.push({type:'consume-group',name:rule.name,round:next.round,targets,health:recipient.health});
+  }
   commitEnemyCharge(next);
   if (prepareDestinyEndEvents(next, roll)) return next;
   if(!next.team||next.team.endAppliedRound!==next.round){
+  if(next.encounter?.healingBeforePassives&&!next.turn.healingBeforePassivesApplied) {
+    next.turn.healingBeforePassivesApplied=true;
+    for(const rule of next.encounter.healingBeforePassives)if(destinyRoundMatches(next,rule)&&isDestinyOpponentActive(next,rule.target)&&!rule.requiresAlive?.some(target=>!isDestinyOpponentActive(next,target))) {
+      const recipient=next.opponents[rule.target];recipient.health=Math.min(recipient.maxHealth,recipient.health+rule.amount);
+    }
+  }
   const alive = next.opponents.map((opponent, target) => isDestinyOpponentActive(next, target));
   const pending = new Map();
   const trackSources=[next,...(next.allies||[])].some(actor=>Object.keys(actor.abilities||{}).some(name=>actor.abilityCatalog?.[name]?.passiveRecoverySources));
@@ -639,12 +759,14 @@ export function endDestinyRound(fight, effects = [], roll = randomDie, {advanceO
     if (target !== 'hero' && (!Number.isInteger(target) || target < 0 || !next.opponents[target])) {
       throw new RangeError('Invalid effect target');
     }
-    const amount = integer(effect.amount, 'passive damage');
+    const amount = Math.max(0,integer(effect.amount, 'passive damage')+(target==='hero'?0:next.encounter?.abilityDamageBonusByTarget?.[target]?.[effect.source]||0));
     if (target !== 'hero' && !effect.allowInactive && (!alive[target] || !destinyDamageAllowed(next, target, 'passive'))) continue;
     const defender = target === 'hero' ? next.hero : next.opponents[target];
     if (typeof effect.ignoreArmour !== 'boolean') throw new RangeError('Specify passive armour handling');
     let damage = Math.max(0, amount - (effect.ignoreArmour ? 0 : destinyArmour(next, target)));
     if (target === 'hero') damage = destinyPassiveProtection(next, damage);
+    else applyDestinyDamageSourceRules(next,target,Math.min(damage,defender.health),'passive',effect.source);
+    if(effect.recordMaximum)next.encounter[effect.recordMaximum]=Math.max(next.encounter[effect.recordMaximum]||0,Math.min(damage,next.hero.health));
     pending.set(target, (pending.get(target) || 0) + damage);
     if(trackSources&&target!=='hero'){
       const sources=((next.turn.passiveSourcesByTarget??={})[target]??={}),source=String(effect.source||'');
@@ -664,12 +786,13 @@ export function endDestinyRound(fight, effects = [], roll = randomDie, {advanceO
     if(target!=='hero')reflectDestinyDamage(next,target,actual,'passive');
     next.turn.passiveDamageByTarget ??= {};
     next.turn.passiveDamageByTarget[target] = actual;
-    if(target!=='hero')defender.health = Math.max(0, defender.health - applied);
+    if(target!=='hero'){defender.health = Math.max(0, defender.health - applied);recordDestinyOpponentDamage(next,target,actual,'passive');}
     if (target !== 'hero' && isDestinyOpponentDead(next, target)) {
       recordDestinyDefeat(next, target);
       next.turn.deaths.push(target);
     }
   }
+  finishDestinyPetRound(next);
   const healing = next.effects.filter(effect => effect.kind === 'end-heal' &&
     effect.from <= next.round && effect.until >= next.round).reduce((total, effect) => total + effect.amount, 0) +
     Object.entries(next.abilityCatalog || {}).reduce((total, [name, spec]) =>
@@ -704,9 +827,28 @@ export function endDestinyRound(fight, effects = [], roll = randomDie, {advanceO
     const opponent=next.opponents[rule.target];
     if(isDestinyOpponentActive(next,rule.target))opponent[rule.attribute]=Math.min(rule.maximum??Number.MAX_SAFE_INTEGER,opponent[rule.attribute]+rule.amount);
   }
+  for(const rule of next.encounter?.endUnhitStatGrowth||[])if(isDestinyOpponentActive(next,rule.target)&&!next.turn.activeDamageByTarget?.[rule.target]) {
+    const opponent=next.opponents[rule.target];opponent[rule.attribute]=Math.min(rule.maximum,opponent[rule.attribute]+rule.amount);
+  }
+  for(const target of next.encounter?.regrowingTargets||[])if(next.opponents[target].health===next.opponents[target].maxHealth&&next.encounter.inactiveTargets?.includes(target)){
+    next.encounter.inactiveTargets=next.encounter.inactiveTargets.filter(index=>index!==target);
+    next.defeated=(next.defeated||[]).filter(index=>index!==target);
+    next.history.push({type:'regrown',round:next.round,target});
+  }
   for(const rule of next.encounter?.endResourceIncrement||[]){
     if(rule.requiresAlive?.some(target=>!isDestinyOpponentActive(next,target)))continue;
     next.encounter.resources[rule.resource]=(next.encounter.resources[rule.resource]||0)+rule.amount;
+  }
+  for(const cycle of next.encounter?.endStatCycles||[])if(isDestinyOpponentActive(next,cycle.target)){
+    const actor=next.opponents[cycle.target],direction=cycle.direction??1;
+    for(const [attribute,amount] of Object.entries(cycle.changes))actor[attribute]+=amount*direction;
+    const value=actor[cycle.boundAttribute];
+    if(value<=cycle.minimum||value>=cycle.maximum)cycle.direction=-direction;
+  }
+  for(const rule of next.encounter?.endAttributeDrains||[])if(isDestinyOpponentActive(next,rule.target)){
+    const current=destinyStat(next,rule.target,rule.attribute);
+    if(current>0)addDestinyStatEffect(next,rule.target,rule.attribute,-Math.min(current,rule.amount),null,rule.name);
+    else if(rule.damageAtZero)destinyStrike(next,rule.target,rule.damageAtZero,rule.name,'companion');
   }
   for (const effect of next.encounter?.endStats || []) {
     if(effect.requiresHeroStatus&&!destinyHeroHasStatus(next,effect.requiresHeroStatus))continue;
@@ -740,6 +882,18 @@ export function endDestinyRound(fight, effects = [], roll = randomDie, {advanceO
     if(next.turn.winner==='hero'&&advanceOnIce){
       lake.position=Math.min(lake.columns,lake.position+lake.advanceStep);
       next.history.push({type:'ice-advance',round:next.round,position:lake.position});
+    }
+  }
+  const oneRound=next.encounter?.oneRoundSequence;
+  if(oneRound&&next.hero.health>0){
+    const index=oneRound.index||0,target=oneRound.targets[index],defeated=isDestinyOpponentDead(next,target);
+    next.history.push({type:'sequence-result',round:next.round,index,target,defeated});
+    if(index===oneRound.targets.length-1)next.encounter[defeated?'forcedVictory':'forcedLoss']=true;
+    else{
+      const following=oneRound.targets.slice(index+1);
+      if(!defeated)for(const target of following){next.opponents[target].health+=oneRound.failureHealthBonus;next.opponents[target].maxHealth+=oneRound.failureHealthBonus;}
+      oneRound.index=index+1;next.encounter.inactiveTargets=next.opponents.map((_,i)=>i).filter(i=>i!==following[0]);
+      next.target=following[0];next.round=0;resetDestinyCombatActor(next,{restoreAbilities:true});return next;
     }
   }
   const resume = next.encounter?.pathProgress || next.encounter?.sequenceRemaining > 0 ? 'encounter-start' : 'start';

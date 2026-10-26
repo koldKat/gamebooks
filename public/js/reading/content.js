@@ -89,6 +89,10 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
         if (sectionLinks) target.setAttribute('href', attr.value);
         continue;
       }
+      if (node.tagName === 'TABLE' && attr.name === 'class' && attr.value === 'reading-encounter-table') {
+        target.setAttribute('class', attr.value);
+        continue;
+      }
       if (node.tagName === 'IMG' && attr.name === 'class' && attr.value === 'reading-inline-symbol') {
         target.setAttribute('class', attr.value);
         continue;

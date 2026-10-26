@@ -1,6 +1,7 @@
 import {destinyDieLocked,destinyRollOpponentDice,applyDestinyHeroRoll,onDestinyHeroDice,destinyStat,destinyAttackerTarget,hasDestinyAbility,destinyScoreExtraDice} from './effects.js';
 import {destinyDie} from './damage.js';
 import {markDestinyScoreDice} from './score-immunity.js';
+import {destinyOpponentSpeedResult} from './effects.js';
 
 const index=(values,i)=>{
   if(!Array.isArray(values)||!Number.isInteger(i)||i<0||i>=values.length)throw new RangeError('Choose an available die');
@@ -25,15 +26,23 @@ export function rerollDestinyScoreDice(fight,selected,roll){
 // Runs on the action's private copy. Changing a face does not invent a new roll
 // or retrigger passive effects which explicitly require rolling a die.
 export function validateDestinyCatalogDice(fight,spec){
+  if(fight.encounter?.immutableOpponentDiceTargets?.includes(destinyAttackerTarget(fight))&&
+      (spec.opponentSpeedDieReduction||spec.opponentSpeedDiceReduction||spec.fewerOpponentDice||spec.opponentDamageFaceMap||spec.rerollOpponentDamageFaces))
+    throw new RangeError('Abilities cannot change this opponent dice');
   if(spec.pendingRollBonus&&(fight.turn.pendingAbility?.type!=='catalog-table'||fight.turn.pendingAbility.name!==spec.pendingRollBonus.ability))throw new RangeError('Use this modifier with its matching ability roll');
   if(!spec.requiresLosingSpeedDoubles)return;
   const values=fight.turn.heroSpeedDice;
-  const own=values.reduce((sum,face)=>sum+face,0)+destinyStat(fight,'hero','speed');
-  const enemy=fight.turn.opponentSpeedDice.reduce((sum,face)=>sum+face,0)+destinyStat(fight,destinyAttackerTarget(fight),'speed')+(fight.turn.opponentSpeedBonus||0);
+  const own=values.reduce((sum,face)=>sum+face,0)+destinyStat(fight,'hero','speed')+(fight.turn.heroSpeedResultBonus||0);
+  const enemy=destinyOpponentSpeedResult(fight);
   if(values.length<2||new Set(values).size===values.length||own>=enemy)throw new RangeError('Requires losing Speed doubles');
 }
 
 export function applyDestinyCatalogDice(fight,name,spec,options,roll){
+  if(spec.scoreDieFromSpeed) {
+    const from=index(fight.turn.heroSpeedDice,options.speedDie),to=index(fight.turn.damageDice,options.die);
+    if(destinyDieLocked(fight,'hero','damage',to)) throw new RangeError('Saved dice cannot be changed');
+    fight.turn.damageDice[to]=fight.turn.heroSpeedDice[from];
+  }
   if(spec.pendingRollBonus)fight.turn.pendingAbility.resultBonus=(fight.turn.pendingAbility.resultBonus||0)+spec.pendingRollBonus.amount;
   if(spec.heroDieFace){
     let values,kind='damage',pending=false;
@@ -72,6 +81,11 @@ export function applyDestinyCatalogDice(fight,name,spec,options,roll){
     }
     const healing=(fight.encounter?.damageFaceTriggers||[]).filter(rule=>rule.target===destinyAttackerTarget(fight)&&values.some(face=>rule.faces.includes(face))).reduce((sum,rule)=>sum+(rule.healOnHealthHit||0),0);
     if(healing)fight.turn.faceTriggeredHealing=healing;else delete fight.turn.faceTriggeredHealing;
+  }
+  if(spec.opponentSpeedDieReduction) {
+    const values=fight.turn.opponentSpeedDice;
+    if(!Array.isArray(values)||values.some((_,i)=>destinyDieLocked(fight,'opponent','speed',i))) throw new RangeError('Saved dice cannot be changed');
+    fight.turn.opponentSpeedDice=values.map(face=>Math.max(1,face-spec.opponentSpeedDieReduction));
   }
   if(spec.useHeroSpeedDiceForDamage){
     const speed=fight.turn.heroSpeedDice;

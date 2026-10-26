@@ -3,7 +3,7 @@ import {createDestinyOpponent} from './core.js';
 import {reformDestinyOpponent, spawnDestinyRoundOpponents, advanceDestinyAspectCycle} from './round-events.js';
 import {createOpponentEditor} from '../../opponents.js';
 import {createDestinySession, beginDestinySession, applyDestinySessionAction} from './session.js';
-import {DESTINY_ABILITIES, destinyAbilitySpec, destinyUnusedAbilities} from './abilities.js';
+import {DESTINY_ABILITIES, destinyAbilitySpec, destinyUnusedAbilities,destinyAbilitySacrificeOptions} from './abilities.js';
 import {hasDestinyAbility, isDestinyOpponentActive, destinyStat, destinyDamageAllowed,destinyDieLocked} from './effects.js';
 import {DESTINY_PENALTIES, createDestinyCharacter} from './character.js';
 import {createDestinyEnemyResponse,isDestinyEnemyResponseAbility} from './enemy-response.js';
@@ -16,7 +16,7 @@ const attributes = ['speed','brawn','magic','armour','health','maxHealth'];
 const defaultSlots = ['mainHand','leftHand','feet','head','chest','cloak','ring1','ring2','transport'];
 const defaultEquipmentStats = ['speed','brawn','magic','armour','health','stability','toughness'];
 
-export function createDestinyPanel({document, definition, state, getRoster, t, showAlert, showConfirm, getButtonRow, registerShortcut = () => {}, createFight, useBookAction, createBookControls,getSharedItemLabel,prepareSharedItemLabels}) {
+export function createDestinyPanel({document, definition, state, getRoster, t, showAlert, showConfirm, getButtonRow, registerShortcut = () => {}, createFight, prepareFight, useBookAction, createBookControls,getSharedItemLabel,prepareSharedItemLabels}) {
   const slots=definition.equipmentSlots||defaultSlots;
   const equipmentStats=definition.equipmentStats||defaultEquipmentStats;
   const equipmentTypes=definition.equipmentTypes||['','axe','sword','dagger','spear','mace','hammer','bow','crossbow','shield','horn','totem','grapple','staff'];
@@ -157,7 +157,7 @@ export function createDestinyPanel({document, definition, state, getRoster, t, s
   function start() {
     if(!state.current()||locked(data()))return;
     try {const snapshot=state.capture(),next=createDestinySession(data());next.character=profile(next.character);
-      const config=setup(),options={roster:getRoster(),catalog:definition.abilityCatalog,bookRules:definition.bookRules,createFight,outcomeId:`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`};
+      const config=setup(),options={roster:getRoster(),catalog:definition.abilityCatalog,bookRules:definition.bookRules,createFight,prepareFight,outcomeId:`${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`};
       const result=config.challenge?beginDestinyChallenge(next,config,{...options,leif:config.leif,useOptionalAbilities:config.useOptionalAbilities}):beginDestinySession(next,config,options);
       if(state.commit(snapshot,result))render();}
     catch(error){showAlert(error.message);}
@@ -194,15 +194,15 @@ export function createDestinyPanel({document, definition, state, getRoster, t, s
     if(spec.stealPlayedAbility)html+=select('borrowAbility',[...new Set(Object.values(fight.encounter?.playedAbilitiesByTarget||{}).flat())].filter(name=>['sp','mo'].includes(destinyAbilitySpec(fight,name)?.category)&&name!==selectedAbility).map(name=>[name,label(name)]),undefined,tk('ability'));
     if(spec.payQuotaOverride)html+=select('quotaAbility',Object.keys(fight.abilities).filter(key=>key!==name&&fight.abilities[key]>0&&destinyAbilitySpec(fight,key)?.category!=='-'&&!destinyAbilitySpec(fight,key)?.quotaStatus&&!fight.used[key]&&!fight.abilityQuota?.everUsed.includes(key)&&!fight.abilityQuota?.paidExempt.includes(key)).map(key=>[key,label(key)]),undefined,tk('fundAbility'));
     if(spec.regain){const recipient=selectedRecipient>=0&&spec.allyTarget?fight.allies[selectedRecipient]:fight;
-      html+=select('restore',Object.keys(recipient.abilities).filter(key=>recipient.used[key]>0&&spec.regain.includes(destinyAbilitySpec(recipient,key)?.category)&&hasDestinyAbility(recipient,key)).map(key=>[key,label(key)]),undefined,tk('restore'));}
-    if(['two','adjacent'].includes(spec.hit)||['twin-blade','poison-cloud'].includes(name))html+=checklist('abilityTargets',targets(fight,true),tk('targets'));
+      html+=select('restore',Object.keys(recipient.abilities).filter(key=>recipient.used[key]>0&&!destinyAbilitySpec(recipient,key)?.unrestorable&&!recipient.encounter?.unrestorableAbilities?.includes(key)&&spec.regain.includes(destinyAbilitySpec(recipient,key)?.category)&&hasDestinyAbility(recipient,key)).map(key=>[key,label(key)]),undefined,tk('restore'));}
+    if(['two','adjacent','selected'].includes(spec.hit)||['twin-blade','poison-cloud'].includes(name))html+=checklist('abilityTargets',targets(fight,true),tk('targets'));
     if(name==='wave')html+=targets(fight,true).map(([index,name])=>number('allocation-'+index,0,0,1000000,name)).join('');
     if(name==='torrent')html+=select('torrentAbility',['cleave','lash','shadow-thorns'].map(key=>[key,label(key)]),undefined,tk('ability'));
     if(name==='shatter')html+=select('variant',[['armour-minus-two',tk('shatterPermanent')],['armour-zero-next-round',tk('shatterNext')]],undefined,tk('variant'));
     if(name==='best-laid-plans')html+=select('trap',['snap-jack','cluster-mine'].map(value=>[value,title(value)]),undefined,tk('trap'));
     if(name==='sweet-spot')html+=number('chosenNumber',1,1,6,tk('chosenNumber'));
     if(name==='ice-mantle')html+=check('bonusAlreadyIncluded');
-    return html;
+    return html+(bookControls?.abilityFields?.(fight,name)||'');
   }
   function readAbilityOptions(fight) {
     const options={deferDamage:true};
@@ -216,7 +216,7 @@ export function createDestinyPanel({document, definition, state, getRoster, t, s
     if(el('abilityAlly')&&integer('abilityAlly',-1)>=0)options.ally=integer('abilityAlly');
     if(el('bonusAlreadyIncluded'))options.bonusAlreadyIncluded=el('bonusAlreadyIncluded').checked;
     if(selectedAbility==='wave')options.allocations=fight.opponents.map((_,index)=>el('allocation-'+index)?integer('allocation-'+index):0);
-    return options;
+    return {...options,...bookControls?.abilityOptions?.(fight,selectedAbility)};
   }
   function choiceTargets(fight, socket) {
     if (fight.phase === 'encounter-orbs') {
@@ -269,13 +269,13 @@ export function createDestinyPanel({document, definition, state, getRoster, t, s
       if(pending.type==='shared-item-loss')html+=renderItemLoss(fight);
       else if(pending.type==='automatic-modifier')html+=select('automaticAttribute',[['',tk('skip')],...pending.action.attributes.map(key=>[key,tk(key)])],'',tk('attribute'))+button('automatic-choice',tk('confirmChoice'));
       else if(['defeat-choice','damage-choice'].includes(pending.type))html+=button(pending.type,pending.type==='damage-choice'?label(pending.name):pending.name);
-      else{const names=pending.type==='ability-sacrifice'?destinyUnusedAbilities(fight):Object.keys(fight.abilities).filter(name=>fight.used[name]>0&&['sp','mo'].includes(destinyAbilitySpec(fight,name)?.category)&&hasDestinyAbility(fight,name));
+      else{const names=pending.type==='ability-sacrifice'?destinyAbilitySacrificeOptions(fight):Object.keys(fight.abilities).filter(name=>fight.used[name]>0&&['sp','mo'].includes(destinyAbilitySpec(fight,name)?.category)&&hasDestinyAbility(fight,name));
         html+=select('choiceAbility',[['',tk(pending.type==='ability-sacrifice'?'takeDamage':'skip')],...names.map(name=>[name,label(name)])],undefined,tk('ability'))+button(pending.type==='ability-sacrifice'?'sacrifice-choice':'gambit-choice');}
     }else if(nextAction(fight)){
       if(fight.phase==='damage'&&fight.turn.winner==='hero'&&fight.turn.soundCharge&&!fight.turn.used.co)html+=check('soundCharge',true);
       const lake=fight.encounter?.iceLake;
       if(fight.phase==='end'&&fight.turn.winner==='hero'&&lake&&lake.position<lake.columns)html+=check('advanceOnIce',true);
-      html+=button('next',tk(fight.phase==='enemy-ability'?'resolve-ability':nextAction(fight)));
+      if(!bookControls?.handlesNext?.(fight))html+=button('next',tk(fight.phase==='enemy-ability'?'resolve-ability':nextAction(fight)));
     }
     if(fight.phase==='start'&&fight.trap&&!fight.trap.fired&&fight.trap.trigger===fight.round+1)html+=checklist('trapTargets',targets(fight,true),tk('trapTargets'));
     if(fight.phase==='damage'&&fight.turn.winner==='hero'){
@@ -340,6 +340,7 @@ export function createDestinyPanel({document, definition, state, getRoster, t, s
     el('status').textContent=f?`${tk('round',{n:f.round})} · ${tk(f.status)} · ${tk('phase.'+f.phase)}`:tk('ready');
     el('combatants').innerHTML=f?`<div class="bsim-status">${escape(f.team?teamPanel.name(f,f.team.active):f.encounter?.heroRelay?.active?f.hero.name:tk('hero'))}: ${f.hero.health}/${f.hero.maxHealth} · ${['speed','brawn','magic','armour'].map(key=>`${escape(tk(key))} ${f.hero[key]===null?'-':destinyStat(f,'hero',key)}`).join(' · ')}</div>`+f.opponents.map((enemy,index)=>`<div class="bsim-combatant">${index+1}. ${escape(enemy.name)}: ${enemy.health??'-'}/${enemy.maxHealth??'-'}${isDestinyOpponentActive(f,index)?'':' · '+escape(tk('inactive'))}<br>${['speed',enemy.damageStat,'armour'].filter(Boolean).map(key=>`${escape(tk(key))} ${enemy[key]===null?'-':destinyStat(f,index,key)}`).join(' · ')}</div>`).join(''):'';
     if(f?.team)el('combatants').innerHTML+=f.allies.map(ally=>`<div class="bsim-combatant">${escape(teamPanel.name(f,ally.teamActorId))}: ${ally.hero.health}/${ally.hero.maxHealth} · ${escape(tk('role.'+(f.team.roles?.[ally.teamActorId]||'attack')))}</div>`).join('');
+    if(f)el('combatants').innerHTML+=bookControls?.statusFields?.(f)||'';
     const pending=f?.turn?.pendingAbility, lines=[];
     if(f?.turn?.heroSpeedDice?.length)lines.push(tk('heroDice')+': '+f.turn.heroSpeedDice.join(', '));
     if(f?.turn?.opponentSpeedDice?.length)lines.push(tk('enemyDice')+': '+f.turn.opponentSpeedDice.join(', '));
@@ -364,7 +365,7 @@ export function createDestinyPanel({document, definition, state, getRoster, t, s
   }
   function close(){itemLossSelection=null;el('overlay')?.classList.remove('active');}
   function open(){if(!state.current()){showAlert(t('battlesim.no_active_playthrough'));return;}render();el('overlay').classList.add('active');}
-  const bookControls=createBookControls?.({id,tk,escape,title,row,number,select,check,textInput,button,el,data,apply,integer,getRoster});
+  const bookControls=createBookControls?.({id,tk,escape,title,row,number,select,check,textInput,button,el,data,apply,integer,getRoster,abilityCatalog,definition});
   const teamPanel=createDestinyTeamPanel({tk,escape,title,select,button,el,integer,apply});
   const allySetup=definition.allowTeam?createDestinyAllySetup({id,definition,tk,escape,title,number,select,check,textInput,el,integer,inventoryEditor,saveSetup}):null;
   function init(){

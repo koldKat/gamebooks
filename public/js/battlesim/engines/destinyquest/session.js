@@ -12,6 +12,7 @@ import {createDestinyCharacter, attachDestinyCharacter, recordDestinyOutcome, re
 import {applyDestinyTravelAction} from './travel-rules.js';
 import {setDestinyPassiveActivation} from './ability-quota.js';
 import {attachDestinyAlly} from './allies.js';
+import {destinyStat} from './effects.js';
 import {enableDestinyTeam,destinyTeamHero,switchDestinyTeamHero} from './team-state.js';
 import {startDestinyTeamRound,rollDestinyTeamSpeed,resolveDestinyTeamSpeed,useDestinyTeamAbility,rollDestinyTeamDamage,resolveDestinyTeamDamage,resolveDestinyTeamAbilityRoll,continueDestinyTeamCombat} from './team-combat.js';
 import {endDestinyTeamRound} from './team-end.js';
@@ -30,7 +31,7 @@ export function createDestinySession(input = {}) {
   return next;
 }
 
-export function beginDestinySession(session, setup, {roster, outcomeId, catalog, bookRules, createFight = createWinterFight} = {}) {
+export function beginDestinySession(session, setup, {roster, outcomeId, catalog, bookRules, createFight = createWinterFight,prepareFight} = {}) {
   if(setup.teamEnabled!==undefined&&typeof setup.teamEnabled!=='boolean')throw new RangeError('Choose solo or two-hero combat');
   if (session.challenge?.status === 'active') throw new RangeError('Finish the active challenge first');
   if (session.fight?.status === 'active') throw new RangeError('Finish the active fight before changing setup');
@@ -55,6 +56,7 @@ export function beginDestinySession(session, setup, {roster, outcomeId, catalog,
       {...ally.character,attributes:ally.hero,abilities:ally.abilities||{},equipment:ally.equipment||{}});
     next.fight=enableDestinyTeam(attachDestinyAlly(next.fight,companion));
   }
+  if(prepareFight)next.fight=prepareFight(next.fight,setup,{roster,character:next.character});
   next.fightId = outcomeId;
   delete next.challenge;
   delete next.outcome;
@@ -66,6 +68,10 @@ export function applyDestinySessionAction(session, action, payload = {}, {roster
     const owner=session.fight?.team?destinyTeamHero(session.fight,0):session.fight;
     const source=session.fight?.team&&session.fight.status!=='active'?{...session,fight:switchDestinyTeamHero(session.fight,0)}:session;
     return applyDestinyTravelAction(source,payload.name,payload.options,catalog??owner?.abilityCatalog);
+  }
+  if(action==='rest-companion'){
+    if(session.fight?.status==='active'||session.fight&&!session.character?.outcomeIds?.includes(session.fightId)||!session.setup?.pet)throw new RangeError('Finish and record combat before resting the companion');
+    const next=createDestinySession(session);delete next.setup.pet.carriedHealth;next.setup.pet.health=next.setup.pet.maxHealth;return next;
   }
   if (action.startsWith('challenge-')) return applyDestinyChallengeAction(session, action, {roll,timestamp});
   const next = createDestinySession(session);
@@ -109,7 +115,7 @@ export function applyDestinySessionAction(session, action, payload = {}, {roster
     case 'passive-activation': next.fight=setDestinyPassiveActivation(fight,payload.name,payload.enabled);break;
     case 'backpack-item': next.fight = abilities.useDestinyBackpackItem(fight,payload.index,roll); break;
     case 'potion-modifier': next.fight = abilities.useDestinyPotionModifier(fight,payload.attribute,roll); break;
-    case 'resolve-ability': next.fight = fight.team?resolveDestinyTeamAbilityRoll(fight,roll,{roster}):resolveDestinyAbilityRoll(fight, roll, {roster}); break;
+    case 'resolve-ability': next.fight = fight.team?resolveDestinyTeamAbilityRoll(fight,roll,{roster}):resolveDestinyAbilityRoll(fight, roll, {roster,...options,...(payload.target!==undefined?{target:payload.target}:{})}); break;
     case 'resolve-enemy-ability': next.fight=resolveAndAdvanceDestinyEnemy(fight,roll);break;
     case 'automatic-choice':
       next.fight=finishDestinyAbilityAction(chooseDestinyAutomaticModifier(fight,payload.attribute??null),roll);
@@ -147,6 +153,14 @@ export function applyDestinySessionAction(session, action, payload = {}, {roster
         const health=(fight.status==='loss'?fight.hero.maxHealth:fight.hero.health)+penalty;
         next.setup.hero={...next.setup.hero,health};
         next.character.attributes={...next.character.attributes,health};
+      }
+      if(result.recorded&&fight.encounter?.carryHeroAttributes&&fight.status==='win'){
+        const view={...fight,status:'active',effects:fight.effects.filter(effect=>effect.kind==='stat'&&effect.target==='hero'&&effect.until===Number.MAX_SAFE_INTEGER&&(effect.amount<0||effect.set!==undefined))};
+        const attributes={...next.setup.hero,health:fight.hero.health,...Object.fromEntries(['speed','brawn','magic','armour'].map(key=>[key,destinyStat(view,'hero',key)]))};
+        next.setup.hero=attributes;next.character.attributes={...next.character.attributes,...attributes};
+      }
+      if(result.recorded&&fight.encounter?.carryCompanion&&next.setup.pet&&fight.pet){
+        next.setup.pet.carriedHealth=fight.status==='loss'?fight.pet.maxHealth:fight.pet.health;
       }
       if(result.recorded){
         const recoverArmour=fight.status==='loss'&&fight.encounter?.recoverArmourOnDefeat||fight.status==='win'&&fight.encounter?.recoverArmourOnVictory;

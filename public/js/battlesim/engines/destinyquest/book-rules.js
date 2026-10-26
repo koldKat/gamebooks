@@ -1,6 +1,6 @@
 // Book options are copied into a fight once, so saving and resuming cannot
 // substitute another edition's abilities or defeat rules.
-const categories = new Set(['sp', 'co', 'mo', 'pa', 'dm', '-']);
+const categories = new Set(['sp', 'co', 'mo', 'pa', 'dm', 'wa', '-']);
 const phases = new Set(['start', 'speed', 'speed-rolled', 'damage', 'damage-rolled', 'ability-rolled', 'end', 'death-move']);
 
 export function destinyBookOptionSnapshot({ catalog, bookRules } = {}) {

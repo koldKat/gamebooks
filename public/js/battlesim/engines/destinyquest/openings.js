@@ -15,7 +15,13 @@ export function useDestinyOpening(fight, name, options, roll, spec = {}) {
   checkDestinyAbilityQuota(fight,name);
   const next = structuredClone(fight);
   next.turn ??= { used: { sp: false, co: false, dm: false, backpack: false }, deaths: [], deathMoveDeathsSeen: 0 };
-  if (spec.openingDamage !== undefined || spec.openingDice) {
+  if(spec.openingTargets) {
+    prepareDestinyDamage(next,name,{...spec,hit:spec.openingTargets,fixedDamage:spec.openingDamage,
+      damageKind:spec.openingKind||'fixed-opening'},options,roll);
+  } else if(spec.openingBleedMark) {
+    if(!Number.isInteger(options.target)||!isDestinyOpponentActive(next,options.target)) throw new RangeError('Choose a living opponent');
+    next.bloodMark={target:options.target,amount:spec.openingBleedMark};
+  } else if (spec.openingDamage !== undefined || spec.openingDice) {
     const target = options.target;
     if (!Number.isInteger(target) || !isDestinyOpponentActive(next, target)) throw new RangeError('Choose a living opponent');
     if (spec.openingDice) prepareDestinyDamage(next, name, {...spec,hit:'one',dice:spec.openingDice,damageKind:'first-strike'}, options, roll);

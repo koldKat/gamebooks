@@ -1,4 +1,4 @@
-import { damageDestinyHero, destinyStrike, addDestinyStatEffect, isDestinyOpponentActive, destinyImmuneToAbility,applyDestinyAcceptedHeroRoll,destinyHeroHasStatus,destinyStat } from './effects.js';
+import { damageDestinyHero, destinyStrike, addDestinyStatEffect, isDestinyOpponentActive, destinyImmuneToAbility,applyDestinyAcceptedHeroRoll,destinyHeroHasStatus,destinyStat,destinyRoundMatches } from './effects.js';
 import { destinyDie, applyDestinyDamage } from './damage.js';
 import { queueDestinyEncounterEvent } from './encounter-events.js';
 
@@ -13,12 +13,29 @@ export function prepareDestinyGridRound(fight,options,roll){
 
 export function applyDestinyScheduledTransitions(fight,round,target){
   let chosen=target;
+  const merge=fight.encounter?.mergeOpponentsAtRound;
+  if(merge&&!merge.used&&round>=merge.round) {
+    merge.used=true;
+    const living=merge.targets.filter(index=>isDestinyOpponentActive(fight,index));
+    if(living.length) {
+      const keeper=living[0],opponent=fight.opponents[keeper];
+      const health=living.reduce((sum,index)=>sum+fight.opponents[index].health,0)*merge.healthMultiplier;
+      Object.assign(opponent,opponent.normal);opponent.health=opponent.maxHealth=health;
+      fight.effects=fight.effects.filter(effect=>effect.target!==keeper||effect.kind!=='stat');
+      fight.encounter.inactiveTargets=[...new Set([...(fight.encounter.inactiveTargets||[]),...living.slice(1)])];
+      if(merge.targets.includes(chosen))chosen=keeper;
+      fight.history.push({type:'opponent-merge',round,targets:living,target:keeper,health});
+    }
+  }
   for(const rule of fight.encounter?.scheduledTransitions||[]){
     if(rule.used||round<rule.round||rule.requiresAlive?.some(index=>!isDestinyOpponentActive(fight,index)))continue;
     rule.used=true;
     if(rule.set)Object.assign(fight.encounter,structuredClone(rule.set));
+    for(const healing of rule.healing||[])if(isDestinyOpponentActive(fight,healing.target)) {
+      const recipient=fight.opponents[healing.target];recipient.health=Math.min(recipient.maxHealth,recipient.health+healing.amount);
+    }
     for(const change of rule.setStats||[]){
-      fight.effects=fight.effects.filter(effect=>!(effect.kind==='stat'&&effect.target===change.target&&effect.attribute===change.attribute));
+      if(!rule.preserveEffects)fight.effects=fight.effects.filter(effect=>!(effect.kind==='stat'&&effect.target===change.target&&effect.attribute===change.attribute));
       fight.opponents[change.target][change.attribute]=change.value;
     }
     fight.encounter.inactiveTargets=[...new Set([...(fight.encounter.inactiveTargets||[]).filter(index=>!rule.activate?.includes(index)),...(rule.suspend||[])])];
@@ -59,7 +76,7 @@ export function reformDestinyOpponent(fight, round) {
 
 export function spawnDestinyRoundOpponents(fight, round, createOpponent) {
   for (const rule of fight.encounter?.spawnAtRoundStart || []) {
-    if (round < rule.fromRound || rule.source !== undefined && !isDestinyOpponentActive(fight, rule.source)) continue;
+    if (round < rule.fromRound || rule.untilRound!==undefined&&round>rule.untilRound || rule.source !== undefined && !isDestinyOpponentActive(fight, rule.source)) continue;
     spawnDestinyOpponents(fight, rule, round, createOpponent);
   }
 }
@@ -69,6 +86,8 @@ export function spawnDestinyOpponents(fight, rule, round, createOpponent) {
   for (let i = 0; i < rule.count; i++) {
     const target = fight.opponents.length;
     fight.opponents.push(createOpponent(rule.opponent));
+    if(rule.passiveImmunities)(fight.encounter.passiveImmunityByTarget??={})[target]=[...rule.passiveImmunities];
+    if(rule.abilityImmunities)(fight.encounter.abilityImmunityByTarget??={})[target]=[...rule.abilityImmunities];
     if (rule.group) (fight.encounter.opponentGroups[rule.group] ??= []).push(target);
     for (const effect of rule.statWhileAlive || []) (fight.encounter.statWhileAlive ??= []).push({ ...effect, target });
     if (rule.endDamage) (fight.encounter.endEffects ??= []).push({ target: 'hero', amount: rule.endDamage, requiresAlive: [target] });
@@ -77,11 +96,39 @@ export function spawnDestinyOpponents(fight, rule, round, createOpponent) {
 }
 
 export function applyDestinyRoundEvents(fight, options, roll) {
+  for(const aid of fight.encounter?.roundAid||[])if(options[aid.option]){
+    if(options[aid.option]!==true||(aid.used||0)>=aid.maximum||fight.round<=(aid.untilRound||0))throw new RangeError('This start-of-round aid is unavailable');
+    aid.used=(aid.used||0)+1;aid.untilRound=fight.round+aid.duration-1;
+    if(aid.damage)destinyStrike(fight,aid.target,aid.damage,aid.name,'companion');
+    for(const [attribute,amount] of Object.entries(aid.changes||{}))addDestinyStatEffect(fight,aid.target,attribute,amount,aid.duration,aid.name);
+    if(aid.blockCategories)fight.encounter.blockedRounds={from:fight.round,until:aid.untilRound,categories:[...aid.blockCategories]};
+    fight.history.push({type:'round-aid',name:aid.name,round:fight.round,used:aid.used,untilRound:aid.untilRound});
+  }
+
+  for(const rule of fight.encounter?.scheduledParasites||[]) {
+    if(fight.round===rule.attachRound){rule.active=true;fight.history.push({type:'parasite-attached',name:rule.name,round:fight.round});}
+    if(rule.active&&!rule.removed&&!rule.burst&&fight.round>=rule.burstRound) {
+      rule.burst=true;rule.active=false;const damage=damageDestinyHero(fight,rule.amount);
+      fight.history.push({type:'encounter-damage',name:rule.name,round:fight.round,damage});
+    }
+  }
+  for(const rule of fight.encounter?.startHealthThresholdDamage||[])if(fight.opponents[rule.target]?.health>=rule.minimum) {
+    const damage=damageDestinyHero(fight,rule.amount);
+    fight.history.push({type:'encounter-damage',name:rule.name,round:fight.round,damage});
+  }
+  for(const rule of fight.encounter?.startGroupDamageResource||[])if(fight.round>=rule.fromRound) {
+    for(const target of rule.targets)if(isDestinyOpponentActive(fight,target))destinyStrike(fight,target,rule.amount,rule.name,'passive');
+    fight.encounter.resources[rule.resource]+=rule.targets.filter(target=>isDestinyOpponentActive(fight,target)).length*rule.increment;
+    if(!isDestinyOpponentActive(fight,fight.target))fight.target=fight.opponents.findIndex((_,i)=>isDestinyOpponentActive(fight,i));
+  }
   for(const rule of fight.encounter?.startAttributeDamage||[]){
     if(rule.every&&fight.round%rule.every!==0||rule.requiresAlive?.some(target=>!isDestinyOpponentActive(fight,target)))continue;
     const damage=damageDestinyHero(fight,destinyStat(fight,rule.actor,rule.attribute));
     fight.history.push({type:'attribute-damage',name:rule.name,round:fight.round,damage});
     if(fight.hero.health<=0)return;
+  }
+  for(const rule of fight.encounter?.roundDiceCycles||[])if(isDestinyOpponentActive(fight,rule.target)){
+    (fight.encounter.speedDiceByTarget??={})[rule.target]=rule.values[(fight.round-1)%rule.values.length];
   }
   for(const rule of fight.encounter?.roundStatCycles||[])if(isDestinyOpponentActive(fight,rule.target))fight.opponents[rule.target][rule.attribute]=rule.values[(fight.round-1)%rule.values.length];
   for(const rule of fight.encounter?.statusAttributeGrowth||[])if(isDestinyOpponentActive(fight,rule.target)&&destinyHeroHasStatus(fight,rule.status)){
@@ -104,7 +151,8 @@ export function applyDestinyRoundEvents(fight, options, roll) {
     if(rule.round===fight.round&&isDestinyOpponentActive(fight,rule.target))fight.opponents[rule.target].health=fight.opponents[rule.target].maxHealth;
   }
   for(const rule of fight.encounter?.startRegeneration||[]){
-    if(!isDestinyOpponentActive(fight,rule.target))continue;
+    if(fight.round<(rule.fromRound??1)||!isDestinyOpponentActive(fight,rule.target)||rule.requiresAlive?.some(target=>!isDestinyOpponentActive(fight,target)))continue;
+    if(rule.minimumAliveGroup&&(fight.encounter.opponentGroups?.[rule.minimumAliveGroup.group]||[]).filter(target=>isDestinyOpponentActive(fight,target)).length<rule.minimumAliveGroup.count)continue;
     const opponent=fight.opponents[rule.target];opponent.health=Math.min(opponent.maxHealth,opponent.health+rule.amount);
   }
   const ranged = fight.encounter?.rangedCombat;
@@ -118,9 +166,14 @@ export function applyDestinyRoundEvents(fight, options, roll) {
       : Math.min(rule.maximum, rule.initial + Math.max(0, fight.round - rule.fromRound) * rule.growth);
   }
   for (const effect of fight.encounter?.startStats || []) {
-    if (effect.round !== fight.round) continue;
+    if(!destinyRoundMatches(fight,effect))continue;
+    if (effect.round !== undefined && effect.round !== fight.round) continue;
+    if(effect.requiresAlive?.some(target=>!isDestinyOpponentActive(fight,target)))continue;
     if (destinyImmuneToAbility(fight,effect.ability)) continue;
-    for (const [attribute, amount] of Object.entries(effect.changes)) addDestinyStatEffect(fight, effect.target, attribute, amount, null, 'encounter-start');
+    for (const [attribute, amount] of Object.entries(effect.changes)){
+      const delta=effect.maximum?.[attribute]===undefined?amount:Math.min(amount,Math.max(0,effect.maximum[attribute]-destinyStat(fight,effect.target,attribute)));
+      if(delta)addDestinyStatEffect(fight,effect.target,attribute,delta,null,'encounter-start');
+    }
   }
   let trapTargets = null;
   if (fight.trap && !fight.trap.fired && fight.trap.trigger === fight.round) {

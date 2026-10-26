@@ -1,11 +1,11 @@
 // Legion encounter profiles and exceptions are loaded from book_enemies. This
 // factory contains no roster names, stats or section-specific rule branches.
 import {createDestinyFight,settleDestinyFight} from './core.js';
-import {configureDestinyAbilities,destinyNeverUsedAbilities} from './abilities.js';
+import {configureDestinyAbilities,destinyNeverUsedAbilities,rerollDestinyPursuit} from './abilities.js';
 import {attachDestinyCharacter} from './character.js';
 import {destinyEncounterSettings,destinyEncounterAction} from './encounter-settings.js';
 import {LEGION_ABILITIES} from './legion-abilities.js';
-import {destinyStrike,addDestinyStatEffect,healDestinyHero,destinyStat,damageDestinyHero} from './effects.js';
+import {destinyStrike,addDestinyStatEffect,healDestinyHero,destinyStat,damageDestinyHero,hasDestinyAbility} from './effects.js';
 import {beginDestinyHeroRelay} from './hero-relay.js';
 import {applyDestinyOpponentForm} from './round-events.js';
 import {LEGION_CONSUMABLES,useLegionConsumable} from './legion-consumables.js';
@@ -71,6 +71,14 @@ export function createLegionFight(hero,section,{roster,abilities={},equipment={}
   let fight=configureDestinyAbilities(createDestinyFight(hero,opponents),abilities,equipment,{catalog,bookRules});
   if(character)fight=attachDestinyCharacter(fight,character);
   fight.encounter=destinyEncounterSettings(fight,preset,encounterOptions);
+  const carried=fight.character?.pendingAbilityLosses;
+  if(carried?.section===String(section)){
+    for(const [name,count] of Object.entries(carried.abilities||{})){
+      if(!Number.isSafeInteger(count)||count<0||count>(fight.abilities[name]||0))throw new RangeError('Invalid carried ability loss');
+      fight.used[name]=count;
+    }
+    delete fight.character.pendingAbilityLosses;
+  }else if(carried?.fromSection===String(section))delete fight.character.pendingAbilityLosses;
   if(preset.adapter.challengeResume){
     const settings=preset.adapter.challengeResume,rounds=encounterOptions[settings.roundsOption],used=encounterOptions[settings.usedOption];
     if(!Number.isSafeInteger(rounds)||rounds<0||rounds>=fight.encounter.lossAfterTotalRounds||!Array.isArray(used)||new Set(used).size!==used.length||used.some(name=>!fight.abilities[name]||catalog[name]?.quotaStatus))throw new RangeError('Enter the prior challenge rounds and used abilities');
@@ -82,9 +90,17 @@ export function createLegionFight(hero,section,{roster,abilities={},equipment={}
     if(fight.abilityQuota)for(const name of fight.encounter.selectedEncounterAbilities)if(catalog[name].category==='pa'&&catalog[name].phases.length===0)fight=setDestinyPassiveActivation(fight,name,true);
   }
   for(const rule of preset.adapter.healthBonusesFromOptions||[]){
-    const count=encounterOptions[rule.option],opponent=fight.opponents[rule.target];
+    const count=encounterOptions[rule.option]??fight.character?.sourceCounters?.[rule.fromCounter],opponent=fight.opponents[rule.target];
     if(!Number.isSafeInteger(count)||count<0||!Number.isSafeInteger(opponent.health+count*rule.amountPer)||opponent.health+count*rule.amountPer>1000000)throw new RangeError('Enter the previous encounter round count');
     opponent.health+=count*rule.amountPer;opponent.maxHealth=opponent.health;
+    (fight.encounter.sourceCounters??={})[rule.option]=count;
+  }
+  for(const rule of preset.adapter.statBonusesFromOptions||[]){
+    const count=encounterOptions[rule.option]??fight.character?.sourceCounters?.[rule.fromCounter];
+    if(!Number.isSafeInteger(count)||count<0||count>1000000)throw new RangeError('Enter the previous encounter round count');
+    const amount=Math.ceil(count/(rule.divisor||1))*rule.amountPer;
+    if(!Number.isSafeInteger(amount)||Math.abs(amount)>1000000)throw new RangeError('Invalid encounter attribute bonus');
+    addDestinyStatEffect(fight,rule.target,rule.attribute,amount,null,'encounter-context');
     (fight.encounter.sourceCounters??={})[rule.option]=count;
   }
   if(fight.encounter.initialOpponentHealth!==undefined){
@@ -98,9 +114,14 @@ export function createLegionFight(hero,section,{roster,abilities={},equipment={}
     fight.encounter.heroDamageStat=attribute;
   }
   for(const [resource,rule] of Object.entries(preset.adapter.resourceOptions||{})){
-    const count=encounterOptions[rule.option]??rule.default;
+    const count=encounterOptions[rule.option]??fight.character?.sourceCounters?.[rule.fromCounter]??rule.default;
     if(!Number.isSafeInteger(count)||count<0||count>(rule.maximum??1000000))throw new RangeError('Invalid source consumable count');
     (fight.encounter.resources??={})[resource]=count;
+  }
+  for(const rule of fight.encounter.blockCategoriesForResource||[]){
+    const count=fight.encounter.resources?.[rule.resource];
+    if(!Number.isSafeInteger(count)||count<0)throw new RangeError('Enter the source counter for this encounter');
+    fight.encounter.blockedRounds={from:1,until:count,categories:[...rule.categories]};
   }
   if(fight.encounter.restoreOnVictory!==undefined)fight.restoreOnVictory=fight.encounter.restoreOnVictory;
   fight.encounter.sourceSection=String(section);
@@ -138,7 +159,49 @@ export function useLegionAction(fight,action,{roster,...options}={},roll=()=>Mat
   if(fight?.status!=='active')throw new RangeError('No active encounter');
   if(Object.hasOwn(LEGION_CONSUMABLES,action))return useLegionConsumable(fight,action,options,roll);
   const settings=destinyEncounterAction(fight,legionRosterFor(roster,fight.encounter?.sourceSection),action);
+  if(settings.kind==='pursuit-reroll')return rerollDestinyPursuit(fight,options.ability,options.dice,roll);
   const next=structuredClone(fight);
+  if(settings.kind==='arcane-surge'){
+    const pending=next.turn?.pendingAbility,rule=next.encounter.arcaneControl,amount=options.amount;
+    if(next.phase!=='ability-rolled'||pending?.event?.kind!=='arcane-control'||!Number.isSafeInteger(amount)||amount<1||amount>destinyStat(next,'hero','magic'))throw new RangeError('Spend available Magic before accepting the challenge');
+    addDestinyStatEffect(next,'hero','magic',-amount,null,rule.surgeName);pending.event.surgeBonus=(pending.event.surgeBonus||0)+amount;
+    const damage=damageDestinyHero(next,amount*rule.healthPerMagic);next.history.push({type:'arcane-surge',round:next.round,amount,damage});return finishDestinyAbilityAction(next,roll);
+  }
+  if(settings.kind==='spend-ability-avoid-end-test'){
+    const name=options.ability;
+    if(next.phase!=='end'||next.turn.encounterEndPrepared||!next.encounter[settings.requiresFlag])throw new RangeError('Choose this avoidance before rolling the end hazard');
+    if(!hasDestinyAbility(next,name)||next.abilityCatalog?.[name]?.category!==settings.category||(next.used[name]||0)>=(next.abilities[name]||0))throw new RangeError('Choose an unused ability of the required category');
+    next.used[name]=(next.used[name]||0)+1;next.turn[settings.turnFlag]=true;
+    next.history.push({type:'ability-sacrifice',name,source:action,round:next.round});return next;
+  }
+  if(settings.kind==='remove-parasite') {
+    if(next.phase!=='damage'||next.turn.winner!=='hero'||next.turn.used.co)throw new RangeError('Spend an unused winning combat action to remove the leech');
+    const parasite=next.encounter.scheduledParasites?.find(rule=>rule.active&&!rule.removed);
+    if(!parasite)throw new RangeError('No leech is attached');
+    parasite.active=false;parasite.removed=true;next.turn.used.co=true;next.turn.normalDamageReplaced=true;next.phase='end';
+    next.history.push({type:'book-action',name:settings.name,round:next.round});return next;
+  }
+  if(settings.kind==='resource-reduce-once') {
+    if(next.usedBookActions?.[action])throw new RangeError('This aid has already been used');
+    next.encounter.resources[settings.resource]=Math.max(0,next.encounter.resources[settings.resource]-settings.amount);
+    (next.usedBookActions??={})[action]=1;
+    next.history.push({type:'book-action',name:settings.name,round:next.round});return next;
+  }
+  if(settings.kind==='weak-spot') {
+    if(next.phase!=='damage'||next.turn.winner!=='hero'||new Set(next.turn.heroSpeedDice).size===next.turn.heroSpeedDice.length)
+      throw new RangeError('Win with Speed doubles before choosing this attack');
+    if(next.history.some(event=>event.type==='ability'&&event.round===next.round&&['mo','co'].includes(next.abilityCatalog?.[event.name]?.category)))
+      throw new RangeError('This attack cannot follow a combat or modifier ability');
+    next.turn.exclusiveScoreAttack=true;next.turn.ignoreArmour=true;
+    next.history.push({type:'book-action',name:settings.name,round:next.round});return next;
+  }
+  if(settings.kind==='damage-component') {
+    if(next.phase!=='damage'||next.turn.winner!=='hero')throw new RangeError('Replace a winning damage score with this action');
+    if(!Number.isSafeInteger(settings.amount)||settings.amount<0||!next.opponents[settings.target]||next.opponents[settings.target].health<=0)throw new RangeError('Choose a living component');
+    destinyStrike(next,settings.target,settings.amount,action,'book-action');
+    next.turn.normalDamageReplaced=true;next.phase='end';
+    next.history.push({type:'book-action',name:settings.name,round:next.round});settleDestinyFight(next,roll);return next;
+  }
   if(settings.kind==='sacrifice-unused-for-stat'){
     if(next.phase!=='damage'||next.turn.winner!=='hero')throw new RangeError('Replace a winning damage score with this action');
     if(!destinyNeverUsedAbilities(next).includes(options.ability))throw new RangeError('Choose an ability never used in this combat');
@@ -195,10 +258,18 @@ export function useLegionAction(fight,action,{roster,...options}={},roll=()=>Mat
     if(destinyStat(next,'hero',settings.attribute)===0)next.encounter.forcedLoss=true;
     next.history.push({type:'book-action',name:settings.name,round:next.round});settleDestinyFight(next);return next;
   }
+  if(settings.kind==='heal-per-round') {
+    if(next.phase!=='end'||next.round<settings.fromRound||next.round>settings.untilRound)throw new RangeError('This healing is unavailable in this combat round');
+    if(next.turn.usedBookActions?.includes(action))throw new RangeError('This healing has already been used this round');
+    healDestinyHero(next,settings.amount);(next.turn.usedBookActions??=[]).push(action);
+    next.history.push({type:'book-action',name:settings.name,round:next.round});return next;
+  }
   if(settings.kind==='heal-once'){
     if(settings.requiresFlag&&!next.encounter[settings.requiresFlag])throw new RangeError('This ally is not available');
     if(next.usedBookActions?.[action])throw new RangeError('This healing has already been used');
+    if(settings.chooseAttribute&&!settings.chooseAttribute.includes(options.attribute))throw new RangeError('Choose an allowed attribute');
     healDestinyHero(next,settings.amount);(next.usedBookActions??={})[action]=1;
+    if(settings.chooseAttribute)addDestinyStatEffect(next,'hero',options.attribute,settings.attributeAmount,settings.duration,action);
     next.history.push({type:'book-action',name:settings.name,round:next.round});return next;
   }
   if(settings.kind==='retreat'&&fight.encounter.retreatSection){
