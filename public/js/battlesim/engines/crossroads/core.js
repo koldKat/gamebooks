@@ -45,7 +45,7 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
     player.wisdom=integer(hero.wisdom,0,100);
     player.dexterity=integer(hero.dexterity,0,100);
     validateEncounterRules(config.mechanics,enemies.length);
-    for (const field of resourceFields(config.mechanics.resources)) player[field]=integer(hero[field]??0,0,1000000);
+    for (const field of resourceFields(config.mechanics.resources)) player[field]=integer(hero[field]??0,0,config.mechanics.resources?.healingPool?.field===field?config.mechanics.resources.healingPool.maximum:1000000);
     if(config.mechanics.resources?.armour?.override!==undefined)player[config.mechanics.resources.armour.field]=config.mechanics.resources.armour.override;
   }
   return {rulesVersion:config.mechanics ? 2 : 1, hero:player, startingHp:player.hp, enemies:opponents, rules:config,

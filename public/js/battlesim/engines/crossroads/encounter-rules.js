@@ -1,5 +1,5 @@
 import {integer,dice,damage,damageSpec,finish} from './values.js';
-import {validateResources,healingSpell,resourceDefence,resourceDamage} from './resources.js';
+import {validateResources,healingSpell,consumeHealing,resourceDefence,resourceDamage} from './resources.js';
 
 const abilities = ['strength','intelligence','wisdom','constitution','dexterity','charisma'];
 const living = fight => fight.enemies.map((enemy,index) => enemy.hp > 0 && !enemy.fled ? index : -1).filter(index => index >= 0);
@@ -35,6 +35,7 @@ export function validateEncounterRules(rules,count) {
       if (enemy.attackEvery !== undefined) integer(enemy.attackEvery,1,1000);
       if (enemy.firstAttackRound !== undefined) integer(enemy.firstAttackRound,1,1000);
       if (enemy.fleeBelowHp !== undefined) integer(enemy.fleeBelowHp,1);
+      if (enemy.alternateAttacks !== undefined && typeof enemy.alternateAttacks !== 'boolean') throw new RangeError('Invalid attack alternation');
     }
   }
   if (rules.mount) { index(rules.mount.rider); index(rules.mount.mount); change(rules.mount.hitChange); change(rules.mount.attackChange); }
@@ -82,6 +83,11 @@ export function validateEncounterRules(rules,count) {
     if (!Array.isArray(values) || !values.length) throw new RangeError('Missing form attacks');
     for (const attack of values) { integer(attack.toHit,3,18);damageSpec(attack.damage); }
   };
+  if(rules.phaseChange){
+    const phase=rules.phaseChange;
+    index(phase.enemy);integer(phase.afterRound,1,1000);integer(phase.toBeHit,3,18);
+    integer(phase.maxHp,1);integer(phase.minimumHp,1,phase.maxHp);attacks(phase.attacks);
+  }
   if (rules.shapeshift) {
     index(rules.shapeshift.enemy);integer(rules.shapeshift.every,1,1000);
     if (!Array.isArray(rules.shapeshift.forms) || rules.shapeshift.forms.length<2) throw new RangeError('Missing shapes');
@@ -301,7 +307,7 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
     }
   }
   if (healing !== null) {
-    const restored=Math.min(healing,fight.hero.maxHp-fight.hero.hp);
+    const restored=action==='healingSpell'?Math.min(healing,fight.hero.maxHp-fight.hero.hp):consumeHealing(fight.hero,resources,healing);
     fight.hero.hp+=restored;fight.events.push({kind:'healing',amount:restored});
   } else if (available.length && !disarming && !skipHero && !rules.net?.escapeOnly && !fight.rules.enemyOnly) {
     state.heroAttacked=true;
@@ -347,7 +353,8 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
     const repetitions=extraEnemy===index?2:1;
     for (let repeat=0;repeat<repetitions;repeat++) {
       let previousHit=false;
-      for (const attack of enemy.attacks) {
+      const attacks=schedule.alternateAttacks?[enemy.attacks[Math.floor((round-first)/(schedule.attackEvery??1))%enemy.attacks.length]]:enemy.attacks;
+      for (const attack of attacks) {
         if (attack.when==='heroMiss' && !heroMiss || attack.when==='otherwise' && heroMiss || attack.when==='previousHit'&&!previousHit) continue;
         if (allyHere && index===rules.ally.enemy) {
           const value=dice(1,roll)[0];
@@ -438,6 +445,15 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
     if (rules.roundLimitOutcome) route(rules.roundLimitOutcome.status,rules.roundLimitOutcome.section);
     else finish(fight,fight.rules.roundResult==='compareDamage'
       ? fight.damageDealt>fight.damageTaken?'win':fight.damageDealt<fight.damageTaken?'loss':'draw':'win');
+  }
+  if(rules.phaseChange && fight.status==='active' && round===rules.phaseChange.afterRound){
+    const phase=rules.phaseChange,enemy=fight.enemies[phase.enemy];
+    if(enemy.hp>0){
+      const damageReceived=enemy.maxHp-enemy.hp;
+      enemy.maxHp=phase.maxHp;enemy.hp=Math.max(phase.minimumHp,phase.maxHp-damageReceived);
+      enemy.toBeHit=phase.toBeHit;enemy.attacks=structuredClone(phase.attacks);
+      fight.events.push({kind:'phaseChanged',name:enemy.name});
+    }
   }
   if (rules.shapeshift && round%rules.shapeshift.every===0) {
     state.formIndex=(state.formIndex ?? 0)+1;

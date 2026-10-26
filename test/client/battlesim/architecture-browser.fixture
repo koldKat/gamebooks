@@ -4825,6 +4825,37 @@ for(const id of BOOK_IDS){
       check(JSON.stringify(data())===saved,'Prospero stale reset ignored');app.setCurrentBookId(1295);button.click();
     }finally{Math.random=random;}
   }
+  if(id===1298){
+    const el=key=>document.getElementById('sim1298-'+key),data=()=>app.currentPlaythrough().sim1298;
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1298/definition.js');
+    const run=app.currentPlaythrough();run.inventory={sentinel:['shared-item']};run.equipment={sentinel:'shared-slot'};
+    const items=JSON.stringify([run.inventory,run.equipment]),random=Math.random;
+    const choose=section=>{el('encounter').value=String(section);el('encounter').dispatchEvent(new Event('change'));};
+    const cancel=()=>{if(data().fight?.status==='active'){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    try{
+      Math.random=()=>0;choose('custom');
+      const fields={toBeHit:3,toHit:18,hp:1,damageDice:0,damageAdd:0};el('editor').querySelector('[role="combobox"]').value='Custom opponent';
+      for(const field of el('editor').querySelectorAll('[data-stat]'))field.value=fields[field.dataset.stat];
+      el('weaponDice').value='0';el('weaponAdd').value='1';el('start').click();el('round').click();
+      check(data().fight?.status==='win'&&data().history.length===1,'Warhorn custom fight and single outcome');
+      for(const entry of getRoster()){
+        choose(entry.section);
+        if(!entry.rules.heroDamage){check(el('weaponDice').value===''&&!el('weaponDice').disabled,'Warhorn unprinted damage remains a choice');el('weaponDice').value='0';el('weaponAdd').value='0';}
+        el('start').click();check(data().fight?.status==='active','Warhorn starts '+entry.section);
+        check(data().fight.enemies.length===entry.enemies.length,'Warhorn source group '+entry.section);
+        el('round').click();check(data().fight.round===1,'Warhorn advances '+entry.section);cancel();
+      }
+      el('hp').value='10';el('healingSips').value='5';el('saveCharacter').click();choose('93');el('start').click();el('healing').value='5';el('heal').click();
+      check(data().fight.hero.hp===15&&data().character.healingSips===0&&el('healingSips').value==='0'&&el('heal').disabled,'Warhorn five sips consumed in one healing round');cancel();
+      choose('100');el('start').click();el('round').click();check(data().fight.enemies[0].maxHp===20,'Warhorn empowered first exchange');el('round').click();
+      check(data().fight.enemies[0].maxHp===10&&data().log.at(-1).includes('temporary power fades'),'Warhorn second exchange changes phase and logs it');cancel();
+      el('maxHp').value='100';el('hp').value='100';el('saveCharacter').click();choose('119');el('weaponDice').value='0';el('weaponAdd').value='0';el('start').click();Math.random=()=>.999;
+      el('round').click();check(data().fight.events.find(event=>event.side==='enemy').damage===12,'Warhorn dragon fire first');el('round').click();check(data().fight.events.find(event=>event.side==='enemy').damage===18,'Warhorn dragon claws second');cancel();Math.random=()=>0;
+      check(JSON.stringify([run.inventory,run.equipment])===items,'Warhorn universal inventory and equipment unchanged');
+      const saved=JSON.stringify(data());el('newCharacter').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();
+      check(JSON.stringify(data())===saved,'Warhorn stale reset ignored');app.setCurrentBookId(1298);button.click();
+    }finally{Math.random=random;}
+  }
   if(id===1297){
     const el=key=>document.getElementById('sim1297-'+key),data=()=>app.currentPlaythrough().sim1297;
     const {getRoster}=await import('REPO/public/js/battlesim/books/1297/definition.js');

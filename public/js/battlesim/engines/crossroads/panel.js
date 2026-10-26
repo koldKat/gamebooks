@@ -1,6 +1,6 @@
 import {startCrossroadsFight, crossroadsRound, crossroadsAbilityCheck,encounterTargets} from './core.js';
 import {createOpponentEditor} from '../../opponents.js';
-import {healingSpell} from './resources.js';
+import {healingSpell,consumeHealing} from './resources.js';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const abilities = ['strength','intelligence','wisdom','constitution','dexterity','charisma'];
@@ -29,7 +29,7 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     showConfirm(tk(key),()=>{if(getRun()===run && state.read()===before)change(update);});
   }
   function readCharacter(){
-    const result=Object.fromEntries(characterFields.map(key=>[key,number(key,key.endsWith('Bonus')?-100:0,key==='damageReduction'?1:abilities.includes(key)||key.endsWith('Bonus')?100:1000000)]));
+    const result=Object.fromEntries(characterFields.map(key=>[key,number(key,key.endsWith('Bonus')?-100:0,definition.characterLimits?.[key]??(key==='damageReduction'?1:abilities.includes(key)||key.endsWith('Bonus')?100:1000000))]));
     if (!result.maxHp || result.hp>result.maxHp)throw new RangeError('Invalid hit points');
     return result;
   }
@@ -66,6 +66,7 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
       if(event.kind==='blinded')data.log.push(tk('blinded'));
       if(event.kind==='fled')data.log.push(tk('fled',{name:event.name}));
       if(event.kind==='shape')data.log.push(tk('shape',{name:event.name}));
+      if(event.kind==='phaseChanged')data.log.push(tk('phaseChanged',{name:event.name}));
       if(event.kind==='disarmed')data.log.push(tk('disarmed',{name:event.name}));
       if(event.kind==='openingDamage')data.log.push(tk('openingDamage',{n:event.amount}));
       if(['weaponRetrieved','gripFreed','gripped','netFreed'].includes(event.kind))data.log.push(tk(event.kind));
@@ -117,7 +118,8 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     el('escapeCheck').hidden=!mechanics?.escapeCheck;
     el('escapeCheck').disabled=!locked||fight.round<1||fight.encounter?.escapeCheckedRound===fight.round;
     el('sourceExit').hidden=!mechanics?.sourceExit;el('sourceExit').disabled=!locked;
-    el('heal').disabled=!hero?.hp||Boolean(locked&&(fight.rules.enemyOnly||fight.encounter?.netTurns||mechanics?.openingEnemyTurn&&fight.round===0));
+    el('heal').disabled=!resourceHero?.hp||Boolean(resources?.healingPool&&(resourceHero.hp>=resourceHero.maxHp||!resourceHero[resources.healingPool.field]))||Boolean(locked&&(fight.rules.enemyOnly||fight.encounter?.netTurns||mechanics?.openingEnemyTurn&&fight.round===0));
+    el('healing').max=resources?.healingPool?Math.min(resourceHero?.[resources.healingPool.field]??0,(resourceHero?.maxHp??0)-(resourceHero?.hp??0)):1000000;
     el('abilityCheck').disabled=locked||!hero?.hp;
     const currentTarget=Number(el('target').value),targets=encounterTargets(fight).map(index=>({enemy:fight.enemies[index],index}));
     el('target').innerHTML=targets.map(({enemy,index})=>`<option value="${index}">${escape(enemy.name)}</option>`).join('');
@@ -151,7 +153,7 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     if(el('overlay'))return;
     const overlay=document.createElement('div');overlay.id=ID+'-overlay';overlay.className='inv-overlay';
     overlay.innerHTML=`<div class="inv-modal bsim-modal bsim-compact-form" role="dialog" aria-modal="true" aria-labelledby="${ID}-heading"><div class="inv-modal-hdr"><span class="inv-modal-title" id="${ID}-heading">${escape(definition.title)}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">×</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left">
-      <details open><summary>${escape(tk('character'))}</summary>${characterFields.map(key=>field(key,key.endsWith('Bonus')?-100:0,key==='damageReduction'?1:abilities.includes(key)||key.endsWith('Bonus')?100:1000000)).join('')}<div class="bsim-btn-row">${button('saveCharacter')}${button('newCharacter')}</div></details>
+      <details open><summary>${escape(tk('character'))}</summary>${characterFields.map(key=>field(key,key.endsWith('Bonus')?-100:0,definition.characterLimits?.[key]??(key==='damageReduction'?1:abilities.includes(key)||key.endsWith('Bonus')?100:1000000))).join('')}<div class="bsim-btn-row">${button('saveCharacter')}${button('newCharacter')}</div></details>
       <label class="inv-edit-row"><span>${escape(tk('encounter'))}</span><select class="inv-edit-input" id="${ID}-encounter"><option value="custom">${escape(tk('custom'))}</option>${getRoster().map(entry=>`<option value="${entry.section}">${escape(entry.label)}</option>`).join('')}</select></label>
       <label class="inv-edit-row" id="${ID}-enemyCountRow" hidden><span>${escape(tk('enemyCount'))}</span><input class="inv-edit-input" id="${ID}-enemyCount" type="number" min="1" max="98" step="1"></label>
       <div id="${ID}-editor"></div><p class="bsim-note" id="${ID}-sourceNotes"></p>
@@ -215,7 +217,7 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     el('heal').addEventListener('click',()=>change(data=>{
       const amount=number('healing',1);
       if(active(data.fight))logEvents(data,crossroadsRound(data.fight,{healing:amount,allyTarget:selectedAlly(data.fight)}));
-      else {const restored=Math.min(amount,data.character.maxHp-data.character.hp);data.character.hp+=restored;data.fight=null;data.log.push(tk('restored',{n:restored}));}
+      else {const resources=(preset()?.rules??definition.getCustomRules?.())?.mechanics?.resources,restored=consumeHealing(data.character,resources,amount);data.character.hp+=restored;data.fight=null;data.log.push(tk('restored',{n:restored}));}
     }));
     el('abilityCheck').addEventListener('click',()=>change(data=>{if(active(data.fight))return;const key=el('ability').value;if(!abilities.includes(key))return;const result=crossroadsAbilityCheck(Math.max(0,Math.min(100,data.character[key]+number('abilityModifier',-100,100))));data.log.push(tk('check',{name:tk(key),dice:result.dice.join('+'),result:tk(result.passed?'passed':'failed')}));}));
     el('cancel').addEventListener('click',()=>confirm('cancelConfirm',data=>{if(!active(data.fight))return;if(data.fight.rules.nonfatal)data.fight.hero.hp=data.fight.startingHp;data.fight.status='cancelled';data.fight.events=[];}));

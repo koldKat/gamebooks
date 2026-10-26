@@ -1,7 +1,7 @@
 import {integer,dice} from './values.js';
 
 export function resourceFields(rules) {
-  return ['healing','misdirection','gauntlet','evenDamage','repulsion','armour'].flatMap(key=>rules?.[key]?[rules[key].field]:[]);
+  return ['healing','healingPool','misdirection','gauntlet','evenDamage','repulsion','armour'].flatMap(key=>rules?.[key]?[rules[key].field]:[]);
 }
 
 export function validateResources(rules) {
@@ -11,6 +11,19 @@ export function validateResources(rules) {
   for (const key of ['misdirection','repulsion']) if(rules[key]) integer(rules[key].bonus,1,100);
   for (const key of ['gauntlet','evenDamage']) if(rules[key]) integer(rules[key].damage,1,1000);
   if(rules.armour?.override!==undefined)integer(rules.armour.override,0,100);
+  if(rules.healingPool?.maximum!==undefined)integer(rules.healingPool.maximum,1);
+}
+
+export function consumeHealing(hero,rules,amount) {
+  integer(amount,1);
+  const pool=rules?.healingPool;
+  if(pool){
+    if(!hero.hp||hero.hp>=hero.maxHp)throw new RangeError('No healing needed');
+    integer(hero[pool.field],0,pool.maximum);
+    if(amount>hero[pool.field])throw new RangeError('Not enough healing remaining');
+    hero[pool.field]-=amount;
+  }
+  return Math.min(amount,hero.maxHp-hero.hp);
 }
 
 export function healingSpell(hero,rules,roll=()=>Math.floor(Math.random()*6)+1) {
