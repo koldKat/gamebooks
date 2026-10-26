@@ -221,6 +221,11 @@ gamebooks/
                          injuries, first-round ability bonuses and timed nonfatal outcomes.
                          Vessel attacks track ship hits separately from character Health and
                          armour, preserving damage and per-round destinations across saves.
+                         Optional source rules support shared net casts, strict escape checks,
+                         gripping and prone combat, weapon retrieval instead of an attack,
+                         rolled surprise attacks, subdual thresholds, flight and surrender.
+                         Weapon choices affect simulator damage only. Optional parting shots
+                         preserve the completed outcome and cannot award it a second time.
                          V1 saved fights keep their original transitions.
                          The panel uses the same availability rules as combat. Database roster
                          entries own stats and exceptions.

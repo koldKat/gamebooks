@@ -30,7 +30,24 @@ export function validateEncounterRules(rules,count) {
     rules.ally.absorbOn.forEach(value => integer(value,1,6));
   }
   if (rules.freeRounds) { integer(rules.freeRounds.threshold,1,6); integer(rules.freeRounds.low,0,1000); integer(rules.freeRounds.high,0,1000); }
-  if (rules.opening) index(rules.opening.enemy);
+  if (rules.opening) {
+    index(rules.opening.enemy);
+    if(rules.opening.attackBonus!==undefined)change(rules.opening.attackBonus);
+    if(rules.opening.damageMultiplier!==undefined)integer(rules.opening.damageMultiplier,1,10);
+  }
+  if(rules.retrieval){check(rules.retrieval.ability);damageSpec(rules.retrieval.damage);}
+  if(rules.grip){index(rules.grip.enemy);check(rules.grip.ability);if(rules.grip.proneToHit!==undefined)integer(rules.grip.proneToHit,3,18);if(rules.grip.proneToBeHit!==undefined)integer(rules.grip.proneToBeHit,3,18);}
+  if(rules.net){
+    if(!Array.isArray(rules.net.casters)||!rules.net.casters.length)throw new RangeError('Missing net casters');
+    rules.net.casters.forEach(index);integer(rules.net.threshold,3,18);integer(rules.net.captureTurns,1,100);check(rules.net.ability);
+    if(rules.net.escapeTurns!==undefined)integer(rules.net.escapeTurns,1,100);
+  }
+  if(rules.capture){
+    if(rules.capture.hpAtMost!==undefined)integer(rules.capture.hpAtMost);
+    if(rules.capture.damageAtLeast!==undefined)integer(rules.capture.damageAtLeast);
+    if(rules.capture.minimumHp!==undefined)integer(rules.capture.minimumHp);
+  }
+  if(rules.earlyVictory){rules.earlyVictory.enemies.forEach(index);integer(rules.earlyVictory.beforeRound,1,1000);}
   if (rules.abilityOutcome) check(rules.abilityOutcome.ability);
   if (rules.heroAttackBonus !== undefined) change(rules.heroAttackBonus);
   if (rules.openingDamage !== undefined) integer(rules.openingDamage);
@@ -81,12 +98,14 @@ export function encounterTargets(fight,round = (fight?.round ?? 0)+1) {
   return fight?.rules.mechanics?.orderedTargets ? available.slice(0,1) : available;
 }
 
-export function encounterRound(original,{target = 0,healing = null,roll = () => Math.floor(Math.random()*6)+1} = {}) {
-  if (original?.status !== 'active' || original.rulesVersion !== 2) throw new RangeError('No active fight');
+export function encounterRound(original,{target = 0,healing = null,action = 'attack',roll = () => Math.floor(Math.random()*6)+1} = {}) {
+  const partingShot=action==='partingShot'&&original?.status==='win'&&original.rules.mechanics?.partingShot&&original.round>=original.rules.roundLimit&&!original.encounter?.partingShotUsed;
+  if ((original?.status !== 'active'&&!partingShot) || original.rulesVersion !== 2) throw new RangeError('No active fight');
   const fight=structuredClone(original),rules=fight.rules.mechanics;
   validateEncounterRules(rules,fight.enemies.length);
-  const round=fight.round+1,available=availableEnemies(fight,round);
-  if (healing === null && available.length && !encounterTargets(fight,round).includes(target)) throw new RangeError('Choose an available target');
+  const round=fight.round+(partingShot?0:1),available=availableEnemies(fight,round);
+  if(!['attack','retrieve','escapeGrip','flee','surrender','partingShot'].includes(action)||action==='partingShot'&&!partingShot||healing!==null&&action!=='attack')throw new RangeError('Invalid action');
+  if (action==='attack' && healing === null && available.length && !encounterTargets(fight,round).includes(target)) throw new RangeError('Choose an available target');
   if (rules.abilityOutcome && healing!==null) throw new RangeError('This encounter is an ability check');
   if (healing !== null) {
     integer(healing,1);
@@ -94,6 +113,8 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
   }
   fight.events=[];fight.round=round;
   const state=fight.encounter ??= {arrivals:{},allyRound:null,freeRounds:0,blinded:false,bonusAttack:false};
+  if(healing!==null&&(fight.rules.enemyOnly||state.netTurns))throw new RangeError('No healing during this action');
+  if(rules.grip&&state.gripped===undefined){state.gripped=Boolean(rules.grip.initiallyHeld);state.gripApplied=state.gripped;}
   const route = (status,section) => {
     finish(fight,status);fight.destination=section;fight.events.at(-1).destination=section;
   };
@@ -115,6 +136,9 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
   };
   const done = () => {
     if (fight.status!=='active') return true;
+    if(rules.earlyVictory&&round<rules.earlyVictory.beforeRound&&rules.earlyVictory.enemies.every(index=>!fight.enemies[index].hp)){
+      route('win',rules.earlyVictory.section);return true;
+    }
     announceDeaths();
     (rules.enemies ?? []).forEach((rule,index)=>{
       const enemy=fight.enemies[index];
@@ -125,9 +149,11 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
     if (!living(fight).length) { finish(fight,'win'); return true; }
     return false;
   };
-  const hitChange = index => (rules.mount?.rider===index && !fight.enemies[rules.mount.mount].hp ? rules.mount.hitChange : 0)
+  const hitChange = index => (rules.grip?.enemy===index&&state.gripped&&rules.grip.proneToBeHit!==undefined?rules.grip.proneToBeHit-fight.enemies[index].toBeHit:0)
+    +(rules.mount?.rider===index && !fight.enemies[rules.mount.mount].hp ? rules.mount.hitChange : 0)
     +(fatigued && rules.fatigue.enemy===index ? rules.fatigue.hitChange : 0);
-  const attackChange = index => (rules.mount?.rider===index && !fight.enemies[rules.mount.mount].hp ? rules.mount.attackChange : 0)
+  const attackChange = index => (rules.grip?.enemy===index&&state.gripped&&rules.grip.proneToHit!==undefined?rules.grip.proneToHit-fight.enemies[index].attacks[0].toHit:0)
+    +(rules.mount?.rider===index && !fight.enemies[rules.mount.mount].hp ? rules.mount.attackChange : 0)
     +(fatigued && rules.fatigue.enemy===index ? rules.fatigue.attackChange : 0);
   let fatigued=false;
   if (rules.abilityOutcome) {
@@ -136,12 +162,12 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
     fight.destination=passed?rules.abilityOutcome.successSection:rules.abilityOutcome.failureSection;
     fight.events.at(-1).destination=fight.destination;return fight;
   }
-  function heroAttack(index,{automatic=false,ally=false}={}) {
+  function heroAttack(index,{automatic=false,ally=false,attackBonus=0,multiplier=1}={}) {
     const enemy=fight.enemies[index];
-    const values=automatic ? [] : dice(3,roll),total=values.reduce((sum,value)=>sum+value,fight.hero.attackBonus+(ally?0:rules.heroAttackBonus ?? 0));
+    const values=automatic ? [] : dice(3,roll),total=values.reduce((sum,value)=>sum+value,fight.hero.attackBonus+attackBonus+(ally?0:rules.heroAttackBonus ?? 0));
     const hit=automatic || total>=enemy.toBeHit+hitChange(index);
     const result=hit ? damage(fight.weaponDamage,roll) : {dice:[],amount:0};
-    const lost=Math.min(enemy.hp,Math.max(0,result.amount+(hit&&ally ? rules.ally.damageBonus : 0)));
+    const lost=Math.min(enemy.hp,Math.max(0,result.amount*multiplier+(hit&&ally ? rules.ally.damageBonus : 0)));
     enemy.hp-=lost;fight.damageDealt+=lost;
     fight.events.push({kind:'attack',side:ally?'ally':'hero',target:index,name:ally?rules.ally.name:enemy.name,dice:values,total,hit,automatic,damageDice:result.dice,damage:lost});
     if (hit && !ally && rules.firstHitWin?.enemy===index && !state.firstHitter) {
@@ -149,9 +175,14 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
     }
     announceDeaths();return hit;
   }
-  if (round===1 && rules.opening) {
-    heroAttack(rules.opening.enemy,{automatic:true});
+  if(partingShot){
+    if(!available.includes(target))throw new RangeError('Choose a fleeing opponent');
+    state.partingShotUsed=true;heroAttack(target);return fight;
+  }
+  if (round===1 && rules.opening && (rules.opening.automatic!==false || action==='attack' && healing===null)) {
+    heroAttack(rules.opening.enemy,{automatic:rules.opening.automatic!==false,attackBonus:rules.opening.attackBonus??0,multiplier:rules.opening.damageMultiplier??1});
     if (done()) return fight;
+    if(!fight.enemies[target]?.hp)target=encounterTargets(fight,round)[0]??target;
   }
   // Blindness threatens only rounds after the injury, never the same round.
   if (state.blinded && !check(rules.blindness.continueAbility)) {
@@ -174,6 +205,30 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
   }
   const extraEnemy=rules.extraEnemyAttack && round===1 && !check(rules.extraEnemyAttack.ability) ? rules.extraEnemyAttack.enemy : null;
   let heroMiss=false,disarming=false;
+  let skipHero=false,fleeing=false;
+  if(action==='surrender'){
+    if(!rules.surrender)throw new RangeError('Cannot surrender');
+    route('surrendered',rules.surrender.section);return fight;
+  }
+  if(action==='flee'){
+    if(!rules.flee||state.gripped)throw new RangeError('Cannot flee');
+    skipHero=true;fleeing=true;
+    if(!rules.flee.finalAttack||rules.flee.onlyAfterAttack&&!state.heroAttacked){route('escaped',rules.flee.section);return fight;}
+  }
+  if(action==='retrieve'){
+    if(!rules.retrieval||state.weaponRetrieved||state.netTurns)throw new RangeError('Cannot retrieve weapon');
+    skipHero=true;
+    if(check(rules.retrieval.ability,rules.retrieval.strict)){state.weaponRetrieved=true;fight.weaponDamage=damageSpec(rules.retrieval.damage);fight.events.push({kind:'weaponRetrieved'});}
+  }
+  if(action==='escapeGrip'){
+    if(!rules.grip||!state.gripped)throw new RangeError('Not held');
+    skipHero=true;if(check(rules.grip.ability)){state.gripped=false;fight.events.push({kind:'gripFreed'});}
+  }
+  if(state.netTurns){
+    skipHero=true;
+    if(check(rules.net.ability,rules.net.strict)){state.netTurns=0;fight.events.push({kind:'netFreed'});}
+    else if(++state.netTurns>=rules.net.captureTurns)state.netCapturePending=true;
+  }
   if (rules.disarm && !state.disarmed && healing===null) {
     disarming=true;
     state.disarmStreak=check(rules.disarm.ability,rules.disarm.strict)?(state.disarmStreak ?? 0)+1:0;
@@ -185,7 +240,8 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
   if (healing !== null) {
     const restored=Math.min(healing,fight.hero.maxHp-fight.hero.hp);
     fight.hero.hp+=restored;fight.events.push({kind:'healing',amount:restored});
-  } else if (available.length && !disarming) {
+  } else if (available.length && !disarming && !skipHero && !rules.net?.escapeOnly && !fight.rules.enemyOnly) {
+    state.heroAttacked=true;
     heroMiss=!heroAttack(target);
     if (done()) return fight;
     if (extraAttack) {
@@ -229,15 +285,33 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
         }
         const result=hit?damage(attack.damage,roll):{dice:[],amount:0};
         if (hit && rules.firstHitWin?.enemy===index && !state.firstHitter) state.firstHitter='enemy';
+        const remaining=fight.hero.hp-result.amount*damageMultiplier;
         const lost=Math.min(fight.hero.hp,result.amount*damageMultiplier);
         fight.hero.hp-=lost;fight.damageTaken+=lost;
         fight.events.push({kind:'attack',side:'enemy',target:index,name:enemy.name,dice:values,total,hit,damageDice:result.dice,damage:lost});
+        if(hit&&rules.grip?.enemy===index&&rules.grip.onFirstHit&&!state.gripApplied){state.gripped=true;state.gripApplied=true;fight.events.push({kind:'gripped'});}
+        if(hit&&rules.capture){
+          const capture=rules.capture;
+          if((capture.minimumHp===undefined||remaining>=capture.minimumHp)
+            &&(capture.hpAtMost===undefined||remaining<=capture.hpAtMost)
+            &&(capture.damageAtLeast===undefined||fight.damageTaken>=capture.damageAtLeast)){
+            route('loss',capture.section);return fight;
+          }
+        }
         if (!fight.hero.hp) { finish(fight,'loss');return fight; }
         if (hit && !state.blinded && rules.blindness?.enemy===index && result.amount===rules.blindness.damage && !check(rules.blindness.avoidAbility)) {
           state.blinded=true;fight.events.push({kind:'blinded'});
         }
       }
     }
+  }
+  if(fleeing){route('escaped',rules.flee.section);return fight;}
+  if(state.netCapturePending){route('loss',rules.net.section);return fight;}
+  if(rules.net&&!state.netTurns&&rules.net.casters.some(index=>fight.enemies[index].hp>0)){
+    const values=dice(3,roll),total=values.reduce((a,b)=>a+b,0),hit=total>=rules.net.threshold;
+    fight.events.push({kind:'netThrown',dice:values,total,hit});
+    if(hit){state.netTurns=1;state.netAvoided=0;}
+    else if(rules.net.escapeOnly&&(state.netAvoided=(state.netAvoided??0)+1)>=rules.net.escapeTurns){route('win',rules.net.escapeSection);return fight;}
   }
   if (rules.vessel) {
     fight.destination=healing===null && !heroMiss ? rules.vessel.heroHitSection

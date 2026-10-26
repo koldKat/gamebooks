@@ -95,6 +95,24 @@ test('Majipoor round-trips twelve presets and sixteen NPC rows without changing 
   assert.deepEqual(db.prepare('SELECT id,book_id,name,attack,defense,hp,pb,created_at FROM book_enemies WHERE book_id<>1293').all(),old);
 });
 
+test('Witchfires round-trips all twenty-one presets and preserves non-damaging net carriers',t=>{
+  const db=fixture(t);db.exec('INSERT INTO books VALUES(1294)');
+  const document=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/simulator-rosters/1294.json'),'utf8'));
+  const players=db.prepare('SELECT * FROM players').all(),old=db.prepare('SELECT * FROM book_enemies').all();
+  assert.deepEqual(seedEnemyRoster(db,document),{inserted:46,updated:0});
+  const rows=getBookEnemyRows(db,1294);assert.equal(rows.length,46);
+  assert.equal(new Set(rows.map(row=>row.stats.entry.section)).size,21);
+  for(const expected of document.enemies){
+    const actual=rows.find(row=>row.stats.roster.key===expected.key);
+    assert.deepEqual(actual.stats.entry,expected.stats.entry);
+    assert.equal(actual.attack,expected.attack);assert.equal(actual.defense,expected.defense);assert.equal(actual.hp,expected.hp);
+  }
+  assert.equal(rows.filter(row=>row.attack===null).length,2);
+  assert.deepEqual(seedEnemyRoster(db,document),{inserted:0,updated:0});assert.deepEqual(getBookEnemyRows(db,1294),rows);
+  assert.deepEqual(db.prepare('SELECT * FROM players').all(),players);
+  assert.deepEqual(db.prepare('SELECT id,book_id,name,attack,defense,hp,pb,created_at FROM book_enemies WHERE book_id<>1294').all(),old);
+});
+
 test('schema migration and legacy API results preserve old enemy rows and player state exactly', t => {
   const db = fixture(t);
   const before = db.prepare('SELECT * FROM players').all();

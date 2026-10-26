@@ -18,8 +18,8 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
   if (config.roundResult && !['compareDamage','survive'].includes(config.roundResult)) throw new RangeError('Unknown round limit');
   if (config.attackGroups && (!Array.isArray(config.attackGroups) || config.attackGroups.some(group =>
     !Array.isArray(group) || !group.length || group.some(i => !Number.isSafeInteger(i) || i < 0 || i >= enemies.length)))) throw new RangeError('Invalid attack groups');
-  const opponents = enemies.map(enemy => {
-    if (!Array.isArray(enemy.attacks) || !enemy.attacks.length && !config.mechanics?.abilityOutcome || enemy.attacks.length > 10) throw new RangeError('Missing enemy attacks');
+  const opponents = enemies.map((enemy,index) => {
+    if (!Array.isArray(enemy.attacks) || !enemy.attacks.length && !config.mechanics?.abilityOutcome && !config.mechanics?.net?.casters.includes(index) || enemy.attacks.length > 10) throw new RangeError('Missing enemy attacks');
     return {
       name:String(enemy.name ?? enemy.displayName ?? '').slice(0,200),
       hp:integer(enemy.hp, 1), maxHp:enemy.hp, toBeHit:integer(enemy.toBeHit, 3, 18),
@@ -37,6 +37,7 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
     };
   });
   if (config.mechanics) {
+    if (config.mechanics.grip) player.strength=integer(hero.strength,0,100);
     player.wisdom=integer(hero.wisdom,0,100);
     player.dexterity=integer(hero.dexterity,0,100);
     validateEncounterRules(config.mechanics,enemies.length);
@@ -47,8 +48,9 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
 }
 
 // Pure transitions make an invalid roll/action harmless to the saved run.
-export function crossroadsRound(original, {target = 0, healing = null, roll = () => Math.floor(Math.random()*6)+1} = {}) {
-  if (original?.rulesVersion === 2) return encounterRound(original,{target,healing,roll});
+export function crossroadsRound(original, {target = 0, healing = null, action = 'attack', roll = () => Math.floor(Math.random()*6)+1} = {}) {
+  if (original?.rulesVersion === 2) return encounterRound(original,{target,healing,action,roll});
+  if (action!=='attack') throw new RangeError('Unsupported action');
   if (original?.status !== 'active' || original.rulesVersion !== 1) throw new RangeError('No active fight');
   const fight = clone(original);
   fight.events = [];
