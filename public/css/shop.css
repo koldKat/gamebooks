@@ -279,8 +279,7 @@
   white-space: nowrap;
 }
 
-/* Admin-only app-wide XP widget - same shape as #books-xp-summary, distinct
-   violet accent so it reads as "the app", not the logged-in player. */
+/* App-wide XP uses the player-level text palette and a violet progress fill. */
 #app-xp-summary {
   display: flex;
   flex-direction: column;
@@ -298,13 +297,13 @@
 #app-xp-hb-rate {
   margin-left: auto;
   font-size: 0.7rem;
-  color: #f472b6;
+  color: #22d3ee;
   white-space: nowrap;
 }
 #app-xp-level {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #a78bfa;
+  color: #f5a623;
   line-height: 1.15;
 }
 #app-xp-title {
@@ -339,10 +338,10 @@
   line-height: 1.15;
   white-space: nowrap;
 }
-#app-xp-text .xp-val { color: #a78bfa; }
+#app-xp-text .xp-val { color: #f59e0b; }
 #app-xp-boost {
   font-size: 0.74rem;
-  color: #a78bfa;
+  color: #f59e0b;
   line-height: 1.15;
   text-align: right;
   white-space: nowrap;

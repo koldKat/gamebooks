@@ -37,7 +37,7 @@ function _paintBoost(boostXp, data) {
   const boostEl = document.getElementById('app-xp-boost');
   const xpBoostPct = Number(data?.xpBoostPct) || 0;
   boostEl.innerHTML = xpBoostPct > 0
-    ? `<span style="color:#f472b6">+${xpBoostPct}% boost</span> <span>(${Math.round(Math.max(0, boostXp)).toLocaleString()} XP)</span>`
+    ? `<span style="color:#22d3ee">+${xpBoostPct}% boost</span> <span>(${Math.round(Math.max(0, boostXp)).toLocaleString()} XP)</span>`
     : '';
 }
 
