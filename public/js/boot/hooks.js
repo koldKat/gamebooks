@@ -165,6 +165,7 @@ export function initFeatureHooks() {
     processRewardSnapshot:       _processRewardSnapshot,
     refreshAppXp:                refreshAppXp,
     getIsAdmin:                  () => bootState._isAdmin,
+    getCanSeeAppXp:              () => bootState._canSeeAppXp,
     getIsModerator: resolveIsModerator,
     onAppXpEvent:                handleAppXpEvent,
     sendHeartbeat:                _sendHeartbeat,

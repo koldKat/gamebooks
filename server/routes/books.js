@@ -298,7 +298,7 @@ async function handleGetAppXpStream(req, res) {
   if (!token) return send(res, 401, { error: 'Unauthorized' });
   const session = db.getSession(token);
   if (!session) return send(res, 401, { error: 'Unauthorized' });
-  if (!db.isUserAdmin(session.user_id)) return send(res, 403, { error: 'Gamemaster only' });
+  if (!db.canSeeAppXp(session.user_id)) return send(res, 403, { error: 'Forbidden' });
 
   req.socket?.setNoDelay?.(true);
   res.writeHead(200, {
@@ -309,7 +309,7 @@ async function handleGetAppXpStream(req, res) {
   });
   res.write(': connected\n\n');
 
-  appXpRegister(res);
+  appXpRegister(res, { summaryOnly: !db.isUserAdmin(session.user_id) });
   maintainStream(res, () => appXpUnregister(res), SSE_PING_MS);
 }
 

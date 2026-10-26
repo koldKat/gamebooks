@@ -318,10 +318,11 @@ export function _disconnectAppXpSSE() {
 }
 
 export function _connectAppXpSSE() {
-  if (!_isLiveLeader || _appXpSource || typeof EventSource === 'undefined' || !getToken() || !_hooks.getIsAdmin?.()) return;
+  const canWatch = () => !!(_hooks.getCanSeeAppXp?.() ?? _hooks.getIsAdmin?.());
+  if (!_isLiveLeader || _appXpSource || typeof EventSource === 'undefined' || !getToken() || !canWatch()) return;
   try {
     _appXpSource = connectEventStream(() => `/api/app-xp/stream?token=${encodeURIComponent(getToken())}`, {
-      enabled: () => _isLiveLeader && !!getToken() && !!_hooks.getIsAdmin?.(),
+      enabled: () => _isLiveLeader && !!getToken() && canWatch(),
       onReconnect: _refreshAppXpStaggered,
       onMessage: e => {
         let payload; try { payload = JSON.parse(e.data); } catch { return; }

@@ -18,7 +18,7 @@ test('stats renders all ten half-star bins for all categories in balanced column
   const context = vm.createContext({ document: { getElementById: id => id === 'stats-modal-body' ? body : overlay },
     escapeHtml, t: key => messages[key] || key,
     fetchPublic: async () => ({ ok: true, json: async () => ({ ratingsTotal: 10, squires: 7,
-      diamondsMined: 123, rubiesMined: 7,
+      diamondsMined: 123, rubiesMined: 7, appJobLevel: 2, appJobTitle: '<Sifter>', totalJobXp: 9000,
       heartbeatMinutes: (365 + 2) * 1440 + 3 * 60 + 27,
       avgPlayMinutesPerPlayer: 2 * 1440 + 3 * 60 + 27,
       ratingBreakdown: { books: group(4.5, 5), anthologies: group(3.5, 2), series: group(2, 3) },
@@ -33,8 +33,10 @@ test('stats renders all ten half-star bins for all categories in balanced column
   assert.ok(!columns[2].includes('stats-section--battle-sims'));
   assert.equal((body.innerHTML.match(/class="stats-section stats-section--/g) || []).length, 13);
   assert.ok(columns[0].lastIndexOf('stats-section--crystals') > columns[0].lastIndexOf('stats-section--server'));
-  assert.match(columns[0], /Diamonds mined<\/td><td class="stats-val"><span class="stats-diamonds">123<\/span>/);
-  assert.match(columns[0], /Rubies mined<\/td><td class="stats-val"><span class="stats-rubies">7<\/span>/);
+  assert.match(columns[0], /Rubies mined<\/td><td class="stats-val"><span class="stats-diamonds">123<\/span>/);
+  assert.match(columns[0], /Diamonds mined<\/td><td class="stats-val"><span class="stats-rubies">7<\/span>/);
+  assert.match(body.innerHTML,/App Job Level<\/td><td class="stats-val">2 - &lt;Sifter&gt;/);
+  assert.match(body.innerHTML,/Total Job EV<\/td><td class="stats-val">9,000/);
   assert.ok(body.innerHTML.includes('4.5 / 5'));
   assert.ok(body.innerHTML.includes('0.5 / 5'));
   assert.ok(body.innerHTML.includes('4.50'));

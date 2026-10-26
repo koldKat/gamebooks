@@ -57,6 +57,7 @@ export default {
     'shop.request_failed': 'Request failed',
 
     'appxp.hb_rate':    '+{rate} heartbeat XP/min',
+    'appxp.job_level':  'App Job Lvl {n}',
     'appxp.users':      '{n} user{s}',
     'appxp.total_levels': '{n} total levels',
     'appxp.more_to_lvl':  '{n} more to Lvl {lvl}',

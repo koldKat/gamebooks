@@ -68,23 +68,26 @@ function feedPush(payload = { type: 'feed_changed' }) {
 db.setXpFeedHook(feedPush);
 
 // ── Admin-only "someone else earned XP/GC" live floaters ─────────────────────
-const _appXpClients = new Set();
+const _appXpClients = new Map();
 
-function appXpRegister(res) { _appXpClients.add(res); }
+function appXpRegister(res, { summaryOnly = false } = {}) { _appXpClients.set(res, summaryOnly); }
 function appXpUnregister(res) { _appXpClients.delete(res); }
 
 function appXpPush(payload) {
   if (_appXpClients.size === 0) return;
   const data = `data: ${JSON.stringify(payload)}\n\n`;
-  for (const res of _appXpClients) {
-    writeEvent(res, data);
+  for (const [res, summaryOnly] of _appXpClients) {
+    writeEvent(res, summaryOnly ? 'data: {"summaryChanged":true}\n\n' : data);
   }
 }
 
-db.setAppXpHook(({ userId, xpDelta, coinDelta, diamondDelta, rubyDelta }) => {
+db.setAppXpHook(({ userId, xpDelta, coinDelta, diamondDelta, rubyDelta, jobXpDelta }) => {
   if (_appXpClients.size === 0) return; // nobody watching - skip the lookups entirely
   const adminUserId = db.getUserByUsername(db.getAdminUsername())?.id ?? null;
-  if (userId === adminUserId) return; // admin's own gains already show in their personal bar
+  if (userId === adminUserId || jobXpDelta > 0) {
+    appXpPush({ summaryChanged: true });
+    return; // Refresh aggregate bars without duplicating personal reward floaters.
+  }
   const user = db.getUserById(userId);
   if (!user) return;
   appXpPush({ username: user.display_name || user.username, xpDelta, coinDelta, diamondDelta, rubyDelta });

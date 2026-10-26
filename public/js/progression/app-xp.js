@@ -41,8 +41,25 @@ function _paintBoost(boostXp, data) {
     : '';
 }
 
+function _paintJobXp(xp, data) {
+  const wrap = document.getElementById('app-job-xp-summary');
+  if (!wrap) return;
+  wrap.hidden = !Number.isFinite(data?.jobXp);
+  if (wrap.hidden) return;
+  const scale = Math.max(1, (data.users || 0) * 1000);
+  const level = xp <= 0 ? 0 : Math.floor((-1 + Math.sqrt(1 + 8 * xp / scale)) / 2);
+  const { levelXp, nextLevelXp } = _levelBounds(xp, scale);
+  const pct = Math.max(0, Math.min(100, 100 * (xp - levelXp) / (nextLevelXp - levelXp)));
+  document.getElementById('app-job-xp-fill').style.width = `${pct}%`;
+  document.getElementById('app-job-xp-level').textContent = t('appxp.job_level', { n: level });
+  document.getElementById('app-job-xp-title').textContent = t('job.title.' + Math.min(level, 20));
+  document.getElementById('app-job-xp-label').innerHTML =
+    `<span class="job-xp-val">${Math.floor(xp).toLocaleString()} EV</span> · ${Math.ceil(nextLevelXp - xp).toLocaleString()} to next LVL`;
+}
+
 let _displayedXp      = null; // last value actually painted (may be mid-tween)
 let _displayedBoostXp = null;
+let _displayedJobXp = null;
 let _animQueue    = []; // pending {toXp, toBoostXp, data} segments, played back to back
 let _animRunning  = false;
 let _animGen      = 0; // bumped only on a hard reset (see _render's !data branch)
@@ -56,35 +73,41 @@ function _runAnimQueue(gen) {
   const next = _animQueue.shift();
   if (!next) return;
   _animRunning = true;
-  const { toXp, toBoostXp, data } = next;
+  const { toXp, toBoostXp, toJobXp, data } = next;
   const fromXp      = _displayedXp != null ? _displayedXp : toXp;
   const fromBoostXp = _displayedBoostXp != null ? _displayedBoostXp : toBoostXp;
+  const fromJobXp = _displayedJobXp != null ? _displayedJobXp : toJobXp;
   const animLevel = Math.min(Math.max(0, Number(data.level) || 0), ANIM_DURATION_LEVEL_CAP);
-  const durationMs = animLevel * XP_ANIM_MS_PER_LEVEL;
-  const jump = Math.abs(toXp - fromXp);
+  const durationMs = toXp === fromXp && toBoostXp === fromBoostXp ? 0 : animLevel * XP_ANIM_MS_PER_LEVEL;
+  const jobDurationMs = toJobXp === fromJobXp ? 0 : Math.min(Math.max(0, Number(data.jobLevel) || 0), ANIM_DURATION_LEVEL_CAP) * XP_ANIM_MS_PER_LEVEL;
   const finish = () => {
     _displayedXp = toXp;
     _displayedBoostXp = toBoostXp;
+    _displayedJobXp = toJobXp;
     _animRunning = false;
     _runAnimQueue(gen);
   };
   // Animate every positive delta; snap zero deltas without suppressing small awards.
-  if (jump === 0 || durationMs <= 0) {
-    _paintXp(toXp, data); _paintBoost(toBoostXp, data);
+  if (durationMs <= 0 && jobDurationMs <= 0) {
+    _paintXp(toXp, data); _paintBoost(toBoostXp, data); _paintJobXp(toJobXp, data);
     finish();
     return;
   }
   const start = performance.now();
   function step(now) {
-    if (gen !== _animGen) { _animRunning = false; return; } // invalidated by a hard reset
-    const t = Math.min(1, (now - start) / durationMs);
+    if (gen !== _animGen) return; // An old frame must not alter a newer login's animation.
+    const t = durationMs > 0 ? Math.min(1, (now - start) / durationMs) : 1;
+    const jobT = jobDurationMs > 0 ? Math.min(1, (now - start) / jobDurationMs) : 1;
     const current      = fromXp      + (toXp      - fromXp)      * t;
     const currentBoost = fromBoostXp + (toBoostXp - fromBoostXp) * t;
     _paintXp(current, data);
     _paintBoost(currentBoost, data);
+    const currentJob = fromJobXp + (toJobXp - fromJobXp) * jobT;
+    _paintJobXp(currentJob, data);
     _displayedXp = current;
     _displayedBoostXp = currentBoost;
-    if (t < 1) requestAnimationFrame(step);
+    _displayedJobXp = currentJob;
+    if (t < 1 || jobT < 1) requestAnimationFrame(step);
     else finish();
   }
   requestAnimationFrame(step);
@@ -93,7 +116,9 @@ function _runAnimQueue(gen) {
 function _enqueueXpAnim(data) {
   const toXp      = Math.floor(Number(data.xp) || 0);
   const toBoostXp = Math.floor(Number(data.xpFromBoost) || 0);
-  _animQueue.push({ toXp, toBoostXp, data });
+  const toJobXp = Math.max(0, Math.floor(Number(data.jobXp) || 0));
+  // Keep one latest pending snapshot while the current animation finishes.
+  _animQueue.splice(0, _animQueue.length, { toXp, toBoostXp, toJobXp, data });
   _runAnimQueue(_animGen);
 }
 
@@ -102,9 +127,11 @@ function _render(data) {
   if (!wrap) return;
   if (!data) {
     wrap.hidden = true;
+    const jobWrap = document.getElementById('app-job-xp-summary');
+    if (jobWrap) jobWrap.hidden = true;
     _animGen++; // hard reset: invalidate any in-flight animation
     _animQueue = []; _animRunning = false;
-    _displayedXp = null; _displayedBoostXp = null;
+    _displayedXp = null; _displayedBoostXp = null; _displayedJobXp = null;
     return;
   }
   const { level = 0, title = '', heartbeatRatePerMin = 0 } = data;
@@ -146,9 +173,11 @@ export function refreshAppXp({ immediate = false } = {}) {
   if (!getToken() || !_hooks.getCanSeeAppXp?.()) {
     if (wrap) wrap.hidden = true;
     if (avgWrap) avgWrap.hidden = true;
+    const jobWrap = document.getElementById('app-job-xp-summary');
+    if (jobWrap) jobWrap.hidden = true;
     _animGen++; // hard reset: invalidate any in-flight animation
     _animQueue = []; _animRunning = false;
-    _displayedXp = null; _displayedBoostXp = null;
+    _displayedXp = null; _displayedBoostXp = null; _displayedJobXp = null;
     return Promise.resolve();
   }
   if (_appXpFetchPromise) return _appXpFetchPromise; // a merged fetch is already in flight - join it
@@ -162,7 +191,7 @@ export function refreshAppXp({ immediate = false } = {}) {
       _appXpFetchPromise = (async () => {
         try {
           const res = await apiFetch('/api/app-xp');
-          if (!res.ok) { if (wrap) wrap.hidden = true; if (avgWrap) avgWrap.hidden = true; return; }
+          if (!res.ok) { _render(null); _renderAvgLevel(null); return; }
           const data = await res.json();
           if (getToken() !== sessionToken || !_hooks.getCanSeeAppXp?.()) return;
           _render(data);

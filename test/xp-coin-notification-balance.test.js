@@ -84,12 +84,13 @@ test('notification failure rolls back XP and all same-tick level rewards', t => 
   assert.deepEqual(f.coins(), []);
 });
 
-test('admin diamond hook reports only committed new mining rewards, never duplicate or failed awards',t=>{
+test('admin hooks report committed mining and Job EV changes, never duplicate or failed awards',t=>{
  const f=fixture();t.after(()=>f.db.close());require('../server/db/diamonds').initializeDiamondBalances(f.db);
- f.db.exec('INSERT INTO user_diamonds(user_id,dig_progress) VALUES(1,999999)');const events=[];f.context._appXpHook=event=>events.push(JSON.parse(JSON.stringify(event)));
+ f.db.exec('INSERT INTO user_diamonds(user_id,dig_progress) VALUES(1,999999)');require('../server/db/job-xp').initializeJobXp(f.db);
+ const events=[];f.context._appXpHook=event=>events.push(JSON.parse(JSON.stringify(event)));
  const code=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');vm.runInContext(code.slice(code.indexOf('function awardXp('),code.indexOf('function awardIdleHeartbeatXp(')),f.context);
- assert.equal(f.context.awardXp(1,'visit_node','diamond-test',0),true);assert.deepEqual(events,[{userId:1,diamondDelta:1}]);
- assert.equal(f.context.awardXp(1,'visit_node','diamond-test',0),false);assert.equal(events.length,1);
+ assert.equal(f.context.awardXp(1,'visit_node','diamond-test',0),true);assert.deepEqual(events,[{userId:1,jobXpDelta:1},{userId:1,diamondDelta:1}]);
+ assert.equal(f.context.awardXp(1,'visit_node','diamond-test',0),false);assert.equal(events.length,2);
  f.db.exec("CREATE TRIGGER reject_xp BEFORE INSERT ON xp_events BEGIN SELECT RAISE(ABORT,'fail xp');END");
- assert.throws(()=>f.context.awardXp(1,'visit_node','diamond-fail',0),/fail xp/);assert.equal(events.length,1);
+ assert.throws(()=>f.context.awardXp(1,'visit_node','diamond-fail',0),/fail xp/);assert.equal(events.length,2);
 });

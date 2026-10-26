@@ -410,11 +410,15 @@ function awardXp(userId, event, ref, amountOverride = null) {
   // awarded during a heartbeat. Job events themselves never award XP or coins.
   const snapshot = () => db.prepare(`SELECT
     COALESCE((SELECT diamonds_earned FROM user_diamonds WHERE user_id=?),0) AS earned,
-    COALESCE((SELECT xp FROM user_job_xp WHERE user_id=?),0) AS jobXp`).get(userId, userId);
+    COALESCE((SELECT xp FROM user_job_xp WHERE user_id=?),0) AS jobXp,
+    COALESCE((SELECT xp FROM users WHERE id=?),0) AS normalXp`).get(userId, userId, userId);
   const before = (_xpFeedHook || (_appXpHook && event !== 'idle_heartbeat')) ? snapshot() : null;
   const awarded = _awardXpTx(userId, event, String(ref), amount);
   if (awarded && before) {
     const after = snapshot();
+    if (after.jobXp > before.jobXp && after.normalXp === before.normalXp) {
+      try { _appXpHook?.({ userId, jobXpDelta: after.jobXp - before.jobXp }); } catch (_) {}
+    }
     if (after.earned > before.earned) {
       try { _appXpHook?.({ userId, diamondDelta: after.earned - before.earned }); } catch (_) {}
     }

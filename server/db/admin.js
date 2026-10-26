@@ -7,6 +7,7 @@ const { db, _naturalCompareByName, _getPdfSize, _getEpubSize } = require('./conn
 const { computeLevel, getTitleForLevel, getUserXpInfo, getAllUsersXpInfo, awardXp, awardCoins, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS, RETIRED_SIM_HISTORY_KEYS = [] } = require('./xp');
 const { purgeExpiredSessions } = require('./auth');
 const { rubyInfoForUser } = require('./rubies');
+const { getJobTitle } = require('./job-xp');
 const { hasDiamondAccess } = require('./diamonds');
 const { getRatingStats } = require('./rating-stats');
 const { collectDashboardStats } = require('./gameplay-stats');
@@ -833,7 +834,9 @@ function getSiteStats() {
     : 0;
 
   // XP & levels
-  const xpRow      = db.prepare('SELECT SUM(xp) AS total, AVG(xp) AS avg FROM users').get();
+  const xpRow = db.prepare(`SELECT SUM(u.xp) AS total, AVG(u.xp) AS avg,
+    COALESCE(SUM(j.xp), 0) AS totalJobXp
+    FROM users u LEFT JOIN user_job_xp j ON j.user_id=u.id`).get();
   const avgLevelRow = db.prepare(`
     SELECT AVG(
       CASE
@@ -848,6 +851,7 @@ function getSiteStats() {
   const appLevelScale = Math.max(1, (base.users || 0) * 1000);
   const appLevel   = totalXp <= 0 ? 0 : Math.floor((-1 + Math.sqrt(1 + 8 * totalXp / appLevelScale)) / 2);
   const appTitle   = getTitleForLevel(appLevel);
+  const appJob = appJobProgression(xpRow?.totalJobXp || 0, base.users || 0);
   const avgLevel   = Number(avgLevelRow?.avg || 0);
   const avgTitle   = getTitleForLevel(Math.floor(avgLevel));
   // Sum current player levels, not deduplicated level-up events, to agree with the app summary.
@@ -949,7 +953,8 @@ function getSiteStats() {
     battlesWon: base.battlesWon, battlesLost: base.battlesLost, battleWinRate: base.battleWinRate,
     heartbeatMinutes, avgPlayMinutesPerPlayer,
     // XP & progression
-    totalXp, appLevel, appTitle, avgLevel, avgTitle, levelUps, xpEvents, xpEventTypes, booksFullyVisited, booksFullyDiscovered,
+    totalXp, appLevel, appTitle, appJobLevel: appJob.jobLevel, appJobTitle: appJob.jobTitle, totalJobXp: appJob.jobXp,
+    avgLevel, avgTitle, levelUps, xpEvents, xpEventTypes, booksFullyVisited, booksFullyDiscovered,
     // Coins & shop
     totalCoinsEarned: base.totalCoinsEarned, totalCoinsSpent: base.totalCoinsSpent, totalCoinsAvailable: base.totalCoinsAvailable,
     totalUpgrades, upgradeUndos, upgradeFastTravels, upgradeHeartbeatXp, upgradeGcChance, upgradeGcMint, upgradeXpBoosts, upgradeDiamondDig, upgradeDiamondExchange,
@@ -970,22 +975,33 @@ function getSiteStats() {
 }
 
 // Scale aggregate XP by player count for the app-level summary.
+function appJobProgression(jobXp, users) {
+  const scale = Math.max(1, users * 1000);
+  const jobLevel = jobXp <= 0 ? 0 : Math.floor((-1 + Math.sqrt(1 + 8 * jobXp / scale)) / 2);
+  return {
+    jobXp, jobLevel, jobTitle: getJobTitle(jobLevel),
+    jobLevelXp: scale * jobLevel * (jobLevel + 1) / 2,
+    jobNextLevelXp: scale * (jobLevel + 1) * (jobLevel + 2) / 2,
+  };
+}
+
 function getAppXpSummary() {
   const row = db.prepare(
-    `SELECT COUNT(*) AS users, COALESCE(SUM(xp), 0) AS totalXp,
-            COALESCE(SUM(xp_from_boost), 0) AS totalXpFromBoost,
-            COALESCE(SUM(xp_boost_pct), 0) AS totalXpBoostPct,
-            COALESCE(SUM(bonus_heartbeat_xp), 0) AS totalBonusHeartbeatXp,
+    `SELECT COUNT(*) AS users, COALESCE(SUM(u.xp), 0) AS totalXp,
+            COALESCE(SUM(j.xp), 0) AS totalJobXp,
+            COALESCE(SUM(u.xp_from_boost), 0) AS totalXpFromBoost,
+            COALESCE(SUM(u.xp_boost_pct), 0) AS totalXpBoostPct,
+            COALESCE(SUM(u.bonus_heartbeat_xp), 0) AS totalBonusHeartbeatXp,
             COALESCE(SUM(
               MAX(0, CASE
-                WHEN xp <= 0 THEN 0
-                ELSE CAST(floor((-1 + sqrt(1 + 8.0 * xp / 1000.0)) / 2) AS INTEGER)
+                WHEN u.xp <= 0 THEN 0
+                ELSE CAST(floor((-1 + sqrt(1 + 8.0 * u.xp / 1000.0)) / 2) AS INTEGER)
               END - 10)
             ), 0) AS totalFreeHeartbeat,
-            COALESCE(SUM(CASE WHEN xp <= 0 THEN 0 ELSE CAST(floor((-1 + sqrt(1 + 8.0 * xp / 1000.0)) / 2) AS INTEGER) END), 0) AS sumLevels,
-            COALESCE(MIN(CASE WHEN xp <= 0 THEN 0 ELSE CAST(floor((-1 + sqrt(1 + 8.0 * xp / 1000.0)) / 2) AS INTEGER) END), 0) AS minLevel,
-            COALESCE(MAX(CASE WHEN xp <= 0 THEN 0 ELSE CAST(floor((-1 + sqrt(1 + 8.0 * xp / 1000.0)) / 2) AS INTEGER) END), 0) AS maxLevel
-     FROM users`
+            COALESCE(SUM(CASE WHEN u.xp <= 0 THEN 0 ELSE CAST(floor((-1 + sqrt(1 + 8.0 * u.xp / 1000.0)) / 2) AS INTEGER) END), 0) AS sumLevels,
+            COALESCE(MIN(CASE WHEN u.xp <= 0 THEN 0 ELSE CAST(floor((-1 + sqrt(1 + 8.0 * u.xp / 1000.0)) / 2) AS INTEGER) END), 0) AS minLevel,
+            COALESCE(MAX(CASE WHEN u.xp <= 0 THEN 0 ELSE CAST(floor((-1 + sqrt(1 + 8.0 * u.xp / 1000.0)) / 2) AS INTEGER) END), 0) AS maxLevel
+     FROM users u LEFT JOIN user_job_xp j ON j.user_id=u.id`
   ).get();
   const users        = row.users || 0;
   const totalXp      = row.totalXp || 0;
@@ -1009,6 +1025,7 @@ function getAppXpSummary() {
   const levelsNeededForNextAvg = Math.max(0, nextAvgThresholdSum - sumLevels);
 
   return {
+    ...appJobProgression(row.totalJobXp || 0, users),
     users, level, title, xp: totalXp, levelXp, nextLevelXp, xpFromBoost: totalXpFromBoost, xpBoostPct, heartbeatRatePerMin,
     sumLevels, minLevel: row.minLevel || 0, maxLevel: row.maxLevel || 0,
     avgLevel: avgLevelFloor, avgLevelTitle, avgLevelFraction, levelsNeededForNextAvg,
