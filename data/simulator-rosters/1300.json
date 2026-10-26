@@ -1,0 +1,327 @@
+{
+  "schemaVersion": 1,
+  "bookId": 1300,
+  "family": "crossroads",
+  "sourceSha256": "e33ccb05263e5d86c71a8f12bda89d5a5b3a867669265dcf847769fa0a40eccd",
+  "rosterComplete": true,
+  "expectedEncounterCount": 2,
+  "source": "The two printed numerical fights. Other battles are narrative outcomes. Shared inventory and equipment are unchanged.",
+  "enemies": [
+    {
+      "key": "14-0",
+      "name": "Lothan",
+      "attack": 14,
+      "defense": 12,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "14",
+          "label": "Two northern giants (§14)",
+          "enemies": [
+            {
+              "name": "Lothan",
+              "hp": 4,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Groggin",
+              "hp": 4,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "mechanics": {
+              "enemyMorale": {
+                "afterDeaths": 1,
+                "attackThresholdChange": 0,
+                "surrenderAfter": 1,
+                "outcome": "flee"
+              }
+            },
+            "winSection": "20",
+            "lossSection": "11",
+            "sourceNotes": [
+              "Geordie uses his short sword for 1 D6 damage. Each giant attacks with fists for 1 D6 - 1, never below zero. As soon as either giant is defeated, the other runs away."
+            ]
+          },
+          "sourcePages": [
+            72,
+            73
+          ],
+          "printedRules": [
+            "Troubled by the look on the face of the third",
+            "man bracketed by the other two, Geordie lets",
+            "them round the corner, then follows dis-",
+            "creetly.",
+            "When he reaches the wall, Geordie peeks",
+            "past the edge cautiously. The two larger men",
+            "are in the process of stripping the smaller",
+            "man of his possessions. Instinctively, without",
+            "thought for his own safety, Geordie rushes up",
+            "to the scene.",
+            "\"Lay off, you two,\" he cries. Neither has a",
+            "visible weapon, but Geordie has only his stab-",
+            "bing sword. His broadsword is in the pack on",
+            "his horse. Without drawing the short hunting",
+            "sword, he advances toward them. The victim",
+            "makes a sudden movement and darts from the",
+            "grasp of his surprised tormentors. Rather",
+            "than stand and help .. .his rescuer, however, he",
+            "scurries away, hastily fastening the satchel",
+            "he's nearly lost.",
+            "The two giants advance <?on Geordie, one",
+            "saying to the other in a hearty voice: \"Well,",
+            "what do you know, Groggin? The Good Sa-",
+            "maritan deserted by the one he aided.''",
+            "Geordie backs up until he feels the wall",
+            "behind him. There is no escape. He will have",
+            "to stand and fight.",
+            "\"No matter, Lothan,\" the other replies,",
+            "\"the trap that was sprung has snagged its",
+            "springer. He looks a plumper catch than the",
+            "other. So lordly, such a fine cut to his clothes,",
+            "don't you think?\" In a moment they are on",
+            "him.",
+            "TWO NORTHERN GIANTS",
+            "To be hit: 12",
+            "To hit Geordie: 14 Hit points: 4",
+            "Damage with short sword: 1 D6",
+            "Damage with fists: 1 D6- 1",
+            "If either of the two giants is defeated, the other",
+            "will run away.",
+            "If Geordie wins, turn to section 20.",
+            "If the two giants win, turn to section 11."
+          ],
+          "customRules": {}
+        }
+      }
+    },
+    {
+      "key": "14-1",
+      "name": "Groggin",
+      "attack": 14,
+      "defense": 12,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "14",
+          "label": "Two northern giants (§14)",
+          "enemies": [
+            {
+              "name": "Lothan",
+              "hp": 4,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Groggin",
+              "hp": 4,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "mechanics": {
+              "enemyMorale": {
+                "afterDeaths": 1,
+                "attackThresholdChange": 0,
+                "surrenderAfter": 1,
+                "outcome": "flee"
+              }
+            },
+            "winSection": "20",
+            "lossSection": "11",
+            "sourceNotes": [
+              "Geordie uses his short sword for 1 D6 damage. Each giant attacks with fists for 1 D6 - 1, never below zero. As soon as either giant is defeated, the other runs away."
+            ]
+          },
+          "sourcePages": [
+            72,
+            73
+          ],
+          "printedRules": [
+            "Troubled by the look on the face of the third",
+            "man bracketed by the other two, Geordie lets",
+            "them round the corner, then follows dis-",
+            "creetly.",
+            "When he reaches the wall, Geordie peeks",
+            "past the edge cautiously. The two larger men",
+            "are in the process of stripping the smaller",
+            "man of his possessions. Instinctively, without",
+            "thought for his own safety, Geordie rushes up",
+            "to the scene.",
+            "\"Lay off, you two,\" he cries. Neither has a",
+            "visible weapon, but Geordie has only his stab-",
+            "bing sword. His broadsword is in the pack on",
+            "his horse. Without drawing the short hunting",
+            "sword, he advances toward them. The victim",
+            "makes a sudden movement and darts from the",
+            "grasp of his surprised tormentors. Rather",
+            "than stand and help .. .his rescuer, however, he",
+            "scurries away, hastily fastening the satchel",
+            "he's nearly lost.",
+            "The two giants advance <?on Geordie, one",
+            "saying to the other in a hearty voice: \"Well,",
+            "what do you know, Groggin? The Good Sa-",
+            "maritan deserted by the one he aided.''",
+            "Geordie backs up until he feels the wall",
+            "behind him. There is no escape. He will have",
+            "to stand and fight.",
+            "\"No matter, Lothan,\" the other replies,",
+            "\"the trap that was sprung has snagged its",
+            "springer. He looks a plumper catch than the",
+            "other. So lordly, such a fine cut to his clothes,",
+            "don't you think?\" In a moment they are on",
+            "him.",
+            "TWO NORTHERN GIANTS",
+            "To be hit: 12",
+            "To hit Geordie: 14 Hit points: 4",
+            "Damage with short sword: 1 D6",
+            "Damage with fists: 1 D6- 1",
+            "If either of the two giants is defeated, the other",
+            "will run away.",
+            "If Geordie wins, turn to section 20.",
+            "If the two giants win, turn to section 11."
+          ],
+          "customRules": {}
+        }
+      }
+    },
+    {
+      "key": "26-0",
+      "name": "Jarmuth Rhydon",
+      "attack": 12,
+      "defense": 9,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "26",
+          "label": "Jarmuth Rhydon (§26)",
+          "enemies": [
+            {
+              "name": "Jarmuth Rhydon",
+              "hp": 7,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 12,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "mechanics": {
+              "openingDamage": 2
+            },
+            "winSection": "45",
+            "lossSection": "27",
+            "sourceNotes": [
+              "The opening dagger wound costs 2 HP before the first exchange. Enter HP before that wound; the simulator applies it once. Both combatants deal 1 D6 damage. Winning this fight still leads to the failed-mission narrative in section 45."
+            ]
+          },
+          "sourcePages": [
+            97,
+            98
+          ],
+          "printedRules": [
+            "Geordie has misjudged the man. For all his",
+            "talk of justice and peace, he is a miserable",
+            "thief. Later that night as Geordie sleeps,",
+            "Jarmuth Rhydon creeps stealthily toward",
+            "him, knife in hand. Having secured Geordie's",
+            "trust, he is now going to slit his throat.",
+            "Geordie awakes just as the villain pounces",
+            "on him, deflecting the knife blade from his",
+            "throat to his shoulder, where -it sinks deeply",
+            "into a fleshy part but cuts no muscles. He has",
+            "escaped the first thrust. Now he must fight for",
+            "his life.",
+            "JARMUTH RHYDON",
+            "To be hit: 9",
+            "To hit Geordie: 12 Hit points: 7",
+            "Subtract 2 points damage already inflicted with",
+            "dagger.",
+            "Each does 1 D6 damage.",
+            "If Geordie wins, turn to section 45.",
+            "If Jarmuth wins, turn to section 27."
+          ],
+          "customRules": {}
+        }
+      }
+    }
+  ]
+}

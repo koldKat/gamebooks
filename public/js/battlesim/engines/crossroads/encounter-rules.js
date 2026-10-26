@@ -67,7 +67,10 @@ export function validateEncounterRules(rules,count) {
     if(rules.capture.minimumHp!==undefined)integer(rules.capture.minimumHp);
     if(rules.capture.floorHp!==undefined)integer(rules.capture.floorHp,1,rules.capture.hpAtMost);
   }
-  if(rules.enemyMorale){integer(rules.enemyMorale.afterDeaths,1,count);change(rules.enemyMorale.attackThresholdChange);integer(rules.enemyMorale.surrenderAfter,rules.enemyMorale.afterDeaths,count);}
+  if(rules.enemyMorale){
+    integer(rules.enemyMorale.afterDeaths,1,count);change(rules.enemyMorale.attackThresholdChange);integer(rules.enemyMorale.surrenderAfter,rules.enemyMorale.afterDeaths,count);
+    if(rules.enemyMorale.outcome!==undefined&&!['surrender','flee'].includes(rules.enemyMorale.outcome))throw new RangeError('Invalid morale outcome');
+  }
   if(rules.enemyRetreat){
     const retreat=rules.enemyRetreat;
     index(retreat.enemy);integer(retreat.hpAtMost,1);check(retreat.catchAbility);
@@ -231,7 +234,10 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
   const done = () => {
     if (fight.status!=='active') return true;
     if(rules.enemyMorale&&fight.enemies.filter(enemy=>enemy.hp===0).length>=rules.enemyMorale.surrenderAfter){
-      fight.events.push({kind:'enemiesSurrender'});finish(fight,'win');return true;
+      if(rules.enemyMorale.outcome==='flee'){
+        for(const enemy of fight.enemies)if(enemy.hp>0&&!enemy.fled){enemy.fled=true;fight.events.push({kind:'fled',name:enemy.name});}
+      }else fight.events.push({kind:'enemiesSurrender'});
+      finish(fight,'win');return true;
     }
     if(rules.earlyVictory&&round<rules.earlyVictory.beforeRound&&rules.earlyVictory.enemies.every(index=>!fight.enemies[index].hp)){
       route('win',rules.earlyVictory.section);return true;
