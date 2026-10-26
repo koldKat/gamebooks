@@ -1,0 +1,1093 @@
+{
+  "schemaVersion": 1,
+  "bookId": 1293,
+  "family": "crossroads",
+  "sourceSha256": "d5b6b514b169d88357e8006ee2542e9c6ed672851fbe383bc494779511caf48c",
+  "rosterComplete": true,
+  "expectedEncounterCount": 12,
+  "source": "Original Revolt on Majipoor tables and surrounding rules. Eight base encounters, approach/preparation variants and an explicit already-deducted injury option. Instructional brigands excluded. No custom application inventory/equipment.",
+  "enemies": [
+    {
+      "key": "11-0",
+      "name": "Human thief 1",
+      "attack": 14,
+      "defense": 12,
+      "hp": 28,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "11",
+          "label": "Human thieves (§11)",
+          "enemies": [
+            {
+              "name": "Human thief 1",
+              "hp": 28,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Human thief 2",
+              "hp": 28,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "6",
+            "lossSection": null,
+            "mechanics": {
+              "firstRoundAttacks": {
+                "ability": "dexterity",
+                "strict": true,
+                "success": 2,
+                "failure": 1
+              }
+            },
+            "roundLimit": 1,
+            "roundResult": "survive",
+            "sourceNotes": [
+              "Resolve one round, then continue at 6. The source does not give a separate destination if Parras dies in this opening fight.",
+              "A Dexterity total strictly below the ability grants two first-round attacks. Each surviving thief throws one knife."
+            ]
+          },
+          "printedRules": [
+            "THIEVES (each) To hit Parras: 14 To be hit: 12 Hit points: 28 Damage with thrown knife: 1 D6-1 After the first round they will flee the barn. The Skandar will have made short work of the Hjort, fighting with a ferocity that scares even Parras. The Hjort lumbers away as best it can, as Polol's laugh fills the barn. Turn to section 6."
+          ],
+          "sourcePages": [
+            58
+          ]
+        }
+      }
+    },
+    {
+      "key": "11-1",
+      "name": "Human thief 2",
+      "attack": 14,
+      "defense": 12,
+      "hp": 28,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "11",
+          "label": "Human thieves (§11)",
+          "enemies": [
+            {
+              "name": "Human thief 1",
+              "hp": 28,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Human thief 2",
+              "hp": 28,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "6",
+            "lossSection": null,
+            "mechanics": {
+              "firstRoundAttacks": {
+                "ability": "dexterity",
+                "strict": true,
+                "success": 2,
+                "failure": 1
+              }
+            },
+            "roundLimit": 1,
+            "roundResult": "survive",
+            "sourceNotes": [
+              "Resolve one round, then continue at 6. The source does not give a separate destination if Parras dies in this opening fight.",
+              "A Dexterity total strictly below the ability grants two first-round attacks. Each surviving thief throws one knife."
+            ]
+          },
+          "printedRules": [
+            "THIEVES (each) To hit Parras: 14 To be hit: 12 Hit points: 28 Damage with thrown knife: 1 D6-1 After the first round they will flee the barn. The Skandar will have made short work of the Hjort, fighting with a ferocity that scares even Parras. The Hjort lumbers away as best it can, as Polol's laugh fills the barn. Turn to section 6."
+          ],
+          "sourcePages": [
+            58
+          ]
+        }
+      }
+    },
+    {
+      "key": "11-advantage-0",
+      "name": "Human thief 1",
+      "attack": 14,
+      "defense": 12,
+      "hp": 28,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "11-advantage",
+          "label": "Human thieves (§11) - approach from §10 or §13",
+          "enemies": [
+            {
+              "name": "Human thief 1",
+              "hp": 28,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Human thief 2",
+              "hp": 28,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "6",
+            "lossSection": null,
+            "mechanics": {
+              "firstRoundAttacks": {
+                "ability": "dexterity",
+                "strict": true,
+                "success": 2,
+                "failure": 1
+              },
+              "heroAttackBonus": 1
+            },
+            "roundLimit": 1,
+            "roundResult": "survive",
+            "sourceNotes": [
+              "Includes the +1 attack-roll advantage from section 10 or 13 for this confrontation only. These two approaches do not stack.",
+              "Resolve one round, then continue at 6. The source does not give a separate destination if Parras dies in this opening fight.",
+              "A Dexterity total strictly below the ability grants two first-round attacks. Each surviving thief throws one knife."
+            ]
+          },
+          "printedRules": [
+            "Approach sections 10 and 13 grant +1 advantage in attacks against the thieves.",
+            "THIEVES (each) To hit Parras: 14 To be hit: 12 Hit points: 28 Damage with thrown knife: 1 D6-1 After the first round they will flee the barn. The Skandar will have made short work of the Hjort, fighting with a ferocity that scares even Parras. The Hjort lumbers away as best it can, as Polol's laugh fills the barn. Turn to section 6."
+          ],
+          "sourcePages": [
+            58
+          ]
+        }
+      }
+    },
+    {
+      "key": "11-advantage-1",
+      "name": "Human thief 2",
+      "attack": 14,
+      "defense": 12,
+      "hp": 28,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "11-advantage",
+          "label": "Human thieves (§11) - approach from §10 or §13",
+          "enemies": [
+            {
+              "name": "Human thief 1",
+              "hp": 28,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Human thief 2",
+              "hp": 28,
+              "toBeHit": 12,
+              "attacks": [
+                {
+                  "toHit": 14,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "6",
+            "lossSection": null,
+            "mechanics": {
+              "firstRoundAttacks": {
+                "ability": "dexterity",
+                "strict": true,
+                "success": 2,
+                "failure": 1
+              },
+              "heroAttackBonus": 1
+            },
+            "roundLimit": 1,
+            "roundResult": "survive",
+            "sourceNotes": [
+              "Includes the +1 attack-roll advantage from section 10 or 13 for this confrontation only. These two approaches do not stack.",
+              "Resolve one round, then continue at 6. The source does not give a separate destination if Parras dies in this opening fight.",
+              "A Dexterity total strictly below the ability grants two first-round attacks. Each surviving thief throws one knife."
+            ]
+          },
+          "printedRules": [
+            "Approach sections 10 and 13 grant +1 advantage in attacks against the thieves.",
+            "THIEVES (each) To hit Parras: 14 To be hit: 12 Hit points: 28 Damage with thrown knife: 1 D6-1 After the first round they will flee the barn. The Skandar will have made short work of the Hjort, fighting with a ferocity that scares even Parras. The Hjort lumbers away as best it can, as Polol's laugh fills the barn. Turn to section 6."
+          ],
+          "sourcePages": [
+            58
+          ]
+        }
+      }
+    },
+    {
+      "key": "21-0",
+      "name": "Hjort",
+      "attack": 13,
+      "defense": 11,
+      "hp": 8,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "21",
+          "label": "Hjort (§21)",
+          "enemies": [
+            {
+              "name": "Hjort",
+              "hp": 8,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "24",
+            "lossSection": null,
+            "mechanics": {},
+            "roundLimit": 1,
+            "roundResult": "survive",
+            "sourceNotes": [
+              "Resolve one round, then continue at 24. The source does not give a separate destination if Parras dies in this opening fight."
+            ]
+          },
+          "printedRules": [
+            "HJORT To hit Parras: 13 To be hit: 11 Hit points: 8 Damage with cutlass: 1 D6 After one round of combat, turn to section 24."
+          ],
+          "sourcePages": [
+            70
+          ]
+        }
+      }
+    },
+    {
+      "key": "21-advantage-0",
+      "name": "Hjort",
+      "attack": 13,
+      "defense": 11,
+      "hp": 8,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "21-advantage",
+          "label": "Hjort (§21) - approach from §10 or §13",
+          "enemies": [
+            {
+              "name": "Hjort",
+              "hp": 8,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "24",
+            "lossSection": null,
+            "mechanics": {
+              "heroAttackBonus": 1
+            },
+            "roundLimit": 1,
+            "roundResult": "survive",
+            "sourceNotes": [
+              "Includes the +1 attack-roll advantage from section 10 or 13 for this confrontation only. These two approaches do not stack.",
+              "Resolve one round, then continue at 24. The source does not give a separate destination if Parras dies in this opening fight."
+            ]
+          },
+          "printedRules": [
+            "Approach sections 10 and 13 grant +1 advantage in attacks against the thieves.",
+            "HJORT To hit Parras: 13 To be hit: 11 Hit points: 8 Damage with cutlass: 1 D6 After one round of combat, turn to section 24."
+          ],
+          "sourcePages": [
+            70
+          ]
+        }
+      }
+    },
+    {
+      "key": "35-0",
+      "name": "Sea-dragon",
+      "attack": 10,
+      "defense": 13,
+      "hp": 14,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "35",
+          "label": "Sea-dragon after retrieving the sword (§35 → §37)",
+          "enemies": [
+            {
+              "name": "Sea-dragon",
+              "hp": 14,
+              "toBeHit": 13,
+              "attacks": [
+                {
+                  "toHit": 10,
+                  "vesselHit": true
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "45",
+            "lossSection": "43",
+            "mechanics": {
+              "vessel": {
+                "enemy": 0,
+                "name": "Dark Sea",
+                "maxHits": 3,
+                "initialHits": 1,
+                "heroHitSection": "39",
+                "enemyHitSection": "44",
+                "bothMissSection": "42"
+              }
+            },
+            "sourceNotes": [
+              "The dragon has already hit the ship once while Parras retrieves his sword.",
+              "The dragon attacks the ship only after Parras misses or uses healing. Each successful enemy attack adds one ship hit, not player damage. Three hits sink the ship. Keep this fight open across the story’s return links to section 37."
+            ]
+          },
+          "printedRules": [
+            "The dragon has made its first attack. Turn to section 37.",
+            "THE SEA-DRAGON To hit the Dark Sea: 10 To be hit: 13 Hit points: 14 Damage: (special-see below) The sea-dragon will try to crush the ship enough times to sink it. Parras attacks first and if Parras hits the dragon, it will back off, stunned. It will then try another spot until the ship is sunk or it is killed. If Parras hits the dragon with his vibrating sword, turn to section 39. If Parras misses, and the dragon hits the ship, turn to section 44. If they both miss, turn to· section 42."
+          ],
+          "sourcePages": [
+            100,
+            101,
+            102
+          ]
+        }
+      }
+    },
+    {
+      "key": "37-0",
+      "name": "Sea-dragon",
+      "attack": 10,
+      "defense": 13,
+      "hp": 14,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "37",
+          "label": "Sea-Dragon (§37)",
+          "enemies": [
+            {
+              "name": "Sea-dragon",
+              "hp": 14,
+              "toBeHit": 13,
+              "attacks": [
+                {
+                  "toHit": 10,
+                  "vesselHit": true
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "45",
+            "lossSection": "43",
+            "mechanics": {
+              "vessel": {
+                "enemy": 0,
+                "name": "Dark Sea",
+                "maxHits": 3,
+                "initialHits": 0,
+                "heroHitSection": "39",
+                "enemyHitSection": "44",
+                "bothMissSection": "42"
+              }
+            },
+            "sourceNotes": [
+              "The dragon attacks the ship only after Parras misses or uses healing. Each successful enemy attack adds one ship hit, not player damage. Three hits sink the ship. Keep this fight open across the story’s return links to section 37."
+            ]
+          },
+          "printedRules": [
+            "THE SEA-DRAGON To hit the Dark Sea: 10 To be hit: 13 Hit points: 14 Damage: (special-see below) The sea-dragon will try to crush the ship enough times to sink it. Parras attacks first and if Parras hits the dragon, it will back off, stunned. It will then try another spot until the ship is sunk or it is killed. If Parras hits the dragon with his vibrating sword, turn to section 39. If Parras misses, and the dragon hits the ship, turn to section 44. If they both miss, turn to· section 42."
+          ],
+          "sourcePages": [
+            101,
+            102
+          ]
+        }
+      }
+    },
+    {
+      "key": "50-0",
+      "name": "Dragon killer 1",
+      "attack": 11,
+      "defense": 10,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "50",
+          "label": "Dragon Killers (§50)",
+          "enemies": [
+            {
+              "name": "Dragon killer 1",
+              "hp": 6,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Dragon killer 2",
+              "hp": 6,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "46",
+            "lossSection": "29",
+            "mechanics": {},
+            "roundLimit": 4,
+            "roundResult": "survive",
+            "sourceNotes": [
+              "All surviving hunters attack. If Parras survives four rounds, the authorities end the fight and section 46 follows."
+            ]
+          },
+          "printedRules": [
+            "DRAGON KILLERS 11 To hit Parras: To be hit: 10 Hit _ points: 6 each Damage with knife: 1 D6- 1 Conduct combat: The dragon hunters will fight to the death rather than face Piliplok's prison, where they have already been guests many times. If, after four rounds, Parras is still alive as well as one of the dragon killers, Cylene will have brought local harbor authorities to help Parras and -stop the fight. If Parras wins or it's the end of the fourth round, turn to section 46. If the dragon killers win, turn to section 29."
+          ],
+          "sourcePages": [
+            128
+          ]
+        }
+      }
+    },
+    {
+      "key": "50-1",
+      "name": "Dragon killer 2",
+      "attack": 11,
+      "defense": 10,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "50",
+          "label": "Dragon Killers (§50)",
+          "enemies": [
+            {
+              "name": "Dragon killer 1",
+              "hp": 6,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Dragon killer 2",
+              "hp": 6,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "46",
+            "lossSection": "29",
+            "mechanics": {},
+            "roundLimit": 4,
+            "roundResult": "survive",
+            "sourceNotes": [
+              "All surviving hunters attack. If Parras survives four rounds, the authorities end the fight and section 46 follows."
+            ]
+          },
+          "printedRules": [
+            "DRAGON KILLERS 11 To hit Parras: To be hit: 10 Hit _ points: 6 each Damage with knife: 1 D6- 1 Conduct combat: The dragon hunters will fight to the death rather than face Piliplok's prison, where they have already been guests many times. If, after four rounds, Parras is still alive as well as one of the dragon killers, Cylene will have brought local harbor authorities to help Parras and -stop the fight. If Parras wins or it's the end of the fourth round, turn to section 46. If the dragon killers win, turn to section 29."
+          ],
+          "sourcePages": [
+            128
+          ]
+        }
+      }
+    },
+    {
+      "key": "62-0",
+      "name": "Vroon",
+      "attack": 12,
+      "defense": 9,
+      "hp": 8,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "62",
+          "label": "Vroon (§62)",
+          "enemies": [
+            {
+              "name": "Vroon",
+              "hp": 8,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 12,
+                  "damage": {
+                    "dice": 1,
+                    "add": -2
+                  }
+                },
+                {
+                  "toHit": 12,
+                  "damage": {
+                    "dice": 1,
+                    "add": -2
+                  },
+                  "sameDamageAsPrimary": true
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "64",
+            "lossSection": "29",
+            "mechanics": {
+              "openingDamage": 2
+            },
+            "sourceNotes": [
+              "Includes the source’s opening 2 HP injury, applied once when the first round advances. Choose the alternate preset if you already deducted that injury. The Vroon attacks twice each round."
+            ]
+          },
+          "printedRules": [
+            "VROON To hit Parras: 12 To be hit: 9 Hit points: 8 Damage done by metal club: 1 D6-2. The Vroon has two attacks for every one of Parras'. It will place Cylene down while battling Parras. Parras has already received two hit points of damage. If Parras wins, turn to section 64. If Parras dies, turn to section 29."
+          ],
+          "sourcePages": [
+            150
+          ]
+        }
+      }
+    },
+    {
+      "key": "62-injury-applied-0",
+      "name": "Vroon",
+      "attack": 12,
+      "defense": 9,
+      "hp": 8,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "62-injury-applied",
+          "label": "Vroon - opening injury already deducted (§62)",
+          "enemies": [
+            {
+              "name": "Vroon",
+              "hp": 8,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 12,
+                  "damage": {
+                    "dice": 1,
+                    "add": -2
+                  }
+                },
+                {
+                  "toHit": 12,
+                  "damage": {
+                    "dice": 1,
+                    "add": -2
+                  },
+                  "sameDamageAsPrimary": true
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "64",
+            "lossSection": "29",
+            "mechanics": {},
+            "sourceNotes": [
+              "Use this variant only if you have already subtracted the source’s 2 HP opening injury. It will not deduct it again. The Vroon attacks twice each round."
+            ]
+          },
+          "printedRules": [
+            "VROON To hit Parras: 12 To be hit: 9 Hit points: 8 Damage done by metal club: 1 D6-2. The Vroon has two attacks for every one of Parras'. It will place Cylene down while battling Parras. Parras has already received two hit points of damage. If Parras wins, turn to section 64. If Parras dies, turn to section 29."
+          ],
+          "sourcePages": [
+            150
+          ]
+        }
+      }
+    },
+    {
+      "key": "84-0",
+      "name": "Ghayrog cook",
+      "attack": 11,
+      "defense": 13,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "84",
+          "label": "Ghayrog Cook (§84)",
+          "enemies": [
+            {
+              "name": "Ghayrog cook",
+              "hp": 7,
+              "toBeHit": 13,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 1,
+                    "add": -1
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "97",
+            "lossSection": "29",
+            "mechanics": {
+              "firstHitWin": {
+                "enemy": 0,
+                "section": "92"
+              },
+              "roundLimitOutcome": {
+                "status": "loss",
+                "section": "85"
+              }
+            },
+            "roundLimit": 3,
+            "roundResult": "survive",
+            "sourceNotes": [
+              "If Parras lands the first hit, disarm the cook and continue at 92. If the cook hits first, fight normally: victory leads to 97; guards interrupt after round three at 85. A successful hit counts even when knife damage is zero."
+            ]
+          },
+          "printedRules": [
+            "THE GHAYROG COOK To hit Parras: 11 To be hit: 13 Hit points: 7 Damage Done: Knife 1 D6- 1 If Parras hits first, he can remove the knife from the cook and stop his assistants. Turn to section 92. If he is hit by the ·cook, the fight will go on as the assistants run out. If Parras is still battling the cook after three rounds, turn to section 85. If he should kill the cook before then, turn to section 97. If Parras should die, turn to section 29."
+          ],
+          "sourcePages": [
+            187
+          ]
+        }
+      }
+    },
+    {
+      "key": "99-0",
+      "name": "Ghayrog guard 1",
+      "attack": 13,
+      "defense": 10,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "99",
+          "label": "Ghayrog Guards (§99)",
+          "enemies": [
+            {
+              "name": "Ghayrog guard 1",
+              "hp": 6,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Ghayrog guard 2",
+              "hp": 6,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "107",
+            "lossSection": "29",
+            "mechanics": {},
+            "sourceNotes": [
+              "Parras fights two guards. Each surviving guard attacks in order each round. Polol’s separate opponents are not added to this fight."
+            ]
+          },
+          "printedRules": [
+            "GHAYROG GUARDS To hit Parras: 13 To be hit: 10 Hit points: 6 Damage with sword: 1 D6 Parras will fight two of the guards, while Polol fights  the other two. Each guard will attack in order. If Parras defeats his two, turn to section 107. If Parras is defeated, turn to section 29. ,"
+          ],
+          "sourcePages": [
+            220
+          ]
+        }
+      }
+    },
+    {
+      "key": "99-1",
+      "name": "Ghayrog guard 2",
+      "attack": 13,
+      "defense": 10,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "99",
+          "label": "Ghayrog Guards (§99)",
+          "enemies": [
+            {
+              "name": "Ghayrog guard 1",
+              "hp": 6,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Ghayrog guard 2",
+              "hp": 6,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "107",
+            "lossSection": "29",
+            "mechanics": {},
+            "sourceNotes": [
+              "Parras fights two guards. Each surviving guard attacks in order each round. Polol’s separate opponents are not added to this fight."
+            ]
+          },
+          "printedRules": [
+            "GHAYROG GUARDS To hit Parras: 13 To be hit: 10 Hit points: 6 Damage with sword: 1 D6 Parras will fight two of the guards, while Polol fights  the other two. Each guard will attack in order. If Parras defeats his two, turn to section 107. If Parras is defeated, turn to section 29. ,"
+          ],
+          "sourcePages": [
+            220
+          ]
+        }
+      }
+    },
+    {
+      "key": "106-0",
+      "name": "Ghayrog guard",
+      "attack": 13,
+      "defense": 10,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "106",
+          "label": "Ghayrog Guard (§106)",
+          "enemies": [
+            {
+              "name": "Ghayrog guard",
+              "hp": 6,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "104",
+            "lossSection": "29",
+            "mechanics": {},
+            "sourceNotes": [
+              "Parras fights one guard; his companions handle the others separately."
+            ]
+          },
+          "printedRules": [
+            "GHAYROG GUARDS To hit Parras: 13 To be hit: 10 Hit point: 6 Damage with sword: 1 D6 Parras will have to fight one guard. If he defeats the guard, turn to section 104. If he is defeated, turn to section 29."
+          ],
+          "sourcePages": [
+            231
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -12,6 +12,8 @@ const labels = {
   ability:'Ability check', abilityModifier:'Temporary check modifier', abilityCheck:'Roll 3D6 check', log:'Battle log', history:'Battle history', hero:'Robinton',
   automatic:'automatic', freeRounds:'Free opening rounds: {n}.', absorbed:'{name} absorbs the attack.', blinded:'Blinded. Check Constitution at the start of each following round.',
   fled:'{name} flees.', shape:'The opponent changes into {name}.', disarmed:'{name} is disarmed.',
+  openingDamage:'Opening injury: {n} HP.', vesselHits:'{name}: {n}/{max} hits',
+  vesselAttack:'{name}: {dice} = {total}, {result}; {n}/{max} ship hits.',
   invalid:'Check the numbers, weapon damage and selected target.',
   resetConfirm:'Reset Robinton’s simulator stats? Battle history and shared inventory are kept.',
   cancelConfirm:'End this fight? Lethal damage already taken is kept; nonfatal brawl damage is discarded.',

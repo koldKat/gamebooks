@@ -57,6 +57,8 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
       if(event.kind==='fled')data.log.push(tk('fled',{name:event.name}));
       if(event.kind==='shape')data.log.push(tk('shape',{name:event.name}));
       if(event.kind==='disarmed')data.log.push(tk('disarmed',{name:event.name}));
+      if(event.kind==='openingDamage')data.log.push(tk('openingDamage',{n:event.amount}));
+      if(event.kind==='vesselAttack')data.log.push(tk('vesselAttack',{name:event.name,dice:event.dice.join('+'),total:event.total,result:tk(event.hit?'hit':'miss'),n:event.hits,max:event.max}));
       if(event.kind==='poison')data.log.push(tk('poison',{dice:event.dice.join('+'),result:tk(event.passed?'passed':'failed'),damage:event.damage}));
       if(event.kind==='healing')data.log.push(tk('restored',{n:event.amount}));
       if(event.kind==='outcome')data.log.push(tk('status.'+event.status)+(event.destination?' '+tk('destination',{n:event.destination}):''));
@@ -83,13 +85,14 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     el('target').value=targets.some(({index})=>index===currentTarget)?currentTarget:targets[0]?.index??'';
     el('target').disabled=!locked||Boolean(fight.rules.enemyOnly);
     el('status').textContent=tk('status.'+(fight?.status??'ready'))+(fight?' · '+tk('roundNumber',{n:fight.round}):'');
+    if(fight?.rules.mechanics?.vessel){const vessel=fight.rules.mechanics.vessel;el('status').textContent+=' · '+tk('vesselHits',{name:vessel.name,n:fight.encounter?.vesselHits??vessel.initialHits,max:vessel.maxHits});}
     el('destination').textContent=fight?.destination?tk('destination',{n:fight.destination}):'';
     el('opponents').innerHTML=fight?fight.enemies.map(enemy=>'<div>'+escape(tk('enemyHp',{name:enemy.name,n:enemy.hp,max:enemy.maxHp}))+'</div>').join(''):'';
     el('log').innerHTML=data.log.slice(-80).map(line=>'<div>'+escape(line)+'</div>').join('');
     el('history').innerHTML=data.history.slice(-40).toReversed().map(row=>'<div>'+escape(row.enemy+': '+tk('status.'+row.outcome))+'</div>').join('');
     setupNotes();
   }
-  function editorRows(enemies){return enemies.map(enemy=>({...structuredClone(enemy),displayName:enemy.name,toHit:enemy.attacks[0]?.toHit??enemy.printedAttack,damageDice:enemy.attacks[0]?.damage.dice,damageAdd:enemy.attacks[0]?.damage.add}));}
+  function editorRows(enemies){return enemies.map(enemy=>({...structuredClone(enemy),displayName:enemy.name,toHit:enemy.attacks[0]?.toHit??enemy.printedAttack,damageDice:enemy.attacks[0]?.damage?.dice,damageAdd:enemy.attacks[0]?.damage?.add}));}
   function open(){
     if(Number(getBookId())!==definition.id||!getRun()){showAlert(t('battlesim.no_active_playthrough'));return;}
     shownRun=getRun();editorRun=null;
@@ -110,8 +113,8 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
       </div><div class="bsim-col bsim-col-right"><p id="${ID}-status" role="status"></p><p id="${ID}-destination"></p><div id="${ID}-opponents"></div><h3 class="bsim-side-title">${escape(tk('log'))}</h3><div class="bsim-log" id="${ID}-log"></div><h3 class="bsim-side-title">${escape(tk('history'))}</h3><div class="bsim-history-list" id="${ID}-history"></div></div></div></div>`;
     document.body.append(overlay);
     el('abilityModifier').value=0;
-    editor=createOpponentEditor({document,id:ID,t,fields:[{key:'toBeHit',label:tk('toBeHit'),min:3,max:18},{key:'toHit',label:tk('toHit'),min:3,max:18},{key:'hp',label:tk('hp'),min:1},{key:'damageDice',label:tk('damageDice'),min:0,max:10},{key:'damageAdd',label:tk('damageAdd'),min:-100,max:1000}],presets:getRoster().filter(entry=>!entry.rules.mechanics?.abilityOutcome).flatMap(entry=>editorRows(entry.enemies)),
-      isStatUnavailable:(key,row)=>key==='toHit'&&row.attacks?.every(attack=>attack.check==='constitution')});
+    editor=createOpponentEditor({document,id:ID,t,fields:[{key:'toBeHit',label:tk('toBeHit'),min:3,max:18},{key:'toHit',label:tk('toHit'),min:3,max:18},{key:'hp',label:tk('hp'),min:1},{key:'damageDice',label:tk('damageDice'),min:0,max:10},{key:'damageAdd',label:tk('damageAdd'),min:-100,max:1000}],presets:getRoster().filter(entry=>!entry.rules.mechanics?.abilityOutcome&&!entry.rules.mechanics?.vessel).flatMap(entry=>editorRows(entry.enemies)),
+      isStatUnavailable:(key,row)=>key==='toHit'&&row.attacks?.every(attack=>attack.check==='constitution')||['damageDice','damageAdd'].includes(key)&&row.attacks?.some(attack=>attack.vesselHit)});
     el('editor').append(editor.element);
     const trigger=document.createElement('button');trigger.id=ID+'-btn';trigger.style.display='none';trigger.textContent=t('battlesim.title');getButtonRow().append(trigger);trigger.addEventListener('click',open);
     el('close').addEventListener('click',close);
@@ -127,7 +130,8 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
       const enemies=rules.mechanics?.abilityOutcome?structuredClone(entry.enemies):editor.read().map(enemy=>{
         const attacks=structuredClone(enemy.attacks??[{toHit:enemy.toHit,damage:{dice:enemy.damageDice,add:enemy.damageAdd}}]);
         for(const attack of attacks)if(!attack.check)attack.toHit=enemy.toHit;
-        attacks[0].damage={...attacks[0].damage,dice:enemy.damageDice,add:enemy.damageAdd};
+        if(!attacks[0].vesselHit)attacks[0].damage={...attacks[0].damage,dice:enemy.damageDice,add:enemy.damageAdd};
+        for(const attack of attacks.slice(1))if(attack.sameDamageAsPrimary)attack.damage=structuredClone(attacks[0].damage);
         return {name:enemy.displayName||tk('opponent'),hp:enemy.hp,toBeHit:enemy.toBeHit,attacks};
       });
       if(enemies.some(enemy=>enemy.attacks.some(attack=>attack.check||attack.when)))rules.mechanics??={};

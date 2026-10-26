@@ -77,6 +77,24 @@ test('Encyclopedia of Xanth round-trips all 10 encounter presets without changin
   assert.deepEqual(db.prepare('SELECT id,book_id,name,attack,defense,hp,pb,created_at FROM book_enemies WHERE book_id<>1290').all(),old);
 });
 
+test('Majipoor round-trips twelve presets and sixteen NPC rows without changing players',t=>{
+  const db=fixture(t);db.exec('INSERT INTO books VALUES(1293)');
+  const document=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/simulator-rosters/1293.json'),'utf8'));
+  const players=db.prepare('SELECT * FROM players').all(),old=db.prepare('SELECT * FROM book_enemies').all();
+  assert.deepEqual(seedEnemyRoster(db,document),{inserted:16,updated:0});
+  const rows=getBookEnemyRows(db,1293);assert.equal(rows.length,16);
+  assert.equal(new Set(rows.map(row=>row.stats.entry.section)).size,12);
+  for(const expected of document.enemies){
+    const actual=rows.find(row=>row.stats.roster.key===expected.key);
+    assert.deepEqual(actual.stats.entry,expected.stats.entry);
+    assert.equal(actual.attack,expected.attack);assert.equal(actual.defense,expected.defense);assert.equal(actual.hp,expected.hp);
+  }
+  assert.deepEqual(seedEnemyRoster(db,document),{inserted:0,updated:0});
+  assert.deepEqual(getBookEnemyRows(db,1293),rows);
+  assert.deepEqual(db.prepare('SELECT * FROM players').all(),players);
+  assert.deepEqual(db.prepare('SELECT id,book_id,name,attack,defense,hp,pb,created_at FROM book_enemies WHERE book_id<>1293').all(),old);
+});
+
 test('schema migration and legacy API results preserve old enemy rows and player state exactly', t => {
   const db = fixture(t);
   const before = db.prepare('SELECT * FROM players').all();

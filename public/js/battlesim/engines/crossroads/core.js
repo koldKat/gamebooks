@@ -24,7 +24,7 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
       name:String(enemy.name ?? enemy.displayName ?? '').slice(0,200),
       hp:integer(enemy.hp, 1), maxHp:enemy.hp, toBeHit:integer(enemy.toBeHit, 3, 18),
       attacks:enemy.attacks.map(attack => {
-        const result = {damage:damageSpec(attack.damage)};
+        const result = config.mechanics?.vessel && attack.vesselHit ? {vesselHit:true} : {damage:damageSpec(attack.damage)};
         if (config.mechanics && attack.check === 'constitution') result.check = attack.check;
         else result.toHit = integer(attack.toHit, 3, 18);
         if (config.mechanics && attack.when) {

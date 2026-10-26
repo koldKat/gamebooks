@@ -32,6 +32,17 @@ export function validateEncounterRules(rules,count) {
   if (rules.freeRounds) { integer(rules.freeRounds.threshold,1,6); integer(rules.freeRounds.low,0,1000); integer(rules.freeRounds.high,0,1000); }
   if (rules.opening) index(rules.opening.enemy);
   if (rules.abilityOutcome) check(rules.abilityOutcome.ability);
+  if (rules.heroAttackBonus !== undefined) change(rules.heroAttackBonus);
+  if (rules.openingDamage !== undefined) integer(rules.openingDamage);
+  if (rules.firstRoundAttacks) {
+    check(rules.firstRoundAttacks.ability);
+    integer(rules.firstRoundAttacks.success,1,2);integer(rules.firstRoundAttacks.failure,1,2);
+  }
+  if (rules.firstHitWin) index(rules.firstHitWin.enemy);
+  if (rules.roundLimitOutcome && !['win','loss','draw'].includes(rules.roundLimitOutcome.status)) throw new RangeError('Invalid round outcome');
+  if (rules.vessel) {
+    index(rules.vessel.enemy);integer(rules.vessel.maxHits,1);integer(rules.vessel.initialHits,0,rules.vessel.maxHits-1);
+  }
   const attacks = values => {
     if (!Array.isArray(values) || !values.length) throw new RangeError('Missing form attacks');
     for (const attack of values) { integer(attack.toHit,3,18);damageSpec(attack.damage); }
@@ -83,6 +94,15 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
   }
   fight.events=[];fight.round=round;
   const state=fight.encounter ??= {arrivals:{},allyRound:null,freeRounds:0,blinded:false,bonusAttack:false};
+  const route = (status,section) => {
+    finish(fight,status);fight.destination=section;fight.events.at(-1).destination=section;
+  };
+  if (rules.vessel && state.vesselHits===undefined) state.vesselHits=rules.vessel.initialHits;
+  if (round===1 && rules.openingDamage) {
+    const lost=Math.min(fight.hero.hp,rules.openingDamage);
+    fight.hero.hp-=lost;fight.damageTaken+=lost;fight.events.push({kind:'openingDamage',amount:lost});
+    if (!fight.hero.hp) { finish(fight,'loss');return fight; }
+  }
   const check = (ability,strict=false) => {
     const values=dice(3,roll),total=values.reduce((sum,value)=>sum+value,0),passed=strict?total<fight.hero[ability]:total<=fight.hero[ability];
     fight.events.push({kind:'check',ability,dice:values,total,passed});
@@ -94,6 +114,7 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
     });
   };
   const done = () => {
+    if (fight.status!=='active') return true;
     announceDeaths();
     (rules.enemies ?? []).forEach((rule,index)=>{
       const enemy=fight.enemies[index];
@@ -117,12 +138,15 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
   }
   function heroAttack(index,{automatic=false,ally=false}={}) {
     const enemy=fight.enemies[index];
-    const values=automatic ? [] : dice(3,roll),total=values.reduce((sum,value)=>sum+value,fight.hero.attackBonus);
+    const values=automatic ? [] : dice(3,roll),total=values.reduce((sum,value)=>sum+value,fight.hero.attackBonus+(ally?0:rules.heroAttackBonus ?? 0));
     const hit=automatic || total>=enemy.toBeHit+hitChange(index);
     const result=hit ? damage(fight.weaponDamage,roll) : {dice:[],amount:0};
     const lost=Math.min(enemy.hp,Math.max(0,result.amount+(hit&&ally ? rules.ally.damageBonus : 0)));
     enemy.hp-=lost;fight.damageDealt+=lost;
     fight.events.push({kind:'attack',side:ally?'ally':'hero',target:index,name:ally?rules.ally.name:enemy.name,dice:values,total,hit,automatic,damageDice:result.dice,damage:lost});
+    if (hit && !ally && rules.firstHitWin?.enemy===index && !state.firstHitter) {
+      state.firstHitter='hero';route('win',rules.firstHitWin.section);
+    }
     announceDeaths();return hit;
   }
   if (round===1 && rules.opening) {
@@ -141,7 +165,8 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
   if (rules.ally && state.allyRound===null && check(rules.ally.ability)) state.allyRound=round+rules.ally.delay;
   if (rules.fatigue) fatigued=!check(rules.fatigue.ability);
   let damageMultiplier=1;
-  const extraAttack=state.bonusAttack;state.bonusAttack=false;
+  let extraAttack=state.bonusAttack;state.bonusAttack=false;
+  if (rules.firstRoundAttacks && round===1) extraAttack=(check(rules.firstRoundAttacks.ability,rules.firstRoundAttacks.strict)?rules.firstRoundAttacks.success:rules.firstRoundAttacks.failure)===2;
   if (rules.charge && round===1) {
     if (check(rules.charge.ability)) {
       damageMultiplier=0;state.bonusAttack=check(rules.charge.ability);
@@ -177,6 +202,7 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
   for (const index of available) {
     if (!fight.enemies[index].hp || fight.enemies[index].fled || round<=state.freeRounds) continue;
     const enemy=fight.enemies[index],schedule=rules.enemies?.[index] ?? {};
+    if (rules.vessel?.enemy===index && healing===null && !heroMiss) continue;
     if (schedule.attackAfterDeathOf!==undefined && fight.enemies[schedule.attackAfterDeathOf].hp>0) continue;
     const first=schedule.firstAttackRound ?? 1;
     if (round<first || (round-first)%(schedule.attackEvery ?? 1)!==0) continue;
@@ -189,12 +215,20 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
           if (rules.ally.absorbOn.includes(value)) { fight.events.push({kind:'absorbed',name:rules.ally.name,dice:[value]});continue; }
         }
         let values,total,hit;
+        if (attack.vesselHit) {
+          values=dice(3,roll);total=values.reduce((sum,value)=>sum+value,0);hit=total>=attack.toHit;
+          if (hit) state.vesselHits++;
+          fight.events.push({kind:'vesselAttack',name:rules.vessel.name,dice:values,total,hit,hits:state.vesselHits,max:rules.vessel.maxHits});
+          if (state.vesselHits>=rules.vessel.maxHits) { finish(fight,'loss');return fight; }
+          continue;
+        }
         if (attack.check==='constitution') {
           values=dice(3,roll);total=values.reduce((sum,value)=>sum+value,0);hit=total>fight.hero.constitution;
         } else {
           values=dice(3,roll);total=values.reduce((sum,value)=>sum+value,-fight.hero.defenceBonus);hit=total>=attack.toHit+attackChange(index);
         }
         const result=hit?damage(attack.damage,roll):{dice:[],amount:0};
+        if (hit && rules.firstHitWin?.enemy===index && !state.firstHitter) state.firstHitter='enemy';
         const lost=Math.min(fight.hero.hp,result.amount*damageMultiplier);
         fight.hero.hp-=lost;fight.damageTaken+=lost;
         fight.events.push({kind:'attack',side:'enemy',target:index,name:enemy.name,dice:values,total,hit,damageDice:result.dice,damage:lost});
@@ -204,6 +238,15 @@ export function encounterRound(original,{target = 0,healing = null,roll = () => 
         }
       }
     }
+  }
+  if (rules.vessel) {
+    fight.destination=healing===null && !heroMiss ? rules.vessel.heroHitSection
+      : fight.events.some(event=>event.kind==='vesselAttack'&&event.hit)?rules.vessel.enemyHitSection:rules.vessel.bothMissSection;
+  }
+  if (fight.rules.roundLimit && round>=fight.rules.roundLimit) {
+    if (rules.roundLimitOutcome) route(rules.roundLimitOutcome.status,rules.roundLimitOutcome.section);
+    else finish(fight,fight.rules.roundResult==='compareDamage'
+      ? fight.damageDealt>fight.damageTaken?'win':fight.damageDealt<fight.damageTaken?'loss':'draw':'win');
   }
   if (rules.shapeshift && round%rules.shapeshift.every===0) {
     state.formIndex=(state.formIndex ?? 0)+1;
