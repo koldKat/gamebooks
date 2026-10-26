@@ -40,9 +40,9 @@ test('logout hides both bars and an old frame cannot overwrite a new login',()=>
 });
 
 test('pool countdown animates through a ruby boundary even when Job EV is capped',()=>{
-  const s=setup();const start={...snapshot,jobRubyMiningEvents:9998,jobRubyMiningInterval:10000,jobAverageEventsPerRuby:999.4};
+  const s=setup();const start={...snapshot,jobRubyMiningEvents:9998,jobRubyMiningInterval:10000,jobAverageEventsPerRuby:9996.4};
   s.render(start);
-  assert.equal(s.elements.get('app-job-xp-ruby-cost').textContent,'appxp.average_ruby_cost 1,000');
+  assert.equal(s.elements.get('app-job-xp-ruby-cost').textContent,'appxp.average_ruby_cost 9,997');
   s.render({...start,jobRubyMiningEvents:10002});s.step(25);
   assert.equal(s.elements.get('app-job-xp-next-ruby').textContent,'appxp.next_ruby 1');
   s.step(25);assert.equal(s.elements.get('app-job-xp-next-ruby').textContent,'appxp.next_ruby 10,000');

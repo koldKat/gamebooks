@@ -26,10 +26,10 @@ test('app job progression mirrors app XP thresholds and includes players without
   assert.equal(summary.jobXp,3000); assert.equal(summary.jobLevel,1);
   assert.equal(summary.jobRubyMiningEvents,9999);
   assert.equal(summary.jobRubyMiningInterval,10000);
-  assert.equal(summary.jobAverageEventsPerRuby,1000000/(1000+2/3));
+  assert.equal(summary.jobAverageEventsPerRuby,10000000/(1000+2/3));
   assert.equal(db.prepare('SELECT total_changes() n').get().n,before);
   db.prepare('UPDATE users SET bonus_diamond_dig_purchased=99 WHERE id=1').run();
-  assert.equal(context.getAppXpSummary().jobAverageEventsPerRuby,1000000/1001);
+  assert.equal(context.getAppXpSummary().jobAverageEventsPerRuby,10000000/1001);
   assert.equal(summary.jobTitle,'Digger'); assert.equal(summary.jobLevelXp,3000); assert.equal(summary.jobNextLevelXp,9000);
   for (const users of [1,3,89]) for (const level of [0,1,2,8,20]) {
     const threshold = users*1000*level*(level+1)/2;
@@ -39,6 +39,7 @@ test('app job progression mirrors app XP thresholds and includes players without
   db.exec('DELETE FROM users; DELETE FROM user_job_xp');
   const empty = context.getAppXpSummary(); assert.equal(empty.jobLevel,0); assert.equal(empty.jobXp,0);
   assert.equal(empty.jobNextLevelXp,1);
+  assert.equal(empty.jobAverageEventsPerRuby,10000);
 });
 
 test('app SSE sends only aggregate refreshes to the restricted non-admin viewer', () => {

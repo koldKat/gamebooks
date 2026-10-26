@@ -1033,7 +1033,9 @@ function getAppXpSummary() {
     ...appJobProgression(row.totalJobXp || 0, users),
     jobRubyMiningEvents: row.jobRubyMiningEvents || 0,
     jobRubyMiningInterval: 10000,
-    jobAverageEventsPerRuby: 1000000 / (1000 + (users > 0 ? row.totalJobDigBonus / users : 0)),
+    // The app's base interval is ten times the player interval; average the
+    // current free and purchased digging bonuses across all players.
+    jobAverageEventsPerRuby: 10000000 / (1000 + (users > 0 ? row.totalJobDigBonus / users : 0)),
     users, level, title, xp: totalXp, levelXp, nextLevelXp, xpFromBoost: totalXpFromBoost, xpBoostPct, heartbeatRatePerMin,
     sumLevels, minLevel: row.minLevel || 0, maxLevel: row.maxLevel || 0,
     avgLevel: avgLevelFloor, avgLevelTitle, avgLevelFraction, levelsNeededForNextAvg,
