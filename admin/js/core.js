@@ -276,7 +276,11 @@ export function userProgressTooltipHtml(u) {
     + section('Job Level', job, u.jobTitle, number(u.jobXp), 1000*job*(job+1)/2, 1000*(job+1)*(job+2)/2, 'admin-progress-job', 'EV')
     + `<div class="admin-progress-caption"><span>XP boost: ${number(u.xpBoostPct)}%</span></div>`
     + '<dl class="admin-progress-facts">'
+    + fact('Bronze coins', number(u.bronzeBalance).toLocaleString(), 'val-bronze')
+    + fact('Silver coins', number(u.silverBalance).toLocaleString(), 'val-silver')
     + fact('GC balance', balance.toLocaleString(), 'val-amber')
+    + fact('Rubies', number(u.diamondsBalance).toLocaleString(), 'val-gem-red')
+    + fact('Diamonds', number(u.rubiesBalance).toLocaleString(), 'val-ruby')
     + fact('XP to next GC', number(u.coinXpUntilNext).toLocaleString())
     + fact('Coin mint bonus', `${number(u.gcMintPct).toLocaleString(undefined, { maximumFractionDigits: 1 })}%`, 'val-amber')
     + fact('XP from boosts', number(u.xpFromBoost).toLocaleString())

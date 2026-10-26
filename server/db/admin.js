@@ -1019,6 +1019,10 @@ function adminGetUsers() {
   const users = db.prepare(`
     SELECT u.id, u.username, u.display_name, u.is_author, u.is_contributor, u.is_moderator, u.is_squire, u.created_at, u.last_country, u.last_city,
            u.bonus_diamond_dig_purchased AS diamondDigPurchased,
+           COALESCE(h.heartbeat_count, 0) % 100 AS bronzeBalance,
+           CAST(COALESCE(h.heartbeat_count, 0) / 100 AS INTEGER) % 100 AS silverBalance,
+           COALESCE(d.diamonds_earned, 0) + COALESCE(d.diamonds_bought, 0) - COALESCE(d.diamonds_spent, 0) AS diamondsBalance,
+           COALESCE(r.rubies_earned, 0) + COALESCE(r.rubies_bought, 0) - COALESCE(r.rubies_spent, 0) AS rubiesBalance,
            u.active_country, u.active_city, u.last_domain, u.failed_login_attempts, u.locked_until, u.is_protected, u.is_admin,
            COALESCE(library.book_count, 0) AS book_count,
            COALESCE(s.session_count, 0) AS session_count,
@@ -1029,6 +1033,9 @@ function adminGetUsers() {
         COUNT(DISTINCT CASE WHEN b.parent_book_id IS NULL THEN b.id END) AS book_count
       FROM user_books ub LEFT JOIN books b ON b.id=ub.book_id GROUP BY ub.user_id
     ) library ON library.user_id=u.id
+    LEFT JOIN user_heartbeat_coins h ON h.user_id=u.id
+    LEFT JOIN user_diamonds d ON d.user_id=u.id
+    LEFT JOIN user_rubies r ON r.user_id=u.id
     LEFT JOIN (SELECT user_id, COUNT(DISTINCT token) AS session_count FROM sessions GROUP BY user_id) s ON s.user_id=u.id
     ORDER BY last_active DESC, u.created_at DESC
   `).all();

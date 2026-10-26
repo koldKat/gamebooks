@@ -185,16 +185,17 @@ input, select, textarea { min-width: 0; max-width: 100%; }
   font-size: 0.8rem;
 }
 
-.admin-progress-tooltip { width: 280px; max-width: calc(100vw - 48px); white-space: normal; }
+.admin-progress-tooltip { width: 280px; max-width: calc(100vw - 48px); white-space: normal; font-size: 0.78rem; line-height: 1.35; }
 .admin-progress-tooltip > strong { display: block; overflow-wrap: anywhere; color: #e5e7eb; }
 .admin-progress-alias { color: #9ca3af; overflow-wrap: anywhere; }
 .admin-progress-facts { display: grid; grid-template-columns: minmax(0, 1fr) max-content; gap: 0.18rem 0.6rem; margin: 0.5rem 0 0; padding-top: 0.4rem; border-top: 1px solid #374151; font-variant-numeric: tabular-nums; }
 .admin-progress-facts dt { color: #9ca3af; }
-.admin-progress-facts dd { margin: 0; text-align: right; }
-.admin-progress-upgrades { margin-top: 0.5rem; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.admin-progress-facts dd { margin: 0; text-align: right; font-size: inherit; line-height: inherit; font-weight: 400; }
+.admin-progress-upgrades { margin-top: 0.5rem; border-collapse: collapse; font-size: inherit; line-height: inherit; font-variant-numeric: tabular-nums; }
 .admin-progress-upgrades caption { text-align: left; font-weight: 600; padding-bottom: 0.2rem; color: #e5e7eb; }
-.admin-progress-upgrades th, .admin-progress-upgrades td { padding: 0.15rem 0.2rem; font-size: 0.78rem; letter-spacing: normal; background: none; border: 0; }
-.admin-progress-upgrades th { text-align: left; font-weight: 400; }
+.admin-progress-upgrades caption, .admin-progress-upgrades th, .admin-progress-upgrades td { font-size: inherit; line-height: inherit; }
+.admin-progress-upgrades th, .admin-progress-upgrades td { padding: 0.15rem 0.2rem; letter-spacing: normal; background: none; border: 0; }
+.admin-progress-upgrades th { text-align: left; font-weight: 400; text-transform: none; }
 .admin-progress-upgrades td, .admin-progress-upgrades thead th:not(:first-child) { text-align: right; white-space: nowrap; }
 .admin-progress-upgrades tbody th { color: #d1d5db; }
 .admin-progress-section { margin: 0.45rem 0; }

@@ -25,7 +25,8 @@ test('user hover shows escaped normal and Job progression with independent progr
   const user={username:'<Reader>',level:3,title:'<Ranger>',xp:8000,levelXp:6000,nextLevelXp:10000,
     jobLevel:1,jobTitle:'Digger',jobXp:1500,jobLevelCap:8,xpBoostPct:12.5,
     xpBoostPurchased:4,bonusHeartbeatXp:7,bonusGcChancePurchased:3,bonusGcMintPurchased:5,
-    diamondDigPurchased:2,bonusUndos:1,bonusFastTravels:2};
+    diamondDigPurchased:2,bonusUndos:1,bonusFastTravels:2,
+    bronzeBalance:42,silverBalance:8,coinsBalance:123,diamondsBalance:13,rubiesBalance:17};
   const html=helper(user);
   assert.match(html,/&lt;Reader&gt;/);assert.match(html,/&lt;Ranger&gt;/);assert.ok(!html.includes('<Reader>'));
   assert.match(html,/Level 3/);assert.match(html,/Job Level 1/);assert.match(html,/Digger/);
@@ -36,6 +37,11 @@ test('user hover shows escaped normal and Job progression with independent progr
   assert.match(html,/Heartbeat XP<\/th><td>7<\/td><td>\+0.7 XP\/min/);
   assert.match(html,/Ruby Digging<\/th><td>2<\/td><td>\+0.2%/);
   assert.match(html,/Lucky Coin Chance<\/th><td>3<\/td><td>\+0.03%/);
+  assert.match(html,/Bronze coins<\/dt><dd class="val-bronze">42/);
+  assert.match(html,/Silver coins<\/dt><dd class="val-silver">8/);
+  assert.match(html,/GC balance<\/dt><dd class="val-amber">123/);
+  assert.match(html,/Rubies<\/dt><dd class="val-gem-red">13/);
+  assert.match(html,/Diamonds<\/dt><dd class="val-ruby">17/);
   assert.ok(!helper({}).includes('NaN'));
   const handlers={},tip={style:{},offsetWidth:300,offsetHeight:180};
   const source=readFileSync('admin/js/boot.js','utf8');
