@@ -201,11 +201,13 @@ export function renderBooksXpSummary(data, opts = {}) {
 
 // Separate progression: one point per recorded non-heartbeat event, without XP boosts.
 let _jobToken = null, _jobDisplayedXp = null, _jobTargetXp = null, _jobData = null;
+let _jobDisplayedRubyEvents = null, _jobTargetRubyEvents = null;
 let _jobFrame = null, _jobAnimationGeneration = 0;
 
 function _animateJobXp() {
-  if (_jobFrame !== null || _jobDisplayedXp === _jobTargetXp) return;
+  if (_jobFrame !== null || (_jobDisplayedXp === _jobTargetXp && _jobDisplayedRubyEvents === _jobTargetRubyEvents)) return;
   const from = _jobDisplayedXp, to = _jobTargetXp;
+  const fromRuby = _jobDisplayedRubyEvents, toRuby = _jobTargetRubyEvents;
   const level = Math.floor((-1 + Math.sqrt(1 + 8 * to / 1000)) / 2);
   const duration = Math.max(1, level) * XP_ANIM_MS_PER_LEVEL;
   const start = performance.now(), generation = _jobAnimationGeneration;
@@ -215,7 +217,9 @@ function _animateJobXp() {
     if (getToken() !== _jobToken) { renderJobXpSummary(null); return; }
     const progress = Math.min(1, Math.max(0, (now - start) / duration));
     _jobDisplayedXp = from + (to - from) * progress;
-    _renderJobXpSummary(_jobData, _jobDisplayedXp, true);
+    _jobDisplayedRubyEvents = _jobTargetRubyEvents === null ? null :
+      fromRuby !== null && toRuby !== null ? fromRuby + (toRuby - fromRuby) * progress : _jobTargetRubyEvents;
+    _renderJobXpSummary(_jobData, _jobDisplayedXp, true, _jobDisplayedRubyEvents);
     if (progress < 1) _jobFrame = requestAnimationFrame(step);
     else _animateJobXp();
   }
@@ -226,6 +230,7 @@ export function renderJobXpSummary(data) {
   const token = getToken();
   const visible = !!token && Number.isSafeInteger(data?.jobXp);
   const xp = visible ? Math.max(0, data.jobXp) : 0;
+  const rubyEvents = visible && Number.isSafeInteger(data?.diamondEventsUntilNext) ? Math.max(0, data.diamondEventsUntilNext) : null;
   _jobData = data;
   if (!visible || token !== _jobToken || _jobDisplayedXp === null || xp < _jobTargetXp) {
     if (_jobFrame !== null) cancelAnimationFrame(_jobFrame);
@@ -234,17 +239,20 @@ export function renderJobXpSummary(data) {
     _jobToken = visible ? token : null;
     _jobDisplayedXp = visible ? xp : null;
     _jobTargetXp = visible ? xp : null;
-    _renderJobXpSummary(data, xp, visible);
+    _jobDisplayedRubyEvents = _jobTargetRubyEvents = rubyEvents;
+    _renderJobXpSummary(data, xp, visible, rubyEvents);
     return;
   }
   _jobTargetXp = xp;
+  _jobTargetRubyEvents = rubyEvents;
+  if (_jobDisplayedRubyEvents === null || rubyEvents === null) _jobDisplayedRubyEvents = rubyEvents;
   // Retain the current tween on repeat snapshots; coalesce subsequent gains
   // into one next target instead of accumulating a queue for every SSE event.
-  _renderJobXpSummary(data, _jobDisplayedXp, true);
+  _renderJobXpSummary(data, _jobDisplayedXp, true, _jobDisplayedRubyEvents);
   _animateJobXp();
 }
 
-function _renderJobXpSummary(data, displayedXp, visible) {
+function _renderJobXpSummary(data, displayedXp, visible, displayedRubyEvents) {
   const xp = Math.floor(displayedXp);
   const level = Math.floor((-1 + Math.sqrt(1 + 8 * xp / 1000)) / 2);
   const { levelXp, nextLevelXp } = _xpLevelBounds(xp);
@@ -264,7 +272,7 @@ function _renderJobXpSummary(data, displayedXp, visible) {
       if (!rubyCost.hidden) rubyCost.textContent = `${Math.ceil(rate).toLocaleString()} EV / ruby`;
     }
     if (bar && visible && Number.isSafeInteger(data?.diamondEventsUntilNext)) {
-      const events = data.diamondEventsUntilNext;
+      const events = Math.max(0, Math.ceil(displayedRubyEvents ?? data.diamondEventsUntilNext));
       bar.setAttribute('data-tooltip', `${events.toLocaleString()} XP event${events === 1 ? '' : 's'} until next ruby`);
       if (nextRuby) nextRuby.textContent = `${events.toLocaleString()} EV to next ruby`;
     } else bar?.removeAttribute('data-tooltip');

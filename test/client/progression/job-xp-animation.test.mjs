@@ -23,7 +23,7 @@ test('Job XP loads immediately and animates later gains using job level rather t
   s.step(50);assert.match(s.elements.get('play-job-xp-label').innerHTML,/1,100 EV/);assert.equal(s.frames.size,0);
 });
 
-test('Job bars use the themed ruby countdown from the live snapshot, independently of animation',()=>{
+test('Job bars animate the themed ruby countdown alongside the displayed event count',()=>{
   const s=setup();s.render(1000,{diamondEventsUntilNext:432,diamondEventsPerDiamond:982.3});
   for(const prefix of ['books','play']){
     const el=s.elements.get(`${prefix}-job-xp`);
@@ -36,12 +36,43 @@ test('Job bars use the themed ruby countdown from the live snapshot, independent
     for(const suffix of ['-level','-title','-label'])assert.equal(s.elements.get(`${prefix}-job-xp${suffix}`)['data-tooltip'],undefined);
   }
   s.render(1100,{diamondEventsUntilNext:1});
+  assert.equal(s.elements.get('play-job-xp-next-ruby').textContent,'432 EV to next ruby');
+  s.step(50);
+  assert.equal(s.elements.get('play-job-xp-next-ruby').textContent,'217 EV to next ruby');
+  assert.equal(s.elements.get('play-job-xp-bar')['data-tooltip'],'217 XP events until next ruby');
+  s.step(50);
   assert.equal(s.elements.get('play-job-xp-bar')['data-tooltip'],'1 XP event until next ruby');
   assert.equal(s.elements.get('play-job-xp-next-ruby').textContent,'1 EV to next ruby');
   s.token(null);s.render(1100);
   assert.equal(s.elements.get('play-job-xp-bar')['data-tooltip'],undefined);
   assert.equal(s.elements.get('play-job-xp-next-ruby').hidden,true);
   assert.equal(s.elements.get('play-job-xp-ruby-cost').hidden,true);
+});
+
+test('ruby countdown changes share one animation frame and coalesce repeated SSE snapshots',()=>{
+  const s=setup();s.render(1000,{diamondEventsUntilNext:500});
+  s.render(1100,{diamondEventsUntilNext:400});s.step(50);
+  for(const prefix of ['books','play'])assert.equal(s.elements.get(`${prefix}-job-xp-next-ruby`).textContent,'450 EV to next ruby');
+  s.render(1200,{diamondEventsUntilNext:300});s.render(1300,{diamondEventsUntilNext:200});
+  assert.equal(s.frames.size,1);assert.equal(s.elements.get('play-job-xp-next-ruby').textContent,'450 EV to next ruby');
+  s.step(50);assert.equal(s.elements.get('play-job-xp-next-ruby').textContent,'400 EV to next ruby');
+  s.step(50);assert.equal(s.elements.get('play-job-xp-next-ruby').textContent,'300 EV to next ruby');
+  s.step(50);assert.equal(s.elements.get('play-job-xp-next-ruby').textContent,'200 EV to next ruby');assert.equal(s.frames.size,0);
+});
+
+test('a digging-rate change animates the countdown even when Job XP stays the same',()=>{
+  const s=setup();s.render(1000,{diamondEventsUntilNext:500});s.render(1000,{diamondEventsUntilNext:450});
+  s.step(50);assert.equal(s.elements.get('play-job-xp-next-ruby').textContent,'475 EV to next ruby');
+  assert.match(s.elements.get('play-job-xp-label').innerHTML,/1,000 EV/);
+  s.step(50);assert.equal(s.elements.get('play-job-xp-next-ruby').textContent,'450 EV to next ruby');assert.equal(s.frames.size,0);
+});
+
+test('missing ruby data and logout do not retain a countdown animation',()=>{
+  const s=setup();s.render(1000,{diamondEventsUntilNext:500});s.render(1100,{diamondEventsUntilNext:400});
+  s.step(50);s.render(1100);s.step(50);assert.equal(s.frames.size,0);
+  assert.equal(s.elements.get('play-job-xp-next-ruby').hidden,true);
+  s.render(1200,{diamondEventsUntilNext:300});s.token(null);s.step(50);
+  assert.equal(s.frames.size,0);assert.equal(s.elements.get('play-job-xp-next-ruby').hidden,true);
 });
 
 test('repeated SSE snapshots preserve the tween and subsequent gains use one pending target',()=>{
