@@ -9,12 +9,17 @@ export {encounterTargets};
 export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
   if (!hero || !Array.isArray(enemies) || !enemies.length || enemies.length > 100) throw new RangeError('Invalid combatants');
   const player = {
-    hp:integer(hero.hp, 1), maxHp:integer(hero.maxHp, 1), constitution:integer(hero.constitution, 0, 100),
+    hp:integer(hero.hp, rules.restoreHeroHp===true?0:1), maxHp:integer(hero.maxHp, 1), constitution:integer(hero.constitution, 0, 100),
     attackBonus:integer(hero.attackBonus ?? 0, -100, 100), defenceBonus:integer(hero.defenceBonus ?? 0, -100, 100),
     damageReduction:integer(hero.damageReduction ?? 0,0,100),
   };
   if (player.hp > player.maxHp) throw new RangeError('Hit points exceed maximum');
   const config = clone(rules);
+  if(config.restoreHeroHp!==undefined){
+    if(config.restoreHeroHp!==true)throw new RangeError('Invalid entry recovery');
+    player.hp=player.maxHp;
+  }
+  if(config.mechanics?.hitCounters)player.age=integer(hero.age,0,1000000);
   if (config.roundLimit !== undefined) integer(config.roundLimit, 1, 1000);
   if (config.nonfatalLossDamage !== undefined) integer(config.nonfatalLossDamage);
   if (config.roundResult && !['compareDamage','survive'].includes(config.roundResult)) throw new RangeError('Unknown round limit');
@@ -24,7 +29,10 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
     if (!Array.isArray(enemy.attacks) || !enemy.attacks.length && !config.mechanics?.abilityOutcome && !config.mechanics?.net?.casters.includes(index) || enemy.attacks.length > 10) throw new RangeError('Missing enemy attacks');
     return {
       name:String(enemy.name ?? enemy.displayName ?? '').slice(0,200),
-      hp:integer(enemy.hp, 1), maxHp:enemy.hp, toBeHit:integer(enemy.toBeHit, 3, 18),
+      // Counter encounters have no printed HP. The 1/0 flag only participates
+      // in existing availability checks; hitsTaken is their actual progress.
+      hp:config.mechanics?.hitCounters?1:integer(enemy.hp, 1), maxHp:config.mechanics?.hitCounters?1:enemy.hp,
+      ...(config.mechanics?.hitCounters?{hitsTaken:0,retired:false}:{}),toBeHit:integer(enemy.toBeHit, 3, 18),
       attacks:enemy.attacks.map(attack => {
         const result = config.mechanics?.vessel && attack.vesselHit ? {vesselHit:true} : {damage:damageSpec(attack.damage)};
         if (config.mechanics && attack.check === 'constitution') result.check = attack.check;
@@ -54,8 +62,8 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
 }
 
 // Pure transitions make an invalid roll/action harmless to the saved run.
-export function crossroadsRound(original, {target = 0, allyTarget = null, healing = null, action = 'attack', useGauntlet = false, roll = () => Math.floor(Math.random()*6)+1} = {}) {
-  if (original?.rulesVersion === 2) return encounterRound(original,{target,allyTarget,healing,action,useGauntlet,roll});
+export function crossroadsRound(original, {target = 0, allyTarget = null, healing = null, action = 'attack', sourceExitIndex = 0, useGauntlet = false, roll = () => Math.floor(Math.random()*6)+1} = {}) {
+  if (original?.rulesVersion === 2) return encounterRound(original,{target,allyTarget,healing,action,sourceExitIndex,useGauntlet,roll});
   if (action!=='attack') throw new RangeError('Unsupported action');
   if (original?.status !== 'active' || original.rulesVersion !== 1) throw new RangeError('No active fight');
   const fight = clone(original);

@@ -239,6 +239,12 @@ gamebooks/
                          weapon retrieval before fencing, with explicit setup for unprinted damage.
                          Retreat thresholds pause combat for pursuit and optional subdual;
                          group morale and nonlethal surrender floors preserve actual injuries.
+                         Optional hit counters track tiring hits and aging separately from HP;
+                         counter encounters use an internal availability flag, not invented HP.
+                         Disappearing opponents reuse one attack roll to determine whether the
+                         hero can strike that round. Entry recovery runs only when a fight starts.
+                         Printed item exits may offer multiple destinations without modifying
+                         universal equipment or inventory.
                          Morale outcomes can make surviving opponents flee without counting
                          them as defeated or granting an extra attack after the outcome.
                          V1 saved fights keep their original transitions.

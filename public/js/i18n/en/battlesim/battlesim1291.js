@@ -26,6 +26,7 @@ const labels = {
   'weaponChoice':'Weapon',
   'escapeCheck':'Try escape',
   'sourceExit':'Use talisman',
+  sourceItem:'Item you have',
   'useGauntlet':'Use gauntlet this attack',
   'healingSpell':'Healing spell (D3)',
   'misdirection':'Misdirection',

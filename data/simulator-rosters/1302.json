@@ -1,0 +1,1379 @@
+{
+  "schemaVersion": 1,
+  "bookId": 1302,
+  "family": "crossroads",
+  "sourceSha256": "677af281fe06d99759176d2cfcc328fa985f925058bcb4bef18df000e200fb1d",
+  "rosterComplete": true,
+  "expectedEncounterCount": 9,
+  "source": "All nine printed combat groups. Box elders use aging/tiring-hit counters, not HP; the Ghost word duel remains its printed Intelligence check. Universal inventory and equipment are unchanged.",
+  "enemies": [
+    {
+      "key": "7-0",
+      "name": "Switchback",
+      "attack": 12,
+      "defense": 11,
+      "hp": 9,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "7",
+          "label": "Switchback (§7)",
+          "enemies": [
+            {
+              "name": "Switchback",
+              "hp": 9,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 12,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "11",
+            "lossSection": "5",
+            "sourceNotes": [
+              "Blades and tire iron each do 1 D6. The tire iron has no additional numerical fatigue penalty."
+            ]
+          },
+          "customRules": {},
+          "sourcePages": [
+            82
+          ],
+          "printedRules": [
+            "Switchback: to hit Max 12; to be hit 11; HP 9",
+            "Its blades do 1 D6 points of damage.",
+            "Max does 1 D6 points of damage with the tire iron.",
+            "If Max defeats the switchback, turn to section 11.",
+            "If it defeats him, turn to section 5."
+          ]
+        }
+      }
+    },
+    {
+      "key": "19-0",
+      "name": "Time Being",
+      "attack": 12,
+      "defense": 14,
+      "hp": 12,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "19",
+          "label": "Time Being (§19)",
+          "enemies": [
+            {
+              "name": "Time Being",
+              "hp": 12,
+              "toBeHit": 14,
+              "attacks": [
+                {
+                  "toHit": 12,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0,
+                    "divideBy": 2
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "12",
+            "lossSection": "20",
+            "sourceNotes": [
+              "Fists and feet do half 1 D6, rounded up. A to-hit roll of 15 or higher makes the Time Being vanish after striking, so Max cannot strike in that round. The enemy roll is determined once before Max acts and reused for its attack. Max may surrender before reaching zero HP: section 17."
+            ],
+            "mechanics": {
+              "vanish": {
+                "enemy": 0,
+                "threshold": 15
+              },
+              "surrender": {
+                "section": "17"
+              }
+            }
+          },
+          "customRules": {},
+          "sourcePages": [
+            124
+          ],
+          "printedRules": [
+            "Time Being: to hit Max 12; to be hit 14; HP 12",
+            "His fists and feet do ½ D6 points worth of damage (in case of an odd number round upward to the next whole.) Special: If the Time Being rolls 15 or better to hit, he vanishes after striking, and Max will be unable to strike him in that round.",
+            "Max does 1 D6 worth of damage with his fists.",
+            "If Max wins, turn to section 12.",
+            "If he loses, turn to section 20.",
+            "If he chooses to surrender before he runs out of hit points, turn to section 17."
+          ]
+        }
+      }
+    },
+    {
+      "key": "20-0",
+      "name": "Switchback",
+      "attack": 13,
+      "defense": 10,
+      "hp": 9,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "20",
+          "label": "Switchback (§20)",
+          "enemies": [
+            {
+              "name": "Switchback",
+              "hp": 9,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 13,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "13",
+            "lossSection": "16",
+            "sourceNotes": [
+              "On entering this encounter, restore Max to his full complement of HP once. Blades and tire iron each do 1 D6."
+            ],
+            "restoreHeroHp": true
+          },
+          "customRules": {},
+          "sourcePages": [
+            127,
+            128
+          ],
+          "printedRules": [
+            "Switchback: to hit Max 13; to be hit 10; HP 9",
+            "Its blades do 1 D6 points of damage.",
+            "Max does 1 D6 points of damage with the tire iron.",
+            "If Max loses, turn to section 16.",
+            "If Max wins turn to section 13."
+          ]
+        }
+      }
+    },
+    {
+      "key": "32-0",
+      "name": "Box elder 1",
+      "attack": 11,
+      "defense": 9,
+      "hp": null,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": "32",
+          "label": "Box elder (§32)",
+          "enemies": [
+            {
+              "name": "Box elder 1",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 2",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 3",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 0,
+              "add": 0
+            },
+            "winSection": "39",
+            "lossSection": "34",
+            "sourceNotes": [
+              "Each successful elder hit ages Max twenty years; three total hits make him too old to fight. Two successful tire-iron hits retire an elder. Count hits, not HP damage. After winning, follow the book’s Fountain of Youth instructions to restore lost years."
+            ],
+            "mechanics": {
+              "hitCounters": {
+                "hitsToRetire": 2,
+                "hitsToLose": 3,
+                "yearsPerHit": 20
+              }
+            }
+          },
+          "customRules": {},
+          "sourcePages": [
+            155,
+            156
+          ],
+          "printedRules": [
+            "Box elder: to hit Max 11; to be hit 9; HP Special",
+            "When a box elder hits Max, he is aged twenty years. If he is hit three times, he becomes too old to fight. Max uses the tire iron to fight. If he successfully hits any box elder twice, it tires out and goes away to have a nap.",
+            "If Max wins, turn to section 39.",
+            "If Max loses turn to section 34."
+          ]
+        }
+      }
+    },
+    {
+      "key": "32-1",
+      "name": "Box elder 2",
+      "attack": 11,
+      "defense": 9,
+      "hp": null,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": "32",
+          "label": "Box elder (§32)",
+          "enemies": [
+            {
+              "name": "Box elder 1",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 2",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 3",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 0,
+              "add": 0
+            },
+            "winSection": "39",
+            "lossSection": "34",
+            "sourceNotes": [
+              "Each successful elder hit ages Max twenty years; three total hits make him too old to fight. Two successful tire-iron hits retire an elder. Count hits, not HP damage. After winning, follow the book’s Fountain of Youth instructions to restore lost years."
+            ],
+            "mechanics": {
+              "hitCounters": {
+                "hitsToRetire": 2,
+                "hitsToLose": 3,
+                "yearsPerHit": 20
+              }
+            }
+          },
+          "customRules": {},
+          "sourcePages": [
+            155,
+            156
+          ],
+          "printedRules": [
+            "Box elder: to hit Max 11; to be hit 9; HP Special",
+            "When a box elder hits Max, he is aged twenty years. If he is hit three times, he becomes too old to fight. Max uses the tire iron to fight. If he successfully hits any box elder twice, it tires out and goes away to have a nap.",
+            "If Max wins, turn to section 39.",
+            "If Max loses turn to section 34."
+          ]
+        }
+      }
+    },
+    {
+      "key": "32-2",
+      "name": "Box elder 3",
+      "attack": 11,
+      "defense": 9,
+      "hp": null,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": "32",
+          "label": "Box elder (§32)",
+          "enemies": [
+            {
+              "name": "Box elder 1",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 2",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 3",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 0,
+              "add": 0
+            },
+            "winSection": "39",
+            "lossSection": "34",
+            "sourceNotes": [
+              "Each successful elder hit ages Max twenty years; three total hits make him too old to fight. Two successful tire-iron hits retire an elder. Count hits, not HP damage. After winning, follow the book’s Fountain of Youth instructions to restore lost years."
+            ],
+            "mechanics": {
+              "hitCounters": {
+                "hitsToRetire": 2,
+                "hitsToLose": 3,
+                "yearsPerHit": 20
+              }
+            }
+          },
+          "customRules": {},
+          "sourcePages": [
+            155,
+            156
+          ],
+          "printedRules": [
+            "Box elder: to hit Max 11; to be hit 9; HP Special",
+            "When a box elder hits Max, he is aged twenty years. If he is hit three times, he becomes too old to fight. Max uses the tire iron to fight. If he successfully hits any box elder twice, it tires out and goes away to have a nap.",
+            "If Max wins, turn to section 39.",
+            "If Max loses turn to section 34."
+          ]
+        }
+      }
+    },
+    {
+      "key": "37-0",
+      "name": "Marsh samphire 1",
+      "attack": 10,
+      "defense": 13,
+      "hp": 12,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "37",
+          "label": "Marsh samphire (§37)",
+          "enemies": [
+            {
+              "name": "Marsh samphire 1",
+              "hp": 12,
+              "toBeHit": 13,
+              "attacks": [
+                {
+                  "toHit": 10,
+                  "damage": {
+                    "dice": 1,
+                    "add": 2
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Marsh samphire 2",
+              "hp": 12,
+              "toBeHit": 13,
+              "attacks": [
+                {
+                  "toHit": 10,
+                  "damage": {
+                    "dice": 1,
+                    "add": 2
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 1
+            },
+            "winSection": "57",
+            "lossSection": "61",
+            "sourceNotes": [
+              "Both samphires on Max’s side attack. Their thorns do 1 D6+2; the icicle does 1 D6+1. Fortinbrass handles the other side without extra ally rolls."
+            ]
+          },
+          "customRules": {},
+          "sourcePages": [
+            186,
+            187
+          ],
+          "printedRules": [
+            "Marsh samphire: to hit Max 10; to be hit 13; HP 12",
+            "Samphires are living marshweed that have long sharp thorns through which they draw out the blood of their prey. Samphires do 1 D6+2 points of damage per hit.",
+            "Max does 1 D6+ 1 with the icicle.",
+            "If Max wins, turn to section 57.",
+            "If Max loses, turn to section 61."
+          ]
+        }
+      }
+    },
+    {
+      "key": "37-1",
+      "name": "Marsh samphire 2",
+      "attack": 10,
+      "defense": 13,
+      "hp": 12,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "37",
+          "label": "Marsh samphire (§37)",
+          "enemies": [
+            {
+              "name": "Marsh samphire 1",
+              "hp": 12,
+              "toBeHit": 13,
+              "attacks": [
+                {
+                  "toHit": 10,
+                  "damage": {
+                    "dice": 1,
+                    "add": 2
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Marsh samphire 2",
+              "hp": 12,
+              "toBeHit": 13,
+              "attacks": [
+                {
+                  "toHit": 10,
+                  "damage": {
+                    "dice": 1,
+                    "add": 2
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 1
+            },
+            "winSection": "57",
+            "lossSection": "61",
+            "sourceNotes": [
+              "Both samphires on Max’s side attack. Their thorns do 1 D6+2; the icicle does 1 D6+1. Fortinbrass handles the other side without extra ally rolls."
+            ]
+          },
+          "customRules": {},
+          "sourcePages": [
+            186,
+            187
+          ],
+          "printedRules": [
+            "Marsh samphire: to hit Max 10; to be hit 13; HP 12",
+            "Samphires are living marshweed that have long sharp thorns through which they draw out the blood of their prey. Samphires do 1 D6+2 points of damage per hit.",
+            "Max does 1 D6+ 1 with the icicle.",
+            "If Max wins, turn to section 57.",
+            "If Max loses, turn to section 61."
+          ]
+        }
+      }
+    },
+    {
+      "key": "40-0",
+      "name": "Box elder 1",
+      "attack": 11,
+      "defense": 9,
+      "hp": null,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": "40",
+          "label": "Box elder (§40)",
+          "enemies": [
+            {
+              "name": "Box elder 1",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 2",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 3",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 0,
+              "add": 0
+            },
+            "winSection": "33",
+            "lossSection": "42",
+            "sourceNotes": [
+              "Each successful elder hit ages Max twenty years; three total hits make him too old to fight. Two successful tire-iron hits retire an elder. Count hits, not HP damage. After winning, follow the book’s Fountain of Youth instructions to restore lost years."
+            ],
+            "mechanics": {
+              "hitCounters": {
+                "hitsToRetire": 2,
+                "hitsToLose": 3,
+                "yearsPerHit": 20
+              }
+            }
+          },
+          "customRules": {},
+          "sourcePages": [
+            196,
+            197
+          ],
+          "printedRules": [
+            "Box elder: to hit Max 11; to be hit 9; HP Special",
+            "When a box elder hits Max, he is aged twenty years. If he is hit three times, he becomes too old to fight.",
+            "Max uses the tire iron to fight. If he successfully hits any box elder twice, it tires out and goes away to have a nap.",
+            "If Max wins, turn to section 33.",
+            "If Max loses, turn to section 42."
+          ]
+        }
+      }
+    },
+    {
+      "key": "40-1",
+      "name": "Box elder 2",
+      "attack": 11,
+      "defense": 9,
+      "hp": null,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": "40",
+          "label": "Box elder (§40)",
+          "enemies": [
+            {
+              "name": "Box elder 1",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 2",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 3",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 0,
+              "add": 0
+            },
+            "winSection": "33",
+            "lossSection": "42",
+            "sourceNotes": [
+              "Each successful elder hit ages Max twenty years; three total hits make him too old to fight. Two successful tire-iron hits retire an elder. Count hits, not HP damage. After winning, follow the book’s Fountain of Youth instructions to restore lost years."
+            ],
+            "mechanics": {
+              "hitCounters": {
+                "hitsToRetire": 2,
+                "hitsToLose": 3,
+                "yearsPerHit": 20
+              }
+            }
+          },
+          "customRules": {},
+          "sourcePages": [
+            196,
+            197
+          ],
+          "printedRules": [
+            "Box elder: to hit Max 11; to be hit 9; HP Special",
+            "When a box elder hits Max, he is aged twenty years. If he is hit three times, he becomes too old to fight.",
+            "Max uses the tire iron to fight. If he successfully hits any box elder twice, it tires out and goes away to have a nap.",
+            "If Max wins, turn to section 33.",
+            "If Max loses, turn to section 42."
+          ]
+        }
+      }
+    },
+    {
+      "key": "40-2",
+      "name": "Box elder 3",
+      "attack": 11,
+      "defense": 9,
+      "hp": null,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": "40",
+          "label": "Box elder (§40)",
+          "enemies": [
+            {
+              "name": "Box elder 1",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 2",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 3",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 0,
+              "add": 0
+            },
+            "winSection": "33",
+            "lossSection": "42",
+            "sourceNotes": [
+              "Each successful elder hit ages Max twenty years; three total hits make him too old to fight. Two successful tire-iron hits retire an elder. Count hits, not HP damage. After winning, follow the book’s Fountain of Youth instructions to restore lost years."
+            ],
+            "mechanics": {
+              "hitCounters": {
+                "hitsToRetire": 2,
+                "hitsToLose": 3,
+                "yearsPerHit": 20
+              }
+            }
+          },
+          "customRules": {},
+          "sourcePages": [
+            196,
+            197
+          ],
+          "printedRules": [
+            "Box elder: to hit Max 11; to be hit 9; HP Special",
+            "When a box elder hits Max, he is aged twenty years. If he is hit three times, he becomes too old to fight.",
+            "Max uses the tire iron to fight. If he successfully hits any box elder twice, it tires out and goes away to have a nap.",
+            "If Max wins, turn to section 33.",
+            "If Max loses, turn to section 42."
+          ]
+        }
+      }
+    },
+    {
+      "key": "50-0",
+      "name": "Box elder 1",
+      "attack": 11,
+      "defense": 9,
+      "hp": null,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": "50",
+          "label": "Box elder (§50)",
+          "enemies": [
+            {
+              "name": "Box elder 1",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 2",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 3",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 0,
+              "add": 0
+            },
+            "winSection": "45",
+            "lossSection": "38",
+            "sourceNotes": [
+              "Each successful elder hit ages Max twenty years; three total hits make him too old to fight. Two successful tire-iron hits retire an elder. Count hits, not HP damage. After winning, follow the book’s Fountain of Youth instructions to restore lost years.",
+              "Only if you have the Two Minute Replay, use the printed item to continue at section 36."
+            ],
+            "mechanics": {
+              "hitCounters": {
+                "hitsToRetire": 2,
+                "hitsToLose": 3,
+                "yearsPerHit": 20
+              },
+              "sourceExit": {
+                "section": "36"
+              }
+            }
+          },
+          "customRules": {},
+          "sourcePages": [
+            221
+          ],
+          "printedRules": [
+            "Box elder: to hit Max 11; to be hit 9; HP Special",
+            "When a box elder hits Max, he is aged twenty years. If he is hit three times, he becomes too old to fight.",
+            "Max uses the tire iron to fight. If he successfully hits any box elder twice, it tires out and goes away to have a nap.",
+            "If Max wins, turn to section 45.",
+            "If Max loses, turn to section 38.",
+            "If Max has the Two Minute Replay and chooses to use it, turn to section 36."
+          ]
+        }
+      }
+    },
+    {
+      "key": "50-1",
+      "name": "Box elder 2",
+      "attack": 11,
+      "defense": 9,
+      "hp": null,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": "50",
+          "label": "Box elder (§50)",
+          "enemies": [
+            {
+              "name": "Box elder 1",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 2",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 3",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 0,
+              "add": 0
+            },
+            "winSection": "45",
+            "lossSection": "38",
+            "sourceNotes": [
+              "Each successful elder hit ages Max twenty years; three total hits make him too old to fight. Two successful tire-iron hits retire an elder. Count hits, not HP damage. After winning, follow the book’s Fountain of Youth instructions to restore lost years.",
+              "Only if you have the Two Minute Replay, use the printed item to continue at section 36."
+            ],
+            "mechanics": {
+              "hitCounters": {
+                "hitsToRetire": 2,
+                "hitsToLose": 3,
+                "yearsPerHit": 20
+              },
+              "sourceExit": {
+                "section": "36"
+              }
+            }
+          },
+          "customRules": {},
+          "sourcePages": [
+            221
+          ],
+          "printedRules": [
+            "Box elder: to hit Max 11; to be hit 9; HP Special",
+            "When a box elder hits Max, he is aged twenty years. If he is hit three times, he becomes too old to fight.",
+            "Max uses the tire iron to fight. If he successfully hits any box elder twice, it tires out and goes away to have a nap.",
+            "If Max wins, turn to section 45.",
+            "If Max loses, turn to section 38.",
+            "If Max has the Two Minute Replay and chooses to use it, turn to section 36."
+          ]
+        }
+      }
+    },
+    {
+      "key": "50-2",
+      "name": "Box elder 3",
+      "attack": 11,
+      "defense": 9,
+      "hp": null,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": "50",
+          "label": "Box elder (§50)",
+          "enemies": [
+            {
+              "name": "Box elder 1",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 2",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            },
+            {
+              "name": "Box elder 3",
+              "hp": null,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 0,
+                    "add": 0
+                  }
+                }
+              ],
+              "hitCounter": true
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 0,
+              "add": 0
+            },
+            "winSection": "45",
+            "lossSection": "38",
+            "sourceNotes": [
+              "Each successful elder hit ages Max twenty years; three total hits make him too old to fight. Two successful tire-iron hits retire an elder. Count hits, not HP damage. After winning, follow the book’s Fountain of Youth instructions to restore lost years.",
+              "Only if you have the Two Minute Replay, use the printed item to continue at section 36."
+            ],
+            "mechanics": {
+              "hitCounters": {
+                "hitsToRetire": 2,
+                "hitsToLose": 3,
+                "yearsPerHit": 20
+              },
+              "sourceExit": {
+                "section": "36"
+              }
+            }
+          },
+          "customRules": {},
+          "sourcePages": [
+            221
+          ],
+          "printedRules": [
+            "Box elder: to hit Max 11; to be hit 9; HP Special",
+            "When a box elder hits Max, he is aged twenty years. If he is hit three times, he becomes too old to fight.",
+            "Max uses the tire iron to fight. If he successfully hits any box elder twice, it tires out and goes away to have a nap.",
+            "If Max wins, turn to section 45.",
+            "If Max loses, turn to section 38.",
+            "If Max has the Two Minute Replay and chooses to use it, turn to section 36."
+          ]
+        }
+      }
+    },
+    {
+      "key": "82-0",
+      "name": "Zombie Chief",
+      "attack": 12,
+      "defense": 9,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "82",
+          "label": "Zombie Chief (§82)",
+          "enemies": [
+            {
+              "name": "Zombie Chief",
+              "hp": 10,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 12,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0,
+                    "divideBy": 2
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 1
+            },
+            "winSection": "91",
+            "lossSection": "85",
+            "sourceNotes": [
+              "The club does half 1 D6 rounded up, and the icicle does 1 D6+1.",
+              "Use a printed item only if you have it in the Hope Chest."
+            ],
+            "mechanics": {
+              "sourceExit": {
+                "options": [
+                  {
+                    "label": "Daytime Cereals: section 87",
+                    "section": "87"
+                  },
+                  {
+                    "label": "Two Minute Replay: section 89",
+                    "section": "89"
+                  }
+                ]
+              }
+            }
+          },
+          "customRules": {},
+          "sourcePages": [
+            287
+          ],
+          "printedRules": [
+            "Zombie Chief: to hit Max 12; to be hit 9; HP 10",
+            "Max does 1 D6+ 1 damage with the icicle.",
+            "The Zombie Chief does 1-3 damage with his club. (Roll 1 D6, divide in half, round up to next largest number.)",
+            "If Max wins, turn to section 91.",
+            "If Max loses, turn to section 85.",
+            "If Max has the Daytime Cereals and wants to use them, turn to section 87.",
+            "If Max has the Two Minute Replay and wants to use it, turn to section 89."
+          ]
+        }
+      }
+    },
+    {
+      "key": "89-0",
+      "name": "Zombie Chief",
+      "attack": 12,
+      "defense": 9,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "89",
+          "label": "Zombie Chief (§89)",
+          "enemies": [
+            {
+              "name": "Zombie Chief",
+              "hp": 10,
+              "toBeHit": 9,
+              "attacks": [
+                {
+                  "toHit": 12,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0,
+                    "divideBy": 2
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 1
+            },
+            "winSection": "91",
+            "lossSection": "85",
+            "sourceNotes": [
+              "The club does half 1 D6 rounded up, and the icicle does 1 D6+1.",
+              "The replay gives no healing or HP reset. Keep Max’s current HP."
+            ]
+          },
+          "customRules": {},
+          "sourcePages": [
+            296,
+            297
+          ],
+          "printedRules": [
+            "Zombie Chief: to hit Max 12; to be hit 9; HP 10",
+            "Max does 1 D6+1 damage with the icicle.",
+            "The Zombie Chief does 1-3 damage with his club. (Roll 1 D6, divide in half, round up to next largest number.)",
+            "If Max wins, turn to section 91.",
+            "If Max loses, turn to section 85."
+          ]
+        }
+      }
+    }
+  ]
+}

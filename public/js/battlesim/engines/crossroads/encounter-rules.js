@@ -10,6 +10,8 @@ export function validateEncounterRules(rules,count) {
   const change = value => integer(value,-100,100);
   const check = value => { if (!abilities.includes(value)) throw new RangeError('Unknown ability'); };
   if(rules.resources)validateResources(rules.resources);
+  if(rules.hitCounters){integer(rules.hitCounters.hitsToRetire,1,100);integer(rules.hitCounters.hitsToLose,1,100);integer(rules.hitCounters.yearsPerHit,1,100);}
+  if(rules.vanish){index(rules.vanish.enemy);integer(rules.vanish.threshold,3,18);}
   if(rules.enemyOpeningDamage){index(rules.enemyOpeningDamage.enemy);damageSpec(rules.enemyOpeningDamage.damage);}
   if(rules.reducedHeroDamage){integer(rules.reducedHeroDamage.rounds,1,1000);integer(rules.reducedHeroDamage.divisor,2,100);}
   if(rules.enemyAttackBonus!==undefined)change(rules.enemyAttackBonus);
@@ -140,7 +142,7 @@ export function encounterTargets(fight,round = (fight?.round ?? 0)+1) {
   return fight?.rules.mechanics?.orderedTargets ? available.slice(0,1) : available;
 }
 
-export function encounterRound(original,{target = 0,allyTarget = null,healing = null,action = 'attack',useGauntlet = false,roll = () => Math.floor(Math.random()*6)+1} = {}) {
+export function encounterRound(original,{target = 0,allyTarget = null,healing = null,action = 'attack',sourceExitIndex = 0,useGauntlet = false,roll = () => Math.floor(Math.random()*6)+1} = {}) {
   const partingShot=action==='partingShot'&&original?.status==='win'&&original.rules.mechanics?.partingShot&&original.round>=original.rules.roundLimit&&!original.encounter?.partingShotUsed;
   if ((original?.status !== 'active'&&!partingShot) || original.rulesVersion !== 2) throw new RangeError('No active fight');
   const fight=structuredClone(original),rules=fight.rules.mechanics;
@@ -186,7 +188,9 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
   };
   if(sourceExit){
     if(!rules.sourceExit)throw new RangeError('No source item available');
-    state.sourceExitUsed=true;route('escaped',rules.sourceExit.section);return fight;
+    const exits=rules.sourceExit.options;
+    if(exits)integer(sourceExitIndex,0,exits.length-1);
+    state.sourceExitUsed=true;route('escaped',exits?exits[sourceExitIndex].section:rules.sourceExit.section);return fight;
   }
   const afterArmour=amount=>Math.max(0,amount-(rules.guardLethalDamageReduction&&fight.hero.hp-amount<0?0:fight.hero.damageReduction??0));
   if (rules.vessel && state.vesselHits===undefined) state.vesselHits=rules.vessel.initialHits;
@@ -277,6 +281,11 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
     const enemy=fight.enemies[index];
     const values=automatic ? [] : dice(3,roll),total=values.reduce((sum,value)=>sum+value,fight.hero.attackBonus+attackBonus+(ally?0:rules.heroAttackBonus ?? 0));
     const hit=automatic || total>=enemy.toBeHit+hitChange(index);
+    if(rules.hitCounters&&!ally){
+      if(hit){enemy.hitsTaken++;if(enemy.hitsTaken>=rules.hitCounters.hitsToRetire){enemy.retired=true;enemy.hp=0;}}
+      fight.events.push({kind:'counterAttack',name:enemy.name,dice:values,total,hit,hits:enemy.hitsTaken,max:rules.hitCounters.hitsToRetire,retired:enemy.retired});
+      announceDeaths();return hit;
+    }
     const result=hit ? damage(fight.weaponDamage,roll) : {dice:[],amount:0};
     let amount=Math.max(0,result.amount*multiplier+(hit&&ally ? rules.ally.damageBonus : 0)+(hit&&!ally?resourceDamage(fight):0));
     if(!ally&&rules.reducedHeroDamage&&round<=rules.reducedHeroDamage.rounds)amount=Math.floor(amount/rules.reducedHeroDamage.divisor);
@@ -370,6 +379,18 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
       fight.events.push({kind:'disarmed',name:fight.enemies[rules.disarm.enemy].name});
     }
   }
+  // Determine the disappearing opponent's roll before the hero's action,
+  // then reuse it for the attack. This preserves hero-first combat on rolls
+  // without disappearance, without undoing a hit or rolling twice.
+  let vanishRoll=null;
+  if(rules.vanish&&fight.enemies[rules.vanish.enemy].hp>0){
+    const index=rules.vanish.enemy,enemy=fight.enemies[index],values=dice(3,roll);
+    const total=values.reduce((sum,value)=>sum+value,-resourceDefence(fight,index,enemy.attacks[0])+(rules.enemyAttackBonus??0));
+    vanishRoll={index,values,total};
+    if(total>=rules.vanish.threshold){
+      skipHero=true;fight.events.push({kind:'vanished',name:enemy.name,dice:values,total});
+    }
+  }
   if (healing !== null) {
     const restored=action==='healingSpell'?Math.min(healing,fight.hero.maxHp-fight.hero.hp):consumeHealing(fight.hero,resources,healing);
     fight.hero.hp+=restored;fight.events.push({kind:'healing',amount:restored});
@@ -437,9 +458,15 @@ export function encounterRound(original,{target = 0,allyTarget = null,healing = 
         if (attack.check==='constitution') {
           values=dice(3,roll);total=values.reduce((sum,value)=>sum+value,0);hit=total>fight.hero.constitution;
         } else {
-          values=dice(3,roll);total=values.reduce((sum,value)=>sum+value,openingEnemyTurn?.ignoreDefence?0:-resourceDefence(fight,index,attack)+(rules.enemyAttackBonus??0));hit=total>=attack.toHit+attackChange(index);
+          values=vanishRoll?.index===index?vanishRoll.values:dice(3,roll);total=values.reduce((sum,value)=>sum+value,openingEnemyTurn?.ignoreDefence?0:-resourceDefence(fight,index,attack)+(rules.enemyAttackBonus??0));hit=total>=attack.toHit+attackChange(index);
         }
         previousHit=hit;
+        if(rules.hitCounters){
+          if(hit){state.agingHits=(state.agingHits??0)+1;fight.hero.age+=rules.hitCounters.yearsPerHit;}
+          fight.events.push({kind:'agingAttack',name:enemy.name,dice:values,total,hit,hits:state.agingHits??0,max:rules.hitCounters.hitsToLose,age:fight.hero.age});
+          if((state.agingHits??0)>=rules.hitCounters.hitsToLose){finish(fight,'loss');return fight;}
+          continue;
+        }
         if(hit&&rules.duplicates&&round<=rules.duplicates.rounds){
           const selection=dice(1,roll);
           if(!rules.duplicates.hitHeroOn.includes(selection[0])){

@@ -21,6 +21,7 @@ export function createCrossroadsState(definition, getContext) {
       const fight = data.fight;
       if (fight && data.character) {
         data.character.hp = fight.status === 'active' && fight.rules.nonfatal ? fight.startingHp : fight.hero.hp;
+        if(fight.rules.mechanics?.hitCounters)data.character.age=fight.hero.age;
         for(const field of resourceFields(fight.rules.mechanics?.resources))data.character[field]=fight.hero[field];
         if (!fight.recorded && ['win','loss','draw'].includes(fight.status)) {
           fight.recorded = true;
