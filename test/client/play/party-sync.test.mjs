@@ -19,7 +19,7 @@ function setup() {
     const button = { classList: { add() {}, remove() {} }, innerHTML: '' };
     const storage = new Map([['gamebook_auth_token', String(clients.length + 1)]]);
     const context = vm.createContext({
-      console, URL, Date,
+      console, URL, Date, AbortController,
       localStorage: { getItem: k => storage.get(k) ?? null, setItem: (k, v) => storage.set(k, v), removeItem: k => storage.delete(k) },
       window: { dispatchEvent() {} }, CustomEvent: class {},
       document: { getElementById: id => id === 'party-btn' ? button : null },
@@ -144,6 +144,7 @@ test('bursts are serialized and a response arriving after navigation cannot chan
   const s = setup(), b = s.client(); await b.open();
   const release = b.delayRead(), before = b.reads;
   b.emit(); b.emit(); b.emit();
+  await tick();
   assert.equal(b.reads, before + 1);
   const newer = initial(); newer.playthroughs[0].path.push(3); s.saved = newer;
   release(); await tick();
@@ -155,6 +156,19 @@ test('bursts are serialized and a response arriving after navigation cannot chan
   assert.equal(b.run('currentBookId'), 2);
   assert.equal(b.run('state.bookName'), 'Other book');
   assert.equal(b.depth, 0);
+});
+
+test('a delayed party GET cannot replace a local move made while it was loading', async () => {
+  const s = setup(), a = s.client(); await a.open();
+  const release = a.delayRead();
+  a.emit(); await tick();
+  await a.run('state.playthroughs[0].path.push(43); saveState()');
+  release(); await tick();
+  assert.equal(a.run('currentSection()'), 43);
+  const retry = [...a.timers.values()].find(t => t.ms === 1000);
+  assert.ok(retry, 'the stale GET is discarded and a fresh state is requested');
+  retry.fn(); await tick();
+  assert.equal(a.run('currentSection()'), 43);
 });
 
 test('failed refresh preserves the current canvas and later events recover', async () => {

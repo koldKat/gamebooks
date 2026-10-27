@@ -62,7 +62,7 @@ export async function connectPartySSE(bookId) {
             const displayedRun = viewingPt || state.playthroughs[state.activePtIndex];
             suppressAutoNav(true);
             try {
-              await loadState(bookId, { strict: true, isCurrent, preservePositions: preserve });
+              await loadState(bookId, { strict: true, isCurrent, preservePositions: preserve, protectLocalChanges: true });
               if (!isCurrent()) return;
               // Receiving progress must not move a node out from under a local drag.
               if (graphRuntime._dragNodeIds.size && network) {

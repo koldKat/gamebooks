@@ -268,7 +268,28 @@ async function handleGetFeedStream(req, res) {
   res.write(': connected\n\n');
 
   feedRegister(res);
-  maintainStream(res, () => feedUnregister(res), SSE_PING_MS);
+  // Share background subscriptions on one HTTP connection. HTTP/1 browsers
+  // otherwise spend almost their entire connection budget on idle SSE streams.
+  const combined = new URL(req.url, 'https://x').searchParams.get('combined') === '1';
+  const token = combined ? tokenFromReq(req) : null;
+  const session = token ? db.getSession(token) : null;
+  if (combined) {
+    publicCatalogRegister(res);
+    if (session) {
+      userBadgeRegister(session.user_id, res);
+      if (db.canSeeAppXp(session.user_id)) {
+        appXpRegister(res, { summaryOnly: !db.isUserAdmin(session.user_id) });
+      }
+    }
+  }
+  maintainStream(res, () => {
+    feedUnregister(res);
+    if (combined) {
+      publicCatalogUnregister(res);
+      if (session) userBadgeUnregister(session.user_id, res);
+      appXpUnregister(res);
+    }
+  }, SSE_PING_MS);
 }
 
 async function handleGetUserStream(req, res) {

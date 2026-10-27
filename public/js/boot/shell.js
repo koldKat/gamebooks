@@ -1,5 +1,5 @@
 import { bootState } from './state.js';
-import { setToken } from '../core/state.js';
+import { setToken, retryStateSaves, hasUnsavedStateSaves } from '../core/state.js';
 import { setTranslationOverride } from '../i18n.js';
 import { _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed, _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed } from '../ui-helpers/prefs.js';
 import { _toggleCoverTooltipSettings, initCoversPanel, _refillLazyIfShort } from '../covers.js';
@@ -10,6 +10,34 @@ import { _toggleShortcutsModal } from './helpers.js';
 import { _openMobilePanel } from './navigation.js';
 
 export function initShell() {
+
+  const unsavedBooks = new Set();
+  const saveWarning = document.createElement('div');
+  saveWarning.className = 'state-save-warning';
+  saveWarning.hidden = true;
+  saveWarning.setAttribute('role', 'status');
+  const message = document.createElement('span');
+  message.textContent = 'Progress has not reached the server. Keep this tab open.';
+  const retry = document.createElement('button');
+  retry.type = 'button';
+  retry.textContent = 'Retry save';
+  retry.addEventListener('click', () => retryStateSaves());
+  saveWarning.append(message, retry);
+  document.body.append(saveWarning);
+  window.addEventListener('book-state-save-failed', event => {
+    unsavedBooks.add(event.detail.bookId);
+    saveWarning.hidden = false;
+  });
+  window.addEventListener('book-state-saved', event => {
+    unsavedBooks.delete(event.detail.bookId);
+    saveWarning.hidden = !unsavedBooks.size;
+  });
+  window.addEventListener('online', () => retryStateSaves());
+  window.addEventListener('beforeunload', event => {
+    if (!hasUnsavedStateSaves()) return;
+    event.preventDefault();
+    event.returnValue = '';
+  });
 
   _setupCtxSubmenuFlip();
 

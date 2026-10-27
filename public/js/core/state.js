@@ -172,37 +172,80 @@ export function isSectionMapped(secId) {
 
 // Serialize saves so an older response cannot overwrite newer state.
 let _saveInFlight = null;
-let _saveQueued   = false;
+const _pendingSaves = new Map();
+const _failedSaves = new Map();
+const _saveOwners = new Map();
+let _stateEditVersion = 0;
 
 export function saveState() {
   if (!currentBookId) return Promise.resolve();
-  if (_saveInFlight) {
-    _saveQueued = true;
-    return _saveInFlight;
+  _stateEditVersion++;
+  _pendingSaves.set(currentBookId, JSON.stringify(state));
+  _saveOwners.set(currentBookId, getToken());
+  _failedSaves.delete(currentBookId);
+  return _drainStateSaves();
+}
+
+export function retryStateSaves() {
+  for (const [bookId, body] of _failedSaves) {
+    if (_saveOwners.get(bookId) === getToken() && !_pendingSaves.has(bookId)) _pendingSaves.set(bookId, body);
   }
-  const bookId = currentBookId;
-  _saveInFlight = apiFetch(`/api/books/${bookId}/state`, {
-    method: 'PUT',
-    body:   JSON.stringify(state),
-  })
-    .then(res => {
-      if (!res.ok) throw new Error('Book state was not saved');
-      window.dispatchEvent(new CustomEvent('book-state-saved', { detail: { bookId } }));
-    })
-    .catch(() => {})
-    .finally(() => {
-      _saveInFlight = null;
-      if (_saveQueued) {
-        _saveQueued = false;
-        saveState();
+  return _drainStateSaves();
+}
+
+function _drainStateSaves() {
+  if (_saveInFlight) return _saveInFlight;
+  _saveInFlight = (async () => {
+    while (_pendingSaves.size) {
+      const bookId = _pendingSaves.keys().next().value;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        if (_saveOwners.get(bookId) !== getToken()) {
+          _failedSaves.set(bookId, _pendingSaves.get(bookId));
+          _pendingSaves.delete(bookId);
+          break;
+        }
+        // Retry the latest edit, never an earlier snapshot of this book.
+        const body = _pendingSaves.get(bookId);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        let permanent = false;
+        try {
+          const res = await apiFetch(`/api/books/${bookId}/state`, {
+            method: 'PUT', body, signal: controller.signal,
+          });
+          permanent = res.status >= 400 && res.status < 500 && res.status !== 408 && res.status !== 429;
+          if (!res.ok) throw new Error('Book state was not saved');
+          if (_pendingSaves.get(bookId) === body) {
+            _pendingSaves.delete(bookId);
+            window.dispatchEvent(new CustomEvent('book-state-saved', { detail: { bookId } }));
+          }
+          _failedSaves.delete(bookId);
+          break;
+        } catch (_) {
+          window.dispatchEvent(new CustomEvent('book-state-save-failed', { detail: { bookId } }));
+          if (permanent || attempt === 2 || !getToken()) {
+            _failedSaves.set(bookId, _pendingSaves.get(bookId));
+            _pendingSaves.delete(bookId);
+            break;
+          }
+        } finally { clearTimeout(timeout); }
       }
-    });
+    }
+  })().finally(() => {
+    _saveInFlight = null;
+    if (_pendingSaves.size) _drainStateSaves();
+  });
   return _saveInFlight;
 }
 
 // Navigation waits for every queued save before replacing the current book.
 export async function flushStateSaves() {
   while (_saveInFlight) await _saveInFlight;
+  if (_failedSaves.has(currentBookId)) throw new Error('Book state has not been saved');
+}
+
+export function hasUnsavedStateSaves() {
+  return [..._pendingSaves.keys(), ..._failedSaves.keys()].some(bookId => _saveOwners.get(bookId) === getToken());
 }
 
 // Canvas drags carry coordinates only; never send an old snapshot of shared runs.
@@ -225,13 +268,18 @@ export function resetBookProgress() {
     .catch(() => false);
 }
 
-export async function loadState(bookId, { strict = true, isCurrent = () => true, preservePositions = false } = {}) {
+export async function loadState(bookId, { strict = true, isCurrent = () => true, preservePositions = false, protectLocalChanges = false } = {}) {
   try {
+    if (protectLocalChanges) await flushStateSaves();
+    const editVersion = _stateEditVersion;
     const res = await apiFetch(`/api/books/${bookId}/state`);
     if (!res.ok) throw new Error('Book state unavailable');
     const loaded = await res.json();
     if (!loaded || typeof loaded !== 'object' || Array.isArray(loaded)) throw new Error('Invalid book state');
     if (!isCurrent()) return;
+    if (protectLocalChanges && (editVersion !== _stateEditVersion || _failedSaves.has(bookId))) {
+      throw new Error('Local edits changed during party refresh');
+    }
     if (preservePositions && currentBookId === bookId) {
       loaded.positions = { ...(loaded.positions || {}), ...(state.positions || {}) };
     }

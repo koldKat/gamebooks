@@ -26,6 +26,47 @@ let _feedSource          = null;
 let _userBadgeSource     = null;
 let _appXpSource         = null;
 
+// Logical subscriptions share one physical stream, leaving connections for saves.
+const _liveSubscriptions = new Map();
+let _sharedLiveSource = null;
+let _sharedLiveToken = null;
+function _subscribeLive(channel, options) {
+  _liveSubscriptions.set(channel, options);
+  const token = getToken() || '';
+  if (_sharedLiveSource && token !== _sharedLiveToken) {
+    _sharedLiveSource.close();
+    _sharedLiveSource = null;
+  }
+  if (!_sharedLiveSource) {
+    _sharedLiveToken = token;
+    _sharedLiveSource = connectEventStream(`/api/feed/stream?combined=1${token ? '&token=' + encodeURIComponent(token) : ''}`, {
+      enabled: () => _isLiveLeader,
+      onReconnect: () => {
+        for (const sub of _liveSubscriptions.values()) if (sub.enabled()) sub.onReconnect?.();
+      },
+      onMessage: event => {
+        let payload;
+        try { payload = JSON.parse(event.data); } catch { return; }
+        const channel = payload.type === 'public_catalog_changed' ? 'catalog'
+          : payload.type === 'badge_state_changed' ? 'badges'
+          : !payload.type ? 'xp' : 'feed';
+        const sub = _liveSubscriptions.get(channel);
+        if (sub?.enabled()) sub.onMessage?.(event);
+      },
+    });
+  }
+  return {
+    close() {
+      _liveSubscriptions.delete(channel);
+      if (!_liveSubscriptions.size) {
+        _sharedLiveSource?.close();
+        _sharedLiveSource = null;
+      }
+    },
+    resume(force) { _sharedLiveSource?.resume(force); },
+  };
+}
+
 let _feedDirty           = false;
 let _feedSseDebounce     = null;
 let _publicCatalogDirty  = false;
@@ -257,7 +298,7 @@ function _connectPublicCatalogSSE() {
       _hooks.refreshPublicCatalogIfVisible?.();
       _broadcastLiveEvent('covers_changed');
     };
-    _publicCatalogSource = connectEventStream('/api/public/stream', {
+    _publicCatalogSource = _subscribeLive('catalog', {
       enabled: () => _isLiveLeader, onMessage: refresh, onReconnect: refresh,
     });
   } catch (_) {}
@@ -266,7 +307,7 @@ function _connectPublicCatalogSSE() {
 function _connectFeedSSE() {
   if (!_isLiveLeader || _feedSource || typeof EventSource === 'undefined') return;
   try {
-    _feedSource = connectEventStream('/api/feed/stream', {
+    _feedSource = _subscribeLive('feed', {
       enabled: () => _isLiveLeader,
       onReconnect: () => {
         _refreshFeedIfChanged();
@@ -295,6 +336,9 @@ export function _disconnectUserBadgeSSE() {
     try { _userBadgeSource.close(); } catch (_) {}
     _userBadgeSource = null;
   }
+  if (_sharedLiveSource && _sharedLiveToken !== (getToken() || '') && _liveSubscriptions.has('feed')) {
+    _subscribeLive('feed', _liveSubscriptions.get('feed'));
+  }
 }
 
 export function _connectUserBadgeSSE() {
@@ -304,7 +348,7 @@ export function _connectUserBadgeSSE() {
       _hooks.scheduleLiveUiRefresh?.({ inbox: true, notif: true, forum: true, reward: true, party: true, prefs: true }, 120);
       _broadcastLiveEvent('badges_changed');
     };
-    _userBadgeSource = connectEventStream(() => `/api/user/stream?token=${encodeURIComponent(getToken())}`, {
+    _userBadgeSource = _subscribeLive('badges', {
       enabled: () => _isLiveLeader && !!getToken(), onMessage: refresh, onReconnect: refresh,
     });
   } catch (_) {}
@@ -321,7 +365,7 @@ export function _connectAppXpSSE() {
   const canWatch = () => !!(_hooks.getCanSeeAppXp?.() ?? _hooks.getIsAdmin?.());
   if (!_isLiveLeader || _appXpSource || typeof EventSource === 'undefined' || !getToken() || !canWatch()) return;
   try {
-    _appXpSource = connectEventStream(() => `/api/app-xp/stream?token=${encodeURIComponent(getToken())}`, {
+    _appXpSource = _subscribeLive('xp', {
       enabled: () => _isLiveLeader && !!getToken() && canWatch(),
       onReconnect: _refreshAppXpStaggered,
       onMessage: e => {
@@ -417,7 +461,5 @@ export function _ensureLiveTabControllerStarted() {
 
 function _resumeLiveStreams(force = false) {
   if (!_isLiveLeader) return;
-  for (const source of [_feedSource, _publicCatalogSource, _userBadgeSource, _appXpSource]) {
-    source?.resume(force);
-  }
+  _sharedLiveSource?.resume(force);
 }
