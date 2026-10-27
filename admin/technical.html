@@ -410,6 +410,12 @@
         engines/sorcery/  Pure Sorcery character, Luck, damage and recovery primitives, plus
                          transactional run-scoped persistence. Book modules own encounter
                          exceptions; stale run/book updates are rejected before saving.
+        engines/fighting-fantasy/ Serializable sequential combat using the shared dice and
+                         Luck primitives. Database roster entries declare entry losses,
+                         timed fights, consecutive-loss exits, recurring damage and item
+                         modifiers. Wounds wait for the player&#39;s Luck decision. Simulator
+                         item flags never modify shared inventory or equipment; transactional
+                         persistence rejects stale run/book actions and records each result once.
         engines/crossroads/ Pure 3D6 threshold combat and ability checks.
                          Optional v3 sequences preserve hit-triggered passage branches,
                          simultaneous friendly and enemy attacks, independent ally targets,

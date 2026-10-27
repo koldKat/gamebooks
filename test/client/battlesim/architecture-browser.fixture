@@ -4825,6 +4825,44 @@ for(const id of BOOK_IDS){
       check(JSON.stringify(data())===saved,'Prospero stale reset ignored');app.setCurrentBookId(1295);button.click();
     }finally{Math.random=random;}
   }
+  if(id===1362){
+    const el=key=>document.getElementById('sim1362-'+key),data=()=>app.currentPlaythrough().sim1362;
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1362/definition.js');
+    const run=app.currentPlaythrough();run.inventory={sentinel:['shared-item']};run.equipment={sentinel:'shared-slot'};run.sim1303={sentinel:true};
+    const preserved=JSON.stringify([run.inventory,run.equipment,run.sim1303]),random=Math.random;
+    const choose=section=>{el('encounter').value=String(section);el('encounter').dispatchEvent(new Event('change'));};
+    const cancel=()=>{if(data().fight?.status==='active'){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    const scores=()=>{for(const [key,value] of Object.entries({skill:12,skillInitial:12,stamina:24,staminaInitial:24,luck:12,luckInitial:12}))el(key).value=value;};
+    try{
+      Math.random=()=>.999;check(getRoster().length===33,'Golden Skull33 database groups');
+      choose('custom');scores();
+      el('editor').querySelector('[role="combobox"]').value='Custom foe';
+      el('editor').querySelector('[data-stat="skill"]').value='1';el('editor').querySelector('[data-stat="stamina"]').value='2';
+      el('start').click();check(data().fight.status==='active','Golden Skull ordinary custom fight starts');
+      el('round').click();check(data().fight.pending?.direction==='outgoing'&&el('round').disabled&&!el('useLuck').disabled,'Golden Skull Luck decision after dice');
+      el('useLuck').click();check(data().fight.status==='win'&&data().character.luck===11&&data().history.length===1,'Golden Skull custom victory and Luck saved');
+      for(const entry of getRoster()){
+        choose(entry.section);scores();el('weapon').value='doomSword';el('applyEntry').checked=false;el('start').click();
+        check(data().fight.status==='active'&&data().fight.config.section===entry.section,'Golden Skull preset starts '+entry.section);
+        check(data().fight.enemies.length===entry.enemies.length,'Golden Skull source group size '+entry.section);
+        check(el('encounter').disabled&&el('skill').disabled&&el('editor').querySelector('[data-stat="skill"]').disabled,'Golden Skull setup locked');
+        if(['43','168','270'].includes(entry.section)){
+          el('round').click();
+          check(data().fight.events.find(event=>event.kind==='attack').playerAttack===(entry.section==='270'?22:21),'Golden Skull sword ignored when unarmed or knife-only');
+          if(data().fight.pending)el('acceptWound').click();
+        }
+        cancel();
+      }
+      choose('220');scores();el('weapon').value='dragonblade';el('item-invisibility').checked=true;el('applyEntry').checked=true;
+      el('start').click();check(data().character.items.invisibility===false,'Golden Skull entry potion consumed');
+      const fight=JSON.stringify(data().fight);el('close').click();button.click();check(JSON.stringify(data().fight)===fight,'Golden Skull fight preserved on reopen');cancel();
+      choose('42');scores();el('nextFightPenalty').value='-2';el('bypass').click();document.getElementById('confirm-ok').click();
+      check(data().fight.status==='bypassed'&&data().fight.destination==='204'&&data().character.nextFightPenalty===-2,'Golden Skull skip is explicit and saves next-battle penalty');
+      check(JSON.stringify([run.inventory,run.equipment,run.sim1303])===preserved,'Golden Skull shared items and unrelated sim unchanged');
+      const saved=JSON.stringify(data());el('newCharacter').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();
+      check(JSON.stringify(data())===saved,'Golden Skull stale reset ignored');app.setCurrentBookId(1362);button.click();
+    }finally{Math.random=random;}
+  }
   if(id===1303){
     const el=key=>document.getElementById('sim1303-'+key),data=()=>app.currentPlaythrough().sim1303;
     const {getRoster}=await import('REPO/public/js/battlesim/books/1303/definition.js');

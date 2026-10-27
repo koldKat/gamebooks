@@ -1,0 +1,20 @@
+const labels = {
+  character:'Adventurer',skill:'SKILL',skillInitial:'Initial SKILL',stamina:'STAMINA',staminaInitial:'Initial STAMINA',luck:'LUCK',luckInitial:'Initial LUCK',
+  gold:'Gold',provisions:'Provisions',potionUses:'Potion measures left',attackModifier:'Other Attack Strength modifier',nextFightPenalty:'Next battle modifier',
+  potion:'Starting potion','potion.skill':'Potion of Skill','potion.strength':'Potion of Strength','potion.fortune':'Potion of Fortune',
+  weapon:'Weapon in use',ordinarySword:'Ordinary sword',itemNote:'Select only items you possess. These combat modifiers do not change your shared inventory or equipment. Enter permanent score losses directly above. The next-battle modifier is used once.',
+  saveCharacter:'Save scores',newCharacter:'Roll adventurer',encounter:'Encounter',custom:'Custom fight',sourceRules:'Printed encounter rules',
+  applyEntry:'Apply entry losses / consume entry potion (uncheck if already recorded)',start:'Start fight',bypass:'Skip encounter',
+  round:'Attack round',acceptWound:'Accept wound',useLuck:'Test Luck',escape:'Escape',projectile:'Throw dart',cancel:'End fight',eat:'Eat provision',drink:'Drink potion',testLuck:'Test Luck outside combat',
+  log:'Battle log',history:'Battle history',you:'You',invalid:'Check the scores, item selections and available actions.',
+  'status.ready':'Ready','status.active':'Fighting','status.win':'Victory','status.loss':'Defeated','status.escaped':'Escaped','status.routed':'Follow the encounter’s instructions','status.cancelled':'Fight ended','status.bypassed':'Encounter skipped',
+  roundNumber:'Round {n}',destination:'Turn to {n}.',enemyStamina:'{name}: {n}/{max} STAMINA',
+  'pending.outgoing':'You wounded your opponent. Accept 2 damage or Test Luck for 4 if lucky, 1 if unlucky.',
+  'pending.incoming':'You were wounded. Accept 2 damage or Test Luck for 1 if lucky, 3 if unlucky.',
+  attack:'You {playerAttack} vs {enemy} {enemyAttack}.',luckResult:'Luck roll {n}: {result}.',lucky:'lucky',unlucky:'unlucky',
+  damage:'{name} loses {n} STAMINA.',extraDamage:'Quills: lose {n} STAMINA.',entryResult:'Entry: lose {n} STAMINA and {luck} LUCK.',
+  resetConfirm:'Roll a new adventurer? Current simulator scores will be replaced. Your battle history stays.',
+  cancelConfirm:'End this fight? Scores and items already used will stay as they are.',
+  bypassConfirm:'Confirm that you lost no Attack Rounds against the previous Shark. The Razor Shark will be skipped.',
+};
+export default Object.fromEntries(Object.entries(labels).map(([key,value])=>['battlesim1362.'+key,value]));
