@@ -153,11 +153,26 @@ body.books-searching #books-search-close {
   flex-shrink: 0;
 }
 
-/* Keep the full-width currency row below the title and its search button.
-   This must follow the shared header's nowrap rule. */
 @media (max-width: 520px) {
-  .books-header { flex-wrap: wrap; }
-  .books-header-right { width: 100%; justify-content: flex-end; gap: 0.25rem; }
+  .books-header { gap: 0.25rem; }
+  .books-header-left { gap: 0.25rem; }
+  .books-header h2 {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .books-header-right {
+    min-width: 0;
+    max-width: calc(100% - 2rem);
+    flex-shrink: 1;
+    overflow-x: auto;
+    gap: 0.15rem;
+  }
+  .books-header-right > * { flex-shrink: 0; }
+  .books-header-right :is(.minor-coins-display, .shop-btn, .diamonds-display, .rubies-display) {
+    padding-inline: 0.25rem;
+  }
 }
 
 .logout-btn {
