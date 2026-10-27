@@ -329,9 +329,6 @@ function _buildPubSegNetwork(container, graph, positions, path, result, allVisit
   Object.keys(graph).forEach(k => { const n = Number(k); if (n >= 1) allIds.add(n); });
   (allVisited || []).forEach(n => { if (n >= 1) allIds.add(n); });
 
-  const endNodeMap = new Map();
-  (endNodes || []).forEach(e => { endNodeMap.set(e.id, e.result); });
-
   allIds.forEach(id => {
     const inPath   = path.includes(id);
     const isFinal  = id === finalId;
@@ -363,11 +360,6 @@ function _buildPubSegNetwork(container, graph, positions, path, result, allVisit
         bg = '#0e7490'; border = '#2dd4bf'; shape = 'diamond'; bw = 3;
       } else if (inPath) {
         bg = '#3d9be9'; border = '#2980b9';
-      } else if (endNodeMap.has(id)) {
-        const r = endNodeMap.get(id);
-        if (r === 'success')     { bg = '#27ae60'; border = '#1e8449'; bw = 4; }
-        else if (r === 'battle') { bg = '#c2410c'; border = '#9a3412'; bw = 4; }
-        else                     { bg = '#e74c3c'; border = '#c0392b'; bw = 4; }
       } else if (isPortal) {
         bg = '#134e4a'; border = '#0d9488'; shape = 'diamond'; bw = 2;
       } else if (gNode) {
@@ -390,7 +382,10 @@ function _buildPubSegNetwork(container, graph, positions, path, result, allVisit
     nodesArr.push({
       id, label,
       shape,
-      color: { background: bg, border },
+      // Only this run's final node is an ending. Other runs' endings follow
+      // the ordinary mapped/visited rules, including hollow outcome markers.
+      color: { background: bg, border,
+        highlight: { background: bg, border }, hover: { background: bg, border } },
       font:  { size: 11, color: fontColor, face: 'Segoe UI, system-ui, sans-serif', bold: fontBold },
       borderWidth: bw, size: shape === 'diamond' ? 16 : 14,
       ...(pos ? { x: pos.x, y: pos.y, physics: false } : {}),
