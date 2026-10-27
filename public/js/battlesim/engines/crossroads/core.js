@@ -4,9 +4,12 @@ const clone = value => structuredClone(value);
 import {integer,damageSpec,dice,damage,finish} from './values.js';
 import {validateEncounterRules,encounterRound,encounterTargets} from './encounter-rules.js';
 import {resourceFields} from './resources.js';
-export {encounterTargets};
+import {startSequenceFight,sequenceRound,sequenceTargets} from './sequence-rules.js';
+export const crossroadsTargets=fight=>fight?.rulesVersion===3?sequenceTargets(fight):encounterTargets(fight);
+export {crossroadsTargets as encounterTargets};
 
 export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
+  if(rules.mechanics?.sequence)return startSequenceFight(hero,enemies,rules,weaponDamage);
   if (!hero || !Array.isArray(enemies) || !enemies.length || enemies.length > 100) throw new RangeError('Invalid combatants');
   const player = {
     hp:integer(hero.hp, rules.restoreHeroHp===true?0:1), maxHp:integer(hero.maxHp, 1), constitution:integer(hero.constitution, 0, 100),
@@ -62,7 +65,8 @@ export function startCrossroadsFight(hero, enemies, rules = {}, weaponDamage) {
 }
 
 // Pure transitions make an invalid roll/action harmless to the saved run.
-export function crossroadsRound(original, {target = 0, allyTarget = null, healing = null, action = 'attack', sourceExitIndex = 0, useGauntlet = false, roll = () => Math.floor(Math.random()*6)+1} = {}) {
+export function crossroadsRound(original, {target = 0, allyTarget = null, allyTargets = [], healing = null, action = 'attack', sourceExitIndex = 0, useGauntlet = false, roll = () => Math.floor(Math.random()*6)+1} = {}) {
+  if(original?.rulesVersion===3)return sequenceRound(original,{target,allyTargets,healing,action,roll});
   if (original?.rulesVersion === 2) return encounterRound(original,{target,allyTarget,healing,action,sourceExitIndex,useGauntlet,roll});
   if (action!=='attack') throw new RangeError('Unsupported action');
   if (original?.status !== 'active' || original.rulesVersion !== 1) throw new RangeError('No active fight');

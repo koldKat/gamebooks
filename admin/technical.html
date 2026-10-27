@@ -410,8 +410,15 @@
         engines/sorcery/  Pure Sorcery character, Luck, damage and recovery primitives, plus
                          transactional run-scoped persistence. Book modules own encounter
                          exceptions; stale run/book updates are rejected before saving.
-        engines/crossroads/ Pure 3D6 threshold combat and ability checks; serializable
-                         round transitions, nonfatal damage, timed fights, venom and grouped
+        engines/crossroads/ Pure 3D6 threshold combat and ability checks.
+                         Optional v3 sequences preserve hit-triggered passage branches,
+                         simultaneous friendly and enemy attacks, independent ally targets,
+                         ally hit counters, roll-under shooting and dodge-only hazards.
+                         Targets without printed HP retain null HP; source stats and routes
+                         live in database roster entries. Existing v1/v2 fights retain their
+                         transition paths and saved fields. Sequence healing is available
+                         between fights, with printed in-fight actions kept explicit.
+                         Serializable round transitions, nonfatal damage, timed fights, venom and grouped
                          enemy attacks. Optional v2 encounter rules add delayed or sequential arrivals,
                          mounted targets, temporary ability checks, allies, opening attacks and
                          conditional magic. Shared wounds across changing forms, retreat thresholds,

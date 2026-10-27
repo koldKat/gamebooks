@@ -4825,6 +4825,52 @@ for(const id of BOOK_IDS){
       check(JSON.stringify(data())===saved,'Prospero stale reset ignored');app.setCurrentBookId(1295);button.click();
     }finally{Math.random=random;}
   }
+  if(id===1303){
+    const el=key=>document.getElementById('sim1303-'+key),data=()=>app.currentPlaythrough().sim1303;
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1303/definition.js');
+    const run=app.currentPlaythrough();run.inventory={sentinel:['shared-item']};run.equipment={sentinel:'shared-slot'};run.sim1302={sentinel:true};
+    const items=JSON.stringify([run.inventory,run.equipment,run.sim1302]),random=Math.random;
+    const choose=section=>{el('encounter').value=String(section);el('encounter').dispatchEvent(new Event('change'));};
+    const cancel=()=>{if(data().fight?.status==='active'){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    const restore=()=>{el('hp').value='16';el('saveCharacter').click();};
+    try{
+      check(getRoster().length===15,'Fate fifteen source sequence variants');
+      Math.random=()=>0;choose('custom');el('editor').querySelector('[role="combobox"]').value='Custom opponent';
+      const fields={toBeHit:3,toHit:18,hp:1,damageDice:0,damageAdd:0};
+      for(const field of el('editor').querySelectorAll('[data-stat]'))field.value=fields[field.dataset.stat];
+      el('weaponDice').value='0';el('weaponAdd').value='1';el('start').click();el('round').click();
+      check(data().fight.status==='win'&&data().history.length===1,'Fate custom fight without preset');
+      for(const entry of getRoster()){
+        choose(entry.section);restore();
+        if(!entry.rules.heroDamage&&!entry.rules.enemyOnly){el('weaponDice').value='0';el('weaponAdd').value='1';}
+        el('start').click();check(data().fight.status==='active'&&data().fight.rulesVersion===3,'Fate preset starts '+entry.section);
+        check(data().fight.enemies.length===entry.enemies.length,'Fate correct DB source group '+entry.section);
+        check(el('heal').disabled,'Fate printed sequence healing boundary');el('round').click();cancel();
+      }
+      choose('79');restore();el('start').click();
+      check(el('editor').querySelector('[data-stat="hp"]').disabled&&el('editor').querySelector('[data-stat="hp"]').value==='','Fate no invented ray target HP');
+      check(!el('opponents').textContent.includes('HP'),'Fate no artificial HP label');
+      check(el('weaponDice').closest('label').hidden,'Fate no ray damage controls');
+      el('round').click();check(data().fight.destination==='80'&&el('log').textContent.includes('Shot at Eel'),'Fate ray shot route and localized log');
+      choose('69');restore();el('weaponDice').value='0';el('weaponAdd').value='7';el('start').click();
+      const allies=[...el('sequenceAllies').querySelectorAll('select')];check(allies.length===2,'Fate independent allied target controls');
+      allies[0].value='1';allies[1].value='2';
+      let values=[...Array(9).fill(.999),0,0,0,0,.4,0,0,0,.8,0,0,0];
+      Math.random=()=>{check(values.length>0,'Fate exact simultaneous dice count');return values.shift();};el('round').click();
+      check(values.length===0&&data().fight.destination==='75','Fate simultaneous party win through panel');
+      check(el('opponents').textContent.includes('0/2 hits')&&el('opponents').textContent.includes('0/1 hits'),'Fate printed ally hit counters');
+      Math.random=()=>0;choose('32');restore();el('start').click();
+      check(data().fight.rules.mechanics.heroAttackBonus===1&&data().character.attackBonus===0,'Fate section23 bonus scoped to this fight');cancel();
+      choose('71');restore();el('weaponChoice').value='1';el('weaponChoice').dispatchEvent(new Event('change'));el('start').click();
+      check(data().fight.rules.mechanics.sequence.dodgeBonus===1&&data().character.dexterity===15,'Fate section59 bonus scoped to dodge checks');
+      el('round').click();
+      const savedFight=JSON.stringify(data().fight);el('close').click();button.click();check(JSON.stringify(data().fight)===savedFight,'Fate fight preserved on reopening');
+      el('round').click();check(data().fight.destination==='63','Fate lightning second miss via UI');
+      check(JSON.stringify([run.inventory,run.equipment,run.sim1302])===items,'Fate universal items and other simulator preserved');
+      const saved=JSON.stringify(data());el('newCharacter').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();
+      check(JSON.stringify(data())===saved,'Fate stale reset ignored');app.setCurrentBookId(1303);button.click();
+    }finally{Math.random=random;}
+  }
   if(id===1302){
     const el=key=>document.getElementById('sim1302-'+key),data=()=>app.currentPlaythrough().sim1302;
     const {getRoster}=await import('REPO/public/js/battlesim/books/1302/definition.js');

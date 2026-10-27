@@ -51,7 +51,7 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     const damage=weapons[Number(el('weaponChoice').value)]?.damage??entry?.rules.heroDamage;
     el('sourceNotes').textContent=(entry?.rules.sourceNotes ?? []).join(' ');
     el('weaponNote').textContent=entry?.rules.mechanics?.hitCounters?tk('counterRule'):entry?.rules.enemyOnly?tk('noHeroAttack'):damage?tk('printedDamage'):tk('chooseDamage');
-    for(const key of ['weaponDice','weaponAdd'])el(key).closest('label').hidden=Boolean(entry?.rules.mechanics?.hitCounters);
+    for(const key of ['weaponDice','weaponAdd'])el(key).closest('label').hidden=Boolean(entry?.rules.mechanics?.hitCounters||entry?.rules.mechanics?.sequence&&entry.rules.enemyOnly);
     el('retrievedWeaponRow').hidden=!entry?.rules.mechanics?.struggle;
     for(const key of ['retrievedWeaponDice','retrievedWeaponAdd'])el(key).disabled=active(state.read()?.fight);
     for(const key of ['weaponDice','weaponAdd'])el(key).disabled=active(state.read()?.fight)||Boolean(damage)||Boolean(entry?.rules.enemyOnly);
@@ -62,6 +62,9 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     for(const event of fight.events){
       if(event.kind==='attack')data.log.push(tk('attack',{name:event.side==='hero'?tk('hero'):event.name,
         dice:event.automatic?tk('automatic'):event.dice.join('+'),total:event.total,result:tk(event.hit?'hit':'miss'),damage:event.damage}));
+      if(event.kind==='attack'&&event.recipient)data.log.push(tk('allyHits',{name:event.recipient,n:event.hits}));
+      if(event.kind==='shot')data.log.push(tk('shot',{name:event.name,dice:event.dice.join('+'),total:event.total,result:tk(event.hit?'hit':'miss')}));
+      if(event.kind==='targetRoll')data.log.push(tk('targetRoll',{name:event.name,dice:event.dice.join('+'),recipient:event.recipient}));
       if(event.kind==='check')data.log.push(tk('check',{name:tk(event.ability),dice:event.dice.join('+'),result:tk(event.passed?'passed':'failed')}));
       if(event.kind==='freeRounds')data.log.push(tk('freeRounds',{n:event.amount}));
       if(event.kind==='absorbed')data.log.push(tk('absorbed',{name:event.name}));
@@ -140,7 +143,7 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
       el(key).hidden=!mechanics?.enemyRetreat||(key==='pursue'?!retreatPending:!retreatCaught||key==='subdue'&&!mechanics.enemyRetreat.subdueAbility);
       el(key).disabled=!locked;
     }
-    el('heal').disabled=!resourceHero?.hp||retreatPending||retreatCaught||['held','retrieve'].includes(struggleStage)||Boolean(resources?.healingPool&&(resourceHero.hp>=resourceHero.maxHp||!resourceHero[resources.healingPool.field]))||Boolean(locked&&(fight.rules.enemyOnly||fight.encounter?.netTurns||mechanics?.openingEnemyTurn&&fight.round===0));
+    el('heal').disabled=!resourceHero?.hp||retreatPending||retreatCaught||['held','retrieve'].includes(struggleStage)||Boolean(resources?.healingPool&&(resourceHero.hp>=resourceHero.maxHp||!resourceHero[resources.healingPool.field]))||Boolean(locked&&(mechanics?.sequence||fight.rules.enemyOnly||fight.encounter?.netTurns||mechanics?.openingEnemyTurn&&fight.round===0));
     el('healing').max=resources?.healingPool?Math.min(resourceHero?.[resources.healingPool.field]??0,(resourceHero?.maxHp??0)-(resourceHero?.hp??0)):1000000;
     el('abilityCheck').disabled=locked||!hero?.hp;
     const currentTarget=Number(el('target').value),targets=encounterTargets(fight).map(index=>({enemy:fight.enemies[index],index}));
@@ -152,6 +155,10 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     el('allyTarget').innerHTML=targets.map(({enemy,index})=>`<option value="${index}">${escape(enemy.name)}</option>`).join('');
     el('allyTarget').value=targets.some(({index})=>String(index)===allyTarget)?allyTarget:targets.at(-1)?.index??'';
     el('allyTarget').disabled=!locked;
+    const previousAllyTargets=[...el('sequenceAllies').querySelectorAll('select')].map(select=>Number(select.value));
+    const sequenceAllies=mechanics?.sequence?.allies??[];
+    el('sequenceAllies').hidden=!sequenceAllies.length;
+    el('sequenceAllies').innerHTML=sequenceAllies.map((ally,index)=>`<label class="inv-edit-row"><span>${escape(ally.name)}</span><select class="inv-edit-input" data-sequence-ally="${index}" ${locked?'':'disabled'}>${targets.map(({enemy,index:targetIndex})=>`<option value="${targetIndex}" ${targetIndex===(targets.some(({index:candidate})=>candidate===previousAllyTargets[index])?previousAllyTargets[index]:targets[0]?.index)?'selected':''}>${escape(enemy.name)}</option>`).join('')}</select></label>`).join('');
     el('status').textContent=tk('status.'+(fight?.status??'ready'))+(fight?' · '+tk('roundNumber',{n:fight.round}):'');
     if(fight?.rules.mechanics?.vessel){const vessel=fight.rules.mechanics.vessel;el('status').textContent+=' · '+tk('vesselHits',{name:vessel.name,n:fight.encounter?.vesselHits??vessel.initialHits,max:vessel.maxHits});}
     if(mechanics?.hitCounters)el('status').textContent+=' · '+tk('agingHits',{n:fight.encounter?.agingHits??0,max:mechanics.hitCounters.hitsToLose,age:fight.hero.age});
@@ -163,12 +170,13 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     if(retreatCaught)el('status').textContent+=' · '+tk('opponentCaught');
     if(locked&&mechanics?.graceRounds&&!targets.length)el('status').textContent+=' · '+tk('graceRound');
     el('destination').textContent=fight?.destination?tk('destination',{n:fight.destination}):'';
-    el('opponents').innerHTML=fight?fight.enemies.map(enemy=>'<div>'+escape(mechanics?.hitCounters?tk('enemyHits',{name:enemy.name,n:enemy.hitsTaken,max:mechanics.hitCounters.hitsToRetire})+(enemy.retired?' '+tk('retired'):''):tk('enemyHp',{name:enemy.name,n:enemy.hp,max:enemy.maxHp}))+'</div>').join(''):'';
+    el('opponents').innerHTML=fight?fight.enemies.map(enemy=>'<div>'+escape(enemy.hp===null?enemy.name:mechanics?.hitCounters?tk('enemyHits',{name:enemy.name,n:enemy.hitsTaken,max:mechanics.hitCounters.hitsToRetire})+(enemy.retired?' '+tk('retired'):''):tk('enemyHp',{name:enemy.name,n:enemy.hp,max:enemy.maxHp}))+'</div>').join(''):'';
+    if(mechanics?.sequence)el('opponents').innerHTML+=(fight.encounter.allies??[]).filter(ally=>ally.hitsToLose).map(ally=>'<div>'+escape(tk('allyHitLimit',{name:ally.name,n:ally.hits,max:ally.hitsToLose}))+'</div>').join('');
     el('log').innerHTML=data.log.slice(-80).map(line=>'<div>'+escape(line)+'</div>').join('');
     el('history').innerHTML=data.history.slice(-40).toReversed().map(row=>'<div>'+escape(row.enemy+': '+tk('status.'+row.outcome))+'</div>').join('');
     setupNotes();
   }
-  function editorRows(enemies){return enemies.map(enemy=>({...structuredClone(enemy),displayName:enemy.name,toHit:enemy.attacks[0]?.toHit??enemy.printedAttack,damageDice:enemy.attacks[0]?.damage?.dice,damageAdd:enemy.attacks[0]?.damage?.add}));}
+  function editorRows(enemies){return enemies.map(enemy=>({...structuredClone(enemy),displayName:enemy.name,...(preset()?.rules.mechanics?.sequence?{unavailableStats:[...(enemy.hp===null?['hp']:[]),...(enemy.toBeHit===null?['toBeHit']:[]),...(!enemy.attacks.length?['toHit','damageDice','damageAdd']:[])]}:{}),toHit:enemy.attacks[0]?.toHit??enemy.printedAttack,damageDice:enemy.attacks[0]?.damage?.dice,damageAdd:enemy.attacks[0]?.damage?.add}));}
   function open(){
     if(Number(getBookId())!==definition.id||!getRun()){showAlert(t('battlesim.no_active_playthrough'));return;}
     shownRun=getRun();editorRun=null;
@@ -188,6 +196,7 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
       <label class="bsim-checkbox" id="${ID}-useGauntletRow" hidden><input type="checkbox" id="${ID}-useGauntlet">${escape(tk('useGauntlet'))}</label><div class="bsim-btn-row">${['healingSpell','misdirection','repulsion'].map(button).join('')}</div>
       <label class="inv-edit-row"><span>${escape(tk('target'))}</span><select class="inv-edit-input" id="${ID}-target"></select></label><div class="bsim-btn-row">${button('round')}${button('cancel')}</div>
       <label class="inv-edit-row" id="${ID}-allyTargetRow" hidden><span>${escape(tk('allyTarget'))}</span><select class="inv-edit-input" id="${ID}-allyTarget"></select></label>
+      <div id="${ID}-sequenceAllies" hidden></div>
       <label class="inv-edit-row" id="${ID}-sourceExitRow" hidden><span>${escape(tk('sourceItem'))}</span><select class="inv-edit-input" id="${ID}-sourceExitChoice"></select></label>
       <div class="bsim-btn-row">${['retrieve','escapeGrip','flee','surrender','partingShot','escapeCheck','sourceExit','pursue','continueFight','subdue'].map(button).join('')}</div>
       ${field('healing',1)}${button('heal')}<p class="bsim-note">${escape(tk('healingNote'))}</p>
@@ -195,8 +204,8 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
       </div><div class="bsim-col bsim-col-right"><p id="${ID}-status" role="status"></p><p id="${ID}-destination"></p><div id="${ID}-opponents"></div><h3 class="bsim-side-title">${escape(tk('log'))}</h3><div class="bsim-log" id="${ID}-log"></div><h3 class="bsim-side-title">${escape(tk('history'))}</h3><div class="bsim-history-list" id="${ID}-history"></div></div></div></div>`;
     document.body.append(overlay);
     el('abilityModifier').value=0;
-    editor=createOpponentEditor({document,id:ID,t,fields:[{key:'toBeHit',label:tk('toBeHit'),min:3,max:18},{key:'toHit',label:tk('toHit'),min:3,max:18},{key:'hp',label:tk('hp'),min:1},{key:'damageDice',label:tk('damageDice'),min:0,max:10},{key:'damageAdd',label:tk('damageAdd'),min:-100,max:1000}],presets:getRoster().filter(entry=>!entry.rules.mechanics?.abilityOutcome&&!entry.rules.mechanics?.vessel&&!entry.rules.mechanics?.hitCounters).flatMap(entry=>editorRows(entry.enemies)),
-      isStatUnavailable:(key,row)=>row.hitCounter&&['hp','damageDice','damageAdd'].includes(key)||['toHit','damageDice','damageAdd'].includes(key)&&row.attacks?.length===0||key==='toHit'&&row.attacks?.every(attack=>attack.check==='constitution')||['damageDice','damageAdd'].includes(key)&&row.attacks?.some(attack=>attack.vesselHit)});
+    editor=createOpponentEditor({document,id:ID,t,fields:[{key:'toBeHit',label:tk('toBeHit'),min:3,max:18},{key:'toHit',label:tk('toHit'),min:3,max:18},{key:'hp',label:tk('hp'),min:1},{key:'damageDice',label:tk('damageDice'),min:0,max:10},{key:'damageAdd',label:tk('damageAdd'),min:-100,max:1000}],presets:getRoster().filter(entry=>!entry.rules.mechanics?.sequence&&!entry.rules.mechanics?.abilityOutcome&&!entry.rules.mechanics?.vessel&&!entry.rules.mechanics?.hitCounters).flatMap(entry=>editorRows(entry.enemies)),
+      isStatUnavailable:(key,row)=>row.unavailableStats?.includes(key)||row.hitCounter&&['hp','damageDice','damageAdd'].includes(key)||['toHit','damageDice','damageAdd'].includes(key)&&row.attacks?.length===0||key==='toHit'&&row.attacks?.every(attack=>attack.check==='constitution')||['damageDice','damageAdd'].includes(key)&&row.attacks?.some(attack=>attack.vesselHit)});
     el('editor').append(editor.element);
     const trigger=document.createElement('button');trigger.id=ID+'-btn';trigger.style.display='none';trigger.textContent=t('battlesim.title');getButtonRow().append(trigger);trigger.addEventListener('click',open);
     el('close').addEventListener('click',close);
@@ -212,6 +221,7 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
       if(active(data.fight))return;data.character=readCharacter();const entry=preset(),rules=structuredClone(entry?.rules??definition.getCustomRules?.()??{});
       if(rules.mechanics?.struggle)rules.mechanics.struggle.retrievedDamage={dice:number('retrievedWeaponDice',0,10),add:number('retrievedWeaponAdd',-100,1000)};
       const weapon=entry?.weapons?.[Number(el('weaponChoice').value)];if(weapon)rules.heroDamage=structuredClone(weapon.damage);
+      if(weapon?.sequenceOverrides&&rules.mechanics?.sequence)Object.assign(rules.mechanics.sequence,structuredClone(weapon.sequenceOverrides));
       if(weapon?.attackBonus){rules.mechanics??={};rules.mechanics.heroAttackBonus=(rules.mechanics.heroAttackBonus??0)+weapon.attackBonus;}
       if(weapon?.winSection)rules.winSection=weapon.winSection;
       const enemies=rules.mechanics?.abilityOutcome?structuredClone(entry.enemies):editor.read().map(enemy=>{
@@ -233,7 +243,7 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     }));
     const selectedAlly=fight=>fight.rules.mechanics?.holdOff?.damage?Number(el('allyTarget').value):null;
     el('useGauntlet').addEventListener('change',()=>{if(!active(state.read()?.fight))saveSetup();});
-    el('round').addEventListener('click',()=>change(data=>logEvents(data,crossroadsRound(data.fight,{target:Number(el('target').value),allyTarget:selectedAlly(data.fight),useGauntlet:el('useGauntlet').checked}))));
+    el('round').addEventListener('click',()=>change(data=>logEvents(data,crossroadsRound(data.fight,{target:Number(el('target').value),allyTarget:selectedAlly(data.fight),allyTargets:[...el('sequenceAllies').querySelectorAll('select')].map(select=>Number(select.value)),useGauntlet:el('useGauntlet').checked}))));
     for(const action of ['healingSpell','misdirection','repulsion'])el(action).addEventListener('click',()=>change(data=>{
       if(active(data.fight))logEvents(data,crossroadsRound(data.fight,{target:Number(el('target').value),action}));
       else if(action==='healingSpell'){
