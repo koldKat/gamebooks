@@ -1,0 +1,277 @@
+{
+  "schemaVersion": 1,
+  "bookId": 1301,
+  "family": "crossroads",
+  "sourceSha256": "f00118e177e831f0ecca3fe802f9885b1d317b57b8d2176a7555fde6dafd0a2e",
+  "rosterComplete": true,
+  "expectedEncounterCount": 4,
+  "source": "All four printed numerical combat groups. Threadfall remains the printed story ability checks and injury rolls, not an invented monster. Universal inventory/equipment stay unchanged.",
+  "enemies": [
+    {
+      "key": "60-0",
+      "name": "Wherry",
+      "attack": 9,
+      "defense": 10,
+      "hp": 8,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "60",
+          "label": "Wherry (§60)",
+          "enemies": [
+            {
+              "name": "Wherry",
+              "hp": 8,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 9,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                },
+                {
+                  "toHit": 9,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "40",
+            "lossSection": "29",
+            "sourceNotes": [
+              "The wherry rolls separately for claws and beak each round, each dealing 1 D6. Mirrim's knife/spear does 1 D6. If the wherry is still alive after four complete rounds, it flees: continue at section 36. Killing it first leads to 40; Mirrim reaching zero HP leads to 29."
+            ],
+            "roundLimit": 4,
+            "mechanics": {
+              "roundLimitOutcome": {
+                "status": "draw",
+                "section": "36"
+              }
+            }
+          },
+          "customRules": {},
+          "sourcePages": [
+            152,
+            153
+          ],
+          "printedRules": [
+            "Wherry",
+            "To hit Mirrim: 9",
+            "To be hit: 10",
+            "Hit points: 8",
+            "The wherry rolls separately for claws and beak each round, each dealing 1 D6. Mirrim's knife/spear does 1 D6. If the wherry is still alive after four complete rounds, it flees: continue at section 36. Killing it first leads to 40; Mirrim reaching zero HP leads to 29.",
+            "Win: section 40",
+            "Loss: section 29"
+          ]
+        }
+      }
+    },
+    {
+      "key": "66-0",
+      "name": "Trader’s apprentice",
+      "attack": 11,
+      "defense": 11,
+      "hp": 8,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "66",
+          "label": "Trader’s apprentice (§66)",
+          "enemies": [
+            {
+              "name": "Trader’s apprentice",
+              "hp": 8,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "65",
+            "lossSection": "69",
+            "sourceNotes": [
+              "Fists do 1 D6 damage. Keep actual HP losses; do not automatically heal after the fight."
+            ]
+          },
+          "customRules": {},
+          "sourcePages": [
+            170
+          ],
+          "printedRules": [
+            "Trader’s apprentice",
+            "To hit Mirrim: 11",
+            "To be hit: 11",
+            "Hit points: 8",
+            "Fists do 1 D6 damage. Keep actual HP losses; do not automatically heal after the fight.",
+            "Win: section 65",
+            "Loss: section 69"
+          ]
+        }
+      }
+    },
+    {
+      "key": "70-0",
+      "name": "Trader’s apprentice",
+      "attack": 11,
+      "defense": 11,
+      "hp": 8,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "70",
+          "label": "Trader’s apprentice (§70)",
+          "enemies": [
+            {
+              "name": "Trader’s apprentice",
+              "hp": 8,
+              "toBeHit": 11,
+              "attacks": [
+                {
+                  "toHit": 11,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "71",
+            "lossSection": "64",
+            "sourceNotes": [
+              "Fists do 1 D6 damage. Fight for three complete rounds unless either combatant reaches zero HP first. If neither wins, continue at section 68. Actual HP losses remain."
+            ],
+            "roundLimit": 3,
+            "mechanics": {
+              "roundLimitOutcome": {
+                "status": "draw",
+                "section": "68"
+              }
+            }
+          },
+          "customRules": {},
+          "sourcePages": [
+            180
+          ],
+          "printedRules": [
+            "Trader’s apprentice",
+            "To hit Mirrim: 11",
+            "To be hit: 11",
+            "Hit points: 8",
+            "Fists do 1 D6 damage. Fight for three complete rounds unless either combatant reaches zero HP first. If neither wins, continue at section 68. Actual HP losses remain.",
+            "Win: section 71",
+            "Loss: section 64"
+          ]
+        }
+      }
+    },
+    {
+      "key": "109-0",
+      "name": "Holdless man",
+      "attack": 9,
+      "defense": 10,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "crossroads",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "109",
+          "label": "Holdless man (§109)",
+          "enemies": [
+            {
+              "name": "Holdless man",
+              "hp": 10,
+              "toBeHit": 10,
+              "attacks": [
+                {
+                  "toHit": 9,
+                  "damage": {
+                    "dice": 1,
+                    "add": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "weapons": [],
+          "rules": {
+            "heroDamage": {
+              "dice": 1,
+              "add": 0
+            },
+            "winSection": "115",
+            "lossSection": "113",
+            "sourceNotes": [
+              "Fists do 1 D6 damage. Keep actual HP losses; do not automatically heal after the fight."
+            ]
+          },
+          "customRules": {},
+          "sourcePages": [
+            243
+          ],
+          "printedRules": [
+            "Holdless man",
+            "To hit Mirrim: 9",
+            "To be hit: 10",
+            "Hit points: 10",
+            "Fists do 1 D6 damage. Keep actual HP losses; do not automatically heal after the fight.",
+            "Win: section 115",
+            "Loss: section 113"
+          ]
+        }
+      }
+    }
+  ]
+}
