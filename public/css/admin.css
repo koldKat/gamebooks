@@ -201,8 +201,8 @@ input, select, textarea { min-width: 0; max-width: 100%; }
 .admin-progress-section { margin: 0.45rem 0; }
 .admin-progress-heading { font-weight: 600; color: #f5a623; }
 .admin-progress-heading span { font-weight: 400; }
-.admin-progress-job .admin-progress-heading { color: #c084fc; }
+.admin-progress-job .admin-progress-heading { color: #fb7185; }
 .admin-progress-track { height: 4px; border-radius: 2px; overflow: hidden; background: #374151; margin: 0.2rem 0; }
 .admin-progress-track span { display: block; height: 100%; background: #f5a623; }
-.admin-progress-job .admin-progress-track span { background: #c084fc; }
+.admin-progress-job .admin-progress-track span { background: #fb7185; }
 .admin-progress-caption { display: flex; justify-content: space-between; gap: 0.6rem; color: #9ca3af; font-size: 0.78rem; font-variant-numeric: tabular-nums; }
