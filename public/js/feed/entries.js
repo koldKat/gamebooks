@@ -114,14 +114,11 @@ export function renderEntry(e) {
       title: `<span class="feed-title">${escapeHtml(e.levelTitle)}</span>` });
   } else if (e.type === 'level_up') {
     extraClass = 'feed-entry--levelup';
-    const abilitySuffix = e.gainedAbility
-      ? t('feed.ability_unlocked', { n: e.newAbilityCount })
-      : '';
     const lvTmpl = e.levelUpTemplate || t('feed.levelup_default');
     html = lvTmpl
       .replace('{name}',  userEl)
       .replace('{title}', `<span class="feed-title">${escapeHtml(e.levelTitle)}</span>`)
-      .replace('{level}', `<span class="feed-level">${e.level}</span>`) + abilitySuffix;
+      .replace('{level}', `<span class="feed-level">${e.level}</span>`);
   } else if (e.type === 'all_visited') {
     html = t('feed.tmpl.all_visited', { user: userEl, book: bookBtn(e.bookId, e.bookName) });
   } else if (e.type === 'all_discovered') {

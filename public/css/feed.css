@@ -210,7 +210,6 @@ body.no-feed-glass-cards .feed-day-card--glass::before { display: none !importan
 .feed-verb.neutral { color: #9ca3af; }
 .feed-level { font-weight: 600; color: #67e8f9; }
 .feed-title { color: #0891b2; font-style: italic; font-weight: 600; }
-.feed-ability { color: #a78bfa; font-size: 0.88em; }
 
 .feed-empty {
   font-size: 0.8rem;
