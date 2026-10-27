@@ -79,7 +79,7 @@ function createRubyCompletionChecker(db) {
   const check = db.transaction((userId, bookId) => {
     const account = user.get(userId);
     if (!account) return 0;
-    const minimumSections = account.is_squire ? 25 : 100;
+    const minimumSections = account.is_squire ? 25 : 50;
     const row = book.get(bookId);
     if (!row) return 0;
     let earned = 0;
@@ -124,6 +124,10 @@ function backfillRubies(db) {
     if (!db.prepare("SELECT 1 FROM ruby_migrations WHERE name='squire-completion-25-v1'").get()) {
       for (const { id } of db.prepare('SELECT id FROM users WHERE is_squire=1').all()) backfillRubiesForUser(db,id);
       db.prepare("INSERT INTO ruby_migrations(name) VALUES('squire-completion-25-v1')").run();
+    }
+    if (!db.prepare("SELECT 1 FROM ruby_migrations WHERE name='player-completion-50-v1'").get()) {
+      for (const { id } of db.prepare('SELECT id FROM users WHERE is_squire=0').all()) backfillRubiesForUser(db,id);
+      db.prepare("INSERT INTO ruby_migrations(name) VALUES('player-completion-50-v1')").run();
     }
   }).immediate();
 }

@@ -41,23 +41,51 @@ function fixture(t) {
 }
 const range=(start,end)=>Array.from({length:end-start+1},(_,i)=>start+i);
 
-test('Squires qualify at 25 sections; other players still need 100 and current role is read on every check',t=>{
+test('Squires qualify at 25 sections; other players need 50 and current role is read on every check',t=>{
   const f=fixture(t);
-  for(const total of [24,25,99,100]){
+  for(const total of [24,25,49,50,99,100]){
     f.addBook(total,total);
     for(const user of [2,17]) f.save(user,total,[range(1,total)]);
   }
   f.db.exec('UPDATE users SET is_squire=1 WHERE id=17');
-  for(const total of [24,25,99,100]){
+  for(const total of [24,25,49,50,99,100]){
     assert.equal(f.check(17,total),total>=25?1:0);
-    assert.equal(f.check(2,total),total>=100?1:0);
+    assert.equal(f.check(2,total),total>=50?1:0);
   }
   f.db.exec('UPDATE users SET is_squire=1 WHERE id=2');
   assert.equal(f.check(2,25),1);
   f.db.exec('UPDATE users SET is_squire=0 WHERE id=2');
   assert.equal(f.check(2,99),0);assert.equal(f.check(2,25),0);
-  assert.equal(f.wallet(2).rubies_earned,2);
+  assert.equal(f.wallet(2).rubies_earned,4);
   assert.equal(f.check(999,100),0);
+});
+
+test('50-section migration backfills public books and anthologies once without changing runs or existing rewards',t=>{
+  const f=fixture(t);
+  f.db.exec("INSERT INTO ruby_migrations VALUES('completion-v1'),('squire-completion-25-v1'); UPDATE users SET is_squire=1 WHERE id=17");
+  f.addBook(100);f.save(2,100,[range(1,100)]);assert.equal(f.check(2,100),1);
+  assert.equal(f.exchange(2,1,'existing-threshold-sale',3).ok,true);
+  for(const total of [49,50,99]){
+    f.addBook(total,total);f.save(2,total,[range(1,total)]);
+  }
+  f.addBook(200,50);f.save(2,200,[range(1,50)]);
+  f.db.exec('UPDATE books SET is_public=0 WHERE id=200');
+  f.addBook(201,50);f.save(2,201,[range(1,49)]);
+  f.addBook(300,0,null,1);f.addBook(301,25,300);f.addBook(302,25,300);
+  f.save(2,301,[range(1,25)]);f.save(2,302,[range(1,25)]);
+  f.addBook(400,0,null,1);f.addBook(401,24,400);f.addBook(402,25,400);
+  f.save(2,401,[range(1,24)]);f.save(2,402,[range(1,25)]);
+  const snapshot=table=>f.db.prepare('SELECT * FROM '+table+' ORDER BY rowid').all();
+  const preserved=Object.fromEntries(['users','user_books','xp_events','coin_events','ruby_exchanges','notifications'].map(table=>[table,snapshot(table)]));
+  ruby.backfillRubies(f.db);
+  assert.equal(f.wallet(2).rubies_earned,4);assert.equal(f.wallet(2).rubies_spent,1);
+  assert.deepEqual(f.db.prepare('SELECT book_id FROM ruby_rewards WHERE user_id=2 ORDER BY book_id').all(),
+    [50,99,100,300].map(book_id=>({book_id})));
+  const market=snapshot('ruby_market');
+  ruby.backfillRubies(f.db);assert.equal(f.wallet(2).rubies_earned,4);
+  assert.deepEqual(snapshot('ruby_market'),market);
+  assert.equal(f.wallet(17),undefined);
+  for(const [table,rows] of Object.entries(preserved)) assert.deepEqual(snapshot(table),rows,table);
 });
 
 test('Squire anthologies need 25 combined sections, every member visited and public, with independent child rewards',t=>{
@@ -159,9 +187,9 @@ test('private books cannot earn rubies; publishing permits one reward and unpubl
 });
 
 test('an anthology and all primary and secondary members must be public for its reward',t=>{
-  const f=fixture(t);f.addBook(20,0,null,1);f.addBook(21,60,20);f.addBook(22,40);
+  const f=fixture(t);f.addBook(20,0,null,1);f.addBook(21,25,20);f.addBook(22,25);
   f.db.exec('INSERT INTO book_anthology_memberships VALUES(22,20)');
-  f.save(2,21,[range(1,60)]);f.save(2,22,[range(1,40)]);
+  f.save(2,21,[range(1,25)]);f.save(2,22,[range(1,25)]);
   for(const id of [20,21,22]){
     f.db.prepare('UPDATE books SET is_public=0 WHERE id=?').run(id);
     assert.equal(f.check(2,20),0);assert.equal(f.check(2,21),0);assert.equal(f.check(2,22),0);
@@ -199,15 +227,16 @@ test('sparse and prefixed imported IDs, uncounted entries and out-of-range paths
   f.db.exec("INSERT INTO book_reading_entries VALUES(10,'intro',0)");
   f.save(1,10,[range(1,150)]);assert.equal(f.check(1,10),0);
   f.save(1,10,[ids.slice(0,99),['A1']]);assert.equal(f.check(1,10),1);
-  f.addBook(11,99);f.save(1,11,[range(1,200)]);assert.equal(f.check(1,11),0);
+  f.addBook(11,99);f.db.exec('UPDATE books SET max_section_number=200 WHERE id=11');
+  f.save(1,11,[range(1,200)]);assert.equal(f.check(1,11),0);
   f.addBook(12);f.db.exec("INSERT INTO book_sections VALUES(12,'1')");f.save(1,12,[range(1,100)]);assert.equal(f.check(1,12),0);
 });
 
 test('anthology totals qualify together, include secondary members once, and eligible books earn separately',t=>{
-  const f=fixture(t);f.addBook(20,0,null,1);f.addBook(21,60,20);f.addBook(22,40);
+  const f=fixture(t);f.addBook(20,0,null,1);f.addBook(21,25,20);f.addBook(22,25);
   f.db.exec('INSERT INTO book_anthology_memberships VALUES(21,20),(22,20)');
-  f.save(17,21,[range(1,60)]);f.save(17,22,[range(1,39)]);assert.equal(f.check(17,21),0);
-  f.save(17,22,[range(1,40)]);assert.equal(f.check(17,22),1);assert.equal(f.check(17,21),0);
+  f.save(17,21,[range(1,25)]);f.save(17,22,[range(1,24)]);assert.equal(f.check(17,21),0);
+  f.save(17,22,[range(1,25)]);assert.equal(f.check(17,22),1);assert.equal(f.check(17,21),0);
   f.addBook(30,0,null,1);f.addBook(31,100,30);f.addBook(32,100,30);
   f.save(17,31,[range(1,100)]);assert.equal(f.check(17,31),1);
   f.save(17,32,[range(1,100)]);assert.equal(f.check(17,32),2);
