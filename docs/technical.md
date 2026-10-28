@@ -226,6 +226,10 @@ gamebooks/
                          deadlines, escape restrictions, entry bonuses and result passage ranges.
                          Optional simulator item modifiers leave base stats and shared items intact;
                          noncombat resolutions do not receive combat win XP.
+                         Source Endurance formulas roll independently per foe. Multiple companions
+                         retain their own cadence and fixed bonuses; single-strike trials stop at the
+                         first failure. Surviving source opponents retain wounds between linked
+                         encounters. One-use source items and equipment exceptions stay simulator-local.
         engines/crossroads/ Pure 3D6 threshold combat and ability checks.
                          Optional v3 sequences preserve hit-triggered passage branches,
                          simultaneous friendly and enemy attacks, independent ally targets,

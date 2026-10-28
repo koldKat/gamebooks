@@ -14,8 +14,13 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
   };
   function readHero(previous){
     const itemBonuses={};
-    for(const item of definition.itemModifiers??[])if(el('item-'+item.key).checked)for(const [key,value]of Object.entries(item.bonuses))itemBonuses[key]=(itemBonuses[key]??0)+value;
-    return character({...previous,...Object.fromEntries(['ob','db','missileOb','running','trickery','magic','endurance','damage'].map(k=>[k,numeric(k,['endurance','damage'].includes(k)?k==='endurance'?1:0:-1000)])),itemBonuses,weapon:el('weapon').value,armour:el('armour').value,missile:el('missile').value,shield:el('shield').checked,elvenChain:el('elvenChain').checked,orcSlayer:el('orcSlayer').checked,deviceCharges:numeric('deviceCharges',0,2),spells:Object.keys(SPELLS).filter(k=>el('known-'+k).checked)});
+    const sourceItems=[];
+    for(const item of definition.itemModifiers??[])if(el('item-'+item.key).checked){
+      sourceItems.push(item.key);
+      if(!item.weapon||(!preset()?.rules.sourceWeapon&&item.weapon===el('weapon').value))for(const [key,value]of Object.entries(item.bonuses))itemBonuses[key]=(itemBonuses[key]??0)+value;
+    }
+    if((definition.itemModifiers??[]).filter(item=>item.weapon&&el('item-'+item.key).checked).length>1)throw new RangeError('Choose one source weapon');
+    return character({...previous,...Object.fromEntries(['ob','db','missileOb','running','trickery','magic','endurance','damage'].map(k=>[k,numeric(k,['endurance','damage'].includes(k)?k==='endurance'?1:0:-1000)])),itemBonuses,sourceItems,nightPenalty:Boolean(el('nightPenalty')?.checked),weapon:el('weapon').value,armour:el('armour').value,missile:el('missile').value,shield:el('shield').checked,elvenChain:el('elvenChain').checked,orcSlayer:el('orcSlayer').checked,deviceCharges:numeric('deviceCharges',0,2),spells:Object.keys(SPELLS).filter(k=>el('known-'+k).checked)});
   }
   function snapshot(d){
     d.setup=Object.fromEntries([...el('setup').querySelectorAll('input,select')].filter(field=>field.id&&!field.closest('.bsim-opponent-editor')).map(field=>[field.id,field.type==='checkbox'?field.checked:field.value]));
@@ -29,6 +34,9 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
       if(run!==getRun()||Number(getBookId())!==definition.id||data()!==before)return;
       if(d.fight&&d.fight!==previousFight){
         d.fight=resolveOutcome(d.fight,dice());
+        for(const enemy of d.fight.enemies)if(enemy.carryKey){
+          d.carriedOpponents??={};d.carriedOpponents[enemy.carryKey]=structuredClone(enemy);
+        }
         d.hero=structuredClone(d.fight.hero);d.log.push(...d.fight.events);d.fight.events=[];
         if(!busy(d)&&!luckAvailable(d.fight)&&!d.fight.recorded){
           d.fight.recorded=true;d.history.push({enemy:d.encounter,outcome:d.fight.status,ts:Math.max(Date.now(),(d.history.at(-1)?.ts??0)+1)});
@@ -40,21 +48,41 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
   }
   function dice(){
     if(!(busy(data())?data().manualDice:el('manualDice').checked))return undefined;
-    return role=>numeric(({player:'playerPick',enemy:'enemyPick',support:'supportPick',spell:'spellPick',damage1:'damagePick1',damage2:'damagePick2'})[role]??'checkPick',2,12);
+    return role=>numeric(({player:'playerPick',enemy:'enemyPick',support:'supportPick',endurance:'endurancePick',spell:'spellPick',damage1:'damagePick1',damage2:'damagePick2'})[role]??'checkPick',2,12);
   }
   function preset(){return getRoster().find(e=>String(e.section)===el('context').value);}
   function start(d,options={}){
     if(locked(d))return;snapshot(d);d.hero=readHero(d.hero);d.manualDice=el('manualDice').checked;
     const entry=preset();d.encounter=entry?.label??opponents.read().map(e=>e.displayName||tk('opponent')).join(' / ');
-    d.fight=beginFight(d.hero,opponents.read(),{mode:el('mode').value,equipmentModifiers:el('equipmentModifiers').checked,formula:el('formula').checked,unmodifiedTwo:el('unmodifiedTwo').checked,surprised:el('surprised').checked,enemyUnaware:el('enemyUnaware').checked,useAlly:el('useAlly').checked,useSupport:el('useSupport').checked,rules:entry?.rules,...options},dice());
+    const enemies=opponents.read().map(enemy=>{
+      const carried=enemy.carryKey&&d.carriedOpponents?.[enemy.carryKey];
+      if(carried?.condition)throw new RangeError('This source opponent was already defeated');
+      return carried&&!carried.condition?{...enemy,endurance:carried.endurance,damage:carried.damage,enduranceFormula:undefined}:enemy;
+    });
+    d.fight=beginFight(d.hero,enemies,{mode:el('mode').value,equipmentModifiers:el('equipmentModifiers').checked,formula:el('formula').checked,unmodifiedTwo:el('unmodifiedTwo').checked,surprised:el('surprised').checked,enemyUnaware:el('enemyUnaware').checked,useAlly:el('useAlly').checked,useSupport:el('useSupport').checked,sourceAction:el('sourceAction').value||undefined,rules:entry?.rules,...options},dice());
     if(d.opening?.firstAttackObBonus)d.fight.effects.sneakAttack=d.opening.firstAttackObBonus;
     if(d.opening?.surprised){d.fight.surprised=true;d.fight.stage='melee';}
     delete d.opening;d.log.push({type:'start',name:d.encounter});
   }
   function chooseContext(){
     if(locked(data()))return;const entry=preset();opponents.fixCount(Boolean(entry));
-    opponents.set(entry?.enemies??data()?.opponentSetup??[{ob:0,db:0,endurance:20,armour:'none',kind:'normal'}]);
+    if(entry?.repeatFirstEnemy)el('sourceCount').value=entry.repeatFirstEnemy.default;
+    if(entry?.remainingAfterSleepingTrial&&data()?.fight?.rules.singleStrikeTrial&&data().fight.status==='avoided')el('sourceCount').value=9-data().fight.index;
+    el('includeGuard').checked=false;
+    el('sourceAction').innerHTML='<option value="">'+escape(tk('sourceAction.none'))+'</option>'+(entry?.rules.sourceActions??[]).map(action=>'<option value="'+escape(action.key)+'">'+escape(action.label)+'</option>').join('');
+    populateOpponents();
     change(d=>snapshot(d));
+  }
+  function populateOpponents(){
+    const entry=preset();
+    if(!entry){opponents.set(data()?.opponentSetup??[{ob:0,db:0,endurance:20,armour:'none',kind:'normal'}]);return;}
+    let rows=structuredClone(entry.enemies);
+    if(entry.repeatFirstEnemy){
+      const r=entry.repeatFirstEnemy,count=numeric('sourceCount',r.min,r.max);
+      rows=Array.from({length:count},(_,i)=>({...structuredClone(entry.enemies[0]),key:entry.enemies[0].key+'-'+i,displayName:entry.enemies[0].displayName+' #'+(i+1)}));
+    }
+    if(entry.optionalTailEnemy&&el('includeGuard').checked)rows.push(structuredClone(entry.optionalTailEnemy));
+    opponents.set(rows);
   }
   function step(d){
     if(!busy(d)||d.fight.manualEffect)return;
@@ -67,7 +95,7 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     render();el('overlay').classList.add('active');
   }
   function eventText(e){
-    if(e.type==='attack')return tk('attackLog',{who:tk(e.who),raw:e.raw??'-',damage:e.damage,result:e.result});
+    if(e.type==='attack')return tk('attackLog',{who:e.supportName??tk(e.who),raw:e.raw??'-',damage:e.damage,result:e.result});
     if(e.type==='spell')return tk('spellLog',{spell:tk('spell.'+e.spell),raw:e.raw,result:tk(e.success?'success':'failed')});
     if(['escape','runPast','opening'].includes(e.type))return tk('checkLog',{raw:e.raw,total:e.total,result:tk(e.success?'success':'failed')});
     if(e.type==='calm')return tk('calmLog',{raw:e.raw,result:tk(e.success?'success':'failed')});
@@ -79,6 +107,9 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     const d=data(),f=d?.fight,active=busy(d),pendingLuck=luckAvailable(f),setupLocked=locked(d);
     if(shownRun!==run){
       shownRun=run;
+      // Restore the context before restoring its dynamically supplied actions.
+      el('context').value=d?.setup?.[id+'-context']??'manual';
+      el('sourceAction').innerHTML='<option value="">'+escape(tk('sourceAction.none'))+'</option>'+(preset()?.rules.sourceActions??[]).map(action=>'<option value="'+escape(action.key)+'">'+escape(action.label)+'</option>').join('');
       for(const field of el('setup').querySelectorAll('input,select')){
         if(!field.id||field.closest('.bsim-opponent-editor'))continue;
         if(field.type==='checkbox')field.checked=d?.setup?.[field.id]??field.defaultChecked;
@@ -100,8 +131,13 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     if([...el('luckPick').options].some(o=>o.value===selected))el('luckPick').value=selected;
     el('useAlly').disabled=setupLocked||!d?.hero?.charmedAnimal;
     const rules=active?f.rules:preset()?.rules??{};
-    el('useSupport').closest('label').hidden=!rules.supportAttack;
-    el('supportPick').closest('label').hidden=!rules.supportAttack;
+    el('useSupport').closest('label').hidden=!(rules.supportAttack||rules.supportAttacks?.length);
+    el('supportPick').closest('label').hidden=!(rules.supportAttack||rules.supportAttacks?.length);
+    el('sourceCount').closest('label').hidden=!preset()?.repeatFirstEnemy;
+    el('includeGuard').closest('label').hidden=!preset()?.optionalTailEnemy;
+    el('sourceAction').closest('label').hidden=!rules.sourceActions?.length;
+    el('endurancePick').closest('label').hidden=!(active?f.enemies:preset()?.enemies??[]).some(enemy=>enemy.enduranceFormula)||active;
+    el('useAlly').disabled=el('useAlly').disabled||Boolean(rules.singleStrikeTrial);
     el('keepRange').disabled=Boolean(rules.cannotEscape);
     if(rules.cannotEscape)el('keepRange').checked=false;
     for(const option of el('meleeAction').options)option.disabled=Boolean(rules.cannotEscape&&option.value!=='attack');
@@ -127,7 +163,7 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     if(el('rangedAction').selectedOptions[0]?.disabled)el('rangedAction').value='skip';
     const enemy=f?.enemies[f.index];
     el('status').textContent=f?tk('status.'+f.status)+(active?' | '+tk('fightState',{round:f.round+1,damage:f.hero.damage,endurance:f.hero.endurance,name:enemy?.name,enemyDamage:enemy?.damage,enemyEndurance:enemy?.endurance}):' | '+tk('heroState',{damage:f.hero.damage,endurance:f.hero.endurance})):tk('ready');
-    el('destination').textContent=f?.destination?tk('nextPassage',{section:f.destination}):'';
+    el('destination').textContent=f?.destination?tk('nextPassage',{section:f.destination}):f?.status==='escaped'?f.rules.escapeInstruction??'':'';
     if(f?.allyActive)el('status').textContent+=' | '+tk('allyState',f.ally);
     el('history').innerHTML=(d?.history??[]).slice(-30).reverse().map(e=>'<div>'+escape(e.enemy)+' | '+escape(tk('status.'+e.outcome))+'</div>').join('');
     el('log').innerHTML=(d?.log??[]).slice().reverse().map(e=>'<div>'+escape(eventText(e))+'</div>').join('');
@@ -143,7 +179,10 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     overlay.innerHTML=`<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(tk('title'))}</span><button type="button" class="inv-close-btn" id="${id}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><div id="${id}-setup"><p>${escape(tk('note'))}</p>${select('mode',['basic','advanced'])}${check('equipmentModifiers')}<details open><summary>${escape(tk('hero'))}</summary>${['ob','db','missileOb','running','trickery','magic'].map(k=>input(k)).join('')}${input('endurance',30,1)}${input('damage',0,0)}</details>${check('surprised')}${check('enemyUnaware')}${check('useAlly')}<div id="${id}-advanced"><details><summary>${escape(tk('modifiers'))}</summary><p>${escape(tk('modifierNote'))}</p>${select('weapon',Object.keys(WEAPONS))}${select('armour',Object.keys(ARMOUR))}${select('missile',Object.keys(MISSILES))}${check('shield')}${check('elvenChain')}${check('orcSlayer')}</details><details id="${id}-spellSetup"><summary>${escape(tk('learnedSpells'))}</summary>${Object.keys(SPELLS).map(k=>check('known-'+k)).join('')}${input('deviceCharges',0,0,2)}<p>${escape(tk('otherSpells'))}</p></details></div>${check('formula')}${check('unmodifiedTwo')}<label class="inv-edit-row"><span>${escape(tk('context'))}</span><select class="inv-edit-input" id="${id}-context"><option value="manual">${escape(tk('custom'))}</option>${getRoster().map(e=>`<option value="${escape(e.section)}">${escape(e.label)}</option>`).join('')}</select></label><div id="${id}-opponents"></div>${check('manualDice')}${select('openingAction',['escape','sneakAway','sneakAttack','steal'])}<p>${escape(tk('openingNote'))}</p></div><div class="bsim-btn-row">${button('saveHero')}${button('opening')}${button('start')}${button('cancel')}</div><details id="${id}-dice"><summary>${escape(tk('numbers'))}</summary>${['playerPick','enemyPick','checkPick','spellPick','damagePick1','damagePick2'].map(k=>input(k,7,2,12)).join('')}</details><div id="${id}-ranged">${select('rangedAction',['shoot','skip','firebolt','shield','strength','calm','charm'])}</div><div id="${id}-approach">${check('keepRange')}</div><div id="${id}-melee">${select('meleeAction',['attack','escape','runPast'])}</div>${check('speed')}${button('step')}<div id="${id}-luck"><label class="inv-edit-row"><span>${escape(tk('luckPick'))}</span><select class="inv-edit-input" id="${id}-luckPick"></select></label><div class="bsim-btn-row">${button('luckCast')}${button('keepNumbers')}</div></div><div id="${id}-calm"><p>${escape(tk('calmNote'))}</p><div class="bsim-btn-row">${button('calmWithdraw')}${button('calmContinue')}</div></div><p id="${id}-animal"></p></div><div class="bsim-col bsim-col-right"><div class="bsim-status" id="${id}-status"></div><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${id}-history"></div></details><div class="bsim-log" id="${id}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
     el('setup').insertAdjacentHTML('beforeend',check('useSupport')+(definition.itemModifiers??[]).map(item=>check('item-'+item.key)).join(''));
-    el('dice').insertAdjacentHTML('beforeend',input('supportPick',7,2,12));
+    if(definition.nightControls)el('setup').insertAdjacentHTML('beforeend',check('nightPenalty'));
+    el('setup').insertAdjacentHTML('beforeend',input('sourceCount',1,1,100)+check('includeGuard')+select('sourceAction',['none']));
+    el('sourceAction').options[0].value='';
+    el('dice').insertAdjacentHTML('beforeend',input('supportPick',7,2,12)+input('endurancePick',7,2,12));
     el('status').insertAdjacentHTML('afterend','<p id="'+id+'-destination"></p>');
     el('openingAction').insertAdjacentHTML('beforeend','<option value="immediateEscape">'+escape(tk('openingAction.immediateEscape'))+'</option>');
     for(const action of ['leave','surrender'])el('openingAction').insertAdjacentHTML('beforeend','<option value="'+action+'">'+escape(tk('openingAction.'+action))+'</option>');
@@ -153,7 +192,7 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     el('close').addEventListener('click',close);let backdrop=false;
     overlay.addEventListener('mousedown',e=>{backdrop=e.target===overlay;});overlay.addEventListener('click',e=>{if(backdrop&&e.target===overlay)close();});overlay.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();close();}});
     registerShortcut({button:launch,overlay,open,close});
-    el('setup').addEventListener('change',e=>{if(!locked(data())&&e.target!==el('context'))change(d=>snapshot(d));});
+    el('setup').addEventListener('change',e=>{if(!locked(data())&&e.target!==el('context'))change(d=>{if([el('sourceCount'),el('includeGuard')].includes(e.target))populateOpponents();snapshot(d);});});
     el('context').addEventListener('change',chooseContext);
     el('saveHero').addEventListener('click',()=>change(d=>{if(locked(d))return;d.hero=readHero(d.hero);d.fight=null;snapshot(d);d.log.push({type:'saved'});}));
     el('start').addEventListener('click',()=>change(start));el('step').addEventListener('click',()=>change(step));

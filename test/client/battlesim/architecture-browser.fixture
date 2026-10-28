@@ -5153,6 +5153,51 @@ for(const id of BOOK_IDS){
       saved=JSON.stringify(data());el('newCharacter').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(data())===saved,'Dzurlord stale confirmation ignored');app.setCurrentBookId(1296);button.click();
     }finally{Math.random=random;}
   }
+  if(id===1438){
+    const el=key=>document.getElementById('sim1438-'+key),data=()=>app.currentPlaythrough().sim1438;
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1438/definition.js');
+    const run=app.currentPlaythrough();run.inventory={sentinel:['shared-item']};run.equipment={sentinel:'shared-slot'};run.sim1437={sentinel:true};
+    const preserved=JSON.stringify([run.inventory,run.equipment,run.sim1437]);
+    const choose=section=>{el('context').value=String(section);el('context').dispatchEvent(new Event('change'));};
+    const change=key=>el(key).dispatchEvent(new Event('change',{bubbles:true}));
+    const cancel=()=>{if(data()?.fight?.status==='active'){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    check(getRoster().length===55&&requestedRosters.has(1438),'Mirkwood complete DB roster loaded');
+    check(data()===undefined,'Mirkwood render preserves uninitialized state');
+    choose('manual');el('manualDice').checked=true;
+    const weak={ob:0,db:0,endurance:1,armour:'none',kind:'normal'};
+    for(const field of el('opponents').querySelectorAll('[data-stat]'))field.value=weak[field.dataset.stat];
+    el('playerPick').value='8';el('enemyPick').value='2';el('start').click();el('step').click();
+    check(data().fight.status==='win'&&data().history.length===1,'Mirkwood custom fight works');
+    for(const entry of getRoster()){
+      choose(entry.section);el('damage').value='0';el('endurance').value='1000';el('saveHero').click();
+      el('endurancePick').value='7';el('playerPick').value='2';el('enemyPick').value='2';el('start').click();
+      const count=entry.repeatFirstEnemy?.default??entry.enemies.length;
+      check(data().fight.status==='active'&&data().fight.enemies.length===count,'Mirkwood preset '+entry.section);
+      el('step').click();check(data().fight.round===1,'Mirkwood resolves '+entry.section);cancel();
+    }
+    choose('102');el('useSupport').checked=true;el('playerPick').value='2';el('supportPick').value='7';el('start').click();el('step').click();el('step').click();
+    check(data().log.some(e=>e.supportName==='Prince')&&data().log.some(e=>e.supportName==='Princess'),'Mirkwood both archers through panel');cancel();el('useSupport').checked=false;
+    choose('467');el('playerPick').value='8';el('start').click();el('step').click();el('step').click();
+    check(data().fight.status==='avoided'&&data().fight.destination==='477','Mirkwood guard alarm is not defeat');
+    const guard=data().fight.enemies[0];check(guard.damage>0,'Mirkwood injured guard retained');
+    choose('169-via477');el('sourceCount').value='4';change('sourceCount');el('includeGuard').checked=true;change('includeGuard');el('start').click();
+    check(data().fight.enemies.length===5&&data().fight.enemies.at(-1).damage===guard.damage&&data().fight.enemies.at(-1).endurance===guard.endurance,'Mirkwood explicit count and injured guard carry forward');
+    check(el('sourceCount').disabled&&el('includeGuard').disabled,'Mirkwood source group controls locked');cancel();
+    choose('381');el('playerPick').value='12';el('start').click();for(let i=0;i<9;i++)el('step').click();
+    check(data().fight.status==='win'&&data().fight.index===9&&data().fight.destination==='383','Mirkwood all nine sleeping opponents');
+    choose('381');el('playerPick').value='12';el('start').click();el('step').click();el('playerPick').value='2';el('step').click();
+    check(data().fight.status==='avoided'&&data().fight.index===1&&data().fight.destination==='324','Mirkwood failed sleeping trial');
+    choose('169-via324');check(el('sourceCount').value==='8','Mirkwood sleeping defeats reduce next source group');
+    choose('169-via399');el('sourceAction').value='horn';el('start').click();
+    check(data().fight.status==='avoided'&&data().fight.destination==='292','Mirkwood horn entrance route');
+    const afterHorn=JSON.stringify(data());el('start').click();check(JSON.stringify(data())===afterHorn,'Mirkwood spent source item cannot be reused');document.getElementById('alert-ok')?.click();
+    choose('102-via248');el('mode').value='advanced';change('mode');el('armour').value='plate';el('shield').checked=true;el('weapon').value='axe';el('start').click();
+    check(data().fight.rules.withoutEquipment&&data().hero.armour==='plate'&&data().hero.weapon==='axe','Mirkwood source sword does not rewrite equipment');cancel();
+    choose('manual');el('mode').value='basic';change('mode');el('start').click();const inFlight=JSON.stringify(data());module.render();check(JSON.stringify(data())===inFlight,'Mirkwood render preserves fight');
+    el('cancel').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(data()??run.sim1438)===inFlight,'Mirkwood stale cancel ignored');app.setCurrentBookId(1438);button.click();cancel();
+    const original=JSON.stringify(data());app.state.playthroughs=[{path:[1],startedAt:2}];app.state.activePtIndex=0;el('start').click();check(app.currentPlaythrough().sim1438===undefined,'Mirkwood stale controls cannot alter new run');app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Mirkwood original run retained');
+    check(JSON.stringify([run.inventory,run.equipment,run.sim1437])===preserved,'Mirkwood shared inventory, equipment and previous simulator unchanged');
+  }
   if(id===1437){
     const el=key=>document.getElementById('sim1437-'+key),data=()=>app.currentPlaythrough().sim1437;
     const {getRoster}=await import('REPO/public/js/battlesim/books/1437/definition.js');

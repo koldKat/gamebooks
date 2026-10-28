@@ -47,7 +47,7 @@ export function character(input={}) {
   if(!Object.hasOwn(WEAPONS,h.weapon)||!Object.hasOwn(ARMOUR,h.armour)||!Object.hasOwn(MISSILES,h.missile))throw new RangeError('Invalid equipment modifier');
   h.shield=Boolean(h.shield);h.spells=[...new Set(h.spells??[])];
   if(h.spells.some(s=>!Object.hasOwn(SPELLS,s)))throw new RangeError('Invalid spell');
-  h.itemBonuses=Object.fromEntries(['ob','db','missileOb','running','trickery','magic'].map(key=>[key,integer(h.itemBonuses?.[key]??0)]));
+  h.itemBonuses=Object.fromEntries(['ob','db','missileOb','meleeOb','meleeDamage','running','trickery','magic'].map(key=>[key,integer(h.itemBonuses?.[key]??0)]));
   h.deviceCharges=integer(h.deviceCharges??0,0,2);return h;
 }
 function opponent(e) {
@@ -58,10 +58,12 @@ function opponent(e) {
 }
 export function modifiers(f, missile=false) {
   if(f.allyActive)return {ob:f.ally.ob,db:f.ally.db,running:0,trickery:0,magic:0};
-  const h=f.hero,advanced=f.mode==='advanced'||f.equipmentModifiers,a=advanced?ARMOUR[h.armour]:ARMOUR.none;
+  const h=f.hero,advanced=(f.mode==='advanced'||f.equipmentModifiers)&&!f.rules?.withoutEquipment,a=advanced?ARMOUR[h.armour]:ARMOUR.none;
   const shield=advanced&&h.shield&&!twoHanded.has(missile?h.missile:h.weapon);
-  const b=h.itemBonuses??{},r=f.rules??{};
-  return {ob:h.ob+(advanced?WEAPONS[h.weapon].ob:0)+(b.ob??0)+(r.heroObBonus??0)+(r.meleeObBonus??0),db:h.db+a.db+(shield?1:0)+(f.effects.shield?2:0)+(b.db??0)+(r.heroDbBonus??0),running:h.running+a.running+(b.running??0)+(r.runningBonus??0),trickery:h.trickery+(h.armour==='chain'&&h.elvenChain?0:a.trickery)+(b.trickery??0),magic:h.magic+a.magic-(shield?1:0)+(b.magic??0)};
+  const b=f.rules?.withoutEquipment?{}:h.itemBonuses??{},r=f.rules??{};
+  const weapon=r.sourceWeapon??h.weapon;
+  const values={ob:h.ob+((f.mode==='advanced'||f.equipmentModifiers)?WEAPONS[weapon].ob:0)+(b.ob??0)+(b.meleeOb??0)+(r.heroObBonus??0)+(r.meleeObBonus??0),missileOb:h.missileOb+MISSILES[h.missile]+(b.ob??0)+(b.missileOb??0)+(r.heroObBonus??0),db:h.db+a.db+(shield?1:0)+(f.effects.shield?2:0)+(b.db??0)+(r.heroDbBonus??0),running:h.running+a.running+(b.running??0)+(r.runningBonus??0),trickery:h.trickery+(h.armour==='chain'&&h.elvenChain?0:a.trickery)+(b.trickery??0),magic:h.magic+a.magic-(shield?1:0)+(b.magic??0)};
+  return h.nightPenalty?Object.fromEntries(Object.entries(values).map(([key,value])=>[key,Math.floor(value/2)])):values;
 }
 export function beginFight(hero,enemies,options={},roll) {
   if(!Array.isArray(enemies)||!enemies.length||enemies.length>100)throw new RangeError('Invalid opponents');
@@ -69,6 +71,8 @@ export function beginFight(hero,enemies,options={},roll) {
   if(!['basic','advanced'].includes(f.mode))throw new RangeError('Invalid rule system');
   if(f.hero.damage>f.hero.endurance)throw new RangeError('Character is unconscious');
   if(f.rules.foeAware===true)f.enemyUnaware=false;
+  if(f.rules.sourceWeapon&&!Object.hasOwn(WEAPONS,f.rules.sourceWeapon))throw new RangeError('Invalid source weapon');
+  if(f.rules.withoutEquipment)f.missileAvailable=false;
   if(options.sourceExit){
     if(!['leaveBeforeFight','preFightSurrender'].includes(options.sourceExit)||!f.rules[options.sourceExit])throw new RangeError('No source exit');
     f.status='avoided';f.destination=f.rules[options.sourceExit];return f;
@@ -91,19 +95,39 @@ export function beginFight(hero,enemies,options={},roll) {
     if(i==null||i<0||!f.enemies[i])throw new RangeError('Unmapped encounter result');
     f.enemies=[f.enemies[i]];
   }
+  if(options.sourceAction){
+    const action=f.rules.sourceActions?.find(a=>a.key===options.sourceAction);
+    if(!action||f.hero.usedSourceItems?.includes(action.consumes))throw new RangeError('Source item unavailable');
+    if(action.consumes)f.hero.usedSourceItems=[...(f.hero.usedSourceItems??[]),action.consumes];
+    if(action.destination){f.status='avoided';f.destination=action.destination;return f;}
+    const raw=pick(roll,'check'),total=Math.max(2,Math.min(12,bonusPick(raw,modifiers(f).magic,f.unmodifiedTwo)));
+    const removed=action.fleeRanges?.find(([low,high])=>total>=low&&total<=high)?.[2];
+    if(removed==null)throw new RangeError('Unmapped source action');
+    f.events.push({type:'sourceCheck',raw,total});
+    f.enemies=f.enemies.slice(removed);
+    if(!f.enemies.length){f.status='avoided';f.destination=action.allFlee;return f;}
+  }
+  for(const enemy of f.enemies){
+    if(!enemy.enduranceFormula)continue;
+    const formula=enemy.enduranceFormula,count=integer(formula.pickCount,1,2),add=integer(formula.add,0);
+    const numbers=Array.from({length:count},()=>pick(roll,'endurance',f));
+    enemy.endurance=add+numbers.reduce((sum,n)=>sum+n,0);
+    delete enemy.enduranceFormula;f.events.push({type:'endurance',name:enemy.name,value:enemy.endurance});
+  }
   if(options.useAlly){
+    if(f.rules.singleStrikeTrial)throw new RangeError('Trial requires your own attacks');
     if(!f.hero.charmedAnimal)throw new RangeError('No charmed animal');
     f.ally=opponent(f.hero.charmedAnimal);f.allyActive=true;delete f.hero.charmedAnimal;
     if(f.ally.damage>f.ally.endurance)throw new RangeError('Animal is unconscious');
   }
-  f.stage=!f.allyActive&&f.mode==='advanced'&&!f.surprised?'missile':'melee';return f;
+  f.stage=!f.rules.singleStrikeTrial&&!f.allyActive&&f.mode==='advanced'&&!f.surprised?'missile':'melee';return f;
 }
 const current=f=>f.enemies[f.index];
 const active=f=>f.status==='active';
 function hurt(f,target,result,who) {
   target.damage+=result.damage;f.events.push({type:'attack',who,...result});
   if(result.result==='K'||result.result==='U'||target.damage>target.endurance){
-    target.condition=result.result==='K'?'killed':'unconscious';
+    target.condition=result.result==='K'&&!f.rules.nonlethal?'killed':'unconscious';
     if(target===f.hero)f.status='loss';
     else if(target===f.ally){f.allyActive=false;f.stage='melee';f.events.push({type:'allyDefeated'});}
     else{
@@ -112,7 +136,7 @@ function hurt(f,target,result,who) {
         f.status=f.noncombatResolution?'calmed':'win';
         if(f.thrownWeapon){f.hero.missile=f.thrownWeapon;if(f.thrownMelee)f.hero.weapon=f.thrownWeapon;}
       }
-      else {f.stage=!f.allyActive&&f.mode==='advanced'&&!f.surprised?'missile':'melee';f.events.push({type:'next',name:current(f).name});}
+      else {f.stage=!f.rules.singleStrikeTrial&&!f.allyActive&&f.mode==='advanced'&&!f.surprised?'missile':'melee';f.events.push({type:'next',name:current(f).name});}
     }
   }
 }
@@ -120,33 +144,42 @@ function enemyAttack(f,roll,missile=false) {
   const enemy=current(f);
   if(missile&&enemy.missileOb==null)return;
   const raw=pick(roll,'enemy',f);if(!active(f))return;
-  const result=attackResult({ob:missile?enemy.missileOb:enemy.ob,db:modifiers(f,missile).db,raw,formula:f.formula,unmodifiedTwo:f.unmodifiedTwo});
+  const owlBonus=f.hero.sourceItems?.includes('owl')?f.rules.owlEnemyObBonus??0:0;
+  const result=attackResult({ob:missile?enemy.missileOb:enemy.ob+(f.rules.enemyMeleeObBonus??0)+owlBonus,db:modifiers(f,missile).db,raw,formula:f.formula,unmodifiedTwo:f.unmodifiedTwo});
   hurt(f,f.allyActive?f.ally:f.hero,result,'enemy');
 }
 function playerAttack(f,roll,missile=false) {
   const h=f.hero,enemy=current(f),m=modifiers(f,missile);let damageBonus=0;
-  const weapon=missile?h.missile:h.weapon,orcSword=weapon==='sword'&&h.orcSlayer;
-  if((f.mode==='advanced'||f.equipmentModifiers)&&!f.allyActive)damageBonus=weapon==='bow'?0:weapon==='mace'?(['chain','plate'].includes(enemy.armour)?2:0):WEAPONS[weapon].damage;
-  const bonus=f.meleeAttacks===0&&!f.allyActive?(f.rules.firstPlayerAttackObBonus??0)+(f.effects.sneakAttack??0):0;
+  const weapon=missile?h.missile:f.rules.sourceWeapon??h.weapon,orcSword=weapon==='sword'&&h.orcSlayer&&!f.rules.withoutEquipment&&!f.rules.sourceWeapon;
+  if((f.mode==='advanced'||f.equipmentModifiers)&&(!f.rules.withoutEquipment||f.rules.sourceWeapon)&&!f.allyActive)damageBonus=weapon==='bow'?0:weapon==='mace'?(['chain','plate'].includes(enemy.armour)?2:0):WEAPONS[weapon].damage;
+  if(!missile&&!f.allyActive&&!f.rules.withoutEquipment)damageBonus+=h.itemBonuses?.meleeDamage??0;
+  const bonus=!f.allyActive?((f.meleeAttacks===0?(f.rules.firstPlayerAttackObBonus??0)+(f.effects.sneakAttack??0)+(f.rules.firstAttackAddTrickery?m.trickery:0):0)+(f.rules.singleStrikeTrial?m.trickery:0)):0;
   const raw=pick(roll,'player',f);if(!active(f))return;
-  const result=attackResult({ob:missile?h.missileOb+MISSILES[h.missile]+(h.itemBonuses?.ob??0)+(h.itemBonuses?.missileOb??0)+(f.rules.heroObBonus??0):m.ob+bonus,db:enemy.db,raw,formula:f.formula,unmodifiedTwo:f.unmodifiedTwo,damageBonus,doubleDamage:!missile&&!f.allyActive&&f.effects.strength});
+  const result=attackResult({ob:missile?m.missileOb:m.ob+bonus,db:enemy.db,raw,formula:f.formula,unmodifiedTwo:f.unmodifiedTwo,damageBonus,doubleDamage:!missile&&!f.allyActive&&f.effects.strength});
   f.playerAttacks++;
   if(!f.allyActive)f.heroAttacks=(f.heroAttacks??f.playerAttacks-1)+1;
   if(!missile&&!f.allyActive)f.meleeAttacks++;
   if(missile&&h.missile!=='bow'){f.thrownWeapon=h.missile;f.thrownMelee=h.weapon===h.missile;f.missileAvailable=false;if(f.thrownMelee)f.hero.weapon='unarmed';f.hero.missile='none';}
   if(!f.allyActive&&orcSword&&enemy.kind==='orc'&&result.damage>0)result.result='K';
   const heroActed=!f.allyActive;
+  if(f.rules.singleStrikeTrial&&!['U','K'].includes(result.result)){
+    enemy.damage+=result.damage;f.events.push({type:'attack',who:'player',...result});
+    f.status='avoided';f.destination=f.rules.trialFailure;f.events.push({type:'trialFailed',defeated:f.index});return;
+  }
   hurt(f,enemy,result,heroActed?'player':'ally');
   if(heroActed)afterHeroAttack(f,enemy,roll);
 }
 function afterHeroAttack(f,enemy,roll){
-  const support=f.rules.supportAttack;
-  if(active(f)&&current(f)===enemy&&f.supportEnabled&&support&&f.heroAttacks%support.everyHeroAttacks===0){
-    const raw=pick(roll,'support',f);
-    if(active(f))hurt(f,enemy,attackResult({ob:support.ob,db:enemy.db,raw,formula:f.formula,unmodifiedTwo:f.unmodifiedTwo}),'support');
+  const supports=f.rules.supportAttacks??(f.rules.supportAttack?[f.rules.supportAttack]:[]);
+  for(const support of supports){
+    const first=f.heroAttacks===1&&support.firstAttackOb!=null;
+    if(active(f)&&current(f)===enemy&&f.supportEnabled&&(first||f.heroAttacks%support.everyHeroAttacks===0)){
+      const raw=pick(roll,'support',f);
+      if(active(f))hurt(f,enemy,{...attackResult({ob:first?support.firstAttackOb:support.ob,db:enemy.db,raw,formula:f.formula,unmodifiedTwo:f.unmodifiedTwo}),supportName:support.name},'support');
+    }
   }
   if(active(f)&&f.rules.heroAttackLimit&&f.heroAttacks>=f.rules.heroAttackLimit){
-    f.status='loss';f.destination=f.rules.limitFailure;f.events.push({type:'attackLimit',limit:f.rules.heroAttackLimit});
+    f.status=f.rules.limitStatus??'loss';f.destination=f.rules.limitFailure;f.events.push({type:'attackLimit',limit:f.rules.heroAttackLimit});
   }
 }
 function strain(f,cost) {

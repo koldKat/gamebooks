@@ -21,16 +21,16 @@ test('new and previous simulator register outcome XP once and ignore non-battle 
   const source=readFileSync('server/db/xp.js','utf8');
   const registry=source.slice(source.indexOf('const SIM_HISTORY_KEYS ='),source.indexOf('function processStateXp('));
   const keys=runInNewContext(registry+'\nSIM_HISTORY_KEYS;',{});
-  for(const id of [1362,1436,1437])assert.equal(keys.filter(key=>key==='sim'+id).length,1);
+  for(const id of [1362,1436,1437,1438])assert.equal(keys.filter(key=>key==='sim'+id).length,1);
   const awards=[],refs=new Set();
   const context={db:{prepare:sql=>({get:()=>sql.includes('FROM books')?{}:{n:100}})},awardXp(_user,event,ref){if(refs.has(event+':'+ref))return false;refs.add(event+':'+ref);awards.push({event,ref});return true;},awardCoins(){},getXpAmount:()=>50,isCleanRun:()=>false,_discoveredSet:()=>new Set(),_visitedSet:()=>new Set(),_mappedSet:()=>new Set(),_checkGroupWonAll(){},SIM_HISTORY_KEYS:keys,_xpRefSeq:0};
   runInNewContext(source.slice(source.indexOf('function processStateXp('),source.indexOf('function migrateXpForUser(')),context);
-  for(const id of [1362,1436,1437]){
+  for(const id of [1362,1436,1437,1438]){
     const state=history=>({playthroughs:[{startedAt:1,path:[],['sim'+id]:{history}}]});
     const history=['win','loss','escaped','avoided','calmed','charmed','cancelled'].map((outcome,i)=>({outcome,ts:100+i}));
     context.processStateXp(1,id,state([]),state(history),0);context.processStateXp(1,id,state(history),state(history),0);
   }
-  assert.deepEqual(awards.filter(row=>row.event.startsWith('battlesim_')),[{event:'battlesim_win',ref:'sim1362:100'},{event:'battlesim_loss',ref:'sim1362:101'},{event:'battlesim_win',ref:'sim1436:100'},{event:'battlesim_loss',ref:'sim1436:101'},{event:'battlesim_win',ref:'sim1437:100'},{event:'battlesim_loss',ref:'sim1437:101'}]);
+  assert.deepEqual(awards.filter(row=>row.event.startsWith('battlesim_')),[{event:'battlesim_win',ref:'sim1362:100'},{event:'battlesim_loss',ref:'sim1362:101'},{event:'battlesim_win',ref:'sim1436:100'},{event:'battlesim_loss',ref:'sim1436:101'},{event:'battlesim_win',ref:'sim1437:100'},{event:'battlesim_loss',ref:'sim1437:101'},{event:'battlesim_win',ref:'sim1438:100'},{event:'battlesim_loss',ref:'sim1438:101'}]);
 });
 
 test('Weathertop database roster preserves groups, source modifiers and individual entry variants',async()=>{
