@@ -543,7 +543,8 @@ function getFeed() {
       const preRuns = parsed?.preSeriesRuns || [];
       const pt = runIndex < 0 ? preRuns[preRuns.length + runIndex] : parsed?.playthroughs?.[runIndex];
       const path = pt?.path || [];
-      return { pathLength: path.length, lastSection: path.length ? path[path.length - 1] : null };
+      return { pathLength: path.length, lastSection: path.length ? path[path.length - 1] : null,
+        runStartedAt: pt?.startedAt || null };
     } catch { return { pathLength: null, lastSection: null }; }
   }
 
@@ -592,6 +593,7 @@ function getFeed() {
     entries.push({ type: 'first_win', username: row.username, bookName: row.bookName,
       bookId: parseInt(row.bookId, 10), userId: row.userId, completedAt: row.created_at * 1000,
       runIndex: winRunIndex, runIsPublic, isSeriesRun: !!winRunRef?.startsWith('series:'),
+      runStartedAt: winPathInfo.runStartedAt,
       pathLength: winPathInfo.pathLength, lastSection: winPathInfo.lastSection,
       bookIsPublic: row.is_public === 1, userPublicProfile: row.public_profile === 1,
       isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, isModerator: row.is_moderator === 1, isSquire: row.is_squire === 1, displayName: row.display_name || null,
@@ -614,7 +616,7 @@ function getFeed() {
              b.name AS bookName, b.cover_path, b.is_public,
              p.id AS parentBookId, p.name AS parentBookName, p.cover_path AS parentCoverPath,
              s.id AS seriesId, s.name AS seriesName, s.is_public AS seriesIsPublic,
-             b.series_number, ub.state_data
+             b.series_number, ub.party_id, ub.state_data
       FROM xp_events e
       JOIN users u ON e.user_id = u.id
       JOIN books b ON b.id = CAST(e.ref AS INTEGER)
@@ -644,6 +646,7 @@ function getFeed() {
         bookId: parseInt(row.bookId, 10), bookName: row.bookName,
         bookIsPublic: row.is_public === 1,
         runIndex, runIsPublic, isSeriesRun: !!runRef?.startsWith('series:'),
+        runStartedAt: deathPathInfo.runStartedAt,
         pathLength: deathPathInfo.pathLength, lastSection: deathPathInfo.lastSection,
         completedAt: row.created_at * 1000,
         userPublicProfile: row.public_profile === 1,
@@ -654,7 +657,8 @@ function getFeed() {
         seriesId: row.seriesId || null, seriesName: row.seriesName || null, seriesNumber: row.series_number || null,
         seriesIsPublic: row.seriesIsPublic === 1,
         avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
-        coverUrl:  row.cover_path  ? `/covers/${row.cover_path}`  : null });
+        coverUrl:  row.cover_path  ? `/covers/${row.cover_path}`  : null,
+        partyId: row.party_id || null });
     }
   }
 
@@ -814,14 +818,16 @@ function getFeed() {
   }
 
   // Merge party run entries by party, book, and run index.
-  const mergeTypes = new Set(['run_started', 'run_completed', 'all_visited', 'all_discovered', 'first_win']);
+  const firstOutcomeTypes = new Set(['first_win', 'first_loss', 'first_battle_death']);
+  const mergeTypes = new Set(['run_started', 'run_completed', 'all_visited', 'all_discovered', ...firstOutcomeTypes]);
   const partyGroups = new Map(); // key → first entry
   const partyExtra  = new Map(); // key → additional { username, avatarUrl, userPublicProfile }[]
   const toRemove    = new Set();
 
   for (const e of entries) {
     if (!e.partyId || !mergeTypes.has(e.type)) continue;
-    const key = `${e.partyId}:${e.bookId}:${e.runIndex ?? ''}:${e.type}`;
+    const runIdentity = firstOutcomeTypes.has(e.type) ? `:${e.runStartedAt ?? e.completedAt}` : '';
+    const key = `${e.partyId}:${e.bookId}:${e.runIndex ?? ''}:${e.type}${runIdentity}`;
     if (!partyGroups.has(key)) {
       partyGroups.set(key, e);
       partyExtra.set(key, []);
@@ -865,18 +871,20 @@ function getFeed() {
   const _hasCloseMatch = (map, key, ts) => (map.get(key) || []).some(t => Math.abs(t - ts) <= SAME_EVENT_WINDOW_MS);
   for (const e of entries) {
     if (toRemove.has(e)) continue;
-    const k = `${e.username}:${e.bookId}:${e.runIndex ?? ''}`;
-    if (e.type === 'first_win')          _addFirstTime(firstWinTimes, k, e.completedAt);
-    else if (e.type === 'first_loss')    _addFirstTime(firstLossTimes, k, e.completedAt);
-    else if (e.type === 'first_battle_death') _addFirstTime(firstBatTimes, k, e.completedAt);
+    if (!firstOutcomeTypes.has(e.type)) continue;
+    for (const player of e.usernames || [e]) {
+      const k = `${player.username}:${e.bookId}:${e.runIndex ?? ''}`;
+      if (e.type === 'first_win')          _addFirstTime(firstWinTimes, k, e.completedAt);
+      else if (e.type === 'first_loss')    _addFirstTime(firstLossTimes, k, e.completedAt);
+      else if (e.type === 'first_battle_death') _addFirstTime(firstBatTimes, k, e.completedAt);
+    }
   }
   for (const e of entries) {
     // Apply the same first-outcome suppression to series-run completion entries.
     if (toRemove.has(e) || (e.type !== 'run_completed' && e.type !== 'series_run_completed')) continue;
-    const k = `${e.username}:${e.bookId}:${e.runIndex ?? ''}`;
-    if      (e.result === 'success' && _hasCloseMatch(firstWinTimes, k, e.completedAt))  toRemove.add(e);
-    else if (e.result === 'death'   && _hasCloseMatch(firstLossTimes, k, e.completedAt)) toRemove.add(e);
-    else if (e.result === 'battle'  && _hasCloseMatch(firstBatTimes, k, e.completedAt))  toRemove.add(e);
+    const firstTimes = e.result === 'success' ? firstWinTimes : e.result === 'death' ? firstLossTimes : e.result === 'battle' ? firstBatTimes : null;
+    if (firstTimes && (e.usernames || [e]).every(player =>
+      _hasCloseMatch(firstTimes, `${player.username}:${e.bookId}:${e.runIndex ?? ''}`, e.completedAt))) toRemove.add(e);
   }
 
   const merged = entries.filter(e => !toRemove.has(e));
