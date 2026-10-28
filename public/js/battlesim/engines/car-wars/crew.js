@@ -12,7 +12,7 @@ export function crewAlive(unit, seat) {
 
 export function firingCrew(unit, round) {
   whole(round, 1);
-  if (unit.skipTurn > 0 || unit.hp <= 0 || unit.powerPlant?.boxes === 0) return [];
+  if (unit.skipTurn > 0 || unit.hp <= 0 || unit.powerPlant?.boxes === 0 && !unit.allowImmobilizedFire) return [];
   const crew = [];
   if (crewAlive(unit, 'driver') && !(unit.skipFire > 0)) crew.push('driver');
   const robot = unit.robotGunner;
@@ -22,12 +22,13 @@ export function firingCrew(unit, round) {
 }
 
 export function targetingBonus(unit, seat) {
+  if (unit.voiceSwitch?.status === 'failed') return 0;
   if (seat === 'gunner' && unit.robotGunner) return 0;
   // Legacy common computers stay common. Explicit crew-owned gadgets apply
   // only to their owner and stop contributing when destroyed.
   const owned = (unit.gadgets ?? []).filter(g => g.computerFor);
   if (!owned.length) return whole(unit.computerBonus ?? 0);
-  return owned.filter(g => g.computerFor === seat && g.boxes > 0)
+  return owned.filter(g => (g.computerFor === seat || g.computerFor === 'either' && (unit.computerSeat ?? 'driver') === seat) && g.boxes > 0)
     .reduce((total, g) => total + whole(g.bonus ?? 0), 0);
 }
 
@@ -59,15 +60,53 @@ export function assignWeapons(unit, indices, round, options = {}) {
   const seats = options.seats ?? available;
   if (new Set(seats).size !== seats.length || seats.some(seat => !available.includes(seat)))
     throw new RangeError('Choose an available firing crew member');
-  if (groups.length > seats.length) throw new RangeError('One weapon system per available crew member');
+  const needsVoice = groups.length > seats.length;
+  const voiceGroup = groups.findIndex(group => group.includes(unit.voiceSwitch?.weaponIndex));
+  if (needsVoice && (unit.voiceSwitch?.status !== 'working' || !available.includes('driver')
+      || voiceGroup < 0 || groups.length > seats.length+1)) throw new RangeError('One weapon system per available crew member');
   const targets = options.targets ?? groups.map(() => options.target ?? 0);
   if (targets.length !== groups.length) throw new RangeError('Choose one target per weapon system');
   targets.forEach(target => whole(target));
   if (unit.robotGunner?.sameTargetAsDriver && new Set(targets).size > 1)
     throw new RangeError('This robot must fire at the driver’s target');
-  return groups.map((weapons, i) => ({seat: seats[i], weapons, target: targets[i],
-    gunnery: crewGunnery(unit, seats[i]), computerBonus: targetingBonus(unit, seats[i]),
-    ...(seats[i] === 'gunner' && unit.robotGunner ? {fixedCombatBonus: unit.robotGunner.combatBonus} : {})}));
+  let manualIndex = 0;
+  return groups.map((weapons, i) => {
+    const seat = needsVoice && i === voiceGroup ? 'driver' : seats[manualIndex++];
+    return {seat,weapons,target:targets[i],gunnery:crewGunnery(unit,seat),computerBonus:targetingBonus(unit,seat),
+      ...(seat === 'gunner' && unit.robotGunner ? {fixedCombatBonus:unit.robotGunner.combatBonus} : {})};
+  });
+}
+
+export function testVoiceSwitch(source, roll) {
+  if (source.voiceSwitch?.status !== 'untested') throw new RangeError('The voice switch has already been tested');
+  const unit=structuredClone(source), value=whole(roll(6),1);
+  if (value>6) throw new RangeError('Invalid die');
+  unit.voiceSwitch.status=value<=4?'failed':'working';
+  return {unit,die:value,working:unit.voiceSwitch.status==='working'};
+}
+
+export function disconnectVoiceSwitch(source, {driving=false,fighting=false}={}) {
+  if (driving || fighting) throw new RangeError('Stop driving and fighting before disconnecting the switch');
+  const unit=structuredClone(source);
+  if (!unit.voiceSwitch) throw new RangeError('No voice switch is installed');
+  unit.voiceSwitch.status='disconnected';
+  return unit;
+}
+
+export function assignPassengerGunner(source,profile) {
+  const unit=structuredClone(source);
+  unit.passengers??=[];
+  if(unit.gunnerName)unit.passengers.push({name:unit.gunnerName,hp:unit.gunnerHp,armour:unit.gunnerArmour});
+  unit.gunnerSeat=false;unit.gunnerHp=0;unit.gunnerArmour=0;delete unit.gunnerName;
+  if(!profile)return unit;
+  if(profile.gunnery==null)throw new RangeError('The book does not print this gunner’s Gunnery; enter their stats manually.');
+  whole(profile.gunnery,-100);
+  const index=unit.passengers.findIndex(person=>person.name===profile.name);
+  const passenger=index>=0?unit.passengers.splice(index,1)[0]:profile;
+  whole(passenger.hp);whole(passenger.armour??0);
+  Object.assign(unit,{gunnerName:profile.name,gunnerSeat:true,gunnerHp:passenger.hp,
+    gunnerArmour:passenger.armour??0,gunnerGunnery:profile.gunnery,gunnerDriving:profile.driving??null});
+  return unit;
 }
 
 export function installRobotGunner(source, profile) {

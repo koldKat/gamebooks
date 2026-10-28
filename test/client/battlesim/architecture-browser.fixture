@@ -5156,6 +5156,64 @@ for(const id of BOOK_IDS){
       saved=JSON.stringify(data());el('newCharacter').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(data())===saved,'Dzurlord stale confirmation ignored');app.setCurrentBookId(1296);button.click();
     }finally{Math.random=random;}
   }
+  if(id===1445){
+    const el=key=>document.getElementById('sim1445-'+key),data=()=>app.currentPlaythrough().sim1445;
+    const {getRoster,getVehicles,getLocalEquipment}=await import('REPO/public/js/battlesim/books/1445/definition.js');
+    const run=app.currentPlaythrough(),random=Math.random;
+    run.inventory={sentinel:['shared']};run.equipment={sentinel:'shared'};run.sim1444={sentinel:true};
+    const preserved=JSON.stringify([run.inventory,run.equipment,run.sim1444]);
+    const choose=section=>{el('context').value=section;el('context').dispatchEvent(new Event('change'));};
+    const set=(path,value)=>{const input=el('hero').querySelector(`[data-path="${path}"]`);check(input,'Badlands field '+path);input.value=String(value);};
+    const cancel=()=>{if(['fighting','paused','awaitingDriver'].includes(data()?.fight?.status)){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    check(getRoster().length===22&&getVehicles().length===2&&requestedRosters.has(id),'Badlands full database roster');
+    check(data()===undefined,'Badlands rendering never initializes state');
+    try{
+      Math.random=()=>.2;
+      for(const entry of getRoster()){
+        delete run.sim1445;choose(entry.section);
+        set('hp',1000);set('maxHp',1000);set('defenseClass',100);set('gunnery',0);
+        if(entry.rules.kind==='vehicle')set('driverHp',50);
+        for(const input of el('opponents').querySelectorAll('[data-stat="gunnery"]'))if(!input.value&&input.dataset.unavailable!=='true')input.value='1';
+        el('start').click();
+        check(data()?.fight.status==='fighting','Badlands preset starts '+entry.section+' '+document.getElementById('confirm-overlay')?.textContent);
+        if(entry.rules.parkedPass){el('weapons').querySelector('input:not(:disabled)').checked=true;el('step').click();}
+        else if(entry.rules.chase?.noCombat)el('step').click();
+        else el('hold').click();
+        check(data().fight.round===1,'Badlands preset advances '+entry.section);
+        if(entry.enemies[0].kind==='chase')check(data().fight.enemies[0].hp===null&&!el('components').querySelector('[data-path="powerPlant.boxes"]'),'Badlands chase no invented combat stats');
+        cancel();
+      }
+      delete run.sim1445;choose('');el('customKind').value='person';el('customKind').dispatchEvent(new Event('change'));
+      set('gunnery',20);for(const input of el('opponents').querySelectorAll('[data-stat]'))input.value=input.dataset.stat==='hp'?'2':'0';
+      el('start').click();el('step').click();check(data().fight.status==='win'&&data().history.length===1,'Badlands custom on-foot fight');
+      delete run.sim1445;choose('');el('customKind').value='vehicle';el('customKind').dispatchEvent(new Event('change'));set('defenseClass',100);el('apply').click();
+      const beforeHp=data().vehicle.hp;
+      const selectItem=key=>{el('equipment').value=String(getLocalEquipment().items.findIndex(item=>item.key===key));};
+      selectItem('little-pete');el('installEquipment').click();el('installEquipment').click();
+      check(data().vehicle.weapons.filter(weapon=>weapon.direction==='up').length===2,'Badlands local vertical rockets');
+      selectItem('voice-switch');el('equipmentWeapon').value='0';el('installEquipment').click();
+      check(data().vehicle.voiceSwitch.status==='untested','Badlands bound voice switch');
+      Math.random=()=>.99;el('testVoice').click();check(data().vehicle.voiceSwitch.status==='working'&&el('testVoice').disabled,'Badlands voice test persisted once');
+      el('gunnerProfile').value='1';el('assignGunner').click();
+      check(data().vehicle.gunnerSeat&&data().vehicle.gunnerGunnery===0&&data().vehicle.passengers.length===1,'Badlands passenger becomes gunner without duplicate critical target');
+      el('ammoEffect').value='1';el('applyAmmoEffect').click();
+      check(data().vehicle.weapons[0].ammo===2&&data().vehicle.weapons.find(weapon=>weapon.delivery==='mine').ammo===0,'Badlands section ammo effect');
+      const savedVehicle=JSON.stringify(data().vehicle);module.render();check(JSON.stringify(data().vehicle)===savedVehicle,'Badlands render preserves equipment');
+      choose('');el('start').click();check(data().fight.status==='fighting','Badlands custom vehicle fight');
+      check(el('installEquipment').disabled&&el('disconnectVoice').disabled,'Badlands live equipment locked');
+      el('weapons').querySelector('input').checked=true;el('step').click();check(data().fight.round===1,'Badlands ordinary vehicle turn');
+      cancel();
+      choose('270');el('start').click();Math.random=()=>0;el('step').click();el('pause').click();
+      const prior=JSON.stringify([data().fight.heroRolls,data().fight.enemyRolls,data().fight.round]);
+      el('start').click();check(JSON.stringify([data().fight.heroRolls,data().fight.enemyRolls,data().fight.round])===prior,'Badlands chase resume preserves Control history');cancel();
+      choose('6');set('defenseClass',100);el('start').click();el('evasive').checked=true;el('hold').click();check(data().fight.evasive===true,'Badlands evasive toggle');cancel();
+      choose('103');el('start').click();el('turnAround').click();check(data().fight.status==='fighting'&&data().fight.rules.playerFacing.join(',')==='front,turret'&&el('turnAround').disabled,'Badlands turn around stays in fight');cancel();
+      check(JSON.stringify([run.inventory,run.equipment,run.sim1444])===preserved,'Badlands shared items and unrelated sim preserved');
+      const saved=JSON.stringify(data());module.render();check(JSON.stringify(data())===saved,'Badlands render preserves all saved state');
+      el('start').click();el('cancel').click();const pending=JSON.stringify(run.sim1445);app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim1445)===pending,'Badlands stale confirmation ignored');app.setCurrentBookId(id);button.click();cancel();
+      const modal=overlay.querySelector('.inv-modal');check(modal.scrollWidth<=modal.clientWidth+1,'Badlands modal fits viewport');
+    }finally{Math.random=random;}
+  }
   if(id===1444){
     const el=key=>document.getElementById('sim1444-'+key),data=()=>app.currentPlaythrough().sim1444;
     const {getRoster,getVehicles}=await import('REPO/public/js/battlesim/books/1444/definition.js');

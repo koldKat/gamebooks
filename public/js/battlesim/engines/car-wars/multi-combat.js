@@ -33,7 +33,8 @@ const event = (fight, text) => fight.events.push(text);
 const finish = (fight, status, section) => {fight.status = status; fight.section = section ?? null;};
 const side = (fight, unit) => unit === fight.hero || fight.allies.includes(unit) ? 'friendly' : 'enemy';
 const friendly = fight => [fight.hero, ...fight.allies];
-const everyone = fight => [...friendly(fight), ...fight.enemies];
+export const combatTargets = fight => [...fight.enemies, ...(fight.supporters ?? [])];
+const everyone = fight => [...friendly(fight), ...combatTargets(fight)];
 
 export function validateCombatant(source) {
   const unit = copy(source);
@@ -47,18 +48,20 @@ export function validateCombatant(source) {
     unit.armour ??= 0; unit.unconsciousAt ??= 1; whole(unit.armour); whole(unit.unconsciousAt);
     if (!unit.weapon) throw new RangeError('Choose a personal weapon');
   } else {
-    whole(unit.driving); whole(unit.handling, -100);
+    if (!unit.unattended) whole(unit.driving);
+    else unit.canAttack = false;
+    whole(unit.handling, -100);
     unit.baseHandling ??= unit.handling;
     unit.driverHp ??= 3; unit.driverArmour ??= 0; unit.gunnerHp ??= 0; unit.gunnerArmour ??= 0;
     for (const key of ['driverHp','driverArmour','gunnerHp','gunnerArmour']) whole(unit[key]);
     if (unit.gunnerGunnery != null) whole(unit.gunnerGunnery, -100);
-    if (unit.gunnery == null && !(unit.gunnerSeat && unit.gunnerGunnery != null))
+    if (!unit.unattended && unit.gunnery == null && !(unit.gunnerSeat && unit.gunnerGunnery != null))
       throw new RangeError('Enter the missing driver Gunnery');
     unit.gadgets ??= []; unit.computerBonus ??= 0; unit.cargo ??= 0;
     whole(unit.powerPlant?.boxes); unit.powerPlant.maxBoxes ??= unit.powerPlant.boxes;
     if (!unit.weapons?.length) throw new RangeError('Add a vehicle weapon');
     for (const weapon of unit.weapons) {
-      whole(weapon.boxes); whole(weapon.bonus ??= 0, -100); whole(weapon.damageDice, 1);
+      whole(weapon.boxes); whole(weapon.bonus ??= 0, -100); whole(weapon.damageDice, weapon.effect && weapon.flatDamage === 0 ? 0 : 1);
       weapon.maxBoxes ??= weapon.boxes;
       weapon.ammo ??= weapon.oneShot ? 1 : /laser/i.test(weapon.name) ? null
         : weapon.ammoCapacity ?? (/machine|vulcan|paint|oil/i.test(weapon.name) ? 20 : 10);
@@ -71,7 +74,15 @@ export function validateCombatant(source) {
 export function combatantOut(unit) {
   if (unit.out || unit.escaped) return true;
   return unit.kind === 'person' ? unit.hp <= unit.unconsciousAt
-    : unit.hp === 0 || unit.powerPlant.boxes === 0 || !crewAlive(unit, 'driver');
+    : unit.hp === 0 || unit.powerPlant.boxes === 0 && !unit.allowImmobilizedFire || !crewAlive(unit, 'driver')
+      || unit.stabilizingRotor?.hp === 0 || unit.mainRotor?.hp === 0;
+}
+
+function control(fight, unit, roll) {
+  const painted = unit.blindUntilRound != null && fight.round <= unit.blindUntilRound;
+  const oiled = everyone(fight).some(other => other.oilActive && other !== unit
+    && (unit.relativePosition === 'behind' || unit === fight.hero && other.relativePosition === 'ahead'));
+  return controlCheck({...unit, ...(painted ? {driving:0} : {}), ...(oiled ? {handling:0} : {})},roll);
 }
 
 function heroDead(fight) {
@@ -80,6 +91,21 @@ function heroDead(fight) {
 }
 function settle(fight) {
   const {hero,rules} = fight;
+  if (rules.scenarioCombat) {
+    const helicopter = fight.enemies.find(unit => unit.helicopter);
+    if (helicopter?.driverHp === 0 && rules.pilotKilledDestination) {
+      finish(fight,'win',rules.pilotKilledDestination); return;
+    }
+    if (helicopter?.gunnerHp === 0 && rules.gunnerKilledDestination) {
+      finish(fight,'branch',rules.gunnerKilledDestination); return;
+    }
+    if (rules.heroPlantLossEnds && hero.kind === 'vehicle' && hero.powerPlant.boxes === 0) {
+      finish(fight,'loss',rules.defeat); return;
+    }
+    if (rules.opponentBodyHpAtSurrender != null && fight.enemies[0].hp <= rules.opponentBodyHpAtSurrender) {
+      finish(fight,'win',rules.victory); return;
+    }
+  }
   if (heroDead(fight)) {finish(fight,'loss',rules.heroKilled ?? rules.defeat); return;}
   if (rules.protectedDriverDeathEnds && fight.allies.some(u => u.protectedPassenger && u.driverHp === 0)) {
     finish(fight,'loss'); return;
@@ -104,6 +130,14 @@ function settle(fight) {
     return;
   }
   if (rules.heroIsGunner && hero.gunnerHp <= 1) {finish(fight,'loss',rules.heroUnconscious); return;}
+  if (rules.scenarioCombat) {
+    const out = fight.enemies.filter(combatantOut).length;
+    if (rules.victoryWhenAnyEnemyOut && out || rules.defeatAtEnemyCount && out >= rules.defeatAtEnemyCount
+        || rules.victoryWhenAnyEnemyOutOrEmpty && fight.enemies.some(unit => combatantOut(unit)
+          || unit.weapons.every(weapon => weapon.ammo != null && weapon.ammo === 0))) {
+      finish(fight,'win',rules.victory); return;
+    }
+  }
   if (fight.enemies.every(combatantOut)) {
     const timed = rules.victoryByRound;
     finish(fight,'win',timed ? fight.round <= timed.atMost ? timed.within : timed.after : rules.victory);
@@ -112,6 +146,7 @@ function settle(fight) {
 
 function normalDamage(fight, unit, amount, attacker) {
   unit.hp = Math.max(0, unit.hp - amount);
+  if (fight.rules.scenarioCombat) unit.generalDamageTaken = (unit.generalDamageTaken ?? 0) + amount;
   if (unit === fight.hero && attacker) fight.lastHeroDamageBy = attacker.key;
   event(fight, `${name(unit)} takes ${amount} damage (${unit.hp} HP left).`);
 }
@@ -128,14 +163,25 @@ function specialDamage(fight, unit, roll, attacker) {
   for (let attempt = 0; attempt < 100; attempt++) {
     const table = sum(dice(2,roll)), weapons = unit.weapons.filter(w => w.boxes > 0);
     let applied = false;
-    if (table === 2 || table === 3) {
+    const rotorRule = unit.helicopter && fight.rules.helicopterSpecialDamage?.[String(table)];
+    if (rotorRule) {
+      const rotor = unit[rotorRule.part];
+      if (rotor?.hp > 0) {rotor.hp = Math.max(0,rotor.hp-sum(dice(rotorRule.damageDice,roll))); applied=true;}
+    } else if (table === 2 || table === 3) {
       const seat = table === 2 ? 'driver' : 'gunner', hp = seat+'Hp', armour = seat+'Armour';
       if (unit[hp] > 0) {
         if (unit[armour] > 0) unit[armour]--; else unit[hp]--;
         unit[seat === 'driver' ? 'skipFire' : 'gunnerSkipFire'] = 1; applied = true;
       }
     } else if (table === 4) {
-      if (unit.cargoOccupant?.hp > 0) {unit.cargoOccupant.hp--; applied = true;}
+      if (fight.rules.specialFour === 'passenger') {
+        const passengers = (unit.passengers ?? []).filter(person => person.hp > 0);
+        if (passengers.length) {
+          const passenger = pick(passengers,roll);
+          if (passenger.armour > 0) passenger.armour--; else passenger.hp--;
+          applied=true;
+        }
+      } else if (unit.cargoOccupant?.hp > 0) {unit.cargoOccupant.hp--; applied = true;}
       else if (unit.cargo > 0) {unit.cargo--; applied = true;}
     } else if ([5,12].includes(table) && unit.powerPlant.boxes > 0) {
       unit.powerPlant.boxes = Math.max(0,unit.powerPlant.boxes-die(roll)); applied = true;
@@ -150,14 +196,14 @@ function specialDamage(fight, unit, roll, attacker) {
     if (!applied) continue;
     if (unit === fight.hero && attacker) fight.lastHeroDamageBy = attacker.key;
     event(fight, `Special damage ${table}: ${name(unit)}.`);
-    const control = controlCheck(unit,roll);
-    event(fight, `${name(unit)} control ${control.dice.join('+')}: ${control.passed ? 'held' : 'lost'}.`);
-    if (!control.passed) {
+    const result = unit.unattended ? {passed:true,dice:[]} : control(fight,unit,roll);
+    event(fight, `${name(unit)} control ${result.dice.join('+')}: ${result.passed ? 'held' : 'lost'}.`);
+    if (!result.passed) {
       unit.skipTurn = 1;
       if (fight.rules.anyAlliedControlFailure && side(fight,unit) === 'friendly')
         finish(fight,'branch',fight.rules.anyAlliedControlFailure);
     }
-    if (!crewAlive(unit,'driver') && crewAlive(unit,'gunner') && !unit.robotGunner && !unit.fixedDriver
+    if (!crewAlive(unit,'driver') && crewAlive(unit,'gunner') && !unit.robotGunner && !unit.fixedDriver && !unit.helicopter
         && !(fight.rules.anyAlliedCarOrDriverOut && side(fight,unit) === 'friendly')) {
       if (unit.gunnerDriving == null) unit.needsReplacementDriver = true;
       else Object.assign(unit,replaceCrewDriver(unit));
@@ -168,35 +214,69 @@ function specialDamage(fight, unit, roll, attacker) {
 }
 function ready(fight, unit, weapon) {
   return weapon.boxes > 0 && (!weapon.oneShot || weapon.ammo > 0)
-    && (!fight.options.advancedAmmo || weapon.ammo == null || weapon.ammo > 0 || fight.virtualAmmo && !weapon.oneShot)
+    && (!weapon.requiresReload || weapon.ammo > 0)
+    && (weapon.delivery !== 'mine' || weapon.ammo > 0)
+    && (!(fight.options.advancedAmmo || unit.basicAmmoLimited || weapon.explicitAmmoLimit) || weapon.ammo == null || weapon.ammo > 0 || fight.virtualAmmo && !weapon.oneShot)
     && (!/laser/i.test(weapon.name) || unit.powerPlant.boxes > 0);
 }
+export const weaponAvailable=(fight,unit,weapon)=>!!ready(fight,unit,weapon);
 function attack(fight, attacker, target, weapon, roll, crew = {}) {
   target.lastTargetedRound = fight.round;
   const vehicle = attacker.kind === 'vehicle';
   if (vehicle) {
     if (!ready(fight,attacker,weapon)) throw new RangeError('Weapon unavailable');
-    if ((weapon.oneShot || fight.options.advancedAmmo) && weapon.ammo != null && weapon.ammo > 0) weapon.ammo--;
+    if ((weapon.oneShot || weapon.delivery === 'mine' || fight.options.advancedAmmo || attacker.basicAmmoLimited || weapon.explicitAmmoLimit) && weapon.ammo != null && weapon.ammo > 0) weapon.ammo--;
+    if(fight.rules.scenarioCombat&&weapon.ammoFault&&die(roll)===weapon.ammoFault.die) {
+      weapon.boxes=Math.max(0,weapon.boxes-weapon.ammoFault.damage);
+      event(fight,`${name(attacker)}: faulty ammunition damages ${weapon.name}; no shot is fired.`);
+      return;
+    }
+  }
+  if (fight.rules.scenarioCombat && weapon.delivery === 'mine') {
+    if (target.relativePosition === 'ahead' || !fight.enemies.includes(target) && attacker.relativePosition !== 'ahead') {
+      throw new RangeError('Mines require a following target');
+    }
+    const result = control(fight,target,roll);
+    event(fight,`${name(target)}: mine ${result.passed ? 'avoided' : 'hit'}.`);
+    if (!result.passed) {
+      const damage=dice(weapon.damageDice,roll);
+      normalDamage(fight,target,sum(damage),attacker);
+      for (const value of damage) if (value === 1) specialDamage(fight,target,roll,attacker);
+    }
+    return;
+  }
+  if (fight.rules.scenarioCombat && weapon.automaticHit && weapon.effect === 'oil') {
+    attacker.oilActive=true;
+    event(fight,`${name(attacker)} deploys oil.`); return;
   }
   const seat = crew.seat ?? 'driver', history = attacker.firingHistory ??= {};
   let sustained = 0;
   if (vehicle && fight.options.sustainedFire) {
-    const prior = history[seat];
+    const historyKey = fight.rules.scenarioCombat ? String(attacker.weapons.indexOf(weapon)) : seat;
+    const prior = history[historyKey];
     sustained = prior?.target === target.key && prior.round === fight.round ? prior.bonus
       : prior?.target === target.key && prior.round === fight.round-1 ? Math.min(2,prior.bonus+1) : 0;
-    history[seat] = {target:target.key,round:fight.round,bonus:sustained};
+    history[historyKey] = {target:target.key,round:fight.round,bonus:sustained};
   }
   const mods = attacker === fight.hero ? fight.rules.heroAttackModifiers : fight.rules.enemyAttackModifiers;
   const attempt = attacker.attackCount ?? 0; attacker.attackCount = attempt+1;
-  const aim = crew.fixedCombatBonus ?? (crew.gunnery ?? attacker.gunnery) + (weapon.bonus ?? 0)
+  const painted = attacker.blindUntilRound != null && fight.round <= attacker.blindUntilRound;
+  const aim = crew.fixedCombatBonus ?? (painted ? 0 : crew.gunnery ?? attacker.gunnery) + (weapon.bonus ?? 0)
     + (vehicle ? crew.computerBonus ?? targetingBonus(attacker,seat) : 0);
   whole(aim,-100);
   const known = fight.rules.knownTargetBonus;
   const bonus = (mods?.[attempt] ?? 0) + (attacker === fight.hero ? fight.rules.heroAttackBonus ?? 0 : fight.rules.enemyAttackBonus ?? 0)
-    + (known && friendly(fight).includes(attacker) && target === fight.enemies[known.targetIndex] ? known.bonus : 0);
-  const values = dice(2,roll), total = sum(values)+aim+bonus+sustained, hit = total > target.defenseClass;
-  event(fight, `${name(attacker)}: ${weapon.name} against ${name(target)}: ${values.join('+')} → ${total} vs DC ${target.defenseClass}: ${hit ? 'hit' : 'miss'}.`);
+    + (known && friendly(fight).includes(attacker) && target === fight.enemies[known.targetIndex] ? known.bonus : 0)
+    + (fight.evasive && attacker === fight.hero ? fight.rules.evasive.attackModifier : 0);
+  const defense = target.defenseClass + (fight.evasive && target === fight.hero ? fight.rules.evasive.defenseBonus : 0);
+  const values = dice(2,roll), total = sum(values)+aim+bonus+sustained, hit = weapon.automaticHit || total > defense;
+  event(fight, `${name(attacker)}: ${weapon.name} against ${name(target)}: ${values.join('+')} → ${total} vs DC ${defense}: ${hit ? 'hit' : 'miss'}.`);
   if (!hit) return;
+  if (fight.rules.scenarioCombat && weapon.effect) {
+    if (weapon.effect === 'paint') target.blindUntilRound = fight.round + (fight.rules.paintCrossing?.blindTurns ?? 3);
+    else if (weapon.effect === 'oil') attacker.oilActive=true;
+    event(fight,`${name(target)}: ${weapon.name}.`); return;
+  }
   if (attacker === fight.hero && fight.rules.successfulHeroHitsToWin) {
     fight.heroHits = (fight.heroHits ?? 0)+1;
     if (fight.heroHits >= fight.rules.successfulHeroHitsToWin) finish(fight,'win',fight.rules.victory);
@@ -206,6 +286,11 @@ function attack(fight, attacker, target, weapon, roll, crew = {}) {
   else {
     const damage = weapon.flatDamage != null ? [weapon.vehicleFlatDamage ?? weapon.flatDamage] : dice(weapon.damageDice,roll);
     normalDamage(fight,target,sum(damage),attacker);
+    if (fight.rules.scenarioCombat && attacker !== fight.hero && target === fight.hero && /flamethrower/i.test(weapon.name)
+        && fight.rules.flameEscape && target.generalDamageTaken > fight.rules.flameEscape.afterGeneralDamageGreaterThan
+        && damage.includes(fight.rules.flameEscape.onDamageDie)) {
+      finish(fight,'loss',fight.rules.flameEscape.destination); return;
+    }
     if (weapon.flatDamage == null) for (const value of damage) if (value === 1) specialDamage(fight,target,roll,attacker);
   }
 }
@@ -217,26 +302,47 @@ function autoWeapons(fight, unit, facing) {
   for (let i = 0; i < unit.weapons.length; i++) {
     const weapon = unit.weapons[i];
     if (!ready(fight,unit,weapon) || !facing.includes(weapon.direction)) continue;
+    if (weapon.effect === 'paint' && fight.rules.paintCrossing && !fight.paintCrossing?.unlocked) continue;
     const key = weapon.linkedGroup ? 'linked:'+weapon.linkedGroup : 'weapon:'+i;
     if (!groups.has(key)) groups.set(key,[]);
     groups.get(key).push(i);
   }
-  const selected = [...groups.values()].sort((a,b) =>
-    b.reduce((n,i) => n+unit.weapons[i].damageDice,0)-a.reduce((n,i) => n+unit.weapons[i].damageDice,0)).slice(0,seats.length);
+  const priority = group => group.reduce((n,i) => n+unit.weapons[i].damageDice,0)
+    + (fight.rules.scenarioCombat && group.some(i => unit.weapons[i].effect)
+      && fight.round % 2 === 1 ? 100 : 0);
+  const ordered = [...groups.values()].sort((a,b) => priority(b)-priority(a));
+  const voice = unit.voiceSwitch?.status==='working' && seats.includes('driver')
+    ? ordered.find(group=>group.includes(unit.voiceSwitch.weaponIndex)) : null;
+  const selected = voice && ordered.length>seats.length
+    ? [...ordered.filter(group=>group!==voice).slice(0,seats.length),voice]
+    : ordered.slice(0,seats.length);
   return {indices:selected.flat(),seats:seats.slice(0,selected.length)};
 }
 function fireUnit(fight, unit, targets, action, roll) {
   if (combatantOut(unit) || unit.canAttack === false) return;
   if (unit.skipTurn > 0) {unit.skipTurn--; event(fight,`${name(unit)} misses a turn recovering control.`); return;}
   if (action?.hold) return;
+  if (fight.rules.scenarioCombat) unit.oilActive=false;
   if (unit.kind === 'person') {
     if (unit.skipFire > 0) unit.skipFire--;
     else if (targets[0] && !combatantOut(targets[0])) attack(fight,unit,targets[0],unit.weapon,roll);
     return;
   }
-  const facing = unit === fight.hero ? fight.rules.playerFacing : fight.rules.enemyFacing;
+  const phase = fight.rules.facingPhases?.find(item => (item.throughTurn == null || fight.round <= item.throughTurn)
+    && (item.fromTurn == null || fight.round >= item.fromTurn));
+  let facing = phase?.[unit === fight.hero ? 'player' : 'enemy']
+    ?? (unit === fight.hero ? fight.rules.playerFacing : fight.rules.enemyFacing);
+  if (unit === fight.hero && fight.rules.upwardPlayerWeaponsOnly) facing = ['up','turret'];
   const auto = action?.weapons ? null : autoWeapons(fight,unit,facing);
   const indices = action?.weapons ?? auto.indices;
+  if (unit.helicopter && fight.rules.enemyWeaponSwitchNoFireTurns && indices.length) {
+    const system = indices.map(index => unit.weapons[index].linkedGroup ?? 'weapon:'+index).join('|');
+    if (unit.selectedWeaponSystem != null && unit.selectedWeaponSystem !== system) {
+      unit.selectedWeaponSystem=system;
+      event(fight,`${name(unit)} changes weapons without firing.`); return;
+    }
+    unit.selectedWeaponSystem=system;
+  }
   const playerSeats = unit === fight.hero && fight.rules.heroIsGunner
     ? ['gunner','driver'].filter(s => firingCrew(unit,Math.max(1,fight.round)).includes(s)) : undefined;
   const assignments = assignWeapons(unit,indices,Math.max(1,fight.round),{facing,
@@ -246,7 +352,15 @@ function fireUnit(fight, unit, targets, action, roll) {
     if (!target || combatantOut(target)) throw new RangeError('Choose a surviving target');
     for (const index of assignment.weapons) {
       if (combatantOut(target) || combatantOut(unit) || fight.status !== 'fighting') break;
-      attack(fight,unit,target,unit.weapons[index],roll,assignment);
+      const weapon = unit.weapons[index];
+      if (weapon.effect === 'paint' && fight.rules.paintCrossing && !fight.paintCrossing?.unlocked)
+        throw new RangeError('The paint sprayer is not yet across the target path');
+      if (unit === fight.hero && fight.rules.upwardPlayerWeaponsOnly && weapon.direction !== 'up' && !weapon.universal)
+        throw new RangeError('Only upward-firing weapons can hit this target');
+      if (fight.rules.positionalFacings && unit === fight.hero && weapon.direction !== 'turret'
+          && weapon.direction !== (target.relativePosition === 'ahead' ? 'front' : 'rear'))
+        throw new RangeError('That weapon cannot face the selected vehicle');
+      attack(fight,unit,target,weapon,roll,assignment);
     }
   }
   unit.skipFire = Math.max(0,unit.skipFire-1); unit.gunnerSkipFire = Math.max(0,unit.gunnerSkipFire-1);
@@ -260,6 +374,21 @@ export function startFight(hero, entry, options = {}, roll) {
     enemies:entry.enemies.map(validateCombatant),allies:(options.allies ?? rules.allies ?? []).map(validateCombatant),
     status:'fighting',round:0,events:[],options:{advancedAmmo:!!options.advancedAmmo,sustainedFire:!!options.sustainedFire,
       simplifiedArena:!!options.simplifiedArena},appliedEntries:[entry.section],section:null};
+  if (rules.scenarioCombat) {
+    if (rules.fireSupport) fight.supporters=(rules.fireSupport.units ?? []).map(validateCombatant);
+    fight.hero.allowImmobilizedFire = !!rules.ownPlantAllowsNonLaserFire && !rules.heroPlantLossEnds;
+    if (rules.playerAlone) {fight.hero.gunnerSeat=false; fight.hero.gunnerHp=0;}
+    if (rules.explicitBasicAmmo) for (const unit of fight.enemies) {
+      unit.basicAmmoLimited=!options.advancedAmmo;
+      for (const weapon of unit.weapons ?? []) if (!options.advancedAmmo) weapon.ammo=rules.explicitBasicAmmo;
+    }
+    if (rules.entryDamageDice) normalDamage(fight,fight.hero,sum(dice(rules.entryDamageDice,roll)));
+    if (rules.openingGunneryChecks) {
+      const checks=rules.openingGunneryChecks;
+      for (let i=0;i<checks.count;i++) if (die(roll)<=checks.target)
+        personalDamage(fight,fight.hero,{damage:checks.flatDamage,knockout:false},fight.enemies[0]);
+    }
+  }
   if (fight.hero.kind !== (rules.kind === 'personal' ? 'person' : 'vehicle')) throw new RangeError('Choose matching combat stats');
   if (rules.robotGunner) fight.hero = installRobotGunner(fight.hero,rules.robotGunner);
   if (rules.playerWeapon) fight.hero.weapon = copy(rules.playerWeapon);
@@ -293,7 +422,37 @@ export function fightRound(previous, action = {}, roll) {
   if (previous?.rulesVersion !== 2 || previous.status !== 'fighting') throw new RangeError('No active fight');
   const fight = copy(previous); fight.events=[]; settle(fight);
   if (fight.status !== 'fighting') return fight;
-  const target = fight.enemies[whole(action.target ?? 0)];
+  if (action.evasive != null) {
+    if (!fight.rules.evasive?.toggleable || typeof action.evasive !== 'boolean')
+      throw new RangeError('Evasive action is not offered here');
+    fight.evasive=action.evasive;
+  }
+  if (fight.rules.parkedPass) {
+    const rule=fight.rules.parkedPass;
+    fight.parkedAttempts ??= [];
+    const available=index=>Number.isSafeInteger(index) && fight.enemies[index] && !fight.parkedAttempts.includes(index);
+    if (action.ramTargets) {
+      if (action.ramTargets.length !== rule.ramTargets || new Set(action.ramTargets).size !== rule.ramTargets
+          || !action.ramTargets.every(available)) throw new RangeError('Choose a fresh pair of parked vehicles');
+      for (const index of action.ramTargets) {fight.enemies[index].out=true; fight.parkedAttempts.push(index);}
+      normalDamage(fight,fight.hero,sum(dice(rule.ramDamageDice,roll)));
+    } else {
+      const index=action.target ?? 0;
+      if (!available(index) || !Array.isArray(action.weapons) || action.weapons.length !== 1)
+        throw new RangeError('Choose one weapon and one untried parked vehicle');
+      fight.rules.heroAttackBonus=rule.heroAttackBonus;
+      fireUnit(fight,fight.hero,fight.enemies,action,roll);
+      fight.parkedAttempts.push(index);
+    }
+    fight.round++; settle(fight);
+    if (fight.status === 'fighting' && fight.parkedAttempts.length === fight.enemies.length) {
+      const disabled=fight.enemies.filter(combatantOut).length;
+      finish(fight,disabled >= rule.atLeastDisabled ? 'win' : 'branch',disabled >= rule.atLeastDisabled ? rule.victory : rule.otherwise);
+    }
+    return fight;
+  }
+  const targets = combatTargets(fight);
+  const target = targets[whole(action.target ?? 0)];
   if (!target || combatantOut(target)) throw new RangeError('Choose a surviving target');
   if (fight.openingShots > 0) {
     attack(fight,fight.hero,target,fight.hero.weapon,roll); fight.openingShots--;
@@ -301,6 +460,16 @@ export function fightRound(previous, action = {}, roll) {
     settle(fight); return fight;
   }
   fight.round++;
+  if (fight.rules.paintCrossing && !fight.paintCrossing?.unlocked) {
+    const source=fight.rules.paintCrossing;
+    const unit=fight.enemies.find(enemy=>enemy.key===source.enemyKey);
+    if (unit && !combatantOut(unit)) {
+      fight.paintCrossing ??= {heroSuccesses:0,enemySuccesses:0,unlocked:false};
+      if (control(fight,fight.hero,roll).passed) fight.paintCrossing.heroSuccesses++;
+      if (control(fight,unit,roll).passed) fight.paintCrossing.enemySuccesses++;
+      fight.paintCrossing.unlocked=fight.paintCrossing.enemySuccesses-fight.paintCrossing.heroSuccesses>=source.controlSuccessLead;
+    }
+  }
   if (fight.options.advancedAmmo) {
     const armed = everyone(fight).filter(u => !combatantOut(u) && u.canAttack !== false);
     const allEmpty = armed.length > 1 && armed.every(u => u.kind === 'vehicle'
@@ -317,7 +486,7 @@ export function fightRound(previous, action = {}, roll) {
   }
   const hero = () => {
     if (fight.hero.kind === 'person') fireUnit(fight,fight.hero,[target],action,roll);
-    else fireUnit(fight,fight.hero,fight.enemies,action,roll);
+    else fireUnit(fight,fight.hero,targets,action,roll);
     settle(fight);
     if (fight.status !== 'fighting') return;
     for (const ally of fight.allies) {
@@ -329,6 +498,7 @@ export function fightRound(previous, action = {}, roll) {
   const enemies = () => {
     for (let i = 0; i < fight.enemies.length; i++) {
       const unit = fight.enemies[i]; if (combatantOut(unit)) continue;
+      if (fight.rules.chase?.pursuersCanFire === false) continue;
       if (fight.rules.enemiesOnlyReturnFire && unit.lastTargetedRound !== fight.round) continue;
       const selected = fight.rules.arena ? arenaTarget(fight,i,roll)
         : fight.rules.randomEnemyTargetEachTurn ? pick(friendly(fight).filter(u => !combatantOut(u)),roll)
@@ -341,10 +511,42 @@ export function fightRound(previous, action = {}, roll) {
       fireUnit(fight,unit,[selected],null,roll); settle(fight);
       if (fight.status !== 'fighting') break;
     }
+    const support=fight.rules.fireSupport;
+    if (fight.status !== 'fighting' || !support) return;
+    for (let i=0;i<(fight.supporters ?? []).length;i++) {
+      const unit=fight.supporters[i];
+      if (combatantOut(unit)) continue;
+      const law=i===(support.lawIndex ?? fight.supporters.length-1);
+      if (law ? !support.lawTurns.includes(fight.round) || (unit.shotsFired ?? 0)>=support.lawMaximumShots
+          : !support.untilBattleEnd && fight.round>support.ordinaryTurns) continue;
+      const before=unit.attackCount ?? 0;
+      fireUnit(fight,unit,[fight.hero],null,roll);
+      if ((unit.attackCount ?? 0)>before) unit.shotsFired=(unit.shotsFired ?? 0)+1;
+      settle(fight);
+      if (fight.status !== 'fighting') break;
+    }
   };
   if (fight.rules.enemyFirst) {enemies(); if(fight.status==='fighting') hero();}
   else {hero(); if(fight.status==='fighting') enemies();}
   if (fight.status !== 'fighting') return fight;
+  if (fight.rules.chase && !fight.rules.chase.noCombat) {
+    const rule=fight.rules.chase;
+    fight.pursuitFailures ??= {hero:0,enemies: fight.enemies.map(()=>0)};
+    const counts=fight.pursuitFailures;
+    if (!control(fight,fight.hero,roll).passed) counts.hero++;
+    for (let i=0;i<fight.enemies.length;i++) {
+      const unit=fight.enemies[i];
+      if (combatantOut(unit)) continue;
+      if (!control(fight,unit,roll).passed) counts.enemies[i]++;
+      if (counts.enemies[i]>=rule.failuresToDropOut) {
+        unit.escaped=true; event(fight,`${name(unit)} drops behind.`);
+      }
+    }
+    settle(fight);
+    if (fight.status === 'fighting' && counts.hero>=rule.failuresToDropOut)
+      finish(fight,'branch',rule.heroFailuresDestination);
+    if (fight.status !== 'fighting') return fight;
+  }
   if (fight.rules.fleeingEnemies && fight.round >= fight.rules.fleeingEnemies.afterResponseTurns)
     for (const i of fight.rules.fleeingEnemies.indices) fight.enemies[i].escaped=true;
   if (fight.options.simplifiedArena && fight.rules.arena)
@@ -353,7 +555,10 @@ export function fightRound(previous, action = {}, roll) {
   settle(fight);
   const limit = fight.rules.roundLimit;
   if (fight.status === 'fighting' && limit && fight.round >= limit.turns
-      && !combatantOut(fight.enemies[limit.onlyIfEnemyActive])) finish(fight,'branch',limit.destination);
+      && (limit.onlyIfEnemyActive == null || !combatantOut(fight.enemies[limit.onlyIfEnemyActive]))) {
+    if(limit.exhaustPersonalWeapons)for(const unit of [fight.hero,...fight.enemies])if(unit.weapon)unit.weapon.ammo=0;
+    finish(fight,'branch',limit.destination);
+  }
   return fight;
 }
 
@@ -361,11 +566,14 @@ export function resumeFight(previous, entry, roll) {
   if (previous?.rulesVersion !== 2 || !['fighting','branch','paused'].includes(previous.status)
       || String(previous.baseSection) !== String(entry.baseSection ?? entry.section)) throw new RangeError('No matching unfinished fight');
   const fight = copy(previous); fight.events=[]; fight.rules={...fight.rules,...copy(entry.rules)};
+  if (entry.rules.carryChaseStateFrom) delete fight.rules.chase;
+  if(fight.rules.scenarioCombat)fight.hero.allowImmobilizedFire=!!fight.rules.ownPlantAllowsNonLaserFire&&!fight.rules.heroPlantLossEnds;
   const fresh = !fight.appliedEntries.includes(entry.section);
   fight.status='fighting'; fight.section=null; fight.sourceSection=entry.section;
   for (const i of entry.rules.escapedEnemyIndices ?? []) fight.enemies[i].escaped=true;
   if (fresh) {
     fight.appliedEntries.push(entry.section);
+    if(entry.rules.scenarioCombat&&entry.rules.entryDamageDice)normalDamage(fight,fight.hero,sum(dice(entry.rules.entryDamageDice,roll)));
     if (entry.rules.robotGunner && JSON.stringify(fight.hero.robotGunner)!==JSON.stringify(entry.rules.robotGunner))
       fight.hero=installRobotGunner(fight.hero,entry.rules.robotGunner);
     if (entry.rules.playerWeapon) fight.hero.weapon=copy(entry.rules.playerWeapon);
@@ -399,5 +607,16 @@ export function tactic(previous, kind) {
   fight.usedTactics ??= [];
   if (rule.once && fight.usedTactics.includes(kind)) throw new RangeError('This tactic has already been used');
   fight.usedTactics.push(kind); fight.events=['You change tactics; existing damage and ammunition are retained.'];
+  if (fight.rules.scenarioCombat && rule.allPursuersCatchUp) {
+    fight.rules.playerFacing=copy(rule.playerFacing);
+    for (const unit of fight.enemies) {
+      // Falling behind in the chase is not the same as being destroyed.
+      delete unit.escaped;
+      unit.relativePosition='behind';
+    }
+    if (rule.supportUntilBattleEnd && fight.rules.fireSupport && fight.round < fight.rules.fireSupport.ordinaryTurns)
+      fight.rules.fireSupport.untilBattleEnd=true;
+    return fight;
+  }
   finish(fight,kind==='leave' ? 'escaped' : 'branch',rule.destination); return fight;
 }

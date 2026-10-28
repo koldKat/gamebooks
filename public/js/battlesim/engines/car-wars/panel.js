@@ -1,7 +1,8 @@
 import {createOpponentEditor} from '../../opponents.js';
 import * as defaultCombat from './core.js';
 import {switchVehicle, rememberCombatCharacter, applyMaintenance} from './vehicles.js';
-import {weaponGroups, firingCrew} from './crew.js';
+import {weaponGroups, firingCrew, testVoiceSwitch, disconnectVoiceSwitch, assignPassengerGunner} from './crew.js';
+import {installEquipment,repairAmmunitionFault,applySectionMaintenance,applyAmmunitionEffect} from './equipment.js';
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clone = value => structuredClone(value);
@@ -24,11 +25,12 @@ const customEnemy = kind => kind === 'person'
     powerPlant:{boxes:3},weapons:[{name:'Machine-gun',direction:'front',bonus:0,damageDice:1,boxes:3}]};
 
 export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,getRun,getBookId,saveState,getButtonRow,
-  showAlert,showConfirm,registerShortcut=()=>{},combat=defaultCombat,getPlayerDefaults,getMaintenance=()=>[]}) {
+  showAlert,showConfirm,registerShortcut=()=>{},combat=defaultCombat,getPlayerDefaults,getMaintenance=()=>[],getLocalEquipment=()=>null,scenarios=false}) {
   const {validateCombatant,startFight,resumeFight,fightRound,tactic,repairVehicle,replaceDriver,combatantOut}=combat;
   const extended=!!getPlayerDefaults;
   const newCharacter=()=>extended?{...clone(getPlayerDefaults()),name:'You',key:'player',kind:'person',weapon:clone(getPlayerDefaults().personalWeaponOptions[0])}:blankPerson();
-  const makeEnemy=kind=>({...customEnemy(kind),...(extended&&kind==='vehicle'?{driving:1}: {})});
+  const makeEnemy=kind=>kind==='chase'?{kind:'chase'}:({...customEnemy(kind),...(extended&&kind==='vehicle'?{driving:1}: {})});
+  const targetsOf=fight=>combat.combatTargets?.(fight)??fight.enemies;
   function syncVehicle(game,unit) {
     const saved=rememberCombatCharacter(game,unit);
     for (const key of ['character','vehicle','vehicles']) game[key]=saved[key];
@@ -46,6 +48,7 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
   const check = (path,value,title) => `<label class="bsim-checkbox"><input type="checkbox" data-path="${esc(path)}" ${value?'checked':''}>${esc(title)}</label>`;
   const selectedOption = (values,current) => values.map(value=>`<option value="${esc(value)}" ${value===current?'selected':''}>${esc(value)}</option>`).join('');
   function unitForm(unit, hero=false) {
+    if (unit.kind==='chase') return number('controlRoll',unit.controlRoll,'Control roll');
     let html = hero ? ['hp','maxHp','defenseClass','gunnery',...(unit.kind==='person'?['armour','driving','mechanic','prestige','wealth']:[])].map(key=>number(key,unit[key]??0)).join('') : '';
     if (unit.kind==='person') {
       html += text('weapon.name',unit.weapon.name,'Weapon') + number('weapon.bonus',unit.weapon.bonus??0,'To-hit bonus',-100);
@@ -53,16 +56,20 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
         : unit.weapon.flatDamage!=null ? number('weapon.flatDamage',unit.weapon.flatDamage,'Fixed damage') : number('weapon.damageDice',unit.weapon.damageDice,'Damage dice',1,10);
       return html;
     }
-    html += ['handling',...(hero||extended?['driving']:['controlRoll']),'driverHp','driverArmour','gunnerHp','gunnerArmour','gunnerGunnery',
+    html += ['handling',...(unit.unattended?[]:hero||extended?['driving']:['controlRoll']),'driverHp','driverArmour','gunnerHp','gunnerArmour','gunnerGunnery',
       ...(!extended?['computerBonus']:[]),'cargo',...(hero&&!extended?['smokeCharges','grenades']:[])].filter(key=>(key!=='handling'||unit.handling!=null)&&(!extended||hero||unit[key]!=null||!['gunnerHp','gunnerArmour','gunnerGunnery'].includes(key)))
       .map(key=>number(key,unit[key]??0,undefined,['handling','gunnerGunnery'].includes(key)?-100:0)).join('');
     if (extended) html+=(unit.gadgets??[]).map((g,i)=>number('gadgets.'+i+'.boxes',g.boxes,g.name+' ('+g.computerFor+')')).join('');
+    if(scenarios&&hero) {
+      html+=`<label class="inv-edit-row">Targeting computer user<select class="inv-edit-input" data-path="computerSeat">${selectedOption(['driver','gunner'],unit.computerSeat??'driver')}</select></label>`;
+      html+=(unit.passengers??[]).map((passenger,i)=>`<details><summary>${esc(passenger.name)}</summary>${number(`passengers.${i}.hp`,passenger.hp,'HP')}${number(`passengers.${i}.armour`,passenger.armour??0,'Armour')}</details>`).join('');
+    }
     html += number('powerPlant.boxes',unit.powerPlant.boxes,'Power plant boxes');
     if (hero) html += check('gunnerSeat',unit.gunnerSeat,'Second vehicle firing station') + (!extended?check('ramplate',unit.ramplate,'Ramplate'):'');
     html += unit.weapons.map((w,index)=>`<details><summary>${esc(w.name)} (${esc(w.direction)})</summary>${text(`weapons.${index}.name`,w.name,'Weapon')}
-      <label class="inv-edit-row">Facing<select class="inv-edit-input" data-path="weapons.${index}.direction">${selectedOption(['front','rear','left','right','turret'],w.direction)}</select></label>
+      <label class="inv-edit-row">Facing<select class="inv-edit-input" data-path="weapons.${index}.direction">${selectedOption(['front','rear','left','right','turret',...(scenarios?['up']:[])],w.direction)}</select></label>
       ${number(`weapons.${index}.boxes`,w.boxes,'Boxes')}${number(`weapons.${index}.bonus`,w.bonus??0,'To-hit bonus',-100)}
-      ${number(`weapons.${index}.damageDice`,w.damageDice??1,'Damage dice',1,10)}
+      ${number(`weapons.${index}.damageDice`,w.damageDice??1,'Damage dice',w.effect?0:1,10)}
       ${extended&&/laser/i.test(w.name)&&w.ammo==null?'':number(`weapons.${index}.ammo`,w.ammo??w.shots??w.ammoCapacity??(/machine|vulcan|paint|oil/i.test(w.name)?20:10),'Shots left')}
       ${text(`weapons.${index}.linkedGroup`,w.linkedGroup??'','Linked group (blank for separate)')}
       ${check(`weapons.${index}.oneShot`,w.oneShot||w.shots!=null,'Single-use weapon')}</details>`).join('');
@@ -90,7 +97,9 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
   }
   function setupForms(game) {
     settingUp=true;
-    const entry=preset(),required=entry?.rules.requiredPlayerVehicle;
+    let entry=preset();
+    if(scenarios&&entry)entry=combat.carrySurvivors(entry,game?.carried?.[entry.rules.survivorsFrom?.section]);
+    const required=entry?.rules.requiredPlayerVehicle;
     const profile=required??(extended?game?.vehicle?.ownedStateKey:null);
     const vehicle=profile?freshVehicle(game,getVehicles().find(v=>v.ownedStateKey===profile)):game?.vehicle??freshVehicle(game);
     modelHero = kind()==='person' ? clone(game?.character??newCharacter()) : clone(vehicle);
@@ -168,7 +177,7 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
     if (locked(game)) return;
     const hero=snapshot(game),entry=preset();
     const selected=entry?{...clone(entry),enemies:opponents()}:{label:opponents().map(e=>e.name).join(' / '),section:null,enemies:opponents(),
-      rules:{kind:el('customKind').value==='vehicle'?'vehicle':'personal',playerFacing:['front','rear','left','right','turret'],enemyFacing:['front']}};
+      rules:{...(scenarios?getPlayerDefaults().customRules:{}),kind:el('customKind').value==='vehicle'?'vehicle':'personal',playerFacing:['front','rear','left','right','turret'],enemyFacing:['front']}};
     if (extended) {
       if (selected.rules.requiredPlayerVehicle&&hero.ownedStateKey!==selected.rules.requiredPlayerVehicle) throw new RangeError('Use the vehicle specified by this section.');
       if (selected.rules.optionalAllies&&game.setup.optionalAllies) selected.rules.allies=clone(selected.rules.optionalAllies);
@@ -204,7 +213,7 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
       el('hero').innerHTML=unitForm(modelHero,true);
     }
     const target=el('target').value;
-    el('target').innerHTML=fight?.enemies.map((enemy,i)=>combatantOut(enemy,fight.rules)?'':`<option value="${i}">${esc(enemy.displayName||enemy.name)} (${enemy.hp} HP)</option>`).join('')??'';
+    el('target').innerHTML=fight?targetsOf(fight).map((enemy,i)=>combatantOut(enemy,fight.rules)||fight.parkedAttempts?.includes(i)?'':`<option value="${i}">${esc(enemy.displayName||enemy.name)}${enemy.kind==='chase'?'':` (${enemy.hp} HP)`}</option>`).join(''):'';
     if ([...el('target').options].some(option=>option.value===target)) el('target').value=target;
     if (extended) {
       const secondary=el('secondTarget').value;
@@ -214,7 +223,9 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
       el('firstSeatRow').hidden=fight?.hero.kind!=='vehicle'||!fight.hero.gunnerSeat;
     }
     const checked=new Set([...el('weapons').querySelectorAll('input:checked')].map(input=>input.value));
-    el('weapons').innerHTML=fight?.hero.kind==='vehicle'?fight.hero.weapons.map((weapon,i)=>`<label class="bsim-checkbox"><input type="checkbox" value="${i}" ${checked.has(String(i))?'checked':''} ${weapon.boxes>0&&(fight.rules.playerFacing??[]).includes(weapon.direction)?'':'disabled'}>${esc(weapon.name)} (${esc(weapon.direction)}, ${weapon.boxes} boxes${weapon.oneShot||fight.options.advancedAmmo?`, ${weapon.ammo??'∞'} shots`:''})</label>`).join(''):'';
+    const phase=fight?.rules.facingPhases?.find(item=>(item.throughTurn==null||fight.round+1<=item.throughTurn)&&(item.fromTurn==null||fight.round+1>=item.fromTurn));
+    const facing=phase?.player??fight?.rules.playerFacing??[];
+    el('weapons').innerHTML=fight?.hero.kind==='vehicle'&&fight.type!=='chase'?fight.hero.weapons.map((weapon,i)=>`<label class="bsim-checkbox"><input type="checkbox" value="${i}" ${checked.has(String(i))?'checked':''} ${(combat.weaponAvailable?combat.weaponAvailable(fight,fight.hero,weapon):weapon.boxes>0)&&(fight.rules.upwardPlayerWeaponsOnly?weapon.direction==='up'||weapon.universal:facing.includes(weapon.direction))?'':'disabled'}>${esc(weapon.name)} (${esc(weapon.direction)}, ${weapon.boxes} boxes${weapon.oneShot||weapon.delivery==='mine'||weapon.requiresReload||weapon.explicitAmmoLimit||fight.options.advancedAmmo?`, ${weapon.ammo??'∞'} shots`:''})</label>`).join(''):'';
     el('smokeRow').hidden=!fight?.rules.canUseSmoke;el('grenadeRow').hidden=!fight?.rules.gunnerGrenades;
     el('smoke').checked=false;el('grenade').checked=false;
     for (const key of ['foam','smokeEscape','grenadeEscape','escape','continue','leave','ram',...(extended?['maneuver']:[])]) {
@@ -222,13 +233,45 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
     }
     el('repair').disabled=active||!game?.vehicle;el('apply').disabled=active;
     el('status').textContent=fight?`${fight.encounter}: ${fight.status} · turn ${fight.round}${fight.section?' · continue at §'+fight.section:''}`:'Ready. Allocate your ten starting skill points, or enter your current stats.';
-    el('units').innerHTML=fight?[fight.hero,...(fight.allies??[]),...fight.enemies].map(unit=>`<div class="bsim-status">${esc(unit.displayName||unit.name)}: ${unit.hp} HP / DC ${unit.defenseClass}${unit.kind==='vehicle'?` · driver ${unit.driverHp} HP${unit.gunnerSeat?' · gunner '+unit.gunnerHp+' HP':''} · plant ${unit.powerPlant.boxes} boxes`:''}${unit.escaped?' · escaped':''}</div>`).join(''):'';
+    el('units').innerHTML=fight?[fight.hero,...(fight.allies??[]),...targetsOf(fight)].map(unit=>`<div class="bsim-status">${esc(unit.displayName||unit.name)}: ${unit.kind==='chase'?`Control ${unit.controlRoll}`:`${unit.hp} HP / DC ${unit.defenseClass}`}${unit.kind==='vehicle'?` · driver ${unit.driverHp} HP${unit.gunnerSeat?' · gunner '+unit.gunnerHp+' HP':''} · plant ${unit.powerPlant.boxes} boxes`:''}${unit.escaped?' · escaped':''}</div>`).join(''):'';
     el('log').innerHTML=(game?.log??[]).slice(-100).reverse().map(line=>`<div>${esc(line)}</div>`).join('');
     el('history').innerHTML=(game?.history??[]).slice(-50).reverse().map(item=>`<div>${esc(item.enemy)} · ${esc(item.outcome)}</div>`).join('');
     const component=el('repairPart').value;
     el('repairPart').innerHTML='<option value="hp">General HP</option><option value="plant">Power plant</option>'+(game?.vehicle?.weapons??[]).map((w,i)=>`<option value="${i}">${esc(w.name)} (${esc(w.direction)})</option>`).join('');
     if ([...el('repairPart').options].some(o=>o.value===component)) el('repairPart').value=component;
     if (extended) {el('maintain').disabled=active||!game?.vehicle;el('pause').disabled=fight?.status!=='fighting';}
+    if(scenarios) {
+      el('evasiveRow').hidden=!fight?.rules.evasive;
+      el('evasive').checked=!!fight?.evasive;
+      el('evasive').disabled=!active;
+      el('turnAround').hidden=!fight?.rules.tactics?.turnAround;
+      el('turnAround').disabled=!active||!!fight?.usedTactics?.includes('turnAround');
+      el('parkedRamRow').hidden=!fight?.rules.parkedPass;
+      const ramTarget=el('ramTarget').value;
+      el('ramTarget').innerHTML=el('target').innerHTML;
+      if([...el('ramTarget').options].some(option=>option.value===ramTarget))el('ramTarget').value=ramTarget;
+      el('parkedRam').disabled=!active;
+      const third=el('thirdTarget').value;
+      el('thirdTarget').innerHTML=el('target').innerHTML;
+      if([...el('thirdTarget').options].some(option=>option.value===third))el('thirdTarget').value=third;
+      el('thirdTargetRow').hidden=fight?.hero.voiceSwitch?.status!=='working'||!fight?.hero.gunnerSeat;
+      el('secondTargetRow').hidden=fight?.hero.kind!=='vehicle'||!(fight.hero.gunnerSeat||fight.hero.voiceSwitch?.status==='working');
+      const vehicle=active?fight?.hero:game?.vehicle;
+      const chosenWeapon=el('equipmentWeapon').value;
+      el('equipmentWeapon').innerHTML=(vehicle?.weapons??[]).map((weapon,i)=>`<option value="${i}">${esc(weapon.name)} (${esc(weapon.direction)})</option>`).join('');
+      if([...el('equipmentWeapon').options].some(option=>option.value===chosenWeapon))el('equipmentWeapon').value=chosenWeapon;
+      el('installEquipment').disabled=active||!vehicle;
+      el('testVoice').disabled=!vehicle||vehicle.voiceSwitch?.status!=='untested';
+      el('disconnectVoice').disabled=active||!vehicle?.voiceSwitch||vehicle.voiceSwitch.status==='disconnected';
+      el('repairFault').disabled=active||!vehicle;
+      el('assignGunner').disabled=active||!vehicle;
+      const gunner=el('gunnerProfile').value;
+      el('gunnerProfile').innerHTML='<option value="">No gunner</option>'+(vehicle?.availableGunners??[]).map((profile,i)=>`<option value="${i}">${esc(profile.name)}${profile.gunnery==null?' (Gunnery not printed)':''}</option>`).join('');
+      if([...el('gunnerProfile').options].some(option=>option.value===gunner))el('gunnerProfile').value=gunner;
+      el('applyAmmoEffect').disabled=active||!vehicle;
+      el('voiceStatus').textContent=vehicle?.voiceSwitch?`Voice switch: ${vehicle.voiceSwitch.status}. Bound to ${vehicle.weapons[vehicle.voiceSwitch.weaponIndex]?.name??'unknown weapon'}.`:'';
+      el('hold').hidden=fight?.type==='chase';
+    }
   }
   function open() {
     if (!getRun()) {showAlert(t('battlesim.no_active_playthrough'));return;}
@@ -281,12 +324,17 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
         <p>Choose the component below. Use each repair allowance once per car; pit resupply restores armour and ammunition only.</p>${button('maintain','Apply section allowance')}`;
       el('repair').closest('details').before(maintenance);
       // Dueltrack uses the explicit source allowances, not Battle Road's mechanic roll.
-      el('repair').hidden=true;el('mechanic').closest('label').hidden=true;el('repairAmount').closest('label').hidden=true;
+      el('repair').hidden=!scenarios;el('mechanic').closest('label').hidden=!scenarios;el('repairAmount').closest('label').hidden=!scenarios;
       el('personalWeapon').addEventListener('change',()=>{if(!busy()&&modelHero.kind==='person'){
         modelHero=readForm(el('hero'),modelHero);modelHero.weapon=clone(getPlayerDefaults().personalWeaponOptions[Number(el('personalWeapon').value)]);el('hero').innerHTML=unitForm(modelHero,true);
       }});
       el('maintain').addEventListener('click',()=>update(game=>{
         const rule=getMaintenance()[Number(el('maintenance').value)];
+        if(scenarios) {
+          const saved=applySectionMaintenance(game,rule);
+          for(const key of ['character','vehicle','vehicles'])if(key in saved)game[key]=saved[key];
+          game.log.push('Section '+rule.section+': '+rule.label+' applied.');return;
+        }
         const numeric=key=>{const input=el(key),n=Number(input.value);if(!input.value.trim()||!Number.isSafeInteger(n)||n<0)throw new RangeError('Enter whole repair amounts.');return n;};
         const amount=numeric('maintenanceBoxes'),part=el('repairPart').value;
         if(amount&&part==='hp')throw new RangeError('Choose a component for the component boxes.');
@@ -295,8 +343,52 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
         game.log.push('Section '+rule.section+': '+rule.label+' applied.');
       }));
     }
+    if(scenarios) {
+      const controls=document.createElement('div');
+      controls.innerHTML=`<label class="bsim-checkbox" id="${id}-evasiveRow"><input type="checkbox" id="${id}-evasive">Evasive driving</label>
+        ${button('turnAround','Turn around')}
+        <div id="${id}-parkedRamRow"><label class="inv-edit-row">Second parked target<select class="inv-edit-input" id="${id}-ramTarget"></select></label>${button('parkedRam','Ram selected pair')}</div>
+        <label class="inv-edit-row" id="${id}-thirdTargetRow">Voice-switch target<select class="inv-edit-input" id="${id}-thirdTarget"></select></label>
+        <details><summary>Simulator equipment</summary><p>Record only equipment bought in the book. Prices are paid on your record sheet. Install, disconnect and repair while stopped.</p>
+        <label class="inv-edit-row">Equipment<select class="inv-edit-input" id="${id}-equipment">${getLocalEquipment().items.map((item,i)=>`<option value="${i}">${esc(item.name)}${item.price?` ($${item.price})`:''}</option>`).join('')}</select></label>
+        <label class="inv-edit-row">Weapon<select class="inv-edit-input" id="${id}-equipmentWeapon"></select></label>
+        ${button('installEquipment','Record equipment')}<p id="${id}-voiceStatus"></p>
+        <div class="bsim-btn-row">${button('testVoice','First voice command')}${button('disconnectVoice','Disconnect switch')}${button('repairFault','Repair ammunition fault')}</div>
+        <label class="inv-edit-row">Gunner<select class="inv-edit-input" id="${id}-gunnerProfile"></select></label>${button('assignGunner','Record gunner')}
+        <label class="inv-edit-row">Section ammunition effect<select class="inv-edit-input" id="${id}-ammoEffect">${(getLocalEquipment().ammunitionEffects??[]).map((rule,i)=>`<option value="${i}">§${esc(rule.section)}: ${esc(rule.label)}</option>`).join('')}</select></label>${button('applyAmmoEffect','Record ammunition effect')}</details>`;
+      el('weapons').after(controls);
+      const editVehicle=(game,change)=>{
+        if(locked(game))game.fight={...game.fight,hero:change(game.fight.hero),events:[]};
+        else {if(!game.vehicle)throw new RangeError('Choose a simulator vehicle first');syncVehicle(game,change(game.vehicle));}
+      };
+      el('turnAround').addEventListener('click',()=>update(game=>{game.fight=tactic(game.fight,'turnAround');}));
+      el('parkedRam').addEventListener('click',()=>update(game=>{game.fight=fightRound(game.fight,{ramTargets:[Number(el('target').value),Number(el('ramTarget').value)]});}));
+      el('installEquipment').addEventListener('click',()=>update(game=>editVehicle(game,unit=>installEquipment(unit,getLocalEquipment().items[Number(el('equipment').value)],{weaponIndex:Number(el('equipmentWeapon').value)},{fighting:locked(game)}))));
+      el('testVoice').addEventListener('click',()=>update(game=>editVehicle(game,unit=>{
+        const result=testVoiceSwitch(unit,()=>1+Math.floor(Math.random()*6));
+        game.log.push(`Voice command: ${result.die}; ${result.working?'working':'computer disabled'}.`);return result.unit;
+      })));
+      el('disconnectVoice').addEventListener('click',()=>update(game=>editVehicle(game,unit=>disconnectVoiceSwitch(unit,{fighting:locked(game)}))));
+      el('assignGunner').addEventListener('click',()=>update(game=>{
+        if(locked(game))throw new RangeError('Change gunners between fights');
+        editVehicle(game,unit=>assignPassengerGunner(unit,el('gunnerProfile').value===''?null:unit.availableGunners[Number(el('gunnerProfile').value)]));
+      }));
+      el('applyAmmoEffect').addEventListener('click',()=>update(game=>{
+        if(locked(game))throw new RangeError('Record section ammunition effects between fights');
+        editVehicle(game,unit=>applyAmmunitionEffect(unit,getLocalEquipment().ammunitionEffects[Number(el('ammoEffect').value)],{advancedAmmo:el('advancedAmmo').checked,weaponIndex:Number(el('equipmentWeapon').value)}));
+      }));
+      el('repairFault').addEventListener('click',()=>update(game=>editVehicle(game,unit=>{
+        const result=repairAmmunitionFault(unit,Number(el('equipmentWeapon').value),game.character.mechanic,()=>1+Math.floor(Math.random()*6),{fighting:locked(game)});
+        game.log.push(`Ammunition repair: ${result.die}; ${result.success?'success':'failed'}.`);return result.unit;
+      })));
+      const repairInfo=el('repair').closest('details').querySelector('p');
+      repairInfo.textContent='Mechanic repairs require a stopped vehicle. Use the repair allowance and time printed in your section; garage repairs and hospital treatment have their own section controls.';
+      const maintenance=el('maintain').closest('details');
+      maintenance.querySelector('p').textContent='Apply treatment or completed garage repairs only when the book allows them. Ammunition and body armour are preserved.';
+      el('maintenanceHp').closest('label').hidden=true;el('maintenanceBoxes').closest('label').hidden=true;
+    }
     editor=createOpponentEditor({document,id,t,fields,presets:getRoster().flatMap(entry=>entry.enemies),onSelect:()=>{if(!settingUp)enemyForms();},
-      ...(extended?{isStatUnavailable:(key,row)=>key==='gunnery'&&row.gunnery==null&&(row.canAttack===false||row.kind==='vehicle'&&row.gunnerHp>1&&Number.isInteger(row.gunnerGunnery))}:{}),
+      ...(extended?{isStatUnavailable:(key,row)=>row.kind==='chase'||key==='gunnery'&&row.gunnery==null&&(row.unattended||row.canAttack===false||row.kind==='vehicle'&&row.gunnerHp>1&&Number.isInteger(row.gunnerGunnery))}:{}),
     });
     el('opponents').appendChild(editor.element);
     editor.element.addEventListener('click',()=>{if(!busy()&&editor.snapshot().length!==modelEnemies.length)enemyForms();});
@@ -317,14 +409,14 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
     el('apply').addEventListener('click',()=>update(game=>{if(!locked(game))snapshot(game);}));
     el('start').addEventListener('click',()=>update(start));
     for(const key of ['step','hold'])el(key).addEventListener('click',()=>update(game=>{
-      const weapons=key==='hold'?[]:[...el('weapons').querySelectorAll('input:checked')].map(input=>Number(input.value));
+      const weapons=key==='hold'?[]:[...el('weapons').querySelectorAll('input:checked:not(:disabled)')].map(input=>Number(input.value));
       let extra={};
       if(extended&&game.fight.hero.kind==='vehicle') {
         const count=weaponGroups(game.fight.hero,weapons).length,first=el('firstSeat').value;
-        extra.targets=[Number(el('target').value),Number(el('secondTarget').value)].slice(0,count);
+        extra.targets=[Number(el('target').value),Number(el('secondTarget').value),...(scenarios?[Number(el('thirdTarget').value)]:[])].slice(0,count);
         if(first)extra.seats=[first,...firingCrew(game.fight.hero,game.fight.round+1).filter(s=>s!==first)].slice(0,count);
       }
-      game.fight=fightRound(game.fight,{target:Number(el('target').value),hold:key==='hold',weapons,...extra,smoke:el('smoke').checked,grenade:el('grenade').checked});
+      game.fight=fightRound(game.fight,{target:Number(el('target').value),hold:key==='hold',weapons,...extra,...(scenarios&&game.fight.rules.evasive?{evasive:el('evasive').checked}:{}),smoke:el('smoke').checked,grenade:el('grenade').checked});
     }));
     for(const key of ['foam','smokeEscape','grenadeEscape','escape','continue','leave','ram',...(extended?['maneuver']:[])]) el(key).addEventListener('click',()=>update(game=>{game.fight=tactic(game.fight,key,{target:Number(el('target').value)});}));
     el('cancel').addEventListener('click',()=>{
