@@ -28,6 +28,8 @@ function _paintXp(xp, data) {
   const span = Math.max(1, nextLevelXp - levelXp);
   const pct  = Math.max(0, Math.min(100, ((xp - levelXp) / span) * 100));
   document.getElementById('app-xp-bar-fill').style.width = `${pct}%`;
+  const mini = document.getElementById('books-app-mini-level-fill');
+  if (mini) mini.style.width = `${pct}%`;
   const toGo = Math.max(0, Math.round(nextLevelXp - xp));
   document.getElementById('app-xp-text').innerHTML =
     `<span class="xp-val">${Math.round(xp).toLocaleString()} XP</span> · ${toGo.toLocaleString()} to next LVL`;
@@ -45,12 +47,16 @@ function _paintJobXp(xp, data, miningEvents = data?.jobRubyMiningEvents) {
   const wrap = document.getElementById('app-job-xp-summary');
   if (!wrap) return;
   wrap.hidden = !Number.isFinite(data?.jobXp);
+  const miniTrack = document.getElementById('books-app-mini-job');
+  if (miniTrack) miniTrack.hidden = wrap.hidden;
   if (wrap.hidden) return;
   const scale = Math.max(1, (data.users || 0) * 1000);
   const level = xp <= 0 ? 0 : Math.floor((-1 + Math.sqrt(1 + 8 * xp / scale)) / 2);
   const { levelXp, nextLevelXp } = _levelBounds(xp, scale);
   const pct = Math.max(0, Math.min(100, 100 * (xp - levelXp) / (nextLevelXp - levelXp)));
   document.getElementById('app-job-xp-fill').style.width = `${pct}%`;
+  const mini = document.getElementById('books-app-mini-job-fill');
+  if (mini) mini.style.width = `${pct}%`;
   document.getElementById('app-job-xp-level').textContent = t('appxp.job_level', { n: level });
   document.getElementById('app-job-xp-title').textContent = t('job.title.' + Math.min(level, 20));
   document.getElementById('app-job-xp-label').innerHTML =
@@ -144,6 +150,8 @@ function _enqueueXpAnim(data) {
 }
 
 function _render(data) {
+  const panel = document.getElementById('books-app-xp-panel');
+  if (panel) panel.hidden = !data;
   const wrap = document.getElementById('app-xp-summary');
   if (!wrap) return;
   if (!data) {
@@ -175,6 +183,8 @@ function _renderAvgLevel(data) {
   document.getElementById('avg-lvl-users').textContent  = t('appxp.users', { n: users.toLocaleString(), s: users === 1 ? '' : 's' });
   const pct = Math.max(0, Math.min(100, avgLevelFraction * 100));
   document.getElementById('avg-lvl-bar-fill').style.width = `${pct}%`;
+  const mini = document.getElementById('books-app-mini-average-fill');
+  if (mini) mini.style.width = `${pct}%`;
   document.getElementById('avg-lvl-text').innerHTML =
     `<span class="lvl-val">${t('appxp.total_levels', { n: sumLevels.toLocaleString() })}</span> · ${t('appxp.more_to_lvl', { n: levelsNeededForNextAvg.toLocaleString(), lvl: avgLevel + 1 })}`;
   document.getElementById('avg-lvl-range').textContent = t('appxp.range', { min: minLevel, max: maxLevel });
@@ -192,6 +202,8 @@ export function refreshAppXp({ immediate = false } = {}) {
   const wrap    = document.getElementById('app-xp-summary');
   const avgWrap = document.getElementById('avg-lvl-summary');
   if (!getToken() || !_hooks.getCanSeeAppXp?.()) {
+    const panel = document.getElementById('books-app-xp-panel');
+    if (panel) panel.hidden = true;
     if (wrap) wrap.hidden = true;
     if (avgWrap) avgWrap.hidden = true;
     const jobWrap = document.getElementById('app-job-xp-summary');

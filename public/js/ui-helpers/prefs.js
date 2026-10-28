@@ -8,6 +8,27 @@ import { setExpandedPrefs, renderBooksList, getCachedBooks, getCachedAllSeries, 
 let _hooks = {};
 export function setPrefsHooks(h) { _hooks = h || {}; }
 
+const booksXpPanels = {
+  booksXpCollapsed: ['books-xp-summary', 'books-xp-toggle'],
+  booksAppXpCollapsed: ['books-app-xp-panel', 'books-app-xp-toggle'],
+};
+
+function applyBooksXpCollapsed(key, collapsed) {
+  const [panelId, buttonId] = booksXpPanels[key];
+  document.getElementById(panelId)?.classList.toggle('books-xp-collapsed', collapsed);
+  document.getElementById(buttonId)?.setAttribute?.('aria-expanded', String(!collapsed));
+}
+
+export function initBooksXpPanels() {
+  for (const [key, [panelId, buttonId]] of Object.entries(booksXpPanels)) {
+    document.getElementById(buttonId)?.addEventListener('click', () => {
+      const collapsed = !document.getElementById(panelId)?.classList.contains('books-xp-collapsed');
+      applyBooksXpCollapsed(key, collapsed);
+      savePrefs({ [key]: collapsed ? '1' : '0' });
+    });
+  }
+}
+
 let _localPrefOverrides   = {};
 let _prefOwner = null;
 let _landingPanelRestoreState = null;
@@ -34,6 +55,7 @@ export function savePrefs(patch) {
 }
 
 export function applyPrefs(p, { renderBooks = true } = {}) {
+  for (const key of Object.keys(booksXpPanels)) applyBooksXpCollapsed(key, p[key] === '1');
   _hooks.applyFeedFilterPrefs?.(p.feedFilters);
   setCoversPrefsState(p);
   setExpandedPrefs(p.bookExpanded, p.seriesExpanded, p.stashExpanded);

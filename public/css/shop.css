@@ -489,7 +489,41 @@
 .black-market-tabs button:disabled { cursor: default; opacity: 0.5; }
 .black-market-tabs button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
-/* Keep the aggregate bars close together above personal progression. */
-.books-container > #avg-lvl-summary,
-.books-container > #app-xp-summary,
-.books-container > #app-job-xp-summary { margin-top: 0; margin-bottom: -0.8rem; }
+/* Compact, independently saved app and player progression panels. */
+.books-xp-panel {
+  min-width: 0;
+  padding: 0.3rem 0.6rem 0.35rem;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  background: rgba(31, 41, 55, 0.9);
+}
+.books-xp-panel[hidden] { display: none; }
+#books-app-xp-panel { margin-bottom: -0.8rem; }
+.books-xp-toggle {
+  display: flex; align-items: center; gap: 0.5rem;
+  width: 100%; min-width: 0; margin: 0; padding: 0;
+  border: 0; background: none; color: #9ca3af; font: inherit;
+  cursor: pointer; text-align: left;
+}
+.books-xp-toggle:hover { color: #d1d5db; }
+.books-xp-toggle:focus-visible { outline: 1px solid #f5a623; outline-offset: 3px; border-radius: 2px; }
+.books-xp-kicker {
+  min-width: 0; max-width: 50%; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.books-xp-arrow { flex-shrink: 0; margin-left: auto; font-size: 0.85rem; line-height: 1; transition: transform 0.15s; }
+.books-xp-body { display: flex; flex-direction: column; gap: 0.18rem; margin-top: 0.15rem; min-width: 0; }
+.books-xp-body > #avg-lvl-summary,
+.books-xp-body > #app-xp-summary,
+.books-xp-body > #app-job-xp-summary { margin: 0; }
+.books-xp-mini-bars { display: none; }
+.books-xp-collapsed > .books-xp-body { display: none; }
+.books-xp-collapsed { padding-bottom: 0.3rem; }
+.books-xp-collapsed .books-xp-arrow { transform: rotate(-90deg); }
+.books-xp-collapsed .books-xp-mini-bars { display: flex; flex: 1 1 0; min-width: 0; flex-direction: column; gap: 2px; }
+.books-xp-mini-track { display: block; height: 3px; background: #374151; border-radius: 2px; overflow: hidden; }
+.books-xp-mini-track[hidden] { display: none; }
+.books-xp-mini-track > span { display: block; height: 100%; width: 0; background: #f5a623; border-radius: inherit; }
+#books-xp-mini-job-fill, #books-app-mini-job-fill { background: #fb7185; }
+#books-app-mini-average-fill { background: #2dd4bf; }

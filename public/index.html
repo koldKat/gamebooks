@@ -557,6 +557,17 @@
       <!-- ── Books screen ─────────────────────────────────────────── -->
       <div id="books-screen" style="display:none">
         <div class="books-container">
+          <div id="books-app-xp-panel" class="books-xp-panel" hidden>
+            <button id="books-app-xp-toggle" class="books-xp-toggle" type="button" aria-expanded="true" aria-controls="books-app-xp-body">
+              <span class="books-xp-kicker">App</span>
+              <span class="books-xp-mini-bars" aria-hidden="true">
+                <span class="books-xp-mini-track"><span id="books-app-mini-average-fill"></span></span>
+                <span class="books-xp-mini-track"><span id="books-app-mini-level-fill"></span></span>
+                <span id="books-app-mini-job" class="books-xp-mini-track" hidden><span id="books-app-mini-job-fill"></span></span>
+              </span>
+              <span class="books-xp-arrow" aria-hidden="true">▾</span>
+            </button>
+            <div id="books-app-xp-body" class="books-xp-body">
           <div id="avg-lvl-summary" hidden aria-live="polite">
             <div id="avg-lvl-level-row">
               <span id="avg-lvl-level">Lvl 0</span>
@@ -594,7 +605,18 @@
             <div id="app-job-xp-bar" class="job-xp-bar"><div id="app-job-xp-fill"></div></div>
             <div class="job-xp-sub-row"><span id="app-job-xp-label"></span><span id="app-job-xp-ruby-cost" hidden></span></div>
           </div>
-          <div id="books-xp-summary" aria-live="polite">
+            </div>
+          </div>
+          <div id="books-xp-summary" class="books-xp-panel" aria-live="polite">
+            <button id="books-xp-toggle" class="books-xp-toggle" type="button" aria-expanded="true" aria-controls="books-xp-body">
+              <span class="books-xp-kicker">Player</span>
+              <span class="books-xp-mini-bars" aria-hidden="true">
+                <span class="books-xp-mini-track"><span id="books-xp-mini-level-fill"></span></span>
+                <span id="books-xp-mini-job" class="books-xp-mini-track" hidden><span id="books-xp-mini-job-fill"></span></span>
+              </span>
+              <span class="books-xp-arrow" aria-hidden="true">▾</span>
+            </button>
+            <div id="books-xp-body" class="books-xp-body">
             <div id="books-xp-level-row">
               <span id="books-xp-level">Lvl 0</span>
               <span id="books-xp-title"></span>
@@ -618,6 +640,7 @@
                 <span id="books-job-xp-label"></span>
                 <span id="books-job-xp-ruby-cost" hidden></span>
               </div>
+            </div>
             </div>
           </div>
           <div class="books-header">

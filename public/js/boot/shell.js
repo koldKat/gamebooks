@@ -1,7 +1,7 @@
 import { bootState } from './state.js';
 import { setToken, retryStateSaves, hasUnsavedStateSaves } from '../core/state.js';
 import { setTranslationOverride } from '../i18n.js';
-import { _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed, _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed } from '../ui-helpers/prefs.js';
+import { _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed, _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed, initBooksXpPanels } from '../ui-helpers/prefs.js';
 import { _toggleCoverTooltipSettings, initCoversPanel, _refillLazyIfShort } from '../covers.js';
 import { _setupCtxSubmenuFlip } from '../play/bg.js';
 import { setAdminUsername } from '../account/user.js';
@@ -10,6 +10,7 @@ import { _toggleShortcutsModal } from './helpers.js';
 import { _openMobilePanel } from './navigation.js';
 
 export function initShell() {
+  initBooksXpPanels();
 
   const unsavedBooks = new Set();
   const saveWarning = document.createElement('div');

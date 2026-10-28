@@ -16,7 +16,9 @@ function classList() {
 async function harness() {
   const elements = new Map(), storage = new Map(), requests = [], effects = [], frames = [];
   const body = { classList: classList() };
-  const el = id => { if (!elements.has(id)) elements.set(id, { classList: classList(), textContent: '', scrollTop: 0 }); return elements.get(id); };
+  const el = id => { if (!elements.has(id)) elements.set(id, { classList: classList(), textContent: '', scrollTop: 0,
+    attributes: {}, handlers: {}, setAttribute(k,v) { this.attributes[k]=v; },
+    addEventListener(k,fn) { this.handlers[k]=fn; } }); return elements.get(id); };
   const state = { token: 'token', books: [], series: [{ id: 2 }], stashes: [{ id: 3 }] };
   let response = async () => ({ ok: true, json: async () => ({}) });
   const dependencies = {
@@ -188,3 +190,27 @@ filters.state.username = 'Other'; filters.state.token = 'other';
 filters.effects.length = 0;
 await filters.api.syncPrefs();
 assert.deepEqual(filters.effects.find(e => e[0] === 'feed-filters')[1], { runs: false }, 'another player does not inherit unsynced filters');
+
+const desktop = await harness(), phone = await harness();
+let accountPrefs = {};
+for (const device of [desktop, phone]) {
+  device.respond(async options => {
+    if (options) Object.assign(accountPrefs, JSON.parse(options.body));
+    return { ok: true, json: async () => ({ ...accountPrefs }) };
+  });
+  device.api.initBooksXpPanels();
+}
+desktop.el('books-xp-toggle').handlers.click();
+assert.equal(accountPrefs.booksXpCollapsed, '1', 'personal collapse is sent to account preferences');
+await desktop.api.syncPrefs(); await phone.api.syncPrefs();
+assert.equal(phone.el('books-xp-summary').classList.contains('books-xp-collapsed'), true);
+assert.equal(phone.el('books-xp-toggle').attributes['aria-expanded'], 'false');
+assert.equal(phone.el('books-app-xp-panel').classList.contains('books-xp-collapsed'), false);
+phone.el('books-app-xp-toggle').handlers.click();
+phone.el('books-xp-toggle').handlers.click();
+await phone.api.syncPrefs(); await desktop.api.syncPrefs();
+assert.equal(desktop.el('books-app-xp-panel').classList.contains('books-xp-collapsed'), true);
+assert.equal(desktop.el('books-xp-summary').classList.contains('books-xp-collapsed'), false);
+assert.equal(desktop.el('books-xp-toggle').attributes['aria-expanded'], 'true');
+desktop.api.applyPrefs({});
+assert.equal(desktop.el('books-app-xp-panel').classList.contains('books-xp-collapsed'), false, 'a different account without preferences starts expanded');
