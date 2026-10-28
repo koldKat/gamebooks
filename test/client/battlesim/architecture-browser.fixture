@@ -5156,6 +5156,64 @@ for(const id of BOOK_IDS){
       saved=JSON.stringify(data());el('newCharacter').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(data())===saved,'Dzurlord stale confirmation ignored');app.setCurrentBookId(1296);button.click();
     }finally{Math.random=random;}
   }
+  if(id===1444){
+    const el=key=>document.getElementById('sim1444-'+key),data=()=>app.currentPlaythrough().sim1444;
+    const {getRoster,getVehicles}=await import('REPO/public/js/battlesim/books/1444/definition.js');
+    const run=app.currentPlaythrough();run.inventory={sentinel:['shared-item']};run.equipment={sentinel:'shared-slot'};run.sim1442={sentinel:true};
+    const preserved=JSON.stringify([run.inventory,run.equipment,run.sim1442]),random=Math.random;
+    const choose=section=>{el('context').value=section;el('context').dispatchEvent(new Event('change'));};
+    const set=(key,value)=>{const input=el('hero').querySelector(`[data-path="${key}"]`);check(input,'Dueltrack editable '+key);input.value=String(value);};
+    const cancel=()=>{if(['fighting','awaitingDriver','paused'].includes(data()?.fight?.status)){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    check(getRoster().length===37&&getVehicles().length===3&&requestedRosters.has(1444),'Dueltrack full DB catalog');
+    check(data()===undefined,'Dueltrack render never initializes saved state');
+    try{
+      Math.random=()=>.2;
+      choose('');el('customKind').value='person';el('customKind').dispatchEvent(new Event('change'));
+      set('gunnery',20);for(const input of el('opponents').querySelectorAll('[data-stat]'))input.value=input.dataset.stat==='hp'?'2':'0';
+      el('start').click();check(data()?.fight.status==='fighting','Dueltrack custom personal starts without preset');
+      el('step').click();check(data().fight.status==='win'&&data().history.length===1,'Dueltrack custom personal victory recorded once');
+      for(const entry of getRoster().filter(entry=>!entry.rules.resumePrior)){
+        // Test-only fresh SIM state makes each source entry independent. Shared run data stays untouched.
+        delete run.sim1444;choose(entry.section);set('hp',1000);set('maxHp',1000);set('defenseClass',100);set('gunnery',0);
+        if(entry.rules.kind==='vehicle')set('driverHp',50);
+        for(const input of el('opponents').querySelectorAll('[data-stat="gunnery"]'))if(!input.value&&input.dataset.unavailable!=='true')input.value='3';
+        el('start').click();check(data()?.fight.status==='fighting'&&data().fight.enemies.length===entry.enemies.length,'Dueltrack source preset '+entry.section);
+        check(data().fight.rulesVersion===2,'Dueltrack uses separate version-2 rules');
+        for(const unit of [data().fight.hero,...data().fight.enemies,...data().fight.allies])for(const weapon of unit.weapons??[]) {
+          if(/laser/i.test(weapon.name))check(weapon.ammo===null,'Dueltrack laser ammunition stays unlimited');
+          if(weapon.ammoCapacity)check(weapon.ammo===weapon.ammoCapacity,'Dueltrack source extra magazine retained');
+        }
+        el('hold').click();check(data().fight.round===(entry.rules.openingPersonalShot||entry.rules.openingHeroShots?0:1),'Dueltrack source turn '+entry.section+' '+data().fight.status+'/'+data().fight.round+' '+document.getElementById('confirm-overlay')?.textContent);cancel();
+      }
+      delete run.sim1444;choose('166');el('optionalAllies').checked=true;el('advantage').checked=true;el('start').click();
+      check(data().fight.allies.length===2&&data().fight.rules.heroAttackBonus===2,'Dueltrack source police and immediate advantage controls');cancel();
+      choose('204');el('simplifiedArena').checked=true;el('knownTarget').checked=true;el('start').click();
+      check(data().fight.options.simplifiedArena&&data().fight.rules.knownTargetBonus.bonus===2,'Dueltrack optional arena controls');cancel();
+      delete run.sim1444;choose('29');el('apply').click();
+      data().vehicle.hp=21;data().vehicle.weapons[0].ammo=4;data().vehicle.powerPlant.boxes=3;module.render();
+      el('vehicleProfile').value='1';el('loadVehicle').click();check(data().vehicle.ownedStateKey===getVehicles()[1].ownedStateKey,'Dueltrack switches owned car');
+      el('vehicleProfile').value='0';el('loadVehicle').click();check(data().vehicle.hp===21&&data().vehicle.weapons[0].ammo===4&&data().vehicle.powerPlant.boxes===3,'Dueltrack switching back keeps damage and ammunition');
+      el('maintenance').value='0';el('maintain').click();
+      check(data().vehicle.hp===21&&data().vehicle.powerPlant.boxes===3&&data().vehicle.weapons[0].ammo===20,'Dueltrack pit resupply cannot repair damage');
+      el('maintenance').value='1';el('maintenanceHp').value='10';el('maintenanceBoxes').value='2';el('repairPart').value='plant';el('maintain').click();
+      check(data().vehicle.hp===31&&data().vehicle.powerPlant.boxes===5,'Dueltrack explicit source repair allowance');
+      choose('');el('customKind').value='vehicle';el('customKind').dispatchEvent(new Event('change'));set('defenseClass',100);
+      for(const input of el('opponents').querySelectorAll('[data-stat]'))input.value=input.dataset.stat==='hp'?'100':'0';
+      el('start').click();check(data().fight.status==='fighting','Dueltrack custom vehicle starts without preset');
+      el('weapons').querySelector('input').checked=true;el('step').click();check(data().fight.round===1,'Dueltrack one weapon accepts one target');cancel();
+      choose('92');set('defenseClass',100);el('start').click();
+      const firing=[...el('weapons').querySelectorAll('input:not(:disabled)')];firing.forEach(input=>input.checked=true);el('step').click();
+      check(data().fight.round===1&&data().fight.hero.robotGunner.activeTurns===8,'Dueltrack robot fires two systems through panel');
+      const priorHp=data().fight.hero.hp,priorAmmo=data().fight.hero.weapons[0].ammo;
+      el('pause').click();check(data().fight.status==='paused'&&!el('context').disabled,'Dueltrack pause unlocks section selection');
+      choose('314');el('start').click();check(data().fight.round===1&&data().fight.hero.hp===priorHp&&data().fight.hero.weapons[0].ammo===priorAmmo,'Dueltrack new arena context preserves ongoing fight');
+      check(data().fight.rules.arenaTargetTable==='314','Dueltrack resumed source target table');
+      const saved=JSON.stringify(data());module.render();check(JSON.stringify(data())===saved,'Dueltrack active render preserves state');
+      el('cancel').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim1444)===saved,'Dueltrack stale confirmation ignored');app.setCurrentBookId(1444);button.click();cancel();
+      const original=JSON.stringify(data());app.state.playthroughs=[{path:[1],startedAt:2}];app.state.activePtIndex=0;el('start').click();check(app.currentPlaythrough().sim1444===undefined,'Dueltrack stale controls preserve new run');app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Dueltrack original run retained');
+      check(JSON.stringify([run.inventory,run.equipment,run.sim1442])===preserved,'Dueltrack shared inventory/equipment and other simulator preserved');
+    }finally{Math.random=random;}
+  }
   if(id===1442){
     const el=key=>document.getElementById('sim1442-'+key),data=()=>app.currentPlaythrough().sim1442;
     const {getRoster,getVehicles}=await import('REPO/public/js/battlesim/books/1442/definition.js');

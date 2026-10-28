@@ -35,6 +35,7 @@ ALL_PANEL_OVERLAY_IDS.push('sim873-overlay', 'sim895-overlay', 'sim896-overlay')
 ALL_PANEL_OVERLAY_IDS.push('sim903-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim904-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim906-overlay');
+ALL_PANEL_OVERLAY_IDS.push('sim1444-overlay');
 ALL_PANEL_OVERLAY_IDS.push('party-modal-overlay', 'guide-modal-overlay', 'notebook-modal-overlay');
 
 // Use physical key codes across keyboard layouts.

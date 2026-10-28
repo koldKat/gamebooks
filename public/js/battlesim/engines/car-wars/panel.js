@@ -1,5 +1,7 @@
 import {createOpponentEditor} from '../../opponents.js';
-import {validateCombatant, startFight, resumeFight, fightRound, tactic, repairVehicle, replaceDriver, combatantOut} from './core.js';
+import * as defaultCombat from './core.js';
+import {switchVehicle, rememberCombatCharacter, applyMaintenance} from './vehicles.js';
+import {weaponGroups, firingCrew} from './crew.js';
 
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clone = value => structuredClone(value);
@@ -22,7 +24,15 @@ const customEnemy = kind => kind === 'person'
     powerPlant:{boxes:3},weapons:[{name:'Machine-gun',direction:'front',bonus:0,damageDice:1,boxes:3}]};
 
 export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,getRun,getBookId,saveState,getButtonRow,
-  showAlert,showConfirm,registerShortcut=()=>{}}) {
+  showAlert,showConfirm,registerShortcut=()=>{},combat=defaultCombat,getPlayerDefaults,getMaintenance=()=>[]}) {
+  const {validateCombatant,startFight,resumeFight,fightRound,tactic,repairVehicle,replaceDriver,combatantOut}=combat;
+  const extended=!!getPlayerDefaults;
+  const newCharacter=()=>extended?{...clone(getPlayerDefaults()),name:'You',key:'player',kind:'person',weapon:clone(getPlayerDefaults().personalWeaponOptions[0])}:blankPerson();
+  const makeEnemy=kind=>({...customEnemy(kind),...(extended&&kind==='vehicle'?{driving:1}: {})});
+  function syncVehicle(game,unit) {
+    const saved=rememberCombatCharacter(game,unit);
+    for (const key of ['character','vehicle','vehicles']) game[key]=saved[key];
+  }
   const id = definition.stateKey, el = key => document.getElementById(id+'-'+key);
   let shownRun, editor, modelHero, modelEnemies = [], settingUp = false;
   const preset = () => getRoster().find(entry=>entry.section===el('context').value);
@@ -39,19 +49,21 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
     let html = hero ? ['hp','maxHp','defenseClass','gunnery',...(unit.kind==='person'?['armour','driving','mechanic','prestige','wealth']:[])].map(key=>number(key,unit[key]??0)).join('') : '';
     if (unit.kind==='person') {
       html += text('weapon.name',unit.weapon.name,'Weapon') + number('weapon.bonus',unit.weapon.bonus??0,'To-hit bonus',-100);
-      html += unit.weapon.flatDamage!=null ? number('weapon.flatDamage',unit.weapon.flatDamage,'Fixed damage') : number('weapon.damageDice',unit.weapon.damageDice,'Damage dice',1,10);
+      html += unit.weapon.damageByDie ? unit.weapon.damageByDie.map((value,i)=>number('weapon.damageByDie.'+i,value,'Damage on die '+(i+1))).join('')
+        : unit.weapon.flatDamage!=null ? number('weapon.flatDamage',unit.weapon.flatDamage,'Fixed damage') : number('weapon.damageDice',unit.weapon.damageDice,'Damage dice',1,10);
       return html;
     }
-    html += ['handling',...(hero?['driving']:['controlRoll']),'driverHp','driverArmour','gunnerHp','gunnerArmour','gunnerGunnery',
-      'computerBonus','cargo',...(hero?['smokeCharges','grenades']:[])].filter(key=>key!=='handling'||unit.handling!=null)
-      .map(key=>number(key,unit[key]??0,undefined,key==='handling'?-100:0)).join('');
+    html += ['handling',...(hero||extended?['driving']:['controlRoll']),'driverHp','driverArmour','gunnerHp','gunnerArmour','gunnerGunnery',
+      ...(!extended?['computerBonus']:[]),'cargo',...(hero&&!extended?['smokeCharges','grenades']:[])].filter(key=>(key!=='handling'||unit.handling!=null)&&(!extended||hero||unit[key]!=null||!['gunnerHp','gunnerArmour','gunnerGunnery'].includes(key)))
+      .map(key=>number(key,unit[key]??0,undefined,['handling','gunnerGunnery'].includes(key)?-100:0)).join('');
+    if (extended) html+=(unit.gadgets??[]).map((g,i)=>number('gadgets.'+i+'.boxes',g.boxes,g.name+' ('+g.computerFor+')')).join('');
     html += number('powerPlant.boxes',unit.powerPlant.boxes,'Power plant boxes');
-    if (hero) html += check('gunnerSeat',unit.gunnerSeat,'Second vehicle firing station') + check('ramplate',unit.ramplate,'Ramplate');
+    if (hero) html += check('gunnerSeat',unit.gunnerSeat,'Second vehicle firing station') + (!extended?check('ramplate',unit.ramplate,'Ramplate'):'');
     html += unit.weapons.map((w,index)=>`<details><summary>${esc(w.name)} (${esc(w.direction)})</summary>${text(`weapons.${index}.name`,w.name,'Weapon')}
       <label class="inv-edit-row">Facing<select class="inv-edit-input" data-path="weapons.${index}.direction">${selectedOption(['front','rear','left','right','turret'],w.direction)}</select></label>
       ${number(`weapons.${index}.boxes`,w.boxes,'Boxes')}${number(`weapons.${index}.bonus`,w.bonus??0,'To-hit bonus',-100)}
       ${number(`weapons.${index}.damageDice`,w.damageDice??1,'Damage dice',1,10)}
-      ${number(`weapons.${index}.ammo`,w.ammo??w.shots??(/machine|vulcan|paint|oil/i.test(w.name)?20:10),'Shots left')}
+      ${extended&&/laser/i.test(w.name)&&w.ammo==null?'':number(`weapons.${index}.ammo`,w.ammo??w.shots??w.ammoCapacity??(/machine|vulcan|paint|oil/i.test(w.name)?20:10),'Shots left')}
       ${text(`weapons.${index}.linkedGroup`,w.linkedGroup??'','Linked group (blank for separate)')}
       ${check(`weapons.${index}.oneShot`,w.oneShot||w.shots!=null,'Single-use weapon')}</details>`).join('');
     return html;
@@ -71,49 +83,65 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
     return result;
   }
   function freshVehicle(game,profile=getVehicles()[0]) {
+    if (extended) return switchVehicle({...game,character:game?.character??newCharacter()},profile).vehicle;
     const person=game?.character??blankPerson();
     return {...clone(profile),maxHp:profile.repairableMaximumHp??profile.maxHp,ramplate:!!profile.ramPlate,kind:'vehicle',name:'Your '+profile.name,key:'player',driving:person.driving,gunnery:person.gunnery,
       driverHp:person.hp,driverArmour:person.armour,gunnerHp:0,gunnerGunnery:1,gunnerArmour:0,smokeCharges:0,grenades:0,cargo:0};
   }
   function setupForms(game) {
     settingUp=true;
-    modelHero = kind()==='person' ? clone(game?.character??blankPerson()) : clone(game?.vehicle??freshVehicle(game));
-    if (modelHero.kind==='vehicle'&&game?.character) Object.assign(modelHero,{driverHp:game.character.hp,driverArmour:game.character.armour,driving:game.character.driving,gunnery:game.character.gunnery});
+    const entry=preset(),required=entry?.rules.requiredPlayerVehicle;
+    const profile=required??(extended?game?.vehicle?.ownedStateKey:null);
+    const vehicle=profile?freshVehicle(game,getVehicles().find(v=>v.ownedStateKey===profile)):game?.vehicle??freshVehicle(game);
+    modelHero = kind()==='person' ? clone(game?.character??newCharacter()) : clone(vehicle);
+    if (!extended&&modelHero.kind==='vehicle'&&game?.character) Object.assign(modelHero,{driverHp:game.character.hp,driverArmour:game.character.armour,driving:game.character.driving,gunnery:game.character.gunnery});
     el('hero').innerHTML=unitForm(modelHero,true);
-    const entry=preset();
-    modelEnemies=clone(game?.setup?.context===el('context').value&&game?.setup?.opponents?.length?game.setup.opponents:entry?.enemies??[customEnemy(el('customKind').value)]);
+    modelEnemies=clone(game?.setup?.context===el('context').value&&game?.setup?.opponents?.length?game.setup.opponents:entry?.enemies??[makeEnemy(el('customKind').value)]);
     editor.set(modelEnemies); editor.fixCount(!!entry);
     enemyForms();
     el('customKindRow').hidden=!!entry;
     el('vehicleRow').hidden=kind()!=='vehicle';
     el('contextNote').textContent=entry?.note??'Preset opponents are editable. Custom fights use your own opponents.';
+    if (extended) {
+      el('optionalAlliesRow').hidden=!entry?.rules.optionalAllies;
+      el('advantageRow').hidden=!entry?.rules.sourceAdvantage;
+      el('knownTargetRow').hidden=!entry?.rules.optionalTargetBonus;
+      el('simplifiedArenaRow').hidden=!entry?.rules.arena?.allowSimplified;
+      el('meleeRow').hidden=!entry?.rules.meleeWeaponChoice;
+      el('optionalAllies').checked=game?.setup?.context===entry?.section&&!!game?.setup?.optionalAllies;
+      for (const key of ['advantage','knownTarget','simplifiedArena']) el(key).checked=game?.setup?.context===entry?.section&&!!game?.setup?.[key];
+      el('personalWeaponRow').hidden=kind()!=='person'||!!entry?.rules.playerWeapon;
+    }
     settingUp=false;
   }
   function enemyForms() {
     const rows=editor.snapshot();
     el('components').innerHTML=rows.map((row,index)=>`<details data-enemy="${index}"><summary>${esc(row.displayName||row.name||'Opponent')} equipment</summary>
-      <p>${esc(row.driverHpBasis??'')}</p>${unitForm({...customEnemy(row.kind??el('customKind').value),...row})}</details>`).join('');
-    modelEnemies=rows.map(row=>({...customEnemy(row.kind??el('customKind').value),...row}));
+      <p>${esc(row.driverHpBasis??'')}</p>${unitForm({...makeEnemy(row.kind??el('customKind').value),...row})}</details>`).join('');
+    modelEnemies=rows.map(row=>({...makeEnemy(row.kind??el('customKind').value),...row}));
   }
   function opponents() {
     return editor.read().map((row,index)=>{
       const container=el('components').querySelector(`[data-enemy="${index}"]`);
-      const details=container?readForm(container,modelEnemies[index]):modelEnemies[index]??customEnemy(el('customKind').value);
+      const details=container?readForm(container,modelEnemies[index]):modelEnemies[index]??makeEnemy(el('customKind').value);
       return {...details,...Object.fromEntries(fields.map(field=>[field.key,row[field.key]])),name:row.displayName||row.name,displayName:row.displayName,key:row.key??'custom-'+index};
     });
   }
   function snapshot(game) {
     game.setup={context:el('context').value,customKind:el('customKind').value,advancedAmmo:el('advancedAmmo').checked,
       sustainedFire:el('sustainedFire').checked,opponents:opponents()};
+    if (extended) for (const key of ['optionalAllies','advantage','knownTarget','simplifiedArena']) game.setup[key]=el(key).checked;
     const hero=validateCombatant(readForm(el('hero'),modelHero));
-    if (hero.kind==='person') game.character=hero; else game.vehicle=hero;
+    if (hero.kind==='person') game.character=hero;
+    else if (extended) syncVehicle(game,hero);
+    else game.vehicle=hero;
     return hero;
   }
   function update(apply) {
     if (shownRun!==getRun()||!el('overlay').classList.contains('active')||Number(getBookId())!==definition.id) return;
     const run=getRun(),before=data();
     try {
-      const game=clone(before??{character:blankPerson(),vehicle:null,setup:{},fight:null,carried:{},history:[],log:[]});
+      const game=clone(before??{character:newCharacter(),vehicle:null,setup:{},fight:null,carried:{},history:[],log:[]});
       const previousFight=game.fight;
       apply(game);
       if (run!==getRun()||data()!==before||Number(getBookId())!==definition.id) return;
@@ -121,8 +149,11 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
         const fight=game.fight;
         game.log.push(...fight.events); fight.events=[];
         if (fight.hero.kind==='vehicle') {
+          if (extended) syncVehicle(game,fight.hero);
+          else {
           game.vehicle=clone(fight.hero);
           game.character={...(game.character??blankPerson()),hp:fight.hero.driverHp,armour:fight.hero.driverArmour,gunnery:fight.hero.gunnery,driving:fight.hero.driving};
+          }
         } else game.character=clone(fight.hero);
         if (fight.baseSection) game.carried[fight.baseSection]=clone(fight);
         if (['win','loss','escaped'].includes(fight.status)&&!fight.recorded) {
@@ -138,9 +169,16 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
     const hero=snapshot(game),entry=preset();
     const selected=entry?{...clone(entry),enemies:opponents()}:{label:opponents().map(e=>e.name).join(' / '),section:null,enemies:opponents(),
       rules:{kind:el('customKind').value==='vehicle'?'vehicle':'personal',playerFacing:['front','rear','left','right','turret'],enemyFacing:['front']}};
+    if (extended) {
+      if (selected.rules.requiredPlayerVehicle&&hero.ownedStateKey!==selected.rules.requiredPlayerVehicle) throw new RangeError('Use the vehicle specified by this section.');
+      if (selected.rules.optionalAllies&&game.setup.optionalAllies) selected.rules.allies=clone(selected.rules.optionalAllies);
+      if (selected.rules.sourceAdvantage&&game.setup.advantage) selected.rules.heroAttackBonus=selected.rules.sourceAdvantage.heroAttackBonus;
+      if (selected.rules.optionalTargetBonus&&game.setup.knownTarget) selected.rules.knownTargetBonus=clone(selected.rules.optionalTargetBonus);
+      if (selected.rules.meleeWeaponChoice) selected.rules.playerWeapon=clone(getPlayerDefaults().personalWeaponOptions[Number(el('melee').value)]);
+    }
     const prior=entry&&game.carried[entry.baseSection];
     if (prior&&['fighting','paused','branch'].includes(prior.status)) {
-      game.fight=resumeFight(prior,entry);
+      game.fight=resumeFight(prior,selected);
     } else {
       if (entry?.rules.resumePrior) throw new RangeError('Resume the earlier fight first; this entry must retain its damage.');
       game.fight=startFight(hero,selected,game.setup);
@@ -160,27 +198,37 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
     el('step').disabled=fight?.status!=='fighting';el('hold').disabled=fight?.status!=='fighting';el('cancel').disabled=!active&&fight?.status!=='paused';
     el('replaceRow').hidden=fight?.status!=='awaitingDriver';
     if (!active) {
-      modelHero=kind()==='person'?clone(game?.character??modelHero):clone(game?.vehicle??modelHero);
+      const profile=extended&&(preset()?.rules.requiredPlayerVehicle??game?.vehicle?.ownedStateKey);
+      modelHero=kind()==='person'?clone(game?.character??modelHero):clone(profile
+        ?freshVehicle(game,getVehicles().find(v=>v.ownedStateKey===profile)):game?.vehicle??modelHero);
       el('hero').innerHTML=unitForm(modelHero,true);
     }
     const target=el('target').value;
     el('target').innerHTML=fight?.enemies.map((enemy,i)=>combatantOut(enemy,fight.rules)?'':`<option value="${i}">${esc(enemy.displayName||enemy.name)} (${enemy.hp} HP)</option>`).join('')??'';
     if ([...el('target').options].some(option=>option.value===target)) el('target').value=target;
+    if (extended) {
+      const secondary=el('secondTarget').value;
+      el('secondTarget').innerHTML=el('target').innerHTML;
+      if ([...el('secondTarget').options].some(option=>option.value===secondary)) el('secondTarget').value=secondary;
+      el('secondTargetRow').hidden=fight?.hero.kind!=='vehicle'||!fight.hero.gunnerSeat;
+      el('firstSeatRow').hidden=fight?.hero.kind!=='vehicle'||!fight.hero.gunnerSeat;
+    }
     const checked=new Set([...el('weapons').querySelectorAll('input:checked')].map(input=>input.value));
     el('weapons').innerHTML=fight?.hero.kind==='vehicle'?fight.hero.weapons.map((weapon,i)=>`<label class="bsim-checkbox"><input type="checkbox" value="${i}" ${checked.has(String(i))?'checked':''} ${weapon.boxes>0&&(fight.rules.playerFacing??[]).includes(weapon.direction)?'':'disabled'}>${esc(weapon.name)} (${esc(weapon.direction)}, ${weapon.boxes} boxes${weapon.oneShot||fight.options.advancedAmmo?`, ${weapon.ammo??'∞'} shots`:''})</label>`).join(''):'';
     el('smokeRow').hidden=!fight?.rules.canUseSmoke;el('grenadeRow').hidden=!fight?.rules.gunnerGrenades;
     el('smoke').checked=false;el('grenade').checked=false;
-    for (const key of ['foam','smokeEscape','grenadeEscape','escape','continue','leave','ram']) {
+    for (const key of ['foam','smokeEscape','grenadeEscape','escape','continue','leave','ram',...(extended?['maneuver']:[])]) {
       el(key).hidden=!fight?.rules.tactics?.[key];el(key).disabled=!(fight?.status==='fighting'||fight?.status==='paused'&&['continue','leave'].includes(key));
     }
     el('repair').disabled=active||!game?.vehicle;el('apply').disabled=active;
     el('status').textContent=fight?`${fight.encounter}: ${fight.status} · turn ${fight.round}${fight.section?' · continue at §'+fight.section:''}`:'Ready. Allocate your ten starting skill points, or enter your current stats.';
-    el('units').innerHTML=fight?[fight.hero,...fight.enemies].map(unit=>`<div class="bsim-status">${esc(unit.displayName||unit.name)}: ${unit.hp} HP / DC ${unit.defenseClass}${unit.kind==='vehicle'?` · driver ${unit.driverHp} HP · plant ${unit.powerPlant.boxes} boxes`:''}</div>`).join(''):'';
+    el('units').innerHTML=fight?[fight.hero,...(fight.allies??[]),...fight.enemies].map(unit=>`<div class="bsim-status">${esc(unit.displayName||unit.name)}: ${unit.hp} HP / DC ${unit.defenseClass}${unit.kind==='vehicle'?` · driver ${unit.driverHp} HP${unit.gunnerSeat?' · gunner '+unit.gunnerHp+' HP':''} · plant ${unit.powerPlant.boxes} boxes`:''}${unit.escaped?' · escaped':''}</div>`).join(''):'';
     el('log').innerHTML=(game?.log??[]).slice(-100).reverse().map(line=>`<div>${esc(line)}</div>`).join('');
     el('history').innerHTML=(game?.history??[]).slice(-50).reverse().map(item=>`<div>${esc(item.enemy)} · ${esc(item.outcome)}</div>`).join('');
     const component=el('repairPart').value;
     el('repairPart').innerHTML='<option value="hp">General HP</option><option value="plant">Power plant</option>'+(game?.vehicle?.weapons??[]).map((w,i)=>`<option value="${i}">${esc(w.name)} (${esc(w.direction)})</option>`).join('');
     if ([...el('repairPart').options].some(o=>o.value===component)) el('repairPart').value=component;
+    if (extended) {el('maintain').disabled=active||!game?.vehicle;el('pause').disabled=fight?.status!=='fighting';}
   }
   function open() {
     if (!getRun()) {showAlert(t('battlesim.no_active_playthrough'));return;}
@@ -207,7 +255,49 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
       <label class="inv-edit-row">Mechanic<input type="number" class="inv-edit-input" min="0" max="100" value="1" id="${id}-mechanic"></label><label class="inv-edit-row">Repair allowance<input type="number" class="inv-edit-input" min="1" max="100" value="1" id="${id}-repairAmount"></label>${button('repair','Roll repair')}</details>
       </div><div class="bsim-col bsim-col-right"><div id="${id}-status" class="bsim-status"></div><div id="${id}-units"></div><details class="bsim-history"><summary>Battle history</summary><div class="bsim-history-list" id="${id}-history"></div></details><div class="bsim-log" id="${id}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
-    editor=createOpponentEditor({document,id,t,fields,presets:getRoster().flatMap(entry=>entry.enemies),onSelect:()=>{if(!settingUp)enemyForms();}});
+    if (extended) {
+      const extra=document.createElement('div');
+      extra.innerHTML=`<label class="bsim-checkbox" id="${id}-optionalAlliesRow"><input type="checkbox" id="${id}-optionalAllies">Police support, if called</label>
+        <label class="bsim-checkbox" id="${id}-advantageRow"><input type="checkbox" id="${id}-advantage">Immediate-attack advantage from the section</label>
+        <label class="bsim-checkbox" id="${id}-knownTargetRow"><input type="checkbox" id="${id}-knownTarget">Known opponent weakness from the section</label>
+        <label class="bsim-checkbox" id="${id}-simplifiedArenaRow"><input type="checkbox" id="${id}-simplifiedArena">Simplified arena eliminations</label>
+        <label class="inv-edit-row" id="${id}-meleeRow">Melee weapon<select class="inv-edit-input" id="${id}-melee">${getPlayerDefaults().personalWeaponOptions.map((w,i)=>w.knockoutOnDamageSixFollowup?`<option value="${i}">${esc(w.name)}</option>`:'').join('')}</select></label>
+        <label class="inv-edit-row" id="${id}-personalWeaponRow">Personal weapon<select class="inv-edit-input" id="${id}-personalWeapon">${getPlayerDefaults().personalWeaponOptions.map((w,i)=>`<option value="${i}">${esc(w.name)}</option>`).join('')}</select></label>`;
+      el('setup').appendChild(extra);
+      const secondary=document.createElement('label');secondary.className='inv-edit-row';secondary.id=id+'-secondTargetRow';
+      secondary.innerHTML=`Second firing station target<select class="inv-edit-input" id="${id}-secondTarget"></select>`;
+      el('weapons').before(secondary);
+      const seat=document.createElement('label');seat.className='inv-edit-row';seat.id=id+'-firstSeatRow';
+      seat.innerHTML=`First firing crew<select class="inv-edit-input" id="${id}-firstSeat"><option value="">Automatic</option><option value="driver">Driver</option><option value="gunner">Gunner</option></select>`;
+      secondary.before(seat);
+      const note=document.createElement('p');note.textContent='Select one weapon group per firing crew member. Linked weapons share a group. The first selected group uses the driver; the second uses the gunner. When you are the gunner, your group fires first.';
+      el('weapons').after(note);
+      const tactics=document.createElement('div');tactics.className='bsim-btn-row';tactics.innerHTML=button('pause','Pause / change section')+button('maneuver','Special maneuver');el('cancel').parentElement.after(tactics);
+      el('pause').addEventListener('click',()=>update(game=>{if(game.fight?.status==='fighting')game.fight={...game.fight,status:'paused',events:['Fight paused; damage, ammunition and turns retained.']};}));
+      const maintenance=document.createElement('details');maintenance.innerHTML=`<summary>Section maintenance</summary>
+        <label class="inv-edit-row">Section<select class="inv-edit-input" id="${id}-maintenance">${getMaintenance().map((m,i)=>`<option value="${i}">§${esc(m.section)}: ${esc(m.label)}</option>`).join('')}</select></label>
+        <label class="inv-edit-row">General HP to repair<input class="inv-edit-input" type="number" min="0" max="100" value="0" id="${id}-maintenanceHp"></label>
+        <label class="inv-edit-row">Component boxes to repair<input class="inv-edit-input" type="number" min="0" max="100" value="0" id="${id}-maintenanceBoxes"></label>
+        <p>Choose the component below. Use each repair allowance once per car; pit resupply restores armour and ammunition only.</p>${button('maintain','Apply section allowance')}`;
+      el('repair').closest('details').before(maintenance);
+      // Dueltrack uses the explicit source allowances, not Battle Road's mechanic roll.
+      el('repair').hidden=true;el('mechanic').closest('label').hidden=true;el('repairAmount').closest('label').hidden=true;
+      el('personalWeapon').addEventListener('change',()=>{if(!busy()&&modelHero.kind==='person'){
+        modelHero=readForm(el('hero'),modelHero);modelHero.weapon=clone(getPlayerDefaults().personalWeaponOptions[Number(el('personalWeapon').value)]);el('hero').innerHTML=unitForm(modelHero,true);
+      }});
+      el('maintain').addEventListener('click',()=>update(game=>{
+        const rule=getMaintenance()[Number(el('maintenance').value)];
+        const numeric=key=>{const input=el(key),n=Number(input.value);if(!input.value.trim()||!Number.isSafeInteger(n)||n<0)throw new RangeError('Enter whole repair amounts.');return n;};
+        const amount=numeric('maintenanceBoxes'),part=el('repairPart').value;
+        if(amount&&part==='hp')throw new RangeError('Choose a component for the component boxes.');
+        const saved=applyMaintenance(game,rule,{hp:numeric('maintenanceHp'),parts:amount?[{component:part==='plant'?'plant':Number(part),amount}]:[]});
+        for(const key of ['character','vehicle','vehicles','maintenanceClaims'])if(key in saved)game[key]=saved[key];
+        game.log.push('Section '+rule.section+': '+rule.label+' applied.');
+      }));
+    }
+    editor=createOpponentEditor({document,id,t,fields,presets:getRoster().flatMap(entry=>entry.enemies),onSelect:()=>{if(!settingUp)enemyForms();},
+      ...(extended?{isStatUnavailable:(key,row)=>key==='gunnery'&&row.gunnery==null&&(row.canAttack===false||row.kind==='vehicle'&&row.gunnerHp>1&&Number.isInteger(row.gunnerGunnery))}:{}),
+    });
     el('opponents').appendChild(editor.element);
     editor.element.addEventListener('click',()=>{if(!busy()&&editor.snapshot().length!==modelEnemies.length)enemyForms();});
     const launch=document.createElement('button');launch.id=id+'-btn';launch.textContent=t('battlesim.title');launch.style.display='none';getButtonRow().appendChild(launch);launch.addEventListener('click',open);
@@ -218,6 +308,7 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
     registerShortcut({button:launch,overlay,open,close});
     for (const key of ['context','customKind']) el(key).addEventListener('change',()=>{if(!busy())setupForms(data());});
     el('loadVehicle').addEventListener('click',()=>{
+      if (extended) {update(game=>{if(locked(game))return;const saved=switchVehicle(game,getVehicles()[Number(el('vehicleProfile').value)]);game.vehicle=saved.vehicle;game.vehicles=saved.vehicles;});return;}
       const run=getRun(),before=data();
       const apply=()=>{if(run!==getRun()||before!==data()||busy()||Number(getBookId())!==definition.id)return;
         modelHero=freshVehicle(before,getVehicles()[Number(el('vehicleProfile').value)]);el('hero').innerHTML=unitForm(modelHero,true);};
@@ -226,9 +317,16 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
     el('apply').addEventListener('click',()=>update(game=>{if(!locked(game))snapshot(game);}));
     el('start').addEventListener('click',()=>update(start));
     for(const key of ['step','hold'])el(key).addEventListener('click',()=>update(game=>{
-      game.fight=fightRound(game.fight,{target:Number(el('target').value),weapons:key==='hold'?[]:[...el('weapons').querySelectorAll('input:checked')].map(input=>Number(input.value)),smoke:el('smoke').checked,grenade:el('grenade').checked});
+      const weapons=key==='hold'?[]:[...el('weapons').querySelectorAll('input:checked')].map(input=>Number(input.value));
+      let extra={};
+      if(extended&&game.fight.hero.kind==='vehicle') {
+        const count=weaponGroups(game.fight.hero,weapons).length,first=el('firstSeat').value;
+        extra.targets=[Number(el('target').value),Number(el('secondTarget').value)].slice(0,count);
+        if(first)extra.seats=[first,...firingCrew(game.fight.hero,game.fight.round+1).filter(s=>s!==first)].slice(0,count);
+      }
+      game.fight=fightRound(game.fight,{target:Number(el('target').value),hold:key==='hold',weapons,...extra,smoke:el('smoke').checked,grenade:el('grenade').checked});
     }));
-    for(const key of ['foam','smokeEscape','grenadeEscape','escape','continue','leave','ram']) el(key).addEventListener('click',()=>update(game=>{game.fight=tactic(game.fight,key,{target:Number(el('target').value)});}));
+    for(const key of ['foam','smokeEscape','grenadeEscape','escape','continue','leave','ram',...(extended?['maneuver']:[])]) el(key).addEventListener('click',()=>update(game=>{game.fight=tactic(game.fight,key,{target:Number(el('target').value)});}));
     el('cancel').addEventListener('click',()=>{
       const run=getRun(),fight=data()?.fight;
       showConfirm('End this fight? Current damage will be kept.',()=>{if(run===getRun()&&data()?.fight===fight)update(game=>{game.fight={...game.fight,status:'ended',events:['Fight ended; current damage retained.']};});});
