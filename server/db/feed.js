@@ -53,9 +53,9 @@ function getFeed() {
     _cascadeAdds.add(`${sr.user_id}:${sr.seriesId}:${sr.added_at}`);
   }
 
-  // Show the latest rating activity; the award ledger still prevents repeat XP.
+  // Keep the first-rating date even if a rating is changed, cleared and restored.
   const ratedBookRows = db.prepare(
-    `SELECT COALESCE(ub.rated_at, xe.created_at) AS created_at, ub.rating,
+    `SELECT xe.created_at, ub.rating,
             b.id AS bookId, b.name AS bookName, b.is_container AS bookIsContainer,
             b.is_public, b.cover_path, b.series_id AS seriesId,
             s.name AS seriesName, b.series_number AS seriesNumber, s.is_public AS seriesIsPublic,
@@ -68,7 +68,7 @@ function getFeed() {
      JOIN users u       ON u.id = xe.user_id
      LEFT JOIN series s ON s.id = b.series_id
      LEFT JOIN books p  ON p.id = b.parent_book_id
-     WHERE xe.event = 'rate_book' AND COALESCE(ub.rated_at, xe.created_at) >= ?
+     WHERE xe.event = 'rate_book' AND xe.created_at >= ?
        AND b.is_public = 1 AND COALESCE(u.hide_from_feed, 0) = 0 AND ub.rating IS NOT NULL`
   ).all(cutoffSec);
   for (const row of ratedBookRows) {
@@ -93,14 +93,14 @@ function getFeed() {
   }
 
   const ratedSeriesRows = db.prepare(
-    `SELECT COALESCE(us.rated_at, xe.created_at) AS created_at, us.rating, s.id AS seriesId, s.name AS seriesName,
+    `SELECT xe.created_at, us.rating, s.id AS seriesId, s.name AS seriesName,
             u.username, u.public_profile, u.avatar_path, u.hide_from_feed, u.xp,
             u.is_author, u.is_contributor, u.is_moderator, u.is_squire, u.display_name
      FROM xp_events xe
      JOIN series s        ON s.id = CAST(xe.ref AS INTEGER)
      JOIN user_series us  ON us.user_id = xe.user_id AND us.series_id = s.id
      JOIN users u         ON u.id = xe.user_id
-     WHERE xe.event = 'rate_series' AND COALESCE(us.rated_at, xe.created_at) >= ? AND s.is_public = 1
+     WHERE xe.event = 'rate_series' AND xe.created_at >= ? AND s.is_public = 1
        AND COALESCE(u.hide_from_feed, 0) = 0 AND us.rating IS NOT NULL`
   ).all(cutoffSec);
   for (const row of ratedSeriesRows) {
