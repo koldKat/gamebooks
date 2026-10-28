@@ -205,6 +205,7 @@ assert.equal(accountPrefs.booksXpCollapsed, '1', 'personal collapse is sent to a
 await desktop.api.syncPrefs(); await phone.api.syncPrefs();
 assert.equal(phone.el('books-xp-summary').classList.contains('books-xp-collapsed'), true);
 assert.equal(phone.el('books-xp-toggle').attributes['aria-expanded'], 'false');
+assert.equal(phone.el('books-xp-kicker').textContent, 'LVL', 'restored collapse uses the short label');
 assert.equal(phone.el('books-app-xp-panel').classList.contains('books-xp-collapsed'), false);
 phone.el('books-app-xp-toggle').handlers.click();
 phone.el('books-xp-toggle').handlers.click();
@@ -212,5 +213,6 @@ await phone.api.syncPrefs(); await desktop.api.syncPrefs();
 assert.equal(desktop.el('books-app-xp-panel').classList.contains('books-xp-collapsed'), true);
 assert.equal(desktop.el('books-xp-summary').classList.contains('books-xp-collapsed'), false);
 assert.equal(desktop.el('books-xp-toggle').attributes['aria-expanded'], 'true');
+assert.equal(desktop.el('books-xp-kicker').textContent, 'Progress', 'expanded label follows the synced state');
 desktop.api.applyPrefs({});
 assert.equal(desktop.el('books-app-xp-panel').classList.contains('books-xp-collapsed'), false, 'a different account without preferences starts expanded');

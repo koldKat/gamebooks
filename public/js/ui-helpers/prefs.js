@@ -17,6 +17,10 @@ function applyBooksXpCollapsed(key, collapsed) {
   const [panelId, buttonId] = booksXpPanels[key];
   document.getElementById(panelId)?.classList.toggle('books-xp-collapsed', collapsed);
   document.getElementById(buttonId)?.setAttribute?.('aria-expanded', String(!collapsed));
+  if (key === 'booksXpCollapsed') {
+    const label = document.getElementById('books-xp-kicker');
+    if (label) label.textContent = collapsed ? 'LVL' : 'Progress';
+  }
 }
 
 export function initBooksXpPanels() {
