@@ -87,12 +87,6 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
     pdfDlBtn.style.display = showPdfBtn ? '' : 'none';
     if (showPdfBtn) pdfDlBtn.href = _adminPdfHref(pdfPath);
   }
-  const epubDlBtn = document.getElementById('epub-download-btn');
-  if (epubDlBtn) {
-    const showEpubBtn = bootState._hasPdfAccess && !!epubPath && !parentBookId;
-    epubDlBtn.style.display = showEpubBtn ? '' : 'none';
-    if (showEpubBtn) epubDlBtn.href = _adminPdfHref(epubPath);
-  }
   setViewingPt(null);
   // Show loading placeholders until graph initialization and sidebar rendering replace them.
   const _graphContainerEl = document.getElementById('graph-container');

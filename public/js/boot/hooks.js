@@ -223,16 +223,11 @@ export function initFeatureHooks() {
       pdfDlBtn.style.display = showPdfBtn ? '' : 'none';
       if (showPdfBtn) pdfDlBtn.href = _adminPdfHref(pdfPath);
     },
-    // Patch EPUB cards and the active play link without rebuilding the library.
+    // Patch EPUB cards without rebuilding the library.
     onEpubChanged:       (bookId, epubPath, epubSize) => {
       _syncEpubBadgeOnCards(bookId, epubPath, epubSize);
       if (String(bookId) !== String(currentBookId)) return;
       bootState._currentBook.epubPath = epubPath;
-      const epubDlBtn = document.getElementById('epub-download-btn');
-      if (!epubDlBtn) return;
-      const showEpubBtn = bootState._hasPdfAccess && !!epubPath && !bootState._currentBook.parentBookId;
-      epubDlBtn.style.display = showEpubBtn ? '' : 'none';
-      if (showEpubBtn) epubDlBtn.href = _adminPdfHref(epubPath);
     },
   });
   initEditBook(() => bootState._mousedownOnOverlay);
