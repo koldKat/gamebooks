@@ -1046,7 +1046,6 @@ function getPublicProfile(username) {
     avatarUrl:     user.avatar_path ? `/avatars/${user.avatar_path}` : null,
     level:         xpInfo.level,
     title:         xpInfo.title,
-    jobXp:         xpInfo.jobXp,
     totalBooks,
     createdBooks,
     books,
