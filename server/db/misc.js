@@ -5,6 +5,9 @@
 const { db, _naturalCompareByName } = require('./connection');
 const { _insertNotif, coinBalance, computeLevel } = require('./xp');
 const { createBulkGcGifts } = require('./bulk-gifts');
+const { adminNotificationSql } = require('./notification-policy');
+
+const adminNotificationFilter = adminNotificationSql('type', 'payload');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS notifications (
@@ -20,7 +23,7 @@ db.exec(`
 
 function getNotifications(userId) {
   const items = db.prepare(
-    `SELECT id, type, payload, seen, created_at FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 25`
+    `SELECT id, type, payload, seen, created_at FROM notifications WHERE user_id = ? AND ${adminNotificationFilter} ORDER BY created_at DESC LIMIT 25`
   ).all(userId).map(r => ({
     id: r.id,
     type: r.type,
@@ -35,7 +38,7 @@ function getNotifications(userId) {
 function markNotificationsSeen(userId) {
   db.prepare(`
     UPDATE notifications SET seen = 1 WHERE seen = 0 AND id IN (
-      SELECT id FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 25
+      SELECT id FROM notifications WHERE user_id = ? AND ${adminNotificationFilter} ORDER BY created_at DESC LIMIT 25
     )
   `).run(userId);
 }

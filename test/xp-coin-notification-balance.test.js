@@ -45,6 +45,17 @@ test('same-tick level and mint rewards report the final spendable balance', t =>
   assert.equal(f.db.prepare('SELECT bonus_coins FROM users WHERE id=1').get().bonus_coins, 394);
 });
 
+test('admin-only notifications preserve XP, level rewards and coin minting', t => {
+  const f = fixture(); t.after(() => f.db.close());
+  require('../server/db/notification-policy').initializeNotificationPolicy(f.db);
+  assert.equal(f.award(1), true);
+  assert.equal(f.balance(), 14);
+  assert.equal(f.db.prepare('SELECT xp FROM users WHERE id=1').get().xp, 496000);
+  assert.equal(f.db.prepare('SELECT bonus_coins FROM users WHERE id=1').get().bonus_coins, 394);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM notifications').get().n, 0);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM xp_events WHERE event='level_up'").get().n, 1);
+});
+
 test('an XP award crossing multiple levels includes every level coin in the mint notification', t => {
   const f = fixture({ xp: 0, purchased: 0, bonus: 0, spent: 0 }); t.after(() => f.db.close());
   f.award(6000);
