@@ -5153,6 +5153,40 @@ for(const id of BOOK_IDS){
       saved=JSON.stringify(data());el('newCharacter').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(data())===saved,'Dzurlord stale confirmation ignored');app.setCurrentBookId(1296);button.click();
     }finally{Math.random=random;}
   }
+  if(id===1441){
+    const el=key=>document.getElementById('sim1441-'+key),data=()=>app.currentPlaythrough().sim1441;
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1441/definition.js');
+    const run=app.currentPlaythrough();run.inventory={sentinel:['shared-item']};run.equipment={sentinel:'shared-slot'};run.sim1439={sentinel:true};
+    const preserved=JSON.stringify([run.inventory,run.equipment,run.sim1439]);
+    const choose=section=>{el('context').value=String(section);el('context').dispatchEvent(new Event('change'));};
+    const change=key=>el(key).dispatchEvent(new Event('change',{bubbles:true}));
+    const cancel=()=>{if(data()?.fight?.status==='active'){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    check(getRoster().length===20&&requestedRosters.has(1441),'Moria full database roster');
+    check(data()===undefined,'Moria render preserves state');
+    check(el('deviceCharges').closest('label').hidden&&!document.getElementById('sim1441-item-mithril'),'Moria no absent magic equipment');
+    choose('manual');el('manualDice').checked=true;
+    const weak={ob:0,db:0,endurance:1,armour:'none',kind:'normal'};
+    for(const field of el('opponents').querySelectorAll('[data-stat]'))field.value=weak[field.dataset.stat];
+    el('playerPick').value='8';el('enemyPick').value='2';el('start').click();el('step').click();
+    check(data().fight.status==='win'&&data().history.length===1,'Moria custom fight');
+    for(const entry of getRoster()){
+      choose(entry.section);el('damage').value='0';el('endurance').value='1000';el('playerPick').value='2';el('enemyPick').value='2';el('start').click();
+      check(data().fight.status==='active'&&data().fight.enemies.length===entry.enemies.length,'Moria preset '+entry.section);
+      el('step').click();check(data().fight.round===1,'Moria first round '+entry.section);cancel();
+    }
+    choose('199');el('start').click();for(let i=0;i<3;i++)el('step').click();
+    check(data().fight.status==='avoided'&&data().fight.destination==='209','Moria three-round timeout');
+    choose('189');el('start').click();data().fight.enemies[0].damage=40;module.render();check(!el('woundedExit').hidden,'Moria wounded route visible');el('woundedExit').click();
+    check(data().fight.destination==='388'&&data().fight.status==='avoided','Moria optional spider route');
+    choose('207');el('mode').value='advanced';change('mode');el('missile').value='bow';el('item-recurvedBow').checked=true;el('specialArrows').value='3';el('mirenna').value='3';el('damage').value='17';el('playerPick').value='7';el('start').click();
+    el('rangedAction').value='shoot';el('step').click();check(data().hero.specialArrows===2&&el('specialArrows').value==='2','Moria arrow charge persists');
+    el('recover-mirenna').click();check(data().hero.damage===7&&data().hero.mirenna===2&&el('mirenna').value==='2'&&el('damage').value==='7','Moria recovery counters persist');cancel();
+    choose('199-from193');el('start').click();check(data().fight.stage==='melee'&&data().fight.surprised,'Moria surprise entry');
+    const saved=JSON.stringify(data());module.render();check(JSON.stringify(data())===saved,'Moria active render preserves fight');
+    el('cancel').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim1441)===saved,'Moria stale cancel ignored');app.setCurrentBookId(1441);button.click();cancel();
+    const original=JSON.stringify(data());app.state.playthroughs=[{path:[1],startedAt:2}];app.state.activePtIndex=0;el('start').click();check(app.currentPlaythrough().sim1441===undefined,'Moria stale controls preserve new run');app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Moria original run retained');
+    check(JSON.stringify([run.inventory,run.equipment,run.sim1439])===preserved,'Moria shared items and other simulator preserved');
+  }
   if(id===1439){
     const el=key=>document.getElementById('sim1439-'+key),data=()=>app.currentPlaythrough().sim1439;
     const {getRoster}=await import('REPO/public/js/battlesim/books/1439/definition.js');

@@ -1,4 +1,4 @@
-import {character,beginFight,step as performStep,applyLuck,acceptNumbers,luckAvailable,openingAction,resolveCalm,resolveOutcome,spellAvailable,WEAPONS,ARMOUR,MISSILES,SPELLS} from './core.js';
+import {character,beginFight,step as performStep,applyLuck,acceptNumbers,luckAvailable,openingAction,resolveCalm,resolveOutcome,spellAvailable,woundedExitAvailable,takeWoundedExit,useRecovery,WEAPONS,ARMOUR,MISSILES,SPELLS} from './core.js';
 import {createOpponentEditor} from '../../opponents.js';
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -173,6 +173,8 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     const enemy=f?.enemies[f.index];
     el('status').textContent=f?tk('status.'+f.status)+(active?' | '+tk('fightState',{round:f.round+1,damage:f.hero.damage,endurance:f.hero.endurance,name:enemy?.name,enemyDamage:enemy?.damage,enemyEndurance:enemy?.endurance}):' | '+tk('heroState',{damage:f.hero.damage,endurance:f.hero.endurance})):tk('ready');
     el('destination').textContent=f?.destination?tk('nextPassage',{section:f.destination}):f?.status==='escaped'?f.rules.escapeInstruction??'':'';
+    if(el('woundedExit'))el('woundedExit').hidden=!woundedExitAvailable(f);
+    for(const item of definition.recoveryItems??[])el('recover-'+item.key).disabled=!f||pendingLuck||f.hero.damage===0||!(f.hero[item.field]>0)||f.hero.condition==='killed'||f.status==='loss'||f.status==='cancelled';
     if(f?.allyActive)el('status').textContent+=' | '+tk('allyState',f.ally);
     if(f&&definition.heroFields?.some(field=>field.key==='strength'))el('status').textContent+=' | '+tk('strengthState',{strength:f.hero.strength});
     el('history').innerHTML=(d?.history??[]).slice(-30).reverse().map(e=>'<div>'+escape(e.enemy)+' | '+escape(tk('status.'+e.outcome))+'</div>').join('');
@@ -198,6 +200,8 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     el('sourceAction').options[0].value='';
     el('dice').insertAdjacentHTML('beforeend',input('supportPick',7,2,12)+input('endurancePick',7,2,12));
     el('status').insertAdjacentHTML('afterend','<p id="'+id+'-destination"></p>');
+    if(definition.woundedExitControl)el('step').insertAdjacentHTML('afterend',button('woundedExit'));
+    if(definition.recoveryItems?.length)el('step').insertAdjacentHTML('afterend','<div class="bsim-btn-row">'+definition.recoveryItems.map(item=>button('recover-'+item.key)).join('')+'</div>');
     el('openingAction').insertAdjacentHTML('beforeend','<option value="immediateEscape">'+escape(tk('openingAction.immediateEscape'))+'</option>');
     for(const action of definition.extraOpeningActions??[])el('openingAction').insertAdjacentHTML('beforeend','<option value="'+escape(action)+'">'+escape(tk('openingAction.'+action))+'</option>');
     for(const action of ['leave','surrender'])el('openingAction').insertAdjacentHTML('beforeend','<option value="'+action+'">'+escape(tk('openingAction.'+action))+'</option>');
@@ -211,6 +215,8 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     el('context').addEventListener('change',chooseContext);
     el('saveHero').addEventListener('click',()=>change(d=>{if(locked(d))return;d.hero=readHero(d.hero);d.fight=null;snapshot(d);d.log.push({type:'saved'});}));
     el('start').addEventListener('click',()=>change(start));el('step').addEventListener('click',()=>change(step));
+    el('woundedExit')?.addEventListener('click',()=>change(d=>{d.fight=takeWoundedExit(d.fight);}));
+    for(const item of definition.recoveryItems??[])el('recover-'+item.key).addEventListener('click',()=>change(d=>{d.fight=useRecovery(d.fight,item);}));
     el('opening').addEventListener('click',()=>change(d=>{if(locked(d))return;const action=el('openingAction').value;if(action==='immediateEscape'){start(d,{immediateEscape:true});return;}const exit=({leave:'leaveBeforeFight',surrender:'preFightSurrender'})[action];if(exit){start(d,{sourceExit:exit});return;}d.hero=readHero(d.hero);snapshot(d);const rules=encounterRules();d.opening=openingAction(d.hero,action,{mode:el('mode').value,equipmentModifiers:el('equipmentModifiers').checked,unmodifiedTwo:el('unmodifiedTwo').checked,rules,enemyUnaware:rules.foeAware===true?false:el('enemyUnaware').checked||Boolean(rules.enemyUnaware)},dice());d.log.push({type:'opening',...d.opening});}));
     el('cancel').addEventListener('click',()=>{const run=getRun(),fight=data()?.fight;if(!busy(data()))return;showConfirm(tk('cancelConfirm'),()=>{if(run===getRun()&&Number(getBookId())===definition.id&&data()?.fight===fight)change(d=>{d.fight={...d.fight,status:'cancelled',lastAction:{used:true,rolls:[]}};});});});
     el('luckCast').addEventListener('click',()=>change(d=>{d.fight=applyLuck(d.fight,numeric('luckPick',0,20),dice());}));el('keepNumbers').addEventListener('click',()=>change(d=>{d.fight=acceptNumbers(d.fight);}));

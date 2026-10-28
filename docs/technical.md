@@ -235,6 +235,10 @@ gamebooks/
                          missile weapon or Sneak Away, and hide modifiers absent from that source.
                          Opt-in rules support Advanced opening past actions, Charm Animal resolving
                          one opponent, printed escape requirements for Calm, and fatal defeat text.
+                         Further opt-in metadata supports completed-round deadlines, optional
+                         wounded-opponent exits, and source-bow bonuses with consumable arrows.
+                         Simulator-local recovery consumes its own charges; pending Luck results
+                         must be accepted first, and recovery cannot revive a defeated character.
                          Source Endurance formulas roll independently per foe. Multiple companions
                          retain their own cadence and fixed bonuses; single-strike trials stop at the
                          first failure. Surviving source opponents retain wounds between linked
