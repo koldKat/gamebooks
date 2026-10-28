@@ -3,6 +3,9 @@ const app=await import('REPO/public/js/core/state.js');
 const desktop=await import('REPO/public/js/battlesim/loader.js');
 const mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
 const check=(value,label)=>{if(!value)throw Error(label);};
+// The desktop loader reports initialization errors through console.warn.
+// Surface the original error instead of an unhelpful missing-trigger assertion.
+console.warn=(message,error)=>{if(error instanceof Error)throw error;};
 let writes=0;
 const requestedRosters = new Set();
 const rosterSeeds=ROSTER_SEEDS;
@@ -5151,6 +5154,39 @@ for(const id of BOOK_IDS){
       choose('110');el('start').click();check(el('heal').disabled,'Dzurlord cannot heal before surprise attacks');el('round').click();check(data().fight.events.filter(e=>e.kind==='attack'&&e.side==='enemy').length===3&&!el('heal').disabled,'Dzurlord opening three attacks then normal play');cancel();
       check(JSON.stringify([run.inventory,run.equipment])===items,'Dzurlord shared items preserved');
       saved=JSON.stringify(data());el('newCharacter').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(data())===saved,'Dzurlord stale confirmation ignored');app.setCurrentBookId(1296);button.click();
+    }finally{Math.random=random;}
+  }
+  if(id===1442){
+    const el=key=>document.getElementById('sim1442-'+key),data=()=>app.currentPlaythrough().sim1442;
+    const {getRoster,getVehicles}=await import('REPO/public/js/battlesim/books/1442/definition.js');
+    const run=app.currentPlaythrough();run.inventory={sentinel:['shared-item']};run.equipment={sentinel:'shared-slot'};run.sim1441={sentinel:true};
+    const preserved=JSON.stringify([run.inventory,run.equipment,run.sim1441]),random=Math.random;
+    const choose=section=>{el('context').value=section;el('context').dispatchEvent(new Event('change'));};
+    const set=(key,value)=>{el('hero').querySelector(`[data-path="${key}"]`).value=String(value);};
+    const cancel=()=>{if(['fighting','awaitingDriver','paused'].includes(data()?.fight?.status)){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    check(getRoster().length===21&&getVehicles().length===8&&requestedRosters.has(1442),'Battle Road full database profiles');
+    check(data()===undefined,'Battle Road render makes no saved state');
+    try{
+      Math.random=()=>.2;
+      choose('');el('customKind').value='person';el('customKind').dispatchEvent(new Event('change'));
+      set('gunnery',20);for(const input of el('opponents').querySelectorAll('[data-stat]'))input.value=input.dataset.stat==='hp'?'2':'0';
+      el('start').click();check(data()?.fight.status==='fighting','Battle Road custom fight starts without preset');
+      el('step').click();check(data().fight.status==='win'&&data().history.length===1,'Battle Road custom personal victory recorded once');
+      for(const entry of getRoster().filter(entry=>!entry.rules.resumePrior)){
+        choose(entry.section);set('hp',1000);set('maxHp',1000);set('defenseClass',100);set('gunnery',0);
+        if(entry.rules.kind==='vehicle')set('driverHp',50);
+        for(const input of el('opponents').querySelectorAll('[data-stat="gunnery"]'))if(!input.value)input.value='3';
+        el('start').click();check(data().fight.status==='fighting'&&data().fight.enemies.length===entry.enemies.length,'Battle Road preset '+entry.section);
+        el('hold').click();check(data().fight.round===1,'Battle Road turn '+entry.section);cancel();
+      }
+      choose('189');set('hp',1000);set('maxHp',1000);set('driverHp',50);set('defenseClass',12);el('start').click();
+      data().fight.hero.defenseClass--;data().fight.enemies[1].hp=0;data().fight.enemies[2].hp=0;
+      el('hold').click();check(data().fight.status==='paused'&&data().fight.hero.defenseClass===11,'Battle Road two defeated pause preserves critical DC loss');
+      choose('325');el('start').click();check(data().fight.status==='fighting'&&data().fight.enemies[1].hp===0&&data().fight.hero.defenseClass===11,'Battle Road resume keeps defeated cycles and DC');
+      const saved=JSON.stringify(data());module.render();check(JSON.stringify(data())===saved,'Battle Road active render preserves state');
+      el('cancel').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim1442)===saved,'Battle Road stale confirmation ignored');app.setCurrentBookId(1442);button.click();cancel();
+      const original=JSON.stringify(data());app.state.playthroughs=[{path:[1],startedAt:2}];app.state.activePtIndex=0;el('start').click();check(app.currentPlaythrough().sim1442===undefined,'Battle Road stale controls preserve new run');app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Battle Road original run retained');
+      check(JSON.stringify([run.inventory,run.equipment,run.sim1441])===preserved,'Battle Road shared items and other simulator preserved');
     }finally{Math.random=random;}
   }
   if(id===1441){
