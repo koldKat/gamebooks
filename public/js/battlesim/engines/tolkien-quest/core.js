@@ -20,8 +20,8 @@ export function pick(roll, role='check',context) {
   const result=roll ? roll(role,context) : 2+Math.floor(Math.random()*6)+Math.floor(Math.random()*6);
   return integer(result,2,12);
 }
-export function bonusPick(raw,bonus,unmodifiedTwo=false) {
-  integer(raw,2,12);integer(bonus);return raw===2&&unmodifiedTwo ? 2 : raw+bonus;
+export function bonusPick(raw,bonus,unmodifiedTwo=false,unmodifiedTwelve=false) {
+  integer(raw,2,12);integer(bonus);return (raw===2&&unmodifiedTwo)||(raw===12&&unmodifiedTwelve) ? raw : raw+bonus;
 }
 export function attackResult({ob,db,raw,formula=false,unmodifiedTwo=false,damageBonus=0,doubleDamage=false}) {
   integer(ob);integer(db);integer(raw,2,12);integer(damageBonus);
@@ -43,15 +43,17 @@ export function character(input={}) {
   const h={...input};
   for(const key of ['ob','db','missileOb','running','trickery','magic'])h[key]=integer(h[key]??0);
   h.endurance=integer(h.endurance??30,1);h.damage=integer(h.damage??0,0);
+  if(h.strength!=null)h.strength=integer(h.strength,0);
   h.weapon=h.weapon??'none';h.armour=h.armour??'none';h.missile=h.missile??'none';
   if(!Object.hasOwn(WEAPONS,h.weapon)||!Object.hasOwn(ARMOUR,h.armour)||!Object.hasOwn(MISSILES,h.missile))throw new RangeError('Invalid equipment modifier');
   h.shield=Boolean(h.shield);h.spells=[...new Set(h.spells??[])];
   if(h.spells.some(s=>!Object.hasOwn(SPELLS,s)))throw new RangeError('Invalid spell');
   h.itemBonuses=Object.fromEntries(['ob','db','missileOb','meleeOb','meleeDamage','running','trickery','magic'].map(key=>[key,integer(h.itemBonuses?.[key]??0)]));
-  h.deviceCharges=integer(h.deviceCharges??0,0,2);return h;
+  h.itemBonuses.weaponDamageMultiplier=integer(input.itemBonuses?.weaponDamageMultiplier??1,1,2);
+  h.deviceCharges=integer(h.deviceCharges??0,0,100);return h;
 }
-function opponent(e) {
-  const result={...e,name:String(e.displayName||e.name||'').slice(0,200),ob:integer(e.ob),db:integer(e.db),endurance:integer(e.endurance,1),damage:integer(e.damage??0,0),armour:e.armour??'none'};
+function opponent(e,allowZeroEndurance=false) {
+  const result={...e,name:String(e.displayName||e.name||'').slice(0,200),ob:integer(e.ob),db:integer(e.db),endurance:integer(e.endurance,allowZeroEndurance?0:1),damage:integer(e.damage??0,0),armour:e.armour??'none'};
   if(!Object.hasOwn(ARMOUR,result.armour))throw new RangeError('Invalid opponent armour');
   if(e.missileOb!=null)result.missileOb=integer(e.missileOb);
   return result;
@@ -67,9 +69,14 @@ export function modifiers(f, missile=false) {
 }
 export function beginFight(hero,enemies,options={},roll) {
   if(!Array.isArray(enemies)||!enemies.length||enemies.length>100)throw new RangeError('Invalid opponents');
-  const f={version:1,hero:character(hero),enemies:enemies.map(opponent),index:0,status:'active',mode:options.mode??'basic',equipmentModifiers:Boolean(options.equipmentModifiers),formula:Boolean(options.formula),unmodifiedTwo:Boolean(options.unmodifiedTwo),rules:structuredClone(options.rules??{}),effects:{},round:0,playerAttacks:0,heroAttacks:0,meleeAttacks:0,events:[],missileAvailable:true,supportEnabled:Boolean(options.useSupport),surprised:Boolean(options.surprised||options.rules?.surprised),enemyUnaware:Boolean(options.enemyUnaware||options.rules?.enemyUnaware)};
+  const f={version:1,hero:character(hero),enemies:enemies.map(e=>opponent(e,options.rules?.allowZeroEndurance===true)),index:0,status:'active',mode:options.mode??'basic',equipmentModifiers:Boolean(options.equipmentModifiers),formula:Boolean(options.formula),unmodifiedTwo:Boolean(options.unmodifiedTwo),rules:structuredClone(options.rules??{}),effects:{},round:0,playerAttacks:0,heroAttacks:0,meleeAttacks:0,events:[],missileAvailable:true,supportEnabled:Boolean(options.useSupport),surprised:Boolean(options.surprised||options.rules?.surprised),enemyUnaware:Boolean(options.enemyUnaware||options.rules?.enemyUnaware)};
   if(!['basic','advanced'].includes(f.mode))throw new RangeError('Invalid rule system');
+  if(f.rules.entryHealingPick){
+    const raw=pick(roll,'check');f.hero.damage=Math.max(0,f.hero.damage-raw);
+    f.events.push({type:'entryHealing',raw,damage:f.hero.damage});
+  }
   if(f.hero.damage>f.hero.endurance)throw new RangeError('Character is unconscious');
+  if(f.rules.enemyStrengthDrain&&integer(f.hero.strength,0)===0)throw new RangeError('Character has no Strength');
   if(f.rules.foeAware===true)f.enemyUnaware=false;
   if(f.rules.sourceWeapon&&!Object.hasOwn(WEAPONS,f.rules.sourceWeapon))throw new RangeError('Invalid source weapon');
   if(f.rules.withoutEquipment)f.missileAvailable=false;
@@ -79,7 +86,7 @@ export function beginFight(hero,enemies,options={},roll) {
   }
   if(options.immediateEscape){
     const r=f.rules.immediateEscape;if(!r)throw new RangeError('No immediate escape');
-    const raw=pick(roll,'check'),total=Math.max(2,Math.min(12,bonusPick(raw,modifiers(f).running,f.unmodifiedTwo)));
+    const raw=pick(roll,'check'),total=Math.max(2,Math.min(12,bonusPick(raw,modifiers(f).running,f.unmodifiedTwo,f.unmodifiedTwo&&f.rules.unmodifiedTwelve)));
     const success=total>=r.successRange[0]&&total<=r.successRange[1];
     f.status='avoided';f.destination=success?r.success:r.failure;f.events.push({type:'sourceCheck',raw,total,destination:f.destination});return f;
   }
@@ -100,7 +107,7 @@ export function beginFight(hero,enemies,options={},roll) {
     if(!action||f.hero.usedSourceItems?.includes(action.consumes))throw new RangeError('Source item unavailable');
     if(action.consumes)f.hero.usedSourceItems=[...(f.hero.usedSourceItems??[]),action.consumes];
     if(action.destination){f.status='avoided';f.destination=action.destination;return f;}
-    const raw=pick(roll,'check'),total=Math.max(2,Math.min(12,bonusPick(raw,modifiers(f).magic,f.unmodifiedTwo)));
+    const raw=pick(roll,'check'),total=Math.max(2,Math.min(12,bonusPick(raw,modifiers(f).magic,f.unmodifiedTwo,f.unmodifiedTwo&&f.rules.unmodifiedTwelve)));
     const removed=action.fleeRanges?.find(([low,high])=>total>=low&&total<=high)?.[2];
     if(removed==null)throw new RangeError('Unmapped source action');
     f.events.push({type:'sourceCheck',raw,total});
@@ -116,6 +123,7 @@ export function beginFight(hero,enemies,options={},roll) {
   }
   if(options.useAlly){
     if(f.rules.singleStrikeTrial)throw new RangeError('Trial requires your own attacks');
+    if(f.rules.enemyStrengthDrain)throw new RangeError('Encounter requires your own character');
     if(!f.hero.charmedAnimal)throw new RangeError('No charmed animal');
     f.ally=opponent(f.hero.charmedAnimal);f.allyActive=true;delete f.hero.charmedAnimal;
     if(f.ally.damage>f.ally.endurance)throw new RangeError('Animal is unconscious');
@@ -146,7 +154,12 @@ function enemyAttack(f,roll,missile=false) {
   const raw=pick(roll,'enemy',f);if(!active(f))return;
   const owlBonus=f.hero.sourceItems?.includes('owl')?f.rules.owlEnemyObBonus??0:0;
   const result=attackResult({ob:missile?enemy.missileOb:enemy.ob+(f.rules.enemyMeleeObBonus??0)+owlBonus,db:modifiers(f,missile).db,raw,formula:f.formula,unmodifiedTwo:f.unmodifiedTwo});
+  if(f.rules.enemyStrengthDrain&&!f.allyActive&&result.damage>0){
+    f.hero.strength=Math.max(0,f.hero.strength-1);result.damage=0;
+    f.events.push({type:'strengthDrain',strength:f.hero.strength});
+  }
   hurt(f,f.allyActive?f.ally:f.hero,result,'enemy');
+  if(f.rules.enemyStrengthDrain&&f.hero.strength===0){f.hero.condition??='unconscious';f.status='loss';}
 }
 function playerAttack(f,roll,missile=false) {
   const h=f.hero,enemy=current(f),m=modifiers(f,missile);let damageBonus=0;
@@ -156,6 +169,7 @@ function playerAttack(f,roll,missile=false) {
   const bonus=!f.allyActive?((f.meleeAttacks===0?(f.rules.firstPlayerAttackObBonus??0)+(f.effects.sneakAttack??0)+(f.rules.firstAttackAddTrickery?m.trickery:0):0)+(f.rules.singleStrikeTrial?m.trickery:0)):0;
   const raw=pick(roll,'player',f);if(!active(f))return;
   const result=attackResult({ob:missile?m.missileOb:m.ob+bonus,db:enemy.db,raw,formula:f.formula,unmodifiedTwo:f.unmodifiedTwo,damageBonus,doubleDamage:!missile&&!f.allyActive&&f.effects.strength});
+  if(!f.allyActive&&!f.rules.withoutEquipment&&weapon===h.weapon)result.damage*=h.itemBonuses?.weaponDamageMultiplier??1;
   f.playerAttacks++;
   if(!f.allyActive)f.heroAttacks=(f.heroAttacks??f.playerAttacks-1)+1;
   if(!missile&&!f.allyActive)f.meleeAttacks++;
@@ -182,14 +196,15 @@ function afterHeroAttack(f,enemy,roll){
     f.status=f.rules.limitStatus??'loss';f.destination=f.rules.limitFailure;f.events.push({type:'attackLimit',limit:f.rules.heroAttackLimit});
   }
 }
-function strain(f,cost) {
-  if(f.hero.deviceCharges>0)f.hero.deviceCharges--;else f.hero.damage+=cost;
+function strain(f,cost,spell) {
+  if(f.hero.deviceCharges>0&&(!f.rules.deviceSpell||f.rules.deviceSpell===spell))f.hero.deviceCharges--;else f.hero.damage+=cost;
   if(f.hero.damage>f.hero.endurance)f.status='loss';
 }
 function cast(f,name,roll) {
-  if(f.allyActive||f.mode!=='advanced'||!f.hero.spells.includes(name))throw new RangeError('Spell not learned');
-  const raw=pick(roll,'spell'),success=bonusPick(raw,modifiers(f,true).magic,f.unmodifiedTwo)>6;
-  f.events.push({type:'spell',spell:name,raw,success});if(success)strain(f,SPELLS[name]);return success&&active(f);
+  const device=f.rules.deviceSpell===name&&f.hero.deviceCharges>0;
+  if(f.allyActive||f.mode!=='advanced'||(!device&&!f.hero.spells.includes(name)))throw new RangeError('Spell not learned');
+  const raw=pick(roll,'spell'),success=bonusPick(raw,modifiers(f,true).magic,f.unmodifiedTwo,f.unmodifiedTwo&&f.rules.unmodifiedTwelve)>6;
+  f.events.push({type:'spell',spell:name,raw,success});if(success)strain(f,SPELLS[name],name);return success&&active(f);
 }
 export function round(source,action='attack',roll,options={}) {
   const f=structuredClone(source);f.events=[];
@@ -203,8 +218,8 @@ export function round(source,action='attack',roll,options={}) {
     if(active(f)){
       let speed=0;if(options.speed&&cast(f,'speed',roll))speed=2;
       if(active(f)){
-        const raw=pick(roll,'check'),total=bonusPick(raw,modifiers(f).running+(f.rules.escapeBonus??0)+(f.rules.escapePickedAdjustment??0)+speed-(action==='runPast'?2:0),f.unmodifiedTwo);
-        const success=total>7;f.events.push({type:'escape',raw,total,success});if(success)f.status='escaped';
+        const raw=pick(roll,'check'),total=bonusPick(raw,modifiers(f).running+(f.rules.escapeBonus??0)+(f.rules.escapePickedAdjustment??0)+speed-(action==='runPast'?2:0),f.unmodifiedTwo,f.unmodifiedTwo&&f.rules.unmodifiedTwelve);
+        const success=total>=(f.rules.combatEscapeMinimum??8);f.events.push({type:'escape',raw,total,success});if(success)f.status='escaped';
       }
     }
     return f;
@@ -227,15 +242,19 @@ export function missileRound(source,action='shoot',roll) {
     if(['shield','strength'].includes(action)&&f.round!==0)throw new RangeError('Beginning-of-fight spell');
     if(action==='shield'&&f.hero.shield&&!twoHanded.has(f.hero.weapon))throw new RangeError('Normal shield in use');
     if(action==='calm'&&(['undead','monster'].includes(current(f).kind)||(current(f).combinedCount??1)>1))throw new RangeError('Not one normal being');
+    if(action==='calm'&&f.rules.calmEscapes&&(f.rules.cannotEscape||f.enemies.length-f.index>1))throw new RangeError('Cannot escape or face multiple foes');
     if(action==='charm'&&(current(f).kind!=='animal'||(current(f).combinedCount??1)>1))throw new RangeError('Not one normal animal');
     if(cast(f,action,roll)){
       if(action==='firebolt'){
-        const damage=Math.max(0,pick(roll,'damage1')+pick(roll,'damage2')+2*modifiers(f,true).magic),enemy=current(f);
+        const raw=pick(roll,'damage1'),magic=2*modifiers(f,true).magic;
+        const damage=Math.max(0,f.rules.fireboltPicks===1?bonusPick(raw,magic,f.unmodifiedTwo,f.unmodifiedTwo&&f.rules.unmodifiedTwelve):raw+pick(roll,'damage2')+magic),enemy=current(f);
         f.playerAttacks++;f.heroAttacks=(f.heroAttacks??f.playerAttacks-1)+1;hurt(f,enemy,{raw:null,result:damage,damage},'player');afterHeroAttack(f,enemy,roll);
       }else if(action==='calm'){
-        const raw=pick(roll,'check'),success=bonusPick(raw,modifiers(f,true).magic,f.unmodifiedTwo)>7;
+        const raw=pick(roll,'check'),success=bonusPick(raw,modifiers(f,true).magic,f.unmodifiedTwo,f.unmodifiedTwo&&f.rules.unmodifiedTwelve)>7;
         f.events.push({type:'calm',raw,success});if(success){
-          if(f.rules.calmUnambiguous){
+          if(f.rules.calmEscapes){
+            f.status='calmed';f.destination=f.rules.escape;
+          }else if(f.rules.calmUnambiguous){
             current(f).condition='calmed';f.noncombatResolution=true;f.index++;
             if(f.index===f.enemies.length)f.status='calmed';
             else f.stage='missile';
@@ -259,19 +278,20 @@ export function approach(source,runPast=false,roll,options={}) {
   if(runPast){
     let speed=0;if(options.speed&&cast(f,'speed',roll))speed=2;
     if(active(f)){
-      const raw=pick(roll,'check'),total=bonusPick(raw,modifiers(f).running+speed-2+(f.rules.escapeBonus??0)+(f.rules.escapePickedAdjustment??0),f.unmodifiedTwo);success=total>7;f.events.push({type:'runPast',raw,total,success});
+      const raw=pick(roll,'check'),total=bonusPick(raw,modifiers(f).running+speed-2+(f.rules.escapeBonus??0)+(f.rules.escapePickedAdjustment??0),f.unmodifiedTwo,f.unmodifiedTwo&&f.rules.unmodifiedTwelve);success=total>7;f.events.push({type:'runPast',raw,total,success});
     }
   }
   if(active(f))f.stage=success?'missile':'melee';return f;
 }
 export function openingAction(hero,action,{unmodifiedTwo=false,mode='basic',equipmentModifiers=false,rules={},enemyUnaware}={},roll) {
+  if(rules.allowedOpeningActions&&!rules.allowedOpeningActions.includes(action))throw new RangeError('Action not in this source');
   if(action==='escape'&&rules.cannotEscape)throw new RangeError('Cannot escape this fight');
   if(action==='steal'&&rules.prohibitedActions?.includes('steal-and-take'))throw new RangeError('Cannot steal in this encounter');
   if(action!=='escape'&&enemyUnaware===false)throw new RangeError('Foe must be unaware');
   const h=character(hero),fake={hero:h,mode,equipmentModifiers,effects:{}},m=modifiers(fake);
   const bonus=action==='escape'?m.running: m.trickery;
   if(!['escape','sneakAway','sneakAttack','steal'].includes(action))throw new RangeError('Invalid action');
-  const raw=pick(roll,'check'),total=bonusPick(raw,bonus,unmodifiedTwo),success=total>(action==='steal'?8:7);
+  const raw=pick(roll,'check'),total=bonusPick(raw,bonus,unmodifiedTwo,unmodifiedTwo&&rules.unmodifiedTwelve),success=total>(action==='steal'?8:7);
   return {raw,total,success,surprised:!success&&['escape','steal'].includes(action),firstAttackObBonus:success&&action==='sneakAttack'?m.trickery:0};
 }
 export function resolveCalm(source,withdraw,roll) {
@@ -283,9 +303,11 @@ export function resolveOutcome(source,roll){
   const f=structuredClone(source);f.outcomeResolved=true;
   const key=({win:'victory',loss:'defeat',escaped:'escape'})[f.status];
   if(key&&!f.destination){
+    const condition=f.status==='loss'?f.hero.condition:f.enemies.at(-1)?.condition;
+    f.destination=f.rules[key+'Conditions']?.[condition];
     const ranges=f.rules[key+'PickRanges'];
-    if(ranges){const raw=pick(roll,'check');f.destination=ranges.find(([low,high])=>raw>=low&&raw<=high)?.[2];f.events.push({type:'sourceCheck',raw,total:raw,destination:f.destination});}
-    else f.destination=f.rules[key];
+    if(!f.destination&&ranges){const raw=pick(roll,'check');f.destination=ranges.find(([low,high])=>raw>=low&&raw<=high)?.[2];f.events.push({type:'sourceCheck',raw,total:raw,destination:f.destination});}
+    else if(!f.destination)f.destination=f.rules[key];
   }
   return f;
 }

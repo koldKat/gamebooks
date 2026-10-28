@@ -5153,6 +5153,50 @@ for(const id of BOOK_IDS){
       saved=JSON.stringify(data());el('newCharacter').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(data())===saved,'Dzurlord stale confirmation ignored');app.setCurrentBookId(1296);button.click();
     }finally{Math.random=random;}
   }
+  if(id===1440){
+    const el=key=>document.getElementById('sim1440-'+key),data=()=>app.currentPlaythrough().sim1440;
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1440/definition.js');
+    const run=app.currentPlaythrough();run.inventory={sentinel:['shared-item']};run.equipment={sentinel:'shared-slot'};run.sim1438={sentinel:true};
+    const preserved=JSON.stringify([run.inventory,run.equipment,run.sim1438]);
+    const choose=section=>{el('context').value=String(section);el('context').dispatchEvent(new Event('change'));};
+    const change=key=>el(key).dispatchEvent(new Event('change',{bubbles:true}));
+    const cancel=()=>{if(data()?.fight?.status==='active'){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    check(getRoster().length===24&&requestedRosters.has(1440),'Helms Deep database roster');
+    check(data()===undefined,'Helms Deep initial render preserves state');
+    choose('manual');el('manualDice').checked=true;
+    const weak={ob:0,db:0,endurance:1,armour:'none',kind:'normal'};
+    for(const field of el('opponents').querySelectorAll('[data-stat]'))field.value=weak[field.dataset.stat];
+    el('playerPick').value='8';el('enemyPick').value='2';el('start').click();el('step').click();
+    check(data().fight.status==='win'&&data().history.length===1,'Helms Deep ordinary custom fight');
+    for(const entry of getRoster()){
+      choose(entry.section);el('damage').value='0';el('endurance').value='1000';el('strength').value='10';el('saveHero').click();
+      el('playerPick').value='2';el('enemyPick').value='2';el('start').click();
+      check(data().fight.status==='active'&&data().fight.enemies.length===entry.enemies.length,'Helms Deep preset '+entry.section);
+      el('step').click();check(data().fight.round===1,'Helms Deep round '+entry.section);cancel();
+    }
+    choose('158');el('strength').value='2';el('damage').value='7';el('playerPick').value='2';el('enemyPick').value='5';el('start').click();el('step').click();
+    check(data().hero.strength===1&&data().hero.damage===7&&el('strength').value==='1','Helms Deep Strength drain persisted without damage');
+    const drained=JSON.stringify(data());module.render();check(JSON.stringify(data())===drained,'Helms Deep drained Strength survives render');cancel();
+    choose('250');el('strength').value='10';el('playerPick').value='2';el('enemyPick').value='2';el('start').click();el('step').click();
+    check(data().fight.status==='active','Helms Deep zero Endurance is not automatic win');el('playerPick').value='7';el('step').click();
+    check(data().fight.status==='win'&&data().fight.destination==='211','Helms Deep zero Endurance successful hit');
+    choose('manual');el('mode').value='advanced';change('mode');el('damage').value='0';el('deviceCharges').value='5';
+    const durable={ob:0,db:0,endurance:100,armour:'none',kind:'normal'};
+    for(const field of el('opponents').querySelectorAll('[data-stat]'))field.value=durable[field.dataset.stat];
+    el('start').click();const fire=[...el('rangedAction').options].find(o=>o.value==='firebolt');check(!fire.disabled,'Helms Deep staff supplies unlearned Fire Bolt');
+    el('spellPick').value='7';el('damagePick1').value='3';el('damagePick2').value='12';el('rangedAction').value='firebolt';el('step').click();
+    check(data().hero.deviceCharges===4&&data().hero.damage===0&&data().fight.enemies[0].damage===3,'Helms Deep staff one damage pick and free charge');cancel();
+    el('known-shield').checked=true;el('deviceCharges').value='5';el('start').click();el('rangedAction').value='shield';el('step').click();
+    check(data().hero.deviceCharges===5&&data().hero.damage===4,'Helms Deep staff cannot pay Shield strain');cancel();
+    choose('264');el('known-calm').checked=true;el('start').click();check([...el('rangedAction').options].find(o=>o.value==='calm').disabled,'Helms Deep group forbids Calm');cancel();
+    choose('194');el('mode').value='basic';change('mode');el('ob').value='1';el('playerPick').value='11';el('start').click();el('step').click();
+    check(data().fight.destination==='267','Helms Deep unconscious outcome');
+    el('playerPick').value='12';el('start').click();el('step').click();check(data().fight.destination==='428','Helms Deep killed outcome');
+    choose('manual');el('start').click();const inFlight=JSON.stringify(data());module.render();check(JSON.stringify(data())===inFlight,'Helms Deep active render preserves fight');
+    el('cancel').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim1440)===inFlight,'Helms Deep stale cancel ignored');app.setCurrentBookId(1440);button.click();cancel();
+    const original=JSON.stringify(data());app.state.playthroughs=[{path:[1],startedAt:2}];app.state.activePtIndex=0;el('start').click();check(app.currentPlaythrough().sim1440===undefined,'Helms Deep stale controls cannot alter new run');app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Helms Deep original run retained');
+    check(JSON.stringify([run.inventory,run.equipment,run.sim1438])===preserved,'Helms Deep shared inventory and other simulator preserved');
+  }
   if(id===1438){
     const el=key=>document.getElementById('sim1438-'+key),data=()=>app.currentPlaythrough().sim1438;
     const {getRoster}=await import('REPO/public/js/battlesim/books/1438/definition.js');
