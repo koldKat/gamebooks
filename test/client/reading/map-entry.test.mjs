@@ -18,6 +18,29 @@ function fixture() {
   };
 }
 
+test('mixed interior and exterior map labels navigate only to printed markers', () => {
+  const f = fixture(), visits = [];
+  let validation = '';
+  f.input.setCustomValidity = value => { validation = value; };
+  f.form.dataset = { readingMarkerList: '["S1","Z19","1A","12H"]', readingMarkerError: 'Choose a printed location.' };
+  bindReadingMapEntry(f.container, { canNavigate: () => true, onNavigate: n => visits.push(n) });
+  for (const value of [' s1 ', 'z19', '1a', '12H']) { f.input.value = value; f.submit(); }
+  assert.deepEqual(visits, ['S1','Z19','1A','12H']);
+  for (const value of ['', 'S20', 'T1', '13A', '01A', '../S1']) { f.input.value = value; f.submit(); }
+  assert.equal(validation, 'Choose a printed location.');
+  assert.equal(visits.length, 4);
+});
+
+test('malformed printed-marker lists never fall through to numeric navigation', () => {
+  const f = fixture(), visits = [];
+  bindReadingMapEntry(f.container, { canNavigate: () => true, onNavigate: n => visits.push(n) });
+  for (const list of ['invalid', 'null', '{}', '[]', '[12]', '["S1","../"]']) {
+    f.form.dataset = { readingMarkerList: list };
+    f.input.value = '12'; f.submit();
+  }
+  assert.deepEqual(visits, []);
+});
+
 test('only explicit valid marker submissions navigate', () => {
   const f = fixture();
   const visits = [];

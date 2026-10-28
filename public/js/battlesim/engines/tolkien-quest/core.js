@@ -48,7 +48,7 @@ export function character(input={}) {
   if(!Object.hasOwn(WEAPONS,h.weapon)||!Object.hasOwn(ARMOUR,h.armour)||!Object.hasOwn(MISSILES,h.missile))throw new RangeError('Invalid equipment modifier');
   h.shield=Boolean(h.shield);h.spells=[...new Set(h.spells??[])];
   if(h.spells.some(s=>!Object.hasOwn(SPELLS,s)))throw new RangeError('Invalid spell');
-  h.itemBonuses=Object.fromEntries(['ob','db','missileOb','meleeOb','meleeDamage','running','trickery','magic'].map(key=>[key,integer(h.itemBonuses?.[key]??0)]));
+  h.itemBonuses=Object.fromEntries(['ob','db','missileOb','meleeOb','meleeDamage','running','trickery','magic','sneakAway'].map(key=>[key,integer(h.itemBonuses?.[key]??0)]));
   h.itemBonuses.weaponDamageMultiplier=integer(input.itemBonuses?.weaponDamageMultiplier??1,1,2);
   h.deviceCharges=integer(h.deviceCharges??0,0,100);return h;
 }
@@ -64,7 +64,7 @@ export function modifiers(f, missile=false) {
   const shield=advanced&&h.shield&&!twoHanded.has(missile?h.missile:h.weapon);
   const b=f.rules?.withoutEquipment?{}:h.itemBonuses??{},r=f.rules??{};
   const weapon=r.sourceWeapon??h.weapon;
-  const values={ob:h.ob+((f.mode==='advanced'||f.equipmentModifiers)?WEAPONS[weapon].ob:0)+(b.ob??0)+(b.meleeOb??0)+(r.heroObBonus??0)+(r.meleeObBonus??0),missileOb:h.missileOb+MISSILES[h.missile]+(b.ob??0)+(b.missileOb??0)+(r.heroObBonus??0),db:h.db+a.db+(shield?1:0)+(f.effects.shield?2:0)+(b.db??0)+(r.heroDbBonus??0),running:h.running+a.running+(b.running??0)+(r.runningBonus??0),trickery:h.trickery+(h.armour==='chain'&&h.elvenChain?0:a.trickery)+(b.trickery??0),magic:h.magic+a.magic-(shield?1:0)+(b.magic??0)};
+  const values={ob:h.ob+((f.mode==='advanced'||f.equipmentModifiers)?WEAPONS[weapon].ob:0)+(b.ob??0)+(r.sourceWeapon?0:b.meleeOb??0)+(r.heroObBonus??0)+(r.meleeObBonus??0),missileOb:h.missileOb+MISSILES[h.missile]+(b.ob??0)+(b.missileOb??0)+(r.heroObBonus??0),db:h.db+a.db+(shield?1:0)+(f.effects.shield?2:0)+(b.db??0)+(r.heroDbBonus??0),running:h.running+a.running+(b.running??0)+(r.runningBonus??0),trickery:h.trickery+(h.armour==='chain'&&h.elvenChain?0:a.trickery)+(b.trickery??0),magic:h.magic+a.magic-(shield?1:0)+(b.magic??0)};
   return h.nightPenalty?Object.fromEntries(Object.entries(values).map(([key,value])=>[key,Math.floor(value/2)])):values;
 }
 export function beginFight(hero,enemies,options={},roll) {
@@ -79,7 +79,7 @@ export function beginFight(hero,enemies,options={},roll) {
   if(f.rules.enemyStrengthDrain&&integer(f.hero.strength,0)===0)throw new RangeError('Character has no Strength');
   if(f.rules.foeAware===true)f.enemyUnaware=false;
   if(f.rules.sourceWeapon&&!Object.hasOwn(WEAPONS,f.rules.sourceWeapon))throw new RangeError('Invalid source weapon');
-  if(f.rules.withoutEquipment)f.missileAvailable=false;
+  if(f.rules.withoutEquipment||f.rules.noMissiles)f.missileAvailable=false;
   if(options.sourceExit){
     if(!['leaveBeforeFight','preFightSurrender'].includes(options.sourceExit)||!f.rules[options.sourceExit])throw new RangeError('No source exit');
     f.status='avoided';f.destination=f.rules[options.sourceExit];return f;
@@ -165,11 +165,11 @@ function playerAttack(f,roll,missile=false) {
   const h=f.hero,enemy=current(f),m=modifiers(f,missile);let damageBonus=0;
   const weapon=missile?h.missile:f.rules.sourceWeapon??h.weapon,orcSword=weapon==='sword'&&h.orcSlayer&&!f.rules.withoutEquipment&&!f.rules.sourceWeapon;
   if((f.mode==='advanced'||f.equipmentModifiers)&&(!f.rules.withoutEquipment||f.rules.sourceWeapon)&&!f.allyActive)damageBonus=weapon==='bow'?0:weapon==='mace'?(['chain','plate'].includes(enemy.armour)?2:0):WEAPONS[weapon].damage;
-  if(!missile&&!f.allyActive&&!f.rules.withoutEquipment)damageBonus+=h.itemBonuses?.meleeDamage??0;
+  if(!missile&&!f.allyActive&&!f.rules.withoutEquipment&&!f.rules.sourceWeapon)damageBonus+=h.itemBonuses?.meleeDamage??0;
   const bonus=!f.allyActive?((f.meleeAttacks===0?(f.rules.firstPlayerAttackObBonus??0)+(f.effects.sneakAttack??0)+(f.rules.firstAttackAddTrickery?m.trickery:0):0)+(f.rules.singleStrikeTrial?m.trickery:0)):0;
   const raw=pick(roll,'player',f);if(!active(f))return;
   const result=attackResult({ob:missile?m.missileOb:m.ob+bonus,db:enemy.db,raw,formula:f.formula,unmodifiedTwo:f.unmodifiedTwo,damageBonus,doubleDamage:!missile&&!f.allyActive&&f.effects.strength});
-  if(!f.allyActive&&!f.rules.withoutEquipment&&weapon===h.weapon)result.damage*=h.itemBonuses?.weaponDamageMultiplier??1;
+  if(!f.allyActive&&!f.rules.withoutEquipment&&!f.rules.sourceWeapon&&weapon===h.weapon)result.damage*=h.itemBonuses?.weaponDamageMultiplier??1;
   f.playerAttacks++;
   if(!f.allyActive)f.heroAttacks=(f.heroAttacks??f.playerAttacks-1)+1;
   if(!missile&&!f.allyActive)f.meleeAttacks++;
@@ -196,13 +196,21 @@ function afterHeroAttack(f,enemy,roll){
     f.status=f.rules.limitStatus??'loss';f.destination=f.rules.limitFailure;f.events.push({type:'attackLimit',limit:f.rules.heroAttackLimit});
   }
 }
+function spellChargeField(hero,rules,spell) {
+  const field=rules.spellChargeFields?.[spell];
+  return typeof field==='string'&&Object.hasOwn(hero,field)&&integer(hero[field],0)>0?field:null;
+}
+export function spellAvailable(f,spell) {
+  return f.hero.spells.includes(spell)||Boolean(spellChargeField(f.hero,f.rules,spell))||Boolean(f.rules.deviceSpell===spell&&f.hero.deviceCharges>0);
+}
 function strain(f,cost,spell) {
-  if(f.hero.deviceCharges>0&&(!f.rules.deviceSpell||f.rules.deviceSpell===spell))f.hero.deviceCharges--;else f.hero.damage+=cost;
+  const field=spellChargeField(f.hero,f.rules,spell);
+  if(field)f.hero[field]--;
+  else if(f.hero.deviceCharges>0&&(!f.rules.deviceSpell||f.rules.deviceSpell===spell))f.hero.deviceCharges--;else f.hero.damage+=cost;
   if(f.hero.damage>f.hero.endurance)f.status='loss';
 }
 function cast(f,name,roll) {
-  const device=f.rules.deviceSpell===name&&f.hero.deviceCharges>0;
-  if(f.allyActive||f.mode!=='advanced'||(!device&&!f.hero.spells.includes(name)))throw new RangeError('Spell not learned');
+  if(f.allyActive||f.mode!=='advanced'||!spellAvailable(f,name))throw new RangeError('Spell not learned');
   const raw=pick(roll,'spell'),success=bonusPick(raw,modifiers(f,true).magic,f.unmodifiedTwo,f.unmodifiedTwo&&f.rules.unmodifiedTwelve)>6;
   f.events.push({type:'spell',spell:name,raw,success});if(success)strain(f,SPELLS[name],name);return success&&active(f);
 }
@@ -243,6 +251,7 @@ export function missileRound(source,action='shoot',roll) {
     if(action==='shield'&&f.hero.shield&&!twoHanded.has(f.hero.weapon))throw new RangeError('Normal shield in use');
     if(action==='calm'&&(['undead','monster'].includes(current(f).kind)||(current(f).combinedCount??1)>1))throw new RangeError('Not one normal being');
     if(action==='calm'&&f.rules.calmEscapes&&(f.rules.cannotEscape||f.enemies.length-f.index>1))throw new RangeError('Cannot escape or face multiple foes');
+    if(action==='calm'&&f.rules.calmNeedsExit&&!f.rules.escape&&!f.rules.sourceRunAwayChoice)throw new RangeError('No printed Run Away choice');
     if(action==='charm'&&(current(f).kind!=='animal'||(current(f).combinedCount??1)>1))throw new RangeError('Not one normal animal');
     if(cast(f,action,roll)){
       if(action==='firebolt'){
@@ -261,7 +270,12 @@ export function missileRound(source,action='shoot',roll) {
           }else f.manualEffect='calm';
         }
       }else if(action==='charm'){
-        f.hero.charmedAnimal=structuredClone(current(f));f.status='charmed';
+        f.hero.charmedAnimal=structuredClone(current(f));
+        if(f.rules.charmOneOpponent){
+          current(f).condition='charmed';f.index++;
+          if(f.index===f.enemies.length)f.status='charmed';
+          else f.stage='missile';
+        }else f.status='charmed';
       }else f.effects[action]=true;
     }
   }else throw new RangeError('Invalid missile action');
@@ -285,14 +299,17 @@ export function approach(source,runPast=false,roll,options={}) {
 }
 export function openingAction(hero,action,{unmodifiedTwo=false,mode='basic',equipmentModifiers=false,rules={},enemyUnaware}={},roll) {
   if(rules.allowedOpeningActions&&!rules.allowedOpeningActions.includes(action))throw new RangeError('Action not in this source');
-  if(action==='escape'&&rules.cannotEscape)throw new RangeError('Cannot escape this fight');
+  const past=['runPast','sneakPast'].includes(action);
+  if(past&&(mode!=='advanced'||!rules.advancedOpeningActions))throw new RangeError('Advanced source action');
+  const base=action==='runPast'?'escape':action==='sneakPast'?'sneakAway':action;
+  if(base==='escape'&&rules.cannotEscape)throw new RangeError('Cannot escape this fight');
   if(action==='steal'&&rules.prohibitedActions?.includes('steal-and-take'))throw new RangeError('Cannot steal in this encounter');
-  if(action!=='escape'&&enemyUnaware===false)throw new RangeError('Foe must be unaware');
+  if(base!=='escape'&&enemyUnaware===false)throw new RangeError('Foe must be unaware');
   const h=character(hero),fake={hero:h,mode,equipmentModifiers,effects:{}},m=modifiers(fake);
-  const bonus=action==='escape'?m.running: m.trickery;
-  if(!['escape','sneakAway','sneakAttack','steal'].includes(action))throw new RangeError('Invalid action');
+  const bonus=(base==='escape'?m.running:m.trickery)+(base==='sneakAway'?(h.itemBonuses.sneakAway??0):0)-(past?2:0);
+  if(!['escape','sneakAway','sneakAttack','steal'].includes(base))throw new RangeError('Invalid action');
   const raw=pick(roll,'check'),total=bonusPick(raw,bonus,unmodifiedTwo,unmodifiedTwo&&rules.unmodifiedTwelve),success=total>(action==='steal'?8:7);
-  return {raw,total,success,surprised:!success&&['escape','steal'].includes(action),firstAttackObBonus:success&&action==='sneakAttack'?m.trickery:0};
+  return {raw,total,success,surprised:!success&&['escape','steal'].includes(base),firstAttackObBonus:success&&action==='sneakAttack'?m.trickery:0};
 }
 export function resolveCalm(source,withdraw,roll) {
   const f=structuredClone(source);f.events=[];if(!active(f)||f.manualEffect!=='calm')throw new RangeError('No manual effect');delete f.manualEffect;if(withdraw)f.status='calmed';else enemyAttack(f,roll,true);return f;
@@ -301,7 +318,8 @@ export function resolveCalm(source,withdraw,roll) {
 export function resolveOutcome(source,roll){
   if(active(source)||luckAvailable(source)||source.outcomeResolved)return source;
   const f=structuredClone(source);f.outcomeResolved=true;
-  const key=({win:'victory',loss:'defeat',escaped:'escape'})[f.status];
+  if(f.status==='loss'&&f.rules.defeatKills)f.hero.condition='killed';
+  const key=({win:'victory',loss:'defeat',escaped:'escape'})[f.status]||(f.status==='charmed'&&f.rules.charmOneOpponent?'victory':undefined);
   if(key&&!f.destination){
     const condition=f.status==='loss'?f.hero.condition:f.enemies.at(-1)?.condition;
     f.destination=f.rules[key+'Conditions']?.[condition];
@@ -320,7 +338,7 @@ export function step(source,action,roll,options={}){
   const numbers=[];
   const capture=(role,context)=>{const raw=pick(roll,role,context);numbers.push({role,raw});return raw;};
   const f=before.stage==='missile'?missileRound(before,action,capture):before.stage==='approach'?approach(before,Boolean(action),capture,options):round(before,action,capture,options);
-  if(before.stage==='missile'&&['shoot','skip'].includes(action)&&before.hero.spells.includes('luck')&&numbers.length){
+  if(before.stage==='missile'&&['shoot','skip'].includes(action)&&spellAvailable(before,'luck')&&numbers.length){
     f.lastAction={before,action,rolls:numbers,used:false};
   }
   return f;

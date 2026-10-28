@@ -1,4 +1,4 @@
-import {character,beginFight,step as performStep,applyLuck,acceptNumbers,luckAvailable,openingAction,resolveCalm,resolveOutcome,WEAPONS,ARMOUR,MISSILES,SPELLS} from './core.js';
+import {character,beginFight,step as performStep,applyLuck,acceptNumbers,luckAvailable,openingAction,resolveCalm,resolveOutcome,spellAvailable,WEAPONS,ARMOUR,MISSILES,SPELLS} from './core.js';
 import {createOpponentEditor} from '../../opponents.js';
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -12,17 +12,20 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
   const numeric=(key,min=-1000,max=1000000)=>{
     const raw=el(key).value.trim(),n=Number(raw);if(!raw||!Number.isSafeInteger(n)||n<min||n>max)throw new RangeError('Invalid number');return n;
   };
-  const encounterRules=()=>({...definition.combatRules,...preset()?.rules});
+  const encounterRules=()=>({...definition.combatRules,...preset()?.rules,...Object.fromEntries((definition.ruleFlags??[]).map(key=>[key,el(key).checked]))});
   function readHero(previous){
     const itemBonuses={};
     const sourceItems=[];
+    let armour=el('armour').value;
     for(const item of definition.itemModifiers??[])if(el('item-'+item.key).checked){
       sourceItems.push(item.key);
-      if(!item.weapon||(!preset()?.rules.sourceWeapon&&item.weapon===el('weapon').value))for(const [key,value]of Object.entries(item.bonuses))itemBonuses[key]=(itemBonuses[key]??0)+value;
+      if(item.armour)armour=item.armour;
+      if((!item.weapon||(!preset()?.rules.sourceWeapon&&item.weapon===el('weapon').value))&&(!item.missile||item.missile===el('missile').value))for(const [key,value]of Object.entries(item.bonuses))itemBonuses[key]=(itemBonuses[key]??0)+value;
+      if(item.weapon===el('missile').value)for(const [key,value]of Object.entries(item.throwBonuses??{}))itemBonuses[key]=(itemBonuses[key]??0)+value;
     }
     if((definition.itemModifiers??[]).filter(item=>item.weapon&&el('item-'+item.key).checked).length>1)throw new RangeError('Choose one source weapon');
     const extra=Object.fromEntries((definition.heroFields??[]).map(field=>[field.key,numeric(field.key,field.min,field.max)]));
-    return character({...previous,...extra,...Object.fromEntries(['ob','db','missileOb','running','trickery','magic','endurance','damage'].map(k=>[k,numeric(k,['endurance','damage'].includes(k)?k==='endurance'?1:0:-1000)])),itemBonuses,sourceItems,nightPenalty:Boolean(el('nightPenalty')?.checked),weapon:el('weapon').value,armour:el('armour').value,missile:el('missile').value,shield:el('shield').checked,elvenChain:el('elvenChain').checked,orcSlayer:el('orcSlayer').checked,deviceCharges:numeric('deviceCharges',0,definition.deviceChargesMaximum??2),spells:Object.keys(SPELLS).filter(k=>el('known-'+k).checked)});
+    return character({...previous,...extra,...Object.fromEntries(['ob','db','missileOb','running','trickery','magic','endurance','damage'].map(k=>[k,numeric(k,['endurance','damage'].includes(k)?k==='endurance'?1:0:-1000)])),itemBonuses,sourceItems,nightPenalty:Boolean(el('nightPenalty')?.checked),weapon:el('weapon').value,armour,missile:el('missile').value,shield:el('shield').checked,elvenChain:el('elvenChain').checked,orcSlayer:el('orcSlayer').checked,deviceCharges:numeric('deviceCharges',0,definition.deviceChargesMaximum??2),spells:Object.keys(SPELLS).filter(k=>el('known-'+k).checked)});
   }
   function snapshot(d){
     d.setup=Object.fromEntries([...el('setup').querySelectorAll('input,select')].filter(field=>field.id&&!field.closest('.bsim-opponent-editor')).map(field=>[field.id,field.type==='checkbox'?field.checked:field.value]));
@@ -150,6 +153,7 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
       const exit=({leave:'leaveBeforeFight',surrender:'preFightSurrender'})[option.value];
       if(exit)option.hidden=option.disabled=!rules[exit];
       if(rules.allowedOpeningActions&&!rules.allowedOpeningActions.includes(option.value))option.hidden=option.disabled=true;
+      if(['runPast','sneakPast'].includes(option.value)&&el('mode').value!=='advanced')option.hidden=option.disabled=true;
     }
     if(el('openingAction').selectedOptions[0]?.hidden||el('openingAction').selectedOptions[0]?.disabled){
       const available=[...el('openingAction').options].find(option=>!option.hidden&&!option.disabled);
@@ -158,11 +162,11 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     el('opening').disabled=setupLocked||Boolean(rules.cannotEscape);
     el('speed').disabled=!active||f.mode!=='advanced'||!f.hero.spells.includes('speed')||Boolean(f.allyActive);
     if(active)for(const option of el('rangedAction').options){
-      const device=f.rules.deviceSpell===option.value&&f.hero.deviceCharges>0;
-      option.disabled=option.value==='shoot'?(f.hero.missile==='none'||!f.missileAvailable):option.value==='skip'?false:(!device&&!f.hero.spells.includes(option.value))||(['shield','strength'].includes(option.value)&&f.round!==0);
+      option.disabled=option.value==='shoot'?(f.hero.missile==='none'||!f.missileAvailable):option.value==='skip'?false:!spellAvailable(f,option.value)||(['shield','strength'].includes(option.value)&&f.round!==0);
       const target=f.enemies[f.index];
       if(option.value==='calm'&&(['undead','monster'].includes(target.kind)||(target.combinedCount??1)>1))option.disabled=true;
       if(option.value==='calm'&&rules.calmEscapes&&(rules.cannotEscape||f.enemies.length-f.index>1))option.disabled=true;
+      if(option.value==='calm'&&rules.calmNeedsExit&&!rules.escape&&!rules.sourceRunAwayChoice)option.disabled=true;
       if(option.value==='charm'&&(target.kind!=='animal'||(target.combinedCount??1)>1))option.disabled=true;
     }
     if(el('rangedAction').selectedOptions[0]?.disabled)el('rangedAction').value='skip';
@@ -186,13 +190,16 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     document.body.appendChild(overlay);
     for(const field of definition.heroFields??[])el('endurance').closest('details').insertAdjacentHTML('beforeend',input(field.key,field.value,field.min,field.max));
     el('deviceCharges').max=definition.deviceChargesMaximum??2;
+    for(const key of definition.hiddenModifierControls??[])el(key).closest('label').hidden=true;
     el('setup').insertAdjacentHTML('beforeend',check('useSupport')+(definition.itemModifiers??[]).map(item=>check('item-'+item.key)).join(''));
+    el('setup').insertAdjacentHTML('beforeend',(definition.ruleFlags??[]).map(key=>check(key)).join(''));
     if(definition.nightControls)el('setup').insertAdjacentHTML('beforeend',check('nightPenalty'));
     el('setup').insertAdjacentHTML('beforeend',input('sourceCount',1,1,100)+check('includeGuard')+select('sourceAction',['none']));
     el('sourceAction').options[0].value='';
     el('dice').insertAdjacentHTML('beforeend',input('supportPick',7,2,12)+input('endurancePick',7,2,12));
     el('status').insertAdjacentHTML('afterend','<p id="'+id+'-destination"></p>');
     el('openingAction').insertAdjacentHTML('beforeend','<option value="immediateEscape">'+escape(tk('openingAction.immediateEscape'))+'</option>');
+    for(const action of definition.extraOpeningActions??[])el('openingAction').insertAdjacentHTML('beforeend','<option value="'+escape(action)+'">'+escape(tk('openingAction.'+action))+'</option>');
     for(const action of ['leave','surrender'])el('openingAction').insertAdjacentHTML('beforeend','<option value="'+action+'">'+escape(tk('openingAction.'+action))+'</option>');
     const presets=[...new Map(getRoster().flatMap(e=>e.enemies).map(e=>[e.key,e])).values()];
     opponents=createOpponentEditor({document,id,t,fields:[{key:'ob',label:tk('enemyOb'),min:-1000},{key:'db',label:tk('enemyDb'),min:-1000},{key:'endurance',label:tk('enemyEndurance'),min:definition.minimumOpponentEndurance??1},{key:'armour',label:tk('enemyArmour'),options:Object.keys(ARMOUR).map(value=>({value,label:tk('armour.'+value)}))},{key:'kind',label:tk('enemyKind'),options:['normal','animal','orc','undead','monster'].map(value=>({value,label:tk('kind.'+value)}))}],presets});el('opponents').appendChild(opponents.element);

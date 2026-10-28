@@ -42,6 +42,25 @@ export function bindReadingMapEntry(container, { canNavigate, onNavigate }) {
       event.preventDefault();
       if (!canNavigate() || !form.reportValidity()) return;
       const raw = input.value.trim();
+      const encodedMarkers = form.dataset?.readingMarkerList;
+      if (encodedMarkers !== undefined) {
+        try {
+          const markers = JSON.parse(encodedMarkers);
+          const target = raw.toUpperCase();
+          const markerPattern = /^(?:[A-Z]{1,8}[1-9]\d{0,5}|[1-9]\d{0,5}[A-Z]{1,8})$/;
+          if (!Array.isArray(markers) || !markers.length
+              || !markers.every(marker => typeof marker === 'string' && markerPattern.test(marker))) return;
+          if (!markers.includes(target)) {
+            input.setCustomValidity(form.dataset.readingMarkerError || '');
+            form.reportValidity();
+            return;
+          }
+          onNavigate(target);
+        } catch {
+          return;
+        }
+        return;
+      }
       const encodedGrid = form.dataset?.readingMarkerGrid;
       if (encodedGrid !== undefined) {
         try {

@@ -230,6 +230,11 @@ gamebooks/
                          Fire Bolt, spell-specific charged devices, persistent simulator Strength
                          drain, zero-Endurance opponents that require a successful hit, and
                          separate killed/unconscious destination branches.
+                         Named spell-charge fields keep independent magic-item uses separate.
+                         Source item controls can replace armour, restrict a bonus to a specific
+                         missile weapon or Sneak Away, and hide modifiers absent from that source.
+                         Opt-in rules support Advanced opening past actions, Charm Animal resolving
+                         one opponent, printed escape requirements for Calm, and fatal defeat text.
                          Source Endurance formulas roll independently per foe. Multiple companions
                          retain their own cadence and fixed bonuses; single-strike trials stop at the
                          first failure. Surviving source opponents retain wounds between linked
@@ -2737,7 +2742,7 @@ The desktop reader's line-step wheel handler targets `.reading-gate-prose` while
 
 Graph section previews require an already-active reading panel for every book. `previewSection()` returns before fetching or changing navigation/physics state when the panel is closed; graph clicks never open or reopen it. Pending and locked reading gates also block previews. Mobile graph-only mode already ignores preview taps.
 
-Map-driven passages can include a bounded `data-reading-map-entry` form. `reading/map-entry.js` binds it in desktop and mobile readers; players choose connected markers from the original map rather than generated adjacency. Submission requires the same active book, session, run, section and render. Preview forms remain disabled. The graph stores manually chosen edges with `manualNavigation`, preserving them on revisits and preventing single-edge auto-navigation or undo skipping at those decision points. Ordinary prose choices keep their existing replacement behavior. Optional `data-reading-marker-targets` JSON maps numeric source codes to positive integer section IDs; unmapped codes do not navigate. `data-reading-marker-error` supplies a localized validation message, cleared when the player edits the input.
+Map-driven passages can include a bounded `data-reading-map-entry` form. `reading/map-entry.js` binds it in desktop and mobile readers; players choose connected markers from the original map rather than generated adjacency. Submission requires the same active book, session, run, section and render. Preview forms remain disabled. The graph stores manually chosen edges with `manualNavigation`, preserving them on revisits and preventing single-edge auto-navigation or undo skipping at those decision points. Ordinary prose choices keep their existing replacement behavior. Optional `data-reading-marker-targets` JSON maps numeric source codes to positive integer section IDs; unmapped codes do not navigate. `data-reading-marker-list` accepts an explicit JSON array of printed letter/number markers, including mixed formats such as `S1` and `1A`; input is normalized to uppercase and unlisted markers never navigate. `data-reading-marker-error` supplies a localized validation message, cleared when the player edits the input.
 
 Paid unlock controls use the access response's current balance and affordability. The shared gate listens for authenticated `coins-balance-changed` events, refreshes on focus/visibility return, and rechecks access before a paid purchase. Shop spending and paid unlocks push player-badge updates for other tabs. The purchase transaction independently checks the current balance before deducting coins. Both unlock actions are disabled when funds are insufficient; a zero-cost trial remains available regardless of balance. Detached gates are tracked through a WeakMap, with one set of event listeners and no polling timer.
 
