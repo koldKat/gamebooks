@@ -5153,6 +5153,47 @@ for(const id of BOOK_IDS){
       saved=JSON.stringify(data());el('newCharacter').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(data())===saved,'Dzurlord stale confirmation ignored');app.setCurrentBookId(1296);button.click();
     }finally{Math.random=random;}
   }
+  if(id===1437){
+    const el=key=>document.getElementById('sim1437-'+key),data=()=>app.currentPlaythrough().sim1437;
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1437/definition.js');
+    const run=app.currentPlaythrough();run.inventory={sentinel:['shared-item']};run.equipment={sentinel:'shared-slot'};run.sim1436={sentinel:true};
+    const preserved=JSON.stringify([run.inventory,run.equipment,run.sim1436]);
+    const choose=section=>{el('context').value=String(section);el('context').dispatchEvent(new Event('change'));};
+    const cancel=()=>{if(data()?.fight?.status==='active'){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    check(getRoster().length===37&&requestedRosters.has(1437),'Weathertop DB roster and variants loaded');
+    check(data()===undefined,'Weathertop render does not initialize saved state');
+    choose('manual');el('manualDice').checked=true;
+    const weak={ob:0,db:0,endurance:1,armour:'none',kind:'normal'};
+    for(const field of el('opponents').querySelectorAll('[data-stat]'))field.value=weak[field.dataset.stat];
+    el('playerPick').value='8';el('enemyPick').value='2';el('start').click();el('step').click();
+    check(data().fight.status==='win'&&data().history.length===1,'Weathertop custom fight works');
+    for(const entry of getRoster()){
+      choose(entry.section);el('damage').value='0';el('endurance').value='1000';el('saveHero').click();el('checkPick').value='7';el('playerPick').value='2';el('enemyPick').value='2';el('start').click();
+      check(data().fight.status==='active'&&data().fight.enemies.length===entry.enemies.length,'Weathertop preset '+entry.section);
+      el('step').click();check(data().fight.round===1,'Weathertop round '+entry.section);cancel();
+    }
+    choose('178');el('checkPick').value='6';el('start').click();check(data().fight.status==='avoided'&&data().fight.destination==='384','Weathertop friendly dog branch');
+    choose('199');el('openingAction').value='immediateEscape';el('checkPick').value='4';el('opening').click();check(data().fight.status==='avoided'&&data().fight.destination==='337','Weathertop immediate fleeing low range');
+    el('checkPick').value='5';el('opening').click();check(data().fight.destination==='297','Weathertop immediate fleeing high range');
+    choose('446');el('openingAction').value='leave';el('opening').click();check(data().fight.status==='avoided'&&data().fight.destination==='147','Weathertop may leave before fighting');
+    choose('547');check(el('openingAction').value==='escape','Weathertop unavailable previous action resets');el('openingAction').value='surrender';el('opening').click();check(data().fight.status==='avoided'&&data().fight.destination==='483','Weathertop may surrender before fighting');
+    choose('230');el('useSupport').checked=true;el('supportPick').value='8';el('damage').value='0';el('start').click();el('step').click();el('step').click();
+    check(data().fight.heroAttacks===2&&data().log.some(e=>e.type==='attack'&&e.who==='support'),'Weathertop Ham attack through panel');cancel();
+    choose('382');el('keepRange').checked=true;el('start').click();check(!el('keepRange').checked&&el('keepRange').disabled,'Weathertop no escape also blocks range evasion');
+    for(let i=0;i<3;i++)el('step').click();check(data().fight.status==='loss'&&data().fight.destination==='158'&&el('destination').textContent.includes('158'),'Weathertop three attack source ending');
+    choose('393');el('start').click();check(data().fight.enemies.length===1,'Weathertop remaining Haradrim');cancel();
+    choose('manual');el('item-mithrilBelt').checked=true;el('item-enchantedCloak').checked=true;el('saveHero').click();check(data().hero.itemBonuses.ob===1&&data().hero.itemBonuses.db===2&&data().hero.ob===0,'Weathertop modifiers leave base stats alone');
+    el('item-mithrilBelt').checked=false;el('item-enchantedCloak').checked=false;
+    el('mode').value='advanced';el('mode').dispatchEvent(new Event('change'));el('known-calm').checked=true;el('damage').value='0';el('saveHero').click();
+    for(const section of ['240','462']){choose(section);el('start').click();check([...el('rangedAction').options].find(o=>o.value==='calm').disabled,'Weathertop invalid Calm target '+section);cancel();}
+    choose('542');el('spellPick').value='7';el('checkPick').value='8';el('start').click();el('rangedAction').value='calm';el('step').click();check(data().fight.index===1&&data().fight.status==='active','Weathertop Calm affects one foe');el('step').click();check(data().fight.status==='calmed','Weathertop Calm group ends without combat victory');
+    choose('519');el('openingAction').value='steal';const beforeSteal=JSON.stringify(data());el('opening').click();check(JSON.stringify(data())===beforeSteal,'Weathertop forbidden steal does not change state');
+    document.getElementById('alert-ok')?.click();
+    choose('manual');el('known-calm').checked=false;el('start').click();const inFlight=JSON.stringify(data());module.render();check(JSON.stringify(data())===inFlight,'Weathertop render preserves fight');
+    el('cancel').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(data()??run.sim1437)===inFlight,'Weathertop stale cancel ignored');app.setCurrentBookId(1437);button.click();cancel();
+    const original=JSON.stringify(data());app.state.playthroughs=[{path:[1],startedAt:2}];app.state.activePtIndex=0;el('start').click();check(app.currentPlaythrough().sim1437===undefined,'Weathertop stale controls cannot modify new run');app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Weathertop old run retained');
+    check(JSON.stringify([run.inventory,run.equipment,run.sim1436])===preserved,'Weathertop shared inventory/equipment/other simulator preserved');
+  }
   if(id===1436){
     const el=key=>document.getElementById('sim1436-'+key),data=()=>app.currentPlaythrough().sim1436;
     const {getRoster}=await import('REPO/public/js/battlesim/books/1436/definition.js');

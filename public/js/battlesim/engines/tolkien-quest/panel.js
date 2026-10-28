@@ -1,4 +1,4 @@
-import {character,beginFight,step as performStep,applyLuck,acceptNumbers,luckAvailable,openingAction,resolveCalm,WEAPONS,ARMOUR,MISSILES,SPELLS} from './core.js';
+import {character,beginFight,step as performStep,applyLuck,acceptNumbers,luckAvailable,openingAction,resolveCalm,resolveOutcome,WEAPONS,ARMOUR,MISSILES,SPELLS} from './core.js';
 import {createOpponentEditor} from '../../opponents.js';
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -13,7 +13,9 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     const raw=el(key).value.trim(),n=Number(raw);if(!raw||!Number.isSafeInteger(n)||n<min||n>max)throw new RangeError('Invalid number');return n;
   };
   function readHero(previous){
-    return character({...previous,...Object.fromEntries(['ob','db','missileOb','running','trickery','magic','endurance','damage'].map(k=>[k,numeric(k,['endurance','damage'].includes(k)?k==='endurance'?1:0:-1000)])),weapon:el('weapon').value,armour:el('armour').value,missile:el('missile').value,shield:el('shield').checked,elvenChain:el('elvenChain').checked,orcSlayer:el('orcSlayer').checked,deviceCharges:numeric('deviceCharges',0,2),spells:Object.keys(SPELLS).filter(k=>el('known-'+k).checked)});
+    const itemBonuses={};
+    for(const item of definition.itemModifiers??[])if(el('item-'+item.key).checked)for(const [key,value]of Object.entries(item.bonuses))itemBonuses[key]=(itemBonuses[key]??0)+value;
+    return character({...previous,...Object.fromEntries(['ob','db','missileOb','running','trickery','magic','endurance','damage'].map(k=>[k,numeric(k,['endurance','damage'].includes(k)?k==='endurance'?1:0:-1000)])),itemBonuses,weapon:el('weapon').value,armour:el('armour').value,missile:el('missile').value,shield:el('shield').checked,elvenChain:el('elvenChain').checked,orcSlayer:el('orcSlayer').checked,deviceCharges:numeric('deviceCharges',0,2),spells:Object.keys(SPELLS).filter(k=>el('known-'+k).checked)});
   }
   function snapshot(d){
     d.setup=Object.fromEntries([...el('setup').querySelectorAll('input,select')].filter(field=>field.id&&!field.closest('.bsim-opponent-editor')).map(field=>[field.id,field.type==='checkbox'?field.checked:field.value]));
@@ -26,6 +28,7 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
       const d=structuredClone(before??{hero:null,setup:{},fight:null,history:[],log:[]}),previousFight=d.fight;update(d);
       if(run!==getRun()||Number(getBookId())!==definition.id||data()!==before)return;
       if(d.fight&&d.fight!==previousFight){
+        d.fight=resolveOutcome(d.fight,dice());
         d.hero=structuredClone(d.fight.hero);d.log.push(...d.fight.events);d.fight.events=[];
         if(!busy(d)&&!luckAvailable(d.fight)&&!d.fight.recorded){
           d.fight.recorded=true;d.history.push({enemy:d.encounter,outcome:d.fight.status,ts:Math.max(Date.now(),(d.history.at(-1)?.ts??0)+1)});
@@ -37,13 +40,13 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
   }
   function dice(){
     if(!(busy(data())?data().manualDice:el('manualDice').checked))return undefined;
-    return role=>numeric(({player:'playerPick',enemy:'enemyPick',spell:'spellPick',damage1:'damagePick1',damage2:'damagePick2'})[role]??'checkPick',2,12);
+    return role=>numeric(({player:'playerPick',enemy:'enemyPick',support:'supportPick',spell:'spellPick',damage1:'damagePick1',damage2:'damagePick2'})[role]??'checkPick',2,12);
   }
   function preset(){return getRoster().find(e=>String(e.section)===el('context').value);}
-  function start(d){
+  function start(d,options={}){
     if(locked(d))return;snapshot(d);d.hero=readHero(d.hero);d.manualDice=el('manualDice').checked;
     const entry=preset();d.encounter=entry?.label??opponents.read().map(e=>e.displayName||tk('opponent')).join(' / ');
-    d.fight=beginFight(d.hero,opponents.read(),{mode:el('mode').value,equipmentModifiers:el('equipmentModifiers').checked,formula:el('formula').checked,unmodifiedTwo:el('unmodifiedTwo').checked,surprised:el('surprised').checked,enemyUnaware:el('enemyUnaware').checked,useAlly:el('useAlly').checked,rules:entry?.rules},dice());
+    d.fight=beginFight(d.hero,opponents.read(),{mode:el('mode').value,equipmentModifiers:el('equipmentModifiers').checked,formula:el('formula').checked,unmodifiedTwo:el('unmodifiedTwo').checked,surprised:el('surprised').checked,enemyUnaware:el('enemyUnaware').checked,useAlly:el('useAlly').checked,useSupport:el('useSupport').checked,rules:entry?.rules,...options},dice());
     if(d.opening?.firstAttackObBonus)d.fight.effects.sneakAttack=d.opening.firstAttackObBonus;
     if(d.opening?.surprised){d.fight.surprised=true;d.fight.stage='melee';}
     delete d.opening;d.log.push({type:'start',name:d.encounter});
@@ -96,13 +99,35 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     const selected=el('luckPick').value;el('luckPick').innerHTML=(pendingLuck?f.lastAction.rolls:[]).map((r,i)=>'<option value="'+i+'">'+escape(tk(r.role)+': '+r.raw)+'</option>').join('');
     if([...el('luckPick').options].some(o=>o.value===selected))el('luckPick').value=selected;
     el('useAlly').disabled=setupLocked||!d?.hero?.charmedAnimal;
+    const rules=active?f.rules:preset()?.rules??{};
+    el('useSupport').closest('label').hidden=!rules.supportAttack;
+    el('supportPick').closest('label').hidden=!rules.supportAttack;
+    el('keepRange').disabled=Boolean(rules.cannotEscape);
+    if(rules.cannotEscape)el('keepRange').checked=false;
+    for(const option of el('meleeAction').options)option.disabled=Boolean(rules.cannotEscape&&option.value!=='attack');
+    if(el('meleeAction').selectedOptions[0]?.disabled)el('meleeAction').value='attack';
+    for(const option of el('openingAction').options){
+      option.hidden=option.value==='immediateEscape'&&!rules.immediateEscape;
+      option.disabled=Boolean(rules.cannotEscape||(option.value==='immediateEscape'&&!rules.immediateEscape)||(option.value==='steal'&&rules.prohibitedActions?.includes('steal-and-take')));
+      const exit=({leave:'leaveBeforeFight',surrender:'preFightSurrender'})[option.value];
+      if(exit)option.hidden=option.disabled=!rules[exit];
+    }
+    if(el('openingAction').selectedOptions[0]?.hidden||el('openingAction').selectedOptions[0]?.disabled){
+      const available=[...el('openingAction').options].find(option=>!option.hidden&&!option.disabled);
+      if(available)el('openingAction').value=available.value;
+    }
+    el('opening').disabled=setupLocked||Boolean(rules.cannotEscape);
     el('speed').disabled=!active||f.mode!=='advanced'||!f.hero.spells.includes('speed')||Boolean(f.allyActive);
     if(active)for(const option of el('rangedAction').options){
       option.disabled=option.value==='shoot'?(f.hero.missile==='none'||!f.missileAvailable):option.value==='skip'?false:!f.hero.spells.includes(option.value)||(['shield','strength'].includes(option.value)&&f.round!==0);
+      const target=f.enemies[f.index];
+      if(option.value==='calm'&&(['undead','monster'].includes(target.kind)||(target.combinedCount??1)>1))option.disabled=true;
+      if(option.value==='charm'&&(target.kind!=='animal'||(target.combinedCount??1)>1))option.disabled=true;
     }
     if(el('rangedAction').selectedOptions[0]?.disabled)el('rangedAction').value='skip';
     const enemy=f?.enemies[f.index];
     el('status').textContent=f?tk('status.'+f.status)+(active?' | '+tk('fightState',{round:f.round+1,damage:f.hero.damage,endurance:f.hero.endurance,name:enemy?.name,enemyDamage:enemy?.damage,enemyEndurance:enemy?.endurance}):' | '+tk('heroState',{damage:f.hero.damage,endurance:f.hero.endurance})):tk('ready');
+    el('destination').textContent=f?.destination?tk('nextPassage',{section:f.destination}):'';
     if(f?.allyActive)el('status').textContent+=' | '+tk('allyState',f.ally);
     el('history').innerHTML=(d?.history??[]).slice(-30).reverse().map(e=>'<div>'+escape(e.enemy)+' | '+escape(tk('status.'+e.outcome))+'</div>').join('');
     el('log').innerHTML=(d?.log??[]).slice().reverse().map(e=>'<div>'+escape(eventText(e))+'</div>').join('');
@@ -117,8 +142,13 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     const overlay=document.createElement('div');overlay.id=id+'-overlay';overlay.className='inv-overlay';
     overlay.innerHTML=`<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(tk('title'))}</span><button type="button" class="inv-close-btn" id="${id}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><div id="${id}-setup"><p>${escape(tk('note'))}</p>${select('mode',['basic','advanced'])}${check('equipmentModifiers')}<details open><summary>${escape(tk('hero'))}</summary>${['ob','db','missileOb','running','trickery','magic'].map(k=>input(k)).join('')}${input('endurance',30,1)}${input('damage',0,0)}</details>${check('surprised')}${check('enemyUnaware')}${check('useAlly')}<div id="${id}-advanced"><details><summary>${escape(tk('modifiers'))}</summary><p>${escape(tk('modifierNote'))}</p>${select('weapon',Object.keys(WEAPONS))}${select('armour',Object.keys(ARMOUR))}${select('missile',Object.keys(MISSILES))}${check('shield')}${check('elvenChain')}${check('orcSlayer')}</details><details id="${id}-spellSetup"><summary>${escape(tk('learnedSpells'))}</summary>${Object.keys(SPELLS).map(k=>check('known-'+k)).join('')}${input('deviceCharges',0,0,2)}<p>${escape(tk('otherSpells'))}</p></details></div>${check('formula')}${check('unmodifiedTwo')}<label class="inv-edit-row"><span>${escape(tk('context'))}</span><select class="inv-edit-input" id="${id}-context"><option value="manual">${escape(tk('custom'))}</option>${getRoster().map(e=>`<option value="${escape(e.section)}">${escape(e.label)}</option>`).join('')}</select></label><div id="${id}-opponents"></div>${check('manualDice')}${select('openingAction',['escape','sneakAway','sneakAttack','steal'])}<p>${escape(tk('openingNote'))}</p></div><div class="bsim-btn-row">${button('saveHero')}${button('opening')}${button('start')}${button('cancel')}</div><details id="${id}-dice"><summary>${escape(tk('numbers'))}</summary>${['playerPick','enemyPick','checkPick','spellPick','damagePick1','damagePick2'].map(k=>input(k,7,2,12)).join('')}</details><div id="${id}-ranged">${select('rangedAction',['shoot','skip','firebolt','shield','strength','calm','charm'])}</div><div id="${id}-approach">${check('keepRange')}</div><div id="${id}-melee">${select('meleeAction',['attack','escape','runPast'])}</div>${check('speed')}${button('step')}<div id="${id}-luck"><label class="inv-edit-row"><span>${escape(tk('luckPick'))}</span><select class="inv-edit-input" id="${id}-luckPick"></select></label><div class="bsim-btn-row">${button('luckCast')}${button('keepNumbers')}</div></div><div id="${id}-calm"><p>${escape(tk('calmNote'))}</p><div class="bsim-btn-row">${button('calmWithdraw')}${button('calmContinue')}</div></div><p id="${id}-animal"></p></div><div class="bsim-col bsim-col-right"><div class="bsim-status" id="${id}-status"></div><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${id}-history"></div></details><div class="bsim-log" id="${id}-log"></div></div></div></div>`;
     document.body.appendChild(overlay);
+    el('setup').insertAdjacentHTML('beforeend',check('useSupport')+(definition.itemModifiers??[]).map(item=>check('item-'+item.key)).join(''));
+    el('dice').insertAdjacentHTML('beforeend',input('supportPick',7,2,12));
+    el('status').insertAdjacentHTML('afterend','<p id="'+id+'-destination"></p>');
+    el('openingAction').insertAdjacentHTML('beforeend','<option value="immediateEscape">'+escape(tk('openingAction.immediateEscape'))+'</option>');
+    for(const action of ['leave','surrender'])el('openingAction').insertAdjacentHTML('beforeend','<option value="'+action+'">'+escape(tk('openingAction.'+action))+'</option>');
     const presets=[...new Map(getRoster().flatMap(e=>e.enemies).map(e=>[e.key,e])).values()];
-    opponents=createOpponentEditor({document,id,t,fields:[{key:'ob',label:tk('enemyOb'),min:-1000},{key:'db',label:tk('enemyDb'),min:-1000},{key:'endurance',label:tk('enemyEndurance'),min:1},{key:'armour',label:tk('enemyArmour'),options:Object.keys(ARMOUR).map(value=>({value,label:tk('armour.'+value)}))},{key:'kind',label:tk('enemyKind'),options:['normal','animal','orc','undead'].map(value=>({value,label:tk('kind.'+value)}))}],presets});el('opponents').appendChild(opponents.element);
+    opponents=createOpponentEditor({document,id,t,fields:[{key:'ob',label:tk('enemyOb'),min:-1000},{key:'db',label:tk('enemyDb'),min:-1000},{key:'endurance',label:tk('enemyEndurance'),min:1},{key:'armour',label:tk('enemyArmour'),options:Object.keys(ARMOUR).map(value=>({value,label:tk('armour.'+value)}))},{key:'kind',label:tk('enemyKind'),options:['normal','animal','orc','undead','monster'].map(value=>({value,label:tk('kind.'+value)}))}],presets});el('opponents').appendChild(opponents.element);
     const launch=document.createElement('button');launch.id=id+'-btn';launch.textContent=t('battlesim.title');launch.style.display='none';getButtonRow().appendChild(launch);launch.addEventListener('click',open);
     el('close').addEventListener('click',close);let backdrop=false;
     overlay.addEventListener('mousedown',e=>{backdrop=e.target===overlay;});overlay.addEventListener('click',e=>{if(backdrop&&e.target===overlay)close();});overlay.addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();close();}});
@@ -127,7 +157,7 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     el('context').addEventListener('change',chooseContext);
     el('saveHero').addEventListener('click',()=>change(d=>{if(locked(d))return;d.hero=readHero(d.hero);d.fight=null;snapshot(d);d.log.push({type:'saved'});}));
     el('start').addEventListener('click',()=>change(start));el('step').addEventListener('click',()=>change(step));
-    el('opening').addEventListener('click',()=>change(d=>{if(locked(d))return;d.hero=readHero(d.hero);snapshot(d);d.opening=openingAction(d.hero,el('openingAction').value,{mode:el('mode').value,equipmentModifiers:el('equipmentModifiers').checked,unmodifiedTwo:el('unmodifiedTwo').checked},dice());d.log.push({type:'opening',...d.opening});}));
+    el('opening').addEventListener('click',()=>change(d=>{if(locked(d))return;const action=el('openingAction').value;if(action==='immediateEscape'){start(d,{immediateEscape:true});return;}const exit=({leave:'leaveBeforeFight',surrender:'preFightSurrender'})[action];if(exit){start(d,{sourceExit:exit});return;}d.hero=readHero(d.hero);snapshot(d);const rules=preset()?.rules??{};d.opening=openingAction(d.hero,action,{mode:el('mode').value,equipmentModifiers:el('equipmentModifiers').checked,unmodifiedTwo:el('unmodifiedTwo').checked,rules,enemyUnaware:rules.foeAware===true?false:el('enemyUnaware').checked||Boolean(rules.enemyUnaware)},dice());d.log.push({type:'opening',...d.opening});}));
     el('cancel').addEventListener('click',()=>{const run=getRun(),fight=data()?.fight;if(!busy(data()))return;showConfirm(tk('cancelConfirm'),()=>{if(run===getRun()&&Number(getBookId())===definition.id&&data()?.fight===fight)change(d=>{d.fight={...d.fight,status:'cancelled',lastAction:{used:true,rolls:[]}};});});});
     el('luckCast').addEventListener('click',()=>change(d=>{d.fight=applyLuck(d.fight,numeric('luckPick',0,20),dice());}));el('keepNumbers').addEventListener('click',()=>change(d=>{d.fight=acceptNumbers(d.fight);}));
     el('calmWithdraw').addEventListener('click',()=>change(d=>{d.fight=resolveCalm(d.fight,true);}));el('calmContinue').addEventListener('click',()=>change(d=>{d.fight=resolveCalm(d.fight,false,dice());}));render();

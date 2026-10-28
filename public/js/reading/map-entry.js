@@ -50,7 +50,9 @@ export function bindReadingMapEntry(container, { canNavigate, onNavigate }) {
           if (!grid || !Number.isSafeInteger(grid.rows) || grid.rows < 1 || grid.rows > 999999
               || typeof grid.columns !== 'string' || !/^[A-Z]{1,26}$/.test(grid.columns)
               || new Set(grid.columns).size !== grid.columns.length) return;
-          if (!coordinate || Number(coordinate[1]) > grid.rows || !grid.columns.includes(coordinate[2])) {
+          if (!coordinate || Number(coordinate[1]) > grid.rows || !grid.columns.includes(coordinate[2])
+              || (grid.markers !== undefined && (!Array.isArray(grid.markers)
+                || !grid.markers.includes(`${coordinate[1]}${coordinate[2]}`)))) {
             input.setCustomValidity(form.dataset.readingMarkerError || '');
             form.reportValidity();
             return;

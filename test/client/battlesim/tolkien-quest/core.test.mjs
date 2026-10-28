@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {attackResult,character,beginFight,round,missileRound,approach,openingAction,resolveCalm,modifiers,step,applyLuck,acceptNumbers,luckAvailable} from '../../../../public/js/battlesim/engines/tolkien-quest/core.js';
+import {attackResult,character,beginFight,round,missileRound,approach,openingAction,resolveCalm,resolveOutcome,modifiers,step,applyLuck,acceptNumbers,luckAvailable} from '../../../../public/js/battlesim/engines/tolkien-quest/core.js';
 const hero=extra=>character({endurance:30,...extra});
 const enemy=extra=>({name:'Custom foe',ob:0,db:0,endurance:20,kind:'normal',...extra});
 const rolls=(...values)=>()=>{assert.ok(values.length,'unexpected roll');return values.shift();};
@@ -111,4 +111,64 @@ test('Luck respects missile-only spell timing, one spell per opportunity and fre
   assert.equal(luckAvailable(step(advanced({spells:['luck','firebolt']}),'firebolt',rolls(7,2,2))),false);
   const free=step(advanced({missile:'bow',spells:['luck'],deviceCharges:1}),'shoot',rolls(2));const f=applyLuck(free,0,rolls(7,8));assert.equal(f.hero.damage,0);assert.equal(f.hero.deviceCharges,0);
   assert.throws(()=>applyLuck(free,2,rolls()),RangeError);
+});
+
+test('a companion attacks on alternate hero attacks using only its fixed source bonus',()=>{
+  const options={equipmentModifiers:true,useSupport:true,rules:{supportAttack:{ob:1,everyHeroAttacks:2}}};
+  let f=melee({ob:0,weapon:'greatsword'}, {endurance:100},options);
+  f=round(f,'attack',rolls(7,2));assert.equal(f.heroAttacks,1);assert.equal(f.events.some(e=>e.who==='support'),false);
+  f.effects.strength=true;f=round(f,'attack',rolls(7,7,2));
+  const support=f.events.find(e=>e.who==='support');assert.equal(support.damage,4);assert.deepEqual(f.events.map(e=>e.who),['player','support','enemy']);
+  assert.equal(f.hero.ob,0);assert.equal(f.hero.weapon,'greatsword');
+  const without=round(round(melee({}, {endurance:100},{rules:options.rules}),'attack',rolls(2,2)),'attack',rolls(2,2));assert.equal(without.events.some(e=>e.who==='support'),false);
+});
+
+test('attack limits count hero attacks, allow a final attack victory, and forbid escape paths',()=>{
+  const rules={heroAttackLimit:3,cannotEscape:true,limitFailure:'158'};
+  let f=melee({}, {endurance:100},{rules});
+  for(let i=0;i<2;i++)f=round(f,'attack',rolls(2,2));
+  f=round(f,'attack',rolls(2));assert.equal(f.status,'loss');assert.equal(f.destination,'158');assert.equal(f.heroAttacks,3);
+  f=melee({}, {endurance:3},{rules});f=round(f,'attack',rolls(2,2));f=round(f,'attack',rolls(2,2));f=round(f,'attack',rolls(8));assert.equal(f.status,'win');
+  assert.throws(()=>round(melee({}, {},{rules}),'escape',rolls()),/Cannot escape/);
+  assert.throws(()=>round(engage(advanced({}, {},{rules})),'runPast',rolls()),/Cannot escape/);
+  f=missileRound(advanced({}, {},{rules}),'skip');assert.throws(()=>approach(f,true,rolls()),/Cannot escape/);
+  f=advanced({spells:['firebolt'],magic:0},{endurance:100},{rules:{heroAttackLimit:1,limitFailure:'158'}});f=missileRound(f,'firebolt',rolls(7,2,2));assert.equal(f.status,'loss');assert.equal(f.heroAttacks,1);
+});
+
+test('entry and item modifiers affect combat without changing saved base character stats',()=>{
+  const h=hero({ob:2,db:1,running:4,itemBonuses:{ob:1,db:1,trickery:1}}),saved=JSON.stringify(h);
+  const f=beginFight(h,[enemy()],{rules:{heroObBonus:-1,heroDbBonus:-1,meleeObBonus:1,runningBonus:-2}});
+  assert.equal(modifiers(f).ob,3);assert.equal(modifiers(f).db,1);assert.equal(modifiers(f).running,2);assert.equal(modifiers(f).trickery,1);assert.equal(JSON.stringify(h),saved);
+  assert.throws(()=>character({itemBonuses:{ob:NaN}}));
+});
+
+test('source preliminary checks avoid fights without awarding combat wins',()=>{
+  const initial={initialCheck:{ranges:[[2,6,'384']]}};
+  const f=beginFight(hero(),[enemy()],{rules:initial},rolls(6));assert.equal(f.status,'avoided');assert.equal(f.destination,'384');
+  assert.equal(beginFight(hero(),[enemy()],{rules:initial},rolls(7)).status,'active');
+  const rules={immediateEscape:{failureRange:[2,4],failure:'337',successRange:[5,12],success:'297'}};
+  assert.equal(beginFight(hero(),[enemy()],{rules,immediateEscape:true},rolls(4)).destination,'337');
+  assert.equal(beginFight(hero({running:1}),[enemy()],{rules,immediateEscape:true},rolls(4)).destination,'297');
+  assert.equal(beginFight(hero({running:-10}),[enemy()],{rules,immediateEscape:true},rolls(2)).destination,'337');
+  assert.equal(beginFight(hero(),[enemy()],{rules:{leaveBeforeFight:'147'},sourceExit:'leaveBeforeFight'},rolls()).destination,'147');
+  assert.equal(beginFight(hero(),[enemy()],{rules:{preFightSurrender:'483'},sourceExit:'preFightSurrender'},rolls()).status,'avoided');
+  assert.throws(()=>beginFight(hero(),[enemy()],{sourceExit:'leaveBeforeFight'},rolls()),/No source exit/);
+  assert.equal(beginFight(hero(),[enemy()],{enemyUnaware:true,rules:{foeAware:true}},rolls()).enemyUnaware,false);
+  assert.throws(()=>openingAction(hero(),'escape',{rules:{cannotEscape:true}},rolls()),/Cannot escape/);
+  assert.throws(()=>openingAction(hero(),'steal',{enemyUnaware:true,rules:{prohibitedActions:['steal-and-take']}},rolls()),/Cannot steal/);
+  assert.throws(()=>openingAction(hero(),'sneakAttack',{enemyUnaware:false},rolls()),/must be unaware/);
+});
+
+test('unambiguous Calm removes only one foe and never turns mixed avoidance into a combat win',()=>{
+  const f=beginFight(hero({spells:['calm']}),[enemy({endurance:1}),enemy({endurance:1})],{mode:'advanced',rules:{calmUnambiguous:true}});
+  const calm=missileRound(f,'calm',rolls(7,8));assert.equal(calm.index,1);assert.equal(calm.stage,'missile');assert.equal(calm.status,'active');assert.equal(calm.manualEffect,undefined);
+  const won=round(approach(missileRound(calm,'skip'),false),'attack',rolls(8));assert.equal(won.status,'calmed');
+  for(const target of [{kind:'monster'},{kind:'undead'},{combinedCount:4}])assert.throws(()=>missileRound(advanced({spells:['calm']},target),'calm',rolls()),/one normal/);
+});
+
+test('outcome branches resolve once after pending Luck and preserve the source fight',()=>{
+  const f={...melee(),status:'loss',rules:{defeatPickRanges:[[2,4,'198'],[5,6,'369'],[7,12,'432']]}};
+  const saved=JSON.stringify(f),resolved=resolveOutcome(f,rolls(6));assert.equal(resolved.destination,'369');assert.equal(JSON.stringify(f),saved);assert.equal(resolveOutcome(resolved,rolls()),resolved);
+  const pending={...f,lastAction:{used:false,rolls:[{role:'player',raw:2}]}};assert.equal(resolveOutcome(pending,rolls()),pending);
+  assert.equal(resolveOutcome({...melee(),status:'win',rules:{victory:'482'}},rolls()).destination,'482');
 });

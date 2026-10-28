@@ -181,3 +181,31 @@ test('invalid grids and stale contexts cannot navigate or fall back to numeric m
   f.submit();
   assert.deepEqual(visits, []);
 });
+
+test('irregular maps accept their printed locations without inventing missing cells', () => {
+  const f = fixture();
+  const markers = [...Array.from({ length: 15 }, (_, i) => [...'ABCDEFG'].map(c => `${i + 1}${c}`)).flat(),
+    ...'30A 30B 30C 30D 31A 31B 31C 32A 32B 32C 33A 33B 33C 33D 34A 34B 34C 35A 35B 35C 35D 36A 36B 36C 36D 37A 37B 37C 37D 38A'.split(' ')];
+  f.form.dataset = { readingMarkerGrid: JSON.stringify({ rows: 38, columns: 'ABCDEFG', markers }), readingMarkerError: 'Check the map.' };
+  const visits = [];
+  let validation = '';
+  f.input.setCustomValidity = value => { validation = value; };
+  bindReadingMapEntry(f.container, { canNavigate: () => true, onNavigate: n => visits.push(n) });
+  for (const marker of markers) {
+    f.input.value = marker.toLowerCase();
+    f.submit();
+  }
+  assert.deepEqual(visits, markers);
+  for (const marker of ['16A', '29A', '30E', '31D', '32D', '34D', '38B']) {
+    f.input.value = marker;
+    f.submit();
+    assert.equal(validation, 'Check the map.');
+  }
+  assert.equal(visits.length, 135);
+  for (const malformed of [null, '1A', { '1A': true }, []]) {
+    f.form.dataset.readingMarkerGrid = JSON.stringify({ rows: 38, columns: 'ABCDEFG', markers: malformed });
+    f.input.value = '1A';
+    f.submit();
+  }
+  assert.equal(visits.length, 135);
+});
