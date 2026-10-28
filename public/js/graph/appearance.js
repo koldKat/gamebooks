@@ -1,5 +1,6 @@
 import { COLORS } from '../core/constants.js';
-import { state, viewingPt, currentPlaythrough, isTerminal, parseSecId } from '../core/state.js';
+import { state, viewingPt, currentPlaythrough, currentBookId, isTerminal, parseSecId } from '../core/state.js';
+import { sectionLabel } from '../core/section-labels.js';
 import { t } from '../i18n.js';
 import { graphRuntime } from './runtime.js';
 import { _effectiveStartSec } from './helpers.js';
@@ -80,24 +81,25 @@ export function nodeColor(secId) {
 export function nodeLabel(secId) {
   const displayPt = currentPlaythrough() || viewingPt;
   const startSec  = _effectiveStartSec(displayPt);
-  return secId === startSec ? `${secId}\nSTART` : String(secId);
+  const label = String(sectionLabel(secId, currentBookId));
+  return secId === startSec ? `${label}\nSTART` : label;
 }
 
 export function nodeTitle(secId, portals) {
   const data = state.graph[secId];
   const lines = [];
   if (!data) {
-    lines.push(t('node.unmapped', { n: secId }));
+    lines.push(t('node.unmapped', { n: sectionLabel(secId, currentBookId) }));
   } else {
     const choices  = data.choices.map(parseSecId);
     const real     = choices.filter(c => !isTerminal(c));
     const hasDeath = choices.includes(-1);
     const hasWin   = choices.includes(0);
     const parts    = [];
-    if (real.length)  parts.push(t('node.goes_to', { list: real.join(', ') }));
+    if (real.length)  parts.push(t('node.goes_to', { list: real.map(c => sectionLabel(c, currentBookId)).join(', ') }));
     if (hasDeath)     parts.push(t('node.can_die'));
     if (hasWin)       parts.push(t('node.can_win'));
-    lines.push(t('node.section', { n: secId, parts: parts.join(' | ') }));
+    lines.push(t('node.section', { n: sectionLabel(secId, currentBookId), parts: parts.join(' | ') }));
     if (data.battle)              lines.push(`Battle: ${t('node.battle')}`);
     if (data.priority === 'high') lines.push(`▲ ${t('ctx.priority.high')}`);
     if (data.priority === 'low')  lines.push(`▼ ${t('ctx.priority.low')}`);

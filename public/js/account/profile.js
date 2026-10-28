@@ -256,7 +256,7 @@ function _renderJobXpSummary(data, displayedXp, visible, displayedRubyEvents) {
   const xp = Math.floor(displayedXp);
   const level = Math.floor((-1 + Math.sqrt(1 + 8 * xp / 1000)) / 2);
   const { levelXp, nextLevelXp } = _xpLevelBounds(xp);
-  for (const prefix of ['books', 'play']) {
+  for (const prefix of ['books', 'play', 'profile']) {
     const wrap = document.getElementById(`${prefix}-job-xp`);
     if (!wrap) continue;
     wrap.hidden = !visible;

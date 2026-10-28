@@ -8,6 +8,7 @@ import {
   isSectionMapped,
 } from '../../js/core/state.js';
 import { canReach, findPathTo } from '../../js/graph.js';
+import { sectionLabel } from '../../js/core/section-labels.js';
 import { showAlert, showConfirm } from '../../js/ui-helpers/confirm.js';
 import { initGraphView, refreshGraph } from './graph-view.js';
 import { openNotebook } from './notebook.js';
@@ -599,7 +600,7 @@ async function _previewSection(sec) {
   if (data.choices?.length) _commitChoices(sec, readingChoices(data, state.graph[sec]?.choices, state.graph[sec]?.manualNavigation));
 
   top.innerHTML = `
-    <p class="m-preview-banner">${t('mobile.preview_banner', { sec })}</p>
+    <p class="m-preview-banner">${t('mobile.preview_banner', { sec: sectionLabel(sec, currentBookId) })}</p>
     ${data.html}
     <p class="m-back-link"><a href="#" id="m-preview-return">${t('mobile.preview_return')}</a></p>`;
   _readingViewReadOnly = true;

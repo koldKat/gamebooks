@@ -71,15 +71,15 @@ export default {
     'modal.edit.title': 'Edit Section {n}',
     'modal.edit.label': 'Choices (comma-separated):',
 
-    'modal.note.title':       'Note \u2014 Section {n}',
+    'modal.note.title':       'Note - Section {n}',
     'modal.note.placeholder': 'e.g. need the brass key to reach this',
 
-    'node.unmapped': 'Section {n} \u2014 not yet mapped',
+    'node.unmapped': 'Section {n} - not yet mapped',
     'node.goes_to':  'goes to: {list}',
     'node.can_die':  'can lose here',
     'node.can_win':  'can win here',
     'node.battle':   'Battle here',
-    'node.section':  'Section {n} \u2014 {parts}',
+    'node.section':  'Section {n} - {parts}',
 
     'party.btn':              'Party',
     'party.btn_partners':     'Party',

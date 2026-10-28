@@ -199,7 +199,13 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  min-width: 0;
+  flex: 1;
 }
+
+.pub-profile-job-xp { max-width: 26rem; }
+.pub-job-xp-title { color: #fff; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pub-job-xp-label { color: #9ca3af; font-size: 0.76rem; }
 
 .pub-profile-username {
   font-size: 1.1rem;

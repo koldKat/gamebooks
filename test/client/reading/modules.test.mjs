@@ -29,7 +29,7 @@ test('reading modules preserve their location, public exports and dependency tar
   const source = readFileSync(moduleUrl, 'utf8');
   const imports = [...source.matchAll(/^import .*from '([^']+)';$/gm)]
     .map(match => fileURLToPath(new URL(match[1], moduleUrl)));
-  assert.deepEqual(imports, ['core/state.js', 'play.js', 'graph.js', 'i18n.js', 'core/util.js', 'reading/liveread-shared.js', 'reading/access.js', 'reading/content.js', 'reading/map-entry.js']
+  assert.deepEqual(imports, ['core/state.js', 'core/section-labels.js', 'play.js', 'graph.js', 'i18n.js', 'core/util.js', 'reading/liveread-shared.js', 'reading/access.js', 'reading/content.js', 'reading/map-entry.js']
     .map(path => fileURLToPath(new URL(path, dir))));
 });
 
@@ -45,7 +45,7 @@ test('mobile keeps existing dependencies and imports only the shared reading mod
     .map(match => new URL(match[1], mobileUrl));
   const desktopImports = imports.filter(url => url.href.startsWith(dir.href));
   assert.deepEqual(desktopImports.map(url => url.href),
-    ['core/state.js', 'graph.js', 'ui-helpers/confirm.js', 'i18n.js', 'reading/liveread-shared.js', 'reading/access.js', 'reading/content.js', 'reading/map-entry.js'].map(path => new URL(path, dir).href));
+    ['core/state.js', 'graph.js', 'core/section-labels.js', 'ui-helpers/confirm.js', 'i18n.js', 'reading/liveread-shared.js', 'reading/access.js', 'reading/content.js', 'reading/map-entry.js'].map(path => new URL(path, dir).href));
   const module = await import(sharedUrl);
   assert.equal(module.terminalHeadingKey(true), 'liveread.victory_heading');
   assert.equal(module.terminalHeadingKey(false), 'liveread.death_heading');

@@ -86,12 +86,26 @@ export function renderPublicProfile(profile) {
   const levelSuffix = profile.level != null
     ? ` - <span class="pub-level-badge">${t('feed.hover_level', { n: profile.level })}</span>${profile.title ? ` <span class="pub-level-title">${escapeHtml(profile.title)}</span>` : ''}`
     : '';
+  const jobXp = Number.isSafeInteger(profile.jobXp) ? Math.max(0, profile.jobXp) : null;
+  const jobLevel = jobXp == null ? 0 : Math.floor((Math.sqrt(1 + 8 * jobXp / 1000) - 1) / 2);
+  const jobLevelXp = 1000 * jobLevel * (jobLevel + 1) / 2;
+  const jobNextXp = 1000 * (jobLevel + 1) * (jobLevel + 2) / 2;
+  const jobBar = jobXp == null ? '' : `
+    <div class="job-xp-summary pub-profile-job-xp" aria-label="Job events: level ${jobLevel}, ${jobXp} of ${jobNextXp}">
+      <div class="job-xp-level-row">
+        <span class="job-xp-level">Job Lvl ${jobLevel}</span>
+        <span class="pub-job-xp-title">${escapeHtml(t('job.title.' + Math.min(jobLevel, 20)))}</span>
+      </div>
+      <div class="job-xp-bar"><div style="width:${100 * (jobXp - jobLevelXp) / (jobNextXp - jobLevelXp)}%"></div></div>
+      <div class="job-xp-sub-row"><span class="pub-job-xp-label"><span class="job-xp-val">${jobXp.toLocaleString()} EV</span> · ${(jobNextXp - jobXp).toLocaleString()} to next LVL</span></div>
+    </div>`;
 
   let html = `
     <div class="pub-profile-header">
       ${avatarHtml}
       <div class="pub-profile-info">
         <div class="pub-profile-username">${escapeHtml(_dn)}${_hooks.adminBadge?.(profile.username) ?? ''}${_hooks.authorBadge?.(profile.username) ?? ''}${_hooks.contributorBadge?.(profile.username) ?? ''}${_hooks.moderatorBadge?.(profile.username) ?? ''}${_hooks.squireBadge?.(profile.username) ?? ''}${levelSuffix}</div>
+        ${jobBar}
         <div class="pub-profile-stats">
           <span class="pub-stat"><span class="pub-stat-val">${profile.totalBooks}</span> ${t('pub.stat.books_suffix')}${profile.createdBooks > 0 ? ` <span style="color:#6b7280;font-size:0.78em">(<span style="color:#60a5fa;font-weight:700">${profile.createdBooks}</span> ${t('pub.stat.created_suffix')})</span>` : ''}</span>
           <span class="pub-stat"><span class="pub-stat-val">${profile.books.length}</span> ${t('pub.stat.books_played')}</span>

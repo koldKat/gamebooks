@@ -304,6 +304,7 @@ export async function loadState(bookId, { strict = true, isCurrent = () => true,
   // Ensure each playthrough has a charSheet
   state.playthroughs.forEach(pt => {
     if (!pt.charSheet) pt.charSheet = { fields: [] };
+    if (Array.isArray(pt.path)) pt.path = pt.path.map(parseSecId);
   });
   // Ensure each playthrough has a completedAt timestamp
   state.playthroughs.forEach(pt => {
@@ -313,7 +314,7 @@ export async function loadState(bookId, { strict = true, isCurrent = () => true,
   // Remove self-referential choices
   Object.entries(state.graph).forEach(([sec, data]) => {
     const id = parseSecId(sec);
-    data.choices = data.choices.filter(c => c !== id);
+    data.choices = data.choices.map(parseSecId).filter(c => c !== id);
   });
 
   // Move legacy terminal path entries into result.

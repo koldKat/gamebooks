@@ -2,8 +2,9 @@
 // Use shared positions/colors, deterministic placement, and grid-snapped dragging; physics stays off.
 
 import {
-  state, currentPlaythrough, viewingPt, isTerminal, parseSecId, allDiscoveredSections, saveState,
+  state, currentBookId, currentPlaythrough, viewingPt, isTerminal, parseSecId, allDiscoveredSections, saveState,
 } from '../../js/core/state.js';
+import { sectionLabel } from '../../js/core/section-labels.js';
 import { COLORS } from '../../js/core/constants.js';
 import { t } from '../../js/i18n.js';
 
@@ -324,7 +325,7 @@ export function refreshGraph(centerOnSec) {
   visNodes.clear();
   visNodes.add(sections.map(id => ({
     id: String(id),
-    label: String(id),
+    label: String(sectionLabel(id, currentBookId)),
     x: state.positions[id].x,
     y: state.positions[id].y,
     physics: false,

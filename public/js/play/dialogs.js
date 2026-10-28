@@ -1,6 +1,7 @@
 // dialogs.js - Internal play-screen module; use ../play.js externally.
 
-import { state, saveState, parseSecId, isValidSecId } from '../core/state.js';
+import { state, saveState, parseSecId, isValidSecId, currentBookId } from '../core/state.js';
+import { sectionLabel } from '../core/section-labels.js';
 import { t } from '../i18n.js';
 import { naturalCompare } from '../core/sort.js';
 import { escapeHtml } from '../core/util.js';
@@ -165,7 +166,7 @@ export function showStartPicker(sections) {
   const optionsEl = document.getElementById('start-picker-options');
   optionsEl.innerHTML = sections.map(sec =>
     `<button class="ft-dialog-mode-btn" data-sec="${escapeHtml(String(sec))}">` +
-      escapeHtml(t('runs.section', { n: sec })) +
+      escapeHtml(t('runs.section', { n: sectionLabel(sec, currentBookId) })) +
       (sec === defaultSec ? ` <span class="start-picker-default-tag">(${escapeHtml(t('runs.pick_start_default'))})</span>` : '') +
     `</button>`
   ).join('');

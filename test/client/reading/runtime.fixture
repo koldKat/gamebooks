@@ -47,7 +47,7 @@ const stubData = {
 };
 const mod = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), { context });
 await mod.link(specifier => {
-  if (specifier === './map-entry.js') return new SourceTextModule(readFileSync(new URL('./map-entry.js', pathToFileURL(process.argv[1])), 'utf8'), { context });
+  if (specifier === './map-entry.js' || specifier === '../core/section-labels.js') return new SourceTextModule(readFileSync(new URL(specifier, pathToFileURL(process.argv[1])), 'utf8'), { context });
   if (specifier === './liveread-shared.js') return new SourceTextModule(readFileSync(new URL('./liveread-shared.js', pathToFileURL(process.argv[1])), 'utf8'), { context });
   assert.ok(stubData[specifier], 'unexpected dependency: ' + specifier);
   const values = stubData[specifier];

@@ -14,7 +14,7 @@ const labels = {
   prepare: 'Prepare / roll', resolve: 'Apply damage',
   tableNote: 'After preparing, read the values in the results column. Use the original tables for HITS and DAMAGE. Enter the complete DAMAGE result, including any specified chance values. Normal combat subtracts defence automatically; do not subtract it twice.',
   tableDamage: 'Table damage', damageBonus: 'Damage bonus',
-  tables: 'Original combat tables', 'table.simple': 'Simple system — section 16', 'table.hits': 'Hits — section 18', 'table.damage': 'Damage — section 18',
+  tables: 'Original combat tables', 'table.simple': 'Simple system - section 16', 'table.hits': 'Hits - section 18', 'table.damage': 'Damage - section 18',
   loadingTables: 'Loading tables...', tablesUnavailable: 'Tables could not load. Close and reopen this section to try again.',
   spell: 'Spell', spellNote: 'Use only spells allowed by the book. Enter requirements, energy cost and direct damage from the spell description. Other effects, recovery and terrain changes remain manual.',
   requiredStrength: 'Required strength', energyCost: 'Energy cost', spellDamage: 'Direct damage', cast: 'Cast spell',

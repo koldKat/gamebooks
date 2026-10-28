@@ -12,12 +12,14 @@ import { maxUndos } from './limits.js';
 // Skip focus when rendering will immediately auto-navigate, avoiding competing camera animations.
 export function wouldAutoNav(sec, pt) {
   const secData = state.graph[sec];
-  return !(playContext._suppressAutoNavDepth > 0) && !secData?.manualNavigation && secData?.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt?.path.includes(secData.choices[0]) && !(playContext._owIsOpenWorld && secData.portals?.length);
+  const isEntry = (state.uncountedSections || []).some(entry => String(entry) === String(sec));
+  return !isEntry && !(playContext._suppressAutoNavDepth > 0) && !secData?.manualNavigation && secData?.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt?.path.includes(secData.choices[0]) && !(playContext._owIsOpenWorld && secData.portals?.length);
 }
 
 export function navigate(sec) {
   const pt = currentPlaythrough();
   if (!pt) return;
+  if (String(pt.path.at(-1)) === String(sec)) return;
   if (isTerminal(sec)) {
     endPlaythrough(sec === 0 ? 'success' : 'death');
     return;

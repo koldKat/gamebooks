@@ -1,13 +1,14 @@
 // node-dialogs.js - Internal play-screen module; use ../play.js externally.
 
-import { state, saveState } from '../core/state.js';
+import { state, saveState, currentBookId } from '../core/state.js';
+import { sectionLabel } from '../core/section-labels.js';
 import { t } from '../i18n.js';
 import { render } from './render.js';
 import { handleRecordChoices } from './choices.js';
 
 export function openEditModal(nodeId) {
   const existing = (state.graph[nodeId]?.choices || []).join(', ');
-  document.getElementById('edit-modal-title').textContent = t('modal.edit.title', { n: nodeId });
+  document.getElementById('edit-modal-title').textContent = t('modal.edit.title', { n: sectionLabel(nodeId, currentBookId) });
 
   // Clone input + both buttons to wipe all stale listeners in one pass
   const oldInp    = document.getElementById('edit-choices-input');
@@ -41,7 +42,7 @@ export function closeEditModal() {
 }
 
 export function openNoteModal(nodeId) {
-  document.getElementById('note-modal-title').textContent = t('modal.note.title', { n: nodeId });
+  document.getElementById('note-modal-title').textContent = t('modal.note.title', { n: sectionLabel(nodeId, currentBookId) });
   const pinCb = document.getElementById('note-pin-cb');
 
   const oldInp    = document.getElementById('note-modal-input');

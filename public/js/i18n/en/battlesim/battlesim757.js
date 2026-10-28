@@ -15,7 +15,7 @@ const labels = {
   'spell.238': 'Direct spell (238)', 'spell.244-small': 'Influence minds (244)', 'spell.244-large': 'Ethereal mirage (244)',
   'spell.249-focused': 'Focused magic fist (249)', 'spell.249-ring': 'Circular magic fist (249)', 'spell.259': 'Open a pit (259)',
   'encounter.ritual': 'Bragurg’s ritual duel', 'encounter.attackers': 'Three attackers', 'encounter.duel': 'Erul’s magic duel',
-  'outcome.win': 'Victory', 'outcome.loss': 'Defeat', 'outcome.draw': 'Draw — both fighters fell',
+  'outcome.win': 'Victory', 'outcome.loss': 'Defeat', 'outcome.draw': 'Draw - both fighters fell',
   'roll.player': 'Your table result', 'roll.enemy': 'Enemy table result', 'roll.enemyAttack': 'Enemy attack: table result',
   'roll.playerDefence': 'Your defence: table result', 'roll.playerAttack': 'Your counterattack: table result', 'roll.enemyDefence': 'Enemy defence: table result',
   'comparison.player': 'You', 'comparison.enemy': 'Bragurg', 'comparison.attack': 'Enemy attack', 'comparison.defence': 'Your defence',

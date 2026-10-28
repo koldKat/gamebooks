@@ -65,7 +65,7 @@ export default {
   'battlesim895.status.win': 'Victory',
   'battlesim895.status.loss': 'Defeat',
   'battlesim895.status.abandoned': 'Fight abandoned',
-  'battlesim895.remaining': 'Your endurance: {stamina}/{max}\nEnemy {current}/{count}: {name} — {hp} endurance',
+  'battlesim895.remaining': 'Your endurance: {stamina}/{max}\nEnemy {current}/{count}: {name} - {hp} endurance',
   'battlesim895.event.start': 'The fight begins.',
   'battlesim895.event.round': 'Round {round}, {enemy}: your die {playerRoll} → {playerStrength}; enemy die {enemyRoll} → {enemyStrength}. Damage inflicted: {playerDamage}; suffered: {enemyDamage}.',
   'battlesim895.event.skillLoss': 'The stench costs 1 combat skill after round six.',

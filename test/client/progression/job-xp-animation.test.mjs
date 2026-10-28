@@ -6,7 +6,7 @@ import vm from 'node:vm';
 function setup() {
   const source=fs.readFileSync('public/js/account/profile.js','utf8');
   const elements=new Map(),frames=new Map();let now=0,id=0,token='first';
-  for(const prefix of ['books','play'])for(const suffix of ['','-bar','-fill','-level','-title','-label','-next-ruby','-ruby-cost'])elements.set(`${prefix}-job-xp${suffix}`,{style:{},setAttribute(name,value){this[name]=value;},removeAttribute(name){delete this[name];}});
+  for(const prefix of ['books','play','profile'])for(const suffix of ['','-bar','-fill','-level','-title','-label','-next-ruby','-ruby-cost'])elements.set(`${prefix}-job-xp${suffix}`,{style:{},setAttribute(name,value){this[name]=value;},removeAttribute(name){delete this[name];}});
   const context=vm.createContext({document:{getElementById:id=>elements.get(id)},getToken:()=>token,
     t:key=>key,XP_ANIM_MS_PER_LEVEL:100,performance:{now:()=>now},
     requestAnimationFrame:fn=>{frames.set(++id,fn);return id;},cancelAnimationFrame:id=>frames.delete(id)});
@@ -19,13 +19,13 @@ function setup() {
 test('Job XP loads immediately and animates later gains using job level rather than normal level',()=>{
   const s=setup();s.render(1000);assert.equal(s.frames.size,0);
   s.render(1100);s.step(50);
-  for(const prefix of ['books','play'])assert.match(s.elements.get(`${prefix}-job-xp-label`).innerHTML,/1,050 EV/);
+  for(const prefix of ['books','play','profile'])assert.match(s.elements.get(`${prefix}-job-xp-label`).innerHTML,/1,050 EV/);
   s.step(50);assert.match(s.elements.get('play-job-xp-label').innerHTML,/1,100 EV/);assert.equal(s.frames.size,0);
 });
 
 test('Job bars animate the themed ruby countdown alongside the displayed event count',()=>{
   const s=setup();s.render(1000,{diamondEventsUntilNext:432,diamondEventsPerDiamond:982.3});
-  for(const prefix of ['books','play']){
+  for(const prefix of ['books','play','profile']){
     const el=s.elements.get(`${prefix}-job-xp`);
     assert.equal(el.title,'');assert.equal(el['data-tooltip'],undefined);
     assert.equal(s.elements.get(`${prefix}-job-xp-bar`)['data-tooltip'],'432 XP events until next ruby');

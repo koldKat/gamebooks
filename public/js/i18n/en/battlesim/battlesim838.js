@@ -46,7 +46,7 @@ export default {
   'battlesim838.note.dogs': '2: lose 9; 3: lose 6; 4–6: lose 3; 7–12: selected dog loses 3. Kill three dogs with 5 Endurance each; the rest flee.',
   'battlesim838.success': 'success',
   'battlesim838.failure': 'failure',
-  'battlesim838.agilityResult': 'Agility: {dice} = {sum}, against {agility} — {result}. Follow the result in the text.',
+  'battlesim838.agilityResult': 'Agility: {dice} = {sum}, against {agility} - {result}. Follow the result in the text.',
   'battlesim838.whirlpoolResult': 'Whirlpool: die {die}, total {total}. Turn to {section}.',
   'battlesim838.extraDie': 'Extra die: {die}.',
   'battlesim838.event.start': 'Started: {name}.',

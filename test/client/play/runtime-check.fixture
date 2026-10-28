@@ -70,6 +70,7 @@ const context = createContext({ console, document, localStorage: { getItem: key 
 const helperNames = ['parseSecId', 'isValidSecId', 'currentPlaythrough', 'currentSection', 'allDiscoveredSections', 'discoveredSectionsFor', 'mappedCount', 'mappedCountFor'];
 const stateModule = new SourceTextModule(`
   export let state = _fixtureState;
+  export const currentBookId = 42;
   export const replaceState = next => { state = next; };
   export let viewingPt = null, viewingPtIndex = -1, currentUserLevel = 0, bonusUndos = 0, bonusFastTravels = 0;
   export const isTerminal = s => s === -1 || s === 0;

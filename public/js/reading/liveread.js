@@ -2,6 +2,7 @@
 // Available for books with imported text; keep the underlying graph interactive.
 
 import { state, apiFetch, getToken, currentBookId, currentPlaythrough, currentSection, viewingPt, isTerminal, parseSecId, isSectionMapped } from '../core/state.js';
+import { sectionLabel } from '../core/section-labels.js';
 import { navigate, startPlaythrough, commitChoices, showAlert, suppressAutoNav } from '../play.js';
 import { network, setLightweightRestabilize } from '../graph.js';
 import { t } from '../i18n.js';
@@ -75,7 +76,7 @@ function _prefetchChoices(choices) {
 
 function _updateHeading(sec) {
   const el = document.getElementById('liveread-heading');
-  if (el) el.textContent = isTerminal(sec) ? t('liveread.title') : t('liveread.reading_section', { n: sec });
+  if (el) el.textContent = isTerminal(sec) ? t('liveread.title') : t('liveread.reading_section', { n: sectionLabel(sec, currentBookId) });
 }
 
 function _terminalHtml(sec) {
@@ -320,7 +321,7 @@ export async function previewSection(sec) {
   if (data.choices?.length) commitChoices(sec, readingChoices(data, state.graph[sec]?.choices, state.graph[sec]?.manualNavigation));
   _previewSec = sec;
   _updateHeading(sec);
-  body.innerHTML = `<p class="liveread-preview-banner">${t('mobile.preview_banner', { sec })}</p>${data.html}<p class="liveread-back"><a href="#" id="liveread-preview-return">${t('mobile.preview_return')}</a></p>`;
+  body.innerHTML = `<p class="liveread-preview-banner">${t('mobile.preview_banner', { sec: sectionLabel(sec, currentBookId) })}</p>${data.html}<p class="liveread-back"><a href="#" id="liveread-preview-return">${t('mobile.preview_return')}</a></p>`;
   bindReadingMapEntry(body, { canNavigate: () => false, onNavigate() {} });
   body.scrollTop = 0;
   document.getElementById('liveread-preview-return').addEventListener('click', e => {

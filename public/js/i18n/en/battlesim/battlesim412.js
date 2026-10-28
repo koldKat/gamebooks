@@ -22,7 +22,7 @@ export default {
     'battlesim412.status.defeat':  '{skull} Жизнените ти точки се изчерпаха.',
 
     'battlesim412.log.start':     '=== Битка с {name} ===',
-    'battlesim412.log.reset_sep': '——————————',
+    'battlesim412.log.reset_sep': '----------',
     'battlesim412.log.rolled_lp': 'Посочи {chance} + 50 = {lp} начални жизнени точки.',
     'battlesim412.log.strike_enemy':  'Посочи {chance} + Сила {pstr} = {sum} > {estr}: {name} губи 2 ж.т. (остават {hp}).',
     'battlesim412.log.strike_player': 'Посочи {chance} + Сила {pstr} = {sum} < {estr}: губиш 2 ж.т. (остават {lp}).',

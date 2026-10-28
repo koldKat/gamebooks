@@ -1,6 +1,7 @@
 // markup.js - Internal play-screen module; use ../play.js externally.
 
-import { state, viewingPt, viewingPtIndex, isTerminal, currentPlaythrough, currentSection } from '../core/state.js';
+import { state, viewingPt, viewingPtIndex, isTerminal, currentPlaythrough, currentSection, currentBookId } from '../core/state.js';
+import { sectionLabel } from '../core/section-labels.js';
 import { network, computeOutcomes } from '../graph.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../core/util.js';
@@ -38,7 +39,7 @@ export function renderPanelMarkup(pt, sec) {
         secDisplay = '-';
       }
     } else {
-      secDisplay = sec;
+      secDisplay = escapeHtml(sectionLabel(sec, currentBookId));
     }
     html += `<div class="section-row"><span class="section-label">${t('record.section')}</span><span class="section-display">${secDisplay}</span></div>` +
             `<div class="run-controls-group">` +
@@ -63,7 +64,7 @@ export function renderPanelMarkup(pt, sec) {
             `<button id="record-btn" class="primary-btn">${t('record.btn')}</button>` +
           `</div>` +
         `</div>`;
-    } else if (!secData.manualNavigation && secData.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt.path.includes(secData.choices[0]) && !(playContext._suppressAutoNavDepth > 0) && !(playContext._owIsOpenWorld && secData.portals?.length)) {
+    } else if (wouldAutoNav(sec, pt)) {
       const dest = secData.choices[0];
       const previous = playContext._pendingAutoNav;
       if (!previous || previous.state !== state || previous.pt !== pt || previous.sec !== sec || previous.dest !== dest || previous.network !== network) {
@@ -78,7 +79,7 @@ export function renderPanelMarkup(pt, sec) {
           navigate(dest);
         }, 0);
       }
-      const destLabel = dest === -1 ? t('record.death') : dest === 0 ? t('record.victory') : dest;
+      const destLabel = dest === -1 ? t('record.death') : dest === 0 ? t('record.victory') : escapeHtml(sectionLabel(dest, currentBookId));
       html += `<div class="choices-label auto-nav">${t('record.auto', { dest: destLabel })}</div>`;
     } else {
       html += `<div class="choices-label">${t('record.where')}</div><div class="choice-buttons">`;
@@ -98,7 +99,7 @@ export function renderPanelMarkup(pt, sec) {
       };
       html += sortedChoices.map(c => {
         const extra = choiceOutcomeClass(c);
-        const lbl   = c === -1 ? t('runs.death') : c === 0 ? t('runs.victory') : c;
+        const lbl   = c === -1 ? t('runs.death') : c === 0 ? t('runs.victory') : escapeHtml(sectionLabel(c, currentBookId));
         return `<button class="choice-btn ${extra}" data-choice="${c}">${lbl}</button>`;
       }).join('');
       html += `</div>`;
@@ -172,7 +173,7 @@ export function renderPanelMarkup(pt, sec) {
           : '<span class="section-cross-book">another book ⇒</span>';
         statusCls  = isActive ? 'run-active-label' : '';
       } else {
-        statusText = lastSec ? t('runs.section', { n: lastSec }) : t('runs.section', { n: '-' });
+        statusText = lastSec ? t('runs.section', { n: sectionLabel(lastSec, currentBookId) }) : t('runs.section', { n: '-' });
         statusCls  = isActive ? 'run-active-label' : '';
       }
       const isPublic = isDone && (p.isPublic || false);
@@ -218,7 +219,7 @@ export function renderPanelMarkup(pt, sec) {
         statusText = p.result === 'success' ? t('runs.victory') : p.result === 'battle' ? t('runs.battle') : t('runs.death');
         statusCls  = p.result === 'success' ? 'run-win' : p.result === 'battle' ? 'run-battle' : 'run-death';
       } else {
-        statusText = lastSec ? t('runs.section', { n: lastSec }) : t('runs.section', { n: '-' });
+        statusText = lastSec ? t('runs.section', { n: sectionLabel(lastSec, currentBookId) }) : t('runs.section', { n: '-' });
         statusCls  = '';
       }
       html +=

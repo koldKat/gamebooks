@@ -10,7 +10,7 @@ import { confirmAlphanumericSwitch } from './dialogs.js';
 // Exported so liveread.js can reveal-on-arrival choices from imported
 // book_sections data using the same dedup/orphan-cleanup path as manual entry.
 export function commitChoices(sec, choices) {
-  const deduped = [...new Set(choices)].sort((a, b) => {
+  const deduped = [...new Set(choices.map(parseSecId).filter(n => n !== null))].sort((a, b) => {
     const av = isValidSecId(a), bv = isValidSecId(b);
     if (av && bv) {
       if (typeof a === 'number' && typeof b === 'number') return a - b;
@@ -85,7 +85,7 @@ export function handleRecordChoices(sec, raw, allowEmpty = false) {
   const parsed = raw
     .split(/[.,;\s]+/)
     .map(s => parseSecId(s.trim()))
-    .filter(n => n !== null && n !== sec && (isTerminal(n) || isValidSecId(n)));
+    .filter(n => n !== null && String(n) !== String(sec) && (isTerminal(n) || isValidSecId(n)));
   if (!parsed.length) return;
 
   const hasAlpha = parsed.some(n => typeof n === 'string');

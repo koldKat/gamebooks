@@ -1,4 +1,4 @@
-// Translations: simulator 463 (strings are in Bulgarian — book 463 "Изпитанието" is Bulgarian).
+// Translations: simulator 463 (strings are in Bulgarian - book 463 "Изпитанието" is Bulgarian).
 export default {
   'battlesim463.ui.title':     'Симулатор на битки - Изпитанието',
   'battlesim463.ui.you':       'Твоят герой',

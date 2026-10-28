@@ -22,7 +22,7 @@ const labels = {
   'status.cancelled': 'Fight ended.',
   'event.attack': '{name}: your total {playerAttack} ({playerDice}), enemy total {enemyAttack} ({enemyDice}).',
   'event.wound': '{side}: {damage} damage.', 'event.opening': 'Before combat: −{skill} Skill, −{stamina} Stamina.',
-  'event.special': 'Special roll: {value}.', 'event.luck': 'Luck: {value} — {result}.',
+  'event.special': 'Special roll: {value}.', 'event.luck': 'Luck: {value} - {result}.',
   'side.player': 'Character', 'side.enemy': 'Opponent', lucky: 'Lucky', unlucky: 'Unlucky',
 };
 export default Object.fromEntries(Object.entries(labels).map(([key, value]) => ['battlesim904.' + key, value]));

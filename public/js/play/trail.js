@@ -1,6 +1,8 @@
 // trail.js - Internal play-screen module; use ../play.js externally.
 
-import { currentPlaythrough } from '../core/state.js';
+import { currentPlaythrough, currentBookId } from '../core/state.js';
+import { sectionLabel } from '../core/section-labels.js';
+import { escapeHtml } from '../core/util.js';
 import { network } from '../graph.js';
 import { t } from '../i18n.js';
 import { playContext } from './context.js';
@@ -12,7 +14,7 @@ export function renderPathTrail(pt, header) {
   const isActive = pt === currentPlaythrough();
   const nodes = pt.path.map((s, i) => {
     const isCurrent = isActive && i === pt.path.length - 1;
-    return `<span class="trail-node${isCurrent ? ' trail-current' : ''}">${s}</span>`;
+    return `<span class="trail-node${isCurrent ? ' trail-current' : ''}">${escapeHtml(sectionLabel(s, currentBookId))}</span>`;
   });
 
   if (pt.completed) {

@@ -873,13 +873,18 @@ function getBookState(userId, bookId) {
   // Always use the authoritative values from the books table so that a stale
   // saveState() call cannot overwrite a newer updateBook() result.
   const book = db.prepare(`SELECT b.name, b.total_sections, b.max_section_number,
-    CASE WHEN e.counts_as_section = 0 THEN e.section_id END AS uncounted_entry
+    CASE WHEN e.counts_as_section = 0 THEN e.section_id END AS uncounted_entry,
+    COALESCE(e.start_section_id, e.section_id) AS reading_start_section
     FROM books b LEFT JOIN book_reading_entries e ON e.book_id = b.id WHERE b.id = ?`).get(bookId);
   if (book) {
     s.bookName      = book.name;
     s.totalSections = book.total_sections;
     s.maxSectionNumber = book.max_section_number ?? book.total_sections;
     s.uncountedSections = book.uncounted_entry == null ? [] : [book.uncounted_entry];
+    if (book.reading_start_section != null && (s.startSection == null || String(s.startSection) === '1')) {
+      const start = book.reading_start_section;
+      s.startSection = /^\d+$/.test(start) ? Number(start) : start;
+    }
   }
   return s;
 }
