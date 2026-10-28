@@ -521,6 +521,7 @@
 .books-xp-collapsed > .books-xp-body { display: none; }
 .books-xp-collapsed { padding-bottom: 0.3rem; }
 .books-xp-collapsed .books-xp-arrow { transform: rotate(-90deg); }
+.books-xp-collapsed .books-xp-kicker { flex: 0 0 2rem; }
 .books-xp-collapsed .books-xp-mini-bars { display: flex; flex: 1 1 0; min-width: 0; flex-direction: column; gap: 2px; }
 .books-xp-mini-track { display: block; height: 3px; background: #374151; border-radius: 2px; overflow: hidden; }
 .books-xp-mini-track[hidden] { display: none; }
