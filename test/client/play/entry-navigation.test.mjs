@@ -53,6 +53,17 @@ test('Bulgarian opening label changes presentation without changing IDs or other
   assert.equal(sectionLabel(1, 988), 1);
 });
 
+test('long named starting sections have compact display labels without changing IDs', () => {
+  for (const id of ['introduction', 'Introduction', 'prologue', 'opening-prologue']) {
+    assert.equal(sectionLabel(id, 1445), 'Intro');
+  }
+  assert.equal(sectionLabel('quest-map', 1286), 'Map');
+  assert.equal(sectionLabel('quest-map-2', 1286), 'quest-map-2');
+  assert.equal(sectionLabel('epilogue', 895), 'epilogue');
+  assert.equal(sectionLabel('Т1', 725), 'Т1');
+  assert.equal(sectionLabel('42', 1445), '42');
+});
+
 test('loading legacy imported paths normalizes numeric IDs and removes existing self-links', async () => {
   const original = { graph:{opening:{choices:['1']},1:{choices:['1','2']}},
     playthroughs:[{path:['opening','1'],completed:false}],activePtIndex:0 };

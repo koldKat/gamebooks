@@ -53,6 +53,10 @@ function _xpRenderPrefix(prefix, xp, data) {
   const fill = document.getElementById(`${prefix}-xp-bar-fill`);
   const el   = document.getElementById(`${prefix}-xp-text`);
   if (fill) fill.style.width = `${pct}%`;
+  if (prefix === 'play') {
+    const miniFill = document.getElementById('play-xp-mini-level-fill');
+    if (miniFill) miniFill.style.width = `${pct}%`;
+  }
   if (!el) return;
   if (prefix === 'profile') { el.textContent = short; return; }
   // Use the same XP label in the books and play summaries.
@@ -278,6 +282,12 @@ function _renderJobXpSummary(data, displayedXp, visible, displayedRubyEvents) {
     } else bar?.removeAttribute('data-tooltip');
     const fill = document.getElementById(`${prefix}-job-xp-fill`);
     if (fill) fill.style.width = `${100 * (xp - levelXp) / (nextLevelXp - levelXp)}%`;
+    if (prefix === 'play') {
+      const miniBar = document.getElementById('play-xp-mini-job');
+      const miniFill = document.getElementById('play-xp-mini-job-fill');
+      if (miniBar) miniBar.hidden = !visible;
+      if (miniFill) miniFill.style.width = visible ? `${100 * (xp - levelXp) / (nextLevelXp - levelXp)}%` : '0%';
+    }
     const levelEl = document.getElementById(`${prefix}-job-xp-level`);
     if (levelEl) levelEl.textContent = visible ? `Job Lvl ${level}` : '';
     const titleEl = document.getElementById(`${prefix}-job-xp-title`);

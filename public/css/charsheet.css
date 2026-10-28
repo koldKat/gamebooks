@@ -74,12 +74,17 @@ body.sidebar-collapsed #play-bottom-stack {
   user-select: none;
 }
 .play-xp-kicker {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.72rem;
   color: #9ca3af;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 .play-xp-collapse-btn {
+  flex-shrink: 0;
   background: none;
   border: none;
   color: #9ca3af;
@@ -93,6 +98,29 @@ body.sidebar-collapsed #play-bottom-stack {
 #play-xp-summary.play-xp-collapsed .play-xp-collapse-btn { transform: rotate(-90deg); }
 #play-xp-summary.play-xp-collapsed #play-xp-body { display: none; }
 #play-xp-summary.play-xp-collapsed { padding-bottom: 0.3rem; gap: 0; }
+.play-xp-mini-bars { display: none; }
+#play-xp-summary.play-xp-collapsed .play-xp-kicker { max-width: 50%; }
+#play-xp-summary.play-xp-collapsed .play-xp-mini-bars {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+.play-xp-mini-track {
+  height: 3px;
+  background: #374151;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.play-xp-mini-track[hidden] { display: none; }
+.play-xp-mini-track > div {
+  height: 100%;
+  width: 0;
+  background: #f5a623;
+  border-radius: inherit;
+}
+#play-xp-mini-job-fill { background: #fb7185; }
 #play-xp-body {
   display: flex;
   flex-direction: column;

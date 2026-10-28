@@ -116,6 +116,9 @@ profile.setProfileHooks({ getIsAdmin: () => isAdmin });
 for (const [jobXp, level, percent] of [[0, 0, 0], [999, 0, 99.9], [1000, 1, 0], [2999, 1, 99.95], [3000, 2, 0], [4500, 2, 50], [6000, 3, 0]]) {
   profile.renderBooksXpSummary({ ...xpData, jobXp });
   settleAnimations();
+  assert.equal(el('play-xp-mini-level-fill').style.width, el('play-xp-bar-fill').style.width);
+  assert.equal(el('play-xp-mini-job-fill').style.width, el('play-job-xp-fill').style.width);
+  assert.equal(el('play-xp-mini-job').hidden, false);
   for (const prefix of ['books', 'play']) {
     assert.equal(el(`${prefix}-job-xp`).hidden, false);
     assert.equal(el(`${prefix}-job-xp-level`).textContent, `Job Lvl ${level}`);
@@ -131,6 +134,7 @@ assert.equal(el('books-job-xp-title').textContent, 'Panner');
 isAdmin = true; token = null;
 profile.renderBooksXpSummary({ ...xpData, jobXp: 6000 });
 assert.equal(el('play-job-xp').hidden, true, 'logout hides the event bar');
+assert.equal(el('play-xp-mini-job').hidden, true, 'logout also hides the compact event bar');
 token = 'new-session';
 profile.renderBooksXpSummary(xpData);
 assert.equal(el('books-job-xp').hidden, true, 'an older cached snapshot without the counter stays hidden');
