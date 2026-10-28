@@ -1,0 +1,2228 @@
+{
+  "schemaVersion": 1,
+  "bookId": 1436,
+  "family": "tolkien-quest",
+  "sourceSha256": "6043b148b73a63d3418cc1ad37f46c07466f34bd2d7a4a875a3e32d7a0d9be90",
+  "rosterComplete": true,
+  "expectedEncounterCount": 28,
+  "source": "All39 main-story Tolkien Quest stat blocks, reviewed against original source. MERP conversion statistics are separate reader references. Section245 reuses all four source197 Orcs.",
+  "enemies": [
+    {
+      "key": "104-1",
+      "name": "BEAR (§104)",
+      "attack": 3,
+      "defense": -1,
+      "hp": 17,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "104",
+          "label": "BEAR (§104)",
+          "enemies": [
+            {
+              "key": "104-1",
+              "name": "BEAR",
+              "displayName": "BEAR (§104)",
+              "ob": 3,
+              "db": -1,
+              "endurance": 17,
+              "kind": "animal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 71,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "106-1",
+      "name": "MAN (§106)",
+      "attack": 1,
+      "defense": 0,
+      "hp": 29,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "106",
+          "label": "MAN (§106)",
+          "enemies": [
+            {
+              "key": "106-1",
+              "name": "MAN",
+              "displayName": "MAN (§106)",
+              "ob": 1,
+              "db": 0,
+              "endurance": 29,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 72,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "113-1",
+      "name": "MAN (§113)",
+      "attack": 1,
+      "defense": 0,
+      "hp": 29,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "113",
+          "label": "MAN (§113)",
+          "enemies": [
+            {
+              "key": "113-1",
+              "name": "MAN",
+              "displayName": "MAN (§113)",
+              "ob": 1,
+              "db": 0,
+              "endurance": 29,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single",
+            "surprised": true
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 73,
+              "side": "single"
+            },
+            {
+              "pdfPage": 74,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "115-1",
+      "name": "MAN (§115)",
+      "attack": -2,
+      "defense": 0,
+      "hp": 40,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "115",
+          "label": "MAN (§115)",
+          "enemies": [
+            {
+              "key": "115-1",
+              "name": "MAN",
+              "displayName": "MAN (§115)",
+              "ob": -2,
+              "db": 0,
+              "endurance": 40,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 74,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "117-1",
+      "name": "MAN (§117)",
+      "attack": 1,
+      "defense": 0,
+      "hp": 26,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "117",
+          "label": "MAN (§117)",
+          "enemies": [
+            {
+              "key": "117-1",
+              "name": "MAN",
+              "displayName": "MAN (§117)",
+              "ob": 1,
+              "db": 0,
+              "endurance": 26,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single",
+            "firstPlayerAttackObBonus": 2
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 74,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "129-1",
+      "name": "WIGHT #1 (§129)",
+      "attack": 3,
+      "defense": 1,
+      "hp": 42,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": "129",
+          "label": "WIGHT #1 (§129)",
+          "enemies": [
+            {
+              "key": "129-1",
+              "name": "WIGHT #1",
+              "displayName": "WIGHT #1 (§129)",
+              "ob": 3,
+              "db": 1,
+              "endurance": 42,
+              "kind": "undead",
+              "armour": "none"
+            },
+            {
+              "key": "129-2",
+              "name": "WIGHT #2",
+              "displayName": "WIGHT #2 (§129)",
+              "ob": 2,
+              "db": 2,
+              "endurance": 34,
+              "kind": "undead",
+              "armour": "none"
+            },
+            {
+              "key": "129-3",
+              "name": "WIGHT #3",
+              "displayName": "WIGHT #3 (§129)",
+              "ob": 1,
+              "db": 3,
+              "endurance": 23,
+              "kind": "undead",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "random-variant",
+            "selectionRanges": [
+              [
+                2,
+                3
+              ],
+              [
+                4,
+                7
+              ],
+              [
+                8,
+                11
+              ]
+            ],
+            "noFightRoll": 12,
+            "noFightDestination": "110"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 78,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "129-2",
+      "name": "WIGHT #2 (§129)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 34,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": "129",
+          "label": "WIGHT #1 (§129)",
+          "enemies": [
+            {
+              "key": "129-1",
+              "name": "WIGHT #1",
+              "displayName": "WIGHT #1 (§129)",
+              "ob": 3,
+              "db": 1,
+              "endurance": 42,
+              "kind": "undead",
+              "armour": "none"
+            },
+            {
+              "key": "129-2",
+              "name": "WIGHT #2",
+              "displayName": "WIGHT #2 (§129)",
+              "ob": 2,
+              "db": 2,
+              "endurance": 34,
+              "kind": "undead",
+              "armour": "none"
+            },
+            {
+              "key": "129-3",
+              "name": "WIGHT #3",
+              "displayName": "WIGHT #3 (§129)",
+              "ob": 1,
+              "db": 3,
+              "endurance": 23,
+              "kind": "undead",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "random-variant",
+            "selectionRanges": [
+              [
+                2,
+                3
+              ],
+              [
+                4,
+                7
+              ],
+              [
+                8,
+                11
+              ]
+            ],
+            "noFightRoll": 12,
+            "noFightDestination": "110"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 78,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "129-3",
+      "name": "WIGHT #3 (§129)",
+      "attack": 1,
+      "defense": 3,
+      "hp": 23,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": "129",
+          "label": "WIGHT #1 (§129)",
+          "enemies": [
+            {
+              "key": "129-1",
+              "name": "WIGHT #1",
+              "displayName": "WIGHT #1 (§129)",
+              "ob": 3,
+              "db": 1,
+              "endurance": 42,
+              "kind": "undead",
+              "armour": "none"
+            },
+            {
+              "key": "129-2",
+              "name": "WIGHT #2",
+              "displayName": "WIGHT #2 (§129)",
+              "ob": 2,
+              "db": 2,
+              "endurance": 34,
+              "kind": "undead",
+              "armour": "none"
+            },
+            {
+              "key": "129-3",
+              "name": "WIGHT #3",
+              "displayName": "WIGHT #3 (§129)",
+              "ob": 1,
+              "db": 3,
+              "endurance": 23,
+              "kind": "undead",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "random-variant",
+            "selectionRanges": [
+              [
+                2,
+                3
+              ],
+              [
+                4,
+                7
+              ],
+              [
+                8,
+                11
+              ]
+            ],
+            "noFightRoll": 12,
+            "noFightDestination": "110"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 78,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "135-1",
+      "name": "WIGHT #1 (§135)",
+      "attack": 4,
+      "defense": 0,
+      "hp": 38,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": "135",
+          "label": "WIGHT #1 (§135)",
+          "enemies": [
+            {
+              "key": "135-1",
+              "name": "WIGHT #1",
+              "displayName": "WIGHT #1 (§135)",
+              "ob": 4,
+              "db": 0,
+              "endurance": 38,
+              "kind": "undead",
+              "armour": "none"
+            },
+            {
+              "key": "135-2",
+              "name": "WIGHT #2",
+              "displayName": "WIGHT #2 (§135)",
+              "ob": 3,
+              "db": 1,
+              "endurance": 33,
+              "kind": "undead",
+              "armour": "none"
+            },
+            {
+              "key": "135-3",
+              "name": "WIGHT #3",
+              "displayName": "WIGHT #3 (§135)",
+              "ob": 2,
+              "db": 1,
+              "endurance": 29,
+              "kind": "undead",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "random-variant",
+            "selectionRanges": [
+              [
+                2,
+                4
+              ],
+              [
+                5,
+                8
+              ],
+              [
+                9,
+                11
+              ]
+            ],
+            "noFightRoll": 12,
+            "noFightDestination": "120"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 80,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "135-2",
+      "name": "WIGHT #2 (§135)",
+      "attack": 3,
+      "defense": 1,
+      "hp": 33,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": "135",
+          "label": "WIGHT #1 (§135)",
+          "enemies": [
+            {
+              "key": "135-1",
+              "name": "WIGHT #1",
+              "displayName": "WIGHT #1 (§135)",
+              "ob": 4,
+              "db": 0,
+              "endurance": 38,
+              "kind": "undead",
+              "armour": "none"
+            },
+            {
+              "key": "135-2",
+              "name": "WIGHT #2",
+              "displayName": "WIGHT #2 (§135)",
+              "ob": 3,
+              "db": 1,
+              "endurance": 33,
+              "kind": "undead",
+              "armour": "none"
+            },
+            {
+              "key": "135-3",
+              "name": "WIGHT #3",
+              "displayName": "WIGHT #3 (§135)",
+              "ob": 2,
+              "db": 1,
+              "endurance": 29,
+              "kind": "undead",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "random-variant",
+            "selectionRanges": [
+              [
+                2,
+                4
+              ],
+              [
+                5,
+                8
+              ],
+              [
+                9,
+                11
+              ]
+            ],
+            "noFightRoll": 12,
+            "noFightDestination": "120"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 80,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "135-3",
+      "name": "WIGHT #3 (§135)",
+      "attack": 2,
+      "defense": 1,
+      "hp": 29,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": "135",
+          "label": "WIGHT #1 (§135)",
+          "enemies": [
+            {
+              "key": "135-1",
+              "name": "WIGHT #1",
+              "displayName": "WIGHT #1 (§135)",
+              "ob": 4,
+              "db": 0,
+              "endurance": 38,
+              "kind": "undead",
+              "armour": "none"
+            },
+            {
+              "key": "135-2",
+              "name": "WIGHT #2",
+              "displayName": "WIGHT #2 (§135)",
+              "ob": 3,
+              "db": 1,
+              "endurance": 33,
+              "kind": "undead",
+              "armour": "none"
+            },
+            {
+              "key": "135-3",
+              "name": "WIGHT #3",
+              "displayName": "WIGHT #3 (§135)",
+              "ob": 2,
+              "db": 1,
+              "endurance": 29,
+              "kind": "undead",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "random-variant",
+            "selectionRanges": [
+              [
+                2,
+                4
+              ],
+              [
+                5,
+                8
+              ],
+              [
+                9,
+                11
+              ]
+            ],
+            "noFightRoll": 12,
+            "noFightDestination": "120"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 80,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "144-1",
+      "name": "MAN (§144)",
+      "attack": 1,
+      "defense": -1,
+      "hp": 26,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "144",
+          "label": "MAN (§144)",
+          "enemies": [
+            {
+              "key": "144-1",
+              "name": "MAN",
+              "displayName": "MAN (§144)",
+              "ob": 1,
+              "db": -1,
+              "endurance": 26,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 83,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "148-1",
+      "name": "MAN (§148)",
+      "attack": 1,
+      "defense": 0,
+      "hp": 23,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "148",
+          "label": "MAN (§148)",
+          "enemies": [
+            {
+              "key": "148-1",
+              "name": "MAN",
+              "displayName": "MAN (§148)",
+              "ob": 1,
+              "db": 0,
+              "endurance": 23,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 84,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "156-1",
+      "name": "MAN #1 (§156)",
+      "attack": 1,
+      "defense": 0,
+      "hp": 31,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "156",
+          "label": "MAN #1 (§156)",
+          "enemies": [
+            {
+              "key": "156-1",
+              "name": "MAN #1",
+              "displayName": "MAN #1 (§156)",
+              "ob": 1,
+              "db": 0,
+              "endurance": 31,
+              "kind": "normal",
+              "armour": "none"
+            },
+            {
+              "key": "156-2",
+              "name": "MAN #2",
+              "displayName": "MAN #2 (§156)",
+              "ob": 0,
+              "db": 0,
+              "endurance": 28,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "sequential"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 85,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "156-2",
+      "name": "MAN #2 (§156)",
+      "attack": 0,
+      "defense": 0,
+      "hp": 28,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "156",
+          "label": "MAN #1 (§156)",
+          "enemies": [
+            {
+              "key": "156-1",
+              "name": "MAN #1",
+              "displayName": "MAN #1 (§156)",
+              "ob": 1,
+              "db": 0,
+              "endurance": 31,
+              "kind": "normal",
+              "armour": "none"
+            },
+            {
+              "key": "156-2",
+              "name": "MAN #2",
+              "displayName": "MAN #2 (§156)",
+              "ob": 0,
+              "db": 0,
+              "endurance": 28,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "sequential"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 85,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "173-1",
+      "name": "MAN #1 (§173)",
+      "attack": 2,
+      "defense": 0,
+      "hp": 29,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "173",
+          "label": "MAN #1 (§173)",
+          "enemies": [
+            {
+              "key": "173-1",
+              "name": "MAN #1",
+              "displayName": "MAN #1 (§173)",
+              "ob": 2,
+              "db": 0,
+              "endurance": 29,
+              "kind": "normal",
+              "armour": "none"
+            },
+            {
+              "key": "173-2",
+              "name": "MAN #2",
+              "displayName": "MAN #2 (§173)",
+              "ob": 1,
+              "db": -1,
+              "endurance": 27,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "sequential"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 89,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "173-2",
+      "name": "MAN #2 (§173)",
+      "attack": 1,
+      "defense": -1,
+      "hp": 27,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "173",
+          "label": "MAN #1 (§173)",
+          "enemies": [
+            {
+              "key": "173-1",
+              "name": "MAN #1",
+              "displayName": "MAN #1 (§173)",
+              "ob": 2,
+              "db": 0,
+              "endurance": 29,
+              "kind": "normal",
+              "armour": "none"
+            },
+            {
+              "key": "173-2",
+              "name": "MAN #2",
+              "displayName": "MAN #2 (§173)",
+              "ob": 1,
+              "db": -1,
+              "endurance": 27,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "sequential"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 89,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "180-1",
+      "name": "BEAR (§180)",
+      "attack": 2,
+      "defense": 0,
+      "hp": 15,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "180",
+          "label": "BEAR (§180)",
+          "enemies": [
+            {
+              "key": "180-1",
+              "name": "BEAR",
+              "displayName": "BEAR (§180)",
+              "ob": 2,
+              "db": 0,
+              "endurance": 15,
+              "kind": "animal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 91,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "197-1",
+      "name": "ORC #1 (§197)",
+      "attack": 2,
+      "defense": 1,
+      "hp": 28,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "section": "197",
+          "label": "ORC #1 (§197)",
+          "enemies": [
+            {
+              "key": "197-1",
+              "name": "ORC #1",
+              "displayName": "ORC #1 (§197)",
+              "ob": 2,
+              "db": 1,
+              "endurance": 28,
+              "kind": "orc",
+              "armour": "none"
+            },
+            {
+              "key": "197-2",
+              "name": "ORC #2",
+              "displayName": "ORC #2 (§197)",
+              "ob": 1,
+              "db": 1,
+              "endurance": 25,
+              "kind": "orc",
+              "armour": "none"
+            },
+            {
+              "key": "197-3",
+              "name": "ORC #3",
+              "displayName": "ORC #3 (§197)",
+              "ob": 1,
+              "db": -1,
+              "endurance": 19,
+              "kind": "orc",
+              "armour": "none"
+            },
+            {
+              "key": "197-4",
+              "name": "ORC #4",
+              "displayName": "ORC #4 (§197)",
+              "ob": 0,
+              "db": -1,
+              "endurance": 20,
+              "kind": "orc",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "random-variant",
+            "selectionRanges": [
+              [
+                2,
+                3
+              ],
+              [
+                4,
+                5
+              ],
+              [
+                6,
+                9
+              ],
+              [
+                10,
+                11
+              ]
+            ],
+            "noFightRoll": 12,
+            "noFightDestination": "176"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 95,
+              "side": "single"
+            }
+          ],
+          "derivedEncounters": [
+            {
+              "section": "245",
+              "label": "Four Orcs (§245)",
+              "rules": {
+                "groupMode": "sequential",
+                "sourceRosterReference": "197"
+              },
+              "sourcePages": [
+                {
+                  "pdfPage": 105,
+                  "side": "single"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "197-2",
+      "name": "ORC #2 (§197)",
+      "attack": 1,
+      "defense": 1,
+      "hp": 25,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "section": "197",
+          "label": "ORC #1 (§197)",
+          "enemies": [
+            {
+              "key": "197-1",
+              "name": "ORC #1",
+              "displayName": "ORC #1 (§197)",
+              "ob": 2,
+              "db": 1,
+              "endurance": 28,
+              "kind": "orc",
+              "armour": "none"
+            },
+            {
+              "key": "197-2",
+              "name": "ORC #2",
+              "displayName": "ORC #2 (§197)",
+              "ob": 1,
+              "db": 1,
+              "endurance": 25,
+              "kind": "orc",
+              "armour": "none"
+            },
+            {
+              "key": "197-3",
+              "name": "ORC #3",
+              "displayName": "ORC #3 (§197)",
+              "ob": 1,
+              "db": -1,
+              "endurance": 19,
+              "kind": "orc",
+              "armour": "none"
+            },
+            {
+              "key": "197-4",
+              "name": "ORC #4",
+              "displayName": "ORC #4 (§197)",
+              "ob": 0,
+              "db": -1,
+              "endurance": 20,
+              "kind": "orc",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "random-variant",
+            "selectionRanges": [
+              [
+                2,
+                3
+              ],
+              [
+                4,
+                5
+              ],
+              [
+                6,
+                9
+              ],
+              [
+                10,
+                11
+              ]
+            ],
+            "noFightRoll": 12,
+            "noFightDestination": "176"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 95,
+              "side": "single"
+            }
+          ],
+          "derivedEncounters": [
+            {
+              "section": "245",
+              "label": "Four Orcs (§245)",
+              "rules": {
+                "groupMode": "sequential",
+                "sourceRosterReference": "197"
+              },
+              "sourcePages": [
+                {
+                  "pdfPage": 105,
+                  "side": "single"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "197-3",
+      "name": "ORC #3 (§197)",
+      "attack": 1,
+      "defense": -1,
+      "hp": 19,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "section": "197",
+          "label": "ORC #1 (§197)",
+          "enemies": [
+            {
+              "key": "197-1",
+              "name": "ORC #1",
+              "displayName": "ORC #1 (§197)",
+              "ob": 2,
+              "db": 1,
+              "endurance": 28,
+              "kind": "orc",
+              "armour": "none"
+            },
+            {
+              "key": "197-2",
+              "name": "ORC #2",
+              "displayName": "ORC #2 (§197)",
+              "ob": 1,
+              "db": 1,
+              "endurance": 25,
+              "kind": "orc",
+              "armour": "none"
+            },
+            {
+              "key": "197-3",
+              "name": "ORC #3",
+              "displayName": "ORC #3 (§197)",
+              "ob": 1,
+              "db": -1,
+              "endurance": 19,
+              "kind": "orc",
+              "armour": "none"
+            },
+            {
+              "key": "197-4",
+              "name": "ORC #4",
+              "displayName": "ORC #4 (§197)",
+              "ob": 0,
+              "db": -1,
+              "endurance": 20,
+              "kind": "orc",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "random-variant",
+            "selectionRanges": [
+              [
+                2,
+                3
+              ],
+              [
+                4,
+                5
+              ],
+              [
+                6,
+                9
+              ],
+              [
+                10,
+                11
+              ]
+            ],
+            "noFightRoll": 12,
+            "noFightDestination": "176"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 95,
+              "side": "single"
+            }
+          ],
+          "derivedEncounters": [
+            {
+              "section": "245",
+              "label": "Four Orcs (§245)",
+              "rules": {
+                "groupMode": "sequential",
+                "sourceRosterReference": "197"
+              },
+              "sourcePages": [
+                {
+                  "pdfPage": 105,
+                  "side": "single"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "197-4",
+      "name": "ORC #4 (§197)",
+      "attack": 0,
+      "defense": -1,
+      "hp": 20,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "section": "197",
+          "label": "ORC #1 (§197)",
+          "enemies": [
+            {
+              "key": "197-1",
+              "name": "ORC #1",
+              "displayName": "ORC #1 (§197)",
+              "ob": 2,
+              "db": 1,
+              "endurance": 28,
+              "kind": "orc",
+              "armour": "none"
+            },
+            {
+              "key": "197-2",
+              "name": "ORC #2",
+              "displayName": "ORC #2 (§197)",
+              "ob": 1,
+              "db": 1,
+              "endurance": 25,
+              "kind": "orc",
+              "armour": "none"
+            },
+            {
+              "key": "197-3",
+              "name": "ORC #3",
+              "displayName": "ORC #3 (§197)",
+              "ob": 1,
+              "db": -1,
+              "endurance": 19,
+              "kind": "orc",
+              "armour": "none"
+            },
+            {
+              "key": "197-4",
+              "name": "ORC #4",
+              "displayName": "ORC #4 (§197)",
+              "ob": 0,
+              "db": -1,
+              "endurance": 20,
+              "kind": "orc",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "random-variant",
+            "selectionRanges": [
+              [
+                2,
+                3
+              ],
+              [
+                4,
+                5
+              ],
+              [
+                6,
+                9
+              ],
+              [
+                10,
+                11
+              ]
+            ],
+            "noFightRoll": 12,
+            "noFightDestination": "176"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 95,
+              "side": "single"
+            }
+          ],
+          "derivedEncounters": [
+            {
+              "section": "245",
+              "label": "Four Orcs (§245)",
+              "rules": {
+                "groupMode": "sequential",
+                "sourceRosterReference": "197"
+              },
+              "sourcePages": [
+                {
+                  "pdfPage": 105,
+                  "side": "single"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "217-1",
+      "name": "MONK (§217)",
+      "attack": 1,
+      "defense": 1,
+      "hp": 31,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "217",
+          "label": "MONK (§217)",
+          "enemies": [
+            {
+              "key": "217-1",
+              "name": "MONK",
+              "displayName": "MONK (§217)",
+              "ob": 1,
+              "db": 1,
+              "endurance": 31,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 99,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "224-1",
+      "name": "WIGHT (§224)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 29,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "224",
+          "label": "WIGHT (§224)",
+          "enemies": [
+            {
+              "key": "224-1",
+              "name": "WIGHT",
+              "displayName": "WIGHT (§224)",
+              "ob": 2,
+              "db": 2,
+              "endurance": 29,
+              "kind": "undead",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 100,
+              "side": "single"
+            },
+            {
+              "pdfPage": 101,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "260-1",
+      "name": "HERMIT (§260)",
+      "attack": 3,
+      "defense": 0,
+      "hp": 32,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "260",
+          "label": "HERMIT (§260)",
+          "enemies": [
+            {
+              "key": "260-1",
+              "name": "HERMIT",
+              "displayName": "HERMIT (§260)",
+              "ob": 3,
+              "db": 0,
+              "endurance": 32,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 108,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "272-1",
+      "name": "HIGHWAYMAN #1 (§272)",
+      "attack": 1,
+      "defense": -1,
+      "hp": 28,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "272",
+          "label": "HIGHWAYMAN #1 (§272)",
+          "enemies": [
+            {
+              "key": "272-1",
+              "name": "HIGHWAYMAN #1",
+              "displayName": "HIGHWAYMAN #1 (§272)",
+              "ob": 1,
+              "db": -1,
+              "endurance": 28,
+              "kind": "normal",
+              "armour": "none"
+            },
+            {
+              "key": "272-2",
+              "name": "HIGHWAYMAN #2",
+              "displayName": "HIGHWAYMAN #2 (§272)",
+              "ob": 0,
+              "db": 0,
+              "endurance": 24,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "sequential",
+            "escapeBonus": -2
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 111,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "272-2",
+      "name": "HIGHWAYMAN #2 (§272)",
+      "attack": 0,
+      "defense": 0,
+      "hp": 24,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "272",
+          "label": "HIGHWAYMAN #1 (§272)",
+          "enemies": [
+            {
+              "key": "272-1",
+              "name": "HIGHWAYMAN #1",
+              "displayName": "HIGHWAYMAN #1 (§272)",
+              "ob": 1,
+              "db": -1,
+              "endurance": 28,
+              "kind": "normal",
+              "armour": "none"
+            },
+            {
+              "key": "272-2",
+              "name": "HIGHWAYMAN #2",
+              "displayName": "HIGHWAYMAN #2 (§272)",
+              "ob": 0,
+              "db": 0,
+              "endurance": 24,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "sequential",
+            "escapeBonus": -2
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 111,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "294-1",
+      "name": "GILDOR (§294)",
+      "attack": 10,
+      "defense": 13,
+      "hp": 54,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "294",
+          "label": "GILDOR (§294)",
+          "enemies": [
+            {
+              "key": "294-1",
+              "name": "GILDOR",
+              "displayName": "GILDOR (§294)",
+              "ob": 10,
+              "db": 13,
+              "endurance": 54,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single",
+            "surprised": true
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 119,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "295-1",
+      "name": "NAZGÛL (§295)",
+      "attack": 15,
+      "defense": 12,
+      "hp": 68,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "295",
+          "label": "NAZGÛL (§295)",
+          "enemies": [
+            {
+              "key": "295-1",
+              "name": "NAZGÛL",
+              "displayName": "NAZGÛL (§295)",
+              "ob": 15,
+              "db": 12,
+              "endurance": 68,
+              "kind": "undead",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 120,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "318-1",
+      "name": "SNAKE (§318)",
+      "attack": -1,
+      "defense": 3,
+      "hp": 8,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "318",
+          "label": "SNAKE (§318)",
+          "enemies": [
+            {
+              "key": "318-1",
+              "name": "SNAKE",
+              "displayName": "SNAKE (§318)",
+              "ob": -1,
+              "db": 3,
+              "endurance": 8,
+              "kind": "animal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 125,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "328-1",
+      "name": "TROLL #1 (§328)",
+      "attack": 2,
+      "defense": 0,
+      "hp": 28,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": "328",
+          "label": "TROLL #1 (§328)",
+          "enemies": [
+            {
+              "key": "328-1",
+              "name": "TROLL #1",
+              "displayName": "TROLL #1 (§328)",
+              "ob": 2,
+              "db": 0,
+              "endurance": 28,
+              "kind": "normal",
+              "armour": "none"
+            },
+            {
+              "key": "328-2",
+              "name": "TROLL #2",
+              "displayName": "TROLL #2 (§328)",
+              "ob": 3,
+              "db": -1,
+              "endurance": 26,
+              "kind": "normal",
+              "armour": "none"
+            },
+            {
+              "key": "328-3",
+              "name": "TROLL #3",
+              "displayName": "TROLL #3 (§328)",
+              "ob": 4,
+              "db": -2,
+              "endurance": 31,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "sequential",
+            "escapeBlockedUntilEnemiesDefeated": 1
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 127,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "328-2",
+      "name": "TROLL #2 (§328)",
+      "attack": 3,
+      "defense": -1,
+      "hp": 26,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": "328",
+          "label": "TROLL #1 (§328)",
+          "enemies": [
+            {
+              "key": "328-1",
+              "name": "TROLL #1",
+              "displayName": "TROLL #1 (§328)",
+              "ob": 2,
+              "db": 0,
+              "endurance": 28,
+              "kind": "normal",
+              "armour": "none"
+            },
+            {
+              "key": "328-2",
+              "name": "TROLL #2",
+              "displayName": "TROLL #2 (§328)",
+              "ob": 3,
+              "db": -1,
+              "endurance": 26,
+              "kind": "normal",
+              "armour": "none"
+            },
+            {
+              "key": "328-3",
+              "name": "TROLL #3",
+              "displayName": "TROLL #3 (§328)",
+              "ob": 4,
+              "db": -2,
+              "endurance": 31,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "sequential",
+            "escapeBlockedUntilEnemiesDefeated": 1
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 127,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "328-3",
+      "name": "TROLL #3 (§328)",
+      "attack": 4,
+      "defense": -2,
+      "hp": 31,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": "328",
+          "label": "TROLL #1 (§328)",
+          "enemies": [
+            {
+              "key": "328-1",
+              "name": "TROLL #1",
+              "displayName": "TROLL #1 (§328)",
+              "ob": 2,
+              "db": 0,
+              "endurance": 28,
+              "kind": "normal",
+              "armour": "none"
+            },
+            {
+              "key": "328-2",
+              "name": "TROLL #2",
+              "displayName": "TROLL #2 (§328)",
+              "ob": 3,
+              "db": -1,
+              "endurance": 26,
+              "kind": "normal",
+              "armour": "none"
+            },
+            {
+              "key": "328-3",
+              "name": "TROLL #3",
+              "displayName": "TROLL #3 (§328)",
+              "ob": 4,
+              "db": -2,
+              "endurance": 31,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "sequential",
+            "escapeBlockedUntilEnemiesDefeated": 1
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 127,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "342-1",
+      "name": "MAN (§342)",
+      "attack": 3,
+      "defense": 2,
+      "hp": 36,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "342",
+          "label": "MAN (§342)",
+          "enemies": [
+            {
+              "key": "342-1",
+              "name": "MAN",
+              "displayName": "MAN (§342)",
+              "ob": 3,
+              "db": 2,
+              "endurance": 36,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 130,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "366-1",
+      "name": "MAN (§366)",
+      "attack": 1,
+      "defense": 0,
+      "hp": 31,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "366",
+          "label": "MAN (§366)",
+          "enemies": [
+            {
+              "key": "366-1",
+              "name": "MAN",
+              "displayName": "MAN (§366)",
+              "ob": 1,
+              "db": 0,
+              "endurance": 31,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 134,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "384-1",
+      "name": "All 6 HOBBITS (§384)",
+      "attack": 1,
+      "defense": 2,
+      "hp": 60,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "384",
+          "label": "All 6 HOBBITS (§384)",
+          "enemies": [
+            {
+              "key": "384-1",
+              "name": "All 6 HOBBITS",
+              "displayName": "All 6 HOBBITS (§384)",
+              "ob": 1,
+              "db": 2,
+              "endurance": 60,
+              "kind": "normal",
+              "armour": "none",
+              "combinedCount": 6
+            }
+          ],
+          "rules": {
+            "groupMode": "combined-source-stat-block"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 138,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "387-1",
+      "name": "All 12 SQUIRRELS (§387)",
+      "attack": -3,
+      "defense": 2,
+      "hp": 12,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "387",
+          "label": "All 12 SQUIRRELS (§387)",
+          "enemies": [
+            {
+              "key": "387-1",
+              "name": "All 12 SQUIRRELS",
+              "displayName": "All 12 SQUIRRELS (§387)",
+              "ob": -3,
+              "db": 2,
+              "endurance": 12,
+              "kind": "animal",
+              "armour": "none",
+              "combinedCount": 12
+            }
+          ],
+          "rules": {
+            "groupMode": "combined-source-stat-block"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 139,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "388-1",
+      "name": "TROLL (§388)",
+      "attack": 3,
+      "defense": -1,
+      "hp": 45,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "388",
+          "label": "TROLL (§388)",
+          "enemies": [
+            {
+              "key": "388-1",
+              "name": "TROLL",
+              "displayName": "TROLL (§388)",
+              "ob": 3,
+              "db": -1,
+              "endurance": 45,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 139,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "394-1",
+      "name": "FERRYMAN (§394)",
+      "attack": -1,
+      "defense": 0,
+      "hp": 28,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "tolkien-quest",
+        "dataset": "CATALOG",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "394",
+          "label": "FERRYMAN (§394)",
+          "enemies": [
+            {
+              "key": "394-1",
+              "name": "FERRYMAN",
+              "displayName": "FERRYMAN (§394)",
+              "ob": -1,
+              "db": 0,
+              "endurance": 28,
+              "kind": "normal",
+              "armour": "none"
+            }
+          ],
+          "rules": {
+            "groupMode": "single"
+          },
+          "sourcePages": [
+            {
+              "pdfPage": 140,
+              "side": "single"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

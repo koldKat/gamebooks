@@ -5153,6 +5153,47 @@ for(const id of BOOK_IDS){
       saved=JSON.stringify(data());el('newCharacter').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(data())===saved,'Dzurlord stale confirmation ignored');app.setCurrentBookId(1296);button.click();
     }finally{Math.random=random;}
   }
+  if(id===1436){
+    const el=key=>document.getElementById('sim1436-'+key),data=()=>app.currentPlaythrough().sim1436;
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1436/definition.js');
+    const run=app.currentPlaythrough();run.inventory={sentinel:['shared-item']};run.equipment={sentinel:'shared-slot'};run.sim1303={sentinel:true};
+    const preserved=JSON.stringify([run.inventory,run.equipment,run.sim1303]);
+    const choose=section=>{el('context').value=String(section);el('context').dispatchEvent(new Event('change'));};
+    const cancel=()=>{if(data()?.fight?.status==='active'){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    check(getRoster().length===28&&requestedRosters.has(1436),'Tolkien complete DB catalog loaded');
+    check(data()===undefined,'Tolkien rendering alone does not initialize or overwrite saved state');
+    choose('manual');el('manualDice').checked=true;
+    const fields={ob:0,db:0,endurance:1,armour:'none',kind:'normal'};
+    for(const input of el('opponents').querySelectorAll('[data-stat]'))input.value=fields[input.dataset.stat];
+    el('playerPick').value='8';el('enemyPick').value='2';el('start').click();
+    check(data().fight.status==='active'&&el('context').disabled,'Tolkien custom starts and locks setup');el('step').click();
+    check(data().fight.status==='win'&&data().history.length===1,'Tolkien custom victory records one outcome');
+    el('damage').value='3';el('damage').dispatchEvent(new Event('change'));el('saveHero').click();check(data().hero.damage===3,'Tolkien ended fight does not override edited character');
+    for(const entry of getRoster()){
+      choose(entry.section);el('damage').value='0';el('endurance').value='1000';el('saveHero').click();el('checkPick').value='4';el('playerPick').value='2';el('enemyPick').value='2';el('start').click();
+      check(data().fight.status==='active','Tolkien source preset starts '+entry.section);
+      const count=entry.rules.groupMode==='random-variant'?1:entry.enemies.length;
+      check(data().fight.enemies.length===count,'Tolkien source group '+entry.section);
+      if(entry.rules.groupMode==='combined-source-stat-block')check(count===1,'Tolkien combined group is not multiplied');
+      el('step').click();check(data().fight.round===1,'Tolkien source round '+entry.section);cancel();
+    }
+    choose('129');el('checkPick').value='12';el('start').click();check(data().fight.status==='avoided','Tolkien source roll12 no fight');
+    choose('180');el('mode').value='advanced';el('mode').dispatchEvent(new Event('change'));el('known-firebolt').checked=true;el('deviceCharges').value='1';el('damage').value='0';el('saveHero').click();el('start').click();
+    el('spellPick').value='7';el('damagePick1').value='2';el('damagePick2').value='3';el('rangedAction').value='firebolt';el('step').click();
+    check(data().hero.deviceCharges===0&&data().hero.damage===0&&data().fight.enemies[0].damage===5,'Tolkien Fire Bolt uses one free charge through panel');
+    cancel();choose('manual');
+    const weak={ob:0,db:0,endurance:1,armour:'none',kind:'normal'};for(const field of el('opponents').querySelectorAll('[data-stat]'))field.value=weak[field.dataset.stat];
+    el('known-luck').checked=true;el('missile').value='bow';el('damage').value='0';el('deviceCharges').value='0';el('saveHero').click();el('start').click();el('rangedAction').value='shoot';el('playerPick').value='12';const histories=data().history.length;el('step').click();
+    check(data().fight.status==='win'&&data().history.length===histories&&!el('luck').hidden&&el('start').disabled,'Tolkien Luck holds terminal outcome before XP');
+    el('spellPick').value='7';el('checkPick').value='2';el('luckCast').click();check(data().fight.status==='active'&&data().hero.damage===5&&data().history.length===histories,'Tolkien Luck rerolls only selected pick and charges strain');
+    el('keepRange').checked=false;el('step').click();el('playerPick').value='12';el('step').click();check(data().fight.status==='win'&&data().history.length===histories+1,'Tolkien rerolled victory recorded once');
+    choose('180');el('known-charm').checked=true;el('damage').value='0';el('saveHero').click();el('start').click();el('rangedAction').value='charm';el('step').click();check(data().fight.status==='charmed'&&data().hero.charmedAnimal,'Tolkien charmed animal saved');
+    choose('manual');const durable={ob:0,db:0,endurance:100,armour:'none',kind:'normal'};for(const field of el('opponents').querySelectorAll('[data-stat]'))field.value=durable[field.dataset.stat];el('useAlly').checked=true;el('start').click();check(data().fight.allyActive&&el('status').textContent.includes(data().fight.ally.name+':'),'Tolkien ally status displays current animal');el('playerPick').value='2';el('enemyPick').value='12';el('step').click();check(!data().fight.allyActive&&data().fight.status==='active'&&data().hero.damage===6,'Tolkien defeated ally hands over without killing player');
+    const inFlight=JSON.stringify(data());module.render();check(JSON.stringify(data())===inFlight,'Tolkien active render preserves fight');
+    el('cancel').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(data()??run.sim1436)===inFlight,'Tolkien stale cancel ignored');app.setCurrentBookId(1436);button.click();cancel();
+    const original=JSON.stringify(data());app.state.playthroughs=[{path:[1],startedAt:2}];app.state.activePtIndex=0;el('start').click();check(app.currentPlaythrough().sim1436===undefined,'Tolkien stale controls cannot write a new run');app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Tolkien old run retained');
+    check(JSON.stringify([run.inventory,run.equipment,run.sim1303])===preserved,'Tolkien shared items and other sim preserved');
+  }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   for(const key of overlay.textContent.match(/battlesim(?:\d+)?\.[\w.]+/g)??[])missingTranslations.add(key);
   check(JSON.stringify(app.currentPlaythrough())===before,'repeat render preserves state '+id);

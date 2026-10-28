@@ -138,3 +138,46 @@ test('invalid source-code maps never fall back to ordinary navigation', () => {
   }
   assert.deepEqual(visits, []);
 });
+
+test('lettered grid coordinates navigate only within the source map', () => {
+  const f = fixture();
+  f.form.dataset = { readingMarkerGrid: '{"rows":27,"columns":"ABCDEFGH"}', readingMarkerError: 'Check the map.' };
+  const visits = [];
+  let validation = '';
+  f.input.setCustomValidity = value => { validation = value; };
+  let clear;
+  f.input.addEventListener = (event, handler) => { if (event === 'input') clear = handler; };
+  bindReadingMapEntry(f.container, { canNavigate: () => true, onNavigate: n => visits.push(n) });
+  for (const value of ['', '0A', '01A', '28A', '1I', 'A1', '14', '1.5A', '1e2A', '../1A']) {
+    f.input.value = value;
+    f.submit();
+    assert.equal(validation, 'Check the map.');
+    clear();
+  }
+  assert.deepEqual(visits, []);
+  for (let row = 1; row <= 27; row++) for (const column of 'ABCDEFGH') {
+    f.input.value = ` ${row}${column.toLowerCase()} `;
+    f.submit();
+  }
+  assert.equal(visits.length, 216);
+  assert.equal(visits[0], '1A');
+  assert.equal(visits.at(-1), '27H');
+});
+
+test('invalid grids and stale contexts cannot navigate or fall back to numeric markers', () => {
+  const f = fixture();
+  const visits = [];
+  let active = true;
+  bindReadingMapEntry(f.container, { canNavigate: () => active, onNavigate: n => visits.push(n) });
+  f.input.value = '1A';
+  for (const grid of ['{', 'null', '[]', '{"rows":0,"columns":"A"}', '{"rows":1.5,"columns":"A"}',
+    '{"rows":1000000,"columns":"A"}', '{"rows":27,"columns":"AA"}', '{"rows":27,"columns":"a"}',
+    '{"rows":27,"columns":12}', '{"rows":27,"columns":"../"}']) {
+    f.form.dataset = { readingMarkerGrid: grid };
+    f.submit();
+  }
+  f.form.dataset = { readingMarkerGrid: '{"rows":27,"columns":"ABCDEFGH"}' };
+  active = false;
+  f.submit();
+  assert.deepEqual(visits, []);
+});

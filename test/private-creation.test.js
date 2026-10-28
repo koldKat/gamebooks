@@ -41,7 +41,7 @@ function setup() {
   }
   const books = load('books', { './connection': connection, './xp': { awardXp() {} },
     fs: { unlinkSync: filename => deletedFiles.push(filename) }, path: require('node:path') });
-  const feed = load('feed', { './connection': connection, './xp': {}, './content': {}, './books': books });
+  const feed = load('feed', { './connection': connection, './xp': {}, './job-xp': { getJobTitle() {} }, './content': {}, './books': books });
   return { db, books, feed, deletedFiles };
 }
 
@@ -395,6 +395,28 @@ test('prefixed imported passages preserve their independent numeric maximum on e
     options.body.max_section_number = 6; assert.equal(await routes.edit(book.id), 200);
     db.prepare('DELETE FROM book_sections WHERE section_id=?').run('р1');
     assert.equal(books.getBookNumberingMinimum(books.getBookById(book.id), 8), 7, 'allowance requires imported prefixed rows');
+  } finally { db.close(); }
+});
+
+test('suffixed map locations preserve the printed numeric maximum when editing metadata', async () => {
+  const { db, books } = setup();
+  try {
+    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER); CREATE TABLE book_sections (book_id INTEGER, section_id TEXT)');
+    const book = books.createBook(1, 'Map locations', 571, null, null, null, null, null, null, null, null, false, null, null, true, 454);
+    db.prepare('UPDATE books SET has_live_reading=1 WHERE id=?').run(book.id);
+    const add = db.prepare('INSERT INTO book_sections VALUES(?,?)');
+    for (let row = 1; row <= 27; row++) for (const column of 'ABCDEFGH') add.run(book.id, row + column);
+    for (let number = 100; number <= 454; number++) add.run(book.id, String(number));
+    add.run(book.id, 'prologue');
+    assert.equal(books.getBookNumberingMinimum(books.getBookById(book.id), 571), 454);
+    const options = { userId: 1, body: { name: 'Map locations', total_sections: 571, is_public: true, max_section_number: 454 } };
+    const routes = editRoutes(db, books, options);
+    assert.equal(await routes.edit(book.id), 200);
+    options.body.max_section_number = 453;
+    assert.equal(await routes.edit(book.id), 400, 'numeric passage 454 remains protected');
+    options.body.max_section_number = 454;
+    options.body.total_sections = 572;
+    assert.equal(await routes.edit(book.id), 400, 'metadata cannot expand the imported allowance');
   } finally { db.close(); }
 });
 
