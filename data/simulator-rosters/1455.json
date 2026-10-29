@@ -1,0 +1,7567 @@
+{
+  "schemaVersion": 1,
+  "bookId": 1455,
+  "family": "warhammer",
+  "sourceSha256": "a3b3c3f2cebf92363aa5125ff313fa3057735df657f083d9449da46264b38f89",
+  "rosterComplete": true,
+  "sourceRosterComplete": true,
+  "runtimeImplementationPending": false,
+  "expectedEncounterCount": 71,
+  "source": "Own281-pagePDF fully manually reviewed. FullreaderverifiedBEFOREsimulator. All printed combat contexts, modifiers and NPC profiles stored as database metadata; no teaching-example rosters. Shared Inventory and Equipment unchanged.",
+  "enemies": [
+    {
+      "key": "7-1",
+      "name": "Skaven Slavemaster (§7)",
+      "attack": 3,
+      "defense": 3,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "7",
+          "label": "Skaven Slavemaster (§7)",
+          "sourcePdfPages": [
+            32
+          ],
+          "enemies": [
+            {
+              "key": "7-1",
+              "name": "Skaven Slavemaster",
+              "ws": 3,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Whip",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 367,
+          "loss": 4,
+          "variants": [
+            {
+              "fromSection": "271",
+              "label": "From §271",
+              "initiative": "enemy"
+            }
+          ],
+          "playerDefaults": {
+            "character": {
+              "ws": 4,
+              "s": 3,
+              "t": 3,
+              "a": 1,
+              "w": 12,
+              "taint": 0,
+              "healingPacks": 3,
+              "name": "You",
+              "maxW": 12,
+              "maxS": 3,
+              "maxT": 3,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 4
+            },
+            "customEnemy": {
+              "name": "",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "",
+                "damage": 1
+              },
+              "armour": 0
+            },
+            "specialWeapon": {
+              "section": "69",
+              "name": "Dammeblad",
+              "weaponSkillBonus": 1,
+              "attacksBonus": 1,
+              "onceOnAcquiringTaintChange": -1,
+              "damageMultiplier": null,
+              "note": "No explicitnewDgiven;do notinventstrongerdamage. Allsim-local;do not customizeuniversalInventoryEquipment."
+            },
+            "interrogation": {
+              "initial": {
+                "w": 8,
+                "taint": 0
+              },
+              "methods": [
+                {
+                  "section": "77",
+                  "name": "Brute strength",
+                  "woundsChange": -2,
+                  "taintChange": 2
+                },
+                {
+                  "section": "241",
+                  "name": "Purifying Flame",
+                  "woundsChange": -2,
+                  "taintChange": 2
+                },
+                {
+                  "section": "304",
+                  "name": "Blessed Waters",
+                  "woundsChange": -1,
+                  "taintChange": 1
+                }
+              ],
+              "deathSection": "154",
+              "taintLimit": 10,
+              "taintSection": "41",
+              "equalSection": "189"
+            },
+            "note": "Use your current statistics. Equipment here belongs to this simulator. Apply passage changes only when the book instructs you."
+          }
+        }
+      }
+    },
+    {
+      "key": "13-1",
+      "name": "Night Goblin Warboss (§13)",
+      "attack": 3,
+      "defense": 3,
+      "hp": 8,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "13",
+          "label": "Night Goblin Warboss + Squig (§13)",
+          "sourcePdfPages": [
+            37
+          ],
+          "enemies": [
+            {
+              "key": "13-1",
+              "name": "Night Goblin Warboss",
+              "ws": 3,
+              "s": 3,
+              "t": 3,
+              "a": 1,
+              "w": 8,
+              "maxW": 8,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            },
+            {
+              "key": "13-2",
+              "name": "Squig",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 3,
+              "maxW": 3,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 246,
+          "loss": 99,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "13-2",
+      "name": "Squig (§13)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "13",
+          "label": "Night Goblin Warboss + Squig (§13)",
+          "sourcePdfPages": [
+            37
+          ],
+          "enemies": [
+            {
+              "key": "13-1",
+              "name": "Night Goblin Warboss",
+              "ws": 3,
+              "s": 3,
+              "t": 3,
+              "a": 1,
+              "w": 8,
+              "maxW": 8,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            },
+            {
+              "key": "13-2",
+              "name": "Squig",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 3,
+              "maxW": 3,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 246,
+          "loss": 99,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "15-1",
+      "name": "Night Goblin Warboss (§15)",
+      "attack": 3,
+      "defense": 4,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "15",
+          "label": "Night Goblin Warboss + Squig (§15)",
+          "sourcePdfPages": [
+            39
+          ],
+          "enemies": [
+            {
+              "key": "15-1",
+              "name": "Night Goblin Warboss",
+              "ws": 3,
+              "s": 4,
+              "t": 4,
+              "a": 1,
+              "w": 10,
+              "maxW": 10,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            },
+            {
+              "key": "15-2",
+              "name": "Squig",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 3,
+              "maxW": 3,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 246,
+          "loss": 99,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "15-2",
+      "name": "Squig (§15)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "15",
+          "label": "Night Goblin Warboss + Squig (§15)",
+          "sourcePdfPages": [
+            39
+          ],
+          "enemies": [
+            {
+              "key": "15-1",
+              "name": "Night Goblin Warboss",
+              "ws": 3,
+              "s": 4,
+              "t": 4,
+              "a": 1,
+              "w": 10,
+              "maxW": 10,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            },
+            {
+              "key": "15-2",
+              "name": "Squig",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 3,
+              "maxW": 3,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 246,
+          "loss": 99,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "17-1",
+      "name": "Skaven Butcher (§17)",
+      "attack": 3,
+      "defense": 3,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "17",
+          "label": "Skaven Butcher (§17)",
+          "sourcePdfPages": [
+            42
+          ],
+          "enemies": [
+            {
+              "key": "17-1",
+              "name": "Skaven Butcher",
+              "ws": 3,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Cleaver",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "17-2",
+              "name": "Skaven Butcher",
+              "ws": 3,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Cleaver",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "loss": 4,
+          "winByRound": {
+            "atMost": 4,
+            "fastSection": 123,
+            "slowSection": 207
+          },
+          "variants": [
+            {
+              "fromSection": "59",
+              "label": "From §59",
+              "initiative": "enemy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "17-2",
+      "name": "Skaven Butcher (§17)",
+      "attack": 3,
+      "defense": 3,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "17",
+          "label": "Skaven Butcher (§17)",
+          "sourcePdfPages": [
+            42
+          ],
+          "enemies": [
+            {
+              "key": "17-1",
+              "name": "Skaven Butcher",
+              "ws": 3,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Cleaver",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "17-2",
+              "name": "Skaven Butcher",
+              "ws": 3,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Cleaver",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "loss": 4,
+          "winByRound": {
+            "atMost": 4,
+            "fastSection": 123,
+            "slowSection": 207
+          },
+          "variants": [
+            {
+              "fromSection": "59",
+              "label": "From §59",
+              "initiative": "enemy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "18-1",
+      "name": "Beastman (§18)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "18",
+          "label": "Beastman (§18)",
+          "sourcePdfPages": [
+            43
+          ],
+          "enemies": [
+            {
+              "key": "18-1",
+              "name": "Beastman",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Cleaver",
+                "s": "*",
+                "damage": 2
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 172,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "19-1",
+      "name": "Champion of Khorne (§19)",
+      "attack": 3,
+      "defense": 4,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "19",
+          "label": "Champion of Khorne (§19)",
+          "sourcePdfPages": [
+            44
+          ],
+          "enemies": [
+            {
+              "key": "19-1",
+              "name": "Champion of Khorne",
+              "ws": 3,
+              "s": 3,
+              "t": 4,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Greataxe",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 4,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 58,
+          "loss": 328,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "29-1",
+      "name": "Night Goblin (§29)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "29",
+          "label": "Night Goblin (§29)",
+          "sourcePdfPages": [
+            49
+          ],
+          "enemies": [
+            {
+              "key": "29-1",
+              "name": "Night Goblin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "29-2",
+              "name": "Night Goblin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 266,
+          "loss": 99,
+          "interruptBeforeRound": 5,
+          "interruptedSection": 357,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "29-2",
+      "name": "Night Goblin (§29)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "29",
+          "label": "Night Goblin (§29)",
+          "sourcePdfPages": [
+            49
+          ],
+          "enemies": [
+            {
+              "key": "29-1",
+              "name": "Night Goblin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "29-2",
+              "name": "Night Goblin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 266,
+          "loss": 99,
+          "interruptBeforeRound": 5,
+          "interruptedSection": 357,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "32-1",
+      "name": "Grey Seer (§32)",
+      "attack": 3,
+      "defense": 3,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "32",
+          "label": "Grey Seer (§32)",
+          "sourcePdfPages": [
+            51
+          ],
+          "enemies": [
+            {
+              "key": "32-1",
+              "name": "Grey Seer",
+              "ws": 3,
+              "s": 3,
+              "t": 3,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 391,
+          "loss": 99,
+          "entryEffects": [
+            {
+              "kind": "taint",
+              "amount": 1
+            },
+            {
+              "kind": "removeItem",
+              "name": "Bone Totem",
+              "scope": "simulator-local/manual source instruction only"
+            }
+          ],
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "33-1",
+      "name": "Night Goblin Warboss (§33)",
+      "attack": 3,
+      "defense": 3,
+      "hp": 8,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "33",
+          "label": "Night Goblin Warboss + Squig (§33)",
+          "sourcePdfPages": [
+            53
+          ],
+          "enemies": [
+            {
+              "key": "33-1",
+              "name": "Night Goblin Warboss",
+              "ws": 3,
+              "s": 3,
+              "t": 3,
+              "a": 1,
+              "w": 8,
+              "maxW": 8,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            },
+            {
+              "key": "33-2",
+              "name": "Squig",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 3,
+              "maxW": 3,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 180,
+          "loss": 99,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "33-2",
+      "name": "Squig (§33)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "33",
+          "label": "Night Goblin Warboss + Squig (§33)",
+          "sourcePdfPages": [
+            53
+          ],
+          "enemies": [
+            {
+              "key": "33-1",
+              "name": "Night Goblin Warboss",
+              "ws": 3,
+              "s": 3,
+              "t": 3,
+              "a": 1,
+              "w": 8,
+              "maxW": 8,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            },
+            {
+              "key": "33-2",
+              "name": "Squig",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 3,
+              "maxW": 3,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 180,
+          "loss": 99,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "35-1",
+      "name": "Night Goblin Warboss (§35)",
+      "attack": 3,
+      "defense": 4,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "35",
+          "label": "Night Goblin Warboss + Squig (§35)",
+          "sourcePdfPages": [
+            55
+          ],
+          "enemies": [
+            {
+              "key": "35-1",
+              "name": "Night Goblin Warboss",
+              "ws": 3,
+              "s": 4,
+              "t": 4,
+              "a": 1,
+              "w": 10,
+              "maxW": 10,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            },
+            {
+              "key": "35-2",
+              "name": "Squig",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 3,
+              "maxW": 3,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 180,
+          "loss": 99,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "35-2",
+      "name": "Squig (§35)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "35",
+          "label": "Night Goblin Warboss + Squig (§35)",
+          "sourcePdfPages": [
+            55
+          ],
+          "enemies": [
+            {
+              "key": "35-1",
+              "name": "Night Goblin Warboss",
+              "ws": 3,
+              "s": 4,
+              "t": 4,
+              "a": 1,
+              "w": 10,
+              "maxW": 10,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            },
+            {
+              "key": "35-2",
+              "name": "Squig",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 3,
+              "maxW": 3,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 180,
+          "loss": 99,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "41-1",
+      "name": "Daemon Spawn (§41)",
+      "attack": 4,
+      "defense": 5,
+      "hp": 12,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "41",
+          "label": "Daemon Spawn (§41)",
+          "sourcePdfPages": [
+            59
+          ],
+          "enemies": [
+            {
+              "key": "41-1",
+              "name": "Daemon Spawn",
+              "ws": 4,
+              "s": 4,
+              "t": 5,
+              "a": 1,
+              "w": 12,
+              "maxW": 12,
+              "weapon": {
+                "name": "Claws",
+                "s": "*",
+                "damage": 1.5
+              },
+              "armour": 5,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 225,
+          "loss": 194,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "43-1",
+      "name": "Skaven (§43)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "section": "43",
+          "label": "Skaven (§43)",
+          "sourcePdfPages": [
+            61
+          ],
+          "enemies": [
+            {
+              "key": "43-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "43-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "43-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "43-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 83,
+          "loss": 365,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "43-2",
+      "name": "Skaven (§43)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "section": "43",
+          "label": "Skaven (§43)",
+          "sourcePdfPages": [
+            61
+          ],
+          "enemies": [
+            {
+              "key": "43-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "43-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "43-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "43-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 83,
+          "loss": 365,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "43-3",
+      "name": "Skaven (§43)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "section": "43",
+          "label": "Skaven (§43)",
+          "sourcePdfPages": [
+            61
+          ],
+          "enemies": [
+            {
+              "key": "43-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "43-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "43-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "43-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 83,
+          "loss": 365,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "43-4",
+      "name": "Skaven (§43)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "section": "43",
+          "label": "Skaven (§43)",
+          "sourcePdfPages": [
+            61
+          ],
+          "enemies": [
+            {
+              "key": "43-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "43-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "43-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "43-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 83,
+          "loss": 365,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "49-1",
+      "name": "Grey Seer (§49)",
+      "attack": 3,
+      "defense": 1,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "49",
+          "label": "Grey Seer (§49)",
+          "sourcePdfPages": [
+            64
+          ],
+          "enemies": [
+            {
+              "key": "49-1",
+              "name": "Grey Seer",
+              "ws": 3,
+              "s": 3,
+              "t": 1,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "enemy",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 391,
+          "loss": 4,
+          "entryEffects": [
+            {
+              "kind": "wounds",
+              "amount": -3
+            }
+          ],
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "54-1",
+      "name": "Skaven (§54)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "section": "54",
+          "label": "Skaven (§54)",
+          "sourcePdfPages": [
+            66
+          ],
+          "enemies": [
+            {
+              "key": "54-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "54-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "54-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "54-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 83,
+          "loss": 365,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "54-2",
+      "name": "Skaven (§54)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "section": "54",
+          "label": "Skaven (§54)",
+          "sourcePdfPages": [
+            66
+          ],
+          "enemies": [
+            {
+              "key": "54-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "54-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "54-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "54-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 83,
+          "loss": 365,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "54-3",
+      "name": "Skaven (§54)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "section": "54",
+          "label": "Skaven (§54)",
+          "sourcePdfPages": [
+            66
+          ],
+          "enemies": [
+            {
+              "key": "54-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "54-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "54-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "54-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 83,
+          "loss": 365,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "54-4",
+      "name": "Skaven (§54)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "section": "54",
+          "label": "Skaven (§54)",
+          "sourcePdfPages": [
+            66
+          ],
+          "enemies": [
+            {
+              "key": "54-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "54-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "54-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "54-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 83,
+          "loss": 365,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "78-1",
+      "name": "Sewer Mutant (§78)",
+      "attack": 2,
+      "defense": 4,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "78",
+          "label": "Sewer Mutant (§78)",
+          "sourcePdfPages": [
+            78
+          ],
+          "enemies": [
+            {
+              "key": "78-1",
+              "name": "Sewer Mutant",
+              "ws": 2,
+              "s": 2,
+              "t": 4,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Claws",
+                "s": "*",
+                "damage": 2
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 158,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "81-1",
+      "name": "Skaven (§81)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "section": "81",
+          "label": "Skaven (§81)",
+          "sourcePdfPages": [
+            80
+          ],
+          "enemies": [
+            {
+              "key": "81-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "81-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "81-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "81-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 22,
+          "loss": 385,
+          "interruptBeforeRound": 6,
+          "interruptedSection": 385,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "81-2",
+      "name": "Skaven (§81)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "section": "81",
+          "label": "Skaven (§81)",
+          "sourcePdfPages": [
+            80
+          ],
+          "enemies": [
+            {
+              "key": "81-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "81-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "81-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "81-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 22,
+          "loss": 385,
+          "interruptBeforeRound": 6,
+          "interruptedSection": 385,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "81-3",
+      "name": "Skaven (§81)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "section": "81",
+          "label": "Skaven (§81)",
+          "sourcePdfPages": [
+            80
+          ],
+          "enemies": [
+            {
+              "key": "81-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "81-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "81-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "81-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 22,
+          "loss": 385,
+          "interruptBeforeRound": 6,
+          "interruptedSection": 385,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "81-4",
+      "name": "Skaven (§81)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "section": "81",
+          "label": "Skaven (§81)",
+          "sourcePdfPages": [
+            80
+          ],
+          "enemies": [
+            {
+              "key": "81-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "81-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "81-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "81-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 22,
+          "loss": 385,
+          "interruptBeforeRound": 6,
+          "interruptedSection": 385,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "85-1",
+      "name": "Skaven (§85)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "section": "85",
+          "label": "Skaven (§85)",
+          "sourcePdfPages": [
+            82
+          ],
+          "enemies": [
+            {
+              "key": "85-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "85-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "85-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "85-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 260,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "85-2",
+      "name": "Skaven (§85)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "section": "85",
+          "label": "Skaven (§85)",
+          "sourcePdfPages": [
+            82
+          ],
+          "enemies": [
+            {
+              "key": "85-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "85-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "85-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "85-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 260,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "85-3",
+      "name": "Skaven (§85)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "section": "85",
+          "label": "Skaven (§85)",
+          "sourcePdfPages": [
+            82
+          ],
+          "enemies": [
+            {
+              "key": "85-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "85-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "85-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "85-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 260,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "85-4",
+      "name": "Skaven (§85)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "section": "85",
+          "label": "Skaven (§85)",
+          "sourcePdfPages": [
+            82
+          ],
+          "enemies": [
+            {
+              "key": "85-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "85-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "85-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "85-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 260,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "90-1",
+      "name": "Assassin (§90)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "90",
+          "label": "Assassin (§90)",
+          "sourcePdfPages": [
+            86
+          ],
+          "enemies": [
+            {
+              "key": "90-1",
+              "name": "Assassin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "90-2",
+              "name": "Assassin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 197,
+          "loss": 4,
+          "playerArmourDisabled": true,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "90-2",
+      "name": "Assassin (§90)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "90",
+          "label": "Assassin (§90)",
+          "sourcePdfPages": [
+            86
+          ],
+          "enemies": [
+            {
+              "key": "90-1",
+              "name": "Assassin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "90-2",
+              "name": "Assassin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 197,
+          "loss": 4,
+          "playerArmourDisabled": true,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "96-1",
+      "name": "Skaven Elite (§96)",
+      "attack": 3,
+      "defense": 3,
+      "hp": null,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "96",
+          "label": "Skaven Elite (§96)",
+          "sourcePdfPages": [
+            92
+          ],
+          "enemies": [
+            {
+              "key": "96-1",
+              "name": "Skaven Elite",
+              "ws": 3,
+              "s": 3,
+              "t": 3,
+              "a": 1,
+              "w": null,
+              "maxW": null,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true,
+              "unavailableStats": [
+                "w"
+              ]
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "kind": "hold-bridge",
+          "loss": 362,
+          "surviveRounds": 5,
+          "trackDamageInflicted": true,
+          "completionSection": 55,
+          "damageCheck": {
+            "atMost": 4,
+            "lowSection": 362,
+            "highSection": 98
+          },
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "106-1",
+      "name": "Beastman Chieftain (§106)",
+      "attack": 3,
+      "defense": 3,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "106",
+          "label": "Beastman Chieftain (§106)",
+          "sourcePdfPages": [
+            97
+          ],
+          "enemies": [
+            {
+              "key": "106-1",
+              "name": "Beastman Chieftain",
+              "ws": 3,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Cleaver",
+                "s": "*",
+                "damage": 2
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 268,
+          "loss": 136,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "108-1",
+      "name": "Weasel (§108)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "108",
+          "label": "Weasel (§108)",
+          "sourcePdfPages": [
+            98
+          ],
+          "enemies": [
+            {
+              "key": "108-1",
+              "name": "Weasel",
+              "ws": 2,
+              "s": 3,
+              "t": 2,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Tentacle",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 371,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "119-1",
+      "name": "Skaven (§119)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "119",
+          "label": "Skaven (§119)",
+          "sourcePdfPages": [
+            104
+          ],
+          "enemies": [
+            {
+              "key": "119-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "119-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "loss": 365,
+          "winByRound": {
+            "atMost": 4,
+            "fastSection": 30,
+            "slowSection": 284
+          },
+          "variants": [
+            {
+              "fromSection": "311",
+              "label": "From §311",
+              "initiative": "enemy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "119-2",
+      "name": "Skaven (§119)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "119",
+          "label": "Skaven (§119)",
+          "sourcePdfPages": [
+            104
+          ],
+          "enemies": [
+            {
+              "key": "119-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            },
+            {
+              "key": "119-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "loss": 365,
+          "winByRound": {
+            "atMost": 4,
+            "fastSection": 30,
+            "slowSection": 284
+          },
+          "variants": [
+            {
+              "fromSection": "311",
+              "label": "From §311",
+              "initiative": "enemy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "124-1",
+      "name": "Ghoul (§124)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": "124",
+          "label": "Ghoul (§124)",
+          "sourcePdfPages": [
+            107
+          ],
+          "enemies": [
+            {
+              "key": "124-1",
+              "name": "Ghoul",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Claws",
+                "s": "**",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "124-2",
+              "name": "Ghoul",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Claws",
+                "s": "**",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "124-3",
+              "name": "Ghoul",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Claws",
+                "s": "**",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 279,
+          "loss": 4,
+          "woundCheck": {
+            "section": 279,
+            "sourcePdfPages": [
+              198
+            ],
+            "fightSection": 124,
+            "woundedSection": 116,
+            "unwoundedSection": 86,
+            "note": "Any actual Wounds lost DURING the Ghoul fight, not whether hero started below max. Track combat damage separately."
+          },
+          "variants": [
+            {
+              "fromSection": "138",
+              "label": "From §138",
+              "initiative": "enemy"
+            },
+            {
+              "fromSection": "361",
+              "label": "From §361",
+              "enemyCount": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "124-2",
+      "name": "Ghoul (§124)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": "124",
+          "label": "Ghoul (§124)",
+          "sourcePdfPages": [
+            107
+          ],
+          "enemies": [
+            {
+              "key": "124-1",
+              "name": "Ghoul",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Claws",
+                "s": "**",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "124-2",
+              "name": "Ghoul",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Claws",
+                "s": "**",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "124-3",
+              "name": "Ghoul",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Claws",
+                "s": "**",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 279,
+          "loss": 4,
+          "woundCheck": {
+            "section": 279,
+            "sourcePdfPages": [
+              198
+            ],
+            "fightSection": 124,
+            "woundedSection": 116,
+            "unwoundedSection": 86,
+            "note": "Any actual Wounds lost DURING the Ghoul fight, not whether hero started below max. Track combat damage separately."
+          },
+          "variants": [
+            {
+              "fromSection": "138",
+              "label": "From §138",
+              "initiative": "enemy"
+            },
+            {
+              "fromSection": "361",
+              "label": "From §361",
+              "enemyCount": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "124-3",
+      "name": "Ghoul (§124)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": "124",
+          "label": "Ghoul (§124)",
+          "sourcePdfPages": [
+            107
+          ],
+          "enemies": [
+            {
+              "key": "124-1",
+              "name": "Ghoul",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Claws",
+                "s": "**",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "124-2",
+              "name": "Ghoul",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Claws",
+                "s": "**",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "124-3",
+              "name": "Ghoul",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Claws",
+                "s": "**",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 279,
+          "loss": 4,
+          "woundCheck": {
+            "section": 279,
+            "sourcePdfPages": [
+              198
+            ],
+            "fightSection": 124,
+            "woundedSection": 116,
+            "unwoundedSection": 86,
+            "note": "Any actual Wounds lost DURING the Ghoul fight, not whether hero started below max. Track combat damage separately."
+          },
+          "variants": [
+            {
+              "fromSection": "138",
+              "label": "From §138",
+              "initiative": "enemy"
+            },
+            {
+              "fromSection": "361",
+              "label": "From §361",
+              "enemyCount": 2
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "125-1",
+      "name": "Cult Leader (§125)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "125",
+          "label": "Cult Leader (§125)",
+          "sourcePdfPages": [
+            108
+          ],
+          "enemies": [
+            {
+              "key": "125-1",
+              "name": "Cult Leader",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 329,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "129-1",
+      "name": "Grey Seer (§129)",
+      "attack": 3,
+      "defense": 2,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "129",
+          "label": "Grey Seer (§129)",
+          "sourcePdfPages": [
+            110
+          ],
+          "enemies": [
+            {
+              "key": "129-1",
+              "name": "Grey Seer",
+              "ws": 3,
+              "s": 3,
+              "t": 2,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Staff",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 391,
+          "loss": 4,
+          "variants": [
+            {
+              "fromSection": "115",
+              "label": "From §115",
+              "initiative": "enemy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "130-1",
+      "name": "Beastman Chieftain (§130)",
+      "attack": 3,
+      "defense": 3,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "130",
+          "label": "Beastman Chieftain (§130)",
+          "sourcePdfPages": [
+            111
+          ],
+          "enemies": [
+            {
+              "key": "130-1",
+              "name": "Beastman Chieftain",
+              "ws": 3,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Cleaver",
+                "s": "*",
+                "damage": 2
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 318,
+          "loss": 190,
+          "playerCombatModifiers": {
+            "ws": 1
+          },
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "133-1",
+      "name": "Weasel (§133)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "133",
+          "label": "Weasel (§133)",
+          "sourcePdfPages": [
+            113
+          ],
+          "enemies": [
+            {
+              "key": "133-1",
+              "name": "Weasel",
+              "ws": 2,
+              "s": 3,
+              "t": 2,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Tentacle",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "enemy",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 371,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "134-1",
+      "name": "Night Goblin (§134)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 27,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "134",
+          "label": "Night Goblin (§134)",
+          "sourcePdfPages": [
+            114
+          ],
+          "enemies": [
+            {
+              "key": "134-1",
+              "name": "Night Goblin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "134-2",
+              "name": "Night Goblin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 399,
+          "loss": 99,
+          "interruptBeforeRound": 5,
+          "interruptedSection": 99,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "134-2",
+      "name": "Night Goblin (§134)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 27,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "134",
+          "label": "Night Goblin (§134)",
+          "sourcePdfPages": [
+            114
+          ],
+          "enemies": [
+            {
+              "key": "134-1",
+              "name": "Night Goblin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "134-2",
+              "name": "Night Goblin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 399,
+          "loss": 99,
+          "interruptBeforeRound": 5,
+          "interruptedSection": 99,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "136-1",
+      "name": "Ungor (§136)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 3,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 28,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "136",
+          "label": "Ungor (§136)",
+          "sourcePdfPages": [
+            116,
+            117
+          ],
+          "enemies": [
+            {
+              "key": "136-1",
+              "name": "Ungor",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 3,
+              "maxW": 3,
+              "weapon": {
+                "name": "Axe",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 114,
+          "loss": 229,
+          "interruptBeforeRound": 4,
+          "interruptedSection": 229,
+          "entryEffects": [
+            {
+              "kind": "setWounds",
+              "amount": 1
+            }
+          ],
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "139-1",
+      "name": "Skaven (§139)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 29,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": "139",
+          "label": "Skaven (§139)",
+          "sourcePdfPages": [
+            118
+          ],
+          "enemies": [
+            {
+              "key": "139-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "139-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "139-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 28,
+          "loss": 365,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "139-2",
+      "name": "Skaven (§139)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 29,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": "139",
+          "label": "Skaven (§139)",
+          "sourcePdfPages": [
+            118
+          ],
+          "enemies": [
+            {
+              "key": "139-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "139-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "139-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 28,
+          "loss": 365,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "139-3",
+      "name": "Skaven (§139)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 29,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": "139",
+          "label": "Skaven (§139)",
+          "sourcePdfPages": [
+            118
+          ],
+          "enemies": [
+            {
+              "key": "139-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "139-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "139-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 28,
+          "loss": 365,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "142-1",
+      "name": "Daemonette of Slaanesh (§142)",
+      "attack": 3,
+      "defense": 3,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 30,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "142",
+          "label": "Daemonette of Slaanesh (§142)",
+          "sourcePdfPages": [
+            120
+          ],
+          "enemies": [
+            {
+              "key": "142-1",
+              "name": "Daemonette of Slaanesh",
+              "ws": 3,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Pincers",
+                "s": "*",
+                "damage": 2
+              },
+              "armour": 4,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 352,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "155-1",
+      "name": "Ghoul Lord (§155)",
+      "attack": 3,
+      "defense": 2,
+      "hp": 8,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 31,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "155",
+          "label": "Ghoul Lord (§155)",
+          "sourcePdfPages": [
+            127
+          ],
+          "enemies": [
+            {
+              "key": "155-1",
+              "name": "Ghoul Lord",
+              "ws": 3,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 8,
+              "maxW": 8,
+              "weapon": {
+                "name": "Iron Sword",
+                "s": "*",
+                "damage": 2
+              },
+              "armour": 4,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "loss": 4,
+          "winChoices": [
+            163,
+            188
+          ],
+          "victoryItemCheck": {
+            "name": "Spectre’s Amulet",
+            "presentSection": 163,
+            "absentSection": 188
+          },
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "156-1",
+      "name": "Sorcerer of Tzeentch (§156)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 32,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "156",
+          "label": "Sorcerer of Tzeentch (§156)",
+          "sourcePdfPages": [
+            128
+          ],
+          "enemies": [
+            {
+              "key": "156-1",
+              "name": "Sorcerer of Tzeentch",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Staff",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "loss": 40,
+          "winChoices": [
+            2
+          ],
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "157-1",
+      "name": "Skaven Sentry (§157)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 33,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "157",
+          "label": "Skaven Sentry (§157)",
+          "sourcePdfPages": [
+            129
+          ],
+          "enemies": [
+            {
+              "key": "157-1",
+              "name": "Skaven Sentry",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "loss": 4,
+          "winChoices": [
+            308
+          ],
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "159-1",
+      "name": "Skaven Chirurgeon (§159)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 34,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "159",
+          "label": "Skaven Chirurgeon (§159)",
+          "sourcePdfPages": [
+            130,
+            131
+          ],
+          "enemies": [
+            {
+              "key": "159-1",
+              "name": "Skaven Chirurgeon",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Scalpel",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "loss": 365,
+          "winChoices": [
+            348
+          ],
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "162-1",
+      "name": "Grey Seer (§162)",
+      "attack": 3,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 35,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "162",
+          "label": "Grey Seer (§162)",
+          "sourcePdfPages": [
+            133
+          ],
+          "enemies": [
+            {
+              "key": "162-1",
+              "name": "Grey Seer",
+              "ws": 3,
+              "s": 3,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Staff",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 391,
+          "loss": 4,
+          "entryEffects": [
+            {
+              "kind": "removeItem",
+              "name": "Shallya’s Blessing",
+              "scope": "manual/simulator-local"
+            }
+          ],
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "169-1",
+      "name": "Skaven (§169)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 36,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "169",
+          "label": "Skaven (§169)",
+          "sourcePdfPages": [
+            139
+          ],
+          "enemies": [
+            {
+              "key": "169-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 187,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "174-1",
+      "name": "Sorcerer of Tzeentch (§174)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 37,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "174",
+          "label": "Sorcerer of Tzeentch (§174)",
+          "sourcePdfPages": [
+            142
+          ],
+          "enemies": [
+            {
+              "key": "174-1",
+              "name": "Sorcerer of Tzeentch",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Staff",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 152,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "176-1",
+      "name": "Sorcerer of Tzeentch (§176)",
+      "attack": 3,
+      "defense": 3,
+      "hp": 8,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 38,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "176",
+          "label": "Sorcerer of Tzeentch (§176)",
+          "sourcePdfPages": [
+            144
+          ],
+          "enemies": [
+            {
+              "key": "176-1",
+              "name": "Sorcerer of Tzeentch",
+              "ws": 3,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 8,
+              "maxW": 8,
+              "weapon": {
+                "name": "Staff",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 325,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "185-1",
+      "name": "Beastlord (§185)",
+      "attack": 3,
+      "defense": 3,
+      "hp": 8,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 39,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "185",
+          "label": "Beastlord (§185)",
+          "sourcePdfPages": [
+            148,
+            149
+          ],
+          "enemies": [
+            {
+              "key": "185-1",
+              "name": "Beastlord",
+              "ws": 3,
+              "s": 3,
+              "t": 3,
+              "a": 1,
+              "w": 8,
+              "maxW": 8,
+              "weapon": {
+                "name": "Axe",
+                "s": "*",
+                "damage": 2
+              },
+              "armour": 5,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 24,
+          "loss": 261,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "193-1",
+      "name": "Slaaneshi Cult Leader (§193)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 40,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "193",
+          "label": "Slaaneshi Cult Leader (§193)",
+          "sourcePdfPages": [
+            153
+          ],
+          "enemies": [
+            {
+              "key": "193-1",
+              "name": "Slaaneshi Cult Leader",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Scourge",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 66,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "198-1",
+      "name": "Night Goblin (§198)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 41,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "198",
+          "label": "Night Goblin (§198)",
+          "sourcePdfPages": [
+            157
+          ],
+          "enemies": [
+            {
+              "key": "198-1",
+              "name": "Night Goblin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "198-2",
+              "name": "Night Goblin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 266,
+          "loss": 99,
+          "interruptBeforeRound": 5,
+          "interruptedSection": 357,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "198-2",
+      "name": "Night Goblin (§198)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 41,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "198",
+          "label": "Night Goblin (§198)",
+          "sourcePdfPages": [
+            157
+          ],
+          "enemies": [
+            {
+              "key": "198-1",
+              "name": "Night Goblin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "198-2",
+              "name": "Night Goblin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 266,
+          "loss": 99,
+          "interruptBeforeRound": 5,
+          "interruptedSection": 357,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "203-1",
+      "name": "Dwarf Gatekeeper (§203)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 42,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "203",
+          "label": "Dwarf Gatekeeper (§203)",
+          "sourcePdfPages": [
+            159
+          ],
+          "enemies": [
+            {
+              "key": "203-1",
+              "name": "Dwarf Gatekeeper",
+              "ws": 2,
+              "s": 3,
+              "t": 3,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Greataxe",
+                "s": "*",
+                "damage": 2
+              },
+              "armour": 5,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 182,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "205-1",
+      "name": "Paulo the Tilean (§205)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 12,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 43,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "205",
+          "label": "Paulo the Tilean (§205)",
+          "sourcePdfPages": [
+            160
+          ],
+          "enemies": [
+            {
+              "key": "205-1",
+              "name": "Paulo the Tilean",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 12,
+              "maxW": 12,
+              "weapon": {
+                "name": "Rapier",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "kind": "limited-duel",
+          "completionSection": 396,
+          "maxRounds": 2,
+          "win": "396",
+          "loss": null,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "209-1",
+      "name": "Skaven Chirurgeon (§209)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 44,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "209",
+          "label": "Skaven Chirurgeon (§209)",
+          "sourcePdfPages": [
+            163
+          ],
+          "enemies": [
+            {
+              "key": "209-1",
+              "name": "Skaven Chirurgeon",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Scalpel",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "loss": 4,
+          "winByRound": {
+            "atMost": 3,
+            "fastSection": 75,
+            "slowSection": 348
+          },
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "217-1",
+      "name": "Champion of Khorne (§217)",
+      "attack": 4,
+      "defense": 4,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 45,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "217",
+          "label": "Champion of Khorne (§217)",
+          "sourcePdfPages": [
+            166
+          ],
+          "enemies": [
+            {
+              "key": "217-1",
+              "name": "Champion of Khorne",
+              "ws": 4,
+              "s": 3,
+              "t": 4,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Greataxe",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 4,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 196,
+          "loss": 137,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "237-1",
+      "name": "Skaven Chirurgeon (§237)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 46,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "237",
+          "label": "Skaven Chirurgeon (§237)",
+          "sourcePdfPages": [
+            174
+          ],
+          "enemies": [
+            {
+              "key": "237-1",
+              "name": "Skaven Chirurgeon",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Scalpel",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 348,
+          "loss": 365,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "254-1",
+      "name": "Guard of Morr (§254)",
+      "attack": 3,
+      "defense": 3,
+      "hp": 8,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 47,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "254",
+          "label": "Guard of Morr (§254)",
+          "sourcePdfPages": [
+            183
+          ],
+          "enemies": [
+            {
+              "key": "254-1",
+              "name": "Guard of Morr",
+              "ws": 3,
+              "s": 3,
+              "t": 3,
+              "a": 1,
+              "w": 8,
+              "maxW": 8,
+              "weapon": {
+                "name": "Greatsword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 4,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 305,
+          "loss": 195,
+          "playerWoundsAtMost": 5,
+          "enemyWoundsAtMost": 5,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "258-1",
+      "name": "Vermintide (§258)",
+      "attack": 2,
+      "defense": 1,
+      "hp": null,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 48,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "258",
+          "label": "Vermintide (§258)",
+          "sourcePdfPages": [
+            187
+          ],
+          "enemies": [
+            {
+              "key": "258-1",
+              "name": "Vermintide",
+              "ws": 2,
+              "s": 2,
+              "t": 1,
+              "a": 1,
+              "w": null,
+              "maxW": null,
+              "weapon": {
+                "name": "Bite",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false,
+              "unavailableStats": [
+                "w"
+              ]
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "kind": "hold-bridge",
+          "loss": 4,
+          "surviveRounds": 5,
+          "trackDamageInflicted": true,
+          "completionSection": 184,
+          "damageCheck": {
+            "atMost": 2,
+            "lowSection": 356,
+            "highSection": 397
+          },
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "275-1",
+      "name": "Sorcerer of Tzeentch (§275)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 49,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "275",
+          "label": "Sorcerer of Tzeentch (§275)",
+          "sourcePdfPages": [
+            196
+          ],
+          "enemies": [
+            {
+              "key": "275-1",
+              "name": "Sorcerer of Tzeentch",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Staff",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 300,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "276-1",
+      "name": "Bright Wizard Apprentice (§276)",
+      "attack": 3,
+      "defense": 2,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 50,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "276",
+          "label": "Bright Wizard Apprentice (§276)",
+          "sourcePdfPages": [
+            197
+          ],
+          "enemies": [
+            {
+              "key": "276-1",
+              "name": "Bright Wizard Apprentice",
+              "ws": 3,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 10,
+              "maxW": 10,
+              "weapon": {
+                "name": "Flaming Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "enemy",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 306,
+          "loss": 375,
+          "protectedCompanion": {
+            "name": "Gustav",
+            "w": 10,
+            "armour": null
+          },
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "283-1",
+      "name": "Night Goblin (§283)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 51,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "283",
+          "label": "Night Goblin (§283)",
+          "sourcePdfPages": [
+            200
+          ],
+          "enemies": [
+            {
+              "key": "283-1",
+              "name": "Night Goblin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 320,
+          "loss": 99,
+          "interruptBeforeRound": 3,
+          "interruptedSection": 384,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "292-1",
+      "name": "Night Goblin (§292)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 52,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "292",
+          "label": "Night Goblin (§292)",
+          "sourcePdfPages": [
+            206
+          ],
+          "enemies": [
+            {
+              "key": "292-1",
+              "name": "Night Goblin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 70,
+          "loss": 99,
+          "variants": [
+            {
+              "fromSection": "206",
+              "label": "From §206",
+              "initiative": "enemy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "307-1",
+      "name": "Hooded Fiend (§307)",
+      "attack": 3,
+      "defense": 2,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 53,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "307",
+          "label": "Hooded Fiend (§307)",
+          "sourcePdfPages": [
+            214
+          ],
+          "enemies": [
+            {
+              "key": "307-1",
+              "name": "Hooded Fiend",
+              "ws": 3,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 264,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "309-1",
+      "name": "Slaaneshi Cult Leader (§309)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 54,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "309",
+          "label": "Slaaneshi Cult Leader (§309)",
+          "sourcePdfPages": [
+            215
+          ],
+          "enemies": [
+            {
+              "key": "309-1",
+              "name": "Slaaneshi Cult Leader",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Scourge",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 25,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "315-1",
+      "name": "Rat Ogre (§315)",
+      "attack": 4,
+      "defense": 4,
+      "hp": 10,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 55,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "315",
+          "label": "Rat Ogre (§315)",
+          "sourcePdfPages": [
+            218
+          ],
+          "enemies": [
+            {
+              "key": "315-1",
+              "name": "Rat Ogre",
+              "ws": 4,
+              "s": 3,
+              "t": 4,
+              "a": 1,
+              "w": 10,
+              "maxW": 10,
+              "weapon": {
+                "name": "Claws",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 107,
+          "loss": 4,
+          "variants": [
+            {
+              "fromSection": "20",
+              "label": "From §20",
+              "initiative": "enemy"
+            },
+            {
+              "fromSection": "228",
+              "label": "From §228",
+              "initiative": "enemy"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "339-1",
+      "name": "Assassin (§339)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 56,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "339",
+          "label": "Assassin (§339)",
+          "sourcePdfPages": [
+            231
+          ],
+          "enemies": [
+            {
+              "key": "339-1",
+              "name": "Assassin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 204,
+          "loss": 4,
+          "playerCombatModifiers": {
+            "ws": -1
+          },
+          "variants": [
+            {
+              "fromSection": "263",
+              "label": "From §263",
+              "enemyWoundsChange": -3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "343-1",
+      "name": "Skaven Slavemaster (§343)",
+      "attack": 3,
+      "defense": 3,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 57,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "343",
+          "label": "Skaven Slavemaster (§343)",
+          "sourcePdfPages": [
+            232
+          ],
+          "enemies": [
+            {
+              "key": "343-1",
+              "name": "Skaven Slavemaster",
+              "ws": 3,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Whip",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": true
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 101,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "345-1",
+      "name": "Cult Leader (§345)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 58,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "345",
+          "label": "Cult Leader (§345)",
+          "sourcePdfPages": [
+            234
+          ],
+          "enemies": [
+            {
+              "key": "345-1",
+              "name": "Cult Leader",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Dagger",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 142,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "347-1",
+      "name": "Champion of Khorne (§347)",
+      "attack": 3,
+      "defense": 4,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 59,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "347",
+          "label": "Champion of Khorne (§347)",
+          "sourcePdfPages": [
+            235
+          ],
+          "enemies": [
+            {
+              "key": "347-1",
+              "name": "Champion of Khorne",
+              "ws": 3,
+              "s": 3,
+              "t": 4,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Greataxe",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 4,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 66,
+          "loss": 137,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "348-1",
+      "name": "Skaven (§348)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 60,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": "348",
+          "label": "Skaven (§348)",
+          "sourcePdfPages": [
+            236
+          ],
+          "enemies": [
+            {
+              "key": "348-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "348-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "348-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 28,
+          "loss": 365,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "348-2",
+      "name": "Skaven (§348)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 60,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": "348",
+          "label": "Skaven (§348)",
+          "sourcePdfPages": [
+            236
+          ],
+          "enemies": [
+            {
+              "key": "348-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "348-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "348-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 28,
+          "loss": 365,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "348-3",
+      "name": "Skaven (§348)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 60,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": "348",
+          "label": "Skaven (§348)",
+          "sourcePdfPages": [
+            236
+          ],
+          "enemies": [
+            {
+              "key": "348-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "348-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "348-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 28,
+          "loss": 365,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "351-1",
+      "name": "Zombie (§351)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 61,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "section": "351",
+          "label": "Zombie (§351)",
+          "sourcePdfPages": [
+            238
+          ],
+          "enemies": [
+            {
+              "key": "351-1",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "351-2",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "351-3",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "351-4",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 175,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "351-2",
+      "name": "Zombie (§351)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 61,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "section": "351",
+          "label": "Zombie (§351)",
+          "sourcePdfPages": [
+            238
+          ],
+          "enemies": [
+            {
+              "key": "351-1",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "351-2",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "351-3",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "351-4",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 175,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "351-3",
+      "name": "Zombie (§351)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 61,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "section": "351",
+          "label": "Zombie (§351)",
+          "sourcePdfPages": [
+            238
+          ],
+          "enemies": [
+            {
+              "key": "351-1",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "351-2",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "351-3",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "351-4",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 175,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "351-4",
+      "name": "Zombie (§351)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 61,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "section": "351",
+          "label": "Zombie (§351)",
+          "sourcePdfPages": [
+            238
+          ],
+          "enemies": [
+            {
+              "key": "351-1",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "351-2",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "351-3",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "351-4",
+              "name": "Zombie",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Rotting Claws",
+                "s": "*",
+                "damage": 0.5
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 175,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "355-1",
+      "name": "Assassin (§355)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 62,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "355",
+          "label": "Assassin (§355)",
+          "sourcePdfPages": [
+            241
+          ],
+          "enemies": [
+            {
+              "key": "355-1",
+              "name": "Assassin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "355-2",
+              "name": "Assassin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 245,
+          "loss": 92,
+          "protectedCompanion": {
+            "name": "Gerhardt",
+            "w": 10,
+            "armour": null
+          },
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "355-2",
+      "name": "Assassin (§355)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 62,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "355",
+          "label": "Assassin (§355)",
+          "sourcePdfPages": [
+            241
+          ],
+          "enemies": [
+            {
+              "key": "355-1",
+              "name": "Assassin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "355-2",
+              "name": "Assassin",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 245,
+          "loss": 92,
+          "protectedCompanion": {
+            "name": "Gerhardt",
+            "w": 10,
+            "armour": null
+          },
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "358-1",
+      "name": "Champion of Khorne (§358)",
+      "attack": 3,
+      "defense": 4,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 63,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "358",
+          "label": "Champion of Khorne (§358)",
+          "sourcePdfPages": [
+            243
+          ],
+          "enemies": [
+            {
+              "key": "358-1",
+              "name": "Champion of Khorne",
+              "ws": 3,
+              "s": 3,
+              "t": 4,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Greataxe",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 4,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 267,
+          "loss": 137,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "366-1",
+      "name": "Champion of Khorne (§366)",
+      "attack": 4,
+      "defense": 4,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 64,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "366",
+          "label": "Champion of Khorne (§366)",
+          "sourcePdfPages": [
+            248
+          ],
+          "enemies": [
+            {
+              "key": "366-1",
+              "name": "Champion of Khorne",
+              "ws": 4,
+              "s": 3,
+              "t": 4,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Greataxe",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 4,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 253,
+          "loss": 137,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "379-1",
+      "name": "Skaven (§379)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 65,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "section": "379",
+          "label": "Skaven (§379)",
+          "sourcePdfPages": [
+            258,
+            259
+          ],
+          "enemies": [
+            {
+              "key": "379-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "379-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "379-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "379-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 28,
+          "loss": 365,
+          "entryEffects": [
+            {
+              "kind": "taint",
+              "amount": 1
+            }
+          ],
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "379-2",
+      "name": "Skaven (§379)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 65,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "section": "379",
+          "label": "Skaven (§379)",
+          "sourcePdfPages": [
+            258,
+            259
+          ],
+          "enemies": [
+            {
+              "key": "379-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "379-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "379-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "379-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 28,
+          "loss": 365,
+          "entryEffects": [
+            {
+              "kind": "taint",
+              "amount": 1
+            }
+          ],
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "379-3",
+      "name": "Skaven (§379)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 65,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "section": "379",
+          "label": "Skaven (§379)",
+          "sourcePdfPages": [
+            258,
+            259
+          ],
+          "enemies": [
+            {
+              "key": "379-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "379-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "379-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "379-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 28,
+          "loss": 365,
+          "entryEffects": [
+            {
+              "kind": "taint",
+              "amount": 1
+            }
+          ],
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "379-4",
+      "name": "Skaven (§379)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 65,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "section": "379",
+          "label": "Skaven (§379)",
+          "sourcePdfPages": [
+            258,
+            259
+          ],
+          "enemies": [
+            {
+              "key": "379-1",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "379-2",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "379-3",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            },
+            {
+              "key": "379-4",
+              "name": "Skaven",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 28,
+          "loss": 365,
+          "entryEffects": [
+            {
+              "kind": "taint",
+              "amount": 1
+            }
+          ],
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "381-1",
+      "name": "Grey Seer (§381)",
+      "attack": 3,
+      "defense": 2,
+      "hp": 4,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 66,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "381",
+          "label": "Grey Seer (§381)",
+          "sourcePdfPages": [
+            261
+          ],
+          "enemies": [
+            {
+              "key": "381-1",
+              "name": "Grey Seer",
+              "ws": 3,
+              "s": 3,
+              "t": 2,
+              "a": 1,
+              "w": 4,
+              "maxW": 4,
+              "weapon": {
+                "name": "Staff",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 391,
+          "loss": 4,
+          "entryEffects": [
+            {
+              "kind": "removeItem",
+              "name": "Dwarf Grenade",
+              "scope": "manual/simulator-local"
+            }
+          ],
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "388-1",
+      "name": "Sorcerer of Tzeentch (§388)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 5,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 67,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "388",
+          "label": "Sorcerer of Tzeentch (§388)",
+          "sourcePdfPages": [
+            264
+          ],
+          "enemies": [
+            {
+              "key": "388-1",
+              "name": "Sorcerer of Tzeentch",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 5,
+              "maxW": 5,
+              "weapon": {
+                "name": "Staff",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 322,
+          "loss": null,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "392-1",
+      "name": "Beastman Gor (§392)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 68,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "392",
+          "label": "Beastman Gor (§392)",
+          "sourcePdfPages": [
+            266
+          ],
+          "enemies": [
+            {
+              "key": "392-1",
+              "name": "Beastman Gor",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            },
+            {
+              "key": "392-2",
+              "name": "Beastman Gor",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 76,
+          "loss": 190,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "392-2",
+      "name": "Beastman Gor (§392)",
+      "attack": 2,
+      "defense": 3,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 68,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "392",
+          "label": "Beastman Gor (§392)",
+          "sourcePdfPages": [
+            266
+          ],
+          "enemies": [
+            {
+              "key": "392-1",
+              "name": "Beastman Gor",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            },
+            {
+              "key": "392-2",
+              "name": "Beastman Gor",
+              "ws": 2,
+              "s": 2,
+              "t": 3,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Sword",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 6,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 76,
+          "loss": 190,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "395-1",
+      "name": "Executioner (§395)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 6,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 69,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "395",
+          "label": "Executioner (§395)",
+          "sourcePdfPages": [
+            268
+          ],
+          "enemies": [
+            {
+              "key": "395-1",
+              "name": "Executioner",
+              "ws": 2,
+              "s": 3,
+              "t": 2,
+              "a": 1,
+              "w": 6,
+              "maxW": 6,
+              "weapon": {
+                "name": "Scythe",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 232,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    },
+    {
+      "key": "398-1",
+      "name": "Slaaneshi Cult Leader (§398)",
+      "attack": 2,
+      "defense": 2,
+      "hp": 7,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "warhammer",
+        "dataset": "CATALOG",
+        "entryIndex": 70,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "398",
+          "label": "Slaaneshi Cult Leader (§398)",
+          "sourcePdfPages": [
+            270
+          ],
+          "enemies": [
+            {
+              "key": "398-1",
+              "name": "Slaaneshi Cult Leader",
+              "ws": 2,
+              "s": 2,
+              "t": 2,
+              "a": 1,
+              "w": 7,
+              "maxW": 7,
+              "weapon": {
+                "name": "Scourge",
+                "s": "*",
+                "damage": 1
+              },
+              "armour": 0,
+              "armouredSkaven": false
+            }
+          ],
+          "initiative": "you",
+          "taintLimit": 6,
+          "taintSection": "26",
+          "armourWeaknessDamage": 1,
+          "win": 300,
+          "loss": 4,
+          "variants": []
+        }
+      }
+    }
+  ]
+}

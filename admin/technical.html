@@ -856,6 +856,11 @@
                          A simulator may export loadData; both lazy loaders await it before init.
                          Character transitions copy supplied profiles and deduplicate completed
                          fight IDs; equipment losses require an explicit choice before the next fight.
+        engines/warhammer/ Shared wound chart plus distinct ranged and knight rulesets.
+                         Knight combat stores database-backed groups, timed exits, unbounded
+                         damage defences, sparring thresholds and protected companions. Temporary
+                         modifiers leave the character sheet intact; story changes are explicit.
+                         Simulator equipment and prisoner counters never alter shared inventory.
         engines/kung-fu.js Interprets database-backed legacy openings, cycles and random choices,
                          plus revised move schedules, stat corrections and defeat conditions.
                          Opponent rules contain no fighter-ID branches. Saved rule versions and
