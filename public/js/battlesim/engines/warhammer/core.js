@@ -1,3 +1,6 @@
+import { isTerminatorFight, terminatorStats, terminatorEngaged, terminatorOutcome,
+  terminatorBeforeRound, terminatorAfterRound, terminatorDrain, resumeTerminatorFight } from './terminator.js';
+
 const copy = value => structuredClone(value);
 const randomDie = () => Math.floor(Math.random() * 6) + 1;
 
@@ -9,11 +12,11 @@ const die = roll => integer(roll(6), 1, 6);
 const alive = fight => fight.opponents.map((enemy, index) => enemy.w > 0 ? index : -1).filter(index => index >= 0);
 const actor = fight => fight.vehicle ?? fight.character;
 
-function weapon(value, ranged) {
+function weapon(value, ranged, maximum = 6) {
   if (value == null) return null;
   const next = copy(value);
   if (!Number.isFinite(next.damage) || next.damage <= 0 || next.damage > 1000) throw new RangeError('Invalid weapon damage');
-  if (ranged) integer(next.s, 1, 6);
+  if (ranged) integer(next.s, 1, maximum);
   if (ranged && next.ammo !== undefined) {
     integer(next.ammo); integer(next.capacity, 1); integer(next.reserve ?? 0);
     if (next.ammo > next.capacity) throw new RangeError('Ammunition exceeds weapon capacity');
@@ -26,21 +29,25 @@ function weapon(value, ranged) {
 export function warhammerCharacter(value) {
   if (!value) throw new TypeError('Missing character');
   const next = copy(value);
-  for (const key of ['ws', 's', 't']) integer(next[key], 1, 6);
+  const maximum = next.statMaximum ?? 6;
+  integer(maximum,6,100);
+  integer(next.ws,1,6);
+  for (const key of ['s', 't']) integer(next[key], 1, maximum);
   for (const key of ['w', 'maxW']) integer(next[key], key === 'maxW' ? 1 : 0);
   if (next.w > next.maxW) throw new RangeError('Wounds exceed starting Wounds');
   for (const key of ['aRanged', 'aClose']) integer(next[key], 1, 100);
   integer(next.purity ?? 0);
   integer(next.armour ?? 0, 0, 6); integer(next.cover ?? 0, 0, 6);
-  next.ranged = weapon(next.ranged, true); next.melee = weapon(next.melee, false);
+  next.ranged = weapon(next.ranged, true, maximum); next.melee = weapon(next.melee, false);
   next.poisoned = Boolean(next.poisoned); next.burning = Boolean(next.burning);
   return next;
 }
 
 // The printed chart spans Strength/Toughness 1 through 6. Infinity means
 // impossible; zero means automatic damage, with saving throws still allowed.
-export function woundThreshold(strength, toughness) {
-  integer(strength, 1, 6); integer(toughness, 1, 6);
+export function woundThreshold(strength, toughness, maximum = 6) {
+  integer(maximum,6,100);
+  integer(strength, 1, maximum); integer(toughness, 1, maximum);
   const threshold = 4 + toughness - strength;
   return threshold < 2 ? 0 : threshold > 6 ? Infinity : threshold;
 }
@@ -57,7 +64,7 @@ function opponent(value) {
   return warhammerCharacter({ ...value, maxW: value.maxW ?? value.w, purity: 0 });
 }
 
-export function startWarhammerFight(character, encounter, mode = 'basic') {
+export function startWarhammerFight(character, encounter, mode = 'basic', previousFight = null) {
   if (!['basic', 'advanced'].includes(mode)) throw new RangeError('Unknown rules');
   const hero = warhammerCharacter(character);
   if (!hero.w) throw new RangeError('No Wounds remaining');
@@ -73,12 +80,23 @@ export function startWarhammerFight(character, encounter, mode = 'basic') {
     fight.kills = 0;
     return fight;
   }
-  fight.opponents = encounter.enemies.map(opponent);
+  fight.opponents = encounter.enemies.map(enemy => opponent({ ...enemy,
+    ...(encounter.statMaximum ? {statMaximum:encounter.statMaximum} : {}) }));
+  if (isTerminatorFight(fight)) {
+    delete fight.character.poisonAppliedRound;
+    if (encounter.continuationFrom && previousFight?.status === 'interrupted'
+        && previousFight.config.sourceSection === encounter.continuationFrom
+        && String(previousFight.section) === String(encounter.sourceSection)) {
+      const survivor = previousFight.opponents.find(enemy => enemy.w > 0);
+      if (survivor) fight.opponents[encounter.carryEnemyIndex].w = Math.min(survivor.w,fight.opponents[encounter.carryEnemyIndex].maxW);
+    }
+    fight.engagedIndices = terminatorEngaged(fight);
+  }
   if (mode === 'advanced' && encounter.advancedPlayerProfile) {
     fight.vehicle = warhammerCharacter(encounter.advancedPlayerProfile);
   }
   if (mode === 'advanced' && encounter.skipRanged) fight.phase = 'close';
-  if (mode === 'advanced' && (!actor(fight).ranged
+  if (!isTerminatorFight(fight) && mode === 'advanced' && (!actor(fight).ranged
       || actor(fight).ranged.ammo === 0 && !actor(fight).ranged.reserve)) fight.phase = 'close';
   if (mode === 'advanced' && encounter.forceCloseOnEmptyAmmo && !actor(fight).ranged?.ammo) fight.phase = 'close';
   return fight;
@@ -93,7 +111,8 @@ function finish(fight, status) {
   if (fight.vehicle) fight.vehicle.burning = false;
 }
 
-function outcome(fight) {
+function outcome(fight, roll = randomDie) {
+  if (terminatorOutcome(fight,roll)) return true;
   if (actor(fight).w <= 0) finish(fight, 'loss');
   else if (alive(fight).length <= (fight.config.stopWhenRemaining ?? 0)) finish(fight, 'win');
   return fight.status !== 'fighting';
@@ -116,19 +135,20 @@ function selectedWeapon(fight, unit, choice, hero) {
   return unit.ranged ?? unit.melee;
 }
 
-function savingThrow(unit, phase) {
-  return [unit.armour, ...(phase === 'close' ? [] : [unit.cover])].filter(value => value > 0).sort((a,b) => a-b)[0];
+function savingThrow(unit, phase, fight) {
+  const stats = terminatorStats(fight,unit);
+  return [stats.armour, ...(phase === 'close' ? [] : [stats.cover])].filter(value => value > 0).sort((a,b) => a-b)[0];
 }
 
 function attack(fight, attacker, defender, used, roll, event, basicHits) {
   const entry = { attacker: attacker.name ?? 'You', defender: defender.name ?? 'You', weapon: used.name ?? '',
-    hitRoll: die(roll), hitThreshold: 7 - attacker.ws };
+    hitRoll: die(roll), hitThreshold: 7 - terminatorStats(fight,attacker).ws };
   event.attacks.push(entry);
   if (used === attacker.ranged && used.ammo !== undefined) used.ammo--;
   if (entry.hitRoll < entry.hitThreshold) return;
   if (fight.mode === 'advanced') {
-    const strength = fight.phase === 'close' ? attacker.s : used.s;
-    entry.woundThreshold = woundThreshold(strength, defender.t);
+    const strength = fight.phase === 'close' ? terminatorStats(fight,attacker).s : used.s;
+    entry.woundThreshold = woundThreshold(strength, terminatorStats(fight,defender).t, fight.config.statMaximum ?? 6);
     // Do not roll for the two exceptional chart entries.
     if (entry.woundThreshold === Infinity) { entry.cannotWound = true; return; }
     if (entry.woundThreshold !== 0) {
@@ -136,18 +156,28 @@ function attack(fight, attacker, defender, used, roll, event, basicHits) {
       if (entry.woundRoll < entry.woundThreshold) return;
     } else entry.automaticWound = true;
   }
-  entry.saveThreshold = savingThrow(defender, fight.phase);
+  entry.saveThreshold = savingThrow(defender, fight.phase, fight);
   if (entry.saveThreshold) {
     entry.saveRoll = die(roll);
     if (entry.saveRoll >= entry.saveThreshold) { entry.saved = true; return; }
   }
   if (fight.mode === 'basic') {
-    const existing = basicHits.find(group => group.defender === defender && group.weapon === used);
-    if (existing) existing.hits++;
-    else basicHits.push({ defender, weapon: used, hits: 1 });
+    let group = basicHits.find(group => group.defender === defender && group.weapon === used);
+    if (group) group.hits++;
+    else { group = {defender,weapon:used,hits:1}; basicHits.push(group); }
+    if (isTerminatorFight(fight)) {
+      const amount = Math.ceil(group.hits*used.damage)-Math.ceil((group.hits-1)*used.damage);
+      const alreadyPoisoned = defender.poisoned;
+      damage(defender,amount,used);
+      group.applied = true;
+      if (used.poison && !alreadyPoisoned) defender.poisonAppliedRound = fight.round;
+    }
   } else {
-    entry.damage = fight.phase === 'close' ? Math.ceil(attacker.s * used.damage) : used.damage;
+    entry.damage = fight.phase === 'close' ? Math.ceil(terminatorStats(fight,attacker).s * used.damage) : used.damage;
+    const alreadyPoisoned = defender.poisoned;
     damage(defender, entry.damage, used);
+    if (isTerminatorFight(fight) && used.poison && !alreadyPoisoned) defender.poisonAppliedRound = fight.round;
+    terminatorDrain(fight,defender,used,roll,event);
   }
 }
 
@@ -157,15 +187,16 @@ function damage(unit, amount, used) {
   if (unit.w > 0 && used?.poison) unit.poisoned = true;
 }
 
-function takeTurn(fight, unit, targets, choice, roll, event, hero) {
+function takeTurn(fight, unit, targets, choice, roll, event, hero, pending = null) {
   if (unit.w <= 0 || fight.status !== 'fighting') return;
   const used = selectedWeapon(fight, unit, choice, hero);
-  const attacks = fight.mode === 'basic' || fight.phase === 'ranged' ? unit.aRanged : unit.aClose;
+  const effective = terminatorStats(fight,unit,hero);
+  const attacks = pending?.remaining ?? (fight.mode === 'basic' || fight.phase === 'ranged' ? effective.aRanged : effective.aClose);
   if (!used || used === unit.ranged && used.ammo !== undefined && used.ammo === 0) {
     if (hero) event.noWeapon = true;
     return;
   }
-  const basicHits = [];
+  const basicHits = pending?.hits ? [{defender:actor(fight),weapon:used,hits:pending.hits,applied:true,priorHits:pending.hits}] : [];
   for (let index = 0; index < attacks && fight.status === 'fighting'; index++) {
     if (used === unit.ranged && used.ammo !== undefined && !used.ammo) break;
     let target = actor(fight);
@@ -173,16 +204,26 @@ function takeTurn(fight, unit, targets, choice, roll, event, hero) {
       const candidate = targets[index] ?? targets.at(-1) ?? alive(fight)[0];
       integer(candidate, 0, fight.opponents.length-1);
       target = fight.opponents[candidate];
+      if (isTerminatorFight(fight) && !fight.engagedIndices.includes(candidate)) throw new RangeError('Choose an engaged opponent');
       if (!target.w) continue; // An explicitly allocated attack is not silently reassigned.
     }
     attack(fight, unit, target, used, roll, event, basicHits);
-    if (fight.mode === 'advanced' && outcome(fight)) break;
+    if ((fight.mode === 'advanced' || isTerminatorFight(fight)) && outcome(fight,roll)) {
+      if (fight.status === 'paused' && !hero) fight.pendingAttacks = {
+        opponentIndex:fight.opponents.indexOf(unit),remaining:attacks-index-1,
+        hits:basicHits.reduce((sum,group) => sum+group.hits,0),choice,
+      };
+      break;
+    }
   }
   for (const group of basicHits) {
-    const amount = Math.ceil(group.hits * group.weapon.damage);
+    const amount = Math.ceil(group.hits * group.weapon.damage)-Math.ceil((group.priorHits ?? 0)*group.weapon.damage);
     event.damage.push({ defender: group.defender.name ?? 'You', hits: group.hits, damage: amount });
-    damage(group.defender, amount, group.weapon);
-    if (outcome(fight)) break;
+    const alreadyPoisoned = group.defender.poisoned;
+    if (!group.applied) damage(group.defender, amount, group.weapon);
+    if (!group.applied && isTerminatorFight(fight) && group.weapon.poison && !alreadyPoisoned) group.defender.poisonAppliedRound = fight.round;
+    if (fight.status !== 'fighting') continue;
+    if (outcome(fight,roll)) break;
   }
   forceClose(fight);
 }
@@ -204,11 +245,14 @@ export function warhammerRound(saved, { targets = [], weapon: choice = 'ranged',
   if (saved?.rulesVersion !== 1 || saved.status !== 'fighting') throw new RangeError('No active fight');
   const fight = copy(saved);
   if (fight.config.kind === 'shooting-challenge') return shootingRound(fight, roll);
+  if (terminatorBeforeRound(fight)) return fight;
   const hero = actor(fight);
+  const before = {player:hero.w,enemies:fight.opponents.reduce((sum,enemy) => sum+enemy.w,0)};
+  fight.lastWeapon = choice;
   if (!Array.isArray(targets)) throw new RangeError('Invalid targets');
   for (const target of targets) integer(target, 0, fight.opponents.length-1);
   if (close) {
-    if (fight.mode !== 'advanced' || fight.phase !== 'ranged' || fight.round < 1 || reload) throw new RangeError('Cannot enter Close Combat now');
+    if (fight.mode !== 'advanced' || fight.phase !== 'ranged' || (!isTerminatorFight(fight) && fight.round < 1) || reload) throw new RangeError('Cannot enter Close Combat now');
     fight.phase = 'close';
   }
   forceClose(fight);
@@ -227,21 +271,32 @@ export function warhammerRound(saved, { targets = [], weapon: choice = 'ranged',
     } else takeTurn(fight, hero, targets, choice, roll, event, true);
   };
   const enemyTurn = () => {
-    for (const enemy of fight.opponents) {
+    const participants = isTerminatorFight(fight) ? fight.engagedIndices.map(index => fight.opponents[index]) : fight.opponents;
+    for (const enemy of participants) {
+      if (fight.mode === 'advanced' && fight.config.leaderEntryIndex !== undefined
+          && enemy === fight.opponents[fight.config.leaderEntryIndex] && fight.round <= fight.config.leaderEntersAfterRound) continue;
       takeTurn(fight, enemy, [], choice, roll, event, false);
       if (fight.status !== 'fighting') break;
     }
   };
-  if (fight.config.initiative === 'enemy') { enemyTurn(); playerTurn(); }
+  if (isTerminatorFight(fight) && fight.config.initiativeOrder) {
+    for (const participant of fight.config.initiativeOrder) {
+      if (participant === 'you') playerTurn();
+      else takeTurn(fight,fight.opponents[participant],[],choice,roll,event,false);
+      if (fight.status !== 'fighting') break;
+    }
+  } else if (fight.config.initiative === 'enemy') { enemyTurn(); playerTurn(); }
   else { playerTurn(); enemyTurn(); }
   if (fight.status === 'fighting') {
     for (const unit of [hero, ...fight.opponents]) {
       if (!unit.w) continue;
-      const amount = Number(unit.burning) + Number(unit.poisoned);
+      const amount = Number(unit.burning) + Number(unit.poisoned && (!isTerminatorFight(fight) || unit.poisonAppliedRound !== fight.round));
       if (amount) { damage(unit, amount); event.effects.push({ name: unit.name ?? 'You', damage: amount }); }
     }
-    outcome(fight);
-  } else if (fight.status === 'win' && hero.poisoned && hero.w > 0) {
+    outcome(fight,roll);
+  } else if (fight.status === 'paused') fight.pendingRoundEnd = true;
+  else if (fight.status === 'win' && hero.poisoned && hero.w > 0
+      && (!isTerminatorFight(fight) || hero.poisonAppliedRound !== fight.round)) {
     // Poison still ticks in the round that kills the last opponent. Winning a
     // succession of short fights must not silently neutralise it.
     damage(hero, 1);
@@ -249,14 +304,44 @@ export function warhammerRound(saved, { targets = [], weapon: choice = 'ranged',
     if (!hero.w) finish(fight, 'loss');
   }
   if (ranged) fight.rangedRounds++;
+  terminatorAfterRound(fight,before,event);
   if (fight.status === 'fighting') {
     const config = fight.config;
-    if (config.surviveRounds && fight.round >= config.surviveRounds) finish(fight, 'win');
+    if (config.surviveRounds && !config.capture && fight.round >= config.surviveRounds) finish(fight, 'win');
     if (fight.mode === 'advanced' && (config.closeAfterRanged && fight.rangedRounds >= config.closeAfterRanged
         || config.closeCombatCondition && fight.rangedRounds >= config.closeCombatCondition.afterRound
           && fight.opponents.length - alive(fight).length < config.closeCombatCondition.ifKillsLessThan)) fight.phase = 'close';
   }
   fight.history.push(event);
+  return fight;
+}
+
+export function continueWarhammerFight(saved, damnatus = false, roll = randomDie) {
+  const fight = resumeTerminatorFight(saved,damnatus);
+  if (fight.status !== 'fighting') {
+    if (!damnatus && saved.pendingRoundEnd && fight.status === 'win' && fight.character.poisoned
+        && fight.character.poisonAppliedRound !== fight.round) {
+      damage(fight.character,1);
+      if (!fight.character.w) finish(fight,'loss');
+    }
+    delete fight.pendingAttacks; delete fight.pendingRoundEnd;
+    return fight;
+  }
+  const pending = fight.pendingAttacks, roundEnd = fight.pendingRoundEnd;
+  delete fight.pendingAttacks; delete fight.pendingRoundEnd;
+  const event = {round:fight.round,phase:fight.phase,continuation:true,attacks:[],damage:[],effects:[]};
+  if (pending?.remaining) takeTurn(fight,fight.opponents[pending.opponentIndex],[],pending.choice,roll,event,false,pending);
+  if (roundEnd && fight.status === 'fighting') {
+    for (const unit of [fight.character,...fight.opponents]) {
+      if (!unit.w) continue;
+      const amount = Number(unit.burning)+Number(unit.poisoned && unit.poisonAppliedRound !== fight.round);
+      if (amount) {damage(unit,amount);event.effects.push({name:unit.name ?? 'You',damage:amount});}
+    }
+    outcome(fight,roll);
+  }
+  if (fight.status === 'fighting' && fight.mode === 'advanced' && fight.config.closeAfterRanged
+      && fight.rangedRounds >= fight.config.closeAfterRanged) fight.phase = 'close';
+  if (pending || roundEnd) fight.history.push(event);
   return fight;
 }
 

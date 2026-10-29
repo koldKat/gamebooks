@@ -1,15 +1,16 @@
 import { createOpponentEditor } from '../../opponents.js';
-import { warhammerCharacter, startWarhammerFight, warhammerRound, reloadWarhammerAfterFight } from './core.js';
+import { warhammerCharacter, startWarhammerFight, warhammerRound, reloadWarhammerAfterFight, continueWarhammerFight } from './core.js';
+import { terminatorStats, terminatorEngaged } from './terminator.js';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
-const active = state => state?.fight?.status === 'fighting';
-const fields = [
+const active = state => ['fighting','paused'].includes(state?.fight?.status);
+const baseFields = [
   ['ws','Weapon Skill',1,6], ['s','Strength',1,6], ['t','Toughness',1,6],
   ['w','Wounds',0], ['maxW','Starting Wounds',1], ['aRanged','Attacks / ranged',1,100],
   ['aClose','Attacks / close',1,100], ['purity','Purity',0], ['armour','Armour save',0,6], ['cover','Cover save',0,6],
 ];
 const enemyFields = [
-  ...fields.filter(([key]) => !['maxW','purity','cover'].includes(key)).map(([key,label,min,max]) => ({ key,label,min:key === 'w' ? 1 : min,max:max ?? 1000000 })),
+  ...baseFields.filter(([key]) => !['maxW','purity','cover'].includes(key)).map(([key,label,min,max]) => ({ key,label,min:key === 'w' ? 1 : min,max:max ?? 1000000 })),
   {key:'attackMode',label:'Weapons',options:[{value:'melee',label:'Close only'},{value:'ranged',label:'Ranged only'},{value:'both',label:'Both'}]},
   {key:'rangedS',label:'Ranged Strength',min:1,max:6}, {key:'rangedDamage',label:'Ranged damage',min:1,max:1000},
   {key:'meleeDamage',label:'Close multiplier',min:0.1,max:1000,step:0.1},
@@ -23,6 +24,8 @@ export function createWarhammerPanel({ document, definition, getRoster, getPlaye
   const ID = definition.stateKey, el = key => document.getElementById(ID + '-' + key);
   let shownRun, shownPreset, editor;
   const defaults = () => getPlayerDefaults();
+  const extended = () => defaults()?.rulesVariant === 'terminator';
+  let fields = baseFields;
   const selected = state => getRoster().find(entry => entry.section === state.encounter);
   function data() {
     if (Number(getBookId()) !== definition.id) return null;
@@ -46,12 +49,14 @@ export function createWarhammerPanel({ document, definition, getRoster, getPlaye
     const key = el(kind + '-preset').value;
     if (!key) return null;
     return { presetKey:key, name:el(kind + '-name').value.trim().slice(0,200), damage:number(kind + '-damage'),
+      ...(extended() ? {strengthBonus:defaults().weaponPresets.find(entry => entry.key === key)?.strengthBonus ?? 0} : {}),
       fire:el(kind + '-fire').checked, poison:el(kind + '-poison').checked,
       ...(kind === 'ranged' ? { s:number('ranged-s'), ammo:number('ranged-ammo'), capacity:number('ranged-capacity'), reserve:number('ranged-reserve') } : {}) };
   }
   function readCharacter() {
     return warhammerCharacter({ ...data().character,
       ...Object.fromEntries(fields.map(([key]) => [key,number(key)])),
+      ...(extended() ? {stormShield:el('stormShield').checked,tyranidWeakness:el('tyranidWeakness').checked} : {}),
       poisoned:el('poisoned').checked, ranged:readWeapon('ranged'), melee:readWeapon('melee') });
   }
   function fillWeapon(kind, value) {
@@ -77,7 +82,7 @@ export function createWarhammerPanel({ document, definition, getRoster, getPlaye
       const state = structuredClone(original); update(state);
       if (getRun() !== run || Number(getBookId()) !== definition.id) return;
       const fight = state.fight;
-      if (fight && !fight.recorded && ['win','loss'].includes(fight.status)) {
+      if (fight && !fight.recorded && ['win','loss','capture','interrupted'].includes(fight.status)) {
         fight.recorded = true;
         state.history.push({enemy:fight.config.label ?? 'Custom fight', outcome:fight.status,
           section:fight.section, ts:Math.max(Date.now(),(state.history.at(-1)?.ts ?? 0)+1)});
@@ -92,7 +97,8 @@ export function createWarhammerPanel({ document, definition, getRoster, getPlaye
       key:preset?.enemies[index].key ?? 'custom-' + index, maxW:row.w,
       ranged:['both','ranged'].includes(row.attackMode) ? { ...row.ranged, name:row.ranged?.name ?? 'Ranged weapon', s:row.rangedS, damage:row.rangedDamage } : null,
       melee:['both','melee'].includes(row.attackMode) ? { ...row.melee, name:row.melee?.name ?? 'Close weapon', damage:row.meleeDamage } : null }));
-    return { ...(preset ?? {}), section:preset?.section ?? 'custom', label:preset?.label ?? 'Custom fight', enemies,
+    return { ...(preset ?? {}), ...(extended() ? {rulesVariant:'terminator',statMaximum:defaults().statMaximum} : {}),
+      section:preset?.section ?? 'custom', label:preset?.label ?? 'Custom fight', enemies,
       initiative:preset?.initiative ?? el('initiative').value, skipRanged:preset?.skipRanged ?? el('startClose').checked };
   }
   function start(state) {
@@ -101,15 +107,20 @@ export function createWarhammerPanel({ document, definition, getRoster, getPlaye
     const encounter = config(state);
     if (encounter.kind !== 'shooting-challenge' && !state.character.ranged && !state.character.melee) throw new RangeError('Choose your weapon first.');
     if (!selected(state)) state.custom = { enemies:editor.snapshot(), initiative:el('initiative').value, skipRanged:el('startClose').checked };
-    state.fight = startWarhammerFight(state.character,encounter,state.mode);
+    state.fight = startWarhammerFight(state.character,encounter,state.mode,state.fight);
     state.log.push('Started: ' + encounter.label + ' (' + state.mode + ').');
   }
   function step(state, options = {}) {
-    if (!active(state)) return;
+    if (state.fight?.status !== 'fighting') return;
     const targets = [...el('targets').querySelectorAll('select')].map(input => Number(input.value));
+    const previousRounds = state.fight.history.length;
     const fight = warhammerRound(state.fight,{targets,weapon:el('weapon').value,...options});
     state.fight = fight; state.character = fight.character;
-    const event = fight.history.at(-1);
+    const event = fight.history.length > previousRounds ? fight.history.at(-1) : null;
+    if (!event) {
+      state.log.push((fight.status === 'loss' ? 'Defeated.' : 'Battle interrupted.') + (fight.section ? ' Continue at section '+fight.section+'.' : ''));
+      return;
+    }
     if (fight.config.kind === 'shooting-challenge') {
       state.log.push(`Shot ${event.round}: ${event.hitRoll} against ${event.hitThreshold}; ${event.kills} kills. ${fight.kills}/${fight.config.killTarget} total.`);
     } else {
@@ -119,9 +130,11 @@ export function createWarhammerPanel({ document, definition, getRoster, getPlaye
         + (entry.damage ? `, ${entry.damage} damage` : '')).join('; ');
       state.log.push(`Round ${event.round} (${event.phase})${event.reload ? ': reloading' : ''}. ${rolls}`);
       for (const entry of event.damage) state.log.push(`${entry.defender}: ${entry.damage} damage.`);
-      for (const entry of event.effects) state.log.push(`${entry.name}: ${entry.damage} ongoing damage.`);
+      for (const entry of event.effects) state.log.push(entry.statDrainRoll
+        ? `${entry.name}: stat drain roll ${entry.statDrainRoll}${entry.statDrain === 'none' ? ', no change' : ''}.`
+        : `${entry.name}: ${entry.damage} ongoing damage.`);
     }
-    if (!active(state)) state.log.push((fight.status === 'win' ? 'Victory!' : 'Defeated.') + (fight.section ? ' Continue at section ' + fight.section + '.' : ''));
+    if (fight.status !== 'fighting') state.log.push(({win:'Victory!',loss:'Defeated.',capture:'Captured.',paused:'Battle paused.',interrupted:'Battle interrupted.'}[fight.status] ?? fight.status) + (fight.section ? ' Continue at section ' + fight.section + '.' : ''));
   }
   function render() {
     if (!el('overlay')) return;
@@ -141,6 +154,10 @@ export function createWarhammerPanel({ document, definition, getRoster, getPlaye
     }
     for (const [key] of fields) el(key).value = state.character[key] ?? 0;
     el('poisoned').checked = state.character.poisoned;
+    if (extended()) {
+      el('stormShield').checked = Boolean(state.character.stormShield);
+      el('tyranidWeakness').checked = Boolean(state.character.tyranidWeakness);
+    }
     for (const kind of ['ranged','melee']) fillWeapon(kind,state.character[kind]);
     editor.lock(locked);
     for (const control of el('character').querySelectorAll('input,select,button')) {
@@ -157,23 +174,29 @@ export function createWarhammerPanel({ document, definition, getRoster, getPlaye
     for (const control of el('enemyEditor').querySelectorAll('[data-stat="s"],[data-stat="t"],[data-stat="aClose"],[data-stat="rangedS"]')) control.closest('label').hidden = state.mode === 'basic';
     el('startClose').closest('label').hidden = state.mode === 'basic' || challenge;
     for (const key of ['reload','closeCombat','reloadAfter']) el(key).hidden = state.mode === 'basic' || challenge;
-    el('start').disabled = locked; el('attack').disabled = !locked; el('cancel').disabled = !locked;
+    el('start').disabled = locked; el('attack').disabled = !locked || fight?.status === 'paused'; el('cancel').disabled = !locked;
+    if (extended()) {
+      el('continuation').hidden = fight?.status !== 'paused';
+      el('continueFight').disabled = fight?.status !== 'paused';
+    }
     const acting = fight?.vehicle ?? state.character;
     el('weaponRow').hidden = state.mode !== 'basic' || challenge;
     el('weapon').disabled = !locked;
     const available = acting.ranged?.ammo > 0 ? 'ranged' : 'melee';
     if (!locked || !acting[el('weapon').value] || el('weapon').value === 'ranged' && !acting.ranged?.ammo) el('weapon').value = available;
     const gun = acting.ranged;
-    el('reload').disabled = !locked || state.mode !== 'advanced' || fight.phase !== 'ranged' || challenge || !gun?.reserve || gun.ammo >= gun.capacity;
-    el('closeCombat').disabled = !locked || state.mode !== 'advanced' || fight.phase !== 'ranged' || fight.round < 1 || challenge;
+    el('reload').disabled = !locked || fight.status === 'paused' || state.mode !== 'advanced' || fight.phase !== 'ranged' || challenge || !gun?.reserve || gun.ammo >= gun.capacity;
+    el('closeCombat').disabled = !locked || fight.status === 'paused' || state.mode !== 'advanced' || fight.phase !== 'ranged' || (!extended() && fight.round < 1) || challenge;
     el('reloadAfter').disabled = locked || !state.character.ranged?.reserve || state.character.ranged.ammo >= state.character.ranged.capacity;
     const actorProfile = fight?.vehicle;
     el('status').textContent = fight ? `${fight.status} · ${state.mode}${fight.phase !== 'basic' ? ' · '+fight.phase : ''}${fight.section ? ' · Section '+fight.section : ''}` : 'Ready';
     el('vehicle').textContent = actorProfile ? `${actorProfile.name}: ${actorProfile.w}/${actorProfile.maxW} Wounds. Your own sheet is kept separately.` : '';
     el('opponents').innerHTML = challenge && fight ? `<p>${fight.kills}/${fight.config.killTarget} kills · ${fight.shotsLeft} shots left</p>` : fight ? '<table class="bsim-report-table"><thead><tr><th>Opponent</th><th>Wounds</th></tr></thead><tbody>'+fight.opponents.map((enemy,index) => `<tr><td>${index+1}. ${escape(enemy.name)}</td><td>${enemy.w}/${enemy.maxW}</td></tr>`).join('')+'</tbody></table>' : '';
     const previous = [...el('targets').querySelectorAll('select')].map(input => input.value);
-    const remaining = fight?.opponents.map((enemy,index) => ({enemy,index})).filter(({enemy}) => enemy.w > 0) ?? [];
-    const count = locked && !challenge ? (state.mode === 'basic' || fight.phase === 'ranged' ? acting.aRanged : acting.aClose) : 0;
+    const engaged = fight && extended() ? terminatorEngaged(fight) : null;
+    const remaining = fight?.opponents.map((enemy,index) => ({enemy,index})).filter(({enemy,index}) => enemy.w > 0 && (!engaged || engaged.includes(index))) ?? [];
+    const effective = fight ? terminatorStats(fight,acting,true) : acting;
+    const count = locked && fight.status !== 'paused' && !challenge ? (state.mode === 'basic' || fight.phase === 'ranged' ? effective.aRanged : effective.aClose) : 0;
     el('targets').innerHTML = Array.from({length:count},(_,index) => `<label class="inv-edit-row"><span>Attack ${index+1} target</span><select class="inv-edit-input">${remaining.map(({enemy,index:i}) => `<option value="${i}">${escape(enemy.name)} (${i+1})</option>`).join('')}</select></label>`).join('');
     [...el('targets').querySelectorAll('select')].forEach((input,index) => { if (remaining.some(({index:i}) => String(i) === previous[index])) input.value = previous[index]; });
     el('log').innerHTML = state.log.slice().reverse().map(line => `<div>${escape(line)}</div>`).join('');
@@ -189,10 +212,22 @@ export function createWarhammerPanel({ document, definition, getRoster, getPlaye
   }
   function init() {
     if (el('overlay')) return;
+    fields = baseFields.map(([key,label,min,max]) => [key,label,min,
+      ['s','t'].includes(key) && extended() ? defaults().statMaximum : max]);
     const overlay = document.createElement('div'); overlay.id = ID+'-overlay'; overlay.className = 'inv-overlay';
     overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(t(definition.i18nPrefix+'.title'))}</span><button class="inv-close-btn" type="button" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left">${select('mode','Rules','<option value="basic">Basic</option><option value="advanced">Advanced</option>')}<details open id="${ID}-character"><summary>Character and weapons</summary><p>${escape(defaults().note)} Changing rules keeps your sheet; use Starting profile to reset it.</p>${fields.map(([key,label,min,max]) => input(key,label,defaults().basic[key],min,max ?? 1000000)).join('')}${check('poisoned','Poisoned')}${weaponControls('ranged','Ranged weapon')}${weaponControls('melee','Close Combat weapon')}<div class="bsim-btn-row">${button('applyCharacter','Apply sheet')}${button('defaults','Starting profile')}${button('reloadAfter','Reload after combat')}</div></details>${select('encounter','Encounter','<option value="">Custom fight</option>'+getRoster().map(entry => `<option value="${entry.section}">${escape(entry.label)}</option>`).join(''))}<p id="${ID}-note"></p>${select('initiative','Initiative','<option value="you">You first</option><option value="enemy">Enemies first</option>')}${check('startClose','Start in Close Combat (advanced)')}<div id="${ID}-enemyEditor"></div><div id="${ID}-weaponRow">${select('weapon','Use weapon','<option value="ranged">Ranged weapon</option><option value="melee">Close weapon</option>')}</div><div id="${ID}-targets"></div><div class="bsim-btn-row">${button('start','Start fight')}${button('attack','Next round')}${button('reload','Reload')}${button('closeCombat','Close Combat')}${button('cancel','End fight')}</div></div><div class="bsim-col bsim-col-right"><div role="status" id="${ID}-status"></div><div role="status" id="${ID}-vehicle"></div><div id="${ID}-opponents"></div><div class="bsim-log" id="${ID}-log"></div><details><summary>Battle history</summary><div id="${ID}-history"></div></details></div></div></div>`;
     document.body.appendChild(overlay);
-    editor = createOpponentEditor({document,id:ID,t,fields:enemyFields,
+    if (extended()) {
+      el('poisoned').closest('label').insertAdjacentHTML('afterend',check('stormShield','Storm Shield equipped')+check('tyranidWeakness','Learned Tyranid weakness'));
+      el('targets').insertAdjacentHTML('afterend',`<div id="${ID}-continuation" hidden><p>Resolve the instructions in the indicated section, then continue the same battle.</p>${check('damnatus','DAMNATUS recorded')}${button('continueFight','Continue battle')}</div>`);
+      el('continueFight').addEventListener('click',() => action(state => {
+        state.fight = continueWarhammerFight(state.fight,el('damnatus').checked);
+        state.character = state.fight.character;
+        state.log.push(state.fight.status === 'fighting' ? 'Resumed the same battle.' : 'Continue at section '+state.fight.section+'.');
+      }));
+    }
+    editor = createOpponentEditor({document,id:ID,t,fields:enemyFields.map(field => ({...field,
+      ...(['s','t','rangedS'].includes(field.key) && extended() ? {max:defaults().statMaximum} : {})})),
       presets:getRoster().filter(entry => entry.kind !== 'shooting-challenge').flatMap(entry => entry.enemies.map(editableEnemy))});
     el('enemyEditor').appendChild(editor.element);
     const launch = document.createElement('button'); launch.id = ID+'-btn'; launch.textContent = t('battlesim.title'); launch.style.display = 'none';

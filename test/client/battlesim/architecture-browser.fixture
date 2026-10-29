@@ -153,6 +153,60 @@ for(const id of BOOK_IDS){
       check(JSON.stringify([run.inventory,run.equipment,run.sim1454])===protectedState,'knight all shared state preserved');
     }finally{Math.random=random;}
   }
+  if(id===1456){
+    const el=key=>document.getElementById('sim1456-'+key),run=app.currentPlaythrough(),data=()=>run.sim1456;
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1456/definition.js');
+    check(getRoster().length===73&&requestedRosters.has(id),'Terminator DB roster');
+    run.inventory={keep:['shared item']};run.equipment={keep:'shared equipment'};run.sim1454={keep:'existing battle'};
+    const protectedState=JSON.stringify([run.inventory,run.equipment,run.sim1454]);
+    const set=(key,value)=>{el(key).value=value;};
+    const change=key=>el(key).dispatchEvent(new Event('change',{bubbles:true}));
+    const reset=()=>{delete run.sim1456;module.render();};
+    const setup=mode=>{
+      set('mode',mode);change('mode');
+      for(const [key,value]of Object.entries({ws:6,s:6,t:6,w:1000,maxW:1000,aRanged:10,aClose:10,armour:1}))set(key,value);
+      set('ranged-ammo',100);set('ranged-capacity',100);set('ranged-s',6);set('ranged-damage',1000);
+      set('melee-damage',100);el('applyCharacter').click();
+    };
+    const choose=section=>{set('encounter',section);change('encounter');};
+    const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    const random=Math.random;
+    try{
+      Math.random=()=>0.999;
+      for(const mode of ['basic','advanced'])for(const entry of getRoster()){
+        reset();setup(mode);choose(entry.section);el('start').click();
+        check(data().fight?.config.section===entry.section,'Terminator preset starts '+mode+' '+entry.section);
+        const before=JSON.stringify(data());module.render();check(JSON.stringify(data())===before,'Terminator render retains fight');
+        const engaged=data().fight.engagedIndices;
+        [...el('targets').querySelectorAll('select')].forEach((input,index)=>{input.value=String(engaged[index%engaged.length]);});
+        el('attack').click();check(data().fight.round===1,'Terminator round '+mode+' '+entry.section);
+        if(data().fight.status==='paused'){
+          check(!el('continuation').hidden&&el('attack').disabled,'Terminator paused controls');
+          el('damnatus').checked=false;el('continueFight').click();
+          check(data().fight.status==='win'&&data().fight.section==='155','Terminator defeated-Talos continuation');
+        }
+        if(data().fight.status==='fighting')cancel();
+        check(JSON.stringify([run.inventory,run.equipment,run.sim1454])===protectedState,'Terminator preserves shared items and old fights');
+      }
+      reset();setup('basic');el('start').click();
+      check(data().fight.config.section==='custom','Terminator custom fight without preset');
+      el('attack').click();check(data().fight.status==='win'&&data().history.length===1,'Terminator custom victory');
+      module.render();check(data().history.length===1,'Terminator history not duplicated');
+      reset();choose('377');set('w',8);el('applyCharacter').click();el('start').click();
+      const faces=[1,6];Math.random=()=>((faces.shift()??1)-.5)/6;
+      el('attack').click();check(data().fight.status==='paused'&&data().character.w===3,'Terminator mid-round checkpoint');
+      const pending=JSON.stringify(data());module.render();check(JSON.stringify(data())===pending,'Terminator paused render preserves pending attack');
+      Math.random=()=>.999;el('damnatus').checked=false;el('continueFight').click();
+      check(data().fight.status==='loss'&&data().fight.round===1&&data().fight.section==='143','Terminator continuation retains remaining enemy attack');
+      reset();setup('advanced');choose('11');el('start').click();
+      const beforeCancel=JSON.stringify(data());el('cancel').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();
+      check(JSON.stringify(run.sim1456)===beforeCancel,'Terminator stale confirmation ignored');
+      app.setCurrentBookId(id);module.render();cancel();
+      const original=JSON.stringify(data());app.state.playthroughs=[{startedAt:2,path:[1]}];app.state.activePtIndex=0;
+      el('start').click();check(app.currentPlaythrough().sim1456===undefined,'Terminator stale controls preserve new run');
+      app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Terminator previous run retained');
+    }finally{Math.random=random;}
+  }
   if(id===1454){
     const el=key=>document.getElementById('sim1454-'+key),run=app.currentPlaythrough(),data=()=>run.sim1454;
     const {getRoster}=await import('REPO/public/js/battlesim/books/1454/definition.js');
