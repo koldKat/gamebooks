@@ -153,6 +153,48 @@ for(const id of BOOK_IDS){
       check(JSON.stringify([run.inventory,run.equipment,run.sim1454])===protectedState,'knight all shared state preserved');
     }finally{Math.random=random;}
   }
+  if(id===1457){
+    const el=key=>document.getElementById('sim1457-'+key),run=app.currentPlaythrough(),data=()=>run.sim1457;
+    const {getRoster,getPlayerDefaults}=await import('REPO/public/js/battlesim/books/1457/definition.js');
+    check(getRoster().length===99&&requestedRosters.has(id),'Vampire DB roster');
+    run.inventory={keep:['shared item']};run.equipment={keep:'shared equipment'};run.sim1456={keep:'existing battle'};
+    const protectedState=JSON.stringify([run.inventory,run.equipment,run.sim1456]);
+    const set=(key,value)=>{el(key).value=value;},change=key=>el(key).dispatchEvent(new Event('change',{bubbles:true}));
+    const reset=()=>{delete run.sim1457;module.render();};
+    const strong=()=>{for(const[key,value]of Object.entries({ws:100,s:100,t:100,w:10000,maxW:10000,a:10,armour:1,weaponDamage:1000}))set(key,value);el('apply').click();};
+    const choose=section=>{set('encounter',section);change('encounter');};
+    const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    const random=Math.random;
+    try{
+      Math.random=()=>.999;
+      for(const line of getPlayerDefaults().bloodlines){
+        reset();set('bloodline',line.key);change('bloodline');document.getElementById('confirm-ok').click();
+        check(data().bloodline===line.key&&data().character.w===line.character.w,'Vampire bloodline sheet');
+      }
+      for(const entry of getRoster()){
+        reset();strong();choose(entry.section);el('start').click();
+        check(data().fight?.config.section===entry.section,'Vampire preset '+entry.section);
+        if(entry.turnOrder)check(el('initiative').selectedOptions[0].textContent==='Printed order'&&el('note').textContent.includes(entry.initiativeOrder.join(' → ')),'Vampire mixed initiative explained');
+        const before=JSON.stringify(data());module.render();check(JSON.stringify(data())===before,'Vampire render preserves fight');
+        el('attack').click();check(data().fight.round===1,'Vampire round '+entry.section);
+        if(['fighting','paused'].includes(data().fight.status))cancel();
+        check(JSON.stringify([run.inventory,run.equipment,run.sim1456])===protectedState,'Vampire shared state preserved');
+      }
+      reset();strong();el('start').click();el('attack').click();
+      check(data().fight.status==='win'&&data().history.length===1,'Vampire custom victory');
+      module.render();check(data().history.length===1,'Vampire history not duplicated');
+      reset();choose('160');el('companion').checked=true;change('companion');el('start').click();
+      check(data().fight.config.section==='110'&&data().fight.config.playerExtraAttacks===1,'Vampire companion route');cancel();
+      reset();choose('271');set('a',0);set('t',100);set('w',100);set('maxW',100);el('apply').click();el('start').click();
+      const pending=data().fight;pending.opponents[0].w=2;pending.status='paused';pending.section='191';module.render();
+      el('resume').click();check(data().fight.status==='fighting'&&data().fight.opponents[0].w===2&&data().fight.config.win==='11','Vampire resumes wounded Terrorgheist');cancel();
+      reset();strong();el('start').click();const frozen=JSON.stringify(data());el('cancel').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();
+      check(JSON.stringify(run.sim1457)===frozen,'Vampire stale confirmation ignored');app.setCurrentBookId(id);module.render();cancel();
+      const original=JSON.stringify(data());app.state.playthroughs=[{startedAt:2,path:[1]}];app.state.activePtIndex=0;
+      el('start').click();check(app.currentPlaythrough().sim1457===undefined,'Vampire stale controls preserve new run');
+      app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Vampire previous run retained');
+    }finally{Math.random=random;}
+  }
   if(id===1456){
     const el=key=>document.getElementById('sim1456-'+key),run=app.currentPlaythrough(),data=()=>run.sim1456;
     const {getRoster}=await import('REPO/public/js/battlesim/books/1456/definition.js');

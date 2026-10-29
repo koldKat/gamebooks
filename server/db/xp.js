@@ -717,7 +717,7 @@ SIM_HISTORY_KEYS.push('sim1291');
 SIM_HISTORY_KEYS.push('sim1292');
 SIM_HISTORY_KEYS.push('sim1293');
 SIM_HISTORY_KEYS.push('sim1294', 'sim1295', 'sim1296', 'sim1297', 'sim1298', 'sim1299', 'sim1300', 'sim1301', 'sim1302', 'sim1303');
-SIM_HISTORY_KEYS.push('sim1362', 'sim1436', 'sim1437', 'sim1438', 'sim1439', 'sim1440', 'sim1441', 'sim1442', 'sim1444', 'sim1445', 'sim1449', 'sim1453', 'sim1454', 'sim1455');
+SIM_HISTORY_KEYS.push('sim1362', 'sim1436', 'sim1437', 'sim1438', 'sim1439', 'sim1440', 'sim1441', 'sim1442', 'sim1444', 'sim1445', 'sim1449', 'sim1453', 'sim1454', 'sim1455', 'sim1456', 'sim1457');
 const RETIRED_SIM_HISTORY_KEYS = ['sim758', 'sim2116'];
 
 function processStateXp(userId, bookId, oldState, newState, totalSections) {
