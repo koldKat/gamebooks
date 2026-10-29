@@ -91,6 +91,54 @@ for(const id of BOOK_IDS){
     const options = [...overlay.querySelectorAll('[role="option"]')];
     check(options.some(option => option.textContent.includes(rosterSeeds[id][0].name)), 'legacy roster displays installed opponent ' + id);
   }
+  if(id===1449){
+    const el=key=>document.getElementById('sim1449-'+key),run=app.currentPlaythrough(),data=()=>run.sim1449;
+    const {getRoster,getPlayerDefaults}=await import('REPO/public/js/battlesim/books/1449/definition.js');
+    check(getRoster().length===21&&requestedRosters.has(id),'dual hero source roster');
+    run.inventory={keep:['shared item']};run.equipment={keep:'shared equipment'};run.sim1453={keep:'saved fight'};
+    const protectedState=JSON.stringify([run.inventory,run.equipment,run.sim1453]);
+    const set=(key,value)=>{el(key).value=value;};
+    const choose=section=>{set('encounter',section);el('encounter').dispatchEvent(new Event('change',{bubbles:true}));};
+    const reset=()=>{delete run.sim1449;module.render();};
+    const strong=()=>{
+      for(const hero of ['sonic','tails']){
+        set('hero',hero);el('hero').dispatchEvent(new Event('change',{bubbles:true}));
+        for(const key of Object.keys(getPlayerDefaults().abilityNames))set('ability-'+key,20);
+        el('applyHero').click();
+      }
+    };
+    const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    const random=Math.random;
+    try{
+      Math.random=()=>0;
+      for(const entry of getRoster()){
+        reset();strong();choose(entry.section);
+        if(entry.manualAbility){check(el('start').disabled,'missing source ability requires choice');set('combatAbility','strength');el('combatAbility').dispatchEvent(new Event('change'));}
+        if(entry.chaos){check(el('start').disabled,'Chaos requires setup');el('rollChaos').click();}
+        el('start').click();check(data().fight?.config.section===entry.section,'dual preset starts '+entry.section);
+        check(el('hero').disabled&&el('encounter').disabled,'dual setup locked '+entry.section);
+        let rounds=0;while(data().fight.status==='fighting'&&rounds++<20)el('attack').click();
+        check(data().fight.status==='win'&&data().history.length===1,'dual preset finishes '+entry.section);
+        const saved=JSON.stringify(data());module.render();module.render();check(JSON.stringify(data())===saved,'dual rendering preserves state '+entry.section);
+      }
+      reset();set('rings',100);el('applyHero').click();check(data().heroes.sonic.lives===3,'exactly100 no extra life');
+      set('rings',101);el('applyHero').click();check(data().heroes.sonic.lives===4&&data().heroes.sonic.rings===101,'crossing100 auto life without spending rings');
+      set('hero','tails');el('hero').dispatchEvent(new Event('change',{bubbles:true}));check(data().heroes.tails.rings===0,'independent hero rings');
+      reset();choose('117');set('helperCount',2);el('helperCount').dispatchEvent(new Event('change',{bubbles:true}));
+      Math.random=()=>0.9;el('rollChaos').click();
+      check(el('start').disabled,'green bolts require targets');
+      for(let i=0;i<2;i++){const target=el('chaosTargets').querySelector('select[value=""]')??[...el('chaosTargets').querySelectorAll('select')].find(input=>input.value==='');check(target,'green victim picker');target.value=String(i);target.dispatchEvent(new Event('change',{bubbles:true}));}
+      el('start').click();check(data().fight.config.enemies.length===3,'actual two mutant wave then boss');cancel();
+      reset();strong();set('combatHero','both');set('combatAbility','speed');el('start').click();
+      check(data().fight.config.enemies[0].heroes.length===2,'custom joint fight');el('attack').click();check(data().fight.status==='win','custom joint result');
+      reset();el('start').click();el('cancel').click();const saved=JSON.stringify(data());
+      app.state.playthroughs.push({startedAt:2,path:[1]});app.state.activePtIndex=1;
+      document.getElementById('confirm-ok').click();el('start').click();el('combatAbility').dispatchEvent(new Event('change'));
+      check(app.currentPlaythrough().sim1449===undefined,'stale controls preserve new run');check(JSON.stringify(run.sim1449)===saved,'stale confirmation preserves old run');
+      app.state.activePtIndex=0;button.click();cancel();
+      check(JSON.stringify([run.inventory,run.equipment,run.sim1453])===protectedState,'dual shared inventory and other sim preserved');
+    }finally{Math.random=random;app.state.activePtIndex=0;}
+  }
   if(id===1453){
     const el=key=>document.getElementById('sim1453-'+key),run=app.currentPlaythrough(),data=()=>run.sim1453;
     const {getRoster,getPlayerDefaults}=await import('REPO/public/js/battlesim/books/1453/definition.js');

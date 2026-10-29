@@ -1,0 +1,2967 @@
+{
+  "schemaVersion": 1,
+  "bookId": 1449,
+  "family": "sonic-dual",
+  "sourceSha256": "279494e95f0dfdeb8ee2cef1b10bd3c483ef2d389fc887afdddd1bf8c49f364b",
+  "rosterComplete": true,
+  "sourceRosterComplete": true,
+  "runtimeImplementationPending": false,
+  "expectedEncounterCount": 21,
+  "source": "Own341pagePDF/currentfullyauditedreader;openingrulesandoriginalsheetsreviewed;21ratedcontexts/35surroundingreferences. Separateheroes,jointstrictcombat,counteronlyonmiss. Missing106returnremainsmanual;295abilitymanual;255printed31explicit. Encounter117 stores mutant/boss prototypes;generate actual waves from the rolled bolts and chosen victims before starting. No sharedInventory/Equipment customization.",
+  "enemies": [
+    {
+      "key": "45-1",
+      "name": "Beast (§45)",
+      "attack": 10,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "45",
+          "label": "Beast (§45)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "45-1",
+              "name": "Beast",
+              "rating": 10,
+              "ability": "strength",
+              "hero": "sonic"
+            }
+          ],
+          "win": "157",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "277"
+            }
+          },
+          "sourcePdfPages": [
+            60
+          ],
+          "bonus": 0,
+          "helperBonus": true,
+          "helperHitSplit": true,
+          "helpers": {
+            "group": "sonic-party",
+            "defaultCount": 0,
+            "maximum": 100
+          },
+          "playerDefaults": {
+            "heroes": {
+              "sonic": {
+                "abilities": {
+                  "speed": 5,
+                  "strength": 4,
+                  "agility": 3,
+                  "coolness": 2,
+                  "quickWits": 2,
+                  "goodLooks": 2
+                },
+                "lives": 3,
+                "rings": 0,
+                "shield": false
+              },
+              "tails": {
+                "abilities": {
+                  "speed": 5,
+                  "strength": 4,
+                  "agility": 3,
+                  "coolness": 2,
+                  "quickWits": 2,
+                  "goodLooks": 2
+                },
+                "lives": 3,
+                "rings": 0,
+                "shield": false
+              }
+            },
+            "heroNames": {
+              "sonic": "Sonic",
+              "tails": "Tails"
+            },
+            "abilityNames": {
+              "speed": "Speed",
+              "strength": "Strength",
+              "agility": "Agility",
+              "coolness": "Coolness",
+              "quickWits": "Quick Wits",
+              "goodLooks": "Good Looks"
+            },
+            "customEnemyDefaults": {
+              "rating": 4
+            },
+            "rules": {
+              "soloCounterThreshold": 10,
+              "jointCounterThreshold": 15,
+              "jointAttackStrict": true,
+              "ringLifeThreshold": 100,
+              "jointVictims": [
+                "tails",
+                "tails",
+                "tails",
+                "sonic",
+                "sonic",
+                "sonic"
+              ],
+              "helperAbsorbsOn": [
+                4,
+                5,
+                6
+              ]
+            },
+            "helperLabel": "Companion",
+            "note": "Assign 5, 4, 3, 2, 2, 2 separately for each hero. Their rings, lives and Shields are independent. Crossing above 100 rings automatically grants a life; the rings are kept.",
+            "startingGear": "Starting gear: Red trainers and White Gloves."
+          }
+        }
+      }
+    },
+    {
+      "key": "50-1",
+      "name": "Number Two (§50)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "50",
+          "label": "Number Two / Number Three (§50)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "50-1",
+              "name": "Number Two",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "50-2",
+              "name": "Number Three",
+              "rating": 8,
+              "ability": "speed",
+              "hero": "sonic"
+            }
+          ],
+          "win": "210",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "94"
+            }
+          },
+          "sourcePdfPages": [
+            65
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "50-2",
+      "name": "Number Three (§50)",
+      "attack": 8,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "50",
+          "label": "Number Two / Number Three (§50)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "50-1",
+              "name": "Number Two",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "50-2",
+              "name": "Number Three",
+              "rating": 8,
+              "ability": "speed",
+              "hero": "sonic"
+            }
+          ],
+          "win": "210",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "94"
+            }
+          },
+          "sourcePdfPages": [
+            65
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "81-1",
+      "name": "Native warrior (§81)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "section": "81",
+          "label": "Native warrior (§81)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "81-1",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "81-2",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            },
+            {
+              "key": "81-3",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "strength",
+              "hero": "sonic"
+            },
+            {
+              "key": "81-4",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "strength",
+              "hero": "tails"
+            }
+          ],
+          "win": "190",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "hit",
+              "section": "281"
+            },
+            "tails": {
+              "when": "hit",
+              "section": "281"
+            }
+          },
+          "sourcePdfPages": [
+            98
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "81-2",
+      "name": "Native warrior (§81)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "section": "81",
+          "label": "Native warrior (§81)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "81-1",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "81-2",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            },
+            {
+              "key": "81-3",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "strength",
+              "hero": "sonic"
+            },
+            {
+              "key": "81-4",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "strength",
+              "hero": "tails"
+            }
+          ],
+          "win": "190",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "hit",
+              "section": "281"
+            },
+            "tails": {
+              "when": "hit",
+              "section": "281"
+            }
+          },
+          "sourcePdfPages": [
+            98
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "81-3",
+      "name": "Native warrior (§81)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "section": "81",
+          "label": "Native warrior (§81)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "81-1",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "81-2",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            },
+            {
+              "key": "81-3",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "strength",
+              "hero": "sonic"
+            },
+            {
+              "key": "81-4",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "strength",
+              "hero": "tails"
+            }
+          ],
+          "win": "190",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "hit",
+              "section": "281"
+            },
+            "tails": {
+              "when": "hit",
+              "section": "281"
+            }
+          },
+          "sourcePdfPages": [
+            98
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "81-4",
+      "name": "Native warrior (§81)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "section": "81",
+          "label": "Native warrior (§81)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "81-1",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "81-2",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            },
+            {
+              "key": "81-3",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "strength",
+              "hero": "sonic"
+            },
+            {
+              "key": "81-4",
+              "name": "Native warrior",
+              "rating": 7,
+              "ability": "strength",
+              "hero": "tails"
+            }
+          ],
+          "win": "190",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "hit",
+              "section": "281"
+            },
+            "tails": {
+              "when": "hit",
+              "section": "281"
+            }
+          },
+          "sourcePdfPages": [
+            98
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "93-1",
+      "name": "Mutated cat guard (§93)",
+      "attack": 10,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "93",
+          "label": "Mutated cat guard (§93)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "93-1",
+              "name": "Mutated cat guard",
+              "rating": 10,
+              "ability": "speed",
+              "hero": "sonic"
+            }
+          ],
+          "win": "144",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "119"
+            }
+          },
+          "sourcePdfPages": [
+            111
+          ],
+          "bonus": 2
+        }
+      }
+    },
+    {
+      "key": "97-1",
+      "name": "Bandit (§97)",
+      "attack": 6,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 3,
+        "entry": {
+          "section": "97",
+          "label": "Bandit (§97)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "97-1",
+              "name": "Bandit",
+              "rating": 6,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "97-2",
+              "name": "Bandit",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "97-3",
+              "name": "Bandit",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            }
+          ],
+          "win": "294",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "hit",
+              "section": "234"
+            }
+          },
+          "sourcePdfPages": [
+            116
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "97-2",
+      "name": "Bandit (§97)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 1,
+        "partCount": 3,
+        "entry": {
+          "section": "97",
+          "label": "Bandit (§97)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "97-1",
+              "name": "Bandit",
+              "rating": 6,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "97-2",
+              "name": "Bandit",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "97-3",
+              "name": "Bandit",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            }
+          ],
+          "win": "294",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "hit",
+              "section": "234"
+            }
+          },
+          "sourcePdfPages": [
+            116
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "97-3",
+      "name": "Bandit (§97)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 2,
+        "partCount": 3,
+        "entry": {
+          "section": "97",
+          "label": "Bandit (§97)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "97-1",
+              "name": "Bandit",
+              "rating": 6,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "97-2",
+              "name": "Bandit",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "97-3",
+              "name": "Bandit",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            }
+          ],
+          "win": "294",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "hit",
+              "section": "234"
+            }
+          },
+          "sourcePdfPages": [
+            116
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "98-1",
+      "name": "Red robot (§98)",
+      "attack": 5,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "98",
+          "label": "Red robot (§98)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "98-1",
+              "name": "Red robot",
+              "rating": 5,
+              "ability": "quickWits",
+              "hero": "sonic"
+            }
+          ],
+          "win": "248",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "288"
+            }
+          },
+          "sourcePdfPages": [
+            117
+          ],
+          "bonus": -1
+        }
+      }
+    },
+    {
+      "key": "102-1",
+      "name": "Woolly mammoth (§102)",
+      "attack": 10,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "102",
+          "label": "Woolly mammoth (§102)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "102-1",
+              "name": "Woolly mammoth",
+              "rating": 10,
+              "ability": "speed",
+              "hero": "tails"
+            }
+          ],
+          "win": null,
+          "winChoices": [
+            "175",
+            "297"
+          ],
+          "exits": {
+            "tails": {
+              "when": "lifeLost",
+              "section": "125"
+            }
+          },
+          "sourcePdfPages": [
+            121
+          ],
+          "bonus": 0,
+          "helperBonus": true,
+          "helperHitSplit": true,
+          "helpers": {
+            "group": "monkeys",
+            "defaultCount": 0,
+            "maximum": 100
+          }
+        }
+      }
+    },
+    {
+      "key": "106-1",
+      "name": "Crocodile guard (§106)",
+      "attack": 9,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "106",
+          "label": "Crocodile guard (§106)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "106-1",
+              "name": "Crocodile guard",
+              "rating": 9,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "106-2",
+              "name": "Crocodile guard",
+              "rating": 9,
+              "ability": "speed",
+              "hero": "sonic"
+            }
+          ],
+          "win": "131",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": null
+            }
+          },
+          "sourcePdfPages": [
+            125
+          ],
+          "bonus": 0,
+          "helperBonus": true,
+          "helperHitSplit": true,
+          "helpers": {
+            "group": "wart-hogs",
+            "defaultCount": 2,
+            "maximum": 100
+          },
+          "note": "The return destination is missing in the source. After losing a life, choose where to continue in the book."
+        }
+      }
+    },
+    {
+      "key": "106-2",
+      "name": "Crocodile guard (§106)",
+      "attack": 9,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "106",
+          "label": "Crocodile guard (§106)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "106-1",
+              "name": "Crocodile guard",
+              "rating": 9,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "106-2",
+              "name": "Crocodile guard",
+              "rating": 9,
+              "ability": "speed",
+              "hero": "sonic"
+            }
+          ],
+          "win": "131",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": null
+            }
+          },
+          "sourcePdfPages": [
+            125
+          ],
+          "bonus": 0,
+          "helperBonus": true,
+          "helperHitSplit": true,
+          "helpers": {
+            "group": "wart-hogs",
+            "defaultCount": 2,
+            "maximum": 100
+          },
+          "note": "The return destination is missing in the source. After losing a life, choose where to continue in the book."
+        }
+      }
+    },
+    {
+      "key": "117-1",
+      "name": "Mutated companion (§117)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "117",
+          "label": "Mutated companion / Galen (§117)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "117-1",
+              "name": "Mutated companion",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "117-2",
+              "name": "Galen",
+              "rating": 10,
+              "ability": "strength",
+              "hero": "sonic"
+            }
+          ],
+          "win": "39",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "21"
+            }
+          },
+          "sourcePdfPages": [
+            137
+          ],
+          "bonus": 0,
+          "helperBonus": true,
+          "helperHitSplit": true,
+          "helpers": {
+            "group": "sonic-party",
+            "defaultCount": 0,
+            "maximum": 100
+          },
+          "chaos": {
+            "countDice": 2,
+            "blueOn": 1,
+            "mutateOn": [
+              5,
+              6
+            ],
+            "suitProtectsOn": [
+              5
+            ],
+            "mutant": {
+              "name": "Mutated companion",
+              "rating": 7,
+              "hero": "sonic",
+              "ability": "speed"
+            },
+            "boss": {
+              "name": "Galen",
+              "rating": 10,
+              "hero": "sonic",
+              "ability": "strength"
+            }
+          },
+          "note": "Roll the Chaos bolts, then choose who each green bolt strikes. Protective suits stop a 5, but not a 6."
+        }
+      }
+    },
+    {
+      "key": "117-2",
+      "name": "Galen (§117)",
+      "attack": 10,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "117",
+          "label": "Mutated companion / Galen (§117)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "117-1",
+              "name": "Mutated companion",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "117-2",
+              "name": "Galen",
+              "rating": 10,
+              "ability": "strength",
+              "hero": "sonic"
+            }
+          ],
+          "win": "39",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "21"
+            }
+          },
+          "sourcePdfPages": [
+            137
+          ],
+          "bonus": 0,
+          "helperBonus": true,
+          "helperHitSplit": true,
+          "helpers": {
+            "group": "sonic-party",
+            "defaultCount": 0,
+            "maximum": 100
+          },
+          "chaos": {
+            "countDice": 2,
+            "blueOn": 1,
+            "mutateOn": [
+              5,
+              6
+            ],
+            "suitProtectsOn": [
+              5
+            ],
+            "mutant": {
+              "name": "Mutated companion",
+              "rating": 7,
+              "hero": "sonic",
+              "ability": "speed"
+            },
+            "boss": {
+              "name": "Galen",
+              "rating": 10,
+              "hero": "sonic",
+              "ability": "strength"
+            }
+          },
+          "note": "Roll the Chaos bolts, then choose who each green bolt strikes. Protective suits stop a 5, but not a 6."
+        }
+      }
+    },
+    {
+      "key": "130-1",
+      "name": "Robot (§130)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "section": "130",
+          "label": "Robot (§130)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "130-1",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "130-2",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "130-3",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            },
+            {
+              "key": "130-4",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            }
+          ],
+          "win": "6",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "hit",
+              "section": "198"
+            },
+            "tails": {
+              "when": "hit",
+              "section": "198"
+            }
+          },
+          "sourcePdfPages": [
+            152
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "130-2",
+      "name": "Robot (§130)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "section": "130",
+          "label": "Robot (§130)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "130-1",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "130-2",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "130-3",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            },
+            {
+              "key": "130-4",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            }
+          ],
+          "win": "6",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "hit",
+              "section": "198"
+            },
+            "tails": {
+              "when": "hit",
+              "section": "198"
+            }
+          },
+          "sourcePdfPages": [
+            152
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "130-3",
+      "name": "Robot (§130)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "section": "130",
+          "label": "Robot (§130)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "130-1",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "130-2",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "130-3",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            },
+            {
+              "key": "130-4",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            }
+          ],
+          "win": "6",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "hit",
+              "section": "198"
+            },
+            "tails": {
+              "when": "hit",
+              "section": "198"
+            }
+          },
+          "sourcePdfPages": [
+            152
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "130-4",
+      "name": "Robot (§130)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "section": "130",
+          "label": "Robot (§130)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "130-1",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "130-2",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "130-3",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            },
+            {
+              "key": "130-4",
+              "name": "Robot",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            }
+          ],
+          "win": "6",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "hit",
+              "section": "198"
+            },
+            "tails": {
+              "when": "hit",
+              "section": "198"
+            }
+          },
+          "sourcePdfPages": [
+            152
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "142-1",
+      "name": "Crocodile (§142)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 4,
+        "entry": {
+          "section": "142",
+          "label": "Crocodile (§142)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "142-1",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "142-2",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "142-3",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            },
+            {
+              "key": "142-4",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            }
+          ],
+          "win": "296",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "31"
+            },
+            "tails": {
+              "when": "lifeLost",
+              "section": "31"
+            }
+          },
+          "sourcePdfPages": [
+            165
+          ],
+          "bonus": 0,
+          "victoryRings": {
+            "sonic": 3,
+            "tails": 3
+          }
+        }
+      }
+    },
+    {
+      "key": "142-2",
+      "name": "Crocodile (§142)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 1,
+        "partCount": 4,
+        "entry": {
+          "section": "142",
+          "label": "Crocodile (§142)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "142-1",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "142-2",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "142-3",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            },
+            {
+              "key": "142-4",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            }
+          ],
+          "win": "296",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "31"
+            },
+            "tails": {
+              "when": "lifeLost",
+              "section": "31"
+            }
+          },
+          "sourcePdfPages": [
+            165
+          ],
+          "bonus": 0,
+          "victoryRings": {
+            "sonic": 3,
+            "tails": 3
+          }
+        }
+      }
+    },
+    {
+      "key": "142-3",
+      "name": "Crocodile (§142)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 2,
+        "partCount": 4,
+        "entry": {
+          "section": "142",
+          "label": "Crocodile (§142)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "142-1",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "142-2",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "142-3",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            },
+            {
+              "key": "142-4",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            }
+          ],
+          "win": "296",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "31"
+            },
+            "tails": {
+              "when": "lifeLost",
+              "section": "31"
+            }
+          },
+          "sourcePdfPages": [
+            165
+          ],
+          "bonus": 0,
+          "victoryRings": {
+            "sonic": 3,
+            "tails": 3
+          }
+        }
+      }
+    },
+    {
+      "key": "142-4",
+      "name": "Crocodile (§142)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 3,
+        "partCount": 4,
+        "entry": {
+          "section": "142",
+          "label": "Crocodile (§142)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "142-1",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "142-2",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "sonic"
+            },
+            {
+              "key": "142-3",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            },
+            {
+              "key": "142-4",
+              "name": "Crocodile",
+              "rating": 7,
+              "ability": "speed",
+              "hero": "tails"
+            }
+          ],
+          "win": "296",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "31"
+            },
+            "tails": {
+              "when": "lifeLost",
+              "section": "31"
+            }
+          },
+          "sourcePdfPages": [
+            165
+          ],
+          "bonus": 0,
+          "victoryRings": {
+            "sonic": 3,
+            "tails": 3
+          }
+        }
+      }
+    },
+    {
+      "key": "168-1",
+      "name": "Metal shark (§168)",
+      "attack": 12,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "168",
+          "label": "Metal shark (§168)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "168-1",
+              "name": "Metal shark",
+              "rating": 12,
+              "ability": "speed",
+              "hero": "tails"
+            }
+          ],
+          "win": "42",
+          "winChoices": [],
+          "exits": {
+            "tails": {
+              "when": "lifeLost",
+              "section": "123"
+            }
+          },
+          "sourcePdfPages": [
+            193
+          ],
+          "bonus": 0,
+          "helperBonus": true,
+          "helperHitSplit": true,
+          "helpers": {
+            "group": "monkeys",
+            "defaultCount": 4,
+            "maximum": 100
+          }
+        }
+      }
+    },
+    {
+      "key": "181-1",
+      "name": "Crocodile (§181)",
+      "attack": 8,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "181",
+          "label": "Crocodile (§181)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "181-1",
+              "name": "Crocodile",
+              "rating": 8,
+              "ability": "strength",
+              "hero": "sonic"
+            },
+            {
+              "key": "181-2",
+              "name": "Crocodile",
+              "rating": 8,
+              "ability": "strength",
+              "hero": "tails"
+            }
+          ],
+          "win": "52",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "160"
+            },
+            "tails": {
+              "when": "hit",
+              "section": "128"
+            }
+          },
+          "sourcePdfPages": [
+            206
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "181-2",
+      "name": "Crocodile (§181)",
+      "attack": 8,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "181",
+          "label": "Crocodile (§181)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "181-1",
+              "name": "Crocodile",
+              "rating": 8,
+              "ability": "strength",
+              "hero": "sonic"
+            },
+            {
+              "key": "181-2",
+              "name": "Crocodile",
+              "rating": 8,
+              "ability": "strength",
+              "hero": "tails"
+            }
+          ],
+          "win": "52",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "160"
+            },
+            "tails": {
+              "when": "hit",
+              "section": "128"
+            }
+          },
+          "sourcePdfPages": [
+            206
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "205-1",
+      "name": "Cat guard (§205)",
+      "attack": 8,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "205",
+          "label": "Cat guard (§205)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "205-1",
+              "name": "Cat guard",
+              "rating": 8,
+              "ability": "strength",
+              "hero": "sonic"
+            },
+            {
+              "key": "205-2",
+              "name": "Cat guard",
+              "rating": 8,
+              "ability": "strength",
+              "hero": "sonic"
+            }
+          ],
+          "win": "192",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "91"
+            }
+          },
+          "sourcePdfPages": [
+            233
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "205-2",
+      "name": "Cat guard (§205)",
+      "attack": 8,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "205",
+          "label": "Cat guard (§205)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "205-1",
+              "name": "Cat guard",
+              "rating": 8,
+              "ability": "strength",
+              "hero": "sonic"
+            },
+            {
+              "key": "205-2",
+              "name": "Cat guard",
+              "rating": 8,
+              "ability": "strength",
+              "hero": "sonic"
+            }
+          ],
+          "win": "192",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "91"
+            }
+          },
+          "sourcePdfPages": [
+            233
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "223-1",
+      "name": "Crocodile guard (§223)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "223",
+          "label": "Crocodile guard (§223)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "223-1",
+              "name": "Crocodile guard",
+              "rating": 7,
+              "ability": "strength",
+              "hero": "sonic"
+            }
+          ],
+          "win": "44",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "31"
+            }
+          },
+          "sourcePdfPages": [
+            252
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "227-1",
+      "name": "Warcat (§227)",
+      "attack": 10,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "227",
+          "label": "Warcat (§227)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "227-1",
+              "name": "Warcat",
+              "rating": 10,
+              "ability": "agility",
+              "heroes": [
+                "sonic",
+                "tails"
+              ]
+            }
+          ],
+          "win": "33",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "8"
+            },
+            "tails": {
+              "when": "lifeLost",
+              "section": "8"
+            }
+          },
+          "sourcePdfPages": [
+            257
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "239-1",
+      "name": "Number One (§239)",
+      "attack": 12,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "239",
+          "label": "Number One (§239)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "239-1",
+              "name": "Number One",
+              "rating": 12,
+              "ability": "strength",
+              "hero": "sonic"
+            }
+          ],
+          "win": "117",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "21"
+            }
+          },
+          "sourcePdfPages": [
+            272
+          ],
+          "bonus": 0,
+          "helperBonus": true,
+          "helperHitSplit": true,
+          "helpers": {
+            "group": "sonic-party",
+            "defaultCount": 0,
+            "maximum": 100
+          }
+        }
+      }
+    },
+    {
+      "key": "255-1",
+      "name": "Chief crocodile (§255)",
+      "attack": 11,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "255",
+          "label": "Chief crocodile (§255)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "255-1",
+              "name": "Chief crocodile",
+              "rating": 11,
+              "ability": "strength",
+              "heroes": [
+                "sonic",
+                "tails"
+              ]
+            }
+          ],
+          "win": "229",
+          "winChoices": [],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "31"
+            },
+            "tails": {
+              "when": "lifeLost",
+              "section": "31"
+            }
+          },
+          "sourcePdfPages": [
+            289
+          ],
+          "bonus": 0
+        }
+      }
+    },
+    {
+      "key": "268-1",
+      "name": "Metal shark (§268)",
+      "attack": 12,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "268",
+          "label": "Metal shark (§268)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "268-1",
+              "name": "Metal shark",
+              "rating": 12,
+              "ability": "speed",
+              "hero": "tails"
+            }
+          ],
+          "win": "42",
+          "winChoices": [],
+          "exits": {
+            "tails": {
+              "when": "lifeLost",
+              "section": "123"
+            }
+          },
+          "sourcePdfPages": [
+            303
+          ],
+          "bonus": 0,
+          "helperBonus": true,
+          "helperHitSplit": true,
+          "helpers": {
+            "group": "monkeys",
+            "defaultCount": 4,
+            "maximum": 100
+          }
+        }
+      }
+    },
+    {
+      "key": "295-1",
+      "name": "Mutated chaos creature (§295)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "295",
+          "label": "Mutated chaos creature (§295)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "295-1",
+              "name": "Mutated chaos creature",
+              "rating": 7,
+              "ability": null,
+              "hero": "sonic"
+            },
+            {
+              "key": "295-2",
+              "name": "Mutated chaos creature",
+              "rating": 7,
+              "ability": null,
+              "hero": "sonic"
+            }
+          ],
+          "win": null,
+          "winChoices": [
+            "187",
+            "239"
+          ],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "21"
+            }
+          },
+          "sourcePdfPages": [
+            332
+          ],
+          "bonus": 0,
+          "helperBonus": true,
+          "helperHitSplit": false,
+          "helpers": {
+            "group": "sonic-party",
+            "defaultCount": 0,
+            "maximum": 100
+          },
+          "manualAbility": true,
+          "note": "This passage does not name a combat ability. Choose one before starting."
+        }
+      }
+    },
+    {
+      "key": "295-2",
+      "name": "Mutated chaos creature (§295)",
+      "attack": 7,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "295",
+          "label": "Mutated chaos creature (§295)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "295-1",
+              "name": "Mutated chaos creature",
+              "rating": 7,
+              "ability": null,
+              "hero": "sonic"
+            },
+            {
+              "key": "295-2",
+              "name": "Mutated chaos creature",
+              "rating": 7,
+              "ability": null,
+              "hero": "sonic"
+            }
+          ],
+          "win": null,
+          "winChoices": [
+            "187",
+            "239"
+          ],
+          "exits": {
+            "sonic": {
+              "when": "lifeLost",
+              "section": "21"
+            }
+          },
+          "sourcePdfPages": [
+            332
+          ],
+          "bonus": 0,
+          "helperBonus": true,
+          "helperHitSplit": false,
+          "helpers": {
+            "group": "sonic-party",
+            "defaultCount": 0,
+            "maximum": 100
+          },
+          "manualAbility": true,
+          "note": "This passage does not name a combat ability. Choose one before starting."
+        }
+      }
+    },
+    {
+      "key": "297-1",
+      "name": "Drei-Gunug, the Eater of Foxes (§297)",
+      "attack": 8,
+      "defense": null,
+      "hp": 1,
+      "pb": null,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "sonic-dual",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "297",
+          "label": "Drei-Gunug, the Eater of Foxes (§297)",
+          "rules": {
+            "soloCounterThreshold": 10,
+            "jointCounterThreshold": 15,
+            "jointAttackStrict": true,
+            "ringLifeThreshold": 100,
+            "jointVictims": [
+              "tails",
+              "tails",
+              "tails",
+              "sonic",
+              "sonic",
+              "sonic"
+            ],
+            "helperAbsorbsOn": [
+              4,
+              5,
+              6
+            ]
+          },
+          "enemies": [
+            {
+              "key": "297-1",
+              "name": "Drei-Gunug, the Eater of Foxes",
+              "rating": 8,
+              "ability": "speed",
+              "hero": "tails"
+            }
+          ],
+          "win": null,
+          "winChoices": [
+            "215",
+            "132"
+          ],
+          "exits": {
+            "tails": {
+              "when": "lifeLost",
+              "section": "41"
+            }
+          },
+          "sourcePdfPages": [
+            335
+          ],
+          "bonus": 0
+        }
+      }
+    }
+  ]
+}
