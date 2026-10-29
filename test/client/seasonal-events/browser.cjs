@@ -12,6 +12,7 @@ const source = `<!doctype html><meta charset="utf-8">
 <link rel="stylesheet" href="file://${publicRoot}/css/seasonal-events.css">
 <style>body{margin:24px;background:#111827;color:#ddd;font:16px sans-serif}button{display:block;width:100%;height:350px;cursor:pointer;background:#263147;color:white;border:1px solid #64748b;border-radius:12px;margin-top:20px}</style>
 <label><input type="checkbox" id="seasonal-events-cb"> Seasonal events</label>
+<div id="seasonal-event-notice" class="seasonal-event-notice" hidden></div>
 <button id="target">Halloween cursor companion</button>
 <div id="landing-wrapper" style="visibility:hidden">
   <div id="covers-panel" style="position:fixed;left:0;top:450px;width:100px;height:400px"></div>
@@ -51,8 +52,9 @@ await blink;await delay(220);
 check(!pumpkin.classList.contains('is-blinking'),'eyes reopen');
 check(pumpkin.style.getPropertyValue('--pumpkin-look-x')==='-2.0px','looks around');
 await mouth;await delay(220);
-check(getComputedStyle(pumpkin.querySelector('.seasonal-pumpkin__mouth')).transform.includes('1.45'),'mouth opens wide');
-await delay(1000);check(!pumpkin.classList.contains('is-gaping'),'mouth closes');
+check(getComputedStyle(pumpkin.querySelector('.seasonal-pumpkin__mouth-open')).display!=='none','mouth opens wide');
+check(getComputedStyle(pumpkin.querySelector('.seasonal-pumpkin__body')).animationName==='pumpkin-shake','shakes while mouth open');
+await delay(1600);check(!pumpkin.classList.contains('is-gaping'),'mouth closes');
 move(innerWidth-1,innerHeight-1);await delay(60);
 const rect=pumpkin.getBoundingClientRect();check(rect.right<=innerWidth&&rect.bottom<=innerHeight,'stays within viewport');
 move(150,150,'touch');check(pumpkin.hidden,'no touch cursor');move();await delay(60);
@@ -74,11 +76,16 @@ const toggle=document.getElementById('seasonal-events-cb');check(toggle.checked,
 toggle.checked=false;toggle.dispatchEvent(new Event('change'));
 check(!document.querySelector('.seasonal-pumpkin'),'turn off immediately');
 check(!document.querySelector('.seasonal-background'),'background follows visual preference');
+const notice=document.getElementById('seasonal-event-notice');
+check(!notice.hidden&&notice.textContent==='Halloween event active: double XP for losses and battle deaths.','reward notice independent of decorations');
+check(getComputedStyle(notice.querySelector('.seasonal-event-loss')).color==='rgb(248, 113, 113)','losses red');
+check(getComputedStyle(notice.querySelector('.seasonal-event-battle-death')).color==='rgb(217, 119, 6)','battle deaths dark orange');
 check(saved.seasonalEvents==='0'&&localStorage.getItem('seasonal-events')==='0','persist preference');
 stop();stop=initSeasonalEvents({now:()=>date});check(!document.querySelector('.seasonal-pumpkin'),'stays disabled after reinitialization');
 applySeasonalEventsPreference('1');check(toggle.checked&&document.querySelector('.seasonal-pumpkin'),'server preference restores setting');
 date=new Date(2026,10,3,23,59);refresh();check(document.querySelector('.seasonal-pumpkin'),'last event day');
 date=new Date(2026,10,4);refresh();check(!document.querySelector('.seasonal-pumpkin'),'event expires in open tab');
+check(notice.hidden,'notice expires');
 date=new Date(2027,9,31);refresh();check(document.querySelectorAll('.seasonal-pumpkin').length===1,'annual event and no duplicates');
 stop();check(!document.querySelector('.seasonal-pumpkin'),'cleanup');
 document.body.classList.remove('reduce-motion');

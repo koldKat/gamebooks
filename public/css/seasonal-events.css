@@ -28,7 +28,16 @@
   transform-origin: center;
   transition: transform 160ms ease;
 }
-.seasonal-pumpkin.is-gaping .seasonal-pumpkin__mouth { transform: translateY(-1px) scale(1.06, 1.45); }
+.seasonal-pumpkin__mouth-open { display: none; }
+.seasonal-pumpkin.is-gaping .seasonal-pumpkin__mouth-open { display: block; }
+.seasonal-pumpkin.is-gaping .seasonal-pumpkin__mouth-closed { display: none; }
+.seasonal-pumpkin.is-gaping .seasonal-pumpkin__body { animation: pumpkin-shake 110ms linear infinite; }
+@keyframes pumpkin-shake {
+  0%, 100% { transform: translateX(-1.5px) rotate(-4deg) scale(1.08); }
+  50% { transform: translateX(1.5px) rotate(4deg) scale(1.08); }
+}
+.seasonal-pumpkin__body { transform-origin: 24px 26px; }
+body.reduce-motion .seasonal-pumpkin__body { animation: none; }
 body.reduce-motion .seasonal-pumpkin * { transition: none; }
 @media (prefers-reduced-motion: reduce) {
   .seasonal-pumpkin * { transition: none; }
@@ -41,15 +50,41 @@ body.reduce-motion .seasonal-pumpkin * { transition: none; }
   pointer-events: none;
   user-select: none;
 }
+.seasonal-background[hidden], .seasonal-background__icon[hidden], .seasonal-background__haze[hidden] { display: none; }
+.seasonal-background__haze {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: radial-gradient(ellipse at 45% 25%, #b8581929, transparent 65%),
+    radial-gradient(ellipse at 65% 75%, #6d329c26, transparent 65%);
+}
 .seasonal-background__icon {
   position: absolute;
   width: 40px;
   height: 40px;
-  color: #b9a7d8;
-  opacity: .38;
+  color: #fff;
+  opacity: .78;
   transform: rotate(-8deg);
 }
-.seasonal-background__icon:nth-child(2) { transform: rotate(7deg); }
-.seasonal-background__icon:nth-child(3) { color: #e09a57; transform: rotate(-5deg); }
+.seasonal-background__icon[data-kind="1"] { color: #050507; opacity: .95; }
+.seasonal-background__icon[data-kind="2"] { color: #ee942e; opacity: .88; }
+.seasonal-background__icon[data-kind="3"] { color: #08090d; opacity: .9; filter: drop-shadow(0 0 1px #cbd5e1); }
+.seasonal-background__icon[data-kind="4"] { color: #f1f2f4; opacity: .5; }
+.seasonal-background__icon[data-kind="5"] { color: #e8e3d9; opacity: .78; }
+body.covers-collapsed.right-collapsed.feed-collapsed .seasonal-background { display: none; }
 .seasonal-background__icon svg { width: 100%; height: 100%; fill: currentColor; }
 @media print { .seasonal-background { display: none; } }
+.seasonal-event-notice {
+  margin: 0 0 .9rem;
+  padding: .6rem .8rem;
+  border: 1px solid #6f5485;
+  border-left: 3px solid #d58b48;
+  border-radius: 7px;
+  background: #191b2b;
+  color: #d9d7e7;
+  font-size: .85rem;
+  line-height: 1.5;
+}
+.seasonal-event-notice strong { color: #f0b17e; font-weight: 600; }
+.seasonal-event-loss { color: #f87171; font-weight: 600; }
+.seasonal-event-battle-death { color: #d97706; font-weight: 600; }

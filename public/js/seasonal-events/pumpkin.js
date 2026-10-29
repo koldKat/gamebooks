@@ -4,7 +4,7 @@ export function createPumpkin({ random = Math.random } = {}) {
   pumpkin.className = 'seasonal-pumpkin';
   pumpkin.setAttribute('aria-hidden', 'true');
   pumpkin.hidden = true;
-  pumpkin.innerHTML = `<svg viewBox="0 0 48 48" focusable="false">
+  pumpkin.innerHTML = `<svg viewBox="0 0 48 48" focusable="false"><g class="seasonal-pumpkin__body">
     <path d="M23 13c-2-5 1-9 5-10l3 3c-4 0-5 3-4 7" fill="#57813c" stroke="#294722" stroke-width="1.5"/>
     <path d="M24 13C5 5 1 24 7 35c4 9 12 10 17 8 6 2 14 1 18-8 6-12 0-29-18-22Z" fill="#ef8520" stroke="#783b15" stroke-width="1.5"/>
     <path d="M20 13c-8 7-9 22-1 30M28 13c8 7 9 22 1 30" fill="none" stroke="#c75b17" stroke-width="1.6"/>
@@ -19,10 +19,16 @@ export function createPumpkin({ random = Math.random } = {}) {
     </g>
     <path d="m24 29-3 5h6Z" fill="#49200d"/>
     <g class="seasonal-pumpkin__mouth">
+    <g class="seasonal-pumpkin__mouth-closed">
       <path d="m11 33 6 3 3-1 4 3 4-3 3 1 6-3-3 7-6 2-4-1-4 1-6-2Z" fill="#ffd36a" stroke="#49200d" stroke-width="1.6" stroke-linejoin="round"/>
       <path d="m16 35 2 5 2-4m8 0 2 4 2-5m-10 6 2-3 2 3" fill="#49200d"/>
     </g>
-  </svg>`;
+    <g class="seasonal-pumpkin__mouth-open">
+      <path d="M13 31Q24 27 35 31L34 40Q24 49 14 40Z" fill="#291209" stroke="#9a4414" stroke-width="1.2"/>
+      <path d="m15 31 3 8 3-9m6 0 3 9 3-8m-13 12 4-7 4 7" fill="#ffdc86"/>
+    </g>
+    </g>
+  </g></svg>`;
   document.body.append(pumpkin);
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   let blinkTimer, openTimer, glanceTimer, mouthTimer, closeMouthTimer, frame, point;
@@ -56,9 +62,9 @@ export function createPumpkin({ random = Math.random } = {}) {
     mouthTimer = setTimeout(() => {
       if (pumpkin.hidden || !animate()) return;
       pumpkin.classList.add('is-gaping');
-      closeMouthTimer = setTimeout(() => pumpkin.classList.remove('is-gaping'), 1000);
+      closeMouthTimer = setTimeout(() => pumpkin.classList.remove('is-gaping'), 1500);
       scheduleMouth();
-    }, 12000 + random() * 10000);
+    }, 10000 + random() * 7000);
   }
   function updateAnimation() {
     clearAnimation();
@@ -82,7 +88,12 @@ export function createPumpkin({ random = Math.random } = {}) {
     });
   }
   function pointerDown(event) { if (event.pointerType !== 'mouse') hide(); }
-  const prefsObserver = new MutationObserver(updateAnimation);
+  let lastMotion = animate();
+  function motionChanged() {
+    const next = animate();
+    if (next !== lastMotion) { lastMotion = next; updateAnimation(); }
+  }
+  const prefsObserver = new MutationObserver(motionChanged);
   prefsObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
   document.addEventListener('pointermove', move, { passive: true });
   document.addEventListener('pointerdown', pointerDown, { passive: true });
@@ -91,7 +102,7 @@ export function createPumpkin({ random = Math.random } = {}) {
   window.addEventListener('resize', hide);
   document.addEventListener('visibilitychange', hide);
   document.addEventListener('pointerlockchange', hide);
-  motion.addEventListener('change', updateAnimation);
+  motion.addEventListener('change', motionChanged);
   return () => {
     hide(); prefsObserver.disconnect();
     document.removeEventListener('pointermove', move);
@@ -101,7 +112,7 @@ export function createPumpkin({ random = Math.random } = {}) {
     window.removeEventListener('resize', hide);
     document.removeEventListener('visibilitychange', hide);
     document.removeEventListener('pointerlockchange', hide);
-    motion.removeEventListener('change', updateAnimation);
+    motion.removeEventListener('change', motionChanged);
     pumpkin.remove();
   };
 }

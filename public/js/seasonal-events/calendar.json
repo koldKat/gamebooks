@@ -1,6 +1,8 @@
 [
   {
     "id": "halloween",
+    "title": "Halloween event active",
+    "description": "double XP for losses and battle deaths.",
     "start": 1028,
     "end": 1103,
     "xpMultiplier": 2,

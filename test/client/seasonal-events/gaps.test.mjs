@@ -9,12 +9,15 @@ test('seasonal icons are sparse, separated and clear of the panels', () => {
     {left:1640,right:1920,top:0,bottom:1000},
   ];
   const points = seasonalGapPositions(1920,1000,panels);
-  assert.equal(points.length,3);
+  assert.ok(points.length>=6&&points.length<=12);
+  assert.ok(points.some(p=>p.x<960)&&points.some(p=>p.x>960));
+  assert.ok(new Set(points.map(p=>p.size)).size>=4);
   for (const point of points) {
     for (const panel of panels) assert.ok(point.x <= panel.left-44 || point.x >= panel.right+44
       || point.y <= panel.top-44 || point.y >= panel.bottom+44);
-    for (const other of points) if (other !== point) assert.ok(Math.hypot(point.x-other.x,point.y-other.y)>=280);
+    for (const other of points) if (other !== point) assert.ok(Math.hypot(point.x-other.x,point.y-other.y)>=155);
   }
+  assert.deepEqual(seasonalGapPositions(1920,1000,panels,{previous:points}),points,'valid positions and sizes remain stable');
 });
 
 test('no decoration is squeezed into a narrow or fully occupied viewport', () => {
