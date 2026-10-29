@@ -9,7 +9,7 @@ import { setEquipmentVisible } from '../equipment.js';
 import { getCachedBooks } from '../books.js';
 import { _syncSeriesRuns, _focusNodeAfterLoad, clearOpenWorldState, getOwSrcBookId, getOwSrcSection } from '../play/open-world.js';
 import { _positionRewardLayer } from '../progression/rewards.js';
-import { isBgInMove, toggleBgHidden, nudgeBgPosY, hideCtxMenu, _hideBgCtxMenu, _positionMenu, _enterBgMoveMode, _exitBgMoveMode, _updateColorSwatches } from '../play/bg.js';
+import { isBgInMove, toggleBgHidden, nudgeBgPosY, hideCtxMenu, _hideBgCtxMenu, _positionMenu, _showBgCtxMenu, _enterBgMoveMode, _exitBgMoveMode, _updateColorSwatches } from '../play/bg.js';
 import { exportBook } from '../books/export.js';
 import { showMain } from './screens.js';
 
@@ -164,7 +164,13 @@ export function initGraphBindings() {
           network.on('oncontext', params => {
             params.event.preventDefault();
             const nodeId = network.getNodeAt(params.pointer.DOM);
-            if (nodeId === undefined) { hideCtxMenu(); return; }
+            if (nodeId === undefined) {
+              hideCtxMenu();
+              bootState.ctxCanvasPos = network.DOMtoCanvas(params.pointer.DOM);
+              _showBgCtxMenu(params.event.clientX, params.event.clientY);
+              return;
+            }
+            _hideBgCtxMenu();
             bootState.ctxNodeId = nodeId;
             const pt     = currentPlaythrough();
             const ftLeft = pt ? (maxFastTravels() - (pt.fastTravelsUsed || 0)) : 0;
@@ -178,7 +184,7 @@ export function initGraphBindings() {
             document.getElementById('ctx-battle-btn').style.display     = hasRuns2 ? '' : 'none';
             document.getElementById('ctx-delete-btn').style.display     = (hasActiveRun2 && !isStartNode2) ? '' : 'none';
             document.getElementById('ctx-jump-wrap').style.display      = showJump ? '' : 'none';
-            document.querySelectorAll('.ctx-submenu-wrap:not(#ctx-jump-wrap)').forEach(w => w.style.display = hasRuns2 ? '' : 'none');
+            document.querySelectorAll('#node-ctx-menu .ctx-submenu-wrap:not(#ctx-jump-wrap)').forEach(w => w.style.display = hasRuns2 ? '' : 'none');
             _updateColorSwatches(nodeId);
             _positionMenu(document.getElementById('node-ctx-menu'), params.event.clientX, params.event.clientY);
           });

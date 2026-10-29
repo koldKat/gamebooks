@@ -115,6 +115,23 @@ export function createDayRenderer() {
       rest.forEach(c => batchConsumedChildren.add(c));
     }
 
+    // A visible container takes the position of its newest same-day descendant.
+    // Keep event dates and expansion keys intact; only the display order changes.
+    const activityTime = e => new Date(e.type === 'announcement' ? e.updatedAt || e.completedAt : e.completedAt).getTime() || 0;
+    const catalogTimes = new Map();
+    const catalogTime = e => {
+      if (!catalogTimes.has(e)) catalogTimes.set(e, (batchChildrenByContainer.get(e) || []).reduce((latest, child) =>
+        Math.max(latest, activityTime(child)), activityTime(e)));
+      return catalogTimes.get(e);
+    };
+    const creationTimes = new Map();
+    for (const group of creationGroups.values()) {
+      group.items.sort((a, b) => catalogTime(b) - catalogTime(a));
+      creationTimes.set(group, group.items.reduce((latest, e) => Math.max(latest, catalogTime(e)), 0));
+    }
+    const displayTime = e => creationGroupFor.has(e) ? creationTimes.get(creationGroupFor.get(e)) : catalogTime(e);
+    const orderedItems = items.filter(e => !batchConsumedChildren.has(e)).sort((a, b) => displayTime(b) - displayTime(a));
+
     function renderCatalogEntry(e) {
       const { html: body, isParty, extraClass } = renderEntry(looseBatchHeads.get(e) || e);
       if (!body) return '';
@@ -142,8 +159,7 @@ export function createDayRenderer() {
     const rendered = new Set();
     const renderedCreations = new Set();
     let out = '';
-    for (const e of items) {
-      if (batchConsumedChildren.has(e)) continue;
+    for (const e of orderedItems) {
       const creationGroup = creationGroupFor.get(e);
       if (creationGroup) {
         if (renderedCreations.has(creationGroup.key)) continue;

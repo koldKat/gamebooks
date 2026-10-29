@@ -158,6 +158,26 @@ if (!baseline) {
   assert.equal(JSON.stringify(separateTypes), separateOriginal, 'grouping never mutates feed payloads');
   assert.equal(creationGroupCount(renderDay(['books', 'anthologies', 'series'].flatMap(kind => creations(kind, 3)), 'today')), 0, 'different types do not contribute to each other’s threshold');
   const sixSeries = creations('series', 6);
+  for (const kind of ['books','series','anthologies']) {
+    const time=hour=>Date.parse(`2026-10-02T${hour}:00:00Z`);
+    const old=creations(kind,6).map((entry,index)=>({...entry,completedAt:time('08')+index}));
+    const marker={...base,type:'announcement',title:'group-sort-marker',body:'Sorting marker',completedAt:time('09')};
+    const before=renderDay([marker,...old],'sorting-'+kind);
+    assert.ok(before.indexOf('group-sort-marker')<before.indexOf('feed-user-group--created'),kind+': older group starts below newer activity');
+    const target=old[0];
+    const added=kind==='books'?{...old[0],bookId:99999,bookName:'Newest standalone book',completedAt:time('10')}:
+      {...base,type:'book_created',username:'Creator',bookId:99999,bookName:'Newest member',isContainer:false,
+        parentBookId:kind==='anthologies'?target.bookId:null,parentBookName:kind==='anthologies'?target.bookName:null,
+        seriesId:kind==='series'?target.seriesId:null,seriesName:kind==='series'?target.seriesName:null,completedAt:time('10')};
+    const input=[added,marker,...old],unchanged=JSON.stringify(input);
+    const after=renderDay(input,'sorting-'+kind);
+    assert.ok(after.indexOf('feed-user-group--created')<after.indexOf('group-sort-marker'),kind+': newest nested activity moves whole folded group up');
+    if(kind==='series')assert.ok(after.indexOf('data-series-id="'+target.seriesId+'"')<after.indexOf('data-series-id="'+old[5].seriesId+'"'),'updated series also moves up inside its group');
+    if(kind==='anthologies')assert.ok(after.indexOf('data-book-id="'+target.bookId+'"')<after.indexOf('data-book-id="'+old[5].bookId+'"'),'updated anthology also moves up inside its group');
+    assert.equal(JSON.stringify(input),unchanged,'display sorting preserves original event dates and payloads');
+    const keys=html=>html.match(/data-group-key="[^"]+"/g)?.filter(key=>key.includes('creations:'));
+    assert.deepEqual(keys(after),keys(before),'reordering retains daily group expansion key');
+  }
   const seriesBooks = creations('books', 6).map((e, i) => ({ ...e, seriesId: sixSeries[i].seriesId, seriesName: sixSeries[i].seriesName }));
   const separatedSeries = renderDay([...sixSeries, ...seriesBooks], 'today');
   assert.equal(creationGroupCount(separatedSeries), 1, 'only series creations get a daily group; their books stay inside each series');

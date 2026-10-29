@@ -145,7 +145,7 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
     document.getElementById('ctx-battle-btn').style.display     = hasRuns ? '' : 'none';
     document.getElementById('ctx-delete-btn').style.display     = (hasActiveRun && !isStartNode) ? '' : 'none';
     document.getElementById('ctx-jump-wrap').style.display      = showJump ? '' : 'none';
-    document.querySelectorAll('.ctx-submenu-wrap:not(#ctx-jump-wrap)').forEach(w => w.style.display = hasRuns ? '' : 'none');
+    document.querySelectorAll('#node-ctx-menu .ctx-submenu-wrap:not(#ctx-jump-wrap)').forEach(w => w.style.display = hasRuns ? '' : 'none');
     const ctxPortalBtn = document.getElementById('ctx-portal-btn');
     if (ctxPortalBtn) ctxPortalBtn.style.display = bootState._currentBook.isOpenWorld ? '' : 'none';
     _updateColorSwatches(nodeId);
