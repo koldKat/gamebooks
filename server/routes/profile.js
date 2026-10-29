@@ -14,6 +14,7 @@ const {
 } = require('../request-helpers');
 const { feedPush, userBadgePush, publicCatalogPush } = require('../sse');
 const { MIME } = require('../runtime-state');
+const COVER_UPLOAD_MAX = 512 * 1024;
 
 // ── Profile handlers ──────────────────────────────────────────────────────────
 
@@ -241,9 +242,9 @@ async function handleUploadCover(req, res, bookId) {
     return send(res, 403, { error: 'Only the creator can edit this cover' });
 
   let buf;
-  try { buf = await readRawBody(req, AVATAR_UPLOAD_MAX); }
+  try { buf = await readRawBody(req, COVER_UPLOAD_MAX); }
   catch (e) {
-    if (e.code === 'PAYLOAD_TOO_LARGE') return send(res, 413, { error: 'File too large (max 256 KB)' });
+    if (e.code === 'PAYLOAD_TOO_LARGE') return send(res, 413, { error: 'File too large (max 512 KB)' });
     throw e;
   }
   if (!buf.length) return send(res, 400, { error: 'Empty body' });

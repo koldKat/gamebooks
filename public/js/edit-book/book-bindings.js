@@ -13,7 +13,7 @@ export function initBookBindings() {
     if (!file) return;
     const session = editState._bookSession;
     let blob;
-    try { blob = await compressImage(file, 256 * 1024, 900); } catch { showAlert('Could not read that image - try a different file.'); return; }
+    try { blob = await compressImage(file, 512 * 1024, 900); } catch { showAlert('Could not read that image - try a different file.'); return; }
     if (!blob || session !== editState._bookSession) return;
     editState._pendingCoverBlob = blob;
     const coverImg = document.getElementById('edit-book-cover-img');

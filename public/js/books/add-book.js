@@ -249,7 +249,7 @@ export function initAddBook(mousedownOnOverlayRef) {
   document.getElementById('cb-cover-file').addEventListener('change', async e => {
     const file = e.target.files[0]; if (!file) return;
     let blob;
-    try { blob = await compressImage(file, 256 * 1024, 900); } catch { showAlert('Could not read that image - try a different file.'); return; }
+    try { blob = await compressImage(file, 512 * 1024, 900); } catch { showAlert('Could not read that image - try a different file.'); return; }
     if (!blob) return;
     _cbCover = blob;
     const img = document.getElementById('cb-cover-img'); setPreviewImgBlob(img, blob); img.style.display = 'block';
@@ -356,7 +356,7 @@ export function initAddBook(mousedownOnOverlayRef) {
   document.getElementById('cc-cover-file').addEventListener('change', async e => {
     const file = e.target.files[0]; if (!file) return;
     let blob;
-    try { blob = await compressImage(file, 256 * 1024, 900); } catch { showAlert('Could not read that image - try a different file.'); return; }
+    try { blob = await compressImage(file, 512 * 1024, 900); } catch { showAlert('Could not read that image - try a different file.'); return; }
     if (!blob) return;
     _ccCover = blob;
     const img = document.getElementById('cc-cover-img'); setPreviewImgBlob(img, blob); img.style.display = 'block';

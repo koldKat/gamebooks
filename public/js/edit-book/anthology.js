@@ -148,7 +148,7 @@ export function initAnthologyBindings(mousedownOnOverlayRef) {
     if (!file) return;
     const session = editState._anthologySession;
     let blob;
-    try { blob = await compressImage(file, 256 * 1024, 900); } catch { showAlert('Could not read that image - try a different file.'); return; }
+    try { blob = await compressImage(file, 512 * 1024, 900); } catch { showAlert('Could not read that image - try a different file.'); return; }
     if (!blob || session !== editState._anthologySession) return;
     editState._eccCover = blob;
     const img = document.getElementById('ecc-cover-img');

@@ -609,7 +609,7 @@ When you've explored everything you can find - every section you know about is f
 
 ### Book cover
 
-Upload a cover in the Create Book window or the edit dialog. Images are compressed to a maximum of 256 KB. The cover appears on the public wall once uploaded.
+Upload a cover in the Create Book window or the edit dialog. Images are resized proportionally to at most 900 pixels on the longest edge and compressed toward a 512 KB limit. Uploads over 512 KB are rejected. The cover appears on the public wall once uploaded.
 
 ### Make public
 
