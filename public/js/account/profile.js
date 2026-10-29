@@ -260,6 +260,8 @@ function _renderJobXpSummary(data, displayedXp, visible, displayedRubyEvents) {
   const xp = Math.floor(displayedXp);
   const level = Math.floor((-1 + Math.sqrt(1 + 8 * xp / 1000)) / 2);
   const { levelXp, nextLevelXp } = _xpLevelBounds(xp);
+  // Keep fractional EV in the fill so single-event awards animate between frames.
+  const pct = Math.max(0, Math.min(100, 100 * (displayedXp - levelXp) / (nextLevelXp - levelXp)));
   for (const prefix of ['books', 'play', 'profile']) {
     const wrap = document.getElementById(`${prefix}-job-xp`);
     if (!wrap) continue;
@@ -281,12 +283,12 @@ function _renderJobXpSummary(data, displayedXp, visible, displayedRubyEvents) {
       if (nextRuby) nextRuby.textContent = `${events.toLocaleString()} EV to next ruby`;
     } else bar?.removeAttribute('data-tooltip');
     const fill = document.getElementById(`${prefix}-job-xp-fill`);
-    if (fill) fill.style.width = `${100 * (xp - levelXp) / (nextLevelXp - levelXp)}%`;
+    if (fill) fill.style.width = `${pct}%`;
     if (prefix === 'play' || prefix === 'books') {
       const miniBar = document.getElementById(`${prefix}-xp-mini-job`);
       const miniFill = document.getElementById(`${prefix}-xp-mini-job-fill`);
       if (miniBar) miniBar.hidden = !visible;
-      if (miniFill) miniFill.style.width = visible ? `${100 * (xp - levelXp) / (nextLevelXp - levelXp)}%` : '0%';
+      if (miniFill) miniFill.style.width = visible ? `${pct}%` : '0%';
     }
     const levelEl = document.getElementById(`${prefix}-job-xp-level`);
     if (levelEl) levelEl.textContent = visible ? `Job Lvl ${level}` : '';

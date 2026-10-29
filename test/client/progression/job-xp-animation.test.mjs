@@ -7,6 +7,7 @@ function setup() {
   const source=fs.readFileSync('public/js/account/profile.js','utf8');
   const elements=new Map(),frames=new Map();let now=0,id=0,token='first';
   for(const prefix of ['books','play','profile'])for(const suffix of ['','-bar','-fill','-level','-title','-label','-next-ruby','-ruby-cost'])elements.set(`${prefix}-job-xp${suffix}`,{style:{},setAttribute(name,value){this[name]=value;},removeAttribute(name){delete this[name];}});
+  for(const prefix of ['books','play'])for(const suffix of ['','-fill'])elements.set(`${prefix}-xp-mini-job${suffix}`,{style:{}});
   const context=vm.createContext({document:{getElementById:id=>elements.get(id)},getToken:()=>token,
     t:key=>key,XP_ANIM_MS_PER_LEVEL:100,performance:{now:()=>now},
     requestAnimationFrame:fn=>{frames.set(++id,fn);return id;},cancelAnimationFrame:id=>frames.delete(id)});
@@ -21,6 +22,23 @@ test('Job XP loads immediately and animates later gains using job level rather t
   s.render(1100);s.step(50);
   for(const prefix of ['books','play','profile'])assert.match(s.elements.get(`${prefix}-job-xp-label`).innerHTML,/1,050 EV/);
   s.step(50);assert.match(s.elements.get('play-job-xp-label').innerHTML,/1,100 EV/);assert.equal(s.frames.size,0);
+});
+
+test('single-event awards move full and mini Job fills before the whole EV label changes',()=>{
+  const s=setup();s.render(1000);s.render(1001);
+  for(const ms of [25,25,25]){
+    s.step(ms);
+    for(const prefix of ['books','play']){
+      const width=s.elements.get(`${prefix}-job-xp-fill`).style.width;
+      assert.ok(parseFloat(width)>0&&parseFloat(width)<0.05, width);
+      assert.equal(s.elements.get(`${prefix}-xp-mini-job-fill`).style.width,width);
+      assert.match(s.elements.get(`${prefix}-job-xp-label`).innerHTML,/1,000 EV/);
+    }
+  }
+  s.step(25);
+  assert.equal(s.elements.get('books-xp-mini-job-fill').style.width,'0.05%');
+  assert.match(s.elements.get('books-job-xp-label').innerHTML,/1,001 EV/);
+  assert.equal(s.frames.size,0);
 });
 
 test('Job bars animate the themed ruby countdown alongside the displayed event count',()=>{
