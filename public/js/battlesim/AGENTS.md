@@ -1,5 +1,11 @@
 # Simulator Structure
 
+## Scope
+
+- Simulators are optional combat tools, not playable adaptations of the book. Let the player choose an encounter, enter current combat stats and relevant modifiers, and resolve that encounter.
+- Keep story decisions, travel clocks, mission progression, noncombat section tests and scripted outcomes in the reader. Do not build campaign engines or automatically play through sections.
+- Persistent combat stats, casualties, battle history and directly related combat recovery are appropriate. They must not impose mission-wide win/loss conditions or force players through a sequence of encounters.
+
 Every simulator uses the same book boundary:
 
 ```text

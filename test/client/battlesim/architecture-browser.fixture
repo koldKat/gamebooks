@@ -303,8 +303,12 @@ for(const id of BOOK_IDS){
     set('playerRoll',12);el('attack').click();
     check(data().fight.status==='win'&&data().history.length===1,'Combat Command custom result recorded');
     module.render();check(data().history.length===1,'Combat Command render does not duplicate outcome');
-    reset();el('effect').value='time-86';el('applyEffect').click();
-    check(data().hours===1&&data().morale===getPlayerDefaults().morale+1,'Combat Command instruction control uses one-time source effect');
+    reset();
+    for(const key of ['hours','morale','stealth','test','effect','applyEffect','rollTest'])
+      check(!el(key),'Combat Command omits campaign control '+key);
+    data().hours=99;data().completedEffects={'legacy-effect':true};
+    const legacy=JSON.stringify(data());module.render();
+    check(JSON.stringify(data())===legacy&&!el('result').textContent.includes('Mission lost'),'Combat Command preserves legacy mission metadata without mission-wide outcomes');
     set('encounter','53');change('encounter');el('start').click();
     const frozen=JSON.stringify(data());el('cancel').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();
     check(JSON.stringify(run.sim1467)===frozen,'Combat Command stale confirmation ignored');app.setCurrentBookId(id);module.render();cancel();

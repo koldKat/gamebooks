@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { createCommandRecord, commandRecordOutcome, commandEncounterForce, beginCommandEncounter,
-  advanceCommandEncounter, cancelCommandEncounter, updateCommandRecord, applyCommandEffect, testCommandRecord, recoverCommandDrones,
+import { createCommandRecord, commandEncounterForce, beginCommandEncounter,
+  advanceCommandEncounter, cancelCommandEncounter, updateCommandRecord, recoverCommandDrones,
   repairCommandFlagship, repairCommandShips } from '../../../../public/js/battlesim/engines/combat-command/record.js';
 
 const catalog=JSON.parse(readFileSync('data/simulator-rosters/1467.json'));
@@ -10,7 +10,6 @@ const entries=[...new Map(catalog.enemies.map(row=>[row.stats.entryIndex,row.sta
 const source=section=>structuredClone(entries.find(entry=>entry.section===String(section)));
 const defaults=entries[0].playerDefaults, charts=entries[0].charts;
 const instructions=defaults.instructions;
-const effect=section=>instructions.effects.find(effect=>effect.section===String(section));
 const fresh=()=>createCommandRecord(defaults);
 const unit=(key,count,ordnance)=>({key,name:key,count,ordnance});
 const step=(record,options={})=>advanceCommandEncounter(record,{playerRoll:2,enemyRoll:2,...options});
@@ -20,10 +19,10 @@ test('new record owns its fleet, preserves arbitrary extensions and never touche
   record.extension={keep:7};
   const run={inventory:[{name:'Existing item'}],equipment:{hand:'Existing sword'},character:{skill:12},simOther:{fight:{id:3}},sim1467:record};
   const before=JSON.stringify({...run,sim1467:null});
-  run.sim1467=applyCommandEffect(record,effect(27));
+  run.sim1467=beginCommandEncounter(record,source(100),charts);
   assert.equal(JSON.stringify({...run,sim1467:null}),before);
   assert.equal(JSON.stringify(defaults),original);
-  assert.equal(record.hours,0); assert.equal(run.sim1467.hours,2);
+  assert.equal(record.hours,0); assert.equal(run.sim1467.hours,0);
   assert.deepEqual(run.sim1467.extension,{keep:7});
 });
 
@@ -41,32 +40,14 @@ test('manual fleet corrections enforce original limits, keep optional retry esco
   assert.equal(original.fleet.find(unit=>unit.key==='catherine').count,0);
 });
 
-test('one-time time and morale effects do not apply twice; exactly twelve hours remains valid',()=>{
-  let record=applyCommandEffect(fresh(),effect(86));
-  assert.equal(record.hours,1); assert.equal(record.morale,10);
-  assert.throws(()=>applyCommandEffect(record,effect(86)));
-  record=applyCommandEffect(record,{key:'test-time',hours:11});
-  assert.equal(commandRecordOutcome(record),null);
-  record=applyCommandEffect(record,{key:'test-expire',hours:.5});
-  assert.equal(commandRecordOutcome(record),'loss');
-  assert.equal(instructions.effects.some(e=>e.section==='48'),false,'no invented section48 time penalty');
-});
 
-test('Brooksville return and the already destroyed enemy cruiser cannot duplicate or resurrect',()=>{
-  let record=fresh(); record.fleet.find(u=>u.key==='brooksville').detached=true;
-  record=applyCommandEffect(record,effect(34));
-  assert.equal(record.fleet.filter(u=>u.key==='brooksville').length,1);
-  assert.equal(record.fleet.find(u=>u.key==='brooksville').detached,false);
-  assert.equal(record.enemyForces.marianas[0].count,1);
-  record=beginCommandEncounter(record,source(53),charts);
-  assert.equal(record.fight.enemies[0].count,1,'reprinted full roster does not resurrect a cruiser');
-  assert.throws(()=>applyCommandEffect(record,effect(34)));
-});
 
-test('destroyed ships stay destroyed and the scripted Pike loss is applied before the selected-ship fight',()=>{
+
+
+test('combat setup preserves losses without applying scripted story casualties',()=>{
   let record=fresh(); record.fleet.find(u=>u.key==='scimitar').count=0;
   record=beginCommandEncounter(record,source(20),charts);
-  assert.equal(record.fleet.find(u=>u.key==='pike').count,0);
+  assert.equal(record.fleet.find(u=>u.key==='pike').count,1,'preset does not apply an out-of-combat story loss');
   assert.deepEqual(record.fight.player.map(u=>u.key),['discovered-check','sparrowhawk','hummingbird']);
   const saved=JSON.stringify(record);
   assert.throws(()=>beginCommandEncounter(record,source(22),charts));
@@ -85,14 +66,17 @@ test('recon selection requires exactly two surviving birds and leaves the third 
   assert.equal(record.fight.section,'31');
 });
 
-test('holding squadron selection is two destroyers and three escorts and survivors remain detached',()=>{
+test('holding squadron selection resolves combat without automatically advancing mission detachments',()=>{
   const keys=['bear','wolf','kukri','scimitar','lance'];
   assert.throws(()=>commandEncounterForce(fresh(),source(60),{playerKeys:keys.slice(1)}));
   let record=beginCommandEncounter(fresh(),source(60),charts,{playerKeys:keys,enemies:[unit('foe',1,0)]});
   record=step(record,{playerRoll:12});
   assert.equal(record.fight.section,'49');
-  assert.ok(record.fleet.filter(u=>keys.includes(u.key)).every(u=>u.detached));
-  assert.ok(commandEncounterForce(record,source(69)).every(u=>!keys.includes(u.key)));
+  assert.ok(record.fleet.filter(u=>keys.includes(u.key)).every(u=>!u.detached));
+  const corrected=structuredClone(record);
+  for(const ship of corrected.fleet)if(keys.includes(ship.key))ship.detached=true;
+  record=updateCommandRecord(record,corrected);
+  assert.ok(commandEncounterForce(record,source(69)).every(u=>!keys.includes(u.key)),'player can still enter the current available combat force');
 });
 
 test('reinforcements inherit actual surviving pirates; direct entry requires an explicit current force',()=>{
@@ -154,37 +138,19 @@ test('remaining tugs cap carried drones after combat without changing any ship s
   assert.equal(record.fleet.find(u=>u.key==='inverness').ordnance,14);
 });
 
-test('scripted bird casualties fall back to escorts then destroyers and stay idempotent',()=>{
-  let record=fresh();
-  for(const ship of record.fleet) if(ship.shipClass==='Assault Ships') ship.count=0;
-  const before=record.fleet.filter(u=>u.shipClass==='Escort').reduce((s,u)=>s+u.count,0);
-  record=applyCommandEffect(record,effect(75));
-  assert.equal(record.fleet.filter(u=>u.shipClass==='Escort').reduce((s,u)=>s+u.count,0),before-2);
-  assert.equal(record.hours,1.5);
-  assert.throws(()=>applyCommandEffect(record,effect(75)));
-});
 
-test('source stealth tests distinguish recon ten from fleet eight and charge pursuit time once',()=>{
-  const instruction=sec=>instructions.tests.find(t=>t.section===String(sec));
-  let record=testCommandRecord(fresh(),instruction(30),()=>5);
-  assert.equal(record.log.at(-1).passed,true);
-  record=testCommandRecord(record,instruction(50),()=>5);
-  assert.equal(record.log.at(-1).passed,false);
-  record=testCommandRecord(record,instruction(63),()=>4);
-  assert.equal(record.hours,.5);
-  record=testCommandRecord(record,instruction(63),()=>4);
-  assert.equal(record.hours,.5);
-});
 
-test('flagship repairs charge battle once and every repair roll including the successful roll',()=>{
+
+
+test('flagship repairs resolve combat recovery without tracking mission time',()=>{
   let record=beginCommandEncounter(fresh(),{...source(69),enemies:[unit('foe',1,0)]},charts);
   record=step(record,{playerRoll:12});
   assert.equal(record.fight.section,'70');
   const instruction=instructions.flagshipRepairs.find(t=>t.section==='70');
   record=repairCommandFlagship(record,instruction,()=>6);
-  assert.equal(record.hours,2); assert.equal(record.repair.done,false);
+  assert.equal(record.hours,0); assert.equal(record.repair.done,false);
   record=repairCommandFlagship(record,instruction,()=>4);
-  assert.equal(record.hours,3); assert.equal(record.repair.done,true);
+  assert.equal(record.hours,0); assert.equal(record.repair.done,true);
   assert.throws(()=>repairCommandFlagship(record,instruction,()=>4));
 });
 
@@ -196,10 +162,24 @@ test('optional repairs restore only current encounter losses and failed selected
   assert.ok(lost.length>=4);
   assert.throws(()=>repairCommandShips(record,instructions.shipRepair,['wolf'],()=>1));
   record=repairCommandShips(record,instructions.shipRepair,lost.slice(0,2),()=>4);
-  assert.equal(record.hours,1);
+  assert.equal(record.hours,0);
   assert.ok(lost.slice(0,2).every(key=>record.fleet.find(u=>u.key===key).count===1));
   assert.throws(()=>repairCommandShips(record,instructions.shipRepair,lost.slice(0,2),()=>4));
   record=repairCommandShips(record,instructions.shipRepair,lost.slice(2,4),()=>6);
-  assert.equal(record.hours,2);
+  assert.equal(record.hours,0);
   assert.throws(()=>repairCommandShips(record,instructions.shipRepair,lost.slice(2,4),()=>1));
+});
+
+
+test('legacy mission metadata stays intact and never determines a new encounter outcome',()=>{
+  const previous=fresh();previous.hours=99;previous.completedEffects={legacy:true};previous.morale=3;
+  previous.log.push({type:'test',section:'old',passed:true});
+  previous.extension={keep:'saved extension'};
+  const before=JSON.stringify(previous);
+  let next=beginCommandEncounter(previous,{...source(100),enemies:[unit('foe',1,0)],afterCombatHours:10},charts);
+  next=step(next,{playerRoll:12});
+  assert.equal(next.fight.status,'win');assert.equal(next.hours,99);
+  assert.deepEqual(next.completedEffects,{legacy:true});assert.equal(next.morale,3);
+  assert.deepEqual(next.extension,previous.extension);assert.deepEqual(next.log[0],previous.log[0]);
+  assert.equal(JSON.stringify(previous),before);
 });

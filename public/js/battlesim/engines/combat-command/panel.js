@@ -1,6 +1,6 @@
 import { createOpponentEditor } from '../../opponents.js';
-import { createCommandRecord, commandRecordOutcome, commandEncounterForce, beginCommandEncounter,
-  advanceCommandEncounter, cancelCommandEncounter, updateCommandRecord, applyCommandEffect, testCommandRecord, recoverCommandDrones,
+import { createCommandRecord, commandEncounterForce, beginCommandEncounter,
+  advanceCommandEncounter, cancelCommandEncounter, updateCommandRecord, recoverCommandDrones,
   repairCommandFlagship, repairCommandShips } from './record.js';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -52,7 +52,7 @@ export function createCombatCommandPanel({document,definition,getRoster,getPlaye
     if (getRun()!==shownRun || Number(getBookId())!==definition.id) return;
     const run=getRun(), original=data(), fight=original?.fight;
     if (!original || key==='cancel' && !active(original) || key==='reset' && active(original)) return;
-    showConfirm(key==='cancel'?'End this encounter? Casualties and fired drones will be kept.':'Reset this simulator fleet and clock to their starting values? Battle history will be kept.',()=>{
+    showConfirm(key==='cancel'?'End this encounter? Casualties and fired drones will be kept.':'Reset this simulator fleet to its starting values? Battle history will be kept.',()=>{
       if (getRun()!==run || Number(getBookId())!==definition.id || data()!==original || data()?.fight!==fight) return;
       action(state=>key==='cancel'?cancelCommandEncounter(state):{
         ...createCommandRecord(defaults()),encounter:state.encounter,custom:state.custom,history:state.history,
@@ -82,7 +82,6 @@ export function createCombatCommandPanel({document,definition,getRoster,getPlaye
   function saveRecord(state) {
     if (active(state)) return state;
     const next=structuredClone(state);
-    next.morale=number('morale'); next.stealth=number('stealth');next.hours=number('hours');
     for (const input of el('fleet').querySelectorAll('input[data-ship]')) {
       const unit=next.fleet.find(ship=>ship.key===input.dataset.ship);
       if (input.type==='checkbox') unit.detached=input.checked;
@@ -121,8 +120,8 @@ export function createCombatCommandPanel({document,definition,getRoster,getPlaye
     if (units.some(unit=>unit.key===previous&&unit.count)) el(key).value=previous;
   }
   function eventText(entry) {
-    if(entry.type==='test')return `Section ${entry.section}: ${entry.dice.join(' + ')} = ${entry.total}, ${entry.passed?'passed':'failed'}. Continue at ${entry.next}.`;
-    if(entry.type==='effect')return `Applied section ${entry.section}${entry.hours?', +'+entry.hours+' hours':''}.`;
+    if(entry.type==='test')return `Previous test at section ${entry.section}: ${entry.passed?'passed':'failed'}.`;
+    if(entry.type==='effect')return `Previous record adjustment at section ${entry.section}.`;
     if(entry.type==='flagship-repair')return `Section ${entry.section}: repair roll ${entry.die}, ${entry.done?'repaired':'another hour needed'}.`;
     if(entry.type==='ship-repair')return `Section ${entry.section}: repair roll ${entry.die}, ${entry.success?'ships restored':'selected ships beyond repair'}.`;
     if(entry.type==='drone-recovery')return `Section ${entry.section}: ${entry.dice.join(' + ')} drones used; surviving drones recovered.`;
@@ -141,7 +140,6 @@ export function createCombatCommandPanel({document,definition,getRoster,getPlaye
     }
     shownRun=getRun();wasActive=locked;
     el('encounter').value=state.encounter;
-    for (const key of ['morale','stealth','hours']) el(key).value=state[key];
     el('fleetRows').innerHTML=state.fleet.map(unit=>`<tr><td>${escape(unit.name)}${unit.optional?' (optional retry)':''}</td><td><input class="inv-edit-input" type="number" min="0" max="${unit.maxCount??defaults().fleet.find(ship=>ship.key===unit.key)?.count??0}" step="1" data-ship="${escape(unit.key)}" value="${unit.count}" aria-label="${escape(unit.name)} remaining"></td><td><label class="bsim-checkbox"><input type="checkbox" data-ship="${escape(unit.key)}"${unit.detached?' checked':''} aria-label="${escape(unit.name)} detached"></label></td></tr>`).join('');
     for (const input of el('record').querySelectorAll('input,button')) input.disabled=locked;
     el('encounter').disabled=locked;
@@ -165,15 +163,14 @@ export function createCombatCommandPanel({document,definition,getRoster,getPlaye
     orderSelect('fireFirst',fight?.player.filter(unit=>!unit.drone)??[]);
     el('recover').disabled=locked||!state.recovery||state.recovery.done;
     const instruction=defaults().instructions;
-    el('test').disabled=el('effect').disabled=el('applyEffect').disabled=el('rollTest').disabled=locked;
     el('repairFlagship').disabled=locked||state.repair?.done||!instruction.flagshipRepairs.some(rule=>rule.section===fight?.section);
     const repairKeys=[...el('repairSelection').querySelectorAll('input:checked')].map(input=>input.value);
     const repairEligible=instruction.shipRepair.afterSections.includes(fight?.config.section)&&!locked;
     el('repairSelection').innerHTML=repairEligible?(fight.startPlayer??[]).filter(unit=>!unit.drone&&unit.count>(state.fleet.find(ship=>ship.key===unit.key)?.count??unit.count)&&!state.unrepairable?.includes(unit.key)).map(unit=>`<label class="bsim-checkbox"><input type="checkbox" value="${escape(unit.key)}"${repairKeys.includes(unit.key)?' checked':''}>${escape(unit.name)}</label>`).join(''):'';
     el('repairShips').disabled=!repairEligible;
     const physical=state.fleet.filter(unit=>!unit.drone&&!unit.detached).reduce((sum,unit)=>sum+unit.count,0);
-    el('status').textContent=`${physical} ships · ${state.hours}/${state.defaults.maximumHours} hours · Morale ${state.morale} · Stealth ${state.stealth}`;
-    el('result').textContent=commandRecordOutcome(state)==='loss'?'Mission lost. Continue at section 29.':fight?`${fight.status} · Round ${fight.round}${fight.section?' · Continue at section '+fight.section:''}`:'Ready';
+    el('status').textContent=`${physical} ships`;
+    el('result').textContent=fight?`${fight.status} · Round ${fight.round}${fight.section?' · Continue at section '+fight.section:''}`:'Ready';
     el('forces').innerHTML=fight?'<table class="bsim-report-table"><thead><tr><th>Force</th><th>Remaining</th></tr></thead><tbody>'+[...fight.player,...fight.enemies].map(unit=>`<tr><td>${escape(unit.name)}</td><td>${unit.count}${unit.drone?' ('+(unit.count-unit.spent)+' ready)':''}</td></tr>`).join('')+'</tbody></table>':'';
     const rounds=(fight?.history??[]).slice().reverse().map(event=>`Round ${event.round}: `+event.attacks.map(a=>`${a.side==='player'?'You':'Enemy'} AS ${a.strength}, Chart ${a.chart}${a.total==null?'':', roll '+a.total}: ${a.hits} hits`+(a.losses.length?' ('+a.losses.map(loss=>loss.count+' '+loss.name).join(', ')+')':'')).join('; '));
     el('log').innerHTML=[...rounds,...state.log.slice().reverse().map(eventText)].map(line=>'<div>'+escape(line)+'</div>').join('');
@@ -188,7 +185,7 @@ export function createCombatCommandPanel({document,definition,getRoster,getPlaye
     const rules=defaults().instructions;
     const chartOptions=Object.keys(getCharts()).map(chart=>`<option value="${chart}">${chart}</option>`).join('');
     const overlay=document.createElement('div');overlay.id=ID+'-overlay';overlay.className='inv-overlay';
-    overlay.innerHTML=`<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(t(definition.i18nPrefix+'.title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><details id="${ID}-record"><summary>Fleet and clock</summary>${input('morale','Morale',defaults().morale)}${input('stealth','Stealth',defaults().stealth)}${input('hours','Hours used',0,0,1000000,.5)}<details id="${ID}-fleet"><summary>Ship loss record</summary><table class="bsim-report-table"><thead><tr><th>Ship</th><th>Remaining</th><th>Away</th></tr></thead><tbody id="${ID}-fleetRows"></tbody></table></details><div class="bsim-btn-row">${button('saveRecord','Apply record')}${button('reset','Starting fleet')}</div></details>${select('encounter','Encounter','<option value="">Custom fight</option>'+options(getRoster()))}<p id="${ID}-note"></p><p id="${ID}-forceSummary"></p>${select('playerChart','Your chart',chartOptions)}${select('enemyChart','Enemy chart',chartOptions)}${select('initiative','Initiative','<option value="you">You first</option><option value="enemy">Enemy first</option>')}<div id="${ID}-shipSelection"></div><div id="${ID}-playerEditor"></div><div id="${ID}-enemyEditor"></div><details><summary>Exchange controls</summary><p>Leave dice blank to roll automatically. Protected ships remain last casualties.</p>${input('playerRoll','Your 2d6','',2,12)}${input('enemyRoll','Enemy 2d6','',2,12)}${input('drones','Drones firing',0,0,9)}${select('playerLoss','Your first loss','')}${select('enemyLoss','Enemy first loss','')}${select('fireFirst','First to fire','')}</details><div class="bsim-btn-row">${button('start','Start encounter')}${button('attack','Next exchange')}${button('cancel','End encounter')}</div><details><summary>Journey tests and repairs</summary>${select('test','Test',options(rules.tests))}${button('rollTest','Roll test')}${select('effect','Instructions',options(rules.effects))}${button('applyEffect','Apply instructions')}<div class="bsim-btn-row">${button('repairFlagship','Repair Inverness')}${button('recover','Recover drones')}</div><p>Optional repairs: choose up to two ships lost in the latest pirate encounter. Each attempt uses one hour.</p><div id="${ID}-repairSelection"></div>${button('repairShips','Attempt ship repairs')}</details></div><div class="bsim-col bsim-col-right"><h4 id="${ID}-status"></h4><p id="${ID}-result"></p><div id="${ID}-forces"></div><h4>Log</h4><div class="bsim-log" id="${ID}-log"></div><h4>Battle history</h4><div id="${ID}-history"></div></div></div></div>`;
+    overlay.innerHTML=`<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(t(definition.i18nPrefix+'.title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><details id="${ID}-record"><summary>Combat fleet</summary><details id="${ID}-fleet"><summary>Ship loss record</summary><table class="bsim-report-table"><thead><tr><th>Ship</th><th>Remaining</th><th>Away</th></tr></thead><tbody id="${ID}-fleetRows"></tbody></table></details><div class="bsim-btn-row">${button('saveRecord','Apply record')}${button('reset','Starting fleet')}</div></details>${select('encounter','Encounter','<option value="">Custom fight</option>'+options(getRoster()))}<p id="${ID}-note"></p><p id="${ID}-forceSummary"></p>${select('playerChart','Your chart',chartOptions)}${select('enemyChart','Enemy chart',chartOptions)}${select('initiative','Initiative','<option value="you">You first</option><option value="enemy">Enemy first</option>')}<div id="${ID}-shipSelection"></div><div id="${ID}-playerEditor"></div><div id="${ID}-enemyEditor"></div><details><summary>Exchange controls</summary><p>Leave dice blank to roll automatically. Protected ships remain last casualties.</p>${input('playerRoll','Your 2d6','',2,12)}${input('enemyRoll','Enemy 2d6','',2,12)}${input('drones','Drones firing',0,0,9)}${select('playerLoss','Your first loss','')}${select('enemyLoss','Enemy first loss','')}${select('fireFirst','First to fire','')}</details><div class="bsim-btn-row">${button('start','Start encounter')}${button('attack','Next exchange')}${button('cancel','End encounter')}</div><details><summary>Combat recovery</summary><div class="bsim-btn-row">${button('repairFlagship','Repair Inverness')}${button('recover','Recover drones')}</div><p>Optional repairs: choose up to two ships lost in the latest pirate encounter.</p><div id="${ID}-repairSelection"></div>${button('repairShips','Attempt ship repairs')}</details></div><div class="bsim-col bsim-col-right"><h4 id="${ID}-status"></h4><p id="${ID}-result"></p><div id="${ID}-forces"></div><h4>Log</h4><div class="bsim-log" id="${ID}-log"></div><h4>Battle history</h4><div id="${ID}-history"></div></div></div></div>`;
     document.body.appendChild(overlay);
     const opponents=getRoster().flatMap(entry=>entry.enemies.map(editable));
     enemyEditor=createOpponentEditor({document,id:ID+'-enemy',t,fields,presets:opponents});
@@ -206,8 +203,6 @@ export function createCombatCommandPanel({document,definition,getRoster,getPlaye
     el('start').addEventListener('click',()=>action(start));el('attack').addEventListener('click',()=>action(step));
     el('saveRecord').addEventListener('click',()=>action(saveRecord));
     for(const key of ['cancel','reset'])el(key).addEventListener('click',()=>confirm(key));
-    el('applyEffect').addEventListener('click',()=>action(state=>applyCommandEffect(state,rules.effects.find(effect=>effect.key===el('effect').value))));
-    el('rollTest').addEventListener('click',()=>action(state=>testCommandRecord(state,rules.tests.find(rule=>rule.section===el('test').value))));
     el('recover').addEventListener('click',()=>action(state=>recoverCommandDrones(state)));
     el('repairFlagship').addEventListener('click',()=>action(state=>repairCommandFlagship(state,rules.flagshipRepairs.find(rule=>rule.section===state.fight?.section))));
     el('repairShips').addEventListener('click',()=>action(state=>repairCommandShips(state,rules.shipRepair,[...el('repairSelection').querySelectorAll('input:checked')].map(input=>input.value))));
