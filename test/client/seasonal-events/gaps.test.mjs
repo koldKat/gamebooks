@@ -17,7 +17,6 @@ test('seasonal icons are sparse, separated and clear of the panels', () => {
       || point.y <= panel.top-44 || point.y >= panel.bottom+44);
     for (const other of points) if (other !== point) assert.ok(Math.hypot(point.x-other.x,point.y-other.y)>=155);
   }
-  assert.deepEqual(seasonalGapPositions(1920,1000,panels,{previous:points}),points,'valid positions and sizes remain stable');
 });
 
 test('no decoration is squeezed into a narrow or fully occupied viewport', () => {

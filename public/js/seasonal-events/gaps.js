@@ -1,5 +1,5 @@
 // Keep a sparse, varied scatter in roomy gaps, balanced across both sides.
-export function seasonalGapPositions(width, height, panels, { random = Math.random, previous = [] } = {}) {
+export function seasonalGapPositions(width, height, panels, { random = Math.random } = {}) {
   const clearance = 76;
   const target = Math.min(12, Math.max(3, Math.round(width * height / 210000)));
   const clear = point => point.x >= clearance && point.x <= width - clearance
@@ -19,7 +19,6 @@ export function seasonalGapPositions(width, height, panels, { random = Math.rand
   }
   const chosen = [];
   const separated = point => chosen.every(other => Math.hypot(point.x - other.x, point.y - other.y) >= 155);
-  for (const point of previous) if (clear(point) && separated(point) && chosen.length < target) chosen.push(point);
   for (const side of [point => point.x < width / 2, point => point.x >= width / 2]) {
     if (chosen.some(side)) continue;
     const point = candidates.find(candidate => side(candidate) && separated(candidate));
