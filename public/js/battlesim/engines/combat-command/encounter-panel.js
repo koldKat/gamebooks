@@ -1,18 +1,23 @@
 import { createOpponentEditor } from '../../opponents.js';
-import { startCombatCommandFight, combatCommandRound } from './core.js';
+import { startCombatCommandFight, combatCommandRound, resumeCombatCommandFight } from './core.js';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fields = [{key:'count',label:'Manpower',min:0,max:10000},{key:'ordnance',label:'Ordnance / Melee',min:0,max:10000}];
 const editable = unit => ({...unit,displayName:unit.name});
-const active = state => state?.fight?.status === 'fighting';
+const active = state => ['fighting','awaiting-force'].includes(state?.fight?.status);
 
 // An isolated encounter sheet: it never reads or writes story progression or inventory.
 export function createCombatCommandEncounterPanel({document,definition,getRoster,getPlayerDefaults,getCharts,t,
   getRun,getBookId,saveState,getButtonRow,showAlert,showConfirm,registerShortcut=()=>{}}) {
   const ID=definition.stateKey, el=key=>document.getElementById(ID+'-'+key);
-  let shownRun, shownPreset, wasActive=false, playerEditor, enemyEditor, reinforcementEditors=[];
+  let shownRun, shownPreset, wasActive=false, wasAwaiting=false, playerEditor, enemyEditor, reinforcementEditors=[];
   const data=()=>Number(getBookId())===definition.id?getRun()?.[ID]:null;
-  const selected=state=>getRoster().find(entry=>entry.section===state.encounter);
+  const selected=state=>{
+    const entry=getRoster().find(entry=>entry.section===state.encounter);
+    if (!entry) return undefined;
+    const variant=entry.variants?.find(item=>item.key===state.variant)??entry.variants?.[0];
+    return variant?{...entry,...variant}:entry;
+  };
   const close=()=>el('overlay')?.classList.remove('active');
   function open() {
     if (!getRun() || Number(getBookId())!==definition.id) {showAlert(t('battlesim.no_active_playthrough'));return;}
@@ -37,6 +42,10 @@ export function createCombatCommandEncounterPanel({document,definition,getRoster
     return editor.read().map((unit,index)=>({...unit,key:custom?prefix+'-'+index:unit.key||prefix+'-'+index,name:unit.displayName||'Unnamed force'}));
   }
   function start(state) {
+    if (state.fight?.status==='awaiting-force') {
+      state.fight=resumeCombatCommandFight(state.fight,read(playerEditor,'player'));
+      return state;
+    }
     if (active(state)) return;
     const preset=selected(state), config=preset?structuredClone(preset):{
       section:'custom',label:'Custom fight',playerChart:el('playerChart').value,
@@ -58,7 +67,7 @@ export function createCombatCommandEncounterPanel({document,definition,getRoster
     return value;
   }
   function step(state) {
-    if (!active(state)) return;
+    if (state.fight?.status!=='fighting') return;
     state.fight=combatCommandRound(state.fight,{playerRoll:roll('playerRoll'),enemyRoll:roll('enemyRoll')});
     return state;
   }
@@ -77,6 +86,10 @@ export function createCombatCommandEncounterPanel({document,definition,getRoster
     result.set(units.map(editable));return result;
   }
   function fillSetup(state,preset) {
+    const variants=preset?.variants??[];
+    el('variant-row').hidden=!variants.length;
+    el('variant').innerHTML=variants.map(item=>`<option value="${escape(item.key)}">${escape(item.label)}</option>`).join('');
+    if (variants.length) el('variant').value=variants.some(item=>item.key===state.variant)?state.variant:variants[0].key;
     playerEditor.fixCount(Boolean(preset));enemyEditor.fixCount(Boolean(preset));
     playerEditor.set((preset?.playerUnits??state.custom.player??[getPlayerDefaults().customPlayer]).map(editable));
     enemyEditor.set((preset?.enemies??state.custom.enemies??[getPlayerDefaults().customEnemy]).map(editable));
@@ -92,18 +105,23 @@ export function createCombatCommandEncounterPanel({document,definition,getRoster
     const run=getRun();
     if (!run || Number(getBookId())!==definition.id) {shownRun=undefined;close();return;}
     const state=run[ID]??= {encounter:'',custom:{},history:[],fight:null};
-    const preset=selected(state), locked=active(state), fight=state.fight;
-    if (shownRun!==run || shownPreset!==state.encounter || wasActive&&!locked) {
-      fillSetup(state,preset);shownPreset=state.encounter;
+    const preset=selected(state), locked=active(state), fight=state.fight, awaiting=fight?.status==='awaiting-force';
+    const presetKey=state.encounter+'|'+(state.variant??'');
+    if (shownRun!==run || shownPreset!==presetKey || wasActive&&!locked) {
+      fillSetup(state,preset);shownPreset=presetKey;
     }
-    shownRun=run;wasActive=locked;
+    if (awaiting && (!wasAwaiting || shownRun!==run)) playerEditor.set(fight.config.afterOpeningPlayerUnits.map(editable));
+    shownRun=run;wasActive=locked;wasAwaiting=awaiting;
     el('encounter').value=state.encounter;el('encounter').disabled=locked;
+    el('variant').disabled=locked;
     for (const key of ['playerChart','enemyChart','initiative']) el(key).disabled=locked||Boolean(preset);
-    for (const item of [playerEditor,enemyEditor,...reinforcementEditors]) item.lock(locked);
-    el('start').disabled=locked;el('attack').disabled=!locked;el('cancel').disabled=!locked;
-    el('playerRoll').disabled=!locked;el('enemyRoll').disabled=!locked;
-    el('note').textContent=preset?.note??'Enter the forces currently engaged. Casualties immediately reduce attack strength; Julian is the last M.I. casualty. Leave dice blank to roll automatically.';
-    el('result').textContent=fight?`${fight.status==='interrupted'?'Wounded':fight.status} · Round ${fight.round}${fight.section?' · Book reference: '+fight.section:''}`:'Ready';
+    playerEditor.lock(locked&&!awaiting);
+    for (const item of [enemyEditor,...reinforcementEditors]) item.lock(locked);
+    el('start').disabled=locked&&!awaiting;el('start').textContent=awaiting?'Continue encounter':'Start encounter';
+    el('attack').disabled=fight?.status!=='fighting';el('cancel').disabled=!locked;
+    el('playerRoll').disabled=fight?.status!=='fighting';el('enemyRoll').disabled=fight?.status!=='fighting';
+    el('note').textContent=awaiting?'Enter the surviving men and their normal combat value, then continue. Vehicle hits do not determine personnel losses in the printed rules.':preset?.note??definition.customNote??'Enter the forces currently engaged. Casualties immediately reduce attack strength; Julian is the last M.I. casualty. Leave dice blank to roll automatically.';
+    el('result').textContent=fight?`${fight.status==='awaiting-force'?'Enter surviving force':fight.status==='interrupted'?'Wounded':fight.status} · Round ${fight.round}${fight.section?' · Book reference: '+fight.section:''}`:'Ready';
     el('forces').innerHTML=fight?'<table class="bsim-report-table"><thead><tr><th>Force</th><th>Remaining</th></tr></thead><tbody>'+[...fight.player,...fight.enemies].map(unit=>`<tr><td>${escape(unit.name)}</td><td>${unit.count}</td></tr>`).join('')+'</tbody></table>':'';
     el('log').innerHTML=(fight?.history??[]).slice().reverse().map(event=>'<div>'+escape(`Round ${event.round}: `+event.attacks.map(a=>`${a.side==='player'?'You':'Enemy'} AS ${a.strength}, Chart ${a.chart}${a.total==null?'':', roll '+a.total}: ${a.hits} hits`+(a.absorbed?`, ${a.absorbed} prisoner casualties`:'')+(a.wounded?', interrupted by wound':'')+(a.losses.length?' ('+a.losses.map(loss=>loss.count+' '+loss.name).join(', ')+')':'')).join('; '))+'</div>').join('');
     el('history').innerHTML=state.history.slice(-30).reverse().map(entry=>`<div>${escape(entry.enemy)} · ${escape(entry.outcome)}</div>`).join('');
@@ -117,6 +135,9 @@ export function createCombatCommandEncounterPanel({document,definition,getRoster
     const overlay=document.createElement('div');overlay.id=ID+'-overlay';overlay.className='inv-overlay';
     overlay.innerHTML=`<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(t(definition.i18nPrefix+'.title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left">${select('encounter','Encounter','<option value="">Custom fight</option>'+getRoster().map(entry=>`<option value="${escape(entry.section)}">${escape(entry.label)}</option>`).join(''))}<p id="${ID}-note"></p>${select('playerChart','Your chart',chartOptions)}${select('enemyChart','Enemy chart',chartOptions)}${select('initiative','Initiative','<option value="player">You first</option><option value="enemy">Enemy first</option>')}<div id="${ID}-playerEditor"></div><div id="${ID}-enemyEditor"></div><div id="${ID}-reinforcements"></div><details><summary>Dice totals</summary><p>Leave blank to roll automatically.</p>${input('playerRoll','Your 2d6')}${input('enemyRoll','Enemy 2d6')}</details><div class="bsim-btn-row">${button('start','Start encounter')}${button('attack','Next round')}${button('cancel','End encounter')}</div></div><div class="bsim-col bsim-col-right"><h4 id="${ID}-result"></h4><div id="${ID}-forces"></div><h4>Combat log</h4><div class="bsim-log" id="${ID}-log"></div><h4>Battle history</h4><div id="${ID}-history"></div></div></div></div>`;
     document.body.appendChild(overlay);
+    const variantRow=document.createElement('div');variantRow.id=ID+'-variant-row';
+    variantRow.innerHTML=select('variant','Combat setup','');
+    el('encounter').closest('label').after(variantRow);
     playerEditor=editor('player',[getPlayerDefaults().customPlayer],'Your force');
     enemyEditor=editor('enemy',[getPlayerDefaults().customEnemy],'Enemy force');
     el('playerEditor').appendChild(playerEditor.element);el('enemyEditor').appendChild(enemyEditor.element);
@@ -127,7 +148,8 @@ export function createCombatCommandEncounterPanel({document,definition,getRoster
     overlay.addEventListener('mousedown',event=>{backdrop=event.target===overlay;});
     overlay.addEventListener('click',event=>{if(backdrop&&event.target===overlay)close();});
     overlay.addEventListener('keydown',event=>{if(event.key==='Escape'){event.stopPropagation();close();}});
-    el('encounter').addEventListener('change',()=>action(state=>active(state)?undefined:{...state,encounter:el('encounter').value}));
+    el('encounter').addEventListener('change',()=>action(state=>active(state)?undefined:{...state,encounter:el('encounter').value,variant:''}));
+    el('variant').addEventListener('change',()=>action(state=>active(state)?undefined:{...state,variant:el('variant').value}));
     el('start').addEventListener('click',()=>action(start));el('attack').addEventListener('click',()=>action(step));
     el('cancel').addEventListener('click',cancel);
   }

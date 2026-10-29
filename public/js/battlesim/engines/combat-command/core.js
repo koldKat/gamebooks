@@ -53,7 +53,15 @@ export function startCombatCommandFight(player, encounter, charts) {
   }
   if (!living(fight.player) || !living(fight.enemies) && !(encounter.enemyOnly && encounter.emptyEnemyOutcome)) throw new RangeError('A force has no surviving units');
   for (const key of ['roundLimit', 'enemyAmmo', 'freeOpeningAttacks', 'minimumPhysical', 'droneRound', 'minimumDrones',
-    'dronesCanTakeLossesFrom', 'singleAttackWinHits', 'enemyFreeOpeningAttacks', 'interruptOnPlayerHitThroughRound']) if (encounter[key] !== undefined) integer(encounter[key], 1);
+    'dronesCanTakeLossesFrom', 'singleAttackWinHits', 'enemyFreeOpeningAttacks', 'interruptOnPlayerHitThroughRound',
+    'winWithinRounds', 'afterOpeningRound', 'ignorePlayerDefeatUntilRound']) if (encounter[key] !== undefined) integer(encounter[key], 1);
+  if (encounter.afterOpeningRound !== undefined) {
+    combatCommandForce(encounter.afterOpeningPlayerUnits);
+    combatCommandHits(charts, encounter.afterOpeningPlayerChart, 1, 2);
+    integer(encounter.afterOpeningMaximumManpower, 1);
+  }
+  if (encounter.ignorePlayerDefeatUntilRound !== undefined
+      && encounter.ignorePlayerDefeatUntilRound !== encounter.afterOpeningRound) throw new RangeError('Invalid opening handoff');
   for (const reinforcement of encounter.reinforcements ?? []) {
     integer(reinforcement.round, 1);
     if (!['player', 'enemy'].includes(reinforcement.side)) throw new RangeError('Invalid reinforcement side');
@@ -70,6 +78,9 @@ export function startCombatCommandFight(player, encounter, charts) {
 function finish(fight, status) {
   fight.status = status;
   let target = fight.config[status];
+  if (status === 'win' && fight.config.winWithinRounds !== undefined && fight.round <= fight.config.winWithinRounds) {
+    target = fight.config.earlyWin;
+  }
   if (status === 'win' && fight.config.winWithoutLosses !== undefined) {
     target = physical(fight.player) === physical(fight.startPlayer) ? fight.config.winWithoutLosses : fight.config.win;
   }
@@ -81,10 +92,27 @@ function finish(fight, status) {
 }
 
 function outcome(fight) {
-  if ((!fight.config.ignorePlayerDefeat && !living(fight.player)) || fight.player.some(unit => unit.essential && !unit.count)
+  const opening = fight.round <= (fight.config.ignorePlayerDefeatUntilRound ?? -1);
+  if ((!fight.config.ignorePlayerDefeat && !opening && !living(fight.player)) || fight.player.some(unit => unit.essential && !unit.count)
       || fight.config.minimumPhysical && physical(fight.player) < fight.config.minimumPhysical) finish(fight, 'loss');
   else if (!living(fight.enemies) && !fight.config.refillEnemyEachRound) finish(fight, 'win');
   return fight.status !== 'fighting';
+}
+
+// A printed change of force can require information the book does not derive
+// from the preceding vehicle damage. Keep the same encounter and its log.
+export function resumeCombatCommandFight(previous, player) {
+  if (previous?.rulesVersion !== 1 || previous.status !== 'awaiting-force') throw new RangeError('No force handoff pending');
+  const fight = copy(previous), force = combatCommandForce(player);
+  if (physical(force) > fight.config.afterOpeningMaximumManpower) throw new RangeError('Too many surviving men');
+  fight.player = force;
+  fight.startPlayer = copy(force);
+  fight.startingPhysical = physical(force);
+  fight.config.playerChart = fight.config.afterOpeningPlayerChart;
+  delete fight.config.ignorePlayerDefeatUntilRound;
+  fight.status = 'fighting';
+  outcome(fight);
+  return fight;
 }
 
 function ordered(force, keys, defaultOrder = 'loss') {
@@ -214,7 +242,8 @@ export function combatCommandRound(previous, options = {}, roll = randomDie) {
       if (fight.status !== 'fighting') break;
       if (side === 'player' ? playerFires : enemyFires) attack(fight, side, { ...options, drones }, roll, event);
     }
-    if (fight.status === 'fighting' && fight.round >= (config.roundLimit ?? Infinity)) finish(fight, config.limitOutcome ?? 'survived');
+    if (fight.status === 'fighting' && fight.round === config.afterOpeningRound) fight.status = 'awaiting-force';
+    else if (fight.status === 'fighting' && fight.round >= (config.roundLimit ?? Infinity)) finish(fight, config.limitOutcome ?? 'survived');
   }
   fight.history.push(event);
   fight.history = fight.history.slice(-100);

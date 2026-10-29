@@ -249,6 +249,61 @@ for(const id of BOOK_IDS){
       app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Terminator previous run retained');
     }finally{Math.random=random;}
   }
+  if(id===1469){
+    const el=key=>document.getElementById('sim1469-'+key);
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1469/definition.js');
+    check(getRoster().length===45&&requestedRosters.has(id),'Omega database presets');
+    const protectedData={inventory:[{name:'Existing item'}],equipment:{hand:'Existing sword'},sim1468:{saved:'other fight'},path:[1,2]};
+    let run;
+    const reset=()=>{run={startedAt:Date.now(),...structuredClone(protectedData)};app.state.playthroughs=[run];app.state.activePtIndex=0;module.render();};
+    const data=()=>run.sim1469;
+    const change=(key,value)=>{el(key).value=value;el(key).dispatchEvent(new Event('change',{bubbles:true}));};
+    const cancel=()=>{if(['fighting','awaiting-force'].includes(data().fight?.status)){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    reset();check(!el('note').textContent.includes('Julian'),'Omega custom help belongs to this book');
+    el('playerRoll').value='12';el('enemyRoll').value='2';el('start').click();el('attack').click();
+    check(data().fight.status==='win'&&data().history.length===1,'Omega custom fight works without preset');
+    module.render();check(data().history.length===1,'Omega victory recorded once');
+    el('enemyEditor').querySelector('.bsim-opponent-editor > button').click();
+    for(const name of el('enemyEditor').querySelectorAll('[role="combobox"]')){
+      name.value='Security';name.dispatchEvent(new Event('input',{bubbles:true}));
+      name.parentElement.querySelector('[data-option]').dispatchEvent(new Event('pointerdown',{bubbles:true}));
+    }
+    el('start').click();check(data().fight.enemies.length===2&&new Set(data().fight.enemies.map(u=>u.key)).size===2,'Omega custom autocomplete keeps distinct opponents');cancel();
+    for(const preset of getRoster()){
+      reset();change('encounter',preset.section);el('start').click();
+      check(data().fight.status==='fighting','Omega starts '+preset.section);
+      check(el('encounter').disabled&&el('variant').disabled&&el('playerEditor').querySelector('input').disabled,'Omega setup locked');
+      el('playerRoll').value='2';el('enemyRoll').value='2';el('attack').click();
+      check(data().fight.round===1,'Omega resolves round '+preset.section);cancel();
+      check(JSON.stringify(Object.fromEntries(Object.keys(protectedData).map(key=>[key,run[key]])))===JSON.stringify(protectedData),'Omega shared state preserved '+preset.section);
+    }
+    reset();change('encounter','58');change('variant','failed');el('start').click();
+    check(data().fight.config.playerChart==='C'&&data().fight.config.enemyChart==='C'&&data().fight.player[0].count===8,'Omega Morale result is setup only');cancel();
+    reset();change('encounter','85');change('variant','detected');el('start').click();el('attack').click();
+    check(data().fight.history[0].attacks.length===1&&data().fight.history[0].attacks[0].side==='enemy','Omega detected opening volley');cancel();
+    reset();change('encounter','97');change('variant','ranged');el('start').click();
+    check(data().fight.player[0].ordnance===7&&data().fight.config.win==='113','Omega firing variant');cancel();
+    reset();change('encounter','87');el('playerRoll').value='2';el('enemyRoll').value='2';el('start').click();el('attack').click();
+    check(data().fight.status==='continued'&&data().history.length===0,'Omega surviving guards do not award victory XP');
+    reset();change('encounter','100');el('start').click();el('playerRoll').value='2';el('enemyRoll').value='12';el('attack').click();
+    check(data().fight.status==='awaiting-force'&&data().history.length===0,'Omega vehicle handoff pauses without XP');
+    check(!el('playerEditor').querySelector('input').disabled&&el('enemyEditor').querySelector('input').disabled&&el('encounter').disabled&&el('attack').disabled,'Omega only surviving force is editable');
+    const enemySurvivors=data().fight.enemies[0].count,log=JSON.stringify(data().fight.history);
+    el('playerEditor').querySelector('[data-stat="count"]').value='6';
+    el('playerEditor').querySelector('[data-stat="ordnance"]').value='4';module.render();
+    check(el('playerEditor').querySelector('[data-stat="count"]').value==='6','Omega render preserves entered handoff values');
+    el('start').click();check(data().fight.status==='fighting'&&data().fight.round===1&&data().fight.player[0].count===6,'Omega resumes same encounter');
+    check(data().fight.enemies[0].count===enemySurvivors&&JSON.stringify(data().fight.history)===log,'Omega handoff preserves enemy damage and log');cancel();
+    reset();change('encounter','100');el('start').click();el('attack').click();
+    el('playerEditor').querySelector('[data-stat="count"]').value='0';el('start').click();
+    check(data().fight.status==='loss'&&data().fight.section==='89','Omega zero survivors resolve printed loss');
+    reset();el('start').click();const frozen=JSON.stringify(data());el('cancel').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();
+    check(JSON.stringify(run.sim1469)===frozen,'Omega stale confirmation ignored');app.setCurrentBookId(id);module.render();cancel();
+    const saved=JSON.stringify(data());app.state.playthroughs=[{startedAt:2,path:[1]}];app.state.activePtIndex=0;el('start').click();
+    check(app.currentPlaythrough().sim1469===undefined,'Omega stale controls cannot mutate a new run');
+    app.state.playthroughs=[run];app.state.activePtIndex=0;module.render();check(JSON.stringify(data())===saved,'Omega previous run retained');
+    const modal=overlay.querySelector('.inv-modal');check(modal.scrollWidth<=modal.clientWidth+1,'Omega modal fits');
+  }
   if(id===1468){
     const el=key=>document.getElementById('sim1468-'+key);
     const {getRoster}=await import('REPO/public/js/battlesim/books/1468/definition.js');
