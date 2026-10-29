@@ -40,7 +40,7 @@ function feedFor({ publicRun = true, publicBook = true, hideFirst = true, firstO
       },
     }) } },
     './xp': { computeLevel: () => 1, getTitleForLevel: () => 'Lost Soul' },
-    './content': {}, './books': {}, './job-xp': require('../server/db/job-xp'),
+    './content': {}, './books': {}, './job-xp': require('../server/db/job-xp'), './rating-stats': {},
   };
   const context = vm.createContext({ module: { exports: {} }, require: name => deps[name], Date });
   vm.runInContext(fs.readFileSync(require.resolve('../server/db/feed'), 'utf8'), context);

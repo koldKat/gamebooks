@@ -4,7 +4,7 @@ import { _justRevealedBooks, _applySavedBookResponse, _refreshBooksListOnly } fr
 import { _saveExpandedPref } from './prefs.js';
 import { _scheduleAnthologyCardCoverFlows, _queueBookCovers } from './covers.js';
 import { _materializeLazyGroup, _maybeReclaimLazyGroup } from './lazy.js';
-import { _starLabelHtml, _flashRatingGate } from './markup.js';
+import { _personalStarLabelHtml, _flashRatingGate } from './markup.js';
 import { apiFetch } from '../core/state.js';
 import { refreshCoinsDisplay } from '../progression/shop.js';
 import { openCoverActivity, openSeriesActivity } from '../covers.js';
@@ -266,13 +266,11 @@ export function _wireRenderedContent(list) {
       const bookId = +row.dataset.bookId;
       const cached = () => booksState._cachedBooks?.find(b => b.id === bookId);
       let myRating = parseFloat(row.dataset.userRating) || null;
-      let curAvg   = cached()?.avgRating ?? null;
-      let curCount = cached()?.voteCount ?? 0;
       const stars  = row.querySelectorAll('.star');
       const lbl    = row.querySelector('.star-label');
 
       const updateStars = (hoverVal) => {
-        const displayVal = hoverVal !== null ? hoverVal : curAvg;
+        const displayVal = hoverVal !== null ? hoverVal : myRating;
         stars.forEach(s => {
           const p = +s.dataset.pos;
           s.className = (displayVal !== null && displayVal >= p) ? 'star on'
@@ -281,7 +279,7 @@ export function _wireRenderedContent(list) {
         });
         lbl.innerHTML = hoverVal !== null
           ? `<span class="star-avg">${hoverVal % 1 === 0 ? hoverVal.toFixed(1) : hoverVal}</span>`
-          : _starLabelHtml(curAvg, curCount);
+          : _personalStarLabelHtml(myRating);
       };
 
       stars.forEach(star => {
@@ -293,21 +291,25 @@ export function _wireRenderedContent(list) {
           const prevRating = myRating;
           myRating = toSave;
           row.dataset.userRating = toSave ?? '';
+          updateStars(null);
           try {
             const res = await apiFetch(`/api/books/${bookId}/rating`, { method: 'PATCH', body: JSON.stringify({ rating: toSave }) });
             if (res.ok) {
               const data = await res.json();
-              curAvg = data.avgRating; curCount = data.voteCount;
-              const c = cached(); if (c) { c.userRating = toSave; c.avgRating = curAvg; c.voteCount = curCount; }
+              const c = cached(); if (c) { c.userRating = toSave; c.avgRating = data.avgRating; c.voteCount = data.voteCount; }
               updateStars(null);
               if (data.xpAwarded) refreshCoinsDisplay();
-            } else if (res.status === 403) {
+            } else {
               myRating = prevRating; row.dataset.userRating = prevRating ?? '';
               updateStars(null);
               const errData = await res.json().catch(() => ({}));
-              _flashRatingGate(row, errData.error || 'Complete a run first to rate');
+              _flashRatingGate(row, errData.error || (res.status === 403 ? 'Complete a run first to rate' : t('err.save')));
             }
-          } catch {}
+          } catch {
+            myRating = prevRating; row.dataset.userRating = prevRating ?? '';
+            updateStars(null);
+            _flashRatingGate(row, t('err.save'));
+          }
         });
       });
       row.addEventListener('mouseleave', () => updateStars(null));

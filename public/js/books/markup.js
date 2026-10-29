@@ -20,6 +20,12 @@ export function _starLabelHtml(avgRating, voteCount, noun = 'book') {
   return `<span class="star-avg">${avg}</span><span class="star-votes"> (${voteCount} vote${voteCount !== 1 ? 's' : ''})</span>`;
 }
 
+export function _personalStarLabelHtml(rating) {
+  return rating == null
+    ? `<span class="star-avg-none">${t('books.rate')}</span>`
+    : `<span class="star-avg">${Number(rating).toFixed(1)}</span>`;
+}
+
 export function _flashRatingGate(widget, msg) {
   const lbl = widget?.querySelector('.star-label');
   if (!lbl) return;
@@ -164,8 +170,8 @@ export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrSta
       `</div>` +
       subtitle +
       `<div class="book-rating-row star-rating" data-book-id="${b.id}" data-user-rating="${b.userRating ?? ''}">` +
-        _starsHtml(b.avgRating) +
-        `<span class="star-label">${_starLabelHtml(b.avgRating, b.voteCount)}</span>` +
+        _starsHtml(b.userRating) +
+        `<span class="star-label">${_personalStarLabelHtml(b.userRating)}</span>` +
       `</div>` +
     `</div>` +
     `<div class="book-actions">` +

@@ -99,6 +99,8 @@ export function renderPublicProfile(profile) {
           <span class="pub-stat pub-stat-win"><span class="pub-stat-val">${wins}</span> ${t('pub.stat.wins')}</span>
           <span class="pub-stat pub-stat-death"><span class="pub-stat-val">${losses}</span> ${t('pub.stat.losses')}</span>
           ${battles > 0 ? `<span class="pub-stat pub-stat-battle"><span class="pub-stat-val">${battles}</span> ${t('pub.stat.battle_deaths')}</span>` : ''}
+          <span class="pub-stat">${t('profile.ratings_given')} <span class="pub-stat-val">${profile.ratingsGiven ?? 0}</span></span>
+          <span class="pub-stat">${t('profile.average_rating')} <span class="pub-stat-val">${profile.averageRating == null ? '-' : Number(profile.averageRating).toFixed(2)}</span></span>
         </div>
       </div>
     </div>`;

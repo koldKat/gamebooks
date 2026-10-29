@@ -80,6 +80,7 @@ test('public profiles expose Squire separately from privileged roles and keep pr
   const deps={
     './connection':{db:{prepare:sql=>sql.includes('FROM users WHERE username')?db.prepare(sql):{all:()=>[]}}},
     './xp':{getUserXpInfo:()=>({level:1,title:'Title'})},'./job-xp': require('../server/db/job-xp'), './content':{},'./books':{},
+    './rating-stats':{getPlayerRatingStats:()=>({ratingsGiven:0,averageRating:null})},
   };
   const context=vm.createContext({module:{exports:{}},require:name=>deps[name]});
   vm.runInContext(fs.readFileSync(require.resolve('../server/db/feed'),'utf8'),context);

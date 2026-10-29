@@ -315,7 +315,7 @@ function renderXpBlock(data) {
   if (boostEl) boostEl.innerHTML = _xpBoostHtml(xpBoostPct, xpFromBoostWhole);
   updateCoinsDisplay(coinsBalance);
   const statsEl = document.getElementById('profile-own-stats');
-  if (statsEl && totalBooks > 0) {
+  if (statsEl) {
     statsEl.innerHTML =
       `<span class="pub-stat"><span class="pub-stat-val">${totalBooks}</span> books` +
         (createdBooks > 0 ? ` <span style="color:#6b7280;font-size:0.78em">(<span style="color:#60a5fa;font-weight:700">${createdBooks}</span> created)</span>` : '') +
@@ -324,9 +324,9 @@ function renderXpBlock(data) {
       `<span class="pub-stat"><span class="pub-stat-val">${totalRuns}</span> runs</span>` +
       `<span class="pub-stat pub-stat-win"><span class="pub-stat-val">${wins}</span> wins</span>` +
       `<span class="pub-stat pub-stat-death"><span class="pub-stat-val">${deaths}</span> losses</span>` +
-      (battles > 0 ? `<span class="pub-stat pub-stat-battle"><span class="pub-stat-val">${battles}</span> ${t('pub.stat.battle_deaths')}</span>` : '');
-  } else if (statsEl) {
-    statsEl.innerHTML = '';
+      (battles > 0 ? `<span class="pub-stat pub-stat-battle"><span class="pub-stat-val">${battles}</span> ${t('pub.stat.battle_deaths')}</span>` : '') +
+      `<span class="pub-stat">${t('profile.ratings_given')} <span class="pub-stat-val">${data.ratingsGiven ?? 0}</span></span>` +
+      `<span class="pub-stat">${t('profile.average_rating')} <span class="pub-stat-val">${data.averageRating == null ? '-' : Number(data.averageRating).toFixed(2)}</span></span>`;
   }
 }
 

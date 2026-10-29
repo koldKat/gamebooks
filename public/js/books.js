@@ -20,7 +20,7 @@ export { setExpandedPrefs, _captureExpandedPrefsFromDom } from './books/prefs.js
 
 export { _setBooksSearchOpen, _applyBooksSearchFilter, _scheduleApplyBooksSearchFilter, initBooksPanel } from './books/search.js';
 
-export { _starsHtml, _starLabelHtml, _flashRatingGate, _syncPdfBadgeOnCards, _syncEpubBadgeOnCards } from './books/markup.js';
+export { _starsHtml, _starLabelHtml, _personalStarLabelHtml, _flashRatingGate, _syncPdfBadgeOnCards, _syncEpubBadgeOnCards } from './books/markup.js';
 
 export { renderBooksList } from './books/render.js';
 export { _applySavedBookResponse } from './books/data.js';

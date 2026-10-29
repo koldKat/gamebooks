@@ -3,7 +3,22 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const Database = require('better-sqlite3');
-const { getRatingStats } = require('../server/db/rating-stats');
+const { getRatingStats, getPlayerRatingStats } = require('../server/db/rating-stats');
+
+test('player rating count and average combine books, anthology children, anthologies and series without other players or cleared votes', () => {
+  const db = new Database(':memory:');
+  try {
+    db.exec(`CREATE TABLE user_books (user_id INTEGER, book_id INTEGER, rating REAL);
+      CREATE TABLE user_series (user_id INTEGER, series_id INTEGER, rating REAL);
+      INSERT INTO user_books VALUES (1,10,5),(1,11,3.5),(1,12,1),(1,13,NULL),(2,10,0.5);
+      INSERT INTO user_series VALUES (1,20,4.5),(1,21,NULL),(2,20,1);`);
+    assert.deepEqual(getPlayerRatingStats(db, 1), { ratingsGiven: 4, averageRating: 3.5 });
+    assert.deepEqual(getPlayerRatingStats(db, 2), { ratingsGiven: 2, averageRating: 0.75 });
+    assert.deepEqual(getPlayerRatingStats(db, 3), { ratingsGiven: 0, averageRating: null });
+    db.exec('UPDATE user_books SET rating=NULL WHERE user_id=1 AND book_id=10');
+    assert.deepEqual(getPlayerRatingStats(db, 1), { ratingsGiven: 3, averageRating: 3 });
+  } finally { db.close(); }
+});
 
 test('rating breakdowns retain half stars and agree with all category totals', () => {
   const db = new Database(':memory:');

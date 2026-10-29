@@ -9,6 +9,7 @@ export default {
     'books.untitled':     'Untitled Book',
     'books.empty':        'No books yet. Create one below.',
     'books.open':         'Open',
+    'books.rate':         'Rate this book',
     'books.sections':     '{n} sections',
     'books.has_pdf':      'PDF available',
     'books.has_epub':     'EPUB available',

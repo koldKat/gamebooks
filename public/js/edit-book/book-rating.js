@@ -1,7 +1,7 @@
 import { editState } from './state.js';
 import { apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
-import { _starLabelHtml } from '../books.js';
+import { _personalStarLabelHtml } from '../books.js';
 import { refreshCoinsDisplay } from '../progression/shop.js';
 
 export function initBookRating(bookId) {
@@ -19,7 +19,7 @@ export function initBookRating(bookId) {
   if (!editState._editStarInitialized) {
     editState._editStarInitialized = true;
     editState._editStarUpdateFn = (hoverVal) => {
-      const displayVal = hoverVal !== null ? hoverVal : editState._editStarAvgRating;
+      const displayVal = hoverVal !== null ? hoverVal : editState._editStarCurrentRating;
       _esw.querySelectorAll('.star').forEach(s => {
         const p = +s.dataset.pos;
         s.className = (displayVal !== null && displayVal >= p) ? 'star on'
@@ -30,7 +30,7 @@ export function initBookRating(bookId) {
       if (hoverVal !== null) {
         lbl.innerHTML = `<span class="star-avg">${hoverVal % 1 === 0 ? hoverVal.toFixed(1) : hoverVal}</span>`;
       } else {
-        lbl.innerHTML = _starLabelHtml(editState._editStarAvgRating, editState._editStarVoteCount);
+        lbl.innerHTML = _personalStarLabelHtml(editState._editStarCurrentRating);
       }
     };
     _esw.querySelectorAll('.star').forEach(star => {

@@ -56,6 +56,8 @@ export default {
     'pub.legend.battle_ended':  'Battle death ended here',
     'pub.legend.portal':        'Portal',
     'profile.avatar_alt': 'avatar',
+    'profile.ratings_given': 'Ratings given:',
+    'profile.average_rating': 'Avg. rating:',
 
     'auth.passwords_no_match': 'Passwords do not match.',
     'auth.enter_new_password': 'Please enter a new password.',

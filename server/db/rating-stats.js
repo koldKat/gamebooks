@@ -36,4 +36,14 @@ function getRatingStats(db) {
   };
 }
 
-module.exports = { getRatingStats };
+function getPlayerRatingStats(db, userId) {
+  return db.prepare(`
+    SELECT COUNT(*) AS ratingsGiven, AVG(rating) AS averageRating FROM (
+      SELECT rating FROM user_books WHERE user_id = ? AND rating IS NOT NULL
+      UNION ALL
+      SELECT rating FROM user_series WHERE user_id = ? AND rating IS NOT NULL
+    )
+  `).get(userId, userId);
+}
+
+module.exports = { getRatingStats, getPlayerRatingStats };
