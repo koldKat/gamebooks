@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 
-for (const bookId of [1454, 1456, 1457]) test(`Book ${bookId} outcomes award XP once while cancelled fights and repeated saves do not`, () => {
+for (const bookId of [1454, 1456, 1457, 1467]) test(`Book ${bookId} outcomes award XP once while cancelled fights and repeated saves do not`, () => {
   const source = readFileSync('server/db/xp.js','utf8');
   const registry = source.slice(source.indexOf('const SIM_HISTORY_KEYS ='),source.indexOf('function processStateXp('));
   const keys = runInNewContext(registry+'\nSIM_HISTORY_KEYS;',{});

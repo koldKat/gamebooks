@@ -249,6 +249,69 @@ for(const id of BOOK_IDS){
       app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Terminator previous run retained');
     }finally{Math.random=random;}
   }
+  if(id===1467){
+    const el=key=>document.getElementById('sim1467-'+key);
+    const {getRoster,getPlayerDefaults}=await import('REPO/public/js/battlesim/books/1467/definition.js');
+    check(getRoster().length===26&&requestedRosters.has(id),'Combat Command database catalog');
+    let run=app.currentPlaythrough();
+    const data=()=>run.sim1467;
+    const preserved={inventory:{keep:['shared item']},equipment:{keep:'shared equipment'},sim1454:{keep:'saved fight'}};
+    const protectedState=JSON.stringify(preserved);
+    const set=(key,value)=>{el(key).value=value;};
+    const change=key=>el(key).dispatchEvent(new Event('change',{bubbles:true}));
+    const reset=()=>{
+      run={startedAt:Date.now(),path:[1],...structuredClone(preserved)};
+      app.state.playthroughs=[run];app.state.activePtIndex=0;module.render();
+    };
+    el('record').open=true;el('fleet').open=true;
+    const fleetModal=overlay.querySelector('.inv-modal'),fleetLeft=overlay.querySelector('.bsim-col-left');
+    check(fleetModal.getBoundingClientRect().width<=innerWidth&&fleetModal.scrollWidth<=fleetModal.clientWidth+1,'Combat Command modal fits viewport');
+    check(fleetLeft.scrollWidth<=fleetLeft.clientWidth+1,'Combat Command expanded fleet fits column');
+    el('record').open=false;
+    const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    for(const entry of getRoster()){
+      reset();set('encounter',entry.section);change('encounter');
+      if(entry.forceMode==='holding-squadron'){
+        const classes={};
+        for(const input of el('shipSelection').querySelectorAll('input')){
+          const unit=data().fleet.find(ship=>ship.key===input.value);
+          if((classes[unit.shipClass]??0)<entry.selectionClasses[unit.shipClass]){input.checked=true;classes[unit.shipClass]=(classes[unit.shipClass]??0)+1;}
+        }
+      }
+      if(entry.forceMode==='recon-birds') [...el('shipSelection').querySelectorAll('input')].slice(0,2).forEach(input=>{input.checked=true;});
+      if(entry.continuationFrom) el('enemyEditor').querySelector('[data-stat="count"]').value=3;
+      el('start').click();
+      check(data().fight?.config.section===entry.section,'Combat Command preset starts '+entry.section);
+      const before=JSON.stringify(data());module.render();check(JSON.stringify(data())===before,'Combat Command render preserves active fight');
+      set('playerRoll',2);set('enemyRoll',2);
+      if(entry.forceMode==='drones')set('drones',3);
+      el('attack').click();check(data().fight.round===1,'Combat Command exchange '+entry.section);
+      if(data().fight.status==='fighting')cancel();
+      check(JSON.stringify({inventory:run.inventory,equipment:run.equipment,sim1454:run.sim1454})===protectedState,'Combat Command shared state preserved '+entry.section);
+    }
+    reset();
+    const name=el('enemyEditor').querySelector('[role="combobox"]');
+    name.value='';name.dispatchEvent(new FocusEvent('focus'));name.dispatchEvent(new Event('input',{bubbles:true}));
+    check(el('enemyEditor').querySelector('[role="option"]'),'Combat Command real opponent autocomplete');
+    name.value='Custom opponent';name.dispatchEvent(new Event('blur'));
+    el('enemyEditor').querySelector('[data-stat="count"]').value=1;
+    el('enemyEditor').querySelector('[data-stat="ordnance"]').value=0;
+    el('playerEditor').querySelector('[data-stat="count"]').value=1;
+    el('playerEditor').querySelector('[data-stat="ordnance"]').value=10;
+    set('playerChart','A');el('start').click();
+    check(data().fight?.config.section==='custom','Combat Command custom fight without a preset');
+    set('playerRoll',12);el('attack').click();
+    check(data().fight.status==='win'&&data().history.length===1,'Combat Command custom result recorded');
+    module.render();check(data().history.length===1,'Combat Command render does not duplicate outcome');
+    reset();el('effect').value='time-86';el('applyEffect').click();
+    check(data().hours===1&&data().morale===getPlayerDefaults().morale+1,'Combat Command instruction control uses one-time source effect');
+    set('encounter','53');change('encounter');el('start').click();
+    const frozen=JSON.stringify(data());el('cancel').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();
+    check(JSON.stringify(run.sim1467)===frozen,'Combat Command stale confirmation ignored');app.setCurrentBookId(id);module.render();cancel();
+    const original=JSON.stringify(data());app.state.playthroughs=[{startedAt:2,path:[1]}];app.state.activePtIndex=0;
+    el('start').click();check(app.currentPlaythrough().sim1467===undefined,'Combat Command stale controls leave another run untouched');
+    app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Combat Command original run preserved');
+  }
   if(id===1454){
     const el=key=>document.getElementById('sim1454-'+key),run=app.currentPlaythrough(),data=()=>run.sim1454;
     const {getRoster}=await import('REPO/public/js/battlesim/books/1454/definition.js');
