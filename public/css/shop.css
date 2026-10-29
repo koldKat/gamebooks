@@ -528,3 +528,9 @@
 .books-xp-mini-track > span { display: block; height: 100%; width: 0; background: #f5a623; border-radius: inherit; }
 #books-xp-mini-job-fill, #books-app-mini-job-fill { background: #fb7185; }
 #books-app-mini-average-fill { background: #2dd4bf; }
+
+/* Keep empty tracks visible against the My Books progress panels. */
+#books-xp-bar, #books-job-xp-bar, #avg-lvl-bar,
+#app-xp-bar, #app-job-xp-bar, .books-xp-mini-track {
+  background: #4b5563;
+}
