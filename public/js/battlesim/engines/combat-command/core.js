@@ -51,10 +51,19 @@ export function startCombatCommandFight(player, encounter, charts) {
     if (!names.length && !(side === 'player' ? encounter.enemyOnly : encounter.playerOnly)) throw new RangeError('Choose a combat chart');
     for (const name of names) combatCommandHits(charts, name, 1, 2);
   }
-  if (!living(fight.player) || !living(fight.enemies)) throw new RangeError('A force has no surviving units');
+  if (!living(fight.player) || !living(fight.enemies) && !(encounter.enemyOnly && encounter.emptyEnemyOutcome)) throw new RangeError('A force has no surviving units');
   for (const key of ['roundLimit', 'enemyAmmo', 'freeOpeningAttacks', 'minimumPhysical', 'droneRound', 'minimumDrones',
-    'dronesCanTakeLossesFrom', 'singleAttackWinHits']) if (encounter[key] !== undefined) integer(encounter[key], 1);
+    'dronesCanTakeLossesFrom', 'singleAttackWinHits', 'enemyFreeOpeningAttacks', 'interruptOnPlayerHitThroughRound']) if (encounter[key] !== undefined) integer(encounter[key], 1);
+  for (const reinforcement of encounter.reinforcements ?? []) {
+    integer(reinforcement.round, 1);
+    if (!['player', 'enemy'].includes(reinforcement.side)) throw new RangeError('Invalid reinforcement side');
+    combatCommandForce(reinforcement.units);
+  }
+  for (const changes of [encounter.playerStrengthRounds, encounter.enemyStrengthRounds]) {
+    for (const [round, value] of Object.entries(changes ?? {})) { integer(Number(round), 1); if (value !== null) integer(value); }
+  }
   fight.startPlayer = copy(fight.player);
+  if (!living(fight.enemies)) finish(fight, encounter.emptyEnemyOutcome);
   return fight;
 }
 
@@ -64,13 +73,17 @@ function finish(fight, status) {
   if (status === 'win' && fight.config.winWithoutLosses !== undefined) {
     target = physical(fight.player) === physical(fight.startPlayer) ? fight.config.winWithoutLosses : fight.config.win;
   }
+  const survivors = fight.config[status + 'BySurvivors'];
+  if (survivors) target = survivors[String(physical(fight.player))] ?? survivors.multiple ?? target;
+  const losses = fight.config[status + 'ByLosses'];
+  if (losses) target = losses[String((fight.startingPhysical ?? physical(fight.startPlayer)) - physical(fight.player))] ?? target;
   fight.section = target == null ? null : String(target);
 }
 
 function outcome(fight) {
   if ((!fight.config.ignorePlayerDefeat && !living(fight.player)) || fight.player.some(unit => unit.essential && !unit.count)
       || fight.config.minimumPhysical && physical(fight.player) < fight.config.minimumPhysical) finish(fight, 'loss');
-  else if (!living(fight.enemies)) finish(fight, 'win');
+  else if (!living(fight.enemies) && !fight.config.refillEnemyEachRound) finish(fight, 'win');
   return fight.status !== 'fighting';
 }
 
@@ -87,6 +100,16 @@ function ordered(force, keys, defaultOrder = 'loss') {
 }
 
 function casualties(fight, force, hits, keys, event, player) {
+  if (player && fight.config.prisonerShield) {
+    const previous = fight.enemyHitsReceived ?? 0;
+    fight.enemyHitsReceived = previous + hits;
+    let absorbed = 0;
+    for (let hit = previous; hit < previous + hits; hit++) {
+      if (fight.config.prisonerShield === 'alternating' ? hit % 2 === 0 : hit === 0) absorbed++;
+    }
+    hits -= absorbed;
+    event.absorbed = absorbed;
+  }
   let candidates = ordered(force, keys).filter(unit => unit.count > 0 && (!unit.drone
     || player && fight.config.dronesCanTakeLossesFrom !== undefined && fight.round >= fight.config.dronesCanTakeLossesFrom));
   if (player && fight.config.separatePlayerTargets) candidates = [force[fight.round - 1]].filter(Boolean);
@@ -115,6 +138,10 @@ function chartAt(config, side, round) {
 
 function strength(fight, side, options) {
   const config = fight.config;
+  const changes = Object.entries(config[side + 'StrengthRounds'] ?? {}).sort(([a], [b]) => Number(a) - Number(b));
+  let override;
+  for (const [round, value] of changes) if (fight.round >= Number(round)) override = value;
+  if (override !== undefined && override !== null) return integer(override);
   if (config[side + 'Strength'] !== undefined) return integer(config[side + 'Strength']);
   const force = side === 'player' ? fight.player : fight.enemies;
   if (side === 'enemy') return force.reduce((sum, unit) => sum + unit.count * unit.ordnance, 0);
@@ -147,6 +174,11 @@ function attack(fight, side, options, roll, event) {
   const hits = power ? combatCommandHits(fight.charts, chart, power, total) : 0;
   const entry = { side, strength: power, chart, dice, total, hits, losses: [] };
   event.attacks.push(entry);
+  if (!player && hits && fight.round <= (fight.config.interruptOnPlayerHitThroughRound ?? 0)) {
+    entry.wounded = true;
+    finish(fight, 'interrupted');
+    return;
+  }
   casualties(fight, player ? fight.enemies : fight.player, hits,
     options[player ? 'enemyLossOrder' : 'playerLossOrder'], entry, !player);
   if (!player) fight.enemyExchanges++;
@@ -162,8 +194,19 @@ export function combatCommandRound(previous, options = {}, roll = randomDie) {
   if (drones && (!config.dronesMayAttack || config.droneRound && fight.round !== config.droneRound)) throw new RangeError('Drones cannot attack this round');
   if (drones && drones < (config.minimumDrones ?? 1)) throw new RangeError('Not enough drones selected');
   const event = { round: fight.round, attacks: [] };
+  if (config.refillEnemyEachRound && fight.round > 1) fight.enemies = combatCommandForce(config.enemies);
+  for (const reinforcement of config.reinforcements ?? []) {
+    if (reinforcement.round !== fight.round) continue;
+    const force = reinforcement.side === 'player' ? fight.player : fight.enemies;
+    for (const unit of combatCommandForce(reinforcement.units)) {
+      const existing = force.find(candidate => candidate.key === unit.key);
+      if (existing) existing.count += unit.count;
+      else force.push(unit);
+    }
+    if (reinforcement.side === 'player') fight.startingPhysical = (fight.startingPhysical ?? physical(fight.startPlayer)) + physical(reinforcement.units);
+  }
   if (!outcome(fight)) {
-    const playerFires = !config.enemyOnly;
+    const playerFires = !config.enemyOnly && fight.round > (config.enemyFreeOpeningAttacks ?? 0);
     const enemyFires = !config.playerOnly && fight.round > (config.freeOpeningAttacks ?? 0)
       && fight.enemyExchanges < (config.enemyAmmo ?? Infinity);
     const order = config.initiative === 'enemy' ? ['enemy', 'player'] : ['player', 'enemy'];

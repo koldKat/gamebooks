@@ -249,6 +249,46 @@ for(const id of BOOK_IDS){
       app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Terminator previous run retained');
     }finally{Math.random=random;}
   }
+  if(id===1468){
+    const el=key=>document.getElementById('sim1468-'+key);
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1468/definition.js');
+    check(getRoster().length===45&&requestedRosters.has(id),'Shines database presets');
+    const protectedData={inventory:[{name:'Existing item'}],equipment:{hand:'Existing sword'},sim1467:{saved:'other fight'},path:[1,2]};
+    let run;
+    const reset=()=>{run={startedAt:Date.now(),...structuredClone(protectedData)};app.state.playthroughs=[run];app.state.activePtIndex=0;module.render();};
+    const data=()=>run.sim1468;
+    const choose=section=>{el('encounter').value=section;el('encounter').dispatchEvent(new Event('change',{bubbles:true}));};
+    const cancel=()=>{if(data().fight?.status==='fighting'){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    reset();el('playerRoll').value='12';el('enemyRoll').value='2';el('start').click();
+    check(data().fight.status==='fighting','Shines custom fight without preset');
+    el('attack').click();check(data().fight.status==='win'&&data().history.length===1,'Shines custom victory recorded once');
+    module.render();check(data().history.length===1,'Shines repeated render does not award twice');
+    el('enemyEditor').querySelector('.bsim-opponent-editor > button').click();
+    for(const name of el('enemyEditor').querySelectorAll('[role="combobox"]')){
+      name.value='Bug';name.dispatchEvent(new Event('input',{bubbles:true}));
+      name.parentElement.querySelector('[data-option]').dispatchEvent(new Event('pointerdown',{bubbles:true}));
+    }
+    el('start').click();check(data().fight.enemies.length===2&&new Set(data().fight.enemies.map(unit=>unit.key)).size===2,'Shines repeated custom opponents have distinct keys');cancel();
+    for(const preset of getRoster()){
+      choose(preset.section);
+      for(const input of overlay.querySelectorAll('[data-stat="count"]'))if(input.value==='')input.value='2';
+      el('start').click();check(data().fight?.status==='fighting','Shines preset starts '+preset.section);
+      check(el('encounter').disabled&&el('playerEditor').querySelector('input').disabled,'Shines setup locked');
+      el('playerRoll').value='2';el('enemyRoll').value='2';el('attack').click();
+      check(data().fight.round===1,'Shines preset resolves round '+preset.section);cancel();
+      check(JSON.stringify(Object.fromEntries(Object.keys(protectedData).map(key=>[key,run[key]])))===JSON.stringify(protectedData),'Shines shared state preserved '+preset.section);
+    }
+    reset();choose('2');el('start').click();el('enemyRoll').value='12';el('playerRoll').value='2';el('attack').click();
+    check(data().fight.status==='interrupted'&&data().history.length===0&&data().fight.player[0].count===1,'Shines wound is not a death or victory');
+    reset();choose('95');el('enemyEditor').querySelector('[data-stat="count"]').value='0';el('start').click();
+    check(data().fight.round===0&&data().fight.section==='97'&&data().history.length===0,'Shines unopposed escape has no battle XP');
+    reset();el('start').click();const frozen=JSON.stringify(data());el('cancel').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();
+    check(JSON.stringify(run.sim1468)===frozen,'Shines stale confirmation ignored');app.setCurrentBookId(id);module.render();cancel();
+    const saved=JSON.stringify(data());app.state.playthroughs=[{startedAt:2,path:[1]}];app.state.activePtIndex=0;el('start').click();
+    check(app.currentPlaythrough().sim1468===undefined,'Shines stale control cannot mutate another run');
+    app.state.playthroughs=[run];app.state.activePtIndex=0;module.render();check(JSON.stringify(data())===saved,'Shines old run retained');
+    const modal=overlay.querySelector('.inv-modal');check(modal.scrollWidth<=modal.clientWidth+1,'Shines modal fits');
+  }
   if(id===1467){
     const el=key=>document.getElementById('sim1467-'+key);
     const {getRoster,getPlayerDefaults}=await import('REPO/public/js/battlesim/books/1467/definition.js');

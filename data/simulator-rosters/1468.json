@@ -1,0 +1,4545 @@
+{
+  "schemaVersion": 1,
+  "bookId": 1468,
+  "family": "combat-command",
+  "sourceSha256": "794cc4779a3f1d910ab70b9c810c57702ccc85c2b3f502cc8ec013d8afdf91aa",
+  "rosterComplete": true,
+  "sourceRosterComplete": true,
+  "runtimeImplementationPending": false,
+  "expectedEncounterCount": 45,
+  "source": "All 228 original pages and full reader reviewed. Single-encounter combat presets only; no mission progression or shared inventory changes.",
+  "enemies": [
+    {
+      "key": "2-1",
+      "name": "Bug warriors (§2)",
+      "attack": 3,
+      "hp": 12,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 0,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "2",
+          "label": "Bug warriors (§2)",
+          "playerChart": "D",
+          "enemyChart": "E",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "julian",
+              "name": "Julian",
+              "count": 1,
+              "ordnance": 7,
+              "lossPriority": 10
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Bug warriors",
+              "count": 12,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            39,
+            40
+          ],
+          "interruptOnPlayerHitThroughRound": 2,
+          "interrupted": "6",
+          "roundLimit": 4,
+          "limitOutcome": "survived",
+          "reinforcements": [
+            {
+              "round": 3,
+              "side": "player",
+              "units": [
+                {
+                  "key": "wade",
+                  "name": "Wade",
+                  "count": 1,
+                  "ordnance": 7,
+                  "lossPriority": 0
+                },
+                {
+                  "key": "sutu",
+                  "name": "Sutu",
+                  "count": 1,
+                  "ordnance": 7,
+                  "lossPriority": 1
+                }
+              ]
+            }
+          ],
+          "winByLosses": {
+            "0": "5",
+            "1": "7",
+            "2": "8"
+          },
+          "survivedByLosses": {
+            "0": "5",
+            "1": "7",
+            "2": "8"
+          },
+          "note": "Any hit on Julian in the first two rounds interrupts this fight with a wound, not a death.",
+          "charts": {
+            "A": [
+              [
+                0,
+                1,
+                1,
+                2,
+                2,
+                3,
+                3,
+                4,
+                5,
+                6,
+                6
+              ],
+              [
+                0,
+                1,
+                2,
+                2,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                7
+              ],
+              [
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8
+              ],
+              [
+                2,
+                2,
+                2,
+                3,
+                3,
+                4,
+                5,
+                5,
+                6,
+                7,
+                8
+              ],
+              [
+                2,
+                2,
+                2,
+                3,
+                4,
+                4,
+                5,
+                6,
+                7,
+                7,
+                8
+              ],
+              [
+                2,
+                2,
+                3,
+                4,
+                4,
+                5,
+                5,
+                6,
+                7,
+                8,
+                8
+              ],
+              [
+                2,
+                3,
+                3,
+                4,
+                4,
+                5,
+                6,
+                6,
+                7,
+                8,
+                9
+              ],
+              [
+                3,
+                3,
+                4,
+                4,
+                5,
+                5,
+                6,
+                7,
+                8,
+                8,
+                9
+              ],
+              [
+                3,
+                4,
+                4,
+                5,
+                5,
+                6,
+                7,
+                7,
+                8,
+                9,
+                10
+              ],
+              [
+                3,
+                4,
+                4,
+                5,
+                6,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11
+              ],
+              [
+                4,
+                4,
+                5,
+                6,
+                7,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12
+              ]
+            ],
+            "B": [
+              [
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                4
+              ],
+              [
+                0,
+                0,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                4
+              ],
+              [
+                0,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                4
+              ],
+              [
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                4,
+                5
+              ],
+              [
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                5
+              ],
+              [
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                4,
+                5
+              ],
+              [
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                4,
+                5,
+                6
+              ],
+              [
+                2,
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                4,
+                5,
+                5,
+                6
+              ],
+              [
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                4,
+                5,
+                5,
+                5,
+                6
+              ],
+              [
+                3,
+                3,
+                3,
+                4,
+                4,
+                4,
+                5,
+                5,
+                5,
+                6,
+                7
+              ],
+              [
+                3,
+                3,
+                4,
+                4,
+                4,
+                5,
+                5,
+                6,
+                6,
+                7,
+                8
+              ]
+            ],
+            "C": [
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3
+              ],
+              [
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3
+              ],
+              [
+                0,
+                0,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                4
+              ],
+              [
+                0,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                4
+              ],
+              [
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                4,
+                5
+              ],
+              [
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                5
+              ],
+              [
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                5,
+                5
+              ],
+              [
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                4,
+                5,
+                6
+              ],
+              [
+                2,
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                4,
+                5,
+                5,
+                6
+              ],
+              [
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                4,
+                5,
+                5,
+                6,
+                7
+              ]
+            ],
+            "D": [
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                2,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3
+              ],
+              [
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3
+              ],
+              [
+                0,
+                0,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                4
+              ],
+              [
+                0,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                4,
+                4
+              ],
+              [
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                4,
+                5
+              ],
+              [
+                1,
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                5
+              ],
+              [
+                1,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                5,
+                5
+              ],
+              [
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                4,
+                4,
+                5,
+                5,
+                6
+              ]
+            ],
+            "E": [
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                2,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                2,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2
+              ],
+              [
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                2
+              ],
+              [
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                2,
+                2
+              ],
+              [
+                0,
+                1,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                2,
+                2,
+                3
+              ],
+              [
+                1,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                3
+              ],
+              [
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                2,
+                2,
+                2,
+                3,
+                3
+              ]
+            ],
+            "F": [
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1
+              ],
+              [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                2
+              ],
+              [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                2,
+                3
+              ]
+            ],
+            "G": [
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1
+              ],
+              [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            ]
+          },
+          "playerDefaults": {
+            "customPlayer": {
+              "key": "mi",
+              "name": "M.I.",
+              "count": 1,
+              "ordnance": 6
+            },
+            "customEnemy": {
+              "key": "enemy",
+              "name": "Opponent",
+              "count": 1,
+              "ordnance": 3
+            }
+          },
+          "sourceEvidence": {
+            "section": "2",
+            "sourcePdfPages": [
+              39,
+              40
+            ],
+            "enemy": "Bug warriors",
+            "enemyManpower": 12,
+            "enemyOrdnance": 3,
+            "enemyMelee": 4,
+            "enemyMorale": null,
+            "enemyChart": "E",
+            "playerInitialManpower": 1,
+            "playerOrdnance": 7,
+            "playerMelee": 5,
+            "playerChart": "D",
+            "initiative": "player",
+            "reinforcements": {
+              "afterCompletedRounds": 2,
+              "addManpower": 2,
+              "names": [
+                "Wade",
+                "Sutu"
+              ],
+              "totalManpower": 3
+            },
+            "anyPlayerHitBeforeReinforcement": {
+              "next": "6",
+              "interruptImmediately": true,
+              "fatalNotPrinted": true
+            },
+            "roundLimit": 4,
+            "enemyWithdrawsAfterTwoRoundsFollowingReinforcement": true,
+            "outcomes": {
+              "winNoCasualties": "5",
+              "winOneCasualty": "7",
+              "winTwoCasualties": "8",
+              "BugsWin": "29"
+            },
+            "carryEnemySurvivorsOnContinuation": true,
+            "note": "Outcome lines on PDF40 above heading3 belong to2. Commanderlast genericrule. No bespoke shared Inventory/Equipment."
+          }
+        }
+      }
+    },
+    {
+      "key": "4-1",
+      "name": "Bug warriors (§4)",
+      "attack": 3,
+      "hp": 12,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 1,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "4",
+          "label": "Bug warriors (§4)",
+          "playerChart": "D",
+          "enemyChart": "E",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "julian",
+              "name": "Julian",
+              "count": 1,
+              "ordnance": 7,
+              "lossPriority": 10
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Bug warriors",
+              "count": 12,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            44,
+            45
+          ],
+          "interruptOnPlayerHitThroughRound": 2,
+          "interrupted": "6",
+          "roundLimit": 2,
+          "limitOutcome": "survived",
+          "win": "9",
+          "survived": "9",
+          "note": "Any hit on Julian in the first two rounds interrupts this fight with a wound, not a death.",
+          "sourceEvidence": {
+            "section": "4",
+            "sourcePdfPages": [
+              44,
+              45
+            ],
+            "enemy": "Bug warriors",
+            "enemyManpower": 12,
+            "enemyOrdnance": 3,
+            "enemyMelee": 4,
+            "enemyMorale": null,
+            "enemyChart": "E",
+            "playerManpower": 1,
+            "playerOrdnance": 7,
+            "playerMelee": 5,
+            "playerChart": "D",
+            "initiative": "player",
+            "roundLimit": 2,
+            "reinforcements": null,
+            "anyPlayerHit": {
+              "next": "6",
+              "interruptImmediately": true,
+              "fatalNotPrinted": true
+            },
+            "surviveUnhurtNext": "9",
+            "enemyWithdrawsAfterTwoRounds": true,
+            "note": "Distinct from2: no Wade/Sutu reinforcement here; outcome lines above heading5 on PDF45 belong to4."
+          }
+        }
+      }
+    },
+    {
+      "key": "17-1",
+      "name": "Skinny civilians (§17)",
+      "attack": 1,
+      "hp": 5,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 2,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "17",
+          "label": "Skinny civilians (§17)",
+          "playerChart": "B",
+          "enemyChart": "F",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": 1,
+              "ordnance": 4
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny civilians",
+              "count": 5,
+              "ordnance": 1
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            76
+          ],
+          "refillEnemyEachRound": true,
+          "note": "Only Julian fights. The mob refills to five at the start of each round; casualties reduce its immediate return attack.",
+          "roundLimit": 3,
+          "limitOutcome": "survived",
+          "survived": "30",
+          "sourceEvidence": {
+            "section": "17",
+            "sourcePdfPages": [
+              76
+            ],
+            "type": "hand-to-hand mob",
+            "playerUnit": "Julian",
+            "playerManpower": 1,
+            "playerMelee": 4,
+            "playerAttackStrength": 4,
+            "playerChart": "B",
+            "enemy": "Skinny civilians",
+            "enemyEngagedPerRound": 5,
+            "enemyMelee": 1,
+            "enemyChart": "F",
+            "refillEnemyTo": 5,
+            "refillTiming": "start of next round",
+            "casualtiesReduceImmediateReturnAttack": true,
+            "roundLimit": 3,
+            "outcomes": {
+              "JulianCasualty": "29",
+              "surviveThreeFullRounds": "30"
+            },
+            "note": "Melee rather than rookieOrd6;notstandardSkinnytroopMelee3. OnlyJulianengaged/reservedrookiesunhurt. Nominutechargeprintedhere."
+          }
+        }
+      }
+    },
+    {
+      "key": "20-1",
+      "name": "Skinny soldiers (§20)",
+      "attack": 3,
+      "hp": 4,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 3,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "20",
+          "label": "Skinny soldiers (§20)",
+          "playerChart": "C",
+          "enemyChart": "D",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": 2,
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 4,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            79,
+            80
+          ],
+          "freeOpeningAttacks": 1,
+          "playerChartRounds": {
+            "2": "D"
+          },
+          "win": "31",
+          "roundLimit": 4,
+          "limitOutcome": "survived",
+          "survived": "23",
+          "sourceEvidence": {
+            "section": "20",
+            "sourcePdfPages": [
+              79,
+              80
+            ],
+            "playerUnits": [
+              "Julian",
+              "LeClerc"
+            ],
+            "playerManpower": 2,
+            "playerOrdnance": 6,
+            "playerChartRounds": {
+              "1": "C",
+              "2+": "D"
+            },
+            "enemy": "Pillbox Skinny soldiers",
+            "enemyManpower": 4,
+            "enemyOrdnance": 3,
+            "enemyChart": "D",
+            "enemySkipsFirstRound": true,
+            "roundLimit": 4,
+            "outcomes": {
+              "enemiesKilledWithMISurvivor": "31",
+              "bothMIKilled": "29",
+              "bothSidesHaveSurvivorAfter4": "23"
+            },
+            "note": "Ownprintedtextclearlysays survive the first;readablecropverified/sourceoddwordingretained. Actualconditionaldestinationsunambiguous. No morale roll or minute charge printed20."
+          }
+        }
+      }
+    },
+    {
+      "key": "21-1",
+      "name": "Skinny soldiers (§21)",
+      "attack": 5,
+      "hp": 10,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 4,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "21",
+          "label": "Skinny soldiers (§21)",
+          "playerChart": "D",
+          "enemyChart": "D",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "leclerc",
+              "name": "LeClerc (first hit: wounded)",
+              "count": 1,
+              "ordnance": 6
+            },
+            {
+              "key": "julian",
+              "name": "Julian",
+              "count": 1,
+              "ordnance": 6,
+              "lossPriority": 10
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 10,
+              "ordnance": 5
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            80,
+            81
+          ],
+          "note": "The air-defense gun raises the Skinnies’ printed Ordnance to 5. The first M.I. casualty is LeClerc, wounded; he dies only if Julian is killed.",
+          "win": "31",
+          "sourceEvidence": {
+            "section": "21",
+            "sourcePdfPages": [
+              80,
+              81
+            ],
+            "playerUnits": [
+              "Julian",
+              "LeClerc"
+            ],
+            "playerManpower": 2,
+            "playerOrdnance": 6,
+            "playerChart": "D",
+            "enemyManpower": 10,
+            "enemyGroups": [
+              {
+                "name": "Pillbox Skinny soldiers",
+                "manpower": 4,
+                "ordnance": 3
+              },
+              {
+                "name": "Air-defense gun crew",
+                "manpower": 6,
+                "ordnance": 5
+              }
+            ],
+            "enemyChart": "D",
+            "freeOpeningRound": false,
+            "roundLimit": null,
+            "firstMICasualty": {
+              "name": "LeClerc",
+              "woundedNotDead": true,
+              "diesOnlyIfJulianKilled": true
+            },
+            "outcomes": {
+              "bothMIKilled": "29",
+              "allEnemiesKilled": "31"
+            },
+            "note": "Explicit mixed enemy wording kept in prose;AAgun5 vs normal3. Need final full-source review of later31 for wound/recovery/carryover. Distinct from20(no smoke-free round/no4round limit)."
+          }
+        }
+      }
+    },
+    {
+      "key": "33-1",
+      "name": "Skinny soldiers (§33)",
+      "attack": 3,
+      "hp": 12,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 0,
+        "partCount": 2,
+        "entry": {
+          "section": "33",
+          "label": "Skinny soldiers (§33)",
+          "playerChart": "E",
+          "enemyChart": "D",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 12,
+              "ordnance": 3
+            },
+            {
+              "key": "pillbox",
+              "name": "Earlier pillbox survivors",
+              "count": "",
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            94,
+            95,
+            96
+          ],
+          "roundLimit": 5,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "42",
+            "multiple": "40"
+          },
+          "survivedBySurvivors": {
+            "1": "42",
+            "multiple": "40"
+          },
+          "note": "Enter your current squad and the actual surviving pillbox opponents in addition to the 12 new soldiers.",
+          "sourceEvidence": {
+            "section": "33",
+            "sourcePdfPages": [
+              95,
+              96
+            ],
+            "player": "Current surviving rookie squad, Ordnance 6, Chart E; preserve all earlier casualties",
+            "enemy": "12 Skinny soldiers plus survivors of the original pillbox attacked by Julian and LeClerc; Ordnance 3, Chart D",
+            "firstSide": "enemy",
+            "roundLimit": 5,
+            "withdrawal": "Surviving Skinnies run after five rounds",
+            "outcomes": {
+              "allPlayerKilled": "29",
+              "JulianAndAtLeastOneOtherSurvive": "40",
+              "JulianAloneSurvives": "42"
+            },
+            "continuation": "Use actual remaining original pillbox opponents from prior fight; do not reset defeated opponents or squad casualties.",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "33-2",
+      "name": "Earlier pillbox survivors (§33)",
+      "attack": 3,
+      "hp": 1,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 5,
+        "slot": 1,
+        "partCount": 2,
+        "entry": {
+          "section": "33",
+          "label": "Skinny soldiers (§33)",
+          "playerChart": "E",
+          "enemyChart": "D",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 12,
+              "ordnance": 3
+            },
+            {
+              "key": "pillbox",
+              "name": "Earlier pillbox survivors",
+              "count": "",
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            94,
+            95,
+            96
+          ],
+          "roundLimit": 5,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "42",
+            "multiple": "40"
+          },
+          "survivedBySurvivors": {
+            "1": "42",
+            "multiple": "40"
+          },
+          "note": "Enter your current squad and the actual surviving pillbox opponents in addition to the 12 new soldiers.",
+          "sourceEvidence": {
+            "section": "33",
+            "sourcePdfPages": [
+              95,
+              96
+            ],
+            "player": "Current surviving rookie squad, Ordnance 6, Chart E; preserve all earlier casualties",
+            "enemy": "12 Skinny soldiers plus survivors of the original pillbox attacked by Julian and LeClerc; Ordnance 3, Chart D",
+            "firstSide": "enemy",
+            "roundLimit": 5,
+            "withdrawal": "Surviving Skinnies run after five rounds",
+            "outcomes": {
+              "allPlayerKilled": "29",
+              "JulianAndAtLeastOneOtherSurvive": "40",
+              "JulianAloneSurvives": "42"
+            },
+            "continuation": "Use actual remaining original pillbox opponents from prior fight; do not reset defeated opponents or squad casualties.",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "36-1",
+      "name": "Skinny soldiers (§36)",
+      "attack": 3,
+      "hp": 12,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 6,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "36",
+          "label": "Skinny soldiers (§36)",
+          "playerChart": "C",
+          "enemyChart": "E",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 12,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            98,
+            99
+          ],
+          "winBySurvivors": {
+            "1": "43",
+            "multiple": "34"
+          },
+          "survivedBySurvivors": {
+            "1": "43",
+            "multiple": "34"
+          },
+          "sourceEvidence": {
+            "section": "36",
+            "sourcePdfPages": [
+              99
+            ],
+            "player": "Current surviving rookie squad, Ordnance 6, Chart C",
+            "enemy": "12 Skinny soldiers (8 bridge, 4 rear), standard Ordnance 3, Chart E; run as ONE combined firefight",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "termination": "One side completely eliminated; no round limit or morale withdrawal printed",
+            "outcomes": {
+              "JulianOnly": "43",
+              "JulianAndAnother": "34",
+              "SquadWipedOut": "29"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "37-1",
+      "name": "Skinny soldiers (§37)",
+      "attack": 3,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 7,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "37",
+          "label": "Skinny soldiers (§37)",
+          "playerChart": "C",
+          "enemyChart": "E",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 16,
+              "ordnance": 3
+            }
+          ],
+          "loss": "52",
+          "sourcePdfPages": [
+            100,
+            101
+          ],
+          "enemyChartRounds": {
+            "2": "D"
+          },
+          "winBySurvivors": {
+            "1": "43",
+            "multiple": "51"
+          },
+          "survivedBySurvivors": {
+            "1": "43",
+            "multiple": "51"
+          },
+          "sourceEvidence": {
+            "section": "37",
+            "sourcePdfPages": [
+              100,
+              101
+            ],
+            "player": "Current rookie squad, Ordnance 6, Chart C",
+            "enemy": "16 Skinny soldiers, Ordnance 3, Chart E first round then Chart D all later rounds",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "termination": "Until one side eliminated; no round limit",
+            "outcomes": {
+              "JulianAndAnother": "51",
+              "JulianOnly": "43",
+              "SquadWipedOut": "52"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "39-1",
+      "name": "Skinny soldiers (§39)",
+      "attack": 4,
+      "hp": 22,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 8,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "39",
+          "label": "Skinny soldiers (§39)",
+          "playerChart": "D",
+          "enemyChart": "D",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 22,
+              "ordnance": 4
+            }
+          ],
+          "loss": "52",
+          "sourcePdfPages": [
+            102,
+            103
+          ],
+          "winBySurvivors": {
+            "1": "43",
+            "multiple": "51"
+          },
+          "survivedBySurvivors": {
+            "1": "43",
+            "multiple": "51"
+          },
+          "sourceEvidence": {
+            "section": "39",
+            "sourcePdfPages": [
+              103
+            ],
+            "player": "Current surviving rookie squad, Ordnance 6, Chart D",
+            "enemy": "22 Skinnies total: 16 pillbox troops +6 east-side air-defense crew; EACH has Ordnance 4, explicitly replacing usual3 for the combined force",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "termination": "Until one side eliminated; no round limit",
+            "outcomes": {
+              "JulianAndAnother": "51",
+              "JulianOnly": "43",
+              "SquadWipedOut": "52"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "45-1",
+      "name": "Skinny soldiers (§45)",
+      "attack": 3,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 9,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "45",
+          "label": "Skinny soldiers (§45)",
+          "playerChart": "C",
+          "enemyChart": "D",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 16,
+              "ordnance": 3
+            }
+          ],
+          "loss": "48",
+          "sourcePdfPages": [
+            108,
+            109
+          ],
+          "roundLimit": 4,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "43",
+            "multiple": "46"
+          },
+          "survivedBySurvivors": {
+            "1": "43",
+            "multiple": "46"
+          },
+          "sourceEvidence": {
+            "section": "45",
+            "sourcePdfPages": [
+              109
+            ],
+            "player": "Current rookie squad, Ordnance 6, Chart C",
+            "enemy": "16 Skinny soldiers, Ordnance 3, Chart D",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "roundLimit": 4,
+            "withdrawal": "Skinnies run after four rounds",
+            "outcomes": {
+              "JulianAndAnother": "46",
+              "JulianOnly": "43",
+              "SquadWipedOut": "48"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "47-1",
+      "name": "Skinny soldiers (§47)",
+      "attack": 4,
+      "hp": 22,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 10,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "47",
+          "label": "Skinny soldiers (§47)",
+          "playerChart": "E",
+          "enemyChart": "D",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 22,
+              "ordnance": 4
+            }
+          ],
+          "loss": "48",
+          "sourcePdfPages": [
+            110,
+            111,
+            112
+          ],
+          "roundLimit": 4,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "43",
+            "multiple": "46"
+          },
+          "survivedBySurvivors": {
+            "1": "43",
+            "multiple": "46"
+          },
+          "sourceEvidence": {
+            "section": "47",
+            "sourcePdfPages": [
+              112
+            ],
+            "player": "Current rookie squad, Ordnance 6, Chart E",
+            "enemy": "22 Skinnies:16pillbox+6east-sideAA; EACH Ordnance4 rather than3; ChartD",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "roundLimit": 4,
+            "withdrawal": "Skinnies withdraw after four rounds",
+            "outcomes": {
+              "JulianAndAnother": "46",
+              "JulianOnly": "43",
+              "SquadWipedOut": "48"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "55-1",
+      "name": "Skinny soldiers (§55)",
+      "attack": 3,
+      "hp": 8,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 11,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "55",
+          "label": "Skinny soldiers (§55)",
+          "playerChart": "C",
+          "enemyChart": "E",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 8,
+              "ordnance": 3
+            }
+          ],
+          "loss": "62",
+          "sourcePdfPages": [
+            120,
+            121,
+            122,
+            123
+          ],
+          "roundLimit": 4,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "60",
+            "multiple": "59"
+          },
+          "survivedBySurvivors": {
+            "1": "60",
+            "multiple": "59"
+          },
+          "sourceEvidence": {
+            "section": "55",
+            "sourcePdfPages": [
+              121,
+              123
+            ],
+            "player": "Current rookie squad, Ordnance6, ChartC",
+            "enemy": "8Skinnies (2per4pillboxes), Ordnance3, ChartE",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "roundLimit": 4,
+            "termination": "Either side eliminated or four COMPLETE rounds",
+            "outcomes": {
+              "JulianOnly": "60",
+              "JulianAndAnother": "59",
+              "SquadWipedOut": "62"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "57-1",
+      "name": "Skinny soldiers (§57)",
+      "attack": 3,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 12,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "57",
+          "label": "Skinny soldiers (§57)",
+          "playerChart": "C",
+          "enemyChart": "D",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 16,
+              "ordnance": 3
+            }
+          ],
+          "loss": "62",
+          "sourcePdfPages": [
+            124,
+            125,
+            126
+          ],
+          "winBySurvivors": {
+            "1": "60",
+            "multiple": "59"
+          },
+          "survivedBySurvivors": {
+            "1": "60",
+            "multiple": "59"
+          },
+          "sourceEvidence": {
+            "section": "57",
+            "sourcePdfPages": [
+              125,
+              126
+            ],
+            "player": "Current rookie squad, Ordnance6, ChartC",
+            "enemy": "16Skinnies (2each4pillboxes +4each2vehicles), Ordnance3, ChartD",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "termination": "Either side eliminated; NO four-round limit",
+            "outcomes": {
+              "JulianOnly": "60",
+              "JulianAndAnother": "59",
+              "SquadWipedOut": "62"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "64-1",
+      "name": "Skinny soldiers (§64)",
+      "attack": 3,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 13,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "64",
+          "label": "Skinny soldiers (§64)",
+          "playerChart": "C",
+          "enemyChart": "E",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 16,
+              "ordnance": 3
+            }
+          ],
+          "loss": "62",
+          "sourcePdfPages": [
+            130,
+            131,
+            132
+          ],
+          "roundLimit": 4,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "60",
+            "multiple": "59"
+          },
+          "survivedBySurvivors": {
+            "1": "60",
+            "multiple": "59"
+          },
+          "sourceEvidence": {
+            "section": "64",
+            "sourcePdfPages": [
+              131,
+              132
+            ],
+            "player": "Current rookie squad, Ordnance6, ChartC",
+            "enemy": "16Skinnies (4per4pillboxes), Ordnance3, ChartE",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "roundLimit": 4,
+            "termination": "Either side eliminated or four COMPLETE rounds",
+            "outcomes": {
+              "JulianOnly": "60",
+              "JulianAndAnother": "59",
+              "SquadWipedOut": "62"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "65-1",
+      "name": "Skinny soldiers (§65)",
+      "attack": 3,
+      "hp": 24,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 14,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "65",
+          "label": "Skinny soldiers (§65)",
+          "playerChart": "C",
+          "enemyChart": "D",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 24,
+              "ordnance": 3
+            }
+          ],
+          "loss": "62",
+          "sourcePdfPages": [
+            132,
+            133
+          ],
+          "winBySurvivors": {
+            "1": "60",
+            "multiple": "59"
+          },
+          "survivedBySurvivors": {
+            "1": "60",
+            "multiple": "59"
+          },
+          "sourceEvidence": {
+            "section": "65",
+            "sourcePdfPages": [
+              133
+            ],
+            "player": "Current rookie squad, Ordnance6, ChartC",
+            "enemy": "24Skinnies (4each4pillboxes +4each2vehicles), Ordnance3, ChartD",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "termination": "Either side eliminated; NO four-round limit",
+            "outcomes": {
+              "JulianOnly": "60",
+              "JulianAndAnother": "59",
+              "SquadWipedOut": "62"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "68-1",
+      "name": "Skinny soldiers (§68)",
+      "attack": 3,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 15,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "68",
+          "label": "Skinny soldiers (§68)",
+          "playerChart": "E",
+          "enemyChart": "D",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 16,
+              "ordnance": 3
+            }
+          ],
+          "loss": "71",
+          "sourcePdfPages": [
+            135,
+            136
+          ],
+          "winBySurvivors": {
+            "1": "74",
+            "multiple": "70"
+          },
+          "survivedBySurvivors": {
+            "1": "74",
+            "multiple": "70"
+          },
+          "sourceEvidence": {
+            "section": "68",
+            "sourcePdfPages": [
+              136
+            ],
+            "player": "Current rookie squad, Ordnance6, ChartE",
+            "enemy": "16Skinny patrol troops, Ordnance3, ChartD",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "termination": "One side eliminated; no round limit",
+            "outcomes": {
+              "JulianOnly": "74",
+              "JulianAndAnother": "70",
+              "SquadWipedOut": "71"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "69-1",
+      "name": "Skinny soldiers (§69)",
+      "attack": 3,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 16,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "69",
+          "label": "Skinny soldiers (§69)",
+          "playerChart": "C",
+          "enemyChart": "F",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 16,
+              "ordnance": 3
+            }
+          ],
+          "loss": "87",
+          "sourcePdfPages": [
+            137
+          ],
+          "roundLimit": 3,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "86",
+            "multiple": "85"
+          },
+          "survivedBySurvivors": {
+            "1": "86",
+            "multiple": "85"
+          },
+          "sourceEvidence": {
+            "section": "69",
+            "sourcePdfPages": [
+              137
+            ],
+            "player": "Current rookie squad, Ordnance6, ChartC",
+            "enemy": "16Skinny patrol troops, Ordnance3, ChartF",
+            "listedFireOrder": [
+              "player",
+              "enemy"
+            ],
+            "roundLimit": 3,
+            "termination": "After three rounds M.I. have passed the patrol; firefight ends",
+            "outcomes": {
+              "TwoOrMoreMI": "85",
+              "JulianOnly": "86",
+              "NoMI": "87"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "75-1",
+      "name": "Skinny soldiers (§75)",
+      "attack": 3,
+      "hp": 12,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 17,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "75",
+          "label": "Skinny soldiers (§75)",
+          "playerChart": "C",
+          "enemyChart": "E",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 12,
+              "ordnance": 3
+            }
+          ],
+          "loss": "77",
+          "sourcePdfPages": [
+            145,
+            146
+          ],
+          "freeOpeningAttacks": 1,
+          "roundLimit": 3,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "79",
+            "multiple": "78"
+          },
+          "survivedBySurvivors": {
+            "1": "79",
+            "multiple": "78"
+          },
+          "sourceEvidence": {
+            "section": "75",
+            "sourcePdfPages": [
+              145,
+              146
+            ],
+            "player": "Current surviving rookie squad, Ordnance6, ChartC",
+            "enemy": "12armedSkinnies:2each4towers+4ground, Ordnance3, ChartE",
+            "firstSide": "player",
+            "freeOpeningRounds": 1,
+            "roundLimit": 3,
+            "termination": "After round3 surviving M.I. board retrieval boat",
+            "outcomes": {
+              "NoMI": "77",
+              "JulianOnly": "79",
+              "TwoOrMoreMI": "78"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "76-1",
+      "name": "Skinny soldiers (§76)",
+      "attack": 3,
+      "hp": 12,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 18,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "76",
+          "label": "Skinny soldiers (§76)",
+          "playerChart": "C",
+          "enemyChart": "D",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 12,
+              "ordnance": 3
+            }
+          ],
+          "loss": "77",
+          "sourcePdfPages": [
+            146,
+            147
+          ],
+          "roundLimit": 3,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "79",
+            "multiple": "78"
+          },
+          "survivedBySurvivors": {
+            "1": "79",
+            "multiple": "78"
+          },
+          "sourceEvidence": {
+            "section": "76",
+            "sourcePdfPages": [
+              146,
+              147
+            ],
+            "player": "Current surviving rookie squad, Ordnance6, ChartC",
+            "enemy": "12armedSkinnies:2each4towers+4ground, Ordnance3, ChartD",
+            "firstSide": "enemy",
+            "initiativeReason": "Skinnies already spotted the squad and explicitly open fire as soon as M.I. move",
+            "freeOpeningRounds": 0,
+            "roundLimit": 3,
+            "termination": "After round3 surviving M.I. board retrieval boat",
+            "outcomes": {
+              "NoMI": "77",
+              "JulianOnly": "79",
+              "TwoOrMoreMI": "78"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "80-1",
+      "name": "Skinny soldiers (§80)",
+      "attack": 3,
+      "hp": 12,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 19,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "80",
+          "label": "Skinny soldiers (§80)",
+          "playerChart": "C",
+          "enemyChart": "E",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 12,
+              "ordnance": 3
+            }
+          ],
+          "loss": "83",
+          "sourcePdfPages": [
+            149,
+            150
+          ],
+          "freeOpeningAttacks": 1,
+          "roundLimit": 3,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "84",
+            "multiple": "82"
+          },
+          "survivedBySurvivors": {
+            "1": "84",
+            "multiple": "82"
+          },
+          "sourceEvidence": {
+            "section": "80",
+            "sourcePdfPages": [
+              150
+            ],
+            "player": "Current surviving rookie squad, Ordnance6, ChartC",
+            "enemy": "12Skinnies:2each4towers+4ground, Ordnance3, ChartE",
+            "firstSide": "player",
+            "freeOpeningRounds": 1,
+            "roundLimit": 3,
+            "termination": "After round3 surviving M.I. dash inside R&D building",
+            "outcomes": {
+              "JulianOnly": "84",
+              "TwoOrMoreMI": "82",
+              "NoMI": "83"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "81-1",
+      "name": "Skinny soldiers (§81)",
+      "attack": 3,
+      "hp": 12,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 20,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "81",
+          "label": "Skinny soldiers (§81)",
+          "playerChart": "C",
+          "enemyChart": "D",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 12,
+              "ordnance": 3
+            }
+          ],
+          "loss": "83",
+          "sourcePdfPages": [
+            150,
+            151
+          ],
+          "roundLimit": 3,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "84",
+            "multiple": "82"
+          },
+          "survivedBySurvivors": {
+            "1": "84",
+            "multiple": "82"
+          },
+          "sourceEvidence": {
+            "section": "81",
+            "sourcePdfPages": [
+              151
+            ],
+            "player": "Current surviving rookie squad, Ordnance6, ChartC",
+            "enemy": "12Skinnies:2each4towers+4ground, Ordnance3, ChartD",
+            "listedFireOrder": [
+              "player",
+              "enemy"
+            ],
+            "freeOpeningRounds": 0,
+            "roundLimit": 3,
+            "termination": "After round3 surviving M.I. dash inside R&D building",
+            "outcomes": {
+              "JulianOnly": "84",
+              "TwoOrMoreMI": "82",
+              "NoMI": "83"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "82-1",
+      "name": "Skinny soldiers (§82)",
+      "attack": 3,
+      "hp": 4,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 21,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "82",
+          "label": "Skinny soldiers (§82)",
+          "playerChart": "B",
+          "enemyChart": "E",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 4,
+              "ordnance": 3
+            }
+          ],
+          "loss": "99",
+          "sourcePdfPages": [
+            152,
+            153
+          ],
+          "win": "98",
+          "reinforcements": [
+            {
+              "round": 3,
+              "side": "enemy",
+              "units": [
+                {
+                  "key": "outside0",
+                  "name": "Outside survivors, group 1",
+                  "count": "",
+                  "ordnance": 3
+                }
+              ]
+            },
+            {
+              "round": 5,
+              "side": "enemy",
+              "units": [
+                {
+                  "key": "outside1",
+                  "name": "Outside survivors, group 2",
+                  "count": "",
+                  "ordnance": 3
+                }
+              ]
+            }
+          ],
+          "note": "Enter the current force and both groups of actual outside survivors. The book does not specify rounding for odd totals; use your chosen split. No earlier fight is loaded automatically.",
+          "sourceEvidence": {
+            "section": "82",
+            "sourcePdfPages": [
+              152,
+              153
+            ],
+            "player": "Current surviving rookie squad, Ordnance6, ChartB",
+            "enemy": "4Skinny security guards initially, Ordnance3, ChartE",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "reinforcements": "Half the Skinny survivors from outside80/81 join AFTER2rounds (start3); remaininghalf AFTER4rounds (start5). No rounding rule printed for an odd number.",
+            "termination": "One side eliminated; no round limit",
+            "outcomes": {
+              "MIWin": "98",
+              "SkinniesWin": "99"
+            },
+            "scope": "One selected encounter; player supplies relevant current forces/reinforcements. No campaign progression automation.",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "85-1",
+      "name": "Skinny soldiers (§85)",
+      "attack": 3,
+      "hp": 12,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 22,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "85",
+          "label": "Skinny soldiers (§85)",
+          "playerChart": "C",
+          "enemyChart": "E",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 12,
+              "ordnance": 3
+            }
+          ],
+          "loss": "89",
+          "sourcePdfPages": [
+            155,
+            156
+          ],
+          "roundLimit": 4,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "84",
+            "multiple": "88"
+          },
+          "survivedBySurvivors": {
+            "1": "84",
+            "multiple": "88"
+          },
+          "sourceEvidence": {
+            "section": "85",
+            "sourcePdfPages": [
+              155,
+              156
+            ],
+            "player": "Current surviving rookie squad, Ordnance6, ChartC",
+            "enemy": "12Skinnies:2each4towers+4ground, Ordnance3, ChartE",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "freeOpeningRounds": 0,
+            "roundLimit": 4,
+            "termination": "After round4 surviving M.I. enter R&D building",
+            "outcomes": {
+              "TwoOrMoreMI": "88",
+              "JulianOnly": "84",
+              "NoMI": "89"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "88-1",
+      "name": "Skinny soldiers (§88)",
+      "attack": 3,
+      "hp": 4,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 23,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "88",
+          "label": "Skinny soldiers (§88)",
+          "playerChart": "C",
+          "enemyChart": "E",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 4,
+              "ordnance": 3
+            }
+          ],
+          "loss": "99",
+          "sourcePdfPages": [
+            157,
+            158
+          ],
+          "win": "98",
+          "reinforcements": [
+            {
+              "round": 3,
+              "side": "enemy",
+              "units": [
+                {
+                  "key": "outside0",
+                  "name": "Outside survivors, group 1",
+                  "count": "",
+                  "ordnance": 3
+                }
+              ]
+            },
+            {
+              "round": 5,
+              "side": "enemy",
+              "units": [
+                {
+                  "key": "outside1",
+                  "name": "Outside survivors, group 2",
+                  "count": "",
+                  "ordnance": 3
+                }
+              ]
+            }
+          ],
+          "note": "Enter the current force and both groups of actual outside survivors. The book does not specify rounding for odd totals; use your chosen split. No earlier fight is loaded automatically.",
+          "sourceEvidence": {
+            "section": "88",
+            "sourcePdfPages": [
+              158
+            ],
+            "player": "Current surviving rookie squad, Ordnance6, ChartC (NOT ChartB from82)",
+            "enemy": "4Skinny guards initially, Ordnance3, ChartE",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "reinforcements": "Half the Skinny survivors from outside85 AFTER2rounds(start3); otherhalf AFTER4rounds(start5). No odd-number rounding instruction printed.",
+            "termination": "One side eliminated; no round limit",
+            "outcomes": {
+              "MIWin": "98",
+              "SkinniesWin": "99"
+            },
+            "scope": "Single encounter; player supplies current forces/reinforcements, not campaign progression.",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "91-1",
+      "name": "Skinny soldiers (§91)",
+      "attack": 3,
+      "hp": 8,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 24,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "91",
+          "label": "Skinny soldiers (§91)",
+          "playerChart": "C",
+          "enemyChart": "E",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 8,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            160,
+            161
+          ],
+          "roundLimit": 5,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "106",
+            "multiple": "107"
+          },
+          "survivedBySurvivors": {
+            "1": "106",
+            "multiple": "107"
+          },
+          "reinforcements": [
+            {
+              "round": 5,
+              "side": "enemy",
+              "units": [
+                {
+                  "key": "ground",
+                  "name": "Ground guards",
+                  "count": 4,
+                  "ordnance": 3
+                }
+              ]
+            }
+          ],
+          "sourceEvidence": {
+            "section": "91",
+            "sourcePdfPages": [
+              160,
+              161
+            ],
+            "player": "Current surviving rookie squad, Ordnance6, ChartC",
+            "enemy": "8towerSkinnies initially,2each4towers,Ordnance3,ChartE",
+            "listedFireOrder": [
+              "player",
+              "enemy"
+            ],
+            "reinforcements": "4moreSkinnies join AFTERround4/start5, Ordnance3",
+            "roundLimit": 5,
+            "termination": "After round5 survivors enter R&D building",
+            "outcomes": {
+              "TwoOrMoreMI": "107",
+              "JulianOnly": "106",
+              "NoMI": "29"
+            },
+            "scope": "One encounter only",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "93-1",
+      "name": "Skinny soldiers (§93)",
+      "attack": 3,
+      "hp": 8,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 25,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "93",
+          "label": "Skinny soldiers (§93)",
+          "playerChart": "C",
+          "enemyChart": "E",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 8,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            162,
+            163
+          ],
+          "roundLimit": 5,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "104",
+            "multiple": "105"
+          },
+          "survivedBySurvivors": {
+            "1": "104",
+            "multiple": "105"
+          },
+          "reinforcements": [
+            {
+              "round": 5,
+              "side": "enemy",
+              "units": [
+                {
+                  "key": "ground",
+                  "name": "Ground guards",
+                  "count": 4,
+                  "ordnance": 3
+                }
+              ]
+            }
+          ],
+          "sourceEvidence": {
+            "section": "93",
+            "sourcePdfPages": [
+              162,
+              163
+            ],
+            "player": "Current surviving rookie squad, Ordnance6, ChartC",
+            "enemy": "8towerSkinnies initially,2each4towers,Ordnance3,ChartE",
+            "listedFireOrder": [
+              "player",
+              "enemy"
+            ],
+            "reinforcements": "4moreSkinnies join AFTERround4/start5,Ordnance3",
+            "roundLimit": 5,
+            "termination": "After round5 survivors enter R&D building",
+            "outcomes": {
+              "TwoOrMoreMI": "105",
+              "JulianOnly": "104",
+              "NoMI": "29"
+            },
+            "scope": "One encounter only; preserve distinct destinations from91",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "95-1",
+      "name": "Skinny soldiers (§95)",
+      "attack": 3,
+      "hp": 1,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 26,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "95",
+          "label": "Skinny soldiers (§95)",
+          "playerChart": "C",
+          "enemyChart": "E",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": 1,
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": "",
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            164,
+            165
+          ],
+          "enemyOnly": true,
+          "note": "Enter actual outside survivors. Julian takes one volley and does not return fire. If none remain, no roll is needed; continue at 97.",
+          "roundLimit": 1,
+          "limitOutcome": "survived",
+          "survived": "97",
+          "sourceEvidence": {
+            "section": "95",
+            "sourcePdfPages": [
+              165
+            ],
+            "player": "Julian alone,1manpower; NO return fire",
+            "enemy": "Remaining Skinnies outside R&D building from preceding fight,standardOrdnance3,ChartE; user supplies actual surviving count",
+            "enemyOnly": true,
+            "roundLimit": 1,
+            "outcomes": {
+              "JulianKilled": "29",
+              "JulianSurvives": "97"
+            },
+            "scope": "Single incoming volley, not auto-tracking previous sections",
+            "originalVisuallyVerified": true
+          },
+          "emptyEnemyOutcome": "survived"
+        }
+      }
+    },
+    {
+      "key": "100-1",
+      "name": "Skinny soldiers (§100)",
+      "attack": 3,
+      "hp": 12,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 27,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "100",
+          "label": "Skinny soldiers (§100)",
+          "playerChart": "C",
+          "enemyChart": "E",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 12,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            170,
+            171
+          ],
+          "roundLimit": 3,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "106",
+            "multiple": "107"
+          },
+          "survivedBySurvivors": {
+            "1": "106",
+            "multiple": "107"
+          },
+          "sourceEvidence": {
+            "section": "100",
+            "sourcePdfPages": [
+              171
+            ],
+            "player": "Current surviving rookie squad,Ordnance6,ChartC",
+            "enemy": "12Skinnies:2each4towers+4ground,Ordnance3,ChartE",
+            "listedFireOrder": [
+              "player",
+              "enemy"
+            ],
+            "freeOpeningRounds": 0,
+            "roundLimit": 3,
+            "outcomes": {
+              "NoMI": "29",
+              "JulianOnly": "106",
+              "TwoOrMoreMI": "107"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "101-1",
+      "name": "Skinny soldiers (§101)",
+      "attack": 3,
+      "hp": 12,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 28,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "101",
+          "label": "Skinny soldiers (§101)",
+          "playerChart": "C",
+          "enemyChart": "D",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 12,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            172,
+            173
+          ],
+          "roundLimit": 3,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "104",
+            "multiple": "105"
+          },
+          "survivedBySurvivors": {
+            "1": "104",
+            "multiple": "105"
+          },
+          "sourceEvidence": {
+            "section": "101",
+            "sourcePdfPages": [
+              172,
+              173
+            ],
+            "player": "Current surviving rookie squad,Ordnance6,ChartC",
+            "enemy": "12Skinnies:2each4towers+4ground,Ordnance3,ChartD",
+            "listedFireOrder": [
+              "player",
+              "enemy"
+            ],
+            "freeOpeningRounds": 0,
+            "roundLimit": 3,
+            "outcomes": {
+              "NoMI": "29",
+              "JulianOnly": "104",
+              "TwoOrMoreMI": "105"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "102-1",
+      "name": "Skinny soldiers (§102)",
+      "attack": 3,
+      "hp": 12,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 29,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "102",
+          "label": "Skinny soldiers (§102)",
+          "playerChart": "C",
+          "enemyChart": "F",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 12,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            173,
+            174
+          ],
+          "roundLimit": 3,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "106",
+            "multiple": "107"
+          },
+          "survivedBySurvivors": {
+            "1": "106",
+            "multiple": "107"
+          },
+          "freeOpeningAttacks": 1,
+          "sourceEvidence": {
+            "section": "102",
+            "sourcePdfPages": [
+              174
+            ],
+            "player": "Current surviving rookie squad,Ordnance6,ChartC",
+            "enemy": "12Skinnies:2each4towers+4ground,Ordnance3,ChartF",
+            "firstSide": "player",
+            "freeOpeningRounds": 1,
+            "roundLimit": 3,
+            "outcomes": {
+              "NoMI": "29",
+              "JulianOnly": "106",
+              "TwoOrMoreMI": "107"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "103-1",
+      "name": "Skinny soldiers (§103)",
+      "attack": 3,
+      "hp": 12,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 30,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "103",
+          "label": "Skinny soldiers (§103)",
+          "playerChart": "C",
+          "enemyChart": "F",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 12,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            174,
+            175
+          ],
+          "roundLimit": 3,
+          "limitOutcome": "survived",
+          "winBySurvivors": {
+            "1": "104",
+            "multiple": "105"
+          },
+          "survivedBySurvivors": {
+            "1": "104",
+            "multiple": "105"
+          },
+          "freeOpeningAttacks": 1,
+          "sourceEvidence": {
+            "section": "103",
+            "sourcePdfPages": [
+              175
+            ],
+            "player": "Current surviving rookie squad,Ordnance6,ChartC",
+            "enemy": "12Skinnies:2each4towers+4ground,Ordnance3,ChartF (same as102)",
+            "firstSide": "player",
+            "freeOpeningRounds": 1,
+            "roundLimit": 3,
+            "outcomes": {
+              "NoMI": "29",
+              "JulianOnly": "104",
+              "TwoOrMoreMI": "105"
+            },
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "104-1",
+      "name": "Skinny soldiers (§104)",
+      "attack": 3,
+      "hp": 4,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 31,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "104",
+          "label": "Skinny soldiers (§104)",
+          "playerChart": "B",
+          "enemyChart": "E",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": 1,
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 4,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            176,
+            177
+          ],
+          "winBySurvivors": {
+            "1": "111",
+            "multiple": "111"
+          },
+          "survivedBySurvivors": {
+            "1": "111",
+            "multiple": "111"
+          },
+          "reinforcements": [
+            {
+              "round": 5,
+              "side": "enemy",
+              "units": [
+                {
+                  "key": "outside0",
+                  "name": "Outside survivors, group 1",
+                  "count": "",
+                  "ordnance": 3
+                }
+              ]
+            },
+            {
+              "round": 9,
+              "side": "enemy",
+              "units": [
+                {
+                  "key": "outside1",
+                  "name": "Outside survivors, group 2",
+                  "count": "",
+                  "ordnance": 3
+                }
+              ]
+            }
+          ],
+          "note": "Enter the current force and both groups of actual outside survivors. The book does not specify rounding for odd totals; use your chosen split. No earlier fight is loaded automatically.",
+          "sourceEvidence": {
+            "section": "104",
+            "sourcePdfPages": [
+              176,
+              177
+            ],
+            "player": "Julian alone,1manpower,Ord6,ChartB",
+            "enemy": "4Skinny guards initially,Ordnance3,ChartE",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "reinforcements": "Half outside93/101/103 survivors AFTER4rounds(start5),remaininghalf AFTER8rounds(start9); no odd-rounding rule printed.",
+            "termination": "Julian killed or surviving after opponents eliminated; no round limit printed",
+            "outcomes": {
+              "JulianKilled": "29",
+              "JulianSurvives": "111"
+            },
+            "scope": "Single encounter; player supplies outside survivors",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "105-1",
+      "name": "Skinny soldiers (§105)",
+      "attack": 3,
+      "hp": 4,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 32,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "105",
+          "label": "Skinny soldiers (§105)",
+          "playerChart": "B",
+          "enemyChart": "F",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 4,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            177,
+            178
+          ],
+          "winBySurvivors": {
+            "1": "111",
+            "multiple": "113"
+          },
+          "survivedBySurvivors": {
+            "1": "111",
+            "multiple": "113"
+          },
+          "reinforcements": [
+            {
+              "round": 5,
+              "side": "enemy",
+              "units": [
+                {
+                  "key": "outside0",
+                  "name": "Outside survivors, group 1",
+                  "count": "",
+                  "ordnance": 3
+                }
+              ]
+            },
+            {
+              "round": 9,
+              "side": "enemy",
+              "units": [
+                {
+                  "key": "outside1",
+                  "name": "Outside survivors, group 2",
+                  "count": "",
+                  "ordnance": 3
+                }
+              ]
+            }
+          ],
+          "note": "Enter the current force and both groups of actual outside survivors. The book does not specify rounding for odd totals; use your chosen split. No earlier fight is loaded automatically.",
+          "sourceEvidence": {
+            "section": "105",
+            "sourcePdfPages": [
+              178
+            ],
+            "player": "Current surviving rookie squad,Ordnance6,ChartB",
+            "enemy": "4Skinny guards initially,Ordnance3,ChartF",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "reinforcements": "Half outside93/101/103 survivors AFTER4rounds(start5),remaininghalf AFTER8rounds(start9); no odd-rounding rule printed.",
+            "termination": "One side eliminated; no round limit",
+            "outcomes": {
+              "NoMI": "29",
+              "JulianOnly": "111",
+              "TwoOrMoreMI": "113"
+            },
+            "scope": "Single encounter; player supplies outside survivors",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "106-1",
+      "name": "Skinny soldiers (§106)",
+      "attack": 3,
+      "hp": 4,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 33,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "106",
+          "label": "Skinny soldiers (§106)",
+          "playerChart": "B",
+          "enemyChart": "E",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": 1,
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 4,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            178,
+            179
+          ],
+          "winBySurvivors": {
+            "1": "108",
+            "multiple": "108"
+          },
+          "survivedBySurvivors": {
+            "1": "108",
+            "multiple": "108"
+          },
+          "reinforcements": [
+            {
+              "round": 5,
+              "side": "enemy",
+              "units": [
+                {
+                  "key": "outside0",
+                  "name": "Outside survivors, group 1",
+                  "count": "",
+                  "ordnance": 3
+                }
+              ]
+            },
+            {
+              "round": 9,
+              "side": "enemy",
+              "units": [
+                {
+                  "key": "outside1",
+                  "name": "Outside survivors, group 2",
+                  "count": "",
+                  "ordnance": 3
+                }
+              ]
+            }
+          ],
+          "note": "Enter the current force and both groups of actual outside survivors. The book does not specify rounding for odd totals; use your chosen split. No earlier fight is loaded automatically.",
+          "sourceEvidence": {
+            "section": "106",
+            "sourcePdfPages": [
+              179
+            ],
+            "player": "Julian alone,1manpower,Ord6,ChartB",
+            "enemy": "4Skinnyguards initially,Ordnance3,ChartE",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "reinforcements": "Half outside91/100/102 survivors AFTER4rounds(start5),remaininghalf AFTER8rounds(start9); no odd-rounding rule printed.",
+            "termination": "Julian killed or surviving after opponents eliminated; no round limit printed",
+            "outcomes": {
+              "JulianKilled": "29",
+              "JulianSurvives": "108"
+            },
+            "scope": "Single encounter; player supplies outside survivors",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "107-1",
+      "name": "Skinny soldiers (§107)",
+      "attack": 3,
+      "hp": 4,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 34,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "107",
+          "label": "Skinny soldiers (§107)",
+          "playerChart": "B",
+          "enemyChart": "E",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 4,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            179,
+            180
+          ],
+          "winBySurvivors": {
+            "1": "108",
+            "multiple": "109"
+          },
+          "survivedBySurvivors": {
+            "1": "108",
+            "multiple": "109"
+          },
+          "reinforcements": [
+            {
+              "round": 5,
+              "side": "enemy",
+              "units": [
+                {
+                  "key": "outside0",
+                  "name": "Outside survivors, group 1",
+                  "count": "",
+                  "ordnance": 3
+                }
+              ]
+            },
+            {
+              "round": 9,
+              "side": "enemy",
+              "units": [
+                {
+                  "key": "outside1",
+                  "name": "Outside survivors, group 2",
+                  "count": "",
+                  "ordnance": 3
+                }
+              ]
+            }
+          ],
+          "note": "Enter the current force and both groups of actual outside survivors. The book does not specify rounding for odd totals; use your chosen split. No earlier fight is loaded automatically.",
+          "sourceEvidence": {
+            "section": "107",
+            "sourcePdfPages": [
+              180
+            ],
+            "player": "Current surviving rookie squad,Ord6,ChartB",
+            "enemy": "4Skinnyguards initially,Ordnance3,ChartE (notFfrom105)",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "reinforcements": "Half outside91/100/102 survivors AFTER4rounds(start5),remaininghalf AFTER8rounds(start9); no odd-rounding rule printed.",
+            "termination": "One side eliminated; no round limit",
+            "outcomes": {
+              "NoMI": "29",
+              "JulianOnly": "108",
+              "TwoOrMoreMI": "109"
+            },
+            "scope": "Single encounter; player supplies outside survivors",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "108-1",
+      "name": "Skinny soldiers (§108)",
+      "attack": 3,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 35,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "108",
+          "label": "Skinny soldiers (§108)",
+          "playerChart": "B",
+          "enemyChart": "F",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": 1,
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 16,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            181,
+            182
+          ],
+          "prisonerShield": "first",
+          "note": "The first enemy casualty hits one prisoner; the second hits Julian. Prisoners add no attack strength.",
+          "win": "112",
+          "roundLimit": 3,
+          "limitOutcome": "survived",
+          "survived": "112",
+          "sourceEvidence": {
+            "section": "108",
+            "sourcePdfPages": [
+              182
+            ],
+            "player": "Julian alone,1manpower/Ord6/ChartB, protected by ONE prisoner acting as first casualty with no attack contribution",
+            "enemy": "16Skinnyambushers,Ord3,ChartF",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "casualtyRule": "First enemy-inflicted casualty kills held prisoner, second kills Julian. Four narrative prisoners do NOT supply four shields.",
+            "roundLimit": 3,
+            "outcomes": {
+              "JulianKilled": "29",
+              "JulianSurvives": "112"
+            },
+            "scope": "Single encounter shield modifier, not shared Inventory/Equipment",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "109-1",
+      "name": "Skinny soldiers (§109)",
+      "attack": 3,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 36,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "109",
+          "label": "Skinny soldiers (§109)",
+          "playerChart": "B",
+          "enemyChart": "D",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 6
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Skinny soldiers",
+              "count": 16,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            182,
+            183,
+            184
+          ],
+          "prisonerShield": "alternating",
+          "note": "Enemy casualties alternate prisoner, M.I., prisoner, M.I. across rounds. Prisoners add no attack strength.",
+          "win": "112",
+          "roundLimit": 4,
+          "limitOutcome": "survived",
+          "survived": "112",
+          "sourceEvidence": {
+            "section": "109",
+            "sourcePdfPages": [
+              184
+            ],
+            "player": "Current surviving rookie squad,Ord6,ChartB. Each M.I.herds4prisoners, but prisoners contribute NO attackstrength.",
+            "enemy": "16Skinny patrol troopers,Ord3,ChartD",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "casualtyRule": "First enemy-inflicted casualty and every SECOND casualty thereafter is a prisoner: alternating prisoner/MI/prisoner/MI, cumulative across rounds. NOT all prisoners before any M.I.",
+            "roundLimit": 4,
+            "outcomes": {
+              "NoMI": "29",
+              "AnyMI": "112"
+            },
+            "scope": "Single encounter casualty modifier, not shared Inventory/Equipment",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "114-1",
+      "name": "Bug warriors (§114)",
+      "attack": 3,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 37,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "114",
+          "label": "Bug warriors (§114)",
+          "playerChart": "C",
+          "enemyChart": "E",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": 5,
+              "ordnance": 7
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Bug warriors",
+              "count": 16,
+              "ordnance": 3
+            }
+          ],
+          "loss": "125",
+          "sourcePdfPages": [
+            199,
+            200,
+            201
+          ],
+          "win": "116",
+          "reinforcements": [
+            {
+              "round": 6,
+              "side": "player",
+              "units": [
+                {
+                  "key": "reinforcements",
+                  "name": "Johnson’s five, Brennan and Julian",
+                  "count": 7,
+                  "ordnance": 7
+                }
+              ]
+            }
+          ],
+          "sourceEvidence": {
+            "section": "114",
+            "sourcePdfPages": [
+              201
+            ],
+            "player": "5M.I.initially inrange(Ord7,ChartC,newBirgusetup), NOT15 initially",
+            "enemy": "16Bugs,Ordnance3,ChartE",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "reinforcements": "AFTER5completedrounds/start6 add7M.I.(Johnson5+Brennan+Julian), preserve earlier casualties. Other3remain atlisteningposts.",
+            "termination": "Either engaged force eliminated; no round limit",
+            "outcomes": {
+              "AllBugsKilled": "116",
+              "AllEngagedMIKilled": "125"
+            },
+            "scope": "Single encounter numerical reinforcement rule; no mission progression or sharedgear",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "115-1",
+      "name": "Bug warriors (§115)",
+      "attack": 3,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 38,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "115",
+          "label": "Bug warriors (§115)",
+          "playerChart": "D",
+          "enemyChart": "E",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": 15,
+              "ordnance": 7
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Bug warriors",
+              "count": 16,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            202,
+            203
+          ],
+          "win": "117",
+          "sourceEvidence": {
+            "section": "115",
+            "sourcePdfPages": [
+              203
+            ],
+            "player": "ALL15M.I.initially,Ord7,ChartD (notCfrom114)",
+            "enemy": "16Bugs,Ord3,ChartE",
+            "listedFireOrder": [
+              "enemy",
+              "player"
+            ],
+            "termination": "One side eliminated; no round limit",
+            "outcomes": {
+              "MIWin": "117",
+              "NoMI": "29"
+            },
+            "scope": "Single encounter, not PlanB campaign automation",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "118-1",
+      "name": "Bug warriors (§118)",
+      "attack": 3,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 39,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "118",
+          "label": "Bug warriors (§118)",
+          "playerChart": "D",
+          "enemyChart": "E",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 7
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Bug warriors",
+              "count": 16,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            207
+          ],
+          "win": "121",
+          "sourceEvidence": {
+            "section": "118",
+            "sourcePdfPages": [
+              207
+            ],
+            "player": "Current engaged section manpower, rangedhandflamers/Ord7,ChartD; no printed cap4onattackstrength despite narrative4abreast",
+            "enemy": "16Bugs, explicitlyOrdnance3,ChartE (notMelee4)",
+            "listedFireOrder": [
+              "player",
+              "enemy"
+            ],
+            "termination": "One side eliminated; no round limit",
+            "outcomes": {
+              "NoMI": "29",
+              "AllBugsKilled": "121"
+            },
+            "scope": "Explicit artery firefight overrides earlier generic tunnel melee-only narrative; no campaign tracking",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "122-1",
+      "name": "Bug warriors (§122)",
+      "attack": 4,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 40,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "122",
+          "label": "Bug warriors (§122)",
+          "playerChart": "A",
+          "enemyChart": "E",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": 6,
+              "ordnance": 5
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Bug warriors",
+              "count": 16,
+              "ordnance": 4
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            209,
+            210,
+            211
+          ],
+          "freeOpeningAttacks": 1,
+          "playerStrengthRounds": {
+            "1": 14,
+            "2": null
+          },
+          "playerChartRounds": {
+            "2": "D"
+          },
+          "note": "First round: two M.I. fire at Ordnance 7 (AS 14), with no return fire. Thereafter, all survivors use Melee 5.",
+          "win": "120",
+          "sourceEvidence": {
+            "section": "122",
+            "sourcePdfPages": [
+              211
+            ],
+            "player": "6M.I.total; ROUND1only2fire atOrd7,AS14,ChartA. ROUND2+all current survivors melee at5each,ChartD.",
+            "enemy": "16Bugs,Melee4,ChartE; NOreturnfireinround1",
+            "firstSide": "player",
+            "freeOpeningRounds": 1,
+            "termination": "One side eliminated; no roundlimit",
+            "outcomes": {
+              "NoMI": "29",
+              "AllBugsKilled": "120"
+            },
+            "scope": "Single encounter with explicit ranged opening then melee; NOT sharedgear or campaignengine",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "126-1",
+      "name": "Bug warriors (§126)",
+      "attack": 3,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 41,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "126",
+          "label": "Bug warriors (§126)",
+          "playerChart": "A",
+          "enemyChart": "E",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 7
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Bug warriors",
+              "count": 16,
+              "ordnance": 3
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            213
+          ],
+          "freeOpeningAttacks": 1,
+          "win": "121",
+          "sourceEvidence": {
+            "section": "126",
+            "sourcePdfPages": [
+              213
+            ],
+            "player": "Current engaged sectionmanpower,handflamers/Ord7,ChartA",
+            "enemy": "16Bugs,explicitOrdnance3,ChartE",
+            "firstSide": "player",
+            "freeOpeningRounds": 1,
+            "termination": "One side eliminated; no roundlimit",
+            "outcomes": {
+              "NoMI": "29",
+              "AllBugsKilled": "121"
+            },
+            "scope": "Explicit ranged arteryfight, notMelee5; singleencounter",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "129-1",
+      "name": "Bug warriors (§129)",
+      "attack": 4,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 42,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "129",
+          "label": "Bug warriors (§129)",
+          "playerChart": "C",
+          "enemyChart": "E",
+          "initiative": "player",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": 6,
+              "ordnance": 5
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Bug warriors",
+              "count": 16,
+              "ordnance": 4
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            214,
+            215
+          ],
+          "freeOpeningAttacks": 2,
+          "win": "123",
+          "sourceEvidence": {
+            "section": "129",
+            "sourcePdfPages": [
+              215
+            ],
+            "player": "EXPLICIT6M.I.total (not7 inferred from narrative),Melee5,ChartC",
+            "enemy": "16Bugs,Melee4,ChartE",
+            "firstSide": "player",
+            "freeOpeningRounds": 2,
+            "enemyBeginsRound": 3,
+            "termination": "One side eliminated; no roundlimit",
+            "outcomes": {
+              "NoMI": "29",
+              "AllBugsKilled": "123"
+            },
+            "scope": "Single melee encounter; no campaigntracking",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "131-1",
+      "name": "Bug warriors (§131)",
+      "attack": 4,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 43,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "131",
+          "label": "Bug warriors (§131)",
+          "playerChart": "D",
+          "enemyChart": "E",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 5
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Bug warriors",
+              "count": 16,
+              "ordnance": 4
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            216,
+            217,
+            218
+          ],
+          "enemyFreeOpeningAttacks": 2,
+          "win": "134",
+          "sourceEvidence": {
+            "section": "131",
+            "sourcePdfPages": [
+              216,
+              218
+            ],
+            "player": "Current engaged PlanBsection survivors,Melee5,ChartD",
+            "enemy": "16Bugs,Melee4,ChartE",
+            "firstSide": "enemy",
+            "enemyFreeOpeningRounds": 2,
+            "playerBeginsRound": 3,
+            "termination": "One side eliminated; no roundlimit",
+            "outcomes": {
+              "NoMI": "29",
+              "AllBugsKilled": "134"
+            },
+            "scope": "Single melee encounter; player supplies current engaged manpower",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    },
+    {
+      "key": "133-1",
+      "name": "Bug warriors (§133)",
+      "attack": 4,
+      "hp": 16,
+      "stats": {
+        "schemaVersion": 1,
+        "family": "combat-command",
+        "dataset": "CATALOG",
+        "entryIndex": 44,
+        "slot": 0,
+        "partCount": 1,
+        "entry": {
+          "section": "133",
+          "label": "Bug warriors (§133)",
+          "playerChart": "C",
+          "enemyChart": "E",
+          "initiative": "enemy",
+          "playerUnits": [
+            {
+              "key": "mi",
+              "name": "M.I. (Julian last)",
+              "count": "",
+              "ordnance": 5
+            }
+          ],
+          "enemies": [
+            {
+              "key": "enemy",
+              "name": "Bug warriors",
+              "count": 16,
+              "ordnance": 4
+            }
+          ],
+          "loss": "29",
+          "sourcePdfPages": [
+            218,
+            219
+          ],
+          "enemyFreeOpeningAttacks": 2,
+          "win": "94",
+          "sourceEvidence": {
+            "section": "133",
+            "sourcePdfPages": [
+              219
+            ],
+            "player": "All CURRENT surviving sectionM.I.,Melee5,ChartC",
+            "enemy": "16Bugs,Melee4,ChartE",
+            "firstSide": "enemy",
+            "enemyFreeOpeningRounds": 2,
+            "playerBeginsRound": 3,
+            "termination": "One side eliminated; no roundlimit",
+            "outcomes": {
+              "NoMI": "29",
+              "AllBugsKilled": "94"
+            },
+            "scope": "Single melee encounter, no campaigntracking",
+            "originalVisuallyVerified": true
+          }
+        }
+      }
+    }
+  ]
+}
