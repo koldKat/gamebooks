@@ -683,6 +683,16 @@
 }
 .bsim-modal .inv-edit-row > :is(input.inv-edit-input, select.inv-edit-input) { flex: 1 1 0; width: 0; }
 .bsim-modal .inv-edit-row > input[type="number"] { text-align: center; }
+/* Give plain-text labels the same column as rows with a label span. */
+.bsim-modal label.inv-edit-row:has(> :is(input.inv-edit-input, select.inv-edit-input, textarea.inv-edit-input):only-child) {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  align-items: center;
+}
+.bsim-modal label.inv-edit-row > :is(input.inv-edit-input, select.inv-edit-input, textarea.inv-edit-input):only-child {
+  width: 100%;
+  min-width: 0;
+}
 .bsim-modal .bsim-checkbox { min-height: 22px; }
 .bsim-modal .bsim-btn-row { display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .inv-overlay .bsim-modal button:where(:not(.inv-close-btn, .inv-qty-btn)) {

@@ -52,6 +52,14 @@ for(const id of BOOK_IDS){
     check(Math.abs(parseFloat(style.fontSize)-textSize)<0.1,'consistent readable text '+id+' '+control.className+': '+style.fontSize);
   }
   const left=overlay.querySelector('.bsim-col-left');
+  for(const row of left.querySelectorAll('label.inv-edit-row')){
+    const field=row.firstElementChild;
+    if(row.children.length!==1||!field.matches('input.inv-edit-input,select.inv-edit-input,textarea.inv-edit-input')||!field.getBoundingClientRect().width)continue;
+    const style=getComputedStyle(row),bounds=row.getBoundingClientRect(),input=field.getBoundingClientRect();
+    check(style.display==='grid','plain label uses shared column '+id);
+    check(Math.abs(input.left-bounds.left-parseFloat(style.gridTemplateColumns)-parseFloat(style.columnGap))<1,'aligned input column '+id);
+    check(Math.abs(input.right-bounds.right)<1,'aligned input edge '+id);
+  }
   check(parseFloat(getComputedStyle(left).rowGap)<=6,'compact column spacing '+id);
   for(const button of overlay.querySelectorAll('.bsim-col button:not(.inv-close-btn,.inv-qty-btn)')){
     const style=getComputedStyle(button);
