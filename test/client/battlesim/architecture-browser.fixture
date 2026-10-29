@@ -91,6 +91,50 @@ for(const id of BOOK_IDS){
     const options = [...overlay.querySelectorAll('[role="option"]')];
     check(options.some(option => option.textContent.includes(rosterSeeds[id][0].name)), 'legacy roster displays installed opponent ' + id);
   }
+  if(id===1454){
+    const el=key=>document.getElementById('sim1454-'+key),run=app.currentPlaythrough(),data=()=>run.sim1454;
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1454/definition.js');
+    check(getRoster().length===46&&requestedRosters.has(id),'Warhammer DB roster');
+    run.inventory={keep:['shared item']};run.equipment={keep:'shared equipment'};run.sim1453={keep:'saved fight'};
+    const protectedState=JSON.stringify([run.inventory,run.equipment,run.sim1453]);
+    const set=(key,value)=>{el(key).value=value;};
+    const change=key=>el(key).dispatchEvent(new Event('change',{bubbles:true}));
+    const reset=()=>{delete run.sim1454;module.render();};
+    const setup=mode=>{
+      set('mode',mode);change('mode');
+      for(const [key,value]of Object.entries({ws:6,s:6,t:6,w:1000,maxW:1000,aRanged:7,aClose:7,armour:1}))set(key,value);
+      set('ranged-preset','lasgun');change('ranged-preset');set('ranged-ammo',15);set('ranged-s',6);set('ranged-damage',100);
+      set('melee-preset','knife');change('melee-preset');set('melee-damage',10);el('applyCharacter').click();
+    };
+    const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    const random=Math.random;
+    try{
+      Math.random=()=>0.999;
+      for(const mode of ['basic','advanced'])for(const entry of getRoster()){
+        reset();setup(mode);set('encounter',entry.section);change('encounter');el('start').click();
+        check(data().fight?.config.section===entry.section,'Warhammer preset starts '+mode+' '+entry.section);
+        const before=JSON.stringify(data());module.render();check(JSON.stringify(data())===before,'Warhammer render preserves active fight');
+        const targets=[...el('targets').querySelectorAll('select')];
+        targets.forEach((input,index)=>{input.value=String(index%entry.enemies.length);});
+        el('attack').click();check(data().fight.round===1,'Warhammer round '+mode+' '+entry.section);
+        if(entry.kind==='shooting-challenge')check(data().fight.kills===3&&data().fight.opponents.length===0,'Warhammer shooting tally');
+        if(mode==='advanced'&&entry.advancedPlayerProfile)check(data().character.w===1000&&data().fight.vehicle.w===14,'Warhammer human and vehicle independent');
+        if(data().fight.status==='fighting')cancel();
+        check(JSON.stringify([run.inventory,run.equipment,run.sim1453])===protectedState,'Warhammer shared items preserved');
+      }
+      reset();setup('basic');
+      const names=[...el('enemyEditor').querySelectorAll('[role="combobox"]')];names[0].value='Custom opponent';
+      el('start').click();check(data().fight?.config.section==='custom','Warhammer ordinary fight needs no preset');
+      el('attack').click();check(data().fight.status==='win'&&data().history.length===1,'Warhammer custom victory recorded');
+      module.render();check(data().history.length===1,'Warhammer victory not duplicated by render');
+      reset();setup('advanced');set('encounter','213');change('encounter');el('start').click();
+      const pending=JSON.stringify(data());el('cancel').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();
+      check(JSON.stringify(run.sim1454)===pending,'Warhammer stale cancel ignored');app.setCurrentBookId(1454);module.render();cancel();
+      const original=JSON.stringify(data());app.state.playthroughs=[{startedAt:2,path:[1]}];app.state.activePtIndex=0;
+      el('start').click();check(app.currentPlaythrough().sim1454===undefined,'Warhammer stale controls leave new run untouched');
+      app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Warhammer old run retained');
+    }finally{Math.random=random;}
+  }
   if(id===1449){
     const el=key=>document.getElementById('sim1449-'+key),run=app.currentPlaythrough(),data=()=>run.sim1449;
     const {getRoster,getPlayerDefaults}=await import('REPO/public/js/battlesim/books/1449/definition.js');

@@ -695,6 +695,11 @@
 }
 .bsim-modal .bsim-checkbox { min-height: 22px; }
 .bsim-modal .bsim-btn-row { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.bsim-report-table { width: 100%; border-collapse: collapse; }
+.bsim-report-table :is(th, td) { padding: 0.15rem 0.35rem; text-align: left; }
+.bsim-report-table th { color: #9ca3af; font-weight: normal; }
+.bsim-report-table :is(th, td):first-child { padding-left: 0; }
+.bsim-report-table :is(th, td):last-child { padding-right: 0; text-align: right; }
 .inv-overlay .bsim-modal button:where(:not(.inv-close-btn, .inv-qty-btn)) {
   min-height: 22px;
   margin-top: 0;
