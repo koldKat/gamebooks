@@ -320,7 +320,7 @@ if (db.prepare('SELECT COUNT(*) AS n FROM join_templates').get().n === 0) {
     'The door was unlocked all along. {name} finally tried the handle.',
     '{name} joins the ranks of those who dared to begin.',
     'The adventure log opens to a fresh page. Welcome, {name}.',
-    '{name} has been chosen by the book. Or perhaps chose it.',
+    '{name} has opened the book. The adventure begins.',
     'Something stirs in the depths. {name} has lit a torch.',
     'Somewhere, a narrator clears their throat. {name} has arrived.',
     'The first choice awaits. {name} stands at the fork in the road.',
