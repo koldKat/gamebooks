@@ -3,6 +3,7 @@ import { _effectiveLandingCoverSource, _landingCoverPool, _resetLandingCoverQueu
 import { coversState } from './state.js';
 import { getToken } from '../core/state.js';
 import { t } from '../i18n.js';
+import { applySeasonalEventsPreference } from '../seasonal-events/preferences.js';
 
 // ── Cover settings ─────────────────────────────────────────────────────────────
 export function _applyCoverTooltipTitlePrefs() {
@@ -138,6 +139,7 @@ export function resetFeedDisplayPrefsForLogout() {
 
 // ── Prefs state setter (called from applyPrefs in main.js) ────────────────────
 export function setCoversPrefsState(p) {
+  if ('seasonalEvents' in p) applySeasonalEventsPreference(p.seasonalEvents);
   _setCoverFavoritesFromPrefs(p);
   if (p.landingCoverPos && typeof p.landingCoverPos === 'object' && !Array.isArray(p.landingCoverPos)) {
     coversState._landingCoverPosPrefs = p.landingCoverPos;

@@ -56,7 +56,7 @@ test('live feed pushes only real Job Level crossings, including a legitimate mai
   db.exec('UPDATE user_job_xp SET xp=999 WHERE user_id=1');
   const insert=db.prepare('INSERT OR IGNORE INTO xp_events VALUES(?,?,?)');
   const source=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');
-  const context=vm.createContext({db,computeLevel,isImpersonatingContext:()=>false,getXpAmount:()=>0,
+  const context=vm.createContext({db,computeLevel,isImpersonatingContext:()=>false,getXpAmount:()=>0,seasonalXpMultiplier:()=>1,
     _xpFeedHook:event=>feed.push(event),_appXpHook:event=>gems.push(event),
     _awardXpTx:(user,event,ref)=>insert.run(user,event,ref).changes>0});
   vm.runInContext(source.slice(source.indexOf('function awardXp('),source.indexOf('function awardIdleHeartbeatXp(')),context);

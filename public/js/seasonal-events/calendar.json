@@ -1,0 +1,9 @@
+[
+  {
+    "id": "halloween",
+    "start": 1028,
+    "end": 1103,
+    "xpMultiplier": 2,
+    "xpEvents": ["death_run", "battle_run", "first_loss", "first_battle_death", "first_loss_ow", "first_battle_death_ow", "battlesim_loss"]
+  }
+]

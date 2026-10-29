@@ -11,6 +11,7 @@ const { rubyInfoForUser, createRubyCompletionChecker } = require('./rubies');
 let _rubyCompletionChecker;
 const { getJobTitle } = require('./job-xp');
 const { advanceHeartbeatCoins } = require('./heartbeat-coins');
+const { seasonalXpMultiplier } = require('../seasonal-events');
 
 // ── Impersonation tokens ──────────────────────────────────────────────────────
 
@@ -405,7 +406,9 @@ const _awardXpTx = db.transaction((userId, event, ref, amount) => {
 // Same central safety net as awardCoins above.
 function awardXp(userId, event, ref, amountOverride = null) {
   if (isImpersonatingContext()) return false;
-  const amount = amountOverride ?? getXpAmount(event);
+  // Seasonal rewards are independent of cosmetic preferences. Apply before normal
+  // boosts/caps and retain the same event/ref, so retries cannot earn a second award.
+  const amount = (amountOverride ?? getXpAmount(event)) * seasonalXpMultiplier(event);
   // Reuse the mining snapshot for feed changes, including a main level-up event
   // awarded during a heartbeat. Job events themselves never award XP or coins.
   const snapshot = () => db.prepare(`SELECT

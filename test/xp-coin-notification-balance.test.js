@@ -20,7 +20,7 @@ function fixture({ xp = 495999, purchased = 16, bonus = 393, spent = 899 } = {})
   db.prepare('INSERT INTO users(id,xp,bonus_gc_mint_purchased,bonus_coins,coins_spent) VALUES(1,?,?,?,?)')
     .run(xp, purchased, bonus, spent);
   const math = Object.create(Math); math.random = () => 1;
-  const context = vm.createContext({ db, Math: math, isImpersonatingContext: () => false,
+  const context = vm.createContext({ db, Math: math, isImpersonatingContext: () => false, seasonalXpMultiplier: () => 1,
     _insertNotif: db.prepare('INSERT INTO notifications(user_id,type,payload) VALUES(?,?,?)'),
     _appXpHook: null, _xpFeedHook: null, getTitleForLevel: level => 'Level ' + level });
   const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');

@@ -25,7 +25,9 @@ An author's rating shows its vote count beside the average. Both are derived fro
 - The wall refreshes automatically whenever books are added or changed
 - For players with PDF/EPUB access, an anthology's file badges also show when one of its public stories has that file format.
 
-> Click the ⚙ (cog) button in the header, or press **Ctrl+Y**, to adjust the cover-title font size, toggle bold text, hide Cyrillic covers, toggle **Reduce animations** (useful on low-powered devices), and toggle **Show covers in feed** / **Transparent background for day cards**.
+> Click the ⚙ (cog) button in the header, or press **Ctrl+Y**, to adjust the cover-title font size, toggle bold text, hide Cyrillic covers, toggle **Reduce animations** (useful on low-powered devices), **Seasonal events**, and **Show covers in feed** / **Transparent background for day cards**.
+
+Halloween runs from **October 28 through November 3** each year. A scary pumpkin follows the mouse, glances around, blinks, and occasionally opens its mouth wide. Up to three small Halloween decorations appear in roomy gaps between landing panels. Turn these decorations off with **Seasonal events** in the Ctrl+Y settings; **Reduce animations** keeps the pumpkin still. During the event, losses and battle deaths earn **double XP**, including first-loss achievements and simulator defeats. This XP bonus always applies, even with decorations disabled; reward dates follow the server's Sofia calendar.
 
 ### Centre - Activity feed
 
@@ -76,7 +78,7 @@ This is either the login form or your books list, depending on whether you're si
 |----------|--------|
 | **Ctrl+X** | Hide or restore all three panels |
 | **F1** | Open the Cheat Sheet |
-| **Ctrl+Y** | Landing page settings (cover-title font size/bold/hide Cyrillic, background source, reduce animations, feed day covers, transparent day cards) |
+| **Ctrl+Y** | Landing page settings (cover-title font size/bold/hide Cyrillic, background source, seasonal events, reduce animations, feed day covers, transparent day cards) |
 
 **Escape:** dismisses open autocomplete suggestions first. Press it again to close the top dialog; dialogs underneath stay open. Saving and uploading can temporarily block dismissal.
 

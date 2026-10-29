@@ -5,8 +5,10 @@ import { _applyCoverTooltipTitlePrefs, _persistCoverTooltipPrefs, _applyReduceMo
 import { coversState } from './state.js';
 import { getToken } from '../core/state.js';
 import { t } from '../i18n.js';
+import { initSeasonalEventSettings } from '../seasonal-events/preferences.js';
 
 export function _initCoverSettings() {
+  initSeasonalEventSettings(patch => coversState._hooks.savePrefs?.(patch));
   // Initial pref application
   _applyCoverTooltipTitlePrefs();
   _applyLandingCoverSourcePrefs();
