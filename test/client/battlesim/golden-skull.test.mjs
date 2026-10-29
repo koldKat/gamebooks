@@ -1,3 +1,4 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -5,7 +6,7 @@ import * as combat from '../../../public/js/battlesim/engines/fighting-fantasy/c
 import {createFantasyState} from '../../../public/js/battlesim/engines/fighting-fantasy/state.js';
 import {definition} from '../../../public/js/battlesim/books/1362/definition.js';
 
-const roster = JSON.parse(fs.readFileSync('data/simulator-rosters/1362.json','utf8'));
+const roster = readRosterDocument(1362);
 const entries = [...new Map(roster.enemies.map(row => [row.stats.entry.section,row.stats.entry])).values()];
 const items = entries[0].support.items;
 const hero = changes => ({skill:12,skillInitial:12,stamina:24,staminaInitial:24,luck:12,luckInitial:12,

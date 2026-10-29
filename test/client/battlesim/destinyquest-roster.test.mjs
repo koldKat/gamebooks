@@ -1,9 +1,10 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { decodeDestinyRoster, loadDestinyRoster } from '../../../public/js/battlesim/engines/destinyquest/winters-fury-roster.js';
 import { createWinterFight } from '../../../public/js/battlesim/engines/destinyquest/winters-fury.js';
-const seed=JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/1285.json',import.meta.url),'utf8'));
+const seed=readRosterDocument(1285);
 
 test('the API roster preserves ordering, printed nulls, variants and defensive copies',async()=>{
   const calls=[];

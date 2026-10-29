@@ -1,8 +1,9 @@
+const { readRosterDocument } = require('./helpers/roster-db.cjs');
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');
 const path = require('node:path');
-const roster = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/simulator-rosters/869.json'))).enemies.map(row => row.stats.entry);
+const roster = readRosterDocument(869).enemies.map(row => row.stats.entry);
 const settings = Object.fromEntries(roster.map(row => [row.id, row.support]));
 const labels = Object.fromEntries(roster.map(row => [row.id, row.support.labels]));
 const common = roster.find(row => row.support.common).support.common;

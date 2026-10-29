@@ -1,19 +1,17 @@
 'use strict';
 const fs = require('node:fs');
-const path = require('node:path');
 const Database = require('better-sqlite3');
 const { seedEnemyRoster } = require('../server/db/enemy-rosters');
 
 function main(args) {
   const [databasePath, ...requested] = args;
-  if (!databasePath || !requested.length || requested.some(id => !/^[1-9][0-9]*$/.test(id))) {
-    throw new Error('Usage: node scripts/seed-simulator-rosters.js <database-file> <book-id>...');
+  if (!databasePath || !requested.length) {
+    throw new Error('Usage: node scripts/seed-simulator-rosters.js <database-file> <reviewed-roster-file>...');
   }
-  const documents = [...new Set(requested)].map(id => {
-    const document = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/simulator-rosters', id + '.json'), 'utf8'));
-    if (document.bookId !== Number(id)) throw new Error('Roster book ID mismatch');
-    return document;
-  });
+  // Import explicitly reviewed temporary input; no duplicate roster catalog is
+  // shipped or maintained alongside the database.
+  const documents = [...new Set(requested)].map(file => JSON.parse(fs.readFileSync(file, 'utf8')));
+  if (new Set(documents.map(document => document.bookId)).size !== documents.length) throw new Error('Duplicate roster book ID');
   const db = new Database(databasePath, { fileMustExist: true, timeout: 5000 });
   try {
     db.pragma('foreign_keys = ON');

@@ -1,9 +1,10 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from './simulator-source.mjs';
 import vm from 'node:vm';
 
-const rosterEntries = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/468.json', import.meta.url), 'utf8')).enemies.map(row => row.stats.entry);
+const rosterEntries = readRosterDocument(468).enemies.map(row => row.stats.entry);
 
 const source = readFileSync(new URL('../../../public/js/battlesim/battlesim468.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
 function fixture(saved) {

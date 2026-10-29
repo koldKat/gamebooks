@@ -1,10 +1,11 @@
+import { readRosterDocument } from '../../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { vampireCharacter, vampireRecovery, vampireStats, startVampireFight, vampireRound, resumeVampireFight } from '../../../../public/js/battlesim/engines/warhammer/vampire.js';
 import { loadRosterDataset } from '../../../../public/js/battlesim/roster-data.js';
 
-const catalog=JSON.parse(readFileSync('data/simulator-rosters/1457.json'));
+const catalog=readRosterDocument(1457);
 const entries=[...new Map(catalog.enemies.map(row=>[row.stats.entryIndex,row.stats.entry])).values()];
 const source=section=>structuredClone(entries.find(entry=>entry.section===String(section)));
 const hero=(extra={})=>vampireCharacter({...structuredClone(entries[0].playerDefaults.character),...extra});

@@ -1,3 +1,4 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -28,7 +29,7 @@ test('old saved configurations retain first-hit transitions without new metadata
 });
 
 test('renamed transitions, arrow outcomes and ally limits follow supplied metadata',async()=>{
-  const seed=JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/722.json',import.meta.url),'utf8'));
+  const seed=readRosterDocument(722);
   for(const row of seed.enemies){
     const entry=row.stats.entry;
     if(entry.section===151){entry.firstPlayerHitDestination=900;entry.firstPlayerHitRule.destination=901;}

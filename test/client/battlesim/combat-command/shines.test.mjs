@@ -1,10 +1,11 @@
+import { readRosterDocument } from '../../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { startCombatCommandFight, combatCommandRound } from '../../../../public/js/battlesim/engines/combat-command/core.js';
 import { loadRosterDataset } from '../../../../public/js/battlesim/roster-data.js';
 
-const catalog=JSON.parse(readFileSync('data/simulator-rosters/1468.json'));
+const catalog=readRosterDocument(1468);
 const entries=[...new Map(catalog.enemies.map(row=>[row.stats.entryIndex,row.stats.entry])).values()];
 const source=section=>structuredClone(entries.find(entry=>entry.section===String(section)));
 const charts=entries[0].charts;

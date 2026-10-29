@@ -2,6 +2,8 @@
 
 ## Scope
 
+- Keep opponent rosters, combat tables and encounter metadata in the database. During imports, keep reviewed input and audit evidence in external scratch, install it into the database, and do not commit duplicate JSON catalogs or completed repair/audit records to the app. Tests read installed roster content through the read-only catalog helper.
+
 - Simulators are optional combat tools, not playable adaptations of the book. Let the player choose an encounter, enter current combat stats and relevant modifiers, and resolve that encounter.
 - Keep story decisions, travel clocks, mission progression, noncombat section tests and scripted outcomes in the reader. Do not build campaign engines or automatically play through sections.
 - Persistent combat stats, casualties, battle history and directly related combat recovery are appropriate. They must not impose mission-wide win/loss conditions or force players through a sequence of encounters.

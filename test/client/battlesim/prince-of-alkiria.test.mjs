@@ -1,3 +1,4 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
@@ -5,7 +6,7 @@ import vm from 'node:vm';
 import { loadFixtureRoster } from './roster-fixtures.mjs';
 import { ROSTER } from '../../../public/js/battlesim/books/412/definition.js';
 await loadFixtureRoster(412);
-const rosterEntries = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/412.json', import.meta.url), 'utf8')).enemies.map(row => row.stats.entry);
+const rosterEntries = readRosterDocument(412).enemies.map(row => row.stats.entry);
 
 function fixture(saved, bonus = 5) {
   const entries = structuredClone(rosterEntries);

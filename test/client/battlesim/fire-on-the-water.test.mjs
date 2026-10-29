@@ -1,10 +1,11 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
 function fixture(saved, ruleOverride) {
-  const seed = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/430.json', import.meta.url), 'utf8'));
+  const seed = readRosterDocument(430);
   const createRosterLoader = (_book, _dataset, install) => () => install([ruleOverride || seed.enemies[0].stats.entry]);
   const pt = saved ? { sim430: structuredClone(saved) } : {};
   const source = readFileSync(new URL('../../../public/js/battlesim/battlesim430.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');

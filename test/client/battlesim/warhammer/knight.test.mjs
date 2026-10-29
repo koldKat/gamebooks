@@ -1,10 +1,11 @@
+import { readRosterDocument } from '../../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { knightCharacter, knightRecovery, acquireKnightWeapon, startKnightFight, knightRound, knightInterrogation } from '../../../../public/js/battlesim/engines/warhammer/knight.js';
 import { loadRosterDataset } from '../../../../public/js/battlesim/roster-data.js';
 
-const catalog = JSON.parse(readFileSync('data/simulator-rosters/1455.json'));
+const catalog = readRosterDocument(1455);
 const entries = [...new Map(catalog.enemies.map(row => [row.stats.entryIndex, row.stats.entry])).values()];
 const defaults = entries[0].playerDefaults;
 const source = section => structuredClone(entries.find(entry => entry.section === String(section)));

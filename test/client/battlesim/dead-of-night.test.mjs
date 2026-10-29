@@ -1,8 +1,9 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
-const roster = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/236.json', import.meta.url), 'utf8'));
+const roster = readRosterDocument(236);
 
 const source = readFileSync(new URL('../../../public/js/battlesim/battlesim236.js', import.meta.url), 'utf8')
   .replace(/^import .*;\n/gm, '').replace(/^export /gm, '');

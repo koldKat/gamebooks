@@ -1,10 +1,11 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { loadRosterDataset } from '../../../public/js/battlesim/roster-data.js';
 import { createState as createMutatedState } from '../../../public/js/battlesim/books/781/state.js';
-const seed=JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/781.json',import.meta.url),'utf8'));
-const groupSeed=JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/881.json',import.meta.url),'utf8'));
+const seed=readRosterDocument(781);
+const groupSeed=readRosterDocument(881);
 
 test('generic roster loading reconstructs each complete source group once in source order',async()=>{
   const rows=await loadRosterDataset(881,'ROSTER',async()=>({ok:true,json:async()=>[...groupSeed.enemies].reverse()}));

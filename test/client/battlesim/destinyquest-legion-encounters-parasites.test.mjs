@@ -1,3 +1,4 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -7,7 +8,7 @@ import {startDestinyRound,rollDestinySpeed,resolveDestinySpeed,rollDestinyDamage
 import {useDestinyAbility} from '../../../public/js/battlesim/engines/destinyquest/abilities.js';
 import {destinyStat} from '../../../public/js/battlesim/engines/destinyquest/effects.js';
 import {resolveDestinyAbilityRoll} from '../../../public/js/battlesim/engines/destinyquest/ability-rolls.js';
-const roster=decodeDestinyRoster(JSON.parse(fs.readFileSync(new URL('../../../data/simulator-rosters/1286.json',import.meta.url),'utf8')).enemies);
+const roster=decodeDestinyRoster(readRosterDocument(1286).enemies);
 const hero={speed:20,brawn:3,magic:0,armour:4,health:30,maxHealth:30};
 const rolls=(...values)=>()=>{assert.ok(values.length,'Unexpected roll');return values.shift();};
 const make=(section,options={})=>createLegionFight({...hero,...options.hero},section,{roster,...options});

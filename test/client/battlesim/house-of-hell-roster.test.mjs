@@ -1,3 +1,4 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadFixtureRoster } from './roster-fixtures.mjs';
@@ -91,11 +92,12 @@ test('paralysis uses its loaded threshold rather than a literal fourth wound', (
 });
 
 test('metadata supplies damage exports without adding support fields to Kris rules', async () => {
-  const seed = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/206.json', import.meta.url), 'utf8'));
-  const rules = seed.enemies.map(row => { const {support, ...rule} = row.stats.entry; return rule; });
+  const seed = readRosterDocument(206);
+  const rules = [...seed.enemies].sort((a,b)=>a.stats.entryIndex-b.stats.entryIndex)
+    .map(row => { const {support, ...rule} = row.stats.entry; return rule; });
   assert.deepEqual(KRIS_KNIFE_RULES, rules);
   const isolated = await import('../../../public/js/battlesim/books/206/definition.js?settings-test');
-  Object.assign(seed.enemies[0].stats.entry.support.rules, {fireSpriteLuckyDamage: 1, fireSpriteUnluckyDamage: 5, fireSpriteBaselineDamage: 2, ghoulParalysisThreshold: 6});
+  Object.assign(seed.enemies.find(row=>row.stats.entry.support).stats.entry.support.rules, {fireSpriteLuckyDamage: 1, fireSpriteUnluckyDamage: 5, fireSpriteBaselineDamage: 2, ghoulParalysisThreshold: 6});
   await isolated.loadRoster(async () => ({ok: true, json: async () => seed.enemies}));
   assert.deepEqual([isolated.FIRESPRITE_LUCKY_DMG, isolated.FIRESPRITE_UNLUCKY_DMG, isolated.FIRESPRITE_BASELINE_DMG, isolated.GHOUL_PARALYSIS_THRESHOLD], [1, 5, 2, 6]);
   assert.deepEqual(isolated.KRIS_KNIFE_RULES, rules);

@@ -1,9 +1,10 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {validateCombatant,startFight,fightRound,controlCheck,tactic,resumeFight,repairVehicle,replaceDriver} from '../../../public/js/battlesim/engines/car-wars/core.js';
 import {loadRoster,getRoster,getVehicles} from '../../../public/js/battlesim/books/1442/definition.js';
-const data=JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/1442.json',import.meta.url)));
+const data=readRosterDocument(1442);
 await loadRoster(async()=>({ok:true,json:async()=>data.enemies}));
 const source=section=>structuredClone(getRoster().find(e=>e.section===String(section)));
 const sequence=(...values)=>{let at=0;return()=>{assert.ok(at<values.length,'Unexpected die '+at);return values[at++];};};

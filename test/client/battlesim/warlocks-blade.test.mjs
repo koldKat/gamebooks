@@ -1,10 +1,11 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {startCrossroadsFight,crossroadsRound} from '../../../public/js/battlesim/engines/crossroads/core.js';
 import {createCrossroadsState} from '../../../public/js/battlesim/engines/crossroads/state.js';
 import {healingSpell} from '../../../public/js/battlesim/engines/crossroads/resources.js';
-const roster=JSON.parse(fs.readFileSync('data/simulator-rosters/1297.json','utf8'));
+const roster=readRosterDocument(1297);
 const entries=[...new Map(roster.enemies.map(row=>[row.stats.entry.section,row.stats.entry])).values()];
 const hero={strength:15,intelligence:13,wisdom:17,constitution:14,dexterity:17,charisma:10,hp:30,maxHp:30,armourBonus:2,healingSpells:2,misdirectionSpells:3,shortSwordBonus:0,gauntletRounds:0,repulsionPotion:0};
 function preset(section,changes={}){const e=structuredClone(entries.find(e=>e.section===String(section)));return startCrossroadsFight({...hero,...changes},e.enemies,e.rules);}

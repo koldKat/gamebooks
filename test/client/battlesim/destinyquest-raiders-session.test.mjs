@@ -1,3 +1,4 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -6,7 +7,7 @@ import {decodeDestinyRoster} from '../../../public/js/battlesim/engines/destinyq
 import {createDestinySession,beginDestinySession,applyDestinySessionAction} from '../../../public/js/battlesim/engines/destinyquest/session.js';
 import {createRaidersFight,prepareRaidersFight,getRaidersPetCatalog,RAIDERS_BOOK_RULES} from '../../../public/js/battlesim/engines/destinyquest/raiders.js';
 import {RAIDERS_ABILITIES} from '../../../public/js/battlesim/engines/destinyquest/raiders-abilities.js';
-const roster=decodeDestinyRoster(JSON.parse(fs.readFileSync(new URL('../../../data/simulator-rosters/1288.json',import.meta.url))).enemies);
+const roster=decodeDestinyRoster(readRosterDocument(1288).enemies);
 const hero={speed:100,brawn:200,magic:10,armour:0,health:1000,maxHealth:1000};
 const context={roster,catalog:RAIDERS_ABILITIES,bookRules:RAIDERS_BOOK_RULES,createFight:createRaidersFight,prepareFight:prepareRaidersFight};
 const begin=(setup,id='one',session=createDestinySession())=>beginDestinySession(session,{hero,...setup},{...context,outcomeId:id});

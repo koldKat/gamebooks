@@ -1,10 +1,11 @@
+const { readRosterDocument } = require('./helpers/roster-db.cjs');
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');
 const { readFileSync: readSimulatorSource } = require('./client/battlesim/simulator-source.mjs');
 const path = require('node:path');
 const source = fs.readFileSync(path.join(__dirname,'../public/js/battlesim/engines/mutated-flesh.js'),'utf8');
-const FLESH_RULES = JSON.parse(fs.readFileSync(path.join(__dirname,'../data/simulator-rosters/781.json'),'utf8')).enemies.find(row=>row.stats.entry.support).stats.entry.support.rules;
+const FLESH_RULES = readRosterDocument(781).enemies.find(row=>row.stats.entry.support).stats.entry.support.rules;
 const engine = import('data:text/javascript;base64,'+Buffer.from(source).toString('base64')).then(module=>({
   ...module,
   mutatedFleshWon:d=>module.mutatedFleshWon(d,FLESH_RULES.victoryFloors),
@@ -78,7 +79,7 @@ test('opening a saved fight leaves it untouched; reset enables corrected rules w
   const vm=require('node:vm');const {mutatedFleshRound,mutatedFleshWon}=await engine;
   const d=state();delete d.rulesVersion;Object.assign(d,{weaponId:'crowbar',started:true,log:[],history:[]});d.ammo.pistol=0;
   const pt={sim781:d};const controller=readSimulatorSource(path.join(__dirname,'../public/js/battlesim/battlesim781.js'),'utf8').replace(/^import .*;$/gm,'').replaceAll('export function','function');
-  const fixtureProfiles=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/simulator-rosters/781.json'),'utf8')).enemies.map(row=>{const {support,...profile}=row.stats.entry;return profile;});
+  const fixtureProfiles=readRosterDocument(781).enemies.map(row=>{const {support,...profile}=row.stats.entry;return profile;});
   const context=vm.createContext({currentPlaythrough:()=>pt,saveState:()=>{},t:key=>key,escapeHtml:x=>x,mutatedFleshRound,mutatedFleshWon,fixtureProfiles,fixtureRules:FLESH_RULES});
   vm.runInContext(controller+'\nROSTER.push(...fixtureProfiles);Object.assign(FLESH_RULES,fixtureRules);_renderAll=()=>{};globalThis.subject={data:_data,reset:_resetBattle,defend:_defend};',context);
   const before=JSON.stringify(d);context.subject.data();assert.equal(JSON.stringify(d),before);

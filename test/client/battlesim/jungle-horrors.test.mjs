@@ -1,9 +1,10 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
-const rosterEntries = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/436.json', import.meta.url), 'utf8')).enemies.map(row => row.stats.entry);
+const rosterEntries = readRosterDocument(436).enemies.map(row => row.stats.entry);
 
 function fixture(saved) {
   const pt = saved ? { sim436: structuredClone(saved) } : {};

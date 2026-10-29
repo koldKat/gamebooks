@@ -1,3 +1,4 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import { loadFixtureRoster } from './roster-fixtures.mjs';
 await loadFixtureRoster(539);
 import test from 'node:test';
@@ -17,7 +18,7 @@ const player = () => rules.createShadowsCharacter(roll(6, 6, 6));
 
 test('printed Shadows checks take ratings, damage and routes from loaded metadata',async()=>{
   const rosterUrl=new URL('../../../public/js/battlesim/engines/forbidden-gateway-roster.js?authority',import.meta.url);
-  const roster=await import(rosterUrl.href),seed=JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/539.json',import.meta.url)));
+  const roster=await import(rosterUrl.href),seed=readRosterDocument(539);
   const support=seed.enemies.find(e=>e.key==='61:0').stats.entry.support,check=support.checks.find(c=>c.section===52);
   Object.assign(check,{rating:2,success:777,successDamage:{stamina:7}});delete check.death;support.rules.death=900;
   await roster.loadRoster(async()=>({ok:true,json:async()=>seed.enemies}));

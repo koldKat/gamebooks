@@ -1,3 +1,4 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -48,7 +49,7 @@ test('saved queued Luck resolves without repeating gas, breath or combat turns',
 
 test('catalog settings supply both public damage exports and encounter thresholds', async () => {
   const isolated = await import('../../../public/js/battlesim/books/205/definition.js?settings-test');
-  const seed = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/205.json', import.meta.url), 'utf8'));
+  const seed = readRosterDocument(205);
   Object.assign(seed.enemies[0].stats.entry, {gasDamage: 3, gasHitMax: 4, breathDamage: 4, breathHitMax: 5});
   await isolated.loadRoster(async () => ({ok: true, json: async () => seed.enemies}));
   assert.equal(isolated.ICE_DEMON_GAS_DMG, 3); assert.equal(isolated.WHITE_DRAGON_BREATH_DMG, 4);

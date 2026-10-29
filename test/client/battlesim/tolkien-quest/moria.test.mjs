@@ -1,9 +1,10 @@
+import { readRosterDocument } from '../../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {character,beginFight,round,missileRound,approach,resolveOutcome,step,applyLuck,acceptNumbers,modifiers,woundedExitAvailable,takeWoundedExit,useRecovery} from '../../../../public/js/battlesim/engines/tolkien-quest/core.js';
 import {definition,loadRoster,getRoster} from '../../../../public/js/battlesim/books/1441/definition.js';
-const catalog=JSON.parse(readFileSync('data/simulator-rosters/1441.json','utf8'));
+const catalog=readRosterDocument(1441);
 await loadRoster(async url=>{assert.equal(url,'/api/books/1441/enemies');return {ok:true,json:async()=>structuredClone(catalog.enemies)};});
 const entry=id=>getRoster().find(e=>e.section===id);
 const numbers=(...values)=>()=>{assert.ok(values.length,'unexpected pick');return values.shift();};

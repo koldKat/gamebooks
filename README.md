@@ -90,6 +90,8 @@ The SQLite database (`database.sqlite`) is created automatically on first run.
 | `npm run docs:build`      | Regenerate the HTML docs from `docs/*.md`     |
 | `npm run docs:check`      | Fail if the HTML docs are stale relative to their markdown source |
 
+Book-specific roster tests and browser checks read the installed catalog in read-only mode. Set `GAMEBOOKS_TEST_DATABASE` to use a separate catalog database; the default is `database.sqlite`. Simulator roster data lives in the database, with no duplicate JSON catalog in the repository.
+
 ## Documentation
 
 Full docs live in [`docs/`](docs/) as the single source of truth - each is

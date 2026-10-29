@@ -1,3 +1,4 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
@@ -8,7 +9,7 @@ function fixture(id, saved) {
     .replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
   const pt = saved ? { [`sim${id}`]: structuredClone(saved) } : {};
   const context = vm.createContext({ createRosterLoader: (bookId, dataset, install) => {
-    const seed = JSON.parse(readFileSync(new URL(`../../../data/simulator-rosters/${bookId}.json`, import.meta.url), 'utf8'));
+    const seed = readRosterDocument(bookId);
     const entries = seed.enemies.map(row => row.stats.entry);
     return () => install(entries);
   }, currentPlaythrough: () => pt, saveState: () => {}, structuredClone, t: k => k, escapeHtml: s => s });

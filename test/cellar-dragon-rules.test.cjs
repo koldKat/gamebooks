@@ -1,3 +1,4 @@
+const { readRosterDocument } = require('./helpers/roster-db.cjs');
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');
@@ -10,7 +11,7 @@ const dice = values => () => { assert.ok(values.length, 'unexpected roll'); retu
 async function subject() {
   const { resolveCellarDragon } = await engine;
   const definition = await import('../public/js/battlesim/books/881/definition.js');
-  await definition.loadRoster(async()=>({ok:true,json:async()=>JSON.parse(read('data/simulator-rosters/881.json')).enemies}));
+  await definition.loadRoster(async()=>({ok:true,json:async()=>readRosterDocument(881).enemies}));
   const saved = { encounterId: 'guard_unarmed', swordId: 'firfeld', player: { sila: 5, izd: 30 }, log: ['old'], history: [{ outcome: 'win', ts: 1 }] };
   const elements = Object.fromEntries(['dagger', 'poison', 'target', 'potion', 'knife-magic'].map(name => ['sim881-' + name, { value: name === 'target' ? '0' : '-1', checked: false }]));
   const context = vm.createContext({ currentPlaythrough: () => ({ sim881: saved }), saveState: () => {},

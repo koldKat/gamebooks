@@ -1,3 +1,4 @@
+import { readRosterDocument } from '../helpers/roster-db.cjs';
 import {loadFixtureRoster} from './battlesim/roster-fixtures.mjs';
 import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
@@ -13,7 +14,7 @@ const hero = changes => ({ ...combat.newCharacter(), ...changes });
 const start = (section, character = hero(), options = {}) => combat.startFight(section, character, { damageAtThree: 1, ...options });
 
 test('global death route comes from lethal encounter metadata while nonlethal routes stay distinct',async()=>{
-  const seed=JSON.parse(readFileSync(new URL('../../data/simulator-rosters/783.json',import.meta.url),'utf8'));
+  const seed=readRosterDocument(783);
   for(const row of seed.enemies)if(!row.stats.entry.lossLimit)row.stats.entry.lose=999;
   const isolated=await import('../../public/js/battlesim/books/783/definition.js?death-route-test');
   await isolated.loadRoster(async()=>({ok:true,json:async()=>seed.enemies}));

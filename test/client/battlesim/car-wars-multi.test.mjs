@@ -1,8 +1,9 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {startFight,fightRound,resumeFight,combatantOut,replaceDriver,tactic} from '../../../public/js/battlesim/engines/car-wars/multi-combat.js';
-const data=JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/1444.json',import.meta.url)));
+const data=readRosterDocument(1444);
 const entries=[...new Map(data.enemies.map(r=>[r.stats.entryIndex,r.stats.entry])).values()];
 function source(section) {
   for(const entry of entries) {

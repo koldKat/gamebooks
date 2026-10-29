@@ -1,3 +1,4 @@
+const { readRosterDocument } = require('./helpers/roster-db.cjs');
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');
@@ -5,7 +6,7 @@ const { readFileSync: readSimulatorSource } = require('./client/battlesim/simula
 const path = require('node:path');
 const vm = require('node:vm');
 const source = fs.readFileSync(path.join(__dirname, '../public/js/battlesim/engines/galactic-giant.js'), 'utf8');
-const rosterSeed = JSON.parse(fs.readFileSync(path.join(__dirname,'../data/simulator-rosters/877.json'),'utf8'));
+const rosterSeed = readRosterDocument(877);
 const ruleFor = id => rosterSeed.enemies.find(row=>row.key===id).stats.entry;
 const engine = import('data:text/javascript;base64,' + Buffer.from(source).toString('base64')).then(api=>({
   ...api, resolveGalacticDuel:(id,...args)=>api.resolveGalacticDuel(ruleFor(id),...args),

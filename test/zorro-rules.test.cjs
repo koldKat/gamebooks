@@ -1,3 +1,4 @@
+const { readRosterDocument } = require('./helpers/roster-db.cjs');
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');
@@ -105,11 +106,11 @@ test('zero life never rolls or revives', async () => {
 test('legacy controller opens without modifying saved character or history', async () => {
   const { startZorroFight, advanceZorroFight } = await engine;
   const definition=await import('../public/js/battlesim/books/882/definition.js');
-  await definition.loadRoster(async()=>({ok:true,json:async()=>JSON.parse(read('data/simulator-rosters/882.json')).enemies}));
+  await definition.loadRoster(async()=>({ok:true,json:async()=>readRosterDocument(882).enemies}));
   const saved = { encounterId: 'galdos_mounted', player: { zhivot: 19 }, history: [{ outcome: 'win' }], log: ['old'] };
   const context = vm.createContext({ currentPlaythrough: () => ({ sim882: saved }), startZorroFight, advanceZorroFight,
     createRosterLoader:(_id,_dataset,install)=>{
-      const seed=JSON.parse(read('data/simulator-rosters/882.json'));
+      const seed=readRosterDocument(882);
       install([...new Map(seed.enemies.map(row=>[row.stats.entryIndex,row.stats.entry])).values()]);return async()=>{};
     } });
   vm.runInContext(readSimulatorSource(require('node:path').join(__dirname, '../public/js/battlesim/battlesim882.js'), 'utf8').replace(/^import .*;$/gm, '').replace(/^export /gm, '') + '\nglobalThis.audit={data:_data,roster:ROSTER};', context);
@@ -125,7 +126,7 @@ test('legacy controller opens without modifying saved character or history', asy
 
 test('derived encounters load before the panel and retain metadata order and setup rules',async()=>{
   const definition=await import('../public/js/battlesim/books/882/definition.js');
-  await definition.loadRoster(async()=>({ok:true,json:async()=>JSON.parse(read('data/simulator-rosters/882.json')).enemies}));
+  await definition.loadRoster(async()=>({ok:true,json:async()=>readRosterDocument(882).enemies}));
   assert.equal(definition.ROSTER.length,21);
   assert.deepEqual(definition.ROSTER.slice(-3).map(row=>[row.id,row.enemies.length]),[['village_middle',5],['village_last',4],['village_whip',3]]);
   assert.equal(definition.ENCOUNTER_SETTINGS.village_whip.removed,true);

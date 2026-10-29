@@ -1,3 +1,4 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -5,7 +6,7 @@ import {startCrossroadsFight,crossroadsRound} from '../../../public/js/battlesim
 import {createCrossroadsState} from '../../../public/js/battlesim/engines/crossroads/state.js';
 import {definition} from '../../../public/js/battlesim/books/1300/definition.js';
 
-const roster=JSON.parse(fs.readFileSync('data/simulator-rosters/1300.json','utf8'));
+const roster=readRosterDocument(1300);
 const entries=[...new Map(roster.enemies.map(row=>[row.stats.entry.section,row.stats.entry])).values()];
 function preset(section,hero={}){
   const entry=entries.find(entry=>entry.section===String(section));

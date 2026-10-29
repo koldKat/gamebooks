@@ -1,5 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const checkBrowser=require('./browser-harness.cjs');
+const {getRosterRows}=require('../../helpers/roster-db.cjs');
 const root=process.env.TMPDIR,chromium=process.env.CHROMIUM;
 if(!root||!root.startsWith('/media/koldKat/MediaDrive/.tmp/')||!fs.existsSync(root)||!chromium)
   throw Error('Use the MediaDrive audit scratch directory and a headless Chromium binary');
@@ -10,9 +11,8 @@ const crown=crownEntry||process.argv.includes('--crown');
 const evidencePrefix=process.env.BROWSER_EVIDENCE_PREFIX||'689';
 if(!/^[a-zA-Z0-9-]+$/.test(evidencePrefix))throw Error('Invalid evidence filename prefix');
 const fixturePath='test/client/battlesim/legendary-kingdoms-'+(crownEntry?'crown-entry':integrated?'integration':crown?'crown':'panel')+'.fixture';
-const rosterSeedFile='data/simulator-rosters/'+(crown?'690':'689')+'.json';
-const rosterSeed=fs.existsSync(rosterSeedFile)?JSON.parse(fs.readFileSync(rosterSeedFile,'utf8')).enemies:[];
-const files=[...(fs.existsSync(rosterSeedFile)?[rosterSeedFile]:[]),fixturePath,__filename,
+const rosterSeed=getRosterRows(crown?690:689);
+const files=['test/helpers/roster-db.cjs',fixturePath,__filename,
   'public/js/battlesim/battlesim'+(crown?'690':'689')+'.js','public/js/battlesim/loader.js',
   'public/mobile/js/battlesim-dispatch.js','public/js/core/state.js','public/js/core/util.js','public/js/i18n/battlesim.js',
   ...fs.readdirSync('public/js/battlesim/engines/legendary-kingdoms').filter(name=>name.endsWith('.js'))

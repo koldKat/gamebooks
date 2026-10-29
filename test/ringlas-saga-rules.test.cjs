@@ -1,9 +1,10 @@
+const { readRosterDocument } = require('./helpers/roster-db.cjs');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const engine = import('data:text/javascript;base64,' + Buffer.from(fs.readFileSync(path.join(__dirname, '../public/js/battlesim/engines/ringlas-saga.js'))).toString('base64'));
-const profiles = require('../data/simulator-rosters/871.json').enemies.map(row => row.stats.entry);
+const profiles = readRosterDocument(871).enemies.map(row => row.stats.entry);
 const loadedEngine = engine.then(module => ({
   startRinglasFight: (d, setup) => module.startRinglasFight(d, setup, profiles.find(p => p.id === d.enemyId), profiles.find(p => p.companion).companion),
   resumeRinglasFight: d => module.resumeRinglasFight(d, profiles.find(p => p.id === d.enemyId)),

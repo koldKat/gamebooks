@@ -1,11 +1,12 @@
 'use strict';
+const { readRosterDocument, rosterBookIds } = require('./helpers/roster-db.cjs');
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const Database = require('better-sqlite3');
 const { ensureEnemyRosterSchema, getBookEnemyRows, seedEnemyRoster } = require('../server/db/enemy-rosters');
-const seed = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/simulator-rosters/1285.json'), 'utf8'));
+const seed = readRosterDocument(1285);
 
 function fixture(t) {
   const db = new Database(':memory:');
@@ -28,7 +29,7 @@ test('an explicitly unfinished roster cannot migrate or write the database',t=>{
 
 test('Dragonharper round-trips all 13 encounters without changing players or unrelated enemies',t=>{
   const db=fixture(t);db.exec('INSERT INTO books VALUES(1291)');
-  const document=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/simulator-rosters/1291.json'),'utf8'));
+  const document=readRosterDocument(1291);
   const players=db.prepare('SELECT * FROM players').all(),old=db.prepare('SELECT * FROM book_enemies').all();
   assert.deepEqual(seedEnemyRoster(db,document),{inserted:18,updated:0});
   const rows=getBookEnemyRows(db,1291);assert.equal(rows.length,18);
@@ -45,7 +46,7 @@ test('Dragonharper round-trips all 13 encounters without changing players or unr
 
 test('Storm of Dust round-trips all 16 encounters without changing players or unrelated enemies',t=>{
   const db=fixture(t);db.exec('INSERT INTO books VALUES(1292)');
-  const document=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/simulator-rosters/1292.json'),'utf8'));
+  const document=readRosterDocument(1292);
   const players=db.prepare('SELECT * FROM players').all(),old=db.prepare('SELECT * FROM book_enemies').all();
   assert.deepEqual(seedEnemyRoster(db,document),{inserted:24,updated:0});
   const rows=getBookEnemyRows(db,1292);assert.equal(rows.length,24);
@@ -62,7 +63,7 @@ test('Storm of Dust round-trips all 16 encounters without changing players or un
 
 test('Encyclopedia of Xanth round-trips all 10 encounter presets without changing players or unrelated enemies',t=>{
   const db=fixture(t);db.exec('INSERT INTO books VALUES(1290)');
-  const document=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/simulator-rosters/1290.json'),'utf8'));
+  const document=readRosterDocument(1290);
   const players=db.prepare('SELECT * FROM players').all(),old=db.prepare('SELECT * FROM book_enemies').all();
   assert.deepEqual(seedEnemyRoster(db,document),{inserted:22,updated:0});
   const rows=getBookEnemyRows(db,1290);assert.equal(rows.length,22);
@@ -79,7 +80,7 @@ test('Encyclopedia of Xanth round-trips all 10 encounter presets without changin
 
 test('Majipoor round-trips twelve presets and sixteen NPC rows without changing players',t=>{
   const db=fixture(t);db.exec('INSERT INTO books VALUES(1293)');
-  const document=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/simulator-rosters/1293.json'),'utf8'));
+  const document=readRosterDocument(1293);
   const players=db.prepare('SELECT * FROM players').all(),old=db.prepare('SELECT * FROM book_enemies').all();
   assert.deepEqual(seedEnemyRoster(db,document),{inserted:16,updated:0});
   const rows=getBookEnemyRows(db,1293);assert.equal(rows.length,16);
@@ -97,7 +98,7 @@ test('Majipoor round-trips twelve presets and sixteen NPC rows without changing 
 
 test('Witchfires round-trips all twenty-one presets and preserves non-damaging net carriers',t=>{
   const db=fixture(t);db.exec('INSERT INTO books VALUES(1294)');
-  const document=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/simulator-rosters/1294.json'),'utf8'));
+  const document=readRosterDocument(1294);
   const players=db.prepare('SELECT * FROM players').all(),old=db.prepare('SELECT * FROM book_enemies').all();
   assert.deepEqual(seedEnemyRoster(db,document),{inserted:46,updated:0});
   const rows=getBookEnemyRows(db,1294);assert.equal(rows.length,46);
@@ -187,10 +188,10 @@ test('ambiguous or changed legacy rows abort the entire repair transaction',t=>{
   assert.throws(()=>seedEnemyRoster(db,document),/preserve every/);
 });
 
-test('every staged repair seed is valid and retains all structured source data', t => {
+test('every installed roster round-trips without losing its structured data', t => {
   const db = fixture(t);
-  for (const name of fs.readdirSync(path.join(__dirname,'../data/simulator-rosters'))) {
-    const document=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/simulator-rosters',name),'utf8'));
+  for (const bookId of rosterBookIds()) {
+    const name=String(bookId),document=readRosterDocument(bookId);
     db.prepare('INSERT OR IGNORE INTO books(id) VALUES (?)').run(document.bookId);
     for(const enemy of document.enemies)if(enemy.adopt)db.prepare('INSERT INTO book_enemies(book_id,name,attack,defense,hp,pb) VALUES(?,?,?,?,?,?)')
       .run(document.bookId,enemy.adopt.name,enemy.adopt.attack,enemy.adopt.defense,enemy.adopt.hp,enemy.adopt.pb);

@@ -1,10 +1,11 @@
+import { readRosterDocument } from '../../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { getRoster, getPlayerDefaults, loadRoster } from '../../../../public/js/battlesim/books/1453/definition.js';
 import { startSonicFight, sonicRound } from '../../../../public/js/battlesim/engines/sonic/core.js';
 
-const catalog=JSON.parse(readFileSync('data/simulator-rosters/1453.json','utf8'));
+const catalog=readRosterDocument(1453);
 const fetcher=async()=>({ok:true,json:async()=>catalog.enemies.map(row=>({name:row.name,stats:row.stats}))});
 
 test('all sixty source encounters load only from complete database metadata',async()=>{

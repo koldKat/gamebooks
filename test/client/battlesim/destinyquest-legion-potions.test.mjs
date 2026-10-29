@@ -1,3 +1,4 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -7,7 +8,7 @@ import {startDestinyRound} from '../../../public/js/battlesim/engines/destinyque
 import {useDestinyPotionModifier} from '../../../public/js/battlesim/engines/destinyquest/abilities.js';
 import {destinyStat} from '../../../public/js/battlesim/engines/destinyquest/effects.js';
 import {beginDestinySession,applyDestinySessionAction} from '../../../public/js/battlesim/engines/destinyquest/session.js';
-const roster=decodeDestinyRoster(JSON.parse(fs.readFileSync(new URL('../../../data/simulator-rosters/1286.json',import.meta.url),'utf8')).enemies);
+const roster=decodeDestinyRoster(readRosterDocument(1286).enemies);
 const hero={speed:20,brawn:0,magic:1,armour:4,health:10,maxHealth:30};
 const modifiers={health:{amount:4,uses:2,duration:1},magic:{amount:2,uses:1,duration:2}};
 const make=(options={})=>startDestinyRound(createLegionFight(hero,'18',{roster,character:{notes:'keep',potionModifiers:modifiers},...options}),0);

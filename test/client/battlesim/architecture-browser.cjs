@@ -1,5 +1,6 @@
 const fs=require('fs'),path=require('path');
 const checkBrowser=require('./browser-harness.cjs');
+const {getRosterRows}=require('../../helpers/roster-db.cjs');
 const root=process.env.TMPDIR,repo=process.cwd();
 const receiptName=process.env.SIMULATOR_RECEIPT;
 if(receiptName&&!/^[a-zA-Z0-9-]+\.json$/.test(receiptName))throw Error('Invalid receipt name');
@@ -7,12 +8,7 @@ if(!root?.startsWith('/media/koldKat/MediaDrive/.tmp/'))throw Error('Use MediaDr
 const ids=process.argv.includes('--all')?fs.readdirSync('public/js/battlesim/books').map(Number).sort((a,b)=>a-b):process.argv.slice(2).map(Number);if(!ids.length)throw Error('Supply book IDs');
 // Full-catalog audits can exercise older API-backed simulators with the actual
 // installed enemy response, without opening a writable database connection.
-let installedRosters;
-if (process.env.SIMULATOR_LIVE_ROSTERS === '1') {
-  const db = new (require('better-sqlite3'))(path.join(repo, 'database.sqlite'), {readonly: true});
-  try { installedRosters = Object.fromEntries(ids.map(id => [id, require('../../../server/db/enemy-rosters.js').getBookEnemyRows(db, id)])); }
-  finally { db.close(); }
-}
+const installedRosters=Object.fromEntries(ids.map(id=>[id,getRosterRows(id)]));
 const scratch=fs.mkdtempSync(path.join(root,'sim-architecture-'));
 const scenario=process.env.SIMULATOR_SCENARIO;
 if(scenario&&!/^[a-z-]+$/.test(scenario))throw Error('Invalid simulator scenario');
@@ -22,7 +18,7 @@ if(scenario&&!/^[a-z-]+$/.test(scenario))throw Error('Invalid simulator scenario
   if (!languages.length || !languages.every(language => ['en','bg'].includes(language))) throw Error('Invalid simulator languages');
   for(const language of languages){
   for(const mode of ['desktop','mobile']){
-    const rosterSeeds=installedRosters ?? Object.fromEntries(ids.flatMap(id=>{const file=path.join(repo,'data/simulator-rosters',id+'.json');return fs.existsSync(file)?[[id,JSON.parse(fs.readFileSync(file,'utf8')).enemies]]:[];}));
+    const rosterSeeds=installedRosters;
     const fixture=fs.readFileSync(__dirname+'/'+(scenario?scenario+'-integration':'architecture-browser')+'.fixture','utf8').replaceAll('REPO','file://'+repo).replaceAll('MODE',mode).replaceAll('LANGUAGE',language).replaceAll('AUDIT_LEGACY_ROSTERS', String(process.env.SIMULATOR_LIVE_ROSTERS === '1')).replace('BOOK_IDS',JSON.stringify(ids)).replace('ROSTER_SEEDS',JSON.stringify(rosterSeeds));
     const css=['style','charsheet','equipment','battlesim','confirm'].map(n=>`<link rel="stylesheet" href="file://${repo}/public/css/${n}.css">`).join('')
       + `<link rel="stylesheet" href="file://${repo}/public/${mode === 'mobile' ? 'mobile/css/style' : 'css/play'}.css">`;

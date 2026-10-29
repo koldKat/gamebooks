@@ -1,8 +1,9 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 
-const catalog = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/1444.json', import.meta.url)));
+const catalog = readRosterDocument(1444);
 const entries = [...new Map(catalog.enemies.map(row => [row.stats.entryIndex, row.stats.entry])).values()];
 const entry = section => entries.find(e => e.section === String(section));
 

@@ -1,3 +1,4 @@
+const { readRosterDocument } = require('../../helpers/roster-db.cjs');
 // Panel-only integration while the unreleased simulator awaits its final rules.
 // Real desktop/mobile lazy-loader checks remain a separate release requirement.
 const fs=require('fs'),path=require('path');
@@ -17,11 +18,11 @@ if(!Number.isInteger(width)||width<300||width>2000)throw Error('Invalid viewport
 const repo=process.cwd(),scratch=fs.mkdtempSync(path.join(root,'destinyquest-panel-'));
 (async()=>{try{
   const source=fs.readFileSync(__dirname+(raidersBook?'/destinyquest-raiders-book-panel.fixture':heartBook?'/destinyquest-heart-book-panel.fixture':heartTeam?'/destinyquest-heart-team-panel.fixture':heartControls?'/destinyquest-heart-controls-panel.fixture':legionBook?'/destinyquest-legion-book-panel.fixture':legionAbilities?'/destinyquest-legion-abilities-panel.fixture':bookRules?'/destinyquest-book-rules-panel.fixture':'/destinyquest-panel.fixture'),'utf8').replaceAll('REPO','file://'+repo)
-    .replace('RAIDERS_ENEMIES',raidersBook?JSON.stringify(JSON.parse(fs.readFileSync('data/simulator-rosters/1288.json','utf8')).enemies):'[]')
+    .replace('RAIDERS_ENEMIES',raidersBook?JSON.stringify(readRosterDocument(1288).enemies):'[]')
     .replace('HEART_ENEMIES',heartControls||heartTeam||heartBook?JSON.stringify(JSON.parse(fs.readFileSync('test/fixtures/battlesim/heart-roster.json','utf8')).enemies):'[]')
     .replace('SWEEP_PRESETS',String(process.argv.includes('--presets')))
-    .replace('ROSTER_SEED',JSON.stringify(JSON.parse(fs.readFileSync('data/simulator-rosters/1285.json','utf8')).enemies))
-    .replace('LEGION_ENEMIES',legionAbilities||legionBook?JSON.stringify(JSON.parse(fs.readFileSync('data/simulator-rosters/1286.json','utf8')).enemies):'[]');
+    .replace('ROSTER_SEED',JSON.stringify(readRosterDocument(1285).enemies))
+    .replace('LEGION_ENEMIES',legionAbilities||legionBook?JSON.stringify(readRosterDocument(1286).enemies):'[]');
   const css=['style','charsheet','equipment','battlesim','confirm','play'].map(name=>`<link rel="stylesheet" href="file://${repo}/public/css/${name}.css">`).join('')
     +(mode==='mobile'?`<link rel="stylesheet" href="file://${repo}/public/mobile/css/style.css">`:'');
   const file=path.join(scratch,'test.html');

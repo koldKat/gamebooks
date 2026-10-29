@@ -4,12 +4,12 @@ if (!root || !fs.existsSync(root) || !chromium || !fs.existsSync(chromium)) {
   throw Error('Set TMPDIR to the audit scratch directory and CHROMIUM to a headless Chromium executable');
 }
 const checkBrowser = require('./browser-harness.cjs');
+const {getRosterRows}=require('../../helpers/roster-db.cjs');
 const repo = process.cwd();
 const fixturePath = 'test/client/battlesim/sword-of-samurai-integration.fixture';
 const styles = ['style', 'charsheet', 'equipment', 'battlesim', 'confirm'];
-const rosterSeedFile = 'data/simulator-rosters/672.json';
-const rosterSeed = fs.existsSync(rosterSeedFile) ? JSON.parse(fs.readFileSync(rosterSeedFile, 'utf8')).enemies : [];
-const files = [...(fs.existsSync(rosterSeedFile) ? [rosterSeedFile] : []), fixturePath, __filename, 'test/client/battlesim/browser-harness.cjs', 'public/js/battlesim/loader.js', 'public/mobile/js/battlesim-dispatch.js',
+const rosterSeed = getRosterRows(672);
+const files = ['test/helpers/roster-db.cjs', fixturePath, __filename, 'test/client/battlesim/browser-harness.cjs', 'public/js/battlesim/loader.js', 'public/mobile/js/battlesim-dispatch.js',
   'public/js/battlesim/battlesim672.js', 'public/js/core/state.js', 'public/js/core/util.js',
   ...['panel', 'core', 'character', 'roster'].map(name => 'public/js/battlesim/engines/sword-of-samurai/' + name + '.js'),
   'public/js/i18n/en/battlesim/battlesim672.js', ...styles.map(name => 'public/css/' + name + '.css')];

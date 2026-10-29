@@ -1,10 +1,11 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 
 function fixture(bookId = 400, saved, nameRules) {
-  const seed = JSON.parse(readFileSync(new URL(`../../../data/simulator-rosters/${bookId}.json`, import.meta.url), 'utf8'));
+  const seed = readRosterDocument(bookId);
   const requiresDivineNameRules = nameRules || seed.enemies.map(row => new RegExp(row.stats.entry.namePattern, row.stats.entry.flags));
   const key = `sim${bookId}`;
   const pt = saved ? { [key]: structuredClone(saved) } : {};

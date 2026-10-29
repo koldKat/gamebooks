@@ -1,3 +1,4 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -21,7 +22,7 @@ test('saved captain fights retain checkpoint behavior without new saved fields',
 });
 
 test('alternate metadata controls captain groups, gaze, surprise and volley outcomes',async()=>{
-  const seed=JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/724.json',import.meta.url),'utf8'));
+  const seed=readRosterDocument(724);
   for(const row of seed.enemies){
     const settings=row.stats.entry.npcRules;
     if(settings?.captain)Object.assign(settings.captain,{frontline:[1,2],enemyIndex:0,stamina:7,destination:900,mercyDestination:901});

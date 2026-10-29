@@ -1,9 +1,10 @@
+const { readRosterDocument } = require('./helpers/roster-db.cjs');
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const fs = require('node:fs');
 const { readFileSync: readSimulatorSource } = require('./client/battlesim/simulator-source.mjs');
 const source = fs.readFileSync(require('node:path').join(__dirname, '../public/js/battlesim/engines/tetiva.js'), 'utf8');
-const entries = require('../data/simulator-rosters/753.json').enemies.map(row=>row.stats.entry);
+const entries = readRosterDocument(753).enemies.map(row=>row.stats.entry);
 const rules = Object.fromEntries(entries.map(entry=>[entry.section,entry.effects]));
 const engine = import('data:text/javascript;base64,' + Buffer.from(source).toString('base64')).then(module=>({...module,rawTetivaEncounter:module.tetivaEncounter,tetivaEncounter:section=>module.tetivaEncounter(section,rules)}));
 function state(section = 0) {

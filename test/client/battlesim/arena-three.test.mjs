@@ -1,9 +1,10 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 
 const source = readFileSync(new URL('../../../public/js/battlesim/battlesim716.js', import.meta.url), 'utf8');
-const seed = JSON.parse(readFileSync(new URL('../../../data/simulator-rosters/716.json', import.meta.url), 'utf8'));
+const seed = readRosterDocument(716);
 const rules = Object.fromEntries(seed.enemies.map(row => [row.stats.entry.enemyName, row.stats.entry]));
 const combat = source.slice(source.indexOf('function _ready('), source.indexOf('function _resetBattle()'));
 const battle = version => ({

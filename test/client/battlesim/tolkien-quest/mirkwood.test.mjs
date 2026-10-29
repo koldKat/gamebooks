@@ -1,10 +1,11 @@
+import { readRosterDocument } from '../../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {character,beginFight,round,modifiers,missileRound,resolveOutcome} from '../../../../public/js/battlesim/engines/tolkien-quest/core.js';
 import {loadRoster,getRoster} from '../../../../public/js/battlesim/books/1438/definition.js';
 
-const catalog=JSON.parse(readFileSync('data/simulator-rosters/1438.json','utf8'));
+const catalog=readRosterDocument(1438);
 await loadRoster(async url=>{assert.equal(url,'/api/books/1438/enemies');return {ok:true,json:async()=>structuredClone(catalog.enemies)};});
 const entry=section=>getRoster().find(e=>e.section===section);
 const hero=extra=>character({endurance:100,...extra});

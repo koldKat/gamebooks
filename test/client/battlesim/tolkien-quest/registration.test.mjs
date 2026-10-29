@@ -1,10 +1,11 @@
+import { readRosterDocument } from '../../../helpers/roster-db.cjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {getRoster,loadRoster} from '../../../../public/js/battlesim/books/1436/definition.js';
 import {getRoster as getWeathertopRoster,loadRoster as loadWeathertopRoster} from '../../../../public/js/battlesim/books/1437/definition.js';
-const catalog=JSON.parse(readFileSync('data/simulator-rosters/1436.json','utf8'));
+const catalog=readRosterDocument(1436);
 
 test('database catalog preserves signed TQ stats and expands only the printed roster reference',async()=>{
   assert.equal(catalog.enemies.length,39);assert.equal(new Set(catalog.enemies.map(e=>e.key)).size,39);
@@ -34,7 +35,7 @@ test('new and previous simulator register outcome XP once and ignore non-battle 
 });
 
 test('Weathertop database roster preserves groups, source modifiers and individual entry variants',async()=>{
-  const catalog=JSON.parse(readFileSync('data/simulator-rosters/1437.json','utf8'));
+  const catalog=readRosterDocument(1437);
   assert.equal(catalog.enemies.length,42);assert.equal(new Set(catalog.enemies.map(e=>e.key)).size,42);
   await loadWeathertopRoster(async url=>{assert.equal(url,'/api/books/1437/enemies');return {ok:true,json:async()=>structuredClone(catalog.enemies)};});
   const roster=getWeathertopRoster(),entry=id=>roster.find(e=>e.section===id);assert.equal(roster.length,37);

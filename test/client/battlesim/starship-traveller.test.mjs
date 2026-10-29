@@ -1,10 +1,11 @@
+import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
 import vm from 'node:vm';
 import {readFileSync as readSeed} from 'node:fs';
 
-const damageSeed = JSON.parse(readSeed(new URL('../../../data/simulator-rosters/186.json', import.meta.url), 'utf8'));
+const damageSeed = readRosterDocument(186);
 
 function fixture(saved) {
   const source = readFileSync(new URL('../../../public/js/battlesim/battlesim186.js', import.meta.url), 'utf8')
