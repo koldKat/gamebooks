@@ -83,6 +83,49 @@ for(const id of BOOK_IDS){
     const options = [...overlay.querySelectorAll('[role="option"]')];
     check(options.some(option => option.textContent.includes(rosterSeeds[id][0].name)), 'legacy roster displays installed opponent ' + id);
   }
+  if(id===1453){
+    const el=key=>document.getElementById('sim1453-'+key),run=app.currentPlaythrough(),data=()=>run.sim1453;
+    const {getRoster,getPlayerDefaults}=await import('REPO/public/js/battlesim/books/1453/definition.js');
+    check(getRoster().length===60&&requestedRosters.has(id),'Sonic full DB roster');
+    run.inventory={keep:['shared item']};run.equipment={keep:'shared equipment'};run.sim1445={keep:'unrelated saved fight'};
+    const preserved=JSON.stringify([run.inventory,run.equipment,run.sim1445]);
+    const random=Math.random;
+    const set=(key,value)=>{el(key).value=value;};
+    const choose=section=>{el('encounter').value=section;el('encounter').dispatchEvent(new Event('change',{bubbles:true}));};
+    const cancel=()=>{if(['fighting','paused'].includes(data()?.fight?.status)){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    const reset=()=>{delete run.sim1453;module.render();};
+    const strong=()=>{for(const key of Object.keys(getPlayerDefaults().abilities))set('ability-'+key,20);el('applyCharacter').click();};
+    try{
+      Math.random=()=>0;
+      for(const entry of getRoster()){
+        reset();choose(entry.section);strong();el('start').click();
+        check(data().fight?.config.section===entry.section,'Sonic preset starts '+entry.section);
+        check(el('rings').disabled&&el('encounter').disabled&&el('combatAbility').disabled,'Sonic setup locks '+entry.section);
+        let rounds=0;while(data().fight.status==='fighting'&&rounds++<100)el('attack').click();
+        check(data().fight.status==='win'&&data().history.length===1,'Sonic preset victory '+entry.section);
+        const saved=JSON.stringify(data());module.render();module.render();check(JSON.stringify(data())===saved,'Sonic rendering preserves battle '+entry.section);
+      }
+      reset();choose('');strong();
+      let row=overlay.querySelector('.bsim-opponent-row');row.querySelector('[role="combobox"]').value='Custom robot';
+      row.querySelector('[data-stat="rating"]').value=1;row.querySelector('[data-stat="hits"]').value=1;
+      el('start').click();el('attack').click();check(data().fight.status==='win'&&data().fight.opponents[0].name==='Custom robot','Sonic ordinary custom fight');
+      reset();choose('120');set('ability-goodLooks',0);el('applyCharacter').click();
+      let rolls=[0,0.5,0.6];Math.random=()=>{check(rolls.length,'Sonic special-ray rolls');return rolls.shift();};
+      el('start').click();el('attack').click();check(data().fight.status==='paused'&&data().fight.section==='199'&&data().character.lives===3,'Sonic missed ray freezes only Tails');
+      choose('199');check(!el('resume').disabled,'Sonic matching continuation enabled');
+      const paused=JSON.stringify(data().fight.opponents);el('resume').click();check(data().fight.config.bonus===0&&JSON.stringify(data().fight.opponents)===paused,'Sonic continuation retains opponents without companion bonus');cancel();
+      reset();choose('82');set('ability-coolness',0);el('applyCharacter').click();rolls=[0,0.5];Math.random=()=>rolls.shift();
+      el('start').click();el('attack').click();check(data().fight.section==='168'&&data().character.lives===2,'Sonic Knuckles hit applied once');
+      cancel();choose('168');el('entryEffects').checked=true;Math.random=()=>0;el('start').click();check(data().character.lives===2,'Sonic destination does not duplicate its recorded hit');cancel();
+      reset();choose('8');strong();set('elapsed',9);el('applyCharacter').click();el('start').click();el('attack').click();check(data().fight.status==='loss'&&data().fight.section==='224'&&data().character.elapsed===10,'Sonic countdown expiry after victory');
+      reset();set('rings',100);el('extraLife').click();check(data().character.rings===0&&data().character.lives===4,'Sonic explicit ring-to-life exchange');
+      choose('');el('start').click();el('cancel').click();const saved=JSON.stringify(data());app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();check(JSON.stringify(data())===saved,'Sonic stale confirmation cannot end another view fight');app.setCurrentBookId(id);button.click();cancel();
+      const original=JSON.stringify(data());app.state.playthroughs=[{startedAt:2,path:[1]}];app.state.activePtIndex=0;
+      el('start').click();check(app.currentPlaythrough().sim1453===undefined,'Sonic stale controls do not initialize or change a new run');
+      app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Sonic original run retained');
+      check(JSON.stringify([run.inventory,run.equipment,run.sim1445])===preserved,'Sonic shared items and unrelated simulator preserved');
+    }finally{Math.random=random;}
+  }
   if(id===781){
     const {ROSTER}=await import('REPO/public/js/battlesim/books/781/definition.js');
     const el=key=>document.getElementById('sim781-'+key),state=()=>app.currentPlaythrough().sim781,random=Math.random;
