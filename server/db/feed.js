@@ -421,13 +421,15 @@ function getFeed() {
       gainedAbility, newAbilityCount: gainedAbility ? abilitiesNow : null });
   }
 
-  const jobRows = db.prepare(`SELECT e.level, e.created_at, u.username, u.public_profile,
+  const jobRows = db.prepare(`SELECT e.level, e.created_at, jt.template AS jobLevelUpTemplate, u.username, u.public_profile,
     u.avatar_path, u.xp, u.is_author, u.is_contributor, u.is_moderator, u.is_squire, u.display_name
     FROM job_level_events e JOIN users u ON u.id=e.user_id
+    LEFT JOIN job_level_up_templates jt ON jt.id=e.template_id
     WHERE e.created_at > ? AND u.hide_from_feed=0`).all(cutoffSec);
   for (const row of jobRows) {
     entries.push({ type: 'job_level_up', username: row.username, level: row.level,
-      levelTitle: getJobTitle(row.level), completedAt: row.created_at * 1000,
+      levelTitle: getJobTitle(row.level), jobLevelUpTemplate: row.jobLevelUpTemplate,
+      completedAt: row.created_at * 1000,
       userPublicProfile: row.public_profile === 1,
       isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1,
       isModerator: row.is_moderator === 1, isSquire: row.is_squire === 1,

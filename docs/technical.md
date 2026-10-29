@@ -1629,6 +1629,7 @@ forum_categories (id PK AUTOINCREMENT, name TEXT, slug TEXT UNIQUE, description 
 forum_threads (id PK AUTOINCREMENT, user_id → users SET NULL, category_id → forum_categories, title TEXT, body TEXT, reply_count INT DEFAULT 0, is_locked INT DEFAULT 0, is_pinned INT DEFAULT 0, last_post_at, created_at, edited_at)
 forum_posts (id PK AUTOINCREMENT, thread_id → forum_threads CASCADE, user_id → users SET NULL, body TEXT, is_deleted INT DEFAULT 0, created_at, edited_at)
 level_up_templates (id PK AUTOINCREMENT, template TEXT UNIQUE, active INT DEFAULT 1, created_at)
+job_level_up_templates (id PK AUTOINCREMENT, template TEXT UNIQUE, active INT DEFAULT 1, created_at)
 join_templates (id PK AUTOINCREMENT, template TEXT UNIQUE, active INT DEFAULT 1, created_at)
 taglines (id PK AUTOINCREMENT, text TEXT UNIQUE, active INTEGER DEFAULT 1)
 attachments (
@@ -3424,7 +3425,7 @@ Rubies now buy and sell for the player’s current level in GC. The digging upgr
 
 ### Job Level and ruby digging
 
-Job Level promotions are stored separately in `job_level_events`, atomically with Job XP, without generating extra XP or coins. The activity feed includes them under Achievements and receives live SSE invalidation; feed privacy settings apply. Existing levels remain visible in admin player lists and details, without inventing historical promotion dates.
+Job Level promotions are stored separately in `job_level_events`, atomically with Job XP, without generating extra XP or coins. Each promotion stores a `template_id` from `job_level_up_templates`, selected from active templates when earned; existing promotions receive a template once without changing their dates or levels. Feed reads join the saved template, so refreshes retain the same wording. The pool starts with 91 trade-themed messages and participates in the standard player-count template top-ups. The activity feed includes promotions under Achievements and receives live SSE invalidation; feed privacy settings apply. Existing levels remain visible in admin player lists and details, without inventing historical promotion dates.
 
 Ruby digging uses Job Level for both the automatic bonus and the maximum number of purchased bonuses. Each contributes 0.1% per level or purchase. Purchase number `n` costs `10*n` GC; admin refunds use the same prices. Job XP counts non-heartbeat XP events using the normal triangular 1,000-point level thresholds, with a cap of `floor(user_count/10)` and a buffer ending one point below the next level. Existing levels survive a falling cap. Job XP and player mining advance in one SQLite trigger, so an event reaching a new Job Level uses that level's digging bonus without depending on trigger order. Mining keeps its existing integer carry and changes only future progress. Normal XP continues to determine ruby exchange rates. `job_digging_refunds` records the one-time reimbursement of the original digging upgrade costs; its migration marker prevents another refund or reset of subsequent purchases.
 

@@ -107,6 +107,12 @@ if (!baseline) {
   const jobEntry = { ...base, type: 'job_level_up', levelTitle: 'Sifter' };
   const jobHtml = modules.get(resolve(root, 'feed/render.js')).namespace.renderFeedContents([jobEntry], null, '').html;
   assert.ok(jobHtml.includes('feed-entry--joblevel') && jobHtml.includes('Sifter'));
+  const jobTemplateHtml = modules.get(resolve(root, 'feed/render.js')).namespace.renderFeedContents([
+    {...jobEntry,jobLevelUpTemplate:'Tools down! {name} reached Job Level {level}: {title}. <script>bad</script>'}
+  ], null, '').html;
+  assert.ok(jobTemplateHtml.includes('Tools down!') && jobTemplateHtml.includes('feed-level') && jobTemplateHtml.includes('Sifter'));
+  assert.ok(jobTemplateHtml.includes('&lt;script&gt;bad&lt;/script&gt;') && !jobTemplateHtml.includes('<script>'));
+  assert.ok(!/\{(?:name|level|title)\}/.test(jobTemplateHtml),'all template placeholders render');
   const filter = modules.get(resolve(root, 'feed/filters.js')).namespace.filterFeedEntries;
   assert.equal(filter([jobEntry, { ...base, type:'level_up' }], new Set(['achievements'])).length, 0);
   assert.equal(filter([jobEntry], new Set(['players','runs'])).length, 1);

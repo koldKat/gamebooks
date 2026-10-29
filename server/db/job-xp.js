@@ -1,5 +1,7 @@
 'use strict';
 
+const { initializeJobLevelTemplates } = require('./job-level-templates');
+
 // Job XP counts events, independently of awarded XP, boosts and mining bonuses.
 function initializeJobXp(db) {
   db.transaction(() => {
@@ -21,12 +23,6 @@ function initializeJobXp(db) {
         created_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
         PRIMARY KEY(user_id,level));
       CREATE INDEX IF NOT EXISTS job_level_events_created_at ON job_level_events(created_at);
-      CREATE TRIGGER IF NOT EXISTS record_job_level AFTER UPDATE OF xp ON user_job_xp
-        WHEN CAST((sqrt(1+8*NEW.xp/1000.0)-1)/2 AS INTEGER) >
-          CAST((sqrt(1+8*OLD.xp/1000.0)-1)/2 AS INTEGER) BEGIN
-        INSERT OR IGNORE INTO job_level_events(user_id,level)
-          VALUES(NEW.user_id,CAST((sqrt(1+8*NEW.xp/1000.0)-1)/2 AS INTEGER));
-      END;
       CREATE TRIGGER IF NOT EXISTS job_xp_user_created AFTER INSERT ON users BEGIN
         UPDATE job_xp_policy SET user_count=user_count+1 WHERE id=1;
       END;
@@ -53,6 +49,7 @@ function initializeJobXp(db) {
           FROM user_job_xp j JOIN users u ON u.id=j.user_id WHERE j.user_id=NEW.user_id
         )) AS rate WHERE user_id=NEW.user_id;
       END;`);
+    initializeJobLevelTemplates(db);
   }).immediate();
 }
 

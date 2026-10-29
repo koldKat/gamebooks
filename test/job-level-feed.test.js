@@ -36,11 +36,15 @@ test('Job promotions use the feed privacy/cutoff rules and invalidate the pollin
     INSERT INTO job_level_events(user_id,level) VALUES(1,2),(2,1),(3,1);
     UPDATE users SET hide_from_feed=1 WHERE id=2;
     UPDATE job_level_events SET created_at=1 WHERE user_id=3;`);
+  const template = db.prepare('SELECT id,template FROM job_level_up_templates LIMIT 1').get();
+  db.prepare('UPDATE job_level_events SET template_id=? WHERE user_id=1').run(template.id);
   assert.notEqual(api.getFeedVersion(),before);
   const events=api.getFeed();
   assert.equal(events.length,1);
   assert.equal(events[0].type,'job_level_up'); assert.equal(events[0].level,2);
   assert.equal(events[0].levelTitle,'Sifter'); assert.equal(events[0].userTitle,'Main title');
+  assert.equal(events[0].jobLevelUpTemplate,template.template);
+  assert.equal(api.getFeed()[0].jobLevelUpTemplate,template.template,'feed refresh preserves selected wording');
   assert.equal(events[0].isSquire,true); assert.equal(events[0].displayName,'Reader');
   assert.equal(events[0].userPublicProfile,true);
   db.exec('UPDATE users SET public_profile=0 WHERE id=1');
