@@ -532,5 +532,5 @@
 /* Keep empty tracks visible against the My Books progress panels. */
 #books-xp-bar, #books-job-xp-bar, #avg-lvl-bar,
 #app-xp-bar, #app-job-xp-bar, .books-xp-mini-track {
-  background: #303a48;
+  background: #2c3644;
 }
