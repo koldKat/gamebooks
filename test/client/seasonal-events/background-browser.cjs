@@ -21,7 +21,19 @@ body.feed-collapsed #feed-panel{opacity:0;max-height:0;overflow:hidden}
 let seed=42;Math.random=()=>((seed=(1664525*seed+1013904223)>>>0)/4294967296);
 const {createHalloweenBackground}=await import('file://${base}/js/seasonal-events/background.js');
 const check=(ok,label)=>{if(!ok)throw Error(label);},delay=ms=>new Promise(r=>setTimeout(r,ms));
+const topButton=document.createElement('button');topButton.className='scroll-top-btn';
+topButton.style.cssText='position:fixed;bottom:22px;left:50%;width:32px;height:32px;opacity:0';
+document.body.append(topButton);
+const footer=document.createElement('footer');footer.id='app-footer';footer.textContent='Footer';
+footer.style.cssText='width:200px;height:30px;margin:auto';document.getElementById('landing-wrapper').append(footer);
 const stop=createHalloweenBackground();await delay(350);
+// Use a genuinely scrolling feed and a footer that can move in and out of view.
+const landing=document.getElementById('landing-wrapper'),feed=document.getElementById('feed-panel');
+landing.style.cssText='height:100vh;overflow:auto;position:relative';
+feed.style.position='relative';feed.style.height='2400px';
+const tail=document.createElement('div');tail.style.height='1400px';landing.append(tail);
+landing.append(footer);
+await delay(350);
 const visible=()=>[...document.querySelectorAll('.seasonal-background__icon')].filter(icon=>!icon.hidden);
 if(innerWidth<1400){
  const small=visible();check(small.length>0,'icons present in tight feed gutters');
@@ -42,13 +54,21 @@ check(new Set(rects.filter(r=>r.left>1368).map(r=>Math.round(r.left))).size>=2,'
 const layer=document.querySelector('.seasonal-background');let redraws=0;
 const observer=new MutationObserver(()=>redraws++);observer.observe(layer,{attributes:true,childList:true,subtree:true});
 const original=icons.map(icon=>icon.style.cssText);
-for(let i=0;i<30;i++)document.getElementById('landing-wrapper').dispatchEvent(new Event('scroll'));
+for(const top of [landing.scrollHeight,300,1100,0]){
+ landing.scrollTop=top;topButton.classList.toggle('visible',top>200);await delay(350);
+ check(original.every((style,i)=>icons[i].style.cssText===style),'actual scroll keeps icon positions');
+}
+landing.scrollTop=landing.scrollHeight;topButton.classList.add('visible');await delay(350);
+check(feed.getBoundingClientRect().bottom<=0,'End scroll puts the feed itself out of view');
+check(visible().every(icon=>{const r=icon.getBoundingClientRect();return r.right<=680||r.left>=1368;}),'offscreen feed column stays protected');
+landing.scrollTop=0;topButton.classList.remove('visible');await delay(350);
 document.body.classList.add('unrelated-refresh');await delay(300);
 check(redraws===0,'no redraw on scroll or unrelated class updates');
 check(original.every((style,i)=>icons[i].style.cssText===style),'stable positions and sizes');observer.disconnect();
 document.body.classList.add('covers-collapsed');await delay(300);
 await delay(350);icons=visible();check(icons.some(icon=>icon.getBoundingClientRect().left<320)&&icons.some(icon=>icon.getBoundingClientRect().left>1176),'fills newly opened left space');
 document.body.classList.remove('covers-collapsed');await delay(650);
+check(original.every((style,i)=>icons[i].style.cssText===style),'restoring the same layout restores exact positions');
 document.body.classList.add('right-collapsed');await delay(650);
 check(visible().some(icon=>icon.getBoundingClientRect().right>1700),'fills newly opened right space');
 document.body.classList.remove('right-collapsed');await delay(650);
@@ -59,7 +79,7 @@ document.body.classList.add('covers-collapsed');await delay(220);
 check(getComputedStyle(layer).display==='none','all panels hidden removes icons');
 document.body.classList.remove('covers-collapsed','right-collapsed','feed-collapsed');await delay(350);
 check(getComputedStyle(layer).display!=='none'&&visible().length>=7,'restores with panels');
-document.body.dataset.test=JSON.stringify({density:visible().length,bothSides:true,variedSizes:true,randomPositions:true,noScrollRedraws:true,collapse:true});
+document.body.dataset.test=JSON.stringify({density:visible().length,bothSides:true,variedSizes:true,randomPositions:true,noScrollRedraws:true,endScroll:true,repeatLayoutStable:true,collapse:true});
 }
 </script>`;
 (async()=>{try{fs.writeFileSync(file,html);for(const width of [2048,1280]){const result=await checkBrowser({file,root,profile:path.join(root,'profile-'+width),width,chromium:process.env.CHROMIUM,timeoutMs:12000,screenshotPath:width===1280?process.env.SEASONAL_SCREENSHOT:undefined});console.log(JSON.stringify({width,...result}));}}finally{fs.rmSync(root,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1;});

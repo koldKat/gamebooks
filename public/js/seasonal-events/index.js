@@ -33,7 +33,9 @@ export function initSeasonalEvents({ now = () => new Date(), random = Math.rando
       }
       notice.hidden = !text;
     }
-    const active = !document.hidden && seasonalEventsEnabled() && event?.id === 'halloween';
+    // Keep the same artwork and scatter when a tab is backgrounded and restored.
+    // The cursor handles visibility itself; recreating decorations would randomize them.
+    const active = seasonalEventsEnabled() && event?.id === 'halloween';
     if (active && pointer.matches && !decoration) decoration = createPumpkin({ random });
     if ((!active || !pointer.matches) && decoration) { decoration(); decoration = null; }
     if (active && !background) background = createHalloweenBackground();

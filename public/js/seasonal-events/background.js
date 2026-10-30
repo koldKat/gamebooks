@@ -2,6 +2,12 @@
 import { seasonalGapPositions } from './gaps.js';
 import { halloweenArtwork } from './artwork.js';
 
+// A document gets one scatter; returning to the same layout reproduces it exactly.
+const pageSeed = Math.floor(Math.random() * 0x100000000);
+function layoutRandom() {
+  let seed = pageSeed;
+  return () => ((seed = (Math.imul(1664525, seed) + 1013904223) >>> 0) / 0x100000000);
+}
 
 export function createHalloweenBackground() {
   const landing = document.getElementById('landing-wrapper');
@@ -18,8 +24,9 @@ export function createHalloweenBackground() {
     patch.hidden = true; layer.append(patch); return patch;
   });
   const variants = [8, 9, 10, 11, 12, 13];
+  const random = layoutRandom();
   for (let i = variants.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(random() * (i + 1));
     [variants[i], variants[j]] = [variants[j], variants[i]];
   }
   const portfolio = [0, 2, 1, 3, 4, 5, 6, 7, ...variants];
@@ -29,8 +36,8 @@ export function createHalloweenBackground() {
     icon.className = 'seasonal-background__icon';
     icon.dataset.kind = String(kind);
     icon.dataset.artwork = String(index);
-    icon.dataset.rotation = String(kind === 4 ? Math.floor(Math.random() * 4) * 90 : 0);
-    icon.dataset.flip = Math.random() < .5 ? '-1' : '1';
+    icon.dataset.rotation = String(kind === 4 ? Math.floor(random() * 4) * 90 : 0);
+    icon.dataset.flip = random() < .5 ? '-1' : '1';
     icon.innerHTML = `<svg viewBox="0 0 48 48" focusable="false">${svg}</svg>`;
     return icon;
   });
@@ -41,15 +48,21 @@ export function createHalloweenBackground() {
     if (layer.hidden) return;
     const occupied = panels.filter(panel => {
       const s = getComputedStyle(panel), rect = panel.getBoundingClientRect();
+      const column = ['covers-panel', 'feed-panel', 'landing-right'].includes(panel.id);
       if (panel.id === 'app-footer' && getComputedStyle(document.getElementById('feed-panel')).opacity === '0') return false;
-      return s.display !== 'none' && s.visibility !== 'hidden' && s.opacity !== '0' && rect.width && rect.height
-        && rect.right > 0 && rect.left < innerWidth && rect.bottom > 0 && rect.top < innerHeight;
+      // A scrolled-away feed still occupies its column. Reserve fixed controls even
+      // while faded out, so revealing a scroll-to-top button cannot reshuffle icons.
+      return s.display !== 'none' && s.visibility !== 'hidden' && (!column || s.opacity !== '0') && rect.width && rect.height
+        && rect.right > 0 && rect.left < innerWidth
+        && (column || panel.id === 'app-footer' || (rect.bottom > 0 && rect.top < innerHeight));
     }).map(panel => {
       const rect = panel.getBoundingClientRect();
       if (panel.id === 'feed-panel') {
         const style = getComputedStyle(panel);
         return {left:rect.left+parseFloat(style.paddingLeft),right:rect.right-parseFloat(style.paddingRight),top:0,bottom:innerHeight};
       }
+      // Reserve its eventual bottom-of-viewport position, independent of feed scroll.
+      if (panel.id === 'app-footer') return {left:rect.left,right:rect.right,top:innerHeight-rect.height,bottom:innerHeight};
       return ['covers-panel', 'feed-panel', 'landing-right'].includes(panel.id)
         ? {left:rect.left,right:rect.right,top:0,bottom:innerHeight}
         : {left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom};
@@ -72,7 +85,7 @@ export function createHalloweenBackground() {
     }
     // Redistribute into newly opened space after a real panel-layout change.
     // Unchanged geometry returns above, preserving positions during ordinary use.
-    positions = seasonalGapPositions(innerWidth, innerHeight, occupied);
+    positions = seasonalGapPositions(innerWidth, innerHeight, occupied, { random: layoutRandom() });
     for (const [index, icon] of nodes.entries()) {
       const point = positions[index];
       icon.hidden = !point;

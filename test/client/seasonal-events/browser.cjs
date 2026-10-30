@@ -26,7 +26,7 @@ window.matchMedia=query=>query==='(any-pointer: fine)'?{matches:true,addEventLis
 // Exercise the rare effects without waiting several minutes in a browser check.
 const nativeTimeout=window.setTimeout.bind(window),rareDelays=[];
 window.setTimeout=(callback,ms,...args)=>{
- const accelerated=new Map([[35000,10000],[45000,13000],[60000,18000]]);
+ const accelerated=new Map([[70000,10000],[90000,13000],[120000,18000]]);
  if(accelerated.has(ms))rareDelays.push(ms);
  return nativeTimeout(callback,accelerated.get(ms)??ms,...args);
 };
@@ -60,7 +60,7 @@ check(!pumpkin.hidden,'follows mouse');check(pumpkin.getAttribute('aria-hidden')
 check(getComputedStyle(pumpkin).pointerEvents==='none','click through');
 check(document.elementFromPoint(220,190).id==='target','decoration does not block button');
 check(getComputedStyle(document.getElementById('target')).cursor==='pointer','normal cursor retained');
-check([35000,45000,60000].every(ms=>rareDelays.includes(ms)),'rare actions use longer intervals');
+check([70000,90000,120000].every(ms=>rareDelays.includes(ms)),'rare actions use longer intervals');
 await blink;await delay(220);
 check(!pumpkin.classList.contains('is-blinking'),'eyes reopen');
 check(pumpkin.style.getPropertyValue('--pumpkin-look-x')==='-2.0px','looks around');
@@ -86,6 +86,15 @@ check(!pumpkin.classList.contains('is-clacking')&&!pumpkin.classList.contains('i
 document.getElementById('landing-wrapper').style.visibility='visible';await delay(350);
 let icons=[...document.querySelectorAll('.seasonal-background__icon')];
 check(icons.length===14,'seven background decorations per gap');
+const beforeTab=icons.map(icon=>icon.style.cssText),background=document.querySelector('.seasonal-background');
+let tabHidden=false;
+Object.defineProperty(document,'hidden',{configurable:true,get:()=>tabHidden});
+for(let i=0;i<3;i++){
+ tabHidden=true;document.dispatchEvent(new Event('visibilitychange'));await delay(30);
+ tabHidden=false;document.dispatchEvent(new Event('visibilitychange'));await delay(350);
+ check(document.querySelector('.seasonal-background')===background,'tab switch keeps background node');
+ check(icons.every((icon,index)=>icon.isConnected&&icon.style.cssText===beforeTab[index]),'tab switch preserves icons and exact scatter');
+}
 for(const icon of icons){
  const rect=icon.getBoundingClientRect();
  for(const id of ['covers-panel','feed-panel','landing-right']){
@@ -112,7 +121,7 @@ date=new Date(2027,9,31);refresh();check(document.querySelectorAll('.seasonal-pu
 stop();check(!document.querySelector('.seasonal-pumpkin'),'cleanup');
 document.body.classList.remove('reduce-motion');
 initSeasonalEvents({now:()=>date});move();await delay(80);
-document.body.dataset.test=JSON.stringify({calendar:true,pointer:true,blink:true,glances:true,mouth:true,drool:true,clack:true,background:true,settings:true,persistence:true,reducedMotion:true,cleanup:true});
+document.body.dataset.test=JSON.stringify({calendar:true,pointer:true,blink:true,glances:true,mouth:true,drool:true,clack:true,background:true,tabSwitchStable:true,settings:true,persistence:true,reducedMotion:true,cleanup:true});
 </script>`;
 
 (async () => {
