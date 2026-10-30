@@ -31,6 +31,10 @@ Halloween runs from **October 28 through November 3** each year. A scary pumpkin
 
 **Diwali**, the Festival of Lights, runs for three days before and three days after its main day, inclusive. Its date moves each year; in **2026 the event runs November 5–11**. Pixel lamps, lanterns, rangoli, flowers, sweets and fireworks decorate the panel gaps, and a small lamp follows a mouse pointer. Its flame flickers, occasionally flares, releases glowing embers or curls a little smoke. Diwali gives **double XP for normal wins and simulator wins**, including first-win awards. Activation and expiry happen automatically in open tabs, using Europe/Sofia dates. The same Ctrl+Y decoration setting and Reduce animations preference apply. If events overlap, both reward notices remain visible; the nearest festival supplies the decorations.
 
+**Christmas** runs **December 22–28**. Father Christmas follows the mouse, blinks, looks around, laughs with comic “Ho!” words, rings a bell and tosses a gift. Christmas doubles XP for wins, simulator wins, new runs, discovering or mapping every section of a book, and heartbeats.
+
+**New Year** runs **December 29–January 4**. A ticking clock follows the mouse with occasional countdown, fireworks and confetti animations. Every XP award is doubled, including job XP. Both winter events have 27 pixel sprites and use the same decoration and reduced-animation settings.
+
 ### Centre - Activity feed
 
 Shows what everyone's been up to over the last 30 days. You don't need an account to read it.

@@ -1,3 +1,4 @@
+@import url('./winter-events.css');
 /* Seasonal cursor companions stay decorative and never intercept interaction. */
 .seasonal-pumpkin {
   position: fixed;

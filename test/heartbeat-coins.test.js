@@ -23,7 +23,7 @@ test('heartbeat coins still accrue at the XP level cap, deduplicate tabs and rej
  const db=fixture(t),fs=require('fs'),vm=require('vm');let impersonating=false;
  for(const column of ['xp','bonus_heartbeat_xp','heartbeat_carry','pending_bonus_gc','bonus_gc_chance_purchased'])db.exec('ALTER TABLE users ADD COLUMN '+column+' INTEGER DEFAULT 0');
  db.exec('UPDATE users SET xp=55000');const code=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');
- const context=vm.createContext({db,advanceHeartbeatCoins,getXpAmount:()=>1,isImpersonatingContext:()=>impersonating,_liveUserCount:()=>1,computeLevel:()=>10,xpForLevel:()=>66000,_rollBonusGc(){},awardXp:()=>false,Date:{now:()=>60000000}});
+ const context=vm.createContext({db,advanceHeartbeatCoins,seasonalXpMultiplier:()=>1,getXpAmount:()=>1,isImpersonatingContext:()=>impersonating,_liveUserCount:()=>1,computeLevel:()=>10,xpForLevel:()=>66000,_rollBonusGc(){},awardXp:()=>false,Date:{now:()=>60000000}});
  vm.runInContext(code.slice(code.indexOf('function awardIdleHeartbeatXp('),code.indexOf('function getUserXpInfo(')),context);
  assert.equal(context.awardIdleHeartbeatXp(1).heartbeatCoinsAwarded,true);assert.equal(context.awardIdleHeartbeatXp(1).heartbeatCoinsAwarded,false);
  impersonating=true;assert.equal(context.awardIdleHeartbeatXp(2).heartbeatCoinsAwarded,false);assert.equal(db.prepare('SELECT COUNT(*) n FROM user_heartbeat_coins WHERE user_id=2').get().n,0);

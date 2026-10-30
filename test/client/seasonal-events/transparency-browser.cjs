@@ -9,8 +9,10 @@ const html=`<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="fi
 <script type="module">
 const {halloweenArtwork}=await import('file://${base}/js/seasonal-events/artwork.js');
 const {diwaliArtwork}=await import('file://${base}/js/seasonal-events/diwali-artwork.js');
+const {christmasArtwork,newYearArtwork}=await import('file://${base}/js/seasonal-events/winter-artwork.js');
+if(christmasArtwork.length!==27||newYearArtwork.length!==27)throw Error('Winter seasons need 27 sprites');
 if(halloweenArtwork.length!==27||diwaliArtwork.length!==27)throw Error('Each season needs 27 sprites');
-const artwork=[...halloweenArtwork,...diwaliArtwork];
+const artwork=[...halloweenArtwork,...diwaliArtwork,...christmasArtwork,...newYearArtwork];
 window.transparentSamples=[];
 for(const [index,art]of artwork.entries()){
  const icon=document.createElement('span');icon.className=art.kind===4?'seasonal-background__web':'seasonal-background__icon';
@@ -30,7 +32,7 @@ for(const [index,art]of artwork.entries()){
  }
 }
 if(window.transparentSamples.length<80)throw Error('Insufficient transparent screen samples');
-requestAnimationFrame(()=>requestAnimationFrame(()=>document.body.dataset.test=JSON.stringify({sprites:artwork.length,halloween:27,diwali:27,transparentSamples:window.transparentSamples.length})));
+requestAnimationFrame(()=>requestAnimationFrame(()=>document.body.dataset.test=JSON.stringify({sprites:artwork.length,halloween:27,diwali:27,christmas:27,newYear:27,transparentSamples:window.transparentSamples.length})));
 </script>`;
 const screenshotCheck=async function(base64){
  const image=new Image();const loaded=new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=reject;});image.src='data:image/png;base64,'+base64;await loaded;

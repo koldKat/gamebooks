@@ -19,7 +19,8 @@ export function seasonWindow(season, year) {
   const stamp = (value, y) => Date.UTC(y, Math.floor(value / 100) - 1, value % 100);
   const start = stamp(season.start, year);
   const end = stamp(season.end, year + (season.end < season.start ? 1 : 0));
-  return { start: iso(start), end: iso(end), center: iso(season.day ? stamp(season.day, year) : (start + end) / 2) };
+  const centerYear = year + (season.end < season.start && season.day < season.start ? 1 : 0);
+  return { start: iso(start), end: iso(end), center: iso(season.day ? stamp(season.day, centerYear) : (start + end) / 2) };
 }
 export function activeSeasons(events, date = new Date()) {
   const today = seasonalDay(date), key = iso(today), year = new Date(today).getUTCFullYear();

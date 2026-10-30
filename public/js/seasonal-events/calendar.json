@@ -12,7 +12,7 @@
   {
     "id": "diwali",
     "title": "Diwali event active",
-    "description": "Festival of Lights — double XP for wins and sim battle wins.",
+    "description": "Festival of Lights: double XP for wins and sim battle wins.",
     "daysAround": 3,
     "dates": {
       "2026": "2026-11-08", "2027": "2027-10-29", "2028": "2028-10-17",
@@ -22,5 +22,25 @@
     "dateSources": ["https://www.timeanddate.com/holidays/india/diwali", "https://www.hinduplace.com/festival/diwali-dates-widget/"],
     "xpMultiplier": 2,
     "xpEvents": ["win_run", "first_win", "first_win_ow", "battlesim_win"]
+  },
+  {
+    "id": "christmas",
+    "title": "Christmas event active",
+    "description": "double XP for wins, sim battle wins, new runs, discovering or mapping whole books, and heartbeats.",
+    "start": 1222,
+    "end": 1228,
+    "day": 1225,
+    "xpMultiplier": 2,
+    "xpEvents": ["win_run", "first_win", "first_win_ow", "battlesim_win", "run_depth", "discover_all", "visit_all", "discover_all_series", "visit_all_series", "discover_all_anthology", "visit_all_anthology", "won_all_series", "won_all_anthology", "idle_heartbeat"]
+  },
+  {
+    "id": "new-year",
+    "title": "New Year event active",
+    "description": "double XP for everything.",
+    "start": 1229,
+    "end": 104,
+    "day": 101,
+    "xpMultiplier": 2,
+    "xpEvents": ["*"]
   }
 ]

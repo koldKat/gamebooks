@@ -445,7 +445,8 @@ function awardIdleHeartbeatXp(userId) {
   if (!isImpersonatingContext() && _liveUserCount() <= curLevel) {
     const room       = Math.max(0, xpForLevel(curLevel + 1) - 1 - curXp);
     const freeBoosts = Math.max(0, curLevel - 10);
-    const add        = Math.min(Math.floor(base + ((row?.bonus_heartbeat_xp ?? 0) + freeBoosts) * 0.1), room);
+    const add        = Math.min(Math.floor((base + ((row?.bonus_heartbeat_xp ?? 0) + freeBoosts) * 0.1)
+      * seasonalXpMultiplier('idle_heartbeat')), room);
     if (add > 0) db.prepare('UPDATE users SET xp = xp + ? WHERE id = ?').run(add, userId);
     _rollBonusGc(userId, curXp, row?.pending_bonus_gc, row?.bonus_gc_chance_purchased);
     const pendingAfter = db.prepare('SELECT pending_bonus_gc FROM users WHERE id = ?').get(userId)?.pending_bonus_gc;

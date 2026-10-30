@@ -10,7 +10,17 @@ test('Halloween runs from October 28 through November 3, inclusive, every year',
     }
     assert.equal(activeSeasonalEvent(new Date(`${year}-11-03T21:59:00Z`))?.id, 'halloween');
     assert.equal(activeSeasonalEvent(new Date(`${year}-11-03T22:00:00Z`)), null);
-    assert.equal(activeSeasonalEvent(new Date(`${year}-01-01T12:00:00Z`)), null);
+    assert.equal(activeSeasonalEvent(new Date(`${year}-01-01T12:00:00Z`))?.id, 'new-year');
+  }
+});
+
+test('winter events activate and expire at Sofia midnight across the year boundary', () => {
+  const christmas=seasonalEvents.find(event=>event.id==='christmas'),newYear=seasonalEvents.find(event=>event.id==='new-year');
+  for(const year of [2026,2027,2035,2050]) {
+    assert.deepEqual(seasonWindow(christmas,year),{start:year+'-12-22',end:year+'-12-28',center:year+'-12-25'});
+    assert.deepEqual(seasonWindow(newYear,year),{start:year+'-12-29',end:(year+1)+'-01-04',center:(year+1)+'-01-01'});
+    for(const [date,id]of [[year+'-12-21T21:59:59Z',undefined],[year+'-12-21T22:00:00Z','christmas'],[year+'-12-28T21:59:59Z','christmas'],[year+'-12-28T22:00:00Z','new-year'],[(year+1)+'-01-04T21:59:59Z','new-year'],[(year+1)+'-01-04T22:00:00Z',undefined]])
+      assert.equal(activeSeasonalEvent(new Date(date))?.id,id,date);
   }
 });
 

@@ -43,7 +43,8 @@ function fixture(t) {
   db.exec(`CREATE TABLE users(id INTEGER PRIMARY KEY,xp INTEGER DEFAULT 0,xp_boost_pct INTEGER DEFAULT 0,
     xp_boost_carry REAL DEFAULT 0,xp_from_boost INTEGER DEFAULT 0,coins_spent INTEGER DEFAULT 0,
     bonus_coins INTEGER DEFAULT 0,pending_bonus_gc INTEGER DEFAULT 0,bonus_gc_generated INTEGER DEFAULT 0,
-    bonus_gc_chance_purchased INTEGER DEFAULT 0,bonus_gc_mint_purchased INTEGER DEFAULT 0);
+    bonus_gc_chance_purchased INTEGER DEFAULT 0,bonus_gc_mint_purchased INTEGER DEFAULT 0,
+    bonus_heartbeat_xp INTEGER DEFAULT 0,heartbeat_carry REAL DEFAULT 0,heartbeat_minutes_banked INTEGER DEFAULT 0);
     INSERT INTO users(id) VALUES(1);
     CREATE TABLE xp_events(user_id INTEGER,event TEXT,ref TEXT,template_id INTEGER,UNIQUE(user_id,event,ref));
     CREATE TABLE coin_events(user_id INTEGER,event TEXT,ref TEXT,amount INTEGER,UNIQUE(user_id,event,ref));
@@ -55,11 +56,12 @@ function fixture(t) {
     isImpersonatingContext:()=>impersonating,
     seasonalXpMultiplier:event=>seasonalXpMultiplier(event,date),
     getXpAmount:event=>({death_run:15,battle_run:15,battlesim_loss:5,win_run:20,battlesim_win:10,first_win:100}[event] ?? 0),
-    getTitleForLevel:()=>''});
+    getTitleForLevel:()=>'',advanceHeartbeatCoins:()=>false});
   const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
   vm.runInContext(source.slice(source.indexOf('function computeLevel('),source.indexOf('function toRoman('))
     + '\n_liveUserCount=()=>1000;',context);
   vm.runInContext(source.slice(source.indexOf('const _awardCoinsTx'),source.indexOf('function awardIdleHeartbeatXp(')),context);
+  vm.runInContext(source.slice(source.indexOf('function awardIdleHeartbeatXp('),source.indexOf('function getUserXpInfo(')),context);
   return {db,context,award:(event,ref,amount)=>context.awardXp(1,event,ref,amount),
     xp:()=>db.prepare('SELECT xp FROM users WHERE id=1').get().xp,
     date:value=>{date=new Date(value);},impersonate:()=>{impersonating=true;}};
@@ -78,6 +80,36 @@ test('real XP transaction doubles losses, preserves boosts and never re-awards a
   f.date('2026-11-04T12:00:00Z');
   f.award('death_run','run:5');assert.equal(f.xp(),480,'normal amount after event');
   assert.equal(f.award('death_run','run:1'),false);assert.equal(f.xp(),480);
+});
+
+test('Christmas doubles wins, new runs, full-book milestones and heartbeats only', t => {
+  const f=fixture(t);f.date('2026-12-25T12:00:00Z');
+  for(const event of ['win_run','battlesim_win','first_win','first_win_ow','run_depth','discover_all','visit_all','discover_all_series','visit_all_series','discover_all_anthology','visit_all_anthology','won_all_series','won_all_anthology','idle_heartbeat']) {
+    const before=f.xp();assert.equal(f.award(event,event,10),true);assert.equal(f.xp()-before,20,event);
+    assert.equal(f.award(event,event,10),false);
+  }
+  for(const event of ['death_run','visit_node','discover_node','add_note','rate_book']) {
+    const before=f.xp();f.award(event,event,10);assert.equal(f.xp()-before,10,event);
+  }
+});
+
+test('New Year doubles every XP event and amount override without duplicating awards',t=>{
+  const f=fixture(t);f.date('2026-12-31T12:00:00Z');
+  for(const event of ['win_run','battlesim_loss','idle_heartbeat','discover_node','add_note','rate_book','upload_cover','future_xp_event']) {
+    const before=f.xp();f.award(event,event,7);assert.equal(f.xp()-before,14,event);assert.equal(f.award(event,event,7),false);
+  }
+  assert.equal(seasonalXpMultiplier('future_xp_event',new Date('2027-01-04T21:59:59Z')),2);
+  assert.equal(seasonalXpMultiplier('future_xp_event',new Date('2027-01-04T22:00:00Z')),1);
+});
+
+test('capped heartbeat banking receives the winter bonus and keeps the cap',t=>{
+  const f=fixture(t);f.date('2026-12-25T12:00:00Z');
+  vm.runInContext('_liveUserCount=()=>0;getXpAmount=()=>1;',f.context);
+  f.db.prepare('UPDATE users SET xp=990 WHERE id=1').run();
+  assert.equal(f.context.awardIdleHeartbeatXp(1).awarded,true);assert.equal(f.xp(),992);
+  f.db.prepare('UPDATE users SET xp=998 WHERE id=1').run();f.context.awardIdleHeartbeatXp(1);assert.equal(f.xp(),999);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n,0);
+  f.impersonate();assert.equal(f.context.awardIdleHeartbeatXp(1).awarded,false);assert.equal(f.xp(),999);
 });
 
 test('real Diwali win rewards preserve deduplication, first-win overrides and normal boosts', t => {

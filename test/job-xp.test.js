@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const Database = require('better-sqlite3');
 const { initializeDiamondBalances } = require('../server/db/diamonds');
 const { initializeJobXp } = require('../server/db/job-xp');
+const { seasonalXpMultiplier } = require('../server/seasonal-events');
 
 function fixture(t, users = 20) {
   const db = new Database(':memory:');
@@ -23,6 +24,17 @@ function fixture(t, users = 20) {
     xp: () => db.prepare('SELECT xp FROM user_job_xp WHERE user_id=1').get()?.xp,
     cap: () => Math.floor(db.prepare('SELECT user_count FROM job_xp_policy').get().user_count / 10) };
 }
+
+test('New Year doubles job XP prospectively while preserving caps, deduplication and gem event counts',t=>{
+  const h=fixture(t);let date=new Date('2026-12-31T12:00:00Z');
+  initializeJobXp(h.db,{xpMultiplier:()=>seasonalXpMultiplier('job_xp',date)});
+  h.add('visit_node',1);assert.equal(h.xp(),2);
+  h.add('visit_node',1);assert.equal(h.xp(),2);
+  h.add('idle_heartbeat',1);assert.equal(h.xp(),2);
+  assert.equal(h.db.prepare('SELECT qualifying_events FROM user_diamonds WHERE user_id=1').get().qualifying_events,1);
+  date=new Date('2027-01-05T12:00:00Z');h.add('add_note',1);assert.equal(h.xp(),3);
+  date=new Date('2027-01-01T12:00:00Z');h.db.exec('UPDATE user_job_xp SET xp=5998 WHERE user_id=1');h.add('set_priority',1);assert.equal(h.xp(),5999);
+});
 
 test('Job XP backfills genuine event counts once, independently of main XP and gem balances', t => {
   const h = fixture(t);
