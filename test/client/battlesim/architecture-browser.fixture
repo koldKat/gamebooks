@@ -249,6 +249,95 @@ for(const id of BOOK_IDS){
       app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Terminator previous run retained');
     }finally{Math.random=random;}
   }
+  if(id===1471){
+    const el=key=>document.getElementById('sim1471-'+key),run=app.currentPlaythrough();
+    const {getRoster,getPlayerDefaults}=await import('REPO/public/js/battlesim/books/1471/definition.js');
+    const {createFleetPanelState}=await import('REPO/public/js/battlesim/engines/combat-command/fleet-state.js');
+    const data=()=>run.sim1471;
+    const byLabel=(holder,label)=>[...holder.querySelectorAll('label')].find(row=>row.firstElementChild?.textContent===label)?.querySelector('input,select');
+    const set=(holder,label,value)=>{const field=byLabel(holder,label);check(field,'Fleet field '+label);field.value=String(value);};
+    const click=(holder,label)=>{const target=[...holder.querySelectorAll('button')].find(button=>button.textContent===label);check(target,'Fleet action '+label);target.click();return target;};
+    const choose=key=>{el('encounter').value=key;check(el('encounter').value===key,'Fleet preset exists '+key);el('encounter').dispatchEvent(new Event('change'));};
+    const reset=()=>{run.sim1471=createFleetPanelState(getPlayerDefaults());module.render();};
+    check(getRoster().length===52&&requestedRosters.has(id),'Fleet reviewed DB roster loaded');
+    const originalPath=JSON.stringify(run.path),random=Math.random;Math.random=()=>.4;
+    let sourceSetups=0;
+    try{
+      for(const entry of getRoster())for(const division of entry.enemyDivisions?[1,2,3]:[null]){
+        reset();choose(entry.key);
+        check(el('setup').querySelectorAll('[data-stat="type"]')[0].disabled,'Fleet preset ship type fixed');
+        if(entry.requiresManualEnemySetup){
+          check(byLabel(el('setup'),'Enemy firing chart').value==='','Fleet missing chart not invented');
+          set(el('setup'),'Enemy firing chart','C');
+          el('setup').querySelector('.bsim-opponent-editor:last-of-type [data-stat="count"]').value='9';
+        }
+        if(division)set(el('setup'),'Initial enemy division',division);
+        if(entry.enemySectors&&entry.initialSector==='player-choice')set(el('setup'),'Initial enemy sector',1);
+        if(entry.firingOrder==='each-sector-in-order'){
+          click(el('setup'),'Set sector deployment from current fleet');
+          const rows=[...el('setup').querySelectorAll('fieldset')].filter(row=>row.querySelector('legend'));
+          check(rows.length===2,'Fleet six-sector deployment rendered');
+          rows.forEach((row,index)=>[...row.querySelectorAll('input')].forEach((field,sector)=>{
+            field.value=String(index===0?(sector===0?2:1):(sector<4?2:1));
+          }));
+        }
+        el('start').click();
+        check(data().fight?.status==='fighting','Fleet source setup starts '+entry.key+'/'+division);
+        check(el('encounter').disabled&&el('start').disabled,'Fleet active setup locked');
+        const frozen=JSON.stringify(data());module.render();check(JSON.stringify(data())===frozen,'Fleet active render preserves data');
+        const controls=el('controls');
+        if(entry.firingOrder==='each-sector-in-order')set(controls,'Firing wing in this sector','destroyer');
+        set(controls,'Your volley: 2d6',7);set(controls,'Enemy: 2d6',7);set(controls,'End-round Morale: 2d6',2);
+        click(controls,'Resolve next exchange');
+        check(data().fight.round>0||data().fight.exchange||data().fight.opposition.kind==='dispersed','Fleet source exchange '+entry.key);
+        const resumed=JSON.stringify(data());run.sim1471=JSON.parse(resumed);module.render();
+        check(JSON.stringify(data())===resumed,'Fleet JSON reload and render preserve fight');
+        sourceSetups++;
+      }
+      check(sourceSetups===80,'Fleet all formation/division setups');
+      reset();choose('105-wedge');set(el('setup'),'Morale',0);set(el('setup'),'Enemy ordnance per ship',100);
+      el('start').click();set(el('controls'),'Your volley: 2d6',2);set(el('controls'),'Enemy: 2d6',12);set(el('controls'),'End-round Morale: 2d6',2);
+      click(el('controls'),'Resolve next exchange');
+      check(data().fight.status==='awaiting-player-losses','Fleet player casualties require choice');
+      const hitCount=data().fight.exchange.pending.hits;
+      check(hitCount>0&&hitCount<=14,'Fleet source casualty fixture hit capacity');
+      el('controls').querySelector('input[type="number"]').value=String(hitCount);
+      click(el('controls'),'Apply allocated hits');
+      check(data().fight.status==='retreat-required','Fleet forced Morale failure shown');
+      set(el('controls'),'Stealth attempt 1: 2d6',2);click(el('controls'),'Attempt withdrawal');
+      check(data().fight.status==='withdrawn'&&data().fight.player.every(unit=>unit.damage===0),'Fleet withdrawal repairs wounds only after encounter');
+      reset();choose(getRoster().find(entry=>entry.section==='105'&&entry.specialAttack).key);el('start').click();
+      const special=el('controls').querySelector('input[type="checkbox"]');check(special,'Fleet eligible special control');special.checked=true;
+      set(el('controls'),'Your volley: 2d6',12);set(el('controls'),'Special second volley: 2d6',12);set(el('controls'),'Enemy: 2d6',2);
+      click(el('controls'),'Resolve next exchange');
+      check(data().fight.tactics.specialUsed||data().fight.exchange?.plan.nextPhase.specialUsed,'Fleet special launches two-volley plan');
+      check((data().fight.exchange?.history??data().fight.history.find(event=>event.kind==='exchange')?.events??[]).filter(event=>event.side==='player').length===2,'Fleet special two volleys logged');
+      reset();set(el('setup'),'Your firing chart','A');set(el('setup'),'Enemy firing chart','G');
+      const editors=el('setup').querySelectorAll('.bsim-opponent-editor');
+      const enemyEditor=editors[1];click(enemyEditor,'Add opponent');
+      const enemyRows=enemyEditor.querySelectorAll('.bsim-opponent-row');check(enemyRows.length===2,'Fleet custom permits extra opponents');
+      enemyRows.forEach((row,index)=>{
+        row.querySelector('[role="combobox"]').value='Custom cruiser '+index;
+        row.querySelector('[data-stat="count"]').value='2';row.querySelector('[data-stat="ordnance"]').value='3';
+      });
+      el('start').click();check(data().fight?.opposition.kind==='custom','Fleet no preset custom fight starts');
+      set(el('controls'),'Your volley: 2d6',2);set(el('controls'),'Enemy: 2d6',2);
+      const stale=click(el('controls'),'Resolve next exchange');
+      check(data().fight.status==='awaiting-enemy-losses','Fleet custom pauses for target allocation');
+      const pending=JSON.stringify(data());module.render();stale.click();
+      check(JSON.stringify(data())===pending,'Fleet detached stale round control ignored');
+      const allocations=el('controls').querySelectorAll('input[type="number"]');allocations[0].value='2';
+      click(el('controls'),'Apply allocated hits');check(data().fight.round===1,'Fleet allocated saved volley commits once');
+      set(el('controls'),'Your volley: 2d6',12);set(el('controls'),'Enemy: 2d6',2);
+      click(el('controls'),'Resolve next exchange');
+      check(data().fight.status==='victory'&&data().history.length===1,'Fleet custom victory recorded');
+      const completed=JSON.stringify(data());module.render();check(JSON.stringify(data())===completed,'Fleet completed render gives no extra reward');
+      check(JSON.stringify(run.path)===originalPath,'Fleet leaves story path untouched');
+      const oldStart=el('start');app.state.playthroughs=[{startedAt:2,path:[1]}];app.state.activePtIndex=0;
+      oldStart.click();check(app.currentPlaythrough().sim1471===undefined,'Fleet stale start preserves switched run');
+      app.state.playthroughs=[run];app.state.activePtIndex=0;module.render();
+    }finally{Math.random=random;}
+  }
   if(id===1470){
     const el=key=>document.getElementById('sim1470-'+key);
     const {getRoster}=await import('REPO/public/js/battlesim/books/1470/definition.js');
