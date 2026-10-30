@@ -1,16 +1,18 @@
 import { createOpponentEditor } from '../../opponents.js';
-import { startCombatCommandFight, combatCommandRound, resumeCombatCommandFight } from './core.js';
+// Display and resolve optional Combat Command encounters independently of story navigation.
+import { startCombatCommandFight, combatCommandRound, resumeCombatCommandFight, resolveCombatCommandCasualties } from './core.js';
+import { combatCommandPlayerSetup, rememberCombatCommandForce } from './force-state.js';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fields = [{key:'count',label:'Manpower',min:0,max:10000},{key:'ordnance',label:'Ordnance / Melee',min:0,max:10000}];
 const editable = unit => ({...unit,displayName:unit.name});
-const active = state => ['fighting','awaiting-force'].includes(state?.fight?.status);
+const active = state => ['fighting','awaiting-force','awaiting-losses'].includes(state?.fight?.status);
 
 // An isolated encounter sheet: it never reads or writes story progression or inventory.
 export function createCombatCommandEncounterPanel({document,definition,getRoster,getPlayerDefaults,getCharts,t,
   getRun,getBookId,saveState,getButtonRow,showAlert,showConfirm,registerShortcut=()=>{}}) {
   const ID=definition.stateKey, el=key=>document.getElementById(ID+'-'+key);
-  let shownRun, shownPreset, wasActive=false, wasAwaiting=false, playerEditor, enemyEditor, reinforcementEditors=[];
+  let shownRun, shownPreset, shownPending, wasActive=false, wasAwaiting=false, playerEditor, enemyEditor, reinforcementEditors=[];
   const data=()=>Number(getBookId())===definition.id?getRun()?.[ID]:null;
   const selected=state=>{
     const entry=getRoster().find(entry=>entry.section===state.encounter);
@@ -30,6 +32,7 @@ export function createCombatCommandEncounterPanel({document,definition,getRoster
       const state=update(structuredClone(original));
       if (!state || getRun()!==run || data()!==original) return;
       const fight=state.fight;
+      if (definition.preservePlayerForce && fight) rememberCombatCommandForce(state, fight.player);
       if (fight && fight.round > 0 && !fight.recorded && ['win','loss','survived'].includes(fight.status)) {
         fight.recorded=true;
         state.history.push({enemy:fight.config.label,outcome:fight.status==='survived'?'win':fight.status,
@@ -39,7 +42,16 @@ export function createCombatCommandEncounterPanel({document,definition,getRoster
     } catch(error) {showAlert(error.message || 'Check the combat values.');}
   }
   function read(editor,prefix,custom=false) {
-    return editor.read().map((unit,index)=>({...unit,key:custom?prefix+'-'+index:unit.key||prefix+'-'+index,name:unit.displayName||'Unnamed force'}));
+    const units=editor.read(), reserved=new Set(custom?[]:units.map(unit=>unit.key).filter(Boolean));
+    return units.map((unit,index)=>{
+      let key=custom?prefix+'-'+index:unit.key;
+      if (!key) {
+        let serial=index;key=prefix+'-'+serial;
+        while(reserved.has(key))key=prefix+'-'+(++serial);
+        reserved.add(key);
+      }
+      return {...unit,key,name:unit.displayName||'Unnamed force'};
+    });
   }
   function start(state) {
     if (state.fight?.status==='awaiting-force') {
@@ -48,12 +60,16 @@ export function createCombatCommandEncounterPanel({document,definition,getRoster
     }
     if (active(state)) return;
     const preset=selected(state), config=preset?structuredClone(preset):{
+      ...structuredClone(getPlayerDefaults().customRules??{}),
       section:'custom',label:'Custom fight',playerChart:el('playerChart').value,
       enemyChart:el('enemyChart').value,initiative:el('initiative').value,
     };
     config.enemies=read(enemyEditor,'enemy',!preset);
+    if (preset && definition.forceTypes) config.enemies=config.enemies.map((unit,index)=>({
+      ...unit,key:preset.enemies[index].key,type:preset.enemies[index].type,
+    }));
     for (const [index,editor] of reinforcementEditors.entries()) config.reinforcements[index].units=read(editor,'reinforcement-'+index);
-    const player=read(playerEditor,'player',!preset);
+    const player=read(playerEditor,'player',!preset&&!definition.preservePlayerForce);
     state.fight=startCombatCommandFight(player,config,getCharts());
     if (!preset) state.custom={player, enemies:config.enemies, playerChart:config.playerChart,
       enemyChart:config.enemyChart,initiative:config.initiative};
@@ -68,8 +84,61 @@ export function createCombatCommandEncounterPanel({document,definition,getRoster
   }
   function step(state) {
     if (state.fight?.status!=='fighting') return;
-    state.fight=combatCommandRound(state.fight,{playerRoll:roll('playerRoll'),enemyRoll:roll('enemyRoll')});
+    const options={playerRoll:roll('playerRoll'),enemyRoll:roll('enemyRoll')};
+    if (definition.forceTypes) options.playerLossOrder=Object.values(state.lossOrder??{})
+      .filter(key=>state.fight.player.some(unit=>unit.key===key));
+    state.fight=combatCommandRound(state.fight,options);
     return state;
+  }
+  function renderLossOrder(state) {
+    const holder=el('lossOrder');holder.replaceChildren();
+    if (!definition.forceTypes || state.fight?.status!=='fighting') return;
+    for (const type of definition.forceTypes) {
+      const units=state.fight.player.filter(unit=>unit.type===type.value&&unit.count);
+      if (units.length<2) continue;
+      const label=document.createElement('label');label.className='inv-edit-row';
+      const text=document.createElement('span');text.textContent=type.label+': losses first';
+      const input=document.createElement('select');input.className='inv-edit-input';
+      for (const unit of units) {const option=document.createElement('option');option.value=unit.key;option.textContent=unit.name;input.appendChild(option);}
+      input.value=units.some(unit=>unit.key===state.lossOrder?.[type.value])?state.lossOrder[type.value]:units[0].key;
+      input.addEventListener('change',()=>action(current=>{
+        if (current.fight?.status!=='fighting') return;
+        current.lossOrder={...current.lossOrder,[type.value]:input.value};return current;
+      }));
+      label.append(text,input);holder.appendChild(label);
+    }
+  }
+  function allocate(state) {
+    if (state.fight?.status!=='awaiting-losses') return;
+    const allocation=Object.fromEntries([...el('casualties').querySelectorAll('input[data-unit-key]')].map(input=>{
+      if (!input.value.trim()) throw new RangeError('Enter a casualty count for each unit.');
+      return [input.dataset.unitKey,Number(input.value)];
+    }));
+    state.fight=resolveCombatCommandCasualties(state.fight,allocation);
+    return state;
+  }
+  function renderAllocation(fight) {
+    const awaiting=fight?.status==='awaiting-losses', holder=el('casualties');
+    holder.hidden=!awaiting;
+    if (!awaiting) {shownPending=undefined;return;}
+    if (shownPending===fight) return;
+    shownPending=fight;
+    holder.replaceChildren();
+    const note=document.createElement('p');
+    note.textContent=`Allocate ${fight.pendingCasualties.hits} remaining casualties. Required priority losses have already been applied.`;
+    holder.appendChild(note);
+    for (const unit of fight.player) {
+      const label=document.createElement('label');label.className='inv-edit-row';
+      const name=document.createElement('span');name.textContent=unit.name+' ('+unit.count+' remaining)';
+      const input=document.createElement('input');input.className='inv-edit-input';input.type='number';
+      input.min='0';input.max=String(unit.count);input.step='1';input.value='0';input.dataset.unitKey=unit.key;
+      input.disabled=!unit.count;label.append(name,input);holder.appendChild(label);
+    }
+    const button=document.createElement('button');button.type='button';button.className='bsim-action-btn';
+    button.textContent='Apply casualties';button.addEventListener('click',()=>{
+      if (data()?.fight!==fight) return;
+      action(allocate);
+    });holder.appendChild(button);
   }
   function cancel() {
     const original=data(), run=getRun(), fight=original?.fight;
@@ -80,8 +149,9 @@ export function createCombatCommandEncounterPanel({document,definition,getRoster
     });
   }
   function editor(id,units,title) {
-    const result=createOpponentEditor({document,id:ID+'-'+id,t,fields,
-      presets:getRoster().flatMap(entry=>entry.enemies).map(editable)});
+    const editorFields=definition.forceTypes?[...fields,{key:'type',label:'Unit type',options:definition.forceTypes}]:fields;
+    const result=createOpponentEditor({document,id:ID+'-'+id,t,fields:editorFields,
+      presets:id==='player'&&definition.preservePlayerForce?[]:getRoster().flatMap(entry=>entry.enemies).map(editable)});
     result.element.querySelector('summary').textContent=title;
     result.set(units.map(editable));return result;
   }
@@ -91,7 +161,7 @@ export function createCombatCommandEncounterPanel({document,definition,getRoster
     el('variant').innerHTML=variants.map(item=>`<option value="${escape(item.key)}">${escape(item.label)}</option>`).join('');
     if (variants.length) el('variant').value=variants.some(item=>item.key===state.variant)?state.variant:variants[0].key;
     playerEditor.fixCount(Boolean(preset));enemyEditor.fixCount(Boolean(preset));
-    playerEditor.set((preset?.playerUnits??state.custom.player??[getPlayerDefaults().customPlayer]).map(editable));
+    playerEditor.set(combatCommandPlayerSetup(state,preset,getPlayerDefaults(),definition.preservePlayerForce).map(editable));
     enemyEditor.set((preset?.enemies??state.custom.enemies??[getPlayerDefaults().customEnemy]).map(editable));
     for (const key of ['playerChart','enemyChart','initiative']) el(key).value=preset?.[key]??state.custom[key]??({playerChart:'C',enemyChart:'E',initiative:'player'}[key]);
     el('reinforcements').replaceChildren();reinforcementEditors=[];
@@ -117,11 +187,16 @@ export function createCombatCommandEncounterPanel({document,definition,getRoster
     for (const key of ['playerChart','enemyChart','initiative']) el(key).disabled=locked||Boolean(preset);
     playerEditor.lock(locked&&!awaiting);
     for (const item of [enemyEditor,...reinforcementEditors]) item.lock(locked);
+    if (definition.forceTypes) for (const item of [playerEditor,enemyEditor,...reinforcementEditors]) {
+      for(const input of item.element.querySelectorAll('[data-stat="type"]'))input.disabled=locked||Boolean(preset);
+    }
     el('start').disabled=locked&&!awaiting;el('start').textContent=awaiting?'Continue encounter':'Start encounter';
     el('attack').disabled=fight?.status!=='fighting';el('cancel').disabled=!locked;
     el('playerRoll').disabled=fight?.status!=='fighting';el('enemyRoll').disabled=fight?.status!=='fighting';
+    renderAllocation(fight);
+    renderLossOrder(state);
     el('note').textContent=awaiting?'Enter the surviving men and their normal combat value, then continue. Vehicle hits do not determine personnel losses in the printed rules.':preset?.note??definition.customNote??'Enter the forces currently engaged. Casualties immediately reduce attack strength; Julian is the last M.I. casualty. Leave dice blank to roll automatically.';
-    el('result').textContent=fight?`${fight.status==='awaiting-force'?'Enter surviving force':fight.status==='interrupted'?'Wounded':fight.status} · Round ${fight.round}${fight.section?' · Book reference: '+fight.section:''}`:'Ready';
+    el('result').textContent=fight?`${fight.status==='awaiting-losses'?'Allocate casualties':fight.status==='awaiting-force'?'Enter surviving force':fight.status==='interrupted'?'Wounded':fight.status} · Round ${fight.round}${fight.section?' · Book reference: '+fight.section:''}`:'Ready';
     el('forces').innerHTML=fight?'<table class="bsim-report-table"><thead><tr><th>Force</th><th>Remaining</th></tr></thead><tbody>'+[...fight.player,...fight.enemies].map(unit=>`<tr><td>${escape(unit.name)}</td><td>${unit.count}</td></tr>`).join('')+'</tbody></table>':'';
     el('log').innerHTML=(fight?.history??[]).slice().reverse().map(event=>'<div>'+escape(`Round ${event.round}: `+event.attacks.map(a=>`${a.side==='player'?'You':'Enemy'} AS ${a.strength}, Chart ${a.chart}${a.total==null?'':', roll '+a.total}: ${a.hits} hits`+(a.absorbed?`, ${a.absorbed} prisoner casualties`:'')+(a.wounded?', interrupted by wound':'')+(a.losses.length?' ('+a.losses.map(loss=>loss.count+' '+loss.name).join(', ')+')':'')).join('; '))+'</div>').join('');
     el('history').innerHTML=state.history.slice(-30).reverse().map(entry=>`<div>${escape(entry.enemy)} · ${escape(entry.outcome)}</div>`).join('');
@@ -135,6 +210,9 @@ export function createCombatCommandEncounterPanel({document,definition,getRoster
     const overlay=document.createElement('div');overlay.id=ID+'-overlay';overlay.className='inv-overlay';
     overlay.innerHTML=`<div class="inv-modal bsim-modal bsim-compact-form"><div class="inv-modal-hdr"><span class="inv-modal-title">${escape(t(definition.i18nPrefix+'.title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left">${select('encounter','Encounter','<option value="">Custom fight</option>'+getRoster().map(entry=>`<option value="${escape(entry.section)}">${escape(entry.label)}</option>`).join(''))}<p id="${ID}-note"></p>${select('playerChart','Your chart',chartOptions)}${select('enemyChart','Enemy chart',chartOptions)}${select('initiative','Initiative','<option value="player">You first</option><option value="enemy">Enemy first</option>')}<div id="${ID}-playerEditor"></div><div id="${ID}-enemyEditor"></div><div id="${ID}-reinforcements"></div><details><summary>Dice totals</summary><p>Leave blank to roll automatically.</p>${input('playerRoll','Your 2d6')}${input('enemyRoll','Enemy 2d6')}</details><div class="bsim-btn-row">${button('start','Start encounter')}${button('attack','Next round')}${button('cancel','End encounter')}</div></div><div class="bsim-col bsim-col-right"><h4 id="${ID}-result"></h4><div id="${ID}-forces"></div><h4>Combat log</h4><div class="bsim-log" id="${ID}-log"></div><h4>Battle history</h4><div id="${ID}-history"></div></div></div></div>`;
     document.body.appendChild(overlay);
+    const casualties=document.createElement('div');casualties.id=ID+'-casualties';casualties.hidden=true;
+    el('reinforcements').after(casualties);
+    const lossOrder=document.createElement('div');lossOrder.id=ID+'-lossOrder';casualties.before(lossOrder);
     const variantRow=document.createElement('div');variantRow.id=ID+'-variant-row';
     variantRow.innerHTML=select('variant','Combat setup','');
     el('encounter').closest('label').after(variantRow);

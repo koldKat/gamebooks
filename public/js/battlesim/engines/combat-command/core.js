@@ -1,3 +1,6 @@
+// Resolve a single Combat Command encounter using its explicit printed rules.
+import { validateCasualtyPolicy, applyTypedCasualties, allocateCasualties } from './casualties.js';
+
 const copy = value => structuredClone(value);
 const randomDie = () => Math.floor(Math.random() * 6) + 1;
 
@@ -47,10 +50,19 @@ export function startCombatCommandFight(player, encounter, charts) {
     config: copy(encounter), charts: copy(charts), round: 0, enemyExchanges: 0,
     status: 'fighting', section: null, history: [], launchedDrones: 0, destroyedDrones: 0, destroyedSpentDrones: 0 };
   for (const side of ['player', 'enemy']) {
+    validateCasualtyPolicy(side === 'player' ? fight.player : fight.enemies, encounter[side + 'CasualtyPolicy'], side === 'player');
     const names = [encounter[side + 'Chart'], ...Object.values(encounter[side + 'ChartRounds'] ?? {})].filter(Boolean);
     if (!names.length && !(side === 'player' ? encounter.enemyOnly : encounter.playerOnly)) throw new RangeError('Choose a combat chart');
     for (const name of names) combatCommandHits(charts, name, 1, 2);
   }
+  for (const key of ['playerFiringTypes', 'playerFallbackFiringTypes']) {
+    const types = encounter[key];
+    if (types !== undefined && (!Array.isArray(types) || !types.length || new Set(types).size !== types.length
+        || types.some(type => typeof type !== 'string' || !fight.player.some(unit => unit.type === type)))) {
+      throw new RangeError('Invalid firing force');
+    }
+  }
+  if (encounter.playerFallbackFiringTypes && !encounter.playerFiringTypes) throw new RangeError('Missing primary firing force');
   if (!living(fight.player) || !living(fight.enemies) && !(encounter.enemyOnly && encounter.emptyEnemyOutcome)) throw new RangeError('A force has no surviving units');
   for (const key of ['roundLimit', 'enemyAmmo', 'freeOpeningAttacks', 'minimumPhysical', 'droneRound', 'minimumDrones',
     'dronesCanTakeLossesFrom', 'singleAttackWinHits', 'enemyFreeOpeningAttacks', 'interruptOnPlayerHitThroughRound',
@@ -142,6 +154,10 @@ function casualties(fight, force, hits, keys, event, player) {
     || player && fight.config.dronesCanTakeLossesFrom !== undefined && fight.round >= fight.config.dronesCanTakeLossesFrom));
   if (player && fight.config.separatePlayerTargets) candidates = [force[fight.round - 1]].filter(Boolean);
   if (player && fight.config.enemyHitDestroysKey && hits) candidates = force.filter(unit => unit.key === fight.config.enemyHitDestroysKey);
+  const side = player ? 'player' : 'enemy';
+  if (fight.config[side + 'CasualtyPolicy']) {
+    return applyTypedCasualties(fight, side, candidates, hits, event);
+  }
   for (const unit of candidates) {
     const removed = Math.min(unit.count, hits);
     if (!removed) continue;
@@ -153,6 +169,7 @@ function casualties(fight, force, hits, keys, event, player) {
     hits -= removed;
     if (!hits) break;
   }
+  return 0;
 }
 
 function chartAt(config, side, round) {
@@ -173,7 +190,13 @@ function strength(fight, side, options) {
   if (config[side + 'Strength'] !== undefined) return integer(config[side + 'Strength']);
   const force = side === 'player' ? fight.player : fight.enemies;
   if (side === 'enemy') return force.reduce((sum, unit) => sum + unit.count * unit.ordnance, 0);
-  const ships = ordered(force.filter(unit => !unit.drone && unit.count), options.firingOrder, 'fire');
+  let firing = force.filter(unit => !unit.drone && unit.count);
+  if (config.playerFiringTypes) {
+    let types = config.playerFiringTypes;
+    if (!firing.some(unit => types.includes(unit.type))) types = config.playerFallbackFiringTypes ?? types;
+    firing = firing.filter(unit => types.includes(unit.type));
+  }
+  const ships = ordered(firing, options.firingOrder, 'fire');
   let slots = config.halfPlayerFire ? Math.ceil(physical(force) / 2) : Infinity;
   let total = 0;
   for (const unit of ships) {
@@ -207,11 +230,44 @@ function attack(fight, side, options, roll, event) {
     finish(fight, 'interrupted');
     return;
   }
-  casualties(fight, player ? fight.enemies : fight.player, hits,
+  const pending = casualties(fight, player ? fight.enemies : fight.player, hits,
     options[player ? 'enemyLossOrder' : 'playerLossOrder'], entry, !player);
+  if (pending) {
+    fight.pendingCasualties = { hits:pending, round:fight.round, attackIndex:event.attacks.length - 1 };
+    fight.status = 'awaiting-losses';
+  }
   if (!player) fight.enemyExchanges++;
   if (player && fight.config.singleAttackWinHits && hits >= fight.config.singleAttackWinHits) finish(fight, 'win');
   else outcome(fight);
+}
+
+function finishRound(fight) {
+  if (fight.status !== 'fighting') return;
+  if (fight.round === fight.config.afterOpeningRound) fight.status = 'awaiting-force';
+  else if (fight.round >= (fight.config.roundLimit ?? Infinity)) finish(fight, fight.config.limitOutcome ?? 'survived');
+}
+
+// Preserve the already-rolled volley and log while the reader chooses casualties.
+export function resolveCombatCommandCasualties(previous, allocation, roll = randomDie) {
+  if (previous?.rulesVersion !== 1 || previous.status !== 'awaiting-losses'
+      || !previous.pendingCasualties) throw new RangeError('No casualty allocation pending');
+  const fight = copy(previous), pending = fight.pendingCasualties;
+  const event = fight.history.at(-1), attackEntry = event?.attacks[pending.attackIndex];
+  if (event?.round !== pending.round || pending.round !== fight.round || attackEntry?.side !== 'enemy') {
+    throw new RangeError('Invalid pending volley');
+  }
+  integer(pending.hits, 1);
+  allocateCasualties(fight.player, allocation, pending.hits, attackEntry);
+  delete fight.pendingCasualties;
+  fight.status = 'fighting';
+  if (!outcome(fight)) {
+    for (const side of pending.remainingAttacks ?? []) {
+      if (fight.status !== 'fighting') break;
+      attack(fight, side, pending.options ?? {}, roll, event);
+    }
+    finishRound(fight);
+  }
+  return fight;
 }
 
 export function combatCommandRound(previous, options = {}, roll = randomDie) {
@@ -238,12 +294,15 @@ export function combatCommandRound(previous, options = {}, roll = randomDie) {
     const enemyFires = !config.playerOnly && fight.round > (config.freeOpeningAttacks ?? 0)
       && fight.enemyExchanges < (config.enemyAmmo ?? Infinity);
     const order = config.initiative === 'enemy' ? ['enemy', 'player'] : ['player', 'enemy'];
-    for (const side of order) {
+    for (const [index, side] of order.entries()) {
       if (fight.status !== 'fighting') break;
       if (side === 'player' ? playerFires : enemyFires) attack(fight, side, { ...options, drones }, roll, event);
+      if (fight.status === 'awaiting-losses') {
+        fight.pendingCasualties.remainingAttacks = order.slice(index + 1).filter(side => side === 'player' ? playerFires : enemyFires);
+        fight.pendingCasualties.options = { ...options, drones };
+      }
     }
-    if (fight.status === 'fighting' && fight.round === config.afterOpeningRound) fight.status = 'awaiting-force';
-    else if (fight.status === 'fighting' && fight.round >= (config.roundLimit ?? Infinity)) finish(fight, config.limitOutcome ?? 'survived');
+    finishRound(fight);
   }
   fight.history.push(event);
   fight.history = fight.history.slice(-100);

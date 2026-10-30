@@ -249,6 +249,66 @@ for(const id of BOOK_IDS){
       app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Terminator previous run retained');
     }finally{Math.random=random;}
   }
+  if(id===1470){
+    const el=key=>document.getElementById('sim1470-'+key);
+    const {getRoster}=await import('REPO/public/js/battlesim/books/1470/definition.js');
+    check(getRoster().length===56&&requestedRosters.has(id),'Slammers DB roster');
+    let run=app.currentPlaythrough(),serial=100;
+    const data=()=>run.sim1470;
+    const protectedValues={inventory:{keep:['supplies']},equipment:{keep:'gear'},sim1469:{keep:'old fight'}};
+    const reset=()=>{
+      run={startedAt:serial++,path:[1],...structuredClone(protectedValues)};
+      app.state.playthroughs=[run];app.state.activePtIndex=0;module.render();
+      el('playerRoll').value='2';el('enemyRoll').value='2';
+    };
+    const choose=section=>{el('encounter').value=String(section);el('encounter').dispatchEvent(new Event('change',{bubbles:true}));};
+    const rows=side=>[...el(side+'Editor').querySelectorAll('.bsim-opponent-row')];
+    const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    const totals=side=>rows(side).map(row=>Number(row.querySelector('[data-stat="count"]').value));
+    for(const entry of getRoster()){
+      reset();choose(entry.section);el('start').click();
+      check(data().fight?.config.section===entry.section,'Slammers preset '+entry.section);
+      const before=JSON.stringify(data());module.render();check(JSON.stringify(data())===before,'Slammers render preserves fight');
+      check(el('encounter').disabled&&rows('player').every(row=>row.querySelector('[data-stat="count"]').disabled),'Slammers setup locked');
+      el('attack').click();check(data().fight.round===1,'Slammers combat round '+entry.section);
+      check(run.path.length===1&&run.path[0]===1,'Slammers never navigates the story');
+      check(JSON.stringify([run.inventory,run.equipment,run.sim1469])===JSON.stringify(Object.values(protectedValues)),'Slammers unrelated state preserved');
+      if(['fighting','awaiting-losses'].includes(data().fight.status))cancel();
+    }
+    reset();choose(38);rows('player')[4].querySelector('[data-stat="count"]').value='1';
+    el('enemyRoll').value='12';el('start').click();el('attack').click();cancel();
+    const survivors=data().playerForce.map(unit=>unit.count);
+    choose(19);check(JSON.stringify(totals('player'))===JSON.stringify(survivors),'Slammers current survivors across presets');
+    choose(20);check(JSON.stringify(totals('player'))===JSON.stringify(survivors.slice(0,2)),'Slammers tank-only encounter keeps current tanks');
+    el('start').click();cancel();choose(19);
+    check(JSON.stringify(totals('player'))===JSON.stringify(survivors),'Slammers inactive infantry and destroyed Bravo preserved');
+    reset();el('enemyRoll').value='2';el('playerRoll').value='12';
+    rows('enemy')[0].querySelector('[data-stat="count"]').value='1';
+    el('start').click();el('attack').click();
+    check(data().fight.config.section==='custom'&&data().fight.status==='win','Slammers ordinary custom fight');
+    const recorded=data().history.length;module.render();check(data().history.length===recorded,'Slammers result recorded once');
+    reset();choose(50);rows('player')[4].querySelector('[data-stat="count"]').value='1';
+    el('enemyRoll').value='12';el('start').click();el('attack').click();
+    check(data().fight.status==='awaiting-losses'&&data().fight.pendingCasualties.hits===2,'Slammers manual losses after current Bravo');
+    check(el('attack').disabled&&el('start').disabled&&!el('casualties').hidden,'Slammers allocation blocks another volley');
+    const pending=JSON.stringify(data()),oldApply=el('casualties').querySelector('button');
+    oldApply.click();check(JSON.stringify(data())===pending,'Slammers incomplete allocation rejected');
+    document.getElementById('confirm-ok').click();
+    run.sim1470=JSON.parse(pending);module.render();oldApply.click();
+    check(JSON.stringify(data())===pending,'Slammers stale allocation cannot change replacement fight');
+    const inputs=el('casualties').querySelectorAll('input');
+    for(const input of inputs)input.value=['tango','india'].includes(input.dataset.unitKey)?'1':'0';
+    el('casualties').querySelector('button').click();
+    check(data().fight.status==='fighting'&&data().fight.round===1&&data().fight.enemyExchanges===1,'Slammers allocation resumes same rolled volley');
+    check(data().fight.history.length===1&&data().fight.history[0].attacks.length===2,'Slammers allocation preserves combat log');
+    cancel();
+    reset();el('start').click();const frozen=JSON.stringify(data());el('cancel').click();app.setCurrentBookId(9999);
+    document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim1470)===frozen,'Slammers stale confirmation ignored');
+    app.setCurrentBookId(id);module.render();cancel();
+    app.state.playthroughs=[{startedAt:serial++,path:[1]}];app.state.activePtIndex=0;
+    el('start').click();check(app.currentPlaythrough().sim1470===undefined,'Slammers stale controls cannot mutate a new run');
+    app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();
+  }
   if(id===1469){
     const el=key=>document.getElementById('sim1469-'+key);
     const {getRoster}=await import('REPO/public/js/battlesim/books/1469/definition.js');
