@@ -25,7 +25,7 @@ function nextAnniversary(timestamp) {
 }
 
 function createCollectibles(db, { now = Date.now } = {}) {
-  const list = db.prepare('SELECT item_id FROM user_collectibles WHERE user_id=? ORDER BY seen_at,item_id');
+  const list = db.prepare('SELECT item_id,seen_at FROM user_collectibles WHERE user_id=? ORDER BY seen_at,item_id');
   const account = db.prepare('SELECT is_admin FROM users WHERE id=?');
   const seen = db.prepare('INSERT OR IGNORE INTO user_collectibles(user_id,item_id,seen_at) VALUES(?,?,?)');
   const item = db.prepare('SELECT claimed_at FROM user_collectibles WHERE user_id=? AND item_id=?');
@@ -51,6 +51,7 @@ function createCollectibles(db, { now = Date.now } = {}) {
   });
   return {
     list: userId=>list.all(userId).map(row=>row.item_id),
+    collectedAt: userId=>Object.fromEntries(list.all(userId).map(row=>[row.item_id,row.seen_at])),
     discover,
     claim: (userId,itemId)=>redeem.immediate(userId,itemId),
   };

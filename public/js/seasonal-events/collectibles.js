@@ -2,15 +2,21 @@
 import {apiFetch,getToken} from '../core/state.js';
 import {cursorDesigns} from './cursor-designs.js';
 import {createDesignPreviews} from './cursor-previews.js';
+import {seasonalEvents} from './calendar.js';
 import {updateRubiesDisplay} from '../progression/rubies.js';
 import '../ui-helpers/dialog-escape.js';
 
 let identity=getToken(),seen=new Set(),pending=new Set(),retryAt=new Map(),dialog,stopPreviews,request=0;
 const designs=Object.values(cursorDesigns).flat();
 const channel=typeof BroadcastChannel==='function'?new BroadcastChannel('seasonal-collection'):null;
+function unloadItems(){
+ ++request;stopPreviews?.();stopPreviews=null;
+ dialog?.querySelector('.collectibles-body').replaceChildren();
+}
+function closeCollectibles(){unloadItems();dialog?.close();}
 function reset(){
  identity=getToken();seen.clear();pending.clear();retryAt.clear();++request;
- dialog?.close();stopPreviews?.();stopPreviews=null;
+ closeCollectibles();
 }
 function checkIdentity(){if(identity!==getToken())reset();return identity;}
 function changed(){channel?.postMessage({changed:true});}
@@ -37,9 +43,10 @@ export async function openCollectibles(){
   dialog=document.createElement('dialog');dialog.id='collectibles-dialog';
   dialog.setAttribute('aria-labelledby','collectibles-title');
   dialog.innerHTML='<header><h2 id="collectibles-title">Collectibles</h2><button type="button" data-dialog-close aria-label="Close">×</button></header><div class="collectibles-body"></div>';
-  dialog.querySelector('[data-dialog-close]').addEventListener('click',()=>dialog.close());
-  dialog.addEventListener('close',()=>{if(dialog.open)return;++request;stopPreviews?.();stopPreviews=null;dialog.querySelector('.collectibles-body').replaceChildren();});
-  dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
+  dialog.querySelector('[data-dialog-close]').addEventListener('click',closeCollectibles);
+  dialog.addEventListener('cancel',unloadItems);
+  dialog.addEventListener('close',()=>{if(!dialog.open)unloadItems();});
+  dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeCollectibles();}});
   document.body.append(dialog);
  }
  if(!dialog.open)dialog.showModal();
@@ -51,7 +58,13 @@ export async function openCollectibles(){
   if(sequence!==request||token!==getToken()||!dialog.open)return;
   const collected=designs.filter(d=>data.items.includes(d.id));
   body.textContent=collected.length?'':'No collectibles yet.';
-  stopPreviews=createDesignPreviews(body,collected,id=>claim(id,token));
+  const dateFormat=new Intl.DateTimeFormat(undefined,{dateStyle:'medium',timeZone:'Europe/Sofia'});
+  stopPreviews=createDesignPreviews(body,collected,id=>claim(id,token),id=>{
+   const season=Object.entries(cursorDesigns).find(([,entries])=>entries.some(d=>d.id===id))?.[0];
+   const event=seasonalEvents.find(e=>e.id===season)?.title.replace(/ event active$/,'')||season;
+   const timestamp=data.collectedAt?.[id];
+   return event+(Number.isFinite(timestamp)?'\nClaimed: '+dateFormat.format(new Date(timestamp)):'');
+  });
  }catch{if(sequence===request&&token===getToken()&&dialog.open)body.textContent='Unable to load. Close and try again.';}
 }
 

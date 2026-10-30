@@ -27,21 +27,32 @@ function send(res,status,data){res.writeHead(status,{'Content-Type':'application
 const indexHtml=fs.readFileSync('public/index.html','utf8');
 const gift=indexHtml.match(/<button id="collectibles-btn"[\s\S]*?<\/button>/)[0];
 if(!indexHtml.includes(gift+'\n              <button id="display-settings-btn"'))throw Error('Gift belongs beside the app header settings');
-const html=`<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="/css/seasonal-events.css"><link rel="stylesheet" href="/css/collectibles.css"><style>body{background:#141d29;color:#ccc;font:14px sans-serif;margin:18px}.books-header-right{display:flex;justify-content:flex-end;gap:10px}#landing-wrapper{height:30px}</style>
-<div id="landing-wrapper"><div class="books-header-right">${gift}<button id="rubies-display"></button></div></div>
+const header=indexHtml.slice(indexHtml.indexOf('<div id="app-banner">'),indexHtml.indexOf('<div id="books-tip-bar">'));
+const html=`<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="/css/landing.css"><link rel="stylesheet" href="/css/reduce-motion.css"><link rel="stylesheet" href="/css/mobile.css"><link rel="stylesheet" href="/css/seasonal-events.css"><link rel="stylesheet" href="/css/collectibles.css"><style>body{background:#141d29;color:#ccc;font:14px sans-serif;margin:18px}#landing-wrapper{position:static;display:block}#rubies-display{position:fixed;right:18px;bottom:18px}</style>
+<div id="landing-wrapper">${header}</div><button id="rubies-display"></button>
 <script>addEventListener('error',e=>document.body.dataset.failure=e.error?.stack||e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=e.reason?.stack||String(e.reason));</script>
 <script type="module">
 const check=(v,s)=>{if(!v)throw Error(s);},delay=ms=>new Promise(r=>setTimeout(r,ms));
 const until=async fn=>{for(let i=0;i<100;i++){if(await fn())return;await delay(25);}throw Error('Timed out');};
 const {setToken,clearToken}=await import('/js/core/state.js');setToken('one');
+let activePreviewObservers=0;
+const scheduledTimers=new Set(),nativeTimeout=window.setTimeout,nativeClear=window.clearTimeout;
+window.setTimeout=(callback,ms,...args)=>{let id;id=nativeTimeout(()=>{scheduledTimers.delete(id);callback(...args);},ms);scheduledTimers.add(id);return id;};
+window.clearTimeout=id=>{scheduledTimers.delete(id);nativeClear(id);};
+const NativeObserver=window.IntersectionObserver;
+window.IntersectionObserver=class extends NativeObserver{constructor(...args){super(...args);activePreviewObservers++;}disconnect(){super.disconnect();activePreviewObservers--;}};
 const {openCollectibles}=await import('/js/seasonal-events/collectibles.js');
 const {cursorDesigns}=await import('/js/seasonal-events/cursor-designs.js');
 const {createRotatingCursor}=await import('/js/seasonal-events/rotating-cursor.js');
 const {recordSeenCompanion}=await import('/js/seasonal-events/collectibles.js');
 const api=async()=>fetch('/api/collectibles',{headers:{Authorization:'Bearer '+localStorage.getItem('gamebook_auth_token')}}).then(r=>r.json());
+const giftStyle=getComputedStyle(document.getElementById('collectibles-btn')),settingsStyle=getComputedStyle(document.getElementById('display-settings-btn'));
+for(const property of ['width','height','padding','borderRadius','borderColor','backgroundColor','color'])check(giftStyle[property]===settingsStyle[property],'gift matches header button '+property);
+check(document.querySelector('.gift-icon').getBoundingClientRect().width===document.querySelector('.cog-icon').getBoundingClientRect().width,'gift matches neighboring icon size');
 check(Object.keys(${JSON.stringify(items)}).sort().join()===Object.values(cursorDesigns).flat().map(d=>d.id).sort().join(),'server and client item registry agree');
 let stop=createRotatingCursor(cursorDesigns.halloween,{random:()=>0,onSeen:recordSeenCompanion,switchDelay:()=>500});
 await delay(60);check((await api()).items.length===0,'hidden mouse companion does not collect');
+check(!document.querySelector('dialog')&&activePreviewObservers===0,'closed collection has no item DOM or preview observers');
 document.dispatchEvent(new PointerEvent('pointermove',{pointerType:'touch',clientX:140,clientY:140}));await delay(60);check((await api()).items.length===0,'touch cannot collect invisible cursor');
 document.dispatchEvent(new PointerEvent('pointermove',{pointerType:'mouse',clientX:140,clientY:140}));
 await until(async()=> (await api()).items.includes('pumpkin'));
@@ -52,6 +63,7 @@ document.querySelector('[data-open-collectibles]').click();await until(()=>docum
 check(document.querySelector('dialog').open,'gift opens dialog');
 check(!document.querySelector('dialog').textContent.match(/diamond|claim|reward|year/i),'no reward hints');
 check(getComputedStyle(document.querySelector('.collectible-item')).cursor==='default','no click cursor hint');
+check(document.querySelector('.collectible-item').title.includes('Halloween')&&document.querySelector('.collectible-item').title.includes('2026'),'hover gives event and collection date');
 await until(()=>document.querySelectorAll('.season-cursor-preview > *').length===2);
 document.querySelector('.collectible-item').click();document.querySelector('.collectible-item').click();
 await until(()=>document.getElementById('rubies-display').textContent.trim()==='1');
@@ -63,8 +75,9 @@ await openCollectibles();check(!document.querySelector('.collectible-item'),'oth
 clearToken();check(!document.querySelector('dialog').open,'logout closes collection');
 setToken('one');await fetch('/seed',{method:'POST'});await openCollectibles();await until(()=>document.querySelectorAll('.season-cursor-preview > *').length>=6);
 check(document.querySelectorAll('.collectible-item').length===12,'all twelve items can be collected');
+check(getComputedStyle(document.querySelector('.season-cursor-gallery')).gridTemplateColumns.split(' ').length===(innerWidth>600?6:3),'compact item grid');
 check(document.querySelector('dialog').getBoundingClientRect().right<=innerWidth,'dialog fits viewport');
-document.querySelector('dialog').close();await until(()=>!document.querySelector('.season-cursor-preview > *'));
+document.querySelector('[data-dialog-close]').click();check(!document.querySelector('.collectible-item,.season-cursor-preview > *')&&activePreviewObservers===0&&scheduledTimers.size===0,'close immediately unloads every item, timer and observer');
 await openCollectibles();await until(()=>document.querySelectorAll('.season-cursor-preview > *').length>=6);
 document.body.dataset.test=JSON.stringify({hiddenNotCollected:true,mouseDiscovery:true,reformationDiscovery:true,privateAccounts:true,rollingClaims:true,animatedCollection:true,cleanup:true,noHints:true,items:12,width:innerWidth});
 </script>`;

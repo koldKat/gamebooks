@@ -902,6 +902,7 @@ body.feed-collapsed #feed-panel {
 #notif-btn,
 #inbox-btn,
 #display-settings-btn,
+#collectibles-btn,
 #bonus-gc-btn,
 #mobile-books-btn,
 #mobile-addbook-btn,
@@ -953,6 +954,7 @@ body.feed-collapsed #feed-panel {
 #notif-btn:hover     { border-color: #6b7280; color: #e2e8f0; }
 #inbox-btn:hover     { border-color: #6b7280; color: #e2e8f0; }
 #display-settings-btn:hover { border-color: #6b7280; color: #e2e8f0; }
+#collectibles-btn:hover { border-color: #6b7280; color: #e2e8f0; }
 #inbox-btn.inbox-btn--active       { border-color: #16a34a; color: #4ade80; animation: notif-pulse 4s ease-in-out infinite; }
 #inbox-btn.inbox-btn--active:hover { border-color: #22c55e; color: #86efac; animation: none; }
 

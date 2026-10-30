@@ -28,6 +28,7 @@ test('only the visible season can be discovered; previews belong to admins',t=>{
  assert.equal(store.discover(99,'pumpkin'),false);
  assert.deepEqual(store.list(2),[]);assert.deepEqual(store.list(3),['pumpkin','santa']);
  assert.equal(store.discover(1,'pumpkin'),false);assert.equal(store.list(1).length,3);
+ assert.equal(store.collectedAt(1).pumpkin,Date.parse('2026-10-31T14:30:42Z'));
 });
 test('one blue diamond per collected item, independent rolling anniversaries and silent gains',t=>{
  const {db,store,time,wallet}=fixture(t);

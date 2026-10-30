@@ -3,11 +3,12 @@ import {cursorDesigns} from './cursor-designs.js';
 export function createCursorPreviews(holder,season){
  return createDesignPreviews(holder,cursorDesigns[season]||[]);
 }
-export function createDesignPreviews(holder,designs,onActivate){
+export function createDesignPreviews(holder,designs,onActivate,tooltipFor){
  const gallery=document.createElement('div');gallery.className='season-cursor-gallery';
  const previews=designs.map(design=>{
   const item=document.createElement(onActivate?'button':'figure'),host=document.createElement('div'),label=document.createElement(onActivate?'span':'figcaption');
   if(onActivate){item.type='button';item.className='collectible-item';item.addEventListener('click',()=>onActivate(design.id));}
+  if(tooltipFor)item.title=tooltipFor(design.id);
   host.className='season-cursor-preview seasonal-inline-preview';host.dataset.cursorPreview=design.id;host.setAttribute('aria-hidden','true');label.textContent=design.label;
   item.append(host,label);gallery.append(item);return{host,design,visible:false,stop:null};
  });

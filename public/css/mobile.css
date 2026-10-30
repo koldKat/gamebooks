@@ -229,7 +229,7 @@
     border-radius: 6px;
   }
   #app-banner-tools > button { flex-basis: 30px; height: 30px; }
-  #app-banner-btns :is(#bonus-gc-btn, #notif-btn, #display-settings-btn, #profile-btn) {
+  #app-banner-btns :is(#bonus-gc-btn, #notif-btn, #display-settings-btn, #collectibles-btn, #profile-btn) {
     flex: 0 0 30px;
     width: 30px;
     min-width: 30px;
