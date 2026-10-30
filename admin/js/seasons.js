@@ -2,9 +2,6 @@
 import { seasonalEvents, activeSeasonalEvents, seasonWindow, reloadSeasonalCalendar } from '/js/seasonal-events/calendar.js';
 import { setSeasonPreviewUser, seasonPreview, setSeasonPreview, applySeasonPreviewPreference, isSeasonPreviewStorageKey } from '/js/seasonal-events/preview.js';
 import { apiFetch, getToken } from '/js/core/state.js';
-import { diwaliArtwork } from '/js/seasonal-events/diwali-artwork.js';
-import { halloweenArtwork } from '/js/seasonal-events/artwork.js';
-import { christmasArtwork,newYearArtwork } from '/js/seasonal-events/winter-artwork.js';
 let bound = false;
 export async function loadSeasons() {
   const target = document.getElementById('seasons-list'), status = document.getElementById('seasons-status');
@@ -38,12 +35,6 @@ export async function loadSeasons() {
       test.disabled = preview === event.id; test.dataset.seasonTest = event.id;
       test.addEventListener('click', () => changePreview(event.id));
       card.append(heading, dates, detail);
-      const artwork = { diwali:diwaliArtwork, halloween:halloweenArtwork,christmas:christmasArtwork,'new-year':newYearArtwork }[event.id];
-      if (artwork) {
-        const samples = document.createElement('div'); samples.className = 'season-samples'; samples.setAttribute('aria-hidden','true');
-        for (const sprite of artwork) samples.insertAdjacentHTML('beforeend', `<svg viewBox="0 0 48 48" focusable="false">${sprite.svg}</svg>`);
-        card.append(samples);
-      }
       card.append(test); target.append(card);
     }
     document.getElementById('seasons-automatic').disabled = !preview;

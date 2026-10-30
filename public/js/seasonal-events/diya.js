@@ -1,5 +1,5 @@
 // A small Diwali lamp follows the mouse, with a gentle motion-aware flame.
-import { diyaCursorSvg } from './diwali-artwork.js';
+import { diyaCursorSvg } from './diya-artwork.js';
 export function createDiya({ random = Math.random, preview = false } = {}) {
   const lamp = document.createElement('div');
   lamp.className = 'seasonal-diya'; lamp.hidden = true;

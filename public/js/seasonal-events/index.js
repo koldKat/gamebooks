@@ -9,7 +9,7 @@ let stopCurrent;
 export function initSeasonalEvents({ now = () => new Date(), random = Math.random, getPreview = seasonPreview } = {}) {
   if (stopCurrent) return stopCurrent;
   const pointer = matchMedia('(any-pointer: fine)');
-  let decoration, background, midnight, themeId;
+  let decoration, midnight, themeId;
   let stopped = false, calendarRequest;
   function reconcileCalendar() {
     if (calendarRequest) return;
@@ -27,17 +27,14 @@ export function initSeasonalEvents({ now = () => new Date(), random = Math.rando
     const events = preview ? seasonalEvents.filter(event => event.id === preview) : activeSeasonalEvents(date);
     const event = events[0];
     renderSeasonalNotice(events, preview);
-    // Keep the same artwork and scatter when a tab is backgrounded and restored.
-    // The cursor handles visibility itself; recreating decorations would randomize them.
+    // Keep the mouse companion and its action timers when returning to this tab.
     const landing = document.getElementById('landing-wrapper');
     const visible = !landing || (getComputedStyle(landing).display !== 'none' && getComputedStyle(landing).visibility !== 'hidden');
     const active = seasonalEventsEnabled() && visible && !!seasonalThemes[event?.id];
     const nextTheme = active ? event.id : null;
-    if (themeId !== nextTheme) { decoration?.(); background?.(); decoration = background = null; themeId = nextTheme; }
+    if (themeId !== nextTheme) { decoration?.(); decoration = null; themeId = nextTheme; }
     if (active && pointer.matches && !decoration) decoration = seasonalThemes[event.id].cursor({ random, preview:!!preview });
     if ((!active || !pointer.matches) && decoration) { decoration(); decoration = null; }
-    if (active && !background) background = seasonalThemes[event.id].background();
-    if (!active && background) { background(); background = null; }
     syncSeasonalEventSetting();
     midnight = setTimeout(refresh, nextSeasonalRefreshDelay(date));
   }
@@ -55,7 +52,7 @@ export function initSeasonalEvents({ now = () => new Date(), random = Math.rando
   if (landing) landingChanges.observe(landing, { attributes:true, attributeFilter:['style','class'] });
   stopCurrent = () => {
     stopped = true;
-    clearTimeout(midnight); decoration?.(); background?.();
+    clearTimeout(midnight); decoration?.();
     landingChanges.disconnect();
     const notice = document.getElementById('seasonal-event-notice');
     if (notice) notice.hidden = true;

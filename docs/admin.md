@@ -32,7 +32,7 @@ The **Seasons** tab lists the live calendar, each event's window and rewards. Si
 
 **Test no season** hides seasonal decorations for your preview. **Stop testing, use live season** removes the override and immediately restores the calendar's event. Ctrl+Y's **Seasonal events** setting still controls decoration visibility. Previews do not add decorations to the canvas/play area. Live events continue to activate and expire automatically even while an admin is testing another season.
 
-All four seasonal cards show their 27 sprites. To test Diwali's cursor, move your mouse in the main app. Its flame flickers continuously; test mode demonstrates its flare, rising embers and smoke curl within the first 20 seconds, then uses the same longer intervals as Halloween. **Reduce animations** keeps the lamp still.
+Seasonal previews show only their mouse companion in the main app. To test Diwali's cursor, move your mouse in the main app. Its flame flickers continuously; test mode demonstrates its flare, rising embers and smoke curl within the first 20 seconds, then uses the same longer intervals as Halloween. **Reduce animations** keeps the lamp still.
 
 Christmas runs December 22–28. New Year runs December 29–January 4 and doubles every XP award, including job XP. Christmas doubles wins, simulator wins, new runs, discovering or mapping whole books, and heartbeats. These bonuses follow the live calendar even during a private preview.
 

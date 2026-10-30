@@ -16,61 +16,48 @@ localStorage.setItem('gamebook_auth_token','test-admin');localStorage.setItem('s
 const {initSeasonalEvents}=await import('/js/seasonal-events/index.js');initSeasonalEvents()();
 const {setSeasonPreviewUser,seasonPreview}=await import('/js/seasonal-events/preview.js');
 const {applySeasonalEventsPreference}=await import('/js/seasonal-events/preferences.js');
-const {diwaliArtwork}=await import('/js/seasonal-events/diwali-artwork.js');
 setSeasonPreviewUser({id:1,isAdmin:true});
 const baseTime=Date.now();let clock=Date.parse('2026-10-30T12:00:00Z');
 const stop=initSeasonalEvents({now:()=>new Date(clock+Date.now()-baseTime)});
 const delay=ms=>new Promise(r=>setTimeout(r,ms)),check=(ok,msg)=>{if(!ok)throw Error(msg)};
 const until=async fn=>{for(let i=0;i<80;i++){if(fn())return;await delay(50)}throw Error('Timed out waiting for browser state')};
+const classes={halloween:'.seasonal-pumpkin',diwali:'.seasonal-diya',christmas:'.seasonal-santa','new-year':'.seasonal-champagne'};
+const active=season=>Boolean(document.querySelector(classes[season]));
+const none=()=>!document.querySelector('.seasonal-pumpkin,.seasonal-diya,.seasonal-companion');
+const noBackground=()=>!document.querySelector('.seasonal-background,.seasonal-background__icon,.seasonal-background__web');
 const ad=document.getElementById('admin'),other=document.getElementById('other');
 await until(()=>ad.contentDocument?.querySelector('[data-season-test="diwali"]')&&other.contentDocument?.body.dataset.ready);
 const click=async selector=>{await until(()=>ad.contentDocument.querySelector(selector)&&!ad.contentDocument.querySelector(selector).disabled);ad.contentDocument.querySelector(selector).click();};
-check(document.querySelector('.seasonal-background')?.dataset.season==='halloween','real Halloween active');
-await click('[data-season-test="diwali"]');await until(()=>document.querySelector('.seasonal-background')?.dataset.season==='diwali');await delay(400);
-check(seasonPreview()==='diwali','admin setting reached main app via native storage event');
-check(!document.querySelector('.seasonal-pumpkin'),'old cursor cleaned up');
-check(!document.querySelector('.seasonal-background__web'),'Diwali has no Halloween webs');
-check(document.getElementById('seasonal-event-notice').textContent.includes('preview (only you)'),'preview clearly labelled');
-check(document.querySelector('.seasonal-event-sim-win')?.textContent==='sim battle wins','complete win phrase coloured');
-check(other.contentDocument.querySelector('.seasonal-background')?.dataset.season==='halloween','different account keeps live event');
-check(other.contentWindow.readPreview()===null,'different account has no preview');
-const icons=[...document.querySelectorAll('.seasonal-background__icon')].filter(n=>!n.hidden),styles=icons.map(n=>n.style.cssText),layer=document.querySelector('.seasonal-background');
-check(icons.length>=7,'Diwali fills available gaps');
-document.dispatchEvent(new Event('visibilitychange'));await delay(350);
-check(layer===document.querySelector('.seasonal-background')&&icons.every((n,i)=>n.style.cssText===styles[i]),'visibility return keeps exact scatter');
-document.dispatchEvent(new PointerEvent('pointermove',{clientX:120,clientY:120,pointerType:'mouse'}));await delay(60);
-check(!document.querySelector('.seasonal-diya').hidden,'lamp cursor follows mouse');
-check(getComputedStyle(document.querySelector('.seasonal-diya')).pointerEvents==='none','cursor never intercepts input');
-document.dispatchEvent(new PointerEvent('pointermove',{clientX:120,clientY:120,pointerType:'touch'}));check(document.querySelector('.seasonal-diya').hidden,'touch hides cursor');
-for(const artwork of diwaliArtwork){check(!artwork.svg.includes('undefined'),'valid sprite colours');for(const match of artwork.svg.matchAll(/<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g))check(+match[1]+ +match[3]<=48&&+match[2]+ +match[4]<=48,'sprite stays inside its grid');}
-for(const [season,cursor]of [['christmas','santa'],['new-year','clock']]){
- await click('[data-season-test="'+season+'"]');await until(()=>document.querySelector('.seasonal-background')?.dataset.season===season);
+check(active('halloween')&&noBackground(),'live Halloween has only its mouse companion');
+for(const season of ['diwali','christmas','new-year']){
+ await click('[data-season-test="'+season+'"]');await until(()=>active(season));await delay(60);
+ check(seasonPreview()===season,'admin preview reaches main app '+season);
  document.dispatchEvent(new PointerEvent('pointermove',{clientX:120,clientY:120,pointerType:'mouse'}));await delay(50);
- check(!document.querySelector('.seasonal-'+cursor).hidden,'winter cursor follows mouse');
- check(!document.querySelector('.seasonal-background__web'),'winter has no Halloween webs');
- check(other.contentDocument.querySelector('.seasonal-background')?.dataset.season==='halloween','winter previews remain private');
+ const cursor=document.querySelector(classes[season]);check(!cursor.hidden&&getComputedStyle(cursor).pointerEvents==='none','mouse companion follows pointer without intercepting input '+season);
+ check(noBackground(),'no background objects for '+season);
+ check(other.contentDocument.querySelector('.seasonal-pumpkin')&&other.contentWindow.readPreview()===null,'other account retains its live Halloween companion');
+ document.dispatchEvent(new Event('visibilitychange'));await delay(50);check(document.querySelector(classes[season])===cursor,'tab return preserves current companion');
 }
-await click('#seasons-automatic');await until(()=>document.querySelector('.seasonal-background')?.dataset.season==='halloween');
-await click('#seasons-off');await until(()=>!document.querySelector('.seasonal-background'));check(!document.querySelector('.seasonal-pumpkin')&&!document.querySelector('.seasonal-diya'),'test off removes both cursor types');
-await click('[data-season-test="diwali"]');await until(()=>document.querySelector('.seasonal-background')?.dataset.season==='diwali');
-applySeasonalEventsPreference('0');check(!document.querySelector('.seasonal-background'),'Ctrl+Y disables preview decorations');check(!document.getElementById('seasonal-event-notice').hidden,'notice remains');applySeasonalEventsPreference('1');
-document.getElementById('landing-wrapper').style.display='none';await delay(50);check(!document.querySelector('.seasonal-diya')&&!document.querySelector('.seasonal-background'),'play area gets no preview decorations');
-document.getElementById('landing-wrapper').style.display='';await delay(100);
+check(document.getElementById('seasonal-event-notice').textContent.includes('preview (only you)'),'private preview labelled');
+await click('#seasons-automatic');await until(()=>active('halloween'));
+await click('#seasons-off');await until(none);check(noBackground(),'test off leaves no decorations');
+await click('[data-season-test="diwali"]');await until(()=>active('diwali'));
+applySeasonalEventsPreference('0');check(none()&&!document.getElementById('seasonal-event-notice').hidden,'Ctrl+Y hides mouse companions but keeps notices');applySeasonalEventsPreference('1');
+document.getElementById('landing-wrapper').style.display='none';await delay(50);check(none(),'play area gets no mouse companions');document.getElementById('landing-wrapper').style.display='';await delay(100);
 await click('#seasons-automatic');await until(()=>seasonPreview()===null);
-clock=Date.parse('2026-11-04T21:59:59.750Z')-(Date.now()-baseTime);document.dispatchEvent(new Event('visibilitychange'));check(!document.querySelector('.seasonal-background'),'before automatic start');await delay(600);check(document.querySelector('.seasonal-background')?.dataset.season==='diwali','automatically starts at midnight without reload or SSE');
-clock=Date.parse('2026-11-11T21:59:59.750Z')-(Date.now()-baseTime);document.dispatchEvent(new Event('visibilitychange'));await delay(600);check(!document.querySelector('.seasonal-background')&&document.getElementById('seasonal-event-notice').hidden,'automatically ends at midnight');
-for(const [stamp,season]of [['2026-12-21T21:59:59.750Z','christmas'],['2026-12-28T21:59:59.750Z','new-year'],['2027-01-04T21:59:59.750Z',null]]){
- clock=Date.parse(stamp)-(Date.now()-baseTime);document.dispatchEvent(new Event('visibilitychange'));await delay(600);
- check((document.querySelector('.seasonal-background')?.dataset.season||null)===season,'winter midnight transition '+stamp);
+clock=Date.parse('2026-11-04T21:59:59.750Z')-(Date.now()-baseTime);document.dispatchEvent(new Event('visibilitychange'));check(none(),'before automatic event start');await delay(600);check(active('diwali')&&noBackground(),'Diwali starts at midnight with only the mouse companion');
+clock=Date.parse('2026-11-11T21:59:59.750Z')-(Date.now()-baseTime);document.dispatchEvent(new Event('visibilitychange'));await delay(600);check(none()&&document.getElementById('seasonal-event-notice').hidden,'Diwali ends automatically');
+for(const[stamp,season]of [['2026-12-21T21:59:59.750Z','christmas'],['2026-12-28T21:59:59.750Z','new-year'],['2027-01-04T21:59:59.750Z',null]]){
+ clock=Date.parse(stamp)-(Date.now()-baseTime);document.dispatchEvent(new Event('visibilitychange'));await delay(600);check(season?active(season):none(),'winter midnight transition '+stamp);check(noBackground(),'winter calendar changes never add background objects');
 }
-await click('[data-season-test="diwali"]');await until(()=>document.querySelector('.seasonal-background')?.dataset.season==='diwali');await delay(400);ad.hidden=true;
-document.body.dataset.test=JSON.stringify({privatePreview:true,otherAccountUnaffected:true,liveRestored:true,off:true,settings:true,stableScatter:true,automaticStartAndEnd:true,winterPreview:true,winterYearBoundary:true,sprites:diwaliArtwork.length});
+await click('[data-season-test="diwali"]');await until(()=>active('diwali'));ad.hidden=true;
+document.body.dataset.test=JSON.stringify({privatePreview:true,otherAccountUnaffected:true,liveRestored:true,off:true,settings:true,mouseOnly:true,noBackgroundSprites:true,automaticStartAndEnd:true,winterPreview:true,winterYearBoundary:true});
 </script>`;
 const other=base+`<script type="module">${common}
 const {initSeasonalEvents}=await import('/js/seasonal-events/index.js');initSeasonalEvents()();
 const {setSeasonPreviewUser,seasonPreview}=await import('/js/seasonal-events/preview.js');setSeasonPreviewUser({id:2,isAdmin:true});window.readPreview=seasonPreview;
 initSeasonalEvents({now:()=>new Date('2026-10-30T12:00:00Z')});document.body.dataset.ready='1';</script>`;
-const admin=`<meta charset="utf-8"><link rel="stylesheet" href="/css/admin-seasons.css"><style>${adminStyle}</style>${adminMarkup}<script type="module">import{loadSeasons}from'/admin/js/seasons.js';document.getElementById('tab-seasons').classList.add('active');if(!localStorage.getItem('gamebook_auth_token'))localStorage.setItem('gamebook_auth_token','test-admin');await loadSeasons();const spriteCounts=Object.fromEntries([...document.querySelectorAll('.season-card')].map(card=>[card.querySelector('[data-season-test]').dataset.seasonTest,card.querySelectorAll('.season-samples svg').length]));if(Object.keys(spriteCounts).length!==4||Object.values(spriteCounts).some(count=>count!==27))throw Error('Both seasonal cards must display their artwork');if(getComputedStyle(document.getElementById('seasons-list')).gridTemplateColumns.split(' ').length!==(innerWidth>680?2:1))throw Error('Season cards need two columns on desktop and one on narrow screens');if(${Boolean(process.env.SEASONS_FOCUS_NEW_YEAR)})document.querySelector('[data-season-test="new-year"]').closest('.season-card').scrollIntoView({block:'center'});document.body.dataset.test=JSON.stringify({adminSeasons:true,cards:document.querySelectorAll('.season-card').length,spriteCounts});</script>`;
+const admin=`<meta charset="utf-8"><link rel="stylesheet" href="/css/admin-seasons.css"><style>${adminStyle}</style>${adminMarkup}<script type="module">import{loadSeasons}from'/admin/js/seasons.js';document.getElementById('tab-seasons').classList.add('active');if(!localStorage.getItem('gamebook_auth_token'))localStorage.setItem('gamebook_auth_token','test-admin');await loadSeasons();if(document.querySelector('.season-samples'))throw Error('Retired sprite galleries are still visible');if(getComputedStyle(document.getElementById('seasons-list')).gridTemplateColumns.split(' ').length!==(innerWidth>680?2:1))throw Error('Season cards need two columns on desktop and one on narrow screens');if(${Boolean(process.env.SEASONS_FOCUS_NEW_YEAR)})document.querySelector('[data-season-test="new-year"]').closest('.season-card').scrollIntoView({block:'center'});document.body.dataset.test=JSON.stringify({adminSeasons:true,cards:document.querySelectorAll('.season-card').length,spriteGalleries:0});</script>`;
 let accountPrefs={seasonPreview:'automatic'};
 const server=http.createServer((req,res)=>{
   if(req.url==='/api/prefs'){

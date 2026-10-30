@@ -1,4 +1,4 @@
-// Build crisp Halloween SVG sprites from a limited palette and pixel grids.
+// Build crisp SVG pixel artwork from a supplied palette and grid.
 const palette = {
   O: '#27242f', E: '#938493', B: '#403344', b: '#766078',
   R: '#9b3749', r: '#e47761', W: '#e1d8ba',

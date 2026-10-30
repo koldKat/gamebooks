@@ -63,6 +63,3 @@ body.reduce-motion .seasonal-champagne__foam > *,body.reduce-motion .seasonal-ch
 .seasonal-event-notice[data-season="christmas"] strong { color:#dfb8a1; }
 .seasonal-event-notice[data-season="new-year"] { background:#202737;border-color:#566784;border-left-color:#c5a963; }
 .seasonal-event-notice[data-season="new-year"] strong { color:#e1c890; }
-.seasonal-background[data-season="christmas"] .seasonal-background__haze { background:radial-gradient(ellipse at 40% 30%,#5b95661c,transparent 65%),radial-gradient(ellipse at 65% 70%,#b7676414,transparent 65%); }
-.seasonal-background[data-season="new-year"] .seasonal-background__haze { background:radial-gradient(ellipse at 40% 30%,#7393b21c,transparent 65%),radial-gradient(ellipse at 65% 70%,#c5a96314,transparent 65%); }
-.seasonal-background[data-season="christmas"] .seasonal-background__icon,.seasonal-background[data-season="new-year"] .seasonal-background__icon { --seasonal-opacity:.57; }

@@ -84,23 +84,12 @@ document.body.classList.add('reduce-motion');await delay(30);
 check(pumpkin.style.getPropertyValue('--pumpkin-look-x')==='0px'&&!pumpkin.classList.contains('is-blinking'),'reduced animation preference');
 check(!pumpkin.classList.contains('is-clacking')&&!pumpkin.classList.contains('is-drooling'),'reduced motion clears mouth effects');
 document.getElementById('landing-wrapper').style.visibility='visible';await delay(350);
-let icons=[...document.querySelectorAll('.seasonal-background__icon')];
-check(icons.length===14,'seven background decorations per gap');
-const beforeTab=icons.map(icon=>icon.style.cssText),background=document.querySelector('.seasonal-background');
-let tabHidden=false;
-Object.defineProperty(document,'hidden',{configurable:true,get:()=>tabHidden});
+check(!document.querySelector('.seasonal-background,.seasonal-background__icon,.seasonal-background__web'),'no background decorations');
+let tabHidden=false;Object.defineProperty(document,'hidden',{configurable:true,get:()=>tabHidden});
 for(let i=0;i<3;i++){
  tabHidden=true;document.dispatchEvent(new Event('visibilitychange'));await delay(30);
  tabHidden=false;document.dispatchEvent(new Event('visibilitychange'));await delay(350);
- check(document.querySelector('.seasonal-background')===background,'tab switch keeps background node');
- check(icons.every((icon,index)=>icon.isConnected&&icon.style.cssText===beforeTab[index]),'tab switch preserves icons and exact scatter');
-}
-for(const icon of icons){
- const rect=icon.getBoundingClientRect();
- for(const id of ['covers-panel','feed-panel','landing-right']){
-  const panel=document.getElementById(id).getBoundingClientRect();
-  check(rect.right+12<=panel.left||rect.left-12>=panel.right||rect.bottom+12<=panel.top||rect.top-12>=panel.bottom,'clear panel gaps');
- }
+ check(document.querySelector('.seasonal-pumpkin')===pumpkin&&!document.querySelector('.seasonal-background'),'tab switch retains only the mouse companion');
 }
 initSeasonalEventSettings(patch=>saved=patch);
 const toggle=document.getElementById('seasonal-events-cb');check(toggle.checked,'enabled by default');
@@ -126,7 +115,7 @@ date=new Date('2026-10-27T21:59:59Z');
 stop=initSeasonalEvents({now:()=>date,random:()=>0});
 check(notice.hidden&&!document.querySelector('.seasonal-pumpkin'),'before automatic event start');
 date=new Date('2026-10-27T22:00:00Z');await delay(1250);
-check(!notice.hidden&&document.querySelector('.seasonal-pumpkin')&&document.querySelector('.seasonal-background'),'notice and decorations start automatically');
+check(!notice.hidden&&document.querySelector('.seasonal-pumpkin')&&!document.querySelector('.seasonal-background'),'notice and mouse start automatically');
 stop();date=new Date('2026-11-03T21:59:59Z');
 stop=initSeasonalEvents({now:()=>date,random:()=>0});
 check(!notice.hidden&&document.querySelector('.seasonal-pumpkin'),'before automatic event end');
@@ -141,15 +130,15 @@ window.fetch=async(url,options)=>{
  check(String(url).endsWith('/seasonal-events/calendar.json')&&options.cache==='no-cache','live calendar revalidation');
  calendarFetches++;return {ok:true,json:async()=>nextCalendar};
 };
-const beforeLiveBackground=document.querySelector('.seasonal-background');
+const beforeLiveCursor=document.querySelector('.seasonal-pumpkin');
 nextCalendar=originalCalendar.map(event=>({...event,description:'double XP for sim battle losses.'}));
 window.dispatchEvent(new Event('app-config-changed'));await delay(40);
 check(notice.textContent==='Halloween event active: double XP for sim battle losses.','SSE updates notice text in place');
-check(document.querySelector('.seasonal-background')===beforeLiveBackground,'SSE text updates preserve active artwork');
+check(document.querySelector('.seasonal-pumpkin')===beforeLiveCursor,'SSE text updates preserve the mouse companion');
 nextCalendar=[];window.dispatchEvent(new Event('app-config-changed'));await delay(40);
 check(notice.hidden&&!document.querySelector('.seasonal-background'),'SSE removes inactive event in open tab');
 nextCalendar=originalCalendar;window.dispatchEvent(new Event('app-config-changed'));await delay(40);
-check(!notice.hidden&&document.querySelector('.seasonal-background'),'SSE starts newly active event in open tab');
+check(!notice.hidden&&document.querySelector('.seasonal-pumpkin')&&!document.querySelector('.seasonal-background'),'SSE starts newly active event without background sprites');
 window.fetch=async()=>{throw Error('offline');};
 window.dispatchEvent(new Event('app-config-changed'));await delay(40);
 check(!notice.hidden,'failed calendar request retains last valid event');
@@ -157,7 +146,7 @@ check(calendarFetches===3,'only live configuration signals fetch calendar');
 window.fetch=nativeFetch;stop();
 document.body.classList.remove('reduce-motion');
 initSeasonalEvents({now:()=>date});move();await delay(80);
-document.body.dataset.test=JSON.stringify({calendar:true,automaticStart:true,automaticEnd:true,liveNoticeUpdates:true,liveStart:true,liveEnd:true,liveUpdatePreservesArtwork:true,wholeSimLossPhraseColored:true,pointer:true,blink:true,glances:true,mouth:true,drool:true,clack:true,background:true,tabSwitchStable:true,settings:true,persistence:true,reducedMotion:true,cleanup:true});
+document.body.dataset.test=JSON.stringify({calendar:true,automaticStart:true,automaticEnd:true,liveNoticeUpdates:true,liveStart:true,liveEnd:true,liveUpdatePreservesArtwork:true,wholeSimLossPhraseColored:true,pointer:true,blink:true,glances:true,mouth:true,drool:true,clack:true,mouseOnly:true,tabSwitchStable:true,settings:true,persistence:true,reducedMotion:true,cleanup:true});
 </script>`;
 
 (async () => {
