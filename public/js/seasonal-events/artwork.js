@@ -1,7 +1,43 @@
-// One Halloween artwork pool in a consistent retro pixel style.
-import { halloweenClassics } from './classic-artwork.js';
-import { halloweenCreatures } from './creature-artwork.js';
-import { hauntedArtwork } from './haunted-artwork.js';
-import { animateHalloweenSprite } from './halloween-animation.js';
+// A freshly drawn, static Halloween catalogue in one consistent 16-pixel style.
+import {halloweenDrawing as draw} from './halloween-pixels.js';
+import {halloweenWebs} from './web-artwork.js';
 
-export const halloweenArtwork = [...halloweenClassics, ...halloweenCreatures, ...hauntedArtwork].map(animateHalloweenSprite);
+const pumpkin=(d,wide=false)=>{
+ const{shape,box}=d;box(8,1,2,3,'G');shape(wide?[[3,4],[12,4],[15,7],[14,12],[11,14],[4,14],[1,11],[1,7]]:[[5,3],[11,3],[14,6],[14,11],[11,14],[5,14],[2,11],[2,6]],'O');
+ box(5,6,2,2,'N');box(10,6,2,2,'N');box(6,10,5,2,'N');box(7,10,1,1,'Y');box(10,11,1,1,'O');box(4,6,1,5,'Y');
+};
+const ghost=(d,arms=false)=>{
+ const{shape,box}=d;shape(arms?[[6,2],[10,2],[12,5],[12,7],[15,5],[14,10],[12,11],[12,14],[9,13],[7,15],[5,13],[3,14],[4,10],[1,8],[1,5],[4,7],[4,5]]:[[6,2],[10,2],[13,5],[13,14],[10,13],[8,15],[6,13],[3,14],[3,5]],'W');
+ box(6,5,1,2,'N');box(9,5,1,2,'N');box(7,9,2,2,'N');box(11,7,1,5,'S');
+};
+const skull=(d)=>{const{shape,box}=d;shape([[5,2],[11,2],[14,5],[13,10],[11,11],[11,14],[5,14],[5,11],[3,10],[2,5]],'W');box(4,5,3,3,'N');box(9,5,3,3,'N');box(7,9,2,2,'N');box(6,12,1,2,'N');box(9,12,1,2,'N');};
+const spider=(d,red=false)=>{const{shape,line,box}=d;for(const y of [5,7,9,11]){line(6,y,3,y-2,'D');line(3,y-2,1,y-1,'D');line(9,y,12,y-2,'D');line(12,y-2,14,y-1,'D');}shape([[6,3],[10,3],[12,6],[11,10],[8,12],[5,10],[4,6]],red?'R':'D');box(6,9,1,1,'W');box(9,9,1,1,'W');};
+
+export const halloweenArtwork=[
+ draw('Jack-o-lantern',2,d=>pumpkin(d)),
+ draw('Ghost',0,d=>ghost(d)),
+ draw('Bat',3,({shape,box})=>{shape([[1,3],[5,6],[6,4],[8,5],[10,4],[11,6],[15,3],[14,10],[12,9],[10,12],[8,11],[6,12],[4,9],[2,10]],'D');box(6,6,4,6,'N');box(6,4,1,2,'N');box(9,4,1,2,'N');box(6,7,1,1,'Y');box(9,7,1,1,'Y');}),
+ draw('Skull',5,skull),
+ draw('Spider',7,d=>spider(d)),
+ draw('Black cat',6,({shape,box,line})=>{shape([[7,8],[9,6],[9,2],[11,4],[13,2],[14,5],[13,8],[12,9],[13,13],[6,13],[5,11]],'D');box(10,5,1,1,'Y');box(12,5,1,1,'Y');line(6,11,3,10,'D');line(3,10,2,7,'D');line(2,7,3,5,'D');box(6,13,3,1,'N');box(11,13,3,1,'N');}),
+ draw('Gravestone',5,({shape,box})=>{shape([[5,2],[11,2],[13,4],[13,13],[3,13],[3,4]],'S');box(7,4,2,6,'N');box(5,6,6,2,'N');box(2,13,12,1,'D');}),
+ draw('Cauldron',17,({shape,box})=>{shape([[3,5],[13,5],[15,8],[13,13],[10,14],[5,14],[2,11],[1,8]],'D');box(3,5,10,2,'G');box(3,7,10,1,'N');box(3,13,2,2,'N');box(11,13,2,2,'N');box(5,2,1,1,'G');box(9,3,2,1,'G');}),
+ draw('Potion',18,({shape,box})=>{box(6,1,4,2,'O');shape([[6,3],[10,3],[10,6],[13,10],[12,14],[4,14],[3,10],[6,6]],'B');shape([[5,9],[11,9],[12,12],[10,13],[5,13],[4,11]],'G');box(5,8,1,3,'W');}),
+ draw('Candle',15,({box,shape})=>{shape([[8,1],[10,4],[8,6],[6,4]],'Y');box(5,7,6,7,'N');box(6,7,4,6,'W');box(6,8,1,3,'S');box(3,14,10,1,'D');}),
+ draw('Witch hat',12,({shape,box})=>{shape([[9,1],[11,2],[9,5],[12,12],[3,12],[6,6]],'D');box(3,10,9,2,'R');box(7,10,2,2,'Y');box(1,12,14,2,'N');box(2,12,12,1,'D');}),
+ draw('Reaper',1,({shape,box,line})=>{shape([[5,2],[9,2],[11,6],[10,8],[12,14],[2,14],[4,8],[3,6]],'D');box(5,5,4,3,'N');box(5,6,1,1,'W');box(8,6,1,1,'W');line(13,3,13,14,'O');line(10,3,14,3,'S');line(10,3,9,5,'S');}),
+ draw('Haunted house',14,({shape,box})=>{box(10,2,2,4,'D');shape([[8,1],[15,7],[13,7],[13,14],[3,14],[3,7],[1,7]],'D');box(5,8,2,2,'Y');box(10,8,2,2,'Y');box(7,11,3,3,'N');box(2,14,12,1,'N');}),
+ draw('Coffin',16,({shape,box})=>{shape([[5,1],[11,1],[14,5],[11,14],[5,14],[2,5]],'O');box(7,4,2,7,'N');box(5,6,6,2,'N');box(4,5,1,5,'Y');}),
+ draw('Spellbook',16,({box,line})=>{box(2,3,12,11,'N');box(3,3,10,9,'R');box(3,12,10,1,'W');box(4,4,1,7,'O');box(7,5,4,1,'Y');box(8,4,2,5,'Y');line(5,14,13,14,'D');}),
+ draw('Mummy',9,({shape,box})=>{shape([[6,1],[10,1],[12,4],[11,7],[12,13],[10,14],[8,11],[6,14],[4,13],[5,7],[4,4]],'W');box(5,4,6,2,'N');box(6,4,1,1,'R');box(9,4,1,1,'R');box(6,7,5,1,'S');box(5,10,6,1,'S');box(6,12,2,1,'S');}),
+ draw('Zombie',8,({shape,box})=>{shape([[5,2],[11,2],[13,5],[12,10],[10,12],[5,12],[3,8],[3,4]],'G');box(5,3,4,2,'R');box(5,6,2,2,'N');box(9,6,2,2,'N');box(6,10,4,1,'N');box(7,10,1,1,'W');box(4,12,8,2,'B');}),
+ draw('Vampire',10,({shape,box})=>{shape([[4,2],[12,2],[13,6],[11,10],[14,14],[2,14],[5,10],[3,6]],'D');box(5,4,6,5,'W');box(7,4,2,1,'N');box(5,6,1,1,'R');box(10,6,1,1,'R');box(6,8,4,1,'R');box(6,8,1,2,'W');box(9,8,1,2,'W');shape([[3,10],[8,12],[13,10],[13,14],[3,14]],'R');}),
+ draw('Scarecrow',13,({box,line})=>{box(7,3,2,12,'O');box(1,8,14,1,'O');box(5,3,6,4,'N');box(6,3,4,4,'Y');box(6,4,1,1,'N');box(9,4,1,1,'N');box(7,6,2,1,'N');box(5,2,6,1,'O');box(6,1,4,1,'O');box(5,8,6,4,'R');box(3,8,2,2,'R');box(11,8,2,2,'R');line(1,7,1,10,'Y');line(14,7,14,10,'Y');box(5,12,1,1,'Y');box(10,12,1,1,'Y');}),
+ draw('Lantern',16,({box,line})=>{line(5,3,6,1,'D');line(6,1,9,1,'D');line(9,1,10,3,'D');box(4,4,8,10,'N');box(5,5,6,7,'Y');box(7,5,1,7,'O');box(4,4,8,1,'D');box(3,13,10,1,'D');}),
+ draw('Wrapped sweet',16,({shape,box})=>{shape([[1,5],[5,6],[11,6],[15,4],[14,11],[11,10],[5,10],[1,12]],'R');box(5,5,6,6,'N');box(6,6,4,4,'Y');box(7,6,1,4,'W');}),
+ draw('Crossed bones',5,({line,box})=>{for(const offset of [0,1]){line(3,3+offset,12,12+offset,'W');line(12,3+offset,3,12+offset,'W');}for(const[x,y]of[[2,2],[11,2],[2,11],[11,11]])box(x,y,3,3,'W');box(7,7,2,2,'S');}),
+ draw('Crow',16,({shape,box,line})=>{shape([[7,3],[11,3],[12,5],[14,6],[11,7],[11,10],[7,12],[3,11],[5,7],[5,5]],'D');box(10,4,1,1,'Y');line(7,11,7,14,'N');line(9,11,9,14,'N');box(6,14,5,1,'N');}),
+ draw('Wide pumpkin',2,d=>pumpkin(d,true)),
+ draw('Raised-arm ghost',0,d=>ghost(d,true)),
+ ...halloweenWebs,
+];

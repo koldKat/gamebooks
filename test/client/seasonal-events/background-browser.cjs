@@ -44,7 +44,7 @@ if(innerWidth<1400){
  check(!document.querySelector('.seasonal-background__web:not([hidden])'),'tight gutters do not squeeze in large webs');
  document.body.dataset.test=JSON.stringify({narrow:true,icons:small.length,miniatures:true});
 }else{
- let icons=visible();check(icons.length===4,'only two crawling spiders, cauldron and house');check(new Set(icons.map(n=>n.dataset.artwork)).size===4&&icons.every(n=>['14','15','20','24'].includes(n.dataset.artwork)),'unused artwork stays out of live scene');
+ let icons=visible();check(icons.length===14,'seven static icons per clear gap');check(document.querySelector('.seasonal-background').getAnimations({subtree:true}).length===0,'every background sprite is static');
 const webs=[...document.querySelectorAll('.seasonal-background__web')].filter(web=>!web.hidden);
 check(webs.length===2,'two anchored corner webs');
 check(new Set(webs.map(web=>web.dataset.edge)).size===2,'top and bottom corners');
@@ -53,17 +53,17 @@ for(const web of webs){const r=web.getBoundingClientRect(),anchor=Number(web.dat
  check(r.width>=72&&r.width<=128,'smaller corner web size');
  check(Math.abs(r.top)<1||Math.abs(r.bottom-innerHeight)<1,'web attached to screen edge');
  check(Math.abs(r.left-anchor)<1||Math.abs(r.right-anchor)<1,'web attached to panel edge');
- check(web.querySelector(':is(rect,path)[fill="#9b3749"], :is(rect,path)[fill="#7c9566"]'),'coloured spider on web');
+ check(web.querySelector('path[fill="#292830"]'),'coloured spider on web');
 }
 check(new Set(icons.map(icon=>icon.dataset.artwork)).size===icons.length,'distinct artwork, not resized duplicates');
 check(['7','14','17'].every(kind=>icons.some(icon=>icon.dataset.kind===kind)),'crawling spiders, house and cauldron appear');
 for(const icon of icons.filter(icon=>icon.dataset.pixelated)){
- check(icon.dataset.artwork==='13'||[0,90,180,270].some(angle=>icon.style.transform.startsWith('rotate('+angle+'deg)')),'pixel sprites keep their square grid');
+ check(getComputedStyle(icon).transform==='none','static pixel art retains its square grid');
  const pixels=[...icon.querySelectorAll('rect')];check(icon.querySelector('rect,path'),'pixel sprite has compact painted shapes');check([...icon.querySelectorAll('path')].every(p=>p.getAttribute('d')&&!p.outerHTML.includes('undefined')),'valid compact pixel paths');
  check(pixels.every(pixel=>['x','y','width','height'].every(name=>Number(pixel.getAttribute(name))%2===0)&&Number(pixel.getAttribute('x'))+Number(pixel.getAttribute('width'))<=48&&Number(pixel.getAttribute('y'))+Number(pixel.getAttribute('height'))<=48&&pixel.getAttribute('fill')!=='undefined'),'valid unclipped pixel blocks');
 }
-check(icons.filter(icon=>icon.dataset.kind==='0').every(icon=>getComputedStyle(icon).color==='rgb(255, 255, 255)'),'white ghosts');
-check(icons.filter(icon=>icon.dataset.kind==='4').every(icon=>icon.querySelector(':is(rect,path)[fill="#9b3749"], :is(rect,path)[fill="#7c9566"]')),'colored spiders on white webs');
+check(icons.filter(icon=>icon.dataset.kind==='0').every(icon=>Boolean(icon.querySelector('path[fill="#e2dfcc"]'))),'white ghosts');
+check(icons.filter(icon=>icon.dataset.kind==='4').every(icon=>icon.querySelector('path[fill="#292830"]')),'colored spiders on white webs');
 const rects=icons.map(icon=>icon.getBoundingClientRect());
 check(rects.some(r=>r.left<680)&&rects.some(r=>r.left>1368),'both panel gaps');
 check(new Set(rects.map(r=>Math.round(r.width))).size>=2,'spiders and bottom props keep suitable sizes');
@@ -99,7 +99,7 @@ document.body.classList.add('right-collapsed','feed-collapsed');await delay(220)
 document.body.classList.add('covers-collapsed');await delay(220);
 check(getComputedStyle(layer).display==='none','all panels hidden removes icons');
 document.body.classList.remove('covers-collapsed','right-collapsed','feed-collapsed');await delay(350);
-check(getComputedStyle(layer).display!=='none'&&visible().length===4,'restores the four chosen sprites with panels');
+check(getComputedStyle(layer).display!=='none'&&visible().length===14,'restores static sprites with panels');
 document.body.dataset.test=JSON.stringify({density:visible().length,bothSides:true,variedSizes:true,randomPositions:true,noScrollRedraws:true,endScroll:true,repeatLayoutStable:true,collapse:true,anchoredWebs:2,smallerWebs:true});
 }
 </script>`;

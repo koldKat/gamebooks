@@ -1,54 +1,10 @@
-// Corner cobwebs with radial silk, scalloped rings and contrasting pixel spiders.
-import { pixelSprite } from './pixel-art.js';
-
-function cornerWeb(spiderColor, spokes, radii) {
-  let pixels = Array.from({ length: 48 }, () => Array(48).fill('.'));
-  const plot = (x, y, color = 'F') => {
-    x = Math.round(x); y = Math.round(y);
-    if (x >= 0 && x < 48 && y >= 0 && y < 48) pixels[y][x] = color;
-  };
-  function line(x0, y0, x1, y1, color = 'F') {
-    const steps = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0), 1);
-    for (let i = 0; i <= Math.ceil(steps); i++) {
-      const t = Math.min(1, i / steps);
-      plot(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, color);
-    }
-  }
-  const point = (radius, angle) => [radius * Math.cos(angle), radius * Math.sin(angle)];
-  const angles = Array.from({ length: spokes }, (_, i) => i * Math.PI / (2 * (spokes - 1)));
-  for (const angle of angles) line(0, 0, ...point(47, angle));
-  for (const radius of radii) {
-    for (let i = 1; i < angles.length; i++) {
-      const a = point(radius, angles[i - 1]), b = point(radius, angles[i]);
-      const control = point(radius - Math.min(5, radius * .2), (angles[i - 1] + angles[i]) / 2);
-      let previous = a;
-      for (let step = 1; step <= 20; step++) {
-        const t = step / 20, u = 1 - t;
-        const next = [u*u*a[0]+2*u*t*control[0]+t*t*b[0], u*u*a[1]+2*u*t*control[1]+t*t*b[1]];
-        line(...previous, ...next); previous = next;
-      }
-    }
-  }
-  const silk=pixelSprite(4,pixels.map(row=>row.join('')),1);
-  pixels=Array.from({length:48},()=>Array(48).fill('.'));
-  // Keep the spider separate so corner orientation cannot reverse gravity.
-  for (const side of [-1, 1]) {
-    for (let i = 0; i < 4; i++) {
-      line(29 + side * 2, 27 + i, 29 + side * 5, 25 + i * 2, 'O');
-      line(29 + side * 5, 25 + i * 2, 29 + side * 6, 26 + i * 2, 'O');
-    }
-  }
-  for (let y = 26; y <= 32; y++) for (let x = 27; x <= 31; x++) {
-    if ((y !== 26 && y !== 32) || (x >= 28 && x <= 30)) plot(x, y, spiderColor);
-  }
-  plot(28, 27, 'r'); plot(30, 27, 'r');
-  const spider=pixelSprite(4,pixels.map(row=>row.join('')),1);
-  const svg=silk.svg+'<rect x="29" y="12" width="1" height="13" fill="#b6bfce"/>'+spider.svg;
-  return {...silk,svg,webSvg:silk.svg,spiderSvg:spider.svg,
-    maskImage:`url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">'+svg+'</svg>')}")`};
-}
-
-export const halloweenWebs = [
-  cornerWeb('R', 6, [9, 18, 27, 36, 45]),
-  cornerWeb('Z', 5, [11, 22, 33, 45]),
-];
+// Two static corner webs using the same three-pixel grid and palette as the Halloween set.
+import {halloweenDrawing as draw} from './halloween-pixels.js';
+function web(name,spiderX,spiderY){return draw(name,4,({line,box})=>{
+ const arc=r=>[[r,0],[Math.round(r*.94),Math.round(r*.32)],[Math.round(r*.78),Math.round(r*.62)],[Math.round(r*.62),Math.round(r*.78)],[Math.round(r*.32),Math.round(r*.94)],[0,r]];
+ for(const[x,y]of [[15,0],[14,7],[7,14],[0,15]])line(0,0,x,y,'S');
+ for(const radius of [7,14]){const points=arc(radius);for(let i=1;i<points.length;i++)line(...points[i-1],...points[i],'S');}
+ box(spiderX,spiderY,2,3,'N');box(spiderX,spiderY,2,1,'R');
+ for(const dy of [0,2]){line(spiderX,spiderY+dy,spiderX-1,spiderY+dy-1,'D');line(spiderX+1,spiderY+dy,spiderX+2,spiderY+dy-1,'D');}
+ });}
+export const halloweenWebs=[web('Corner web with spider',10,5),web('Corner web with small spider',5,10)];
