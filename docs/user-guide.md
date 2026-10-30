@@ -33,7 +33,7 @@ Halloween runs from **October 28 through November 3** each year. A scary pumpkin
 
 **Christmas** runs **December 22–28**. Father Christmas follows the mouse, blinks, looks around, laughs with comic “Ho!” words, rings a bell and tosses a gift. Christmas doubles XP for wins, simulator wins, new runs, discovering or mapping every section of a book, and heartbeats.
 
-**New Year** runs **December 29–January 4**. A ticking clock follows the mouse with occasional countdown, fireworks and confetti animations. Every XP award is doubled, including job XP. Both winter events have 27 pixel sprites and use the same decoration and reduced-animation settings.
+**New Year** runs **December 29–January 4**. A sparkling pixel party popper follows the mouse, occasionally bursting with confetti, setting off fireworks or unfurling a party horn. Every XP award is doubled, including job XP. Both winter events have 27 pixel sprites and use the same decoration and reduced-animation settings.
 
 ### Centre - Activity feed
 

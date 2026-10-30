@@ -75,8 +75,3 @@ export const santaCursorSvg=drawing(20,d=>santa(d,false)).svg
   + '<g class="seasonal-santa__ho" font-family="monospace" font-weight="bold" font-size="8" fill="#f6dda0" stroke="#302b39" stroke-width=".6" paint-order="stroke"><text x="10" y="18">Ho!</text><text x="20" y="14">Ho!</text><text x="16" y="20">Ho!</text></g>'
   + '<g transform="translate(28 20) scale(.45)"><g class="seasonal-santa__bell">'+christmasArtwork[10].svg+'</g></g>'
   + '<g transform="translate(8 28) scale(.5)"><g class="seasonal-santa__gift">'+christmasArtwork[8].svg+'</g></g>';
-export const clockCursorSvg=drawing(50,d=>clock(d,false)).svg
-  + '<g class="seasonal-clock__hand" stroke="#302b39" stroke-width="2.5"><path d="M24 24V13"/></g><path d="M24 24L31 29" stroke="#302b39" stroke-width="2.5"/>'
-  + '<g class="seasonal-clock__count" text-anchor="middle" font-family="monospace" font-size="20" font-weight="bold" fill="#f6dda0" stroke="#302b39" stroke-width="1" paint-order="stroke"><text x="24" y="30">3</text><text x="24" y="30">2</text><text x="24" y="30">1</text></g>'
-  + '<g class="seasonal-clock__fireworks">'+newYearArtwork[4].svg+'</g>'
-  + '<g class="seasonal-clock__confetti">'+newYearArtwork[25].svg+'</g>';

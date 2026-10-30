@@ -27,27 +27,31 @@
   48% { opacity:1;transform:translate(35px,-35px) rotate(15deg); }
   100% { opacity:0;transform:translate(65px,15px) rotate(40deg); }
 }
-.seasonal-clock { filter:drop-shadow(0 0 2px #d9b56e60); }
-.seasonal-clock__hand { transform-origin:24px 24px;animation:new-year-tick 12s steps(60,end) infinite; }
-.seasonal-clock__count text,.seasonal-clock__fireworks,.seasonal-clock__confetti { opacity:0; }
-.seasonal-clock.is-counting .seasonal-clock__count text { animation:new-year-count .65s ease-out both; }
-.seasonal-clock.is-counting .seasonal-clock__count text:nth-child(2) { animation-delay:.7s; }
-.seasonal-clock.is-counting .seasonal-clock__count text:nth-child(3) { animation-delay:1.4s; }
-.seasonal-clock.is-celebrating .seasonal-clock__fireworks { transform-origin:24px 24px;animation:new-year-fireworks 2.5s ease-out both; }
-.seasonal-clock.is-confetti .seasonal-clock__confetti { opacity:1; }
-.seasonal-clock.is-confetti .seasonal-clock__confetti rect { animation:new-year-confetti 2.6s ease-out both; }
-.seasonal-clock.is-confetti .seasonal-clock__confetti rect:nth-child(3n) { --confetti-x:-25px;animation-delay:.1s; }
-.seasonal-clock.is-confetti .seasonal-clock__confetti rect:nth-child(3n+1) { --confetti-x:25px;animation-delay:.2s; }
-@keyframes new-year-tick { to { transform:rotate(360deg); } }
-@keyframes new-year-count { 0% { opacity:0;transform:translateY(6px); } 20%,65% { opacity:1; } 100% { opacity:0;transform:translateY(-8px); } }
-@keyframes new-year-fireworks { 0% { opacity:0;transform:scale(.2); } 20% { opacity:1;transform:scale(1.1); } 65% { opacity:.8; } 100% { opacity:0;transform:scale(2) rotate(25deg); } }
-@keyframes new-year-confetti { 0% { opacity:0;transform:translate(0,-5px); } 15% { opacity:1; } 100% { opacity:0;transform:translate(var(--confetti-x,4px),38px) rotate(30deg); } }
+.seasonal-popper { filter:drop-shadow(0 0 2px #d9b56e60); }
+.seasonal-popper__body { transform-origin:17px 34px;animation:new-year-bob 2.8s ease-in-out infinite; }
+.seasonal-popper__sparkles > g { transform-box:fill-box;transform-origin:center;animation:new-year-twinkle 1.8s steps(2,end) infinite; }
+.seasonal-popper__sparkles > g:nth-child(2) { animation-delay:-.6s; }
+.seasonal-popper__sparkles > g:nth-child(3) { animation-delay:-1.2s; }
+.seasonal-popper__confetti rect,.seasonal-popper__fireworks > g,.seasonal-popper__horn,.seasonal-popper__toot { opacity:0; }
+.seasonal-popper.is-popping .seasonal-popper__body { animation:new-year-recoil 450ms ease-out 2; }
+.seasonal-popper.is-popping .seasonal-popper__confetti rect { animation:new-year-pop 2s ease-out both;animation-delay:var(--pop-delay);transform-box:fill-box;transform-origin:center; }
+.seasonal-popper.is-fireworks .seasonal-popper__fireworks > g { transform-box:fill-box;transform-origin:center;animation:new-year-firework 1.5s ease-out both; }
+.seasonal-popper.is-fireworks .seasonal-popper__fireworks > g:nth-child(2) { animation-delay:.65s; }
+.seasonal-popper.is-tooting .seasonal-popper__horn { transform-origin:0 0;animation:new-year-horn 2.4s steps(5,end) both; }
+.seasonal-popper.is-tooting .seasonal-popper__toot { animation:new-year-toot 2.4s ease-out both; }
+@keyframes new-year-bob { 0%,100% { transform:rotate(-6deg) translateY(0); } 50% { transform:rotate(5deg) translateY(-2px); } }
+@keyframes new-year-twinkle { 0%,100% { opacity:.25;transform:scale(.55); } 50% { opacity:1;transform:scale(1.1); } }
+@keyframes new-year-recoil { 0%,100% { transform:rotate(-6deg); } 25% { transform:translate(-4px,4px) rotate(-17deg); } 65% { transform:rotate(9deg); } }
+@keyframes new-year-pop { 0% { opacity:0;transform:translate(0,0) scale(.4); } 12% { opacity:1; } 70% { opacity:1; } 100% { opacity:0;transform:translate(var(--pop-x),var(--pop-y)) translateY(22px) rotate(200deg); } }
+@keyframes new-year-firework { 0% { opacity:0;transform:scale(.15); } 20% { opacity:1; } 75% { opacity:.8; } 100% { opacity:0;transform:scale(1.8) rotate(12deg); } }
+@keyframes new-year-horn { 0%,100% { opacity:0;transform:scaleX(.1); } 12%,65% { opacity:1;transform:scaleX(1); } 85% { opacity:1;transform:scaleX(.3); } }
+@keyframes new-year-toot { 0% { opacity:0;transform:translate(0,10px) scale(.5); } 25%,60% { opacity:1; } 100% { opacity:0;transform:translate(16px,-18px) scale(1.2); } }
 body.reduce-motion .seasonal-companion * { animation:none !important;transition:none !important; }
 body.reduce-motion .seasonal-santa__ho text,body.reduce-motion .seasonal-santa__bell,body.reduce-motion .seasonal-santa__gift,
-body.reduce-motion .seasonal-clock__count text,body.reduce-motion .seasonal-clock__fireworks,body.reduce-motion .seasonal-clock__confetti { opacity:0; }
+body.reduce-motion .seasonal-popper__confetti rect,body.reduce-motion .seasonal-popper__fireworks > g,body.reduce-motion .seasonal-popper__horn,body.reduce-motion .seasonal-popper__toot { opacity:0; }
 @media(prefers-reduced-motion:reduce) {
   .seasonal-companion * { animation:none !important;transition:none !important; }
-  .seasonal-santa__ho text,.seasonal-santa__bell,.seasonal-santa__gift,.seasonal-clock__count text,.seasonal-clock__fireworks,.seasonal-clock__confetti { opacity:0; }
+  .seasonal-santa__ho text,.seasonal-santa__bell,.seasonal-santa__gift,.seasonal-popper__confetti rect,.seasonal-popper__fireworks > g,.seasonal-popper__horn,.seasonal-popper__toot { opacity:0; }
 }
 @media print { .seasonal-companion { display:none; } }
 .seasonal-event-notice[data-season="christmas"] { background:#1b2923;border-color:#546c57;border-left-color:#b67872; }
