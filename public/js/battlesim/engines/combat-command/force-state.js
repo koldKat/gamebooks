@@ -6,8 +6,15 @@ export function combatCommandPlayerSetup(state, preset, defaults, preserve = fal
   return templates.map(unit => structuredClone({...unit, ...saved.get(unit.key), ...(preset ? {type:unit.type} : {})}));
 }
 
-export function rememberCombatCommandForce(state, force) {
+export function rememberCombatCommandForce(state, force, { restoreWeaponValues = false } = {}) {
   const saved = new Map((state.playerForce ?? []).map(unit => [unit.key, unit]));
-  for (const unit of force) saved.set(unit.key, structuredClone(unit));
+  for (const unit of force) {
+    const current = structuredClone(unit);
+    if (restoreWeaponValues && Number.isSafeInteger(current.ordnanceBeforeFirearms)) {
+      current.ordnance = current.ordnanceBeforeFirearms;
+      delete current.ordnanceBeforeFirearms;
+    }
+    saved.set(unit.key, current);
+  }
   state.playerForce = [...saved.values()];
 }

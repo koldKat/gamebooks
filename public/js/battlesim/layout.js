@@ -4,7 +4,7 @@ export function prepareBattleSimLayout(overlay) {
   const right = overlay?.querySelector('.bsim-col-right');
   if (!left || !right) return;
   for (const child of [...right.children]) {
-    const report = child.matches('.bsim-log, .bsim-side-title, [role="status"]')
+    const report = child.matches('.bsim-log, .bsim-side-title, .bsim-report, [role="status"]')
       || /-(?:log|history|result|status|opponents)$/.test(child.id)
       || child.matches('p') && /-(?:totals|destination|actor)$/.test(child.id)
       || child.querySelector('.bsim-log, .bsim-history-list, [id$="-log"], [id$="-history"], [id$="-history-list"]');

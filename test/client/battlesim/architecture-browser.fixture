@@ -338,6 +338,10 @@ for(const id of BOOK_IDS){
       app.state.playthroughs=[run];app.state.activePtIndex=0;module.render();
     }finally{Math.random=random;}
   }
+  if(id===1472){
+    const {checkBlackRoadPanel}=await import('REPO/test/client/battlesim/black-road-browser.mjs');
+    await checkBlackRoadPanel({app,module,overlay,requestedRosters,check});
+  }
   if(id===1470){
     const el=key=>document.getElementById('sim1470-'+key);
     const {getRoster}=await import('REPO/public/js/battlesim/books/1470/definition.js');

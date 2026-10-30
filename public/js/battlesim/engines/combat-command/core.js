@@ -25,11 +25,11 @@ export function combatCommandForce(value) {
   });
 }
 
-export function combatCommandHits(charts, chart, strength, total) {
+export function combatCommandHits(charts, chart, strength, total, { allowBlankCells = false } = {}) {
   integer(strength); integer(total, 2, 12);
   const matrix = charts?.[chart];
   if (!Array.isArray(matrix) || matrix.length !== 11 || matrix.some(row => !Array.isArray(row) || row.length !== 11
-      || row.some(cell => !Number.isSafeInteger(cell) || cell < 0))) throw new RangeError('Invalid combat chart');
+      || row.some(cell => !(allowBlankCells && cell === null) && (!Number.isSafeInteger(cell) || cell < 0)))) throw new RangeError('Invalid combat chart');
   if (!strength) return 0;
   return matrix[total - 2][Math.min(10, Math.ceil(strength / 10) - 1)];
 }
@@ -53,7 +53,7 @@ export function startCombatCommandFight(player, encounter, charts) {
     validateCasualtyPolicy(side === 'player' ? fight.player : fight.enemies, encounter[side + 'CasualtyPolicy'], side === 'player');
     const names = [encounter[side + 'Chart'], ...Object.values(encounter[side + 'ChartRounds'] ?? {})].filter(Boolean);
     if (!names.length && !(side === 'player' ? encounter.enemyOnly : encounter.playerOnly)) throw new RangeError('Choose a combat chart');
-    for (const name of names) combatCommandHits(charts, name, 1, 2);
+    for (const name of names) combatCommandHits(charts, name, 1, 2, { allowBlankCells: encounter.manualBlankChartResults === true });
   }
   for (const key of ['playerFiringTypes', 'playerFallbackFiringTypes']) {
     const types = encounter[key];
@@ -74,6 +74,14 @@ export function startCombatCommandFight(player, encounter, charts) {
   }
   if (encounter.ignorePlayerDefeatUntilRound !== undefined
       && encounter.ignorePlayerDefeatUntilRound !== encounter.afterOpeningRound) throw new RangeError('Invalid opening handoff');
+  if (encounter.enemyRetreatAt !== undefined) integer(encounter.enemyRetreatAt);
+  if (encounter.firearms !== undefined) {
+    integer(encounter.firearms?.ordnance, 1);
+    if (encounter.firearms.chart !== undefined) {
+      combatCommandHits(charts, encounter.firearms.chart, 1, 2, { allowBlankCells: encounter.manualBlankChartResults === true });
+      if (encounter.playerChartRounds) throw new RangeError('Conflicting firearm chart rules');
+    }
+  }
   for (const reinforcement of encounter.reinforcements ?? []) {
     integer(reinforcement.round, 1);
     if (!['player', 'enemy'].includes(reinforcement.side)) throw new RangeError('Invalid reinforcement side');
@@ -84,6 +92,7 @@ export function startCombatCommandFight(player, encounter, charts) {
   }
   fight.startPlayer = copy(fight.player);
   if (!living(fight.enemies)) finish(fight, encounter.emptyEnemyOutcome);
+  else if (encounter.enemyRetreatAt !== undefined) outcome(fight);
   return fight;
 }
 
@@ -108,6 +117,10 @@ function outcome(fight) {
   if ((!fight.config.ignorePlayerDefeat && !opening && !living(fight.player)) || fight.player.some(unit => unit.essential && !unit.count)
       || fight.config.minimumPhysical && physical(fight.player) < fight.config.minimumPhysical) finish(fight, 'loss');
   else if (!living(fight.enemies) && !fight.config.refillEnemyEachRound) finish(fight, 'win');
+  else if (fight.config.enemyRetreatAt !== undefined && living(fight.enemies) <= fight.config.enemyRetreatAt) {
+    fight.enemyFled = living(fight.enemies);
+    finish(fight, 'win');
+  }
   return fight.status !== 'fighting';
 }
 
@@ -222,9 +235,21 @@ function attack(fight, side, options, roll, event) {
     if (manual !== undefined && manual !== null) total = integer(manual, 2, 12);
     else { dice = [integer(roll(6), 1, 6), integer(roll(6), 1, 6)]; total = dice[0] + dice[1]; }
   }
-  const hits = power ? combatCommandHits(fight.charts, chart, power, total) : 0;
+  const hits = power ? combatCommandHits(fight.charts, chart, power, total,
+    { allowBlankCells: fight.config.manualBlankChartResults === true }) : 0;
   const entry = { side, strength: power, chart, dice, total, hits, losses: [] };
   event.attacks.push(entry);
+  if (hits === null) {
+    entry.sourceBlank = true;
+    fight.pendingChartResult = { round: fight.round, attackIndex: event.attacks.length - 1, side };
+    fight.status = 'awaiting-chart-value';
+    return;
+  }
+  applyAttack(fight, entry, options, event);
+}
+
+function applyAttack(fight, entry, options, event) {
+  const player = entry.side === 'player', hits = entry.hits;
   if (!player && hits && fight.round <= (fight.config.interruptOnPlayerHitThroughRound ?? 0)) {
     entry.wounded = true;
     finish(fight, 'interrupted');
@@ -247,6 +272,44 @@ function finishRound(fight) {
   else if (fight.round >= (fight.config.roundLimit ?? Infinity)) finish(fight, fight.config.limitOutcome ?? 'survived');
 }
 
+function retainPendingAttacks(fight, remainingAttacks, options) {
+  const pending = fight.status === 'awaiting-chart-value' ? fight.pendingChartResult
+    : fight.status === 'awaiting-losses' ? fight.pendingCasualties : null;
+  if (pending) Object.assign(pending, { remainingAttacks, options: copy(options) });
+}
+
+function continueAttacks(fight, order, options, roll, event) {
+  for (const [index, side] of order.entries()) {
+    if (fight.status !== 'fighting') break;
+    attack(fight, side, options, roll, event);
+    retainPendingAttacks(fight, order.slice(index + 1), options);
+  }
+  finishRound(fight);
+}
+
+// A blank in the printed chart is a reader decision, never a guessed zero.
+// Resume the saved volley before proceeding to its remaining attacks.
+export function resolveCombatCommandChartResult(previous, hits, roll = randomDie) {
+  if (previous?.rulesVersion !== 1 || previous.status !== 'awaiting-chart-value'
+      || previous.config?.manualBlankChartResults !== true
+      || !previous.pendingChartResult) throw new RangeError('No blank chart result pending');
+  integer(hits);
+  const fight = copy(previous), pending = fight.pendingChartResult;
+  const event = fight.history.at(-1), entry = event?.attacks[pending.attackIndex];
+  if (event?.round !== fight.round || pending.round !== fight.round || entry?.side !== pending.side
+      || !['player', 'enemy'].includes(entry.side) || entry.hits !== null || !entry.sourceBlank) {
+    throw new RangeError('Invalid pending chart result');
+  }
+  entry.hits = hits;
+  entry.manualChartResult = true;
+  delete fight.pendingChartResult;
+  fight.status = 'fighting';
+  applyAttack(fight, entry, pending.options ?? {}, event);
+  retainPendingAttacks(fight, pending.remainingAttacks ?? [], pending.options ?? {});
+  continueAttacks(fight, pending.remainingAttacks ?? [], pending.options ?? {}, roll, event);
+  return fight;
+}
+
 // Preserve the already-rolled volley and log while the reader chooses casualties.
 export function resolveCombatCommandCasualties(previous, allocation, roll = randomDie) {
   if (previous?.rulesVersion !== 1 || previous.status !== 'awaiting-losses'
@@ -261,11 +324,7 @@ export function resolveCombatCommandCasualties(previous, allocation, roll = rand
   delete fight.pendingCasualties;
   fight.status = 'fighting';
   if (!outcome(fight)) {
-    for (const side of pending.remainingAttacks ?? []) {
-      if (fight.status !== 'fighting') break;
-      attack(fight, side, pending.options ?? {}, roll, event);
-    }
-    finishRound(fight);
+    continueAttacks(fight, pending.remainingAttacks ?? [], pending.options ?? {}, roll, event);
   }
   return fight;
 }
@@ -274,6 +333,17 @@ export function combatCommandRound(previous, options = {}, roll = randomDie) {
   if (previous?.rulesVersion !== 1 || previous.status !== 'fighting') throw new RangeError('No active combat');
   const fight = copy(previous), config = fight.config;
   fight.round++;
+  if (options.useFirearms !== undefined && typeof options.useFirearms !== 'boolean') throw new RangeError('Invalid firearm choice');
+  if (options.useFirearms && !fight.firearmsUsed) {
+    if (!config.firearms) throw new RangeError('Guns are unavailable in this encounter');
+    for (const unit of fight.player) {
+      unit.ordnanceBeforeFirearms = unit.ordnance;
+      unit.ordnance = config.firearms.ordnance;
+    }
+    if (config.firearms.chart) config.playerChart = config.firearms.chart;
+    fight.firearmsUsed = true;
+    fight.firearmsRound = fight.round;
+  }
   const drones = integer(options.drones ?? 0, 0, availableDrones(fight.player));
   if (drones && (!config.dronesMayAttack || config.droneRound && fight.round !== config.droneRound)) throw new RangeError('Drones cannot attack this round');
   if (drones && drones < (config.minimumDrones ?? 1)) throw new RangeError('Not enough drones selected');
@@ -294,15 +364,7 @@ export function combatCommandRound(previous, options = {}, roll = randomDie) {
     const enemyFires = !config.playerOnly && fight.round > (config.freeOpeningAttacks ?? 0)
       && fight.enemyExchanges < (config.enemyAmmo ?? Infinity);
     const order = config.initiative === 'enemy' ? ['enemy', 'player'] : ['player', 'enemy'];
-    for (const [index, side] of order.entries()) {
-      if (fight.status !== 'fighting') break;
-      if (side === 'player' ? playerFires : enemyFires) attack(fight, side, { ...options, drones }, roll, event);
-      if (fight.status === 'awaiting-losses') {
-        fight.pendingCasualties.remainingAttacks = order.slice(index + 1).filter(side => side === 'player' ? playerFires : enemyFires);
-        fight.pendingCasualties.options = { ...options, drones };
-      }
-    }
-    finishRound(fight);
+    continueAttacks(fight, order.filter(side => side === 'player' ? playerFires : enemyFires), { ...options, drones }, roll, event);
   }
   fight.history.push(event);
   fight.history = fight.history.slice(-100);
