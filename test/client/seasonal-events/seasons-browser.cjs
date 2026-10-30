@@ -29,6 +29,9 @@ const ad=document.getElementById('admin'),other=document.getElementById('other')
 await until(()=>ad.contentDocument?.querySelector('[data-season-test="diwali"]')&&other.contentDocument?.body.dataset.ready);
 const click=async selector=>{await until(()=>ad.contentDocument.querySelector(selector)&&!ad.contentDocument.querySelector(selector).disabled);ad.contentDocument.querySelector(selector).click();};
 check(active('halloween')&&noBackground(),'live Halloween has only its mouse companion');
+const initialEte=document.querySelector('.seasonal-event-ete')?.textContent;
+check(initialEte?.includes('(ETE:'),'live event shows its remaining time');clock+=60000;document.dispatchEvent(new Event('visibilitychange'));
+check(document.querySelector('.seasonal-event-ete').textContent!==initialEte,'remaining time advances without recreating the notice');
 for(const season of ['diwali','christmas','new-year']){
  await click('[data-season-test="'+season+'"]');await until(()=>active(season));await delay(60);
  check(seasonPreview()===season,'admin preview reaches main app '+season);

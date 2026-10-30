@@ -1,10 +1,12 @@
 // Render live seasonal reward notices and clearly labelled private previews.
-export function renderSeasonalNotice(events, preview = null) {
+import {seasonalEndTime,formatSeasonalRemaining} from './remaining-time.js';
+export function renderSeasonalNotice(events, preview = null, date = new Date()) {
   const notice = document.getElementById('seasonal-event-notice');
   if (!notice) return;
   notice.hidden = !events.length && !preview;
-  const signature = JSON.stringify([events.map(event => [event.id,event.title,event.description]), preview]);
-  if (notice.dataset.seasonalContent === signature) return;
+  const updateRemaining=()=>{for(const node of notice.querySelectorAll('[data-season-end]'))node.textContent=' (ETE: '+formatSeasonalRemaining(Number(node.dataset.seasonEnd),date.getTime())+')';};
+  const signature = JSON.stringify([events.map(event => [event.id,event.title,event.description,event.window?.end]), preview]);
+  if (notice.dataset.seasonalContent === signature) { updateRemaining(); return; }
   notice.dataset.seasonalContent = signature;
   notice.dataset.season = events[0]?.id || '';
   notice.replaceChildren();
@@ -21,6 +23,11 @@ export function renderSeasonalNotice(events, preview = null) {
         span.className = 'seasonal-event-' + classes[part]; span.textContent = part; line.append(span);
       } else line.append(part);
     }
+    const end=preview?null:seasonalEndTime(event);
+    if(end!==null){
+      const remaining=document.createElement('span');remaining.className='seasonal-event-ete';remaining.dataset.seasonEnd=String(end);
+      remaining.dataset.tooltip='Estimated time to end';remaining.setAttribute('aria-live','off');line.append(remaining);
+    }
     notice.append(line);
   }
   if (preview) {
@@ -29,4 +36,5 @@ export function renderSeasonalNotice(events, preview = null) {
       : 'Preview only. Rewards still follow live events. Stop testing in Admin → Seasons.';
     notice.append(hint);
   }
+  updateRemaining();
 }
