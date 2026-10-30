@@ -110,8 +110,8 @@ check(!document.querySelector('.seasonal-background'),'background follows visual
 const notice=document.getElementById('seasonal-event-notice');
 check(!notice.hidden&&notice.textContent==='Halloween event active: double XP for losses, battle deaths and sim battle losses.','reward notice independent of decorations');
 check(getComputedStyle(notice.querySelector('.seasonal-event-loss')).color==='rgb(248, 113, 113)','losses red');
-const simLoss=[...notice.querySelectorAll('.seasonal-event-loss')].find(span=>span.textContent==='sim battle losses');
-check(simLoss&&getComputedStyle(simLoss).color==='rgb(248, 113, 113)','entire sim battle losses phrase red');
+const simLoss=notice.querySelector('.seasonal-event-sim-loss');
+check(simLoss?.textContent==='sim battle losses'&&getComputedStyle(simLoss).color==='rgb(196, 119, 119)','entire sim battle losses phrase muted red');
 check(getComputedStyle(notice.querySelector('.seasonal-event-battle-death')).color==='rgb(217, 119, 6)','battle deaths dark orange');
 check(saved.seasonalEvents==='0'&&localStorage.getItem('seasonal-events')==='0','persist preference');
 stop();stop=initSeasonalEvents({now:()=>date});check(!document.querySelector('.seasonal-pumpkin'),'stays disabled after reinitialization');

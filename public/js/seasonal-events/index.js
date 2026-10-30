@@ -25,7 +25,8 @@ export function initSeasonalEvents({ now = () => new Date(), random = Math.rando
           for (const part of event.description.split(/(sim battle losses|battle deaths|losses)/)) {
             if (part === 'losses' || part === 'sim battle losses' || part === 'battle deaths') {
               const emphasis = document.createElement('span');
-              emphasis.className = part === 'battle deaths' ? 'seasonal-event-battle-death' : 'seasonal-event-loss';
+              emphasis.className = part === 'battle deaths' ? 'seasonal-event-battle-death'
+                : part === 'sim battle losses' ? 'seasonal-event-sim-loss' : 'seasonal-event-loss';
               emphasis.textContent = part; notice.append(emphasis);
             } else notice.append(part);
           }
