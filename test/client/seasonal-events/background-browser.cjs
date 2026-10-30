@@ -44,6 +44,12 @@ if(innerWidth<1400){
 }else{
  let icons=visible();check(icons.length===14,'seven icons per open gap');
 check(new Set(icons.map(icon=>icon.dataset.artwork)).size===icons.length,'distinct artwork, not resized duplicates');
+check(['7','8','9','10'].every(kind=>icons.some(icon=>icon.dataset.kind===kind)),'fat spiders, zombies, mummies and vampires appear in the normal scatter');
+for(const icon of icons.filter(icon=>icon.dataset.pixelated)){
+ check(icon.style.transform.startsWith('rotate(0deg)'),'pixel sprites keep their square grid');
+ const pixels=[...icon.querySelectorAll('rect')];check(pixels.length>0,'pixel sprite has pixel blocks');
+ check(pixels.every(pixel=>['x','y','width','height'].every(name=>Number(pixel.getAttribute(name))%2===0)&&Number(pixel.getAttribute('x'))+Number(pixel.getAttribute('width'))<=48&&Number(pixel.getAttribute('y'))+Number(pixel.getAttribute('height'))<=48&&pixel.getAttribute('fill')!=='undefined'),'valid unclipped pixel blocks');
+}
 check(icons.filter(icon=>icon.dataset.kind==='0').every(icon=>getComputedStyle(icon).color==='rgb(255, 255, 255)'),'white ghosts');
 check(icons.filter(icon=>icon.dataset.kind==='4').every(icon=>getComputedStyle(icon.querySelector('ellipse')).fill!=='rgb(255, 255, 255)'),'colored spiders on white webs');
 const rects=icons.map(icon=>icon.getBoundingClientRect());

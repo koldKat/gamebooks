@@ -1,4 +1,5 @@
-// Distinct Halloween silhouettes: spirits, reapers, pumpkins, bats and webs.
+// Distinct Halloween silhouettes, including spiders and undead creatures.
+import { halloweenCreatures } from './creature-artwork.js';
 export const halloweenArtwork = [
   { kind: 0, svg: '<path d="M10 39V20a14 14 0 0 1 28 0v19l-6-4-7 5-7-5-8 4Z"/><path d="m15 19 7 3-5 5Zm18 0-7 3 5 5Z" fill="#111827"/><ellipse cx="25" cy="31" rx="3" ry="4" fill="#111827"/>' },
   { kind: 1, svg: '<path d="M8 43 13 19Q24-1 35 19l5 24-10-4-6 5-7-5Z" fill="#050507" stroke="#a4a1a0" stroke-width=".65"/><path d="M16 22q8-12 16 0v8l-5 5h-6l-5-5Z" fill="#0c0c10"/><path d="m18 24 5 2-4 3Zm12 0-5 2 4 3Z" fill="white"/><path d="M42 44V12M42 13Q32 5 29 9q5-11 17-5" fill="none" stroke="#b5b3ae" stroke-width="1.7"/>' },
@@ -14,4 +15,5 @@ export const halloweenArtwork = [
   { kind: 4, svg: '<g fill="none" stroke="currentColor" stroke-width=".9"><path d="M24 2v44M2 24h44M7 7l34 34M41 7 7 41"/><path d="m24 7 12 5 5 12-5 12-12 5-12-5-5-12 5-12Zm0 8 7 3 3 6-3 7-7 3-6-3-3-7 3-6Z"/></g><g stroke="#101710" stroke-width="1.4"><path d="m29 27 9-4m-8 7 10 2m-12 1 8 8m-11-12-9-6m8 9-11 2m12 0-8 8" fill="none"/><ellipse cx="27" cy="30" rx="4" ry="6" fill="#60852c"/></g><circle cx="26" cy="28" r="1" fill="#ffa046"/>' },
   { kind: 5, svg: '<path d="M8 43V19a16 16 0 0 1 32 0v24Z" fill="#8e9297" stroke="#c1c3c6"/><path d="M4 44h40M24 10v15m-6-10h12m-19 17 8-4-3 10 7 5m12-15-5 6 6 6" fill="none" stroke="#303039" stroke-width="2"/>' },
   { kind: 6, svg: '<path d="m12 17 1-13 9 9 10-9 1 14q8 8 3 17l7 9H8l6-11Q4 31 3 23q-2-9 4-10-5 11 6 13Z" fill="#07090c" stroke="#8d8991" stroke-width=".7"/><path d="m16 21 7 2-6 3m12-5-6 2 6 3" fill="#edc843"/>' },
+  ...halloweenCreatures,
 ];

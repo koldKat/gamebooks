@@ -23,19 +23,21 @@ export function createHalloweenBackground() {
     patch.className = 'seasonal-background__haze';
     patch.hidden = true; layer.append(patch); return patch;
   });
-  const variants = [8, 9, 10, 11, 12, 13];
+  const featured = [0, 2, 1, 3, 4, 14, 16, 18, 20];
+  const variants = halloweenArtwork.map((_, index) => index).filter(index => !featured.includes(index));
   const random = layoutRandom();
   for (let i = variants.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
     [variants[i], variants[j]] = [variants[j], variants[i]];
   }
-  const portfolio = [0, 2, 1, 3, 4, 5, 6, 7, ...variants];
+  const portfolio = [...featured, ...variants];
   const nodes = [...portfolio, ...portfolio.slice(0,7).reverse()].map(index => {
-    const { kind, svg } = halloweenArtwork[index];
+    const { kind, svg, pixelated } = halloweenArtwork[index];
     const icon = document.createElement('span');
     icon.className = 'seasonal-background__icon';
     icon.dataset.kind = String(kind);
     icon.dataset.artwork = String(index);
+    if (pixelated) icon.dataset.pixelated = 'true';
     icon.dataset.rotation = String(kind === 4 ? Math.floor(random() * 4) * 90 : 0);
     icon.dataset.flip = random() < .5 ? '-1' : '1';
     icon.innerHTML = `<svg viewBox="0 0 48 48" focusable="false">${svg}</svg>`;
@@ -93,7 +95,8 @@ export function createHalloweenBackground() {
       icon.style.left = `${point.x - point.size / 2}px`;
       icon.style.top = `${point.y - point.size / 2}px`;
       icon.style.width = icon.style.height = `${point.size}px`;
-      icon.style.transform = `rotate(${point.angle + Number(icon.dataset.rotation)}deg) scaleX(${icon.dataset.flip})`;
+      const angle = icon.dataset.pixelated ? 0 : point.angle + Number(icon.dataset.rotation);
+      icon.style.transform = `rotate(${angle}deg) scaleX(${icon.dataset.flip})`;
       if (!icon.isConnected) layer.append(icon);
     }
   }
