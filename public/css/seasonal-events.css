@@ -78,6 +78,7 @@ body.reduce-motion .seasonal-pumpkin * { transition: none; }
 }
 .seasonal-event-notice strong { color: #f0b17e; font-weight: 600; }
 .seasonal-event-ete { opacity:.8; white-space:nowrap; font-size:.9em; }
+.seasonal-event-ete-label { color:#fbbf24; }
 .seasonal-event-loss { color: #f87171; font-weight: 600; }
 .seasonal-event-sim-loss { color: #c47777; font-weight: 600; }
 .seasonal-event-battle-death { color: #d97706; font-weight: 600; }

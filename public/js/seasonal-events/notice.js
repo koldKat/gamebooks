@@ -4,7 +4,7 @@ export function renderSeasonalNotice(events, preview = null, date = new Date()) 
   const notice = document.getElementById('seasonal-event-notice');
   if (!notice) return;
   notice.hidden = !events.length && !preview;
-  const updateRemaining=()=>{for(const node of notice.querySelectorAll('[data-season-end]'))node.textContent=' (ETE: '+formatSeasonalRemaining(Number(node.dataset.seasonEnd),date.getTime())+')';};
+  const updateRemaining=()=>{for(const node of notice.querySelectorAll('[data-season-end]'))node.textContent=formatSeasonalRemaining(Number(node.dataset.seasonEnd),date.getTime());};
   const signature = JSON.stringify([events.map(event => [event.id,event.title,event.description,event.window?.end]), preview]);
   if (notice.dataset.seasonalContent === signature) { updateRemaining(); return; }
   notice.dataset.seasonalContent = signature;
@@ -13,7 +13,15 @@ export function renderSeasonalNotice(events, preview = null, date = new Date()) 
   for (const event of events) {
     const line = document.createElement('div'), title = document.createElement('strong');
     line.dataset.season = event.id;
-    title.textContent = preview ? `${event.title.replace(/ event active$/, '')} preview (only you):` : event.title + ':';
+    title.textContent = preview ? `${event.title.replace(/ event active$/, '')} preview (only you)` : event.title;
+    const end=preview?null:seasonalEndTime(event);
+    if(end!==null){
+      const countdown=document.createElement('span'),label=document.createElement('span'),remaining=document.createElement('span');
+      countdown.className='seasonal-event-ete';countdown.dataset.tooltip='Estimated time to end';countdown.setAttribute('aria-live','off');
+      label.className='seasonal-event-ete-label';label.textContent='ETE:';remaining.dataset.seasonEnd=String(end);
+      countdown.append(' (',label,' ',remaining,')');title.append(countdown);
+    }
+    title.append(':');
     line.append(title, ' ');
     for (const part of event.description.split(/(sim battle losses|sim battle wins|battle deaths|losses|wins)/)) {
       const classes = { 'battle deaths':'battle-death', losses:'loss', 'sim battle losses':'sim-loss',
@@ -22,11 +30,6 @@ export function renderSeasonalNotice(events, preview = null, date = new Date()) 
         const span = document.createElement('span');
         span.className = 'seasonal-event-' + classes[part]; span.textContent = part; line.append(span);
       } else line.append(part);
-    }
-    const end=preview?null:seasonalEndTime(event);
-    if(end!==null){
-      const remaining=document.createElement('span');remaining.className='seasonal-event-ete';remaining.dataset.seasonEnd=String(end);
-      remaining.dataset.tooltip='Estimated time to end';remaining.setAttribute('aria-live','off');line.append(remaining);
     }
     notice.append(line);
   }

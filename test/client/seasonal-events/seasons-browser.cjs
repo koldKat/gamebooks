@@ -31,6 +31,8 @@ const click=async selector=>{await until(()=>ad.contentDocument.querySelector(se
 check(active('halloween')&&noBackground(),'live Halloween has only its mouse companion');
 const initialEte=document.querySelector('.seasonal-event-ete')?.textContent;
 check(initialEte?.includes('(ETE:'),'live event shows its remaining time');clock+=60000;document.dispatchEvent(new Event('visibilitychange'));
+check(document.querySelector('#seasonal-event-notice strong').textContent.startsWith('Halloween event active (ETE:')&&document.querySelector('#seasonal-event-notice strong').textContent.endsWith('):'),'ETE belongs in the event heading before the colon');
+check(getComputedStyle(document.querySelector('.seasonal-event-ete-label')).color==='rgb(251, 191, 36)','ETE label has an accent color');
 check(document.querySelector('.seasonal-event-ete').textContent!==initialEte,'remaining time advances without recreating the notice');
 for(const season of ['diwali','christmas','new-year']){
  await click('[data-season-test="'+season+'"]');await until(()=>active(season));await delay(60);
