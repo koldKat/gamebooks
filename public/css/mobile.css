@@ -1,3 +1,4 @@
+@import url('./reward-float.css');
 /* ── Mobile ───────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .mobile-lite-suffix { display: inline; }
@@ -373,26 +374,6 @@ body.sidebar-collapsed #reward-float-layer {
   left: 75vw;
 }
 
-.reward-float {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.42rem;
-  max-width: min(280px, 72vw);
-  padding: 0.45rem 0.72rem;
-  border-radius: 999px;
-  border: 1px solid rgba(103, 232, 249, 0.55);
-  background: rgba(8, 47, 73, 0.94);
-  color: #67e8f9;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.38), 0 0 18px rgba(34, 211, 238, 0.18);
-  font-size: 0.83rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  transform: translateY(0);
-  opacity: 0;
-  animation: reward-float-rise 4.6s ease-out forwards;
-}
-
 .reward-float--xp {
   border-color: rgba(103, 232, 249, 0.55);
   background: rgba(8, 47, 73, 0.94);
@@ -434,25 +415,6 @@ body.sidebar-collapsed #reward-float-layer {
 .reward-float--coins .coin-icon {
   width: 0.95rem;
   height: 0.95rem;
-}
-
-@keyframes reward-float-rise {
-  0% {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  12% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  72% {
-    opacity: 1;
-    transform: translateY(-18px);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-40px);
-  }
 }
 
 /* Admin app-reward floaters use distinct colors from personal rewards. */

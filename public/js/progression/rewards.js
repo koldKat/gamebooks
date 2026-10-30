@@ -15,6 +15,7 @@ import { escapeHtml } from '../core/util.js';
 // ── State ─────────────────────────────────────────────────────────────────────
 let _lastRewardXp        = null;
 let _lastRewardCoins     = null;
+let _lastCoinsEarned     = null;
 let _lastRewardLevel     = null;
 let _lastHeartbeatGold   = null;
 let _lastDiamondsEarned  = null;
@@ -114,6 +115,7 @@ export function _resetRewardSnapshotState() {
   _lastHeartbeatGold = null;
   _lastDiamondsEarned = null;
   _lastRewardXp = null; _lastRewardCoins = null; _lastRewardLevel = null;
+  _lastCoinsEarned = null;
   _lastRewardUserKey = null; _rewardAccumXp = 0; _rewardAccumCoins = 0;
   if (_rewardFlushTimer) { clearTimeout(_rewardFlushTimer); _rewardFlushTimer = null; }
   _rewardFloaterQueue = []; _rewardFloaterActive = false;
@@ -154,6 +156,10 @@ export function _processRewardSnapshot(data, opts = {}) {
   if (Number.isSafeInteger(diamondsEarned)) _lastDiamondsEarned = diamondsEarned;
   if (cache) saveRewardCache(data);
   const prevXp = _lastRewardXp;
+  const coinsEarned = Number(data.coinsEarned);
+  const coinsGained = Number.isFinite(coinsEarned) && _lastCoinsEarned !== null
+    ? Math.max(0,coinsEarned-_lastCoinsEarned) : Math.max(0,coins-(_lastRewardCoins??coins));
+  _lastCoinsEarned = Number.isFinite(coinsEarned) ? coinsEarned : null;
   if (_lastRewardXp === null || _lastRewardCoins === null || _lastRewardLevel === null) {
     _lastRewardUserKey = rewardUserKey; _lastRewardXp = xp; _lastRewardCoins = coins;
     _lastRewardLevel = level;
@@ -166,7 +172,7 @@ export function _processRewardSnapshot(data, opts = {}) {
   _lastRewardUserKey = rewardUserKey; _lastRewardXp = xp; _lastRewardCoins = coins; _lastRewardLevel = level;
   renderBooksXpSummary(data, { fromXp: prevXp });
   if (broadcast) _broadcastLiveEvent('reward_snapshot', data);
-  if (xpDelta > 0 || coinDelta > silentGold) _queueRewardFloater(Math.max(0, xpDelta), Math.max(0, coinDelta - silentGold));
+  if (xpDelta > 0 || coinsGained > silentGold) _queueRewardFloater(Math.max(0, xpDelta), Math.max(0, coinsGained - silentGold));
   if (rubyDelta > 0) _spawnRewardFloater('rubies', `${RUBY_SVG}<span>+${rubyDelta.toLocaleString()}</span>`);
   if (diamondDelta > 0) _spawnRewardFloater('diamonds', `${DIAMOND_SVG}<span>+${diamondDelta.toLocaleString()}</span>`);
   if (coinDelta > 0 || levelDelta > 0) _scheduleLiveUiRefresh({ notif: true }, 60);

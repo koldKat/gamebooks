@@ -5,13 +5,15 @@ import {createDesignPreviews} from './cursor-previews.js';
 import {seasonalEvents} from './calendar.js';
 import {updateRubiesDisplay} from '../progression/rubies.js';
 import {initTooltip} from '../ui-helpers/tooltip.js';
+import {createCollectibleFeedback} from './collectible-feedback.js';
 import '../ui-helpers/dialog-escape.js';
 
-let identity=getToken(),seen=new Set(),pending=new Set(),retryAt=new Map(),dialog,stopPreviews,request=0;
+let identity=getToken(),seen=new Set(),pending=new Set(),retryAt=new Map(),dialog,stopPreviews,feedback,request=0;
 const designs=Object.values(cursorDesigns).flat();
 const channel=typeof BroadcastChannel==='function'?new BroadcastChannel('seasonal-collection'):null;
 function unloadItems(){
  ++request;stopPreviews?.();stopPreviews=null;
+ feedback?.dispose();feedback=null;
  dialog?.querySelector('.collectibles-body').replaceChildren();
 }
 function closeCollectibles(){unloadItems();dialog?.close();}
@@ -77,6 +79,9 @@ async function claim(id,token){
  try{
   const response=await apiFetch(`/api/collectibles/${id}/claim`,{method:'POST'});
   if(response.ok&&token===getToken()){
+   const result=await response.json();
+   if(token!==getToken())return;
+   if(result.awarded&&dialog?.open){feedback??=createCollectibleFeedback(dialog);feedback.show();}
    const profile=await apiFetch('/api/profile');
    if(profile.ok){const data=await profile.json();if(token===getToken())updateRubiesDisplay(data.rubiesBalance,data);}
    changed();

@@ -70,6 +70,9 @@ const tip=document.getElementById('app-tooltip');check(tip.closest('dialog')&&ge
 await until(()=>document.querySelectorAll('.season-cursor-preview > *').length===2);
 document.querySelector('.collectible-item').click();document.querySelector('.collectible-item').click();
 await until(()=>document.getElementById('rubies-display').textContent.trim()==='1');
+await until(()=>document.querySelectorAll('dialog .reward-float--rubies').length===1);
+await delay(200);check(Number(getComputedStyle(document.querySelector('dialog .reward-float--rubies')).opacity)>0,'confirmed diamond has a visible top-layer floater');
+document.querySelector('.collectible-item').click();await delay(60);check(document.querySelectorAll('dialog .reward-float--rubies').length===1,'cooldown click creates no additional diamond floater');
 const balance=await fetch('/api/profile',{headers:{Authorization:'Bearer one'}}).then(r=>r.json());check(balance.rubiesBalance===1,'single blue diamond for repeated interaction');
 let hidden=true;Object.defineProperty(document,'hidden',{configurable:true,get:()=>hidden});document.dispatchEvent(new Event('visibilitychange'));
 check(!document.querySelector('.season-cursor-preview > *'),'hidden dialog previews stop');hidden=false;document.dispatchEvent(new Event('visibilitychange'));await until(()=>document.querySelectorAll('.season-cursor-preview > *').length===2);
@@ -80,8 +83,10 @@ setToken('one');await fetch('/seed',{method:'POST'});await openCollectibles();aw
 check(document.querySelectorAll('.collectible-item').length===12,'all twelve items can be collected');
 check(getComputedStyle(document.querySelector('.season-cursor-gallery')).gridTemplateColumns.split(' ').length===(innerWidth>600?6:3),'compact item grid');
 check(document.querySelector('dialog').getBoundingClientRect().right<=innerWidth,'dialog fits viewport');
+document.querySelector('.collectible-item:nth-child(3)').click();await until(()=>document.querySelector('dialog .reward-float--rubies'));
 document.querySelector('[data-dialog-close]').click();check(!document.querySelector('.collectible-item,.season-cursor-preview > *')&&activePreviewObservers===0&&scheduledTimers.size===0,'close immediately unloads every item, timer and observer');
 await openCollectibles();await until(()=>document.querySelectorAll('.season-cursor-preview > *').length>=6);
+document.querySelector('.collectible-item:nth-child(4)').click();await until(()=>document.querySelector('dialog .reward-float--rubies'));await delay(250);
 document.body.dataset.test=JSON.stringify({hiddenNotCollected:true,mouseDiscovery:true,reformationDiscovery:true,privateAccounts:true,rollingClaims:true,animatedCollection:true,cleanup:true,noHints:true,items:12,width:innerWidth});
 </script>`;
 const server=http.createServer(async(req,res)=>{

@@ -10,6 +10,8 @@
 #collectibles-dialog header button{display:grid;place-items:center;width:24px;height:24px;padding:0;background:none;color:inherit;border:0;font-size:20px;line-height:1;cursor:default;}
 .collectibles-body{padding-top:4px;font-size:.85rem;}
 #collectibles-dialog #app-tooltip{white-space:pre-line;}
+.collectibles-reward-layer{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.45rem;pointer-events:none;z-index:2;}
+.collectibles-reward-layer .diamond-icon{width:.95rem;height:.95rem;flex-shrink:0;}
 #collectibles-dialog .season-cursor-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:4px;}
 #collectibles-dialog .collectible-item{min-width:0;padding:0 0 5px;border:1px solid #303b49;border-radius:8px;background:#1d2733;color:inherit;font:inherit;text-align:center;cursor:default;}
 #collectibles-dialog .collectible-item:focus-visible{outline:2px solid #c6ae7b;outline-offset:2px;}

@@ -15,7 +15,7 @@ async function handleCollectibles(req,res,itemId,action) {
   if (!action) return send(res,200,collection());
   if (isRequestImpersonating(req)) return send(res,403,{error:'Not available'});
   const changed=action==='seen' ? store.discover(userId,itemId) : store.claim(userId,itemId);
-  send(res,200,collection());
+  send(res,200,{...collection(),...(action==='claim'?{awarded:changed}:{})});
   if (changed) userBadgePush(userId);
 }
 module.exports = { handleCollectibles };
