@@ -54,6 +54,7 @@ module.exports = async function checkBrowser({ file, profile, root, width, chrom
     const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
     await send('Runtime.enable', {}, sessionId);
     await send('Page.enable', {}, sessionId);
+    await send('Page.bringToFront', {}, sessionId);
     await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false }, sessionId);
     await send('Page.navigate', { url: 'file://' + file }, sessionId);
     let last;

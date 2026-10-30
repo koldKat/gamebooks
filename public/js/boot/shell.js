@@ -8,6 +8,7 @@ import { setAdminUsername } from '../account/user.js';
 import { fetchPublic as publicFetch } from '../core/util.js';
 import { _toggleShortcutsModal } from './helpers.js';
 import { _openMobilePanel } from './navigation.js';
+import { initAppRefresh } from './app-refresh.js';
 
 export function initShell() {
   initBooksXpPanels();
@@ -59,6 +60,7 @@ export function initShell() {
   publicFetch('/api/config').then(r => r.ok ? r.json() : null).then(cfg => {
     if (cfg?.version)       document.getElementById('app-version').textContent = cfg.version;
     if (cfg?.adminUsername) setAdminUsername(cfg.adminUsername);
+    if (cfg) initAppRefresh(cfg);
   }).catch(() => {});
 
   // Panel collapse toggles - persist state across refreshes

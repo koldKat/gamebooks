@@ -40,6 +40,7 @@ class Element {
   removeAttribute(name) { delete this[name]; }
   insertAdjacentHTML() {}
   appendChild() {}
+  append() {}
   remove() {}
   scrollTo() {}
 }
@@ -60,7 +61,7 @@ const book = { id: 1, name: 'Alpha', total_sections: 20, cover_path: 'alpha.jpg'
 const profile = { id: scenario.userId || 9, username, level: 12, coinsBalance: 7, pdfAccess: scenario.pdfAccess !== false, isAdmin: !!scenario.admin };
 let releaseLibrary;
 if (scenario.cached) storage.set('books_list_v1', JSON.stringify([book]));
-window.appStartup = { ready: () => calls.push(['startupReady']) };
+window.appStartup = { ready: () => calls.push(['startupReady']), fail: () => calls.push(['startupFailed']) };
 let heartbeatResult = { awarded: true };
 const playState = { graph: {}, positions: {}, playthroughs: [], totalSections: 20, bookName: 'Alpha', startSection: 1 };
 const graphHandlers = new Map();
