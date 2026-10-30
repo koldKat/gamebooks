@@ -1,5 +1,5 @@
 // Activate seasonal decorations on their annual dates and honor player settings.
-import { activeSeasonalEvent } from './calendar.js';
+import { activeSeasonalEvent, nextSeasonalRefreshDelay } from './calendar.js';
 import { seasonalEventsEnabled, syncSeasonalEventSetting } from './preferences.js';
 import { createPumpkin } from './pumpkin.js';
 import { createHalloweenBackground } from './background.js';
@@ -22,10 +22,10 @@ export function initSeasonalEvents({ now = () => new Date(), random = Math.rando
           const title = document.createElement('strong');
           title.textContent = event.title + ':';
           notice.append(title, ' ');
-          for (const part of event.description.split(/(losses|battle deaths)/)) {
-            if (part === 'losses' || part === 'battle deaths') {
+          for (const part of event.description.split(/(sim battle losses|battle deaths|losses)/)) {
+            if (part === 'losses' || part === 'sim battle losses' || part === 'battle deaths') {
               const emphasis = document.createElement('span');
-              emphasis.className = part === 'losses' ? 'seasonal-event-loss' : 'seasonal-event-battle-death';
+              emphasis.className = part === 'battle deaths' ? 'seasonal-event-battle-death' : 'seasonal-event-loss';
               emphasis.textContent = part; notice.append(emphasis);
             } else notice.append(part);
           }
@@ -41,8 +41,7 @@ export function initSeasonalEvents({ now = () => new Date(), random = Math.rando
     if (active && !background) background = createHalloweenBackground();
     if (!active && background) { background(); background = null; }
     syncSeasonalEventSetting();
-    const tomorrow = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
-    midnight = setTimeout(refresh, Math.max(1000, tomorrow - date + 100));
+    midnight = setTimeout(refresh, nextSeasonalRefreshDelay(date));
   }
   function storage(event) {
     if (event.key === 'seasonal-events' || event.key === null) refresh();

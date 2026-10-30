@@ -108,8 +108,10 @@ toggle.checked=false;toggle.dispatchEvent(new Event('change'));
 check(!document.querySelector('.seasonal-pumpkin'),'turn off immediately');
 check(!document.querySelector('.seasonal-background'),'background follows visual preference');
 const notice=document.getElementById('seasonal-event-notice');
-check(!notice.hidden&&notice.textContent==='Halloween event active: double XP for losses and battle deaths.','reward notice independent of decorations');
+check(!notice.hidden&&notice.textContent==='Halloween event active: double XP for losses, battle deaths and sim battle losses.','reward notice independent of decorations');
 check(getComputedStyle(notice.querySelector('.seasonal-event-loss')).color==='rgb(248, 113, 113)','losses red');
+const simLoss=[...notice.querySelectorAll('.seasonal-event-loss')].find(span=>span.textContent==='sim battle losses');
+check(simLoss&&getComputedStyle(simLoss).color==='rgb(248, 113, 113)','entire sim battle losses phrase red');
 check(getComputedStyle(notice.querySelector('.seasonal-event-battle-death')).color==='rgb(217, 119, 6)','battle deaths dark orange');
 check(saved.seasonalEvents==='0'&&localStorage.getItem('seasonal-events')==='0','persist preference');
 stop();stop=initSeasonalEvents({now:()=>date});check(!document.querySelector('.seasonal-pumpkin'),'stays disabled after reinitialization');
@@ -119,9 +121,21 @@ date=new Date(2026,10,4);refresh();check(!document.querySelector('.seasonal-pump
 check(notice.hidden,'notice expires');
 date=new Date(2027,9,31);refresh();check(document.querySelectorAll('.seasonal-pumpkin').length===1,'annual event and no duplicates');
 stop();check(!document.querySelector('.seasonal-pumpkin'),'cleanup');
+// Let the real scheduled callback run: no settings, visibility event or refresh.
+date=new Date('2026-10-27T21:59:59Z');
+stop=initSeasonalEvents({now:()=>date,random:()=>0});
+check(notice.hidden&&!document.querySelector('.seasonal-pumpkin'),'before automatic event start');
+date=new Date('2026-10-27T22:00:00Z');await delay(1250);
+check(!notice.hidden&&document.querySelector('.seasonal-pumpkin')&&document.querySelector('.seasonal-background'),'notice and decorations start automatically');
+stop();date=new Date('2026-11-03T21:59:59Z');
+stop=initSeasonalEvents({now:()=>date,random:()=>0});
+check(!notice.hidden&&document.querySelector('.seasonal-pumpkin'),'before automatic event end');
+date=new Date('2026-11-03T22:00:00Z');await delay(1250);
+check(notice.hidden&&!document.querySelector('.seasonal-pumpkin')&&!document.querySelector('.seasonal-background'),'notice and decorations end automatically');
+stop();date=new Date(2027,9,31);
 document.body.classList.remove('reduce-motion');
 initSeasonalEvents({now:()=>date});move();await delay(80);
-document.body.dataset.test=JSON.stringify({calendar:true,pointer:true,blink:true,glances:true,mouth:true,drool:true,clack:true,background:true,tabSwitchStable:true,settings:true,persistence:true,reducedMotion:true,cleanup:true});
+document.body.dataset.test=JSON.stringify({calendar:true,automaticStart:true,automaticEnd:true,wholeSimLossPhraseColored:true,pointer:true,blink:true,glances:true,mouth:true,drool:true,clack:true,background:true,tabSwitchStable:true,settings:true,persistence:true,reducedMotion:true,cleanup:true});
 </script>`;
 
 (async () => {
