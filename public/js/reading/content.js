@@ -89,7 +89,7 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
         if (sectionLinks) target.setAttribute('href', attr.value);
         continue;
       }
-      if (node.tagName === 'TABLE' && attr.name === 'class' && attr.value === 'reading-encounter-table') {
+      if (node.tagName === 'TABLE' && attr.name === 'class' && ['reading-encounter-table', 'reading-wide-table'].includes(attr.value)) {
         target.setAttribute('class', attr.value);
         continue;
       }
@@ -101,8 +101,14 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
         target.setAttribute('class', attr.value);
         continue;
       }
-      if (node.tagName === 'FIGURE' && attr.name === 'class' && ['reading-art-parts', 'reading-art-stack'].includes(attr.value)) {
+      if (node.tagName === 'FIGURE' && attr.name === 'class' && ['reading-art-parts', 'reading-art-stack', 'reading-table-scroll'].includes(attr.value)) {
         target.setAttribute('class', attr.value);
+        continue;
+      }
+      if (node.tagName === 'FIGURE' && node.getAttribute('class') === 'reading-table-scroll'
+          && ((attr.name === 'tabindex' && attr.value === '0')
+            || (attr.name === 'aria-label' && attr.value === 'Wide table: scroll horizontally'))) {
+        target.setAttribute(attr.name, attr.value);
         continue;
       }
       if (node.tagName === 'FIGURE' && attr.name === 'data-source-width-percent' && node.getAttribute('class') === 'reading-art-stack') {

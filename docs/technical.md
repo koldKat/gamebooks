@@ -2752,6 +2752,8 @@ The access check used by section requests does not fetch frontmatter; only a loc
 
 Structured player matter renders through a shared inert HTML allowlist on desktop and mobile. It preserves headings, paragraphs, emphasis, underlining, numbered lists, tables and this book's protected images. Paragraphs and headings may use only `text-align:center`; other CSS, executable elements and event attributes are rejected before any content is inserted.
 
+Wide source tables can use a `reading-wide-table` inside a focusable `reading-table-scroll` figure. The shared reader styles preserve readable column widths and horizontal scrolling within the figure, with the first column held in view. The matter allowlist accepts these classes, `tabindex="0"`, and the fixed accessible label `Wide table: scroll horizontally`; arbitrary table styles and event attributes remain rejected.
+
 Frontmatter uses justified, wrapping text in its own scrolling pane. A non-scrolling footer anchors the compact centered unlock button at the bottom of the reader. The button follows the gold shop's dark green purchase styling and uses the identical SVG from the import-free `ui-helpers/coin-icon.js`; the shop re-exports that constant for existing callers. Mobile does not import the shop implementation. Currency remains in the button's accessible label without visible `GC` text.
 
 `reading/frontmatter.js` applies book-specific presentation only to book 263: paragraph breaks, semantic rules headings, a numbered combat list and an emphasized luck-in-battles lead-in. Rendering uses text nodes, never imported HTML; wording and database text remain unchanged. Other books retain the plain-text renderer.

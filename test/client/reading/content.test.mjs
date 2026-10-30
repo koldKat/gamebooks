@@ -35,6 +35,20 @@ test('plain text retains legacy rendering without heading or sentence guessing',
   }
 });
 
+test('wide source tables retain a keyboard-accessible scroll container with strict attributes', () => {
+  const attrs = { class: 'reading-table-scroll', tabindex: '0', 'aria-label': 'Wide table: scroll horizontally' };
+  const table = source('TABLE', [source('TR', [source('TD', [textNode('101+')])])], { class: 'reading-wide-table' });
+  const { mount, document } = setup([source('FIGURE', [table], attrs)]);
+  assert.equal(renderReadingMatter(mount, 1470, '<figure></figure>', document), true);
+  assert.deepEqual(mount.children[0].attrs, attrs);
+  assert.equal(mount.children[0].children[0].attrs.class, 'reading-wide-table');
+  for (const invalid of [{ tabindex: '-1' }, { onclick: 'bad()' }, { class: 'arbitrary' }, { style: 'position:fixed' }]) {
+    const { mount, document } = setup([source('FIGURE', [table], { ...attrs, ...invalid })]);
+    assert.equal(renderReadingMatter(mount, 1470, '<figure></figure>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
 test('source-centered matter and underlined headings render with canonical alignment', () => {
   const { mount, document } = setup([
     source('H2', [source('U', [textNode('WARNING!')])], { style: ' text-align : center; ' }),

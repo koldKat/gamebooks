@@ -46,6 +46,26 @@
   width: 32%;
   text-align: left;
 }
+.reading-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.reading-table-scroll:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+.liveread-body table.reading-wide-table,
+.m-top table.reading-wide-table {
+  min-width: 40rem;
+  table-layout: auto;
+}
+.reading-wide-table th, .reading-wide-table td {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.reading-wide-table :is(th, td):first-child {
+  position: sticky;
+  left: 0;
+  background: #111827;
+}
+.reading-wide-table th:first-child { background: #17313d; }
 .reading-art-parts > img,
 .reading-frontmatter--structured figure.reading-art-parts > img { display: block; flex: 0 1 auto; min-width: 0; max-width: none; height: auto; margin: 0; padding: 0; border: 0; }
 .reading-art-stack,
