@@ -1,4 +1,4 @@
-// A decorative pumpkin beside the mouse, with occasional glances and blinks.
+// A decorative pumpkin beside the mouse, with occasional creepy facial animations.
 export function createPumpkin({ random = Math.random } = {}) {
   const pumpkin = document.createElement('div');
   pumpkin.className = 'seasonal-pumpkin';
@@ -25,20 +25,30 @@ export function createPumpkin({ random = Math.random } = {}) {
     </g>
     <g class="seasonal-pumpkin__mouth-open">
       <path d="M13 31Q24 27 35 31L34 40Q24 49 14 40Z" fill="#291209" stroke="#9a4414" stroke-width="1.2"/>
-      <path d="m15 31 3 8 3-9m6 0 3 9 3-8m-13 12 4-7 4 7" fill="#ffdc86"/>
+      <path class="seasonal-pumpkin__upper-teeth" d="m15 31 3 8 3-9m6 0 3 9 3-8" fill="#ffdc86"/>
+      <path class="seasonal-pumpkin__lower-teeth" d="m20 43 4-7 4 7" fill="#ffdc86"/>
     </g>
+    </g>
+    <g class="seasonal-pumpkin__drool">
+      <path d="M29 40q-2 5 0 9t-1 8" fill="none" stroke="#9fcf45" stroke-width="2.2" stroke-linecap="round"/>
+      <ellipse cx="28" cy="60" rx="2" ry="3" fill="#9fcf45" stroke="#486b1f" stroke-width=".5"/>
     </g>
   </g></svg>`;
   document.body.append(pumpkin);
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
-  let blinkTimer, openTimer, glanceTimer, mouthTimer, closeMouthTimer, frame, point;
+  let blinkTimer, openTimer, glanceTimer, mouthTimer, closeMouthTimer, droolTimer, droolEndTimer, frame, point;
+  let clackTimer, clackEndTimer;
   const animate = () => !motion.matches && !document.body.classList.contains('reduce-motion');
   function clearAnimation() {
     clearTimeout(blinkTimer); clearTimeout(openTimer); clearTimeout(glanceTimer);
     clearTimeout(mouthTimer); clearTimeout(closeMouthTimer);
+    clearTimeout(droolTimer); clearTimeout(droolEndTimer);
+    clearTimeout(clackTimer); clearTimeout(clackEndTimer);
     blinkTimer = openTimer = glanceTimer = null;
     pumpkin.classList.remove('is-blinking');
     pumpkin.classList.remove('is-gaping');
+    pumpkin.classList.remove('is-drooling');
+    pumpkin.classList.remove('is-clacking');
     pumpkin.style.setProperty('--pumpkin-look-x', '0px');
     pumpkin.style.setProperty('--pumpkin-look-y', '0px');
   }
@@ -61,6 +71,7 @@ export function createPumpkin({ random = Math.random } = {}) {
   function scheduleMouth() {
     mouthTimer = setTimeout(() => {
       if (pumpkin.hidden || !animate()) return;
+      if (pumpkin.classList.contains('is-clacking')) { scheduleMouth(); return; }
       pumpkin.classList.add('is-gaping');
       closeMouthTimer = setTimeout(() => pumpkin.classList.remove('is-gaping'), 1500);
       scheduleMouth();
@@ -68,7 +79,27 @@ export function createPumpkin({ random = Math.random } = {}) {
   }
   function updateAnimation() {
     clearAnimation();
-    if (!pumpkin.hidden && animate()) { scheduleBlink(); scheduleGlance(); scheduleMouth(); }
+    if (!pumpkin.hidden && animate()) {
+      scheduleBlink(); scheduleGlance(); scheduleMouth(); scheduleDrool(); scheduleClack();
+    }
+  }
+  function scheduleClack() {
+    clackTimer = setTimeout(() => {
+      if (pumpkin.hidden || !animate()) return;
+      if (!pumpkin.classList.contains('is-gaping')) {
+        pumpkin.classList.add('is-clacking');
+        clackEndTimer = setTimeout(() => pumpkin.classList.remove('is-clacking'), 1200);
+      }
+      scheduleClack();
+    }, 13000 + random() * 10000);
+  }
+  function scheduleDrool() {
+    droolTimer = setTimeout(() => {
+      if (pumpkin.hidden || !animate()) return;
+      pumpkin.classList.add('is-drooling');
+      droolEndTimer = setTimeout(() => pumpkin.classList.remove('is-drooling'), 2300);
+      scheduleDrool();
+    }, 18000 + random() * 14000);
   }
   function hide() {
     pumpkin.hidden = true;
@@ -82,7 +113,7 @@ export function createPumpkin({ random = Math.random } = {}) {
     frame = requestAnimationFrame(() => {
       frame = null;
       const x = point.x + 48 > innerWidth ? point.x - 46 : point.x + 14;
-      const y = point.y + 48 > innerHeight ? point.y - 46 : point.y + 14;
+      const y = point.y + 62 > innerHeight ? point.y - 58 : point.y + 14;
       pumpkin.style.transform = `translate3d(${Math.max(0, x)}px, ${Math.max(0, y)}px, 0)`;
       if (pumpkin.hidden) { pumpkin.hidden = false; updateAnimation(); }
     });

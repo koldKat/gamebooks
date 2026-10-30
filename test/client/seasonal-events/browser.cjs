@@ -43,6 +43,11 @@ const mouth=new Promise(resolve=>{
  const observer=new MutationObserver(()=>{if(pumpkin.classList.contains('is-gaping')){observer.disconnect();resolve();}});
  observer.observe(pumpkin,{attributes:true,attributeFilter:['class']});
 });
+const animationStart=className=>new Promise(resolve=>{
+ const observer=new MutationObserver(()=>{if(pumpkin.classList.contains(className)){observer.disconnect();resolve();}});
+ observer.observe(pumpkin,{attributes:true,attributeFilter:['class']});
+});
+const drool=animationStart('is-drooling'),clack=animationStart('is-clacking');
 move();await delay(80);
 check(!pumpkin.hidden,'follows mouse');check(pumpkin.getAttribute('aria-hidden')==='true','decorative');
 check(getComputedStyle(pumpkin).pointerEvents==='none','click through');
@@ -55,15 +60,24 @@ await mouth;await delay(220);
 check(getComputedStyle(pumpkin.querySelector('.seasonal-pumpkin__mouth-open')).display!=='none','mouth opens wide');
 check(getComputedStyle(pumpkin.querySelector('.seasonal-pumpkin__body')).animationName==='pumpkin-shake','shakes while mouth open');
 await delay(1600);check(!pumpkin.classList.contains('is-gaping'),'mouth closes');
+await clack;await delay(80);
+check(getComputedStyle(pumpkin.querySelector('.seasonal-pumpkin__upper-teeth')).animationName==='pumpkin-clack-upper','upper teeth clack');
+check(getComputedStyle(pumpkin.querySelector('.seasonal-pumpkin__lower-teeth')).animationName==='pumpkin-clack-lower','lower teeth clack');
+check(!pumpkin.classList.contains('is-gaping'),'clacking separate from wide-mouth shake');
+await delay(1250);check(!pumpkin.classList.contains('is-clacking'),'teeth stop clacking');
+await drool;await delay(300);
+check(getComputedStyle(pumpkin.querySelector('.seasonal-pumpkin__drool')).animationName==='pumpkin-drool','drool animates');
+await delay(2300);check(!pumpkin.classList.contains('is-drooling'),'drool ends');
 move(innerWidth-1,innerHeight-1);await delay(60);
 const rect=pumpkin.getBoundingClientRect();check(rect.right<=innerWidth&&rect.bottom<=innerHeight,'stays within viewport');
 move(150,150,'touch');check(pumpkin.hidden,'no touch cursor');move();await delay(60);
 window.dispatchEvent(new Event('blur'));check(pumpkin.hidden,'hides on blur');move();await delay(60);
 document.body.classList.add('reduce-motion');await delay(30);
 check(pumpkin.style.getPropertyValue('--pumpkin-look-x')==='0px'&&!pumpkin.classList.contains('is-blinking'),'reduced animation preference');
+check(!pumpkin.classList.contains('is-clacking')&&!pumpkin.classList.contains('is-drooling'),'reduced motion clears mouth effects');
 document.getElementById('landing-wrapper').style.visibility='visible';await delay(350);
 let icons=[...document.querySelectorAll('.seasonal-background__icon')];
-check(icons.length>0&&icons.length<=3,'sparse background decorations');
+check(icons.length===14,'seven background decorations per gap');
 for(const icon of icons){
  const rect=icon.getBoundingClientRect();
  for(const id of ['covers-panel','feed-panel','landing-right']){
@@ -90,14 +104,14 @@ date=new Date(2027,9,31);refresh();check(document.querySelectorAll('.seasonal-pu
 stop();check(!document.querySelector('.seasonal-pumpkin'),'cleanup');
 document.body.classList.remove('reduce-motion');
 initSeasonalEvents({now:()=>date});move();await delay(80);
-document.body.dataset.test=JSON.stringify({calendar:true,pointer:true,blink:true,glances:true,mouth:true,background:true,settings:true,persistence:true,reducedMotion:true,cleanup:true});
+document.body.dataset.test=JSON.stringify({calendar:true,pointer:true,blink:true,glances:true,mouth:true,drool:true,clack:true,background:true,settings:true,persistence:true,reducedMotion:true,cleanup:true});
 </script>`;
 
 (async () => {
   try {
     fs.writeFileSync(file, source);
     const result = await checkBrowser({file, root, profile:path.join(root,'profile'), width:700,
-      chromium:process.env.CHROMIUM, timeoutMs:25000, screenshotPath:process.env.SEASONAL_SCREENSHOT});
+      chromium:process.env.CHROMIUM, timeoutMs:35000, screenshotPath:process.env.SEASONAL_SCREENSHOT});
     assert.ok(Object.values(result).every(value => value === true));
     console.log(JSON.stringify(result));
   } finally { fs.rmSync(root, {recursive:true, force:true}); }

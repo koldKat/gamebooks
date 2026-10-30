@@ -30,7 +30,7 @@ if(innerWidth<1400){
  check(small.some(icon=>icon.getBoundingClientRect().left<264)&&small.some(icon=>icon.getBoundingClientRect().left>1016),'both narrow gutters');
  document.body.dataset.test=JSON.stringify({narrow:true,icons:small.length,miniatures:true});
 }else{
-let icons=visible();check(icons.length>=7&&icons.length<=12,'event decoration density');
+ let icons=visible();check(icons.length===14,'seven icons per open gap');
 check(new Set(icons.map(icon=>icon.dataset.artwork)).size===icons.length,'distinct artwork, not resized duplicates');
 check(icons.filter(icon=>icon.dataset.kind==='0').every(icon=>getComputedStyle(icon).color==='rgb(255, 255, 255)'),'white ghosts');
 check(icons.filter(icon=>icon.dataset.kind==='4').every(icon=>getComputedStyle(icon.querySelector('ellipse')).fill!=='rgb(255, 255, 255)'),'colored spiders on white webs');

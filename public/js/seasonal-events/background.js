@@ -22,7 +22,8 @@ export function createHalloweenBackground() {
     const j = Math.floor(Math.random() * (i + 1));
     [variants[i], variants[j]] = [variants[j], variants[i]];
   }
-  const nodes = [0, 2, 1, 3, 4, 5, 6, 7, ...variants.slice(0, 4)].map(index => {
+  const portfolio = [0, 2, 1, 3, 4, 5, 6, 7, ...variants];
+  const nodes = [...portfolio, ...portfolio.slice(0,7).reverse()].map(index => {
     const { kind, svg } = halloweenArtwork[index];
     const icon = document.createElement('span');
     icon.className = 'seasonal-background__icon';

@@ -12,7 +12,7 @@
   contain: layout style;
 }
 .seasonal-pumpkin[hidden] { display: none; }
-.seasonal-pumpkin svg { display: block; width: 100%; height: 100%; }
+.seasonal-pumpkin svg { display: block; width: 100%; height: 100%; overflow: visible; }
 .seasonal-pumpkin__pupils {
   transform: translate(var(--pumpkin-look-x, 0px), var(--pumpkin-look-y, 0px));
   transition: transform 220ms ease;
@@ -29,14 +29,34 @@
   transition: transform 160ms ease;
 }
 .seasonal-pumpkin__mouth-open { display: none; }
-.seasonal-pumpkin.is-gaping .seasonal-pumpkin__mouth-open { display: block; }
-.seasonal-pumpkin.is-gaping .seasonal-pumpkin__mouth-closed { display: none; }
+.seasonal-pumpkin.is-gaping .seasonal-pumpkin__mouth-open,
+.seasonal-pumpkin.is-clacking .seasonal-pumpkin__mouth-open { display: block; }
+.seasonal-pumpkin.is-gaping .seasonal-pumpkin__mouth-closed,
+.seasonal-pumpkin.is-clacking .seasonal-pumpkin__mouth-closed { display: none; }
+.seasonal-pumpkin.is-clacking .seasonal-pumpkin__upper-teeth { animation: pumpkin-clack-upper 200ms linear infinite; }
+.seasonal-pumpkin.is-clacking .seasonal-pumpkin__lower-teeth { animation: pumpkin-clack-lower 200ms linear infinite; }
+@keyframes pumpkin-clack-upper {
+  0%, 100% { transform: translateY(0); }
+  45%, 60% { transform: translateY(2px); }
+}
+@keyframes pumpkin-clack-lower {
+  0%, 100% { transform: translateY(0); }
+  45%, 60% { transform: translateY(-4px); }
+}
 .seasonal-pumpkin.is-gaping .seasonal-pumpkin__body { animation: pumpkin-shake 110ms linear infinite; }
 @keyframes pumpkin-shake {
   0%, 100% { transform: translateX(-1.5px) rotate(-4deg) scale(1.08); }
   50% { transform: translateX(1.5px) rotate(4deg) scale(1.08); }
 }
 .seasonal-pumpkin__body { transform-origin: 24px 26px; }
+.seasonal-pumpkin__drool { opacity: 0; transform-box: fill-box; transform-origin: top; }
+.seasonal-pumpkin.is-drooling .seasonal-pumpkin__drool { animation: pumpkin-drool 2.3s ease-in both; }
+@keyframes pumpkin-drool {
+  0% { opacity: 0; transform: scaleY(0); }
+  15% { opacity: 1; transform: scaleY(.3); }
+  75% { opacity: 1; transform: scaleY(1); }
+  100% { opacity: 0; transform: translateY(4px) scaleY(1); }
+}
 body.reduce-motion .seasonal-pumpkin__body { animation: none; }
 body.reduce-motion .seasonal-pumpkin * { transition: none; }
 @media (prefers-reduced-motion: reduce) {

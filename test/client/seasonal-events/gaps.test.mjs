@@ -9,7 +9,9 @@ test('seasonal icons are sparse, separated and clear of the panels', () => {
     {left:1640,right:1920,top:0,bottom:1000},
   ];
   const points = seasonalGapPositions(1920,1000,panels);
-  assert.ok(points.length>=6&&points.length<=12);
+  assert.equal(points.length,14);
+  assert.equal(points.filter(p=>p.region===0).length,7);
+  assert.equal(points.filter(p=>p.region===1).length,7);
   assert.ok(points.some(p=>p.x<960)&&points.some(p=>p.x>960));
   assert.ok(new Set(points.map(p=>p.size)).size>=4);
   for (const point of points) {
@@ -17,7 +19,7 @@ test('seasonal icons are sparse, separated and clear of the panels', () => {
     for (const panel of panels) assert.ok(point.x <= panel.left-radius || point.x >= panel.right+radius
       || point.y <= panel.top-radius || point.y >= panel.bottom+radius);
     for (const other of points) if (other !== point) assert.ok(Math.hypot(point.x-other.x,point.y-other.y)
-      >=(point.narrow&&other.narrow?110:155));
+      >=(point.size+other.size)*.71+24);
   }
 });
 

@@ -1,6 +1,5 @@
 // Keep a sparse, varied scatter in roomy gaps, balanced across both sides.
 export function seasonalGapPositions(width, height, panels, { random = Math.random } = {}) {
-  const target = Math.min(12, Math.max(3, Math.round(width * height / 210000)));
   const candidates = [];
   const xs = [], ys = [];
   for (let x = 24; x < width - 20; x += 40) xs.push(x + (random() - .5) * 24);
@@ -25,29 +24,31 @@ export function seasonalGapPositions(width, height, panels, { random = Math.rand
       if (maxSize >= minimum) candidates.push({x,y,maxSize,minimum,padding,narrow});
     }
   }
-  for (let i = candidates.length - 1; i > 0; i--) {
-    const j = Math.floor(random() * (i + 1));
-    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  const columns = panels.filter(rect => rect.top <= 0 && rect.bottom >= height)
+    .sort((a,b) => a.left-b.left);
+  const regions = []; let edge = 0;
+  for (const column of columns) {
+    if (column.left-edge >= 20) regions.push({left:edge,right:column.left});
+    edge = Math.max(edge,column.right);
   }
+  if (width-edge >= 20) regions.push({left:edge,right:width});
   const chosen = [];
   const separated = point => chosen.every(other => Math.hypot(point.x - other.x, point.y - other.y)
-    >= (point.narrow && other.narrow ? 110 : 155));
-  for (const side of [point => point.x < width / 2, point => point.x >= width / 2]) {
-    if (chosen.some(side)) continue;
-    const point = candidates.find(candidate => side(candidate) && separated(candidate));
-    if (point) { if (chosen.length === target) chosen.pop(); chosen.push(point); }
+    >= (point.size+other.size)*.71+24);
+  const sizes = [38,76,50,88,44,64,54,82,46,68,58,90,48,72];
+  for (const [regionIndex, region] of regions.entries()) {
+    const pool = candidates.filter(point => point.x > region.left && point.x < region.right);
+    for (let slot = 0; slot < 7; slot++) {
+      const index = chosen.length;
+      const preferred = sizes[index % sizes.length]+Math.round(random()*4);
+      const x = region.left+(region.right-region.left)*(.2+random()*.6);
+      const y = height*((slot+.5+(random()-.5)*.25)/7);
+      const options = pool.map(point => ({...point,
+        size:Math.max(point.minimum,Math.min(preferred,Math.floor(point.maxSize*(point.narrow ? .82+random()*.18 : 1)))),
+      })).filter(separated).sort((a,b) => Math.abs(a.y-y)+Math.abs(a.x-x)*.35
+        - Math.abs(b.y-y)-Math.abs(b.x-x)*.35);
+      if (options[0]) chosen.push({...options[0],region:regionIndex,angle:Math.round(random()*28-14)});
+    }
   }
-  for (const point of candidates) {
-    if (chosen.length === target) break;
-    const leftCount = chosen.filter(point => point.x < width / 2).length;
-    const preferLeft = leftCount <= chosen.length - leftCount;
-    const balanced = candidates.find(candidate => (candidate.x < width / 2) === preferLeft && separated(candidate));
-    if (balanced) chosen.push(balanced);
-    else if (separated(point)) chosen.push(point);
-  }
-  return chosen.map((point, index) => ({ ...point,
-    size: Math.max(point.minimum,Math.min([38,76,50,88,44,64,54,82,46,68,58,90][index]
-      + Math.round(random()*4),Math.floor(point.maxSize*(point.narrow ? .82+random()*.18 : 1)))),
-    angle: point.angle ?? Math.round(random() * 28 - 14),
-  }));
+  return chosen;
 }
