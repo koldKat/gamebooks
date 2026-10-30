@@ -1,0 +1,18 @@
+/* Seasonal calendar cards and private admin preview controls. */
+#tab-seasons { max-width: 1000px; margin:auto; }
+.season-explanation { color:#9ca3af; margin:.65rem 0; font-size:.85rem; line-height:1.5; }
+.season-actions { display:flex; align-items:center; flex-wrap:wrap; gap:.7rem; margin:1rem 0; }
+.season-actions a { color:#d4b574; font-size:.85rem; }
+.season-actions button, .season-card button { border:1px solid #66583f; background:#242c38;
+  color:#dfbd80; padding:.45rem .75rem; border-radius:6px; font:inherit; font-size:.8rem; cursor:pointer; }
+.season-actions button:hover:not(:disabled), .season-card button:hover:not(:disabled) { background:#333948; }
+.season-actions button:focus-visible, .season-card button:focus-visible { outline:2px solid #dfbd80; outline-offset:3px; }
+#seasons-status { color:#d4b574; margin:1rem 0; font-size:.85rem; }
+#seasons-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr)); gap:1rem; }
+.season-card { background:#1a2332; border:1px solid #374151; border-radius:9px; padding:1rem; }
+.season-card h3 { color:#e0bf83; margin-bottom:.6rem; }
+.season-card p { font-size:.82rem; line-height:1.5; margin:.5rem 0; }
+.season-card .muted { color:#8792a2; }
+.season-samples { display:flex; flex-wrap:wrap; gap:.5rem; margin:1rem 0; }
+.season-samples svg { width:42px; height:42px; shape-rendering:crispEdges; }
+.season-actions button:disabled, .season-card button:disabled { opacity:.45; cursor:default; }

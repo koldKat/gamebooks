@@ -26,6 +26,14 @@ All `/api/admin/*` routes and the panel itself reject any connection that is not
 
 ---
 
+## Seasons
+
+The **Seasons** tab lists the live calendar, each event's window and rewards. Sign in to your administrator account in the main app first, then use **Test season** to preview Halloween or Diwali in your main-app tab. The selected preview replaces the displayed event only for that account. It syncs through private account preferences to your other tabs and devices, stays stable when changing tabs or scrolling, and never changes another player's event or the server's actual XP rewards.
+
+**Test no season** hides seasonal decorations for your preview. **Stop testing — use live season** removes the override and immediately restores the calendar's event. Ctrl+Y's **Seasonal events** setting still controls decoration visibility. Previews do not add decorations to the canvas/play area. Live events continue to activate and expire automatically even while an admin is testing another season.
+
+Diwali dates are year-specific, with a three-day margin on either side. The tab shows the last configured year so future dates can be added to the shared calendar without changing the seasonal controller. An unknown future date never silently repeats November 8.
+
 ## Stats cards
 
 The top of the panel groups aggregate metrics into six compact panels:

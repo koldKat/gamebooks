@@ -9,7 +9,7 @@ const palette = {
   F: '#ffffff', f: '#b6bfce', A: '#df862b', a: '#994a24', L: '#f1b14b',
 };
 
-export function pixelSprite(kind, rows, pixelSize = 2) {
+export function pixelSprite(kind, rows, pixelSize = 2, colors = palette) {
   let svg = '<g shape-rendering="crispEdges">';
   rows.forEach((row, y) => {
     // Merge horizontal runs while keeping every edge on the sprite's pixel grid.
@@ -17,7 +17,7 @@ export function pixelSprite(kind, rows, pixelSize = 2) {
       const color = row[x];
       let end = x + 1;
       while (end < row.length && row[end] === color) end++;
-      if (color !== '.') svg += `<rect x="${x * pixelSize}" y="${y * pixelSize}" width="${(end - x) * pixelSize}" height="${pixelSize}" fill="${palette[color]}"/>`;
+      if (color !== '.') svg += `<rect x="${x * pixelSize}" y="${y * pixelSize}" width="${(end - x) * pixelSize}" height="${pixelSize}" fill="${colors[color]}"/>`;
       x = end;
     }
   });

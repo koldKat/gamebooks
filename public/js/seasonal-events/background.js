@@ -10,11 +10,13 @@ function layoutRandom() {
   return () => ((seed = (Math.imul(1664525, seed) + 1013904223) >>> 0) / 0x100000000);
 }
 
-export function createHalloweenBackground() {
+export function createSeasonalBackground({ id = 'halloween', artwork = halloweenArtwork,
+  featured = [0, 2, 1, 3, 14, 16, 18, 20], cornerWebs = true } = {}) {
   const landing = document.getElementById('landing-wrapper');
   if (!landing) return () => {};
   const layer = document.createElement('div');
   layer.className = 'seasonal-background';
+  layer.dataset.season = id;
   layer.setAttribute('aria-hidden', 'true');
   document.body.append(layer);
   const panels = [...document.querySelectorAll('#covers-panel, #feed-panel, #landing-right, .panel-toggle, .scroll-top-btn, #app-footer')];
@@ -24,17 +26,19 @@ export function createHalloweenBackground() {
     patch.className = 'seasonal-background__haze';
     patch.hidden = true; layer.append(patch); return patch;
   });
-  const featured = [0, 2, 1, 3, 14, 16, 18, 20];
-  const variants = halloweenArtwork.map((_, index) => index)
-    .filter(index => halloweenArtwork[index].kind !== 4 && !featured.includes(index));
+  featured = featured.filter(index => artwork[index]);
+  const variants = artwork.map((_, index) => index)
+    .filter(index => artwork[index].kind !== 4 && !featured.includes(index));
   const random = layoutRandom();
   for (let i = variants.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
     [variants[i], variants[j]] = [variants[j], variants[i]];
   }
   const portfolio = [...featured, ...variants];
-  const nodes = [...portfolio, ...portfolio.slice(0,7).reverse()].map(index => {
-    const { kind, svg, pixelated, maskImage } = halloweenArtwork[index];
+  const pool = [...portfolio, ...portfolio.slice(0,7).reverse()];
+  while (pool.length < 42 && portfolio.length) pool.push(...portfolio);
+  const nodes = pool.map(index => {
+    const { kind, svg, pixelated, maskImage } = artwork[index];
     const icon = document.createElement('span');
     icon.className = 'seasonal-background__icon';
     icon.dataset.kind = String(kind);
@@ -46,7 +50,7 @@ export function createHalloweenBackground() {
     icon.innerHTML = `<svg viewBox="0 0 48 48" focusable="false">${svg}</svg>`;
     return icon;
   });
-  const webs = halloweenArtwork.filter(art => art.kind === 4).map(({ svg, maskImage }) => {
+  const webs = artwork.filter(art => cornerWebs && art.kind === 4).map(({ svg, maskImage }) => {
     const web = document.createElement('span');
     web.className = 'seasonal-background__web';
     web.style.maskImage = maskImage;
@@ -97,7 +101,7 @@ export function createHalloweenBackground() {
     }
     // Redistribute into newly opened space after a real panel-layout change.
     // Unchanged geometry returns above, preserving positions during ordinary use.
-    const corners = seasonalWebPositions(innerWidth, innerHeight, occupied, { random: layoutRandom() });
+    const corners = cornerWebs ? seasonalWebPositions(innerWidth, innerHeight, occupied, { random: layoutRandom() }) : [];
     const webAreas = corners.map(point => ({ left: point.left - 8, right: point.left + point.size + 8,
       top: point.top - 8, bottom: point.top + point.size + 8 }));
     for (const [index, web] of webs.entries()) {
@@ -148,3 +152,4 @@ export function createHalloweenBackground() {
     layer.remove();
   };
 }
+export const createHalloweenBackground = () => createSeasonalBackground();

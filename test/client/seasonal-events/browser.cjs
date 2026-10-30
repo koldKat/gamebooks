@@ -14,7 +14,7 @@ const source = `<!doctype html><meta charset="utf-8">
 <label><input type="checkbox" id="seasonal-events-cb"> Seasonal events</label>
 <div id="seasonal-event-notice" class="seasonal-event-notice" hidden></div>
 <button id="target">Halloween cursor companion</button>
-<div id="landing-wrapper" style="visibility:hidden">
+<div id="landing-wrapper" style="visibility:visible">
   <div id="covers-panel" style="position:fixed;left:0;top:450px;width:100px;height:400px"></div>
   <div id="feed-panel" style="position:fixed;left:300px;top:450px;width:100px;height:400px"></div>
   <div id="landing-right" style="position:fixed;right:0;top:450px;width:100px;height:400px"></div>
@@ -132,7 +132,7 @@ stop=initSeasonalEvents({now:()=>date,random:()=>0});
 check(!notice.hidden&&document.querySelector('.seasonal-pumpkin'),'before automatic event end');
 date=new Date('2026-11-03T22:00:00Z');await delay(1250);
 check(notice.hidden&&!document.querySelector('.seasonal-pumpkin')&&!document.querySelector('.seasonal-background'),'notice and decorations end automatically');
-stop();date=new Date(2027,9,31);
+stop();date=new Date(2026,9,31);
 stop=initSeasonalEvents({now:()=>date,random:()=>0});
 const {seasonalEvents}=await import('file://${publicRoot}/js/seasonal-events/calendar.js');
 const originalCalendar=JSON.parse(JSON.stringify(seasonalEvents)),nativeFetch=window.fetch;

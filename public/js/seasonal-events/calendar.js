@@ -1,5 +1,7 @@
 // Annual seasonal calendar and automatic day changes, using the server's Sofia date.
 import events from './calendar.json' with { type: 'json' };
+import { activeSeasons, seasonWindow } from './schedule.js';
+export { seasonWindow };
 export const seasonalEvents = events;
 export async function reloadSeasonalCalendar() {
   const response = await fetch(new URL('./calendar.json', import.meta.url), { cache: 'no-cache' });
@@ -7,8 +9,11 @@ export async function reloadSeasonalCalendar() {
   const next = await response.json();
   if (!Array.isArray(next) || next.some(event => !event || typeof event.id !== 'string'
     || typeof event.title !== 'string' || typeof event.description !== 'string'
-    || !Number.isInteger(event.start) || !Number.isInteger(event.end)
-    || event.start < 101 || event.start > 1231 || event.end < 101 || event.end > 1231)) {
+    || (event.dates ? Object.entries(event.dates).some(([year, date]) =>
+      !/^\d{4}$/.test(year) || !new RegExp(`^${year}-\\d{2}-\\d{2}$`).test(date)
+      || !Number.isFinite(Date.parse(date + 'T00:00:00Z')))
+      : !Number.isInteger(event.start) || !Number.isInteger(event.end)
+        || event.start < 101 || event.start > 1231 || event.end < 101 || event.end > 1231))) {
     throw new Error('Invalid seasonal calendar');
   }
   seasonalEvents.splice(0, seasonalEvents.length, ...next);
@@ -35,8 +40,6 @@ export function nextSeasonalRefreshDelay(date = new Date()) {
 }
 
 export function activeSeasonalEvent(date = new Date()) {
-  const { day } = calendarDay(date);
-  return seasonalEvents.find(event => event.start <= event.end
-    ? day >= event.start && day <= event.end
-    : day >= event.start || day <= event.end) || null;
+  return activeSeasonalEvents(date)[0] || null;
 }
+export function activeSeasonalEvents(date = new Date()) { return activeSeasons(seasonalEvents, date); }

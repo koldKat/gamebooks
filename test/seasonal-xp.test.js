@@ -6,6 +6,23 @@ const vm = require('node:vm');
 const Database = require('better-sqlite3');
 const { seasonalXpMultiplier } = require('../server/seasonal-events');
 
+test('Diwali doubles normal and simulator wins only within its moving Sofia dates', () => {
+  for (const event of ['win_run','first_win','first_win_ow','battlesim_win']) {
+    assert.equal(seasonalXpMultiplier(event,new Date('2026-11-04T21:59:59Z')),1);
+    assert.equal(seasonalXpMultiplier(event,new Date('2026-11-04T22:00:00Z')),2);
+    assert.equal(seasonalXpMultiplier(event,new Date('2026-11-11T21:59:59Z')),2);
+    assert.equal(seasonalXpMultiplier(event,new Date('2026-11-11T22:00:00Z')),1);
+    assert.equal(seasonalXpMultiplier(event,new Date('2027-10-29T12:00:00Z')),2);
+    assert.equal(seasonalXpMultiplier(event,new Date('2027-11-08T12:00:00Z')),1);
+  }
+  for (const event of ['death_run','battle_run','battlesim_loss','run_depth','clean_run','discovery']) {
+    assert.equal(seasonalXpMultiplier(event,new Date('2026-11-08T12:00:00Z')),1);
+  }
+  for (const event of ['win_run','battlesim_win','death_run','battlesim_loss']) {
+    assert.equal(seasonalXpMultiplier(event,new Date('2027-10-31T12:00:00Z')),2);
+  }
+});
+
 test('Halloween loss bonuses use inclusive Sofia dates and exclude unrelated rewards', () => {
   for (const year of [2026, 2027, 2028]) {
     for (const event of ['death_run','battle_run','first_loss','first_battle_death','first_loss_ow','first_battle_death_ow','battlesim_loss']) {
@@ -37,7 +54,7 @@ function fixture(t) {
     _insertNotif:db.prepare('INSERT INTO notifications VALUES(?,?,?)'),
     isImpersonatingContext:()=>impersonating,
     seasonalXpMultiplier:event=>seasonalXpMultiplier(event,date),
-    getXpAmount:event=>({death_run:15,battle_run:15,battlesim_loss:5,win_run:20}[event] ?? 0),
+    getXpAmount:event=>({death_run:15,battle_run:15,battlesim_loss:5,win_run:20,battlesim_win:10,first_win:100}[event] ?? 0),
     getTitleForLevel:()=>''});
   const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
   vm.runInContext(source.slice(source.indexOf('function computeLevel('),source.indexOf('function toRoman('))
@@ -61,6 +78,17 @@ test('real XP transaction doubles losses, preserves boosts and never re-awards a
   f.date('2026-11-04T12:00:00Z');
   f.award('death_run','run:5');assert.equal(f.xp(),480,'normal amount after event');
   assert.equal(f.award('death_run','run:1'),false);assert.equal(f.xp(),480);
+});
+
+test('real Diwali win rewards preserve deduplication, first-win overrides and normal boosts', t => {
+  const f=fixture(t);f.date('2026-11-08T12:00:00Z');
+  assert.equal(f.award('win_run','run:1'),true);assert.equal(f.xp(),40);
+  assert.equal(f.award('battlesim_win','fight:1'),true);assert.equal(f.xp(),60);
+  assert.equal(f.award('battlesim_win','fight:1'),false);assert.equal(f.xp(),60);
+  f.award('death_run','run:2');assert.equal(f.xp(),75,'loss has no Diwali bonus');
+  f.db.prepare('UPDATE users SET xp_boost_pct=1000 WHERE id=1').run();
+  f.award('first_win','book:1',150);assert.equal(f.xp(),675,'first-win override doubles before ordinary boost');
+  f.date('2026-11-12T12:00:00Z');f.award('win_run','run:3');assert.equal(f.xp(),715,'ordinary boost remains after event ends');
 });
 
 test('seasonal XP remains mandatory while retaining the level cap and impersonation guard', t => {

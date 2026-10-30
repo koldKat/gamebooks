@@ -1,4 +1,5 @@
 import { bootState } from './state.js';
+import { setSeasonPreviewUser } from '../seasonal-events/preview.js';
 import { state, setViewingPt, getToken, setUsername, apiFetch, setCurrentBookId, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../core/state.js';
 import { destroyNetwork } from '../graph.js';
 import { render, setDiscoverableLimit } from '../play.js';
@@ -27,6 +28,7 @@ import { _pushNav, _isViewLocked } from './navigation.js';
 import { APP_XP_EXTRA_USER_ID } from './state.js';
 
 export function showLogin() {
+  setSeasonPreviewUser(null);
   renderJobXpSummary(null);
   closeProfileModal();
   _revealLanding();
@@ -90,6 +92,7 @@ export async function loadSessionProfile(sessionToken = getToken()) {
     if (!response.ok) return null;
     const profile = await response.json();
     if (getToken() !== sessionToken) return null;
+    setSeasonPreviewUser(profile);
     if (profile.id) { bootState._currentUserId = profile.id; setCurrentUserId(bootState._currentUserId); }
     bootState._isAdmin = resolveIsAdmin(profile);
     _processRewardSnapshot(profile);
