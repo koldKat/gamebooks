@@ -2,7 +2,9 @@
 import { seasonalEvents, activeSeasonalEvents, seasonWindow, reloadSeasonalCalendar } from '/js/seasonal-events/calendar.js';
 import { setSeasonPreviewUser, seasonPreview, setSeasonPreview, applySeasonPreviewPreference, isSeasonPreviewStorageKey } from '/js/seasonal-events/preview.js';
 import { apiFetch, getToken } from '/js/core/state.js';
+import {createCursorPreviews} from '/js/seasonal-events/cursor-previews.js';
 let bound = false;
+let stopPreviews=()=>{};
 export async function loadSeasons() {
   const target = document.getElementById('seasons-list'), status = document.getElementById('seasons-status');
   try {
@@ -21,7 +23,8 @@ export async function loadSeasons() {
     await reloadSeasonalCalendar();
     const preview = seasonPreview(), live = activeSeasonalEvents();
     status.textContent = `Live now: ${live.map(event => event.title.replace(/ event active$/, '')).join(', ') || 'none'}. Your preview: ${preview === 'off' ? 'no season' : preview || 'automatic'}.`;
-    target.replaceChildren();
+    stopPreviews();target.replaceChildren();
+    const previewStops=[];stopPreviews=()=>previewStops.forEach(stop=>stop());
     const year = Number(new Intl.DateTimeFormat('en', {timeZone:'Europe/Sofia',year:'numeric'}).format(new Date()));
     for (const event of seasonalEvents) {
       const card = document.createElement('section'); card.className = 'season-card';
@@ -35,7 +38,7 @@ export async function loadSeasons() {
       test.disabled = preview === event.id; test.dataset.seasonTest = event.id;
       test.addEventListener('click', () => changePreview(event.id));
       card.append(heading, dates, detail);
-      card.append(test); target.append(card);
+      card.append(test); target.append(card);previewStops.push(createCursorPreviews(card,event.id));
     }
     document.getElementById('seasons-automatic').disabled = !preview;
     document.getElementById('seasons-off').disabled = preview === 'off';
@@ -46,6 +49,7 @@ export async function loadSeasons() {
       window.addEventListener('storage', event => { if (isSeasonPreviewStorageKey(event.key)) loadSeasons(); });
     }
   } catch (error) {
+    stopPreviews();
     status.textContent = error.message;
     target.replaceChildren();
     for (const id of ['seasons-automatic','seasons-off']) document.getElementById(id).disabled = true;

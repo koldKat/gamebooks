@@ -1,11 +1,11 @@
 // A small Diwali lamp follows the mouse, with a gentle motion-aware flame.
 import { diyaCursorSvg } from './diya-artwork.js';
-export function createDiya({ random = Math.random, preview = false } = {}) {
+export function createDiya({ random = Math.random, preview = false, host = null } = {}) {
   const lamp = document.createElement('div');
-  lamp.className = 'seasonal-diya'; lamp.hidden = true;
+  lamp.className = 'seasonal-diya'; lamp.hidden = !host;
   lamp.setAttribute('aria-hidden', 'true');
   lamp.innerHTML = `<svg viewBox="0 0 48 48" focusable="false">${diyaCursorSvg}</svg>`;
-  document.body.append(lamp);
+  (host||document.body).append(lamp);
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
   const effects = [
     { name:'is-flaring', delay:70000, spread:60000, duration:1800, previewDelay:4500 },
@@ -37,7 +37,7 @@ export function createDiya({ random = Math.random, preview = false } = {}) {
       }
       schedule(effect);
     }, previewPending.has(effect.name) ? effect.previewDelay + random() * 2000
-      : effect.delay + random() * effect.spread);
+      : host ? 20000 + random() * 5000 : effect.delay + random() * effect.spread);
     timers.add(timer);
   }
   function updateAnimation() {
@@ -69,12 +69,14 @@ export function createDiya({ random = Math.random, preview = false } = {}) {
   const prefsObserver = new MutationObserver(motionChanged);
   prefsObserver.observe(document.body, { attributes:true, attributeFilter:['class'] });
   motion.addEventListener('change', motionChanged);
+  if(!host){
   document.addEventListener('pointermove', move, { passive:true });
   document.addEventListener('pointerdown', down, { passive:true });
   document.documentElement.addEventListener('pointerleave', hide);
   for (const name of ['blur','resize']) window.addEventListener(name, hide);
   for (const name of ['visibilitychange','pointerlockchange']) document.addEventListener(name, hide);
-  return () => {
+  }else updateAnimation();
+  const dispose = () => {
     hide(); lamp.remove(); prefsObserver.disconnect();
     motion.removeEventListener('change', motionChanged);
     document.removeEventListener('pointermove', move);
@@ -83,4 +85,5 @@ export function createDiya({ random = Math.random, preview = false } = {}) {
     for (const name of ['blur','resize']) window.removeEventListener(name, hide);
     for (const name of ['visibilitychange','pointerlockchange']) document.removeEventListener(name, hide);
   };
+  return Object.assign(dispose,{node:lamp,move,hide});
 }

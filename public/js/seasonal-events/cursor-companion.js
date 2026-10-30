@@ -1,7 +1,7 @@
-// Manage decorative winter cursor motion, timed actions and complete lifecycle cleanup.
-export function createCursorCompanion({name,svg,actions,face=false,random=Math.random,preview=false}) {
-  const node=document.createElement('div');node.className='seasonal-companion seasonal-'+name;node.hidden=true;
-  node.setAttribute('aria-hidden','true');node.innerHTML='<svg viewBox="0 0 48 48" focusable="false">'+svg+'</svg>';document.body.append(node);
+// Manage decorative mouse companion motion, timed actions and complete lifecycle cleanup.
+export function createCursorCompanion({name,svg,actions,face=false,random=Math.random,preview=false,host=null}) {
+  const node=document.createElement('div');node.className='seasonal-companion seasonal-'+name;node.hidden=!host;
+  node.setAttribute('aria-hidden','true');node.innerHTML='<svg viewBox="0 0 48 48" focusable="false">'+svg+'</svg>';(host||document.body).append(node);
   const motion=matchMedia('(prefers-reduced-motion: reduce)'),timers=new Set(),pending=new Set(preview?actions.map(a=>a.name):[]);
   let frame,point,currentAction;
   const animate=()=>!motion.matches&&!document.body.classList.contains('reduce-motion');
@@ -11,7 +11,7 @@ export function createCursorCompanion({name,svg,actions,face=false,random=Math.r
     if(node.hidden||!animate())return;
     if(!currentAction){pending.delete(effect.name);currentAction=effect.name;node.classList.add(effect.name);after(()=>{node.classList.remove(effect.name);currentAction=null;},effect.duration);}
     action(effect);
-  },pending.has(effect.name)?effect.previewDelay+random()*1500:effect.delay+random()*effect.spread);}
+  },pending.has(effect.name)?effect.previewDelay+random()*1500:host?20000+random()*5000:effect.delay+random()*effect.spread);}
   function blink(){after(()=>{if(node.hidden||!animate())return;node.classList.add('is-blinking');after(()=>node.classList.remove('is-blinking'),150);blink();},3200+random()*4200);}
   function look(){after(()=>{if(node.hidden||!animate())return;node.style.setProperty('--companion-look-x',(random()*4-2).toFixed(1)+'px');node.style.setProperty('--companion-look-y',(random()*2-1).toFixed(1)+'px');look();},1700+random()*2600);}
   function start(){clear();if(!node.hidden&&animate()){actions.forEach(action);if(face){blink();look();}}}
@@ -31,14 +31,17 @@ export function createCursorCompanion({name,svg,actions,face=false,random=Math.r
   function changed(){const next=animate();if(next!==previousMotion){previousMotion=next;start();}}
   const observer=new MutationObserver(changed);observer.observe(document.body,{attributes:true,attributeFilter:['class']});
   motion.addEventListener('change',changed);
+  if(!host){
   document.addEventListener('pointermove',move,{passive:true});document.addEventListener('pointerdown',down,{passive:true});
   document.documentElement.addEventListener('pointerleave',hide);
   for(const type of ['blur','resize'])window.addEventListener(type,hide);
   for(const type of ['visibilitychange','pointerlockchange'])document.addEventListener(type,hide);
-  return()=>{hide();observer.disconnect();motion.removeEventListener('change',changed);
+  }else start();
+  const dispose=()=>{hide();observer.disconnect();motion.removeEventListener('change',changed);
     document.removeEventListener('pointermove',move);document.removeEventListener('pointerdown',down);
     document.documentElement.removeEventListener('pointerleave',hide);
     for(const type of ['blur','resize'])window.removeEventListener(type,hide);
     for(const type of ['visibilitychange','pointerlockchange'])document.removeEventListener(type,hide);
     node.remove();};
+  return Object.assign(dispose,{node,move,hide});
 }

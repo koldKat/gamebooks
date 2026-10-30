@@ -15,3 +15,8 @@
 .season-card p { font-size:.82rem; line-height:1.5; margin:.5rem 0; }
 .season-card .muted { color:#8792a2; }
 .season-actions button:disabled, .season-card button:disabled { opacity:.45; cursor:default; }
+.season-cursor-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.4rem;margin:.8rem 0 0;}
+.season-cursor-gallery figure{min-width:0;margin:0;text-align:center;}
+.season-cursor-gallery figcaption{font-size:.73rem;color:#bcb7ac;line-height:1.35;}
+.season-cursor-preview{height:120px;display:grid;place-items:center;contain:layout style paint;overflow:hidden;}
+.seasonal-inline-preview :is(.seasonal-pumpkin,.seasonal-diya,.seasonal-companion){position:relative!important;inset:auto!important;transform:none!important;width:60px!important;height:60px!important;z-index:auto!important;}

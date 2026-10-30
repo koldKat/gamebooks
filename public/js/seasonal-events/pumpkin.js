@@ -1,9 +1,9 @@
 // A decorative pumpkin beside the mouse, with occasional creepy facial animations.
-export function createPumpkin({ random = Math.random } = {}) {
+export function createPumpkin({ random = Math.random, host = null } = {}) {
   const pumpkin = document.createElement('div');
   pumpkin.className = 'seasonal-pumpkin';
   pumpkin.setAttribute('aria-hidden', 'true');
-  pumpkin.hidden = true;
+  pumpkin.hidden = !host;
   pumpkin.innerHTML = `<svg viewBox="0 0 48 48" focusable="false"><g class="seasonal-pumpkin__body">
     <path d="M23 13c-2-5 1-9 5-10l3 3c-4 0-5 3-4 7" fill="#57813c" stroke="#294722" stroke-width="1.5"/>
     <path d="M24 13C5 5 1 24 7 35c4 9 12 10 17 8 6 2 14 1 18-8 6-12 0-29-18-22Z" fill="#ef8520" stroke="#783b15" stroke-width="1.5"/>
@@ -34,8 +34,9 @@ export function createPumpkin({ random = Math.random } = {}) {
       <ellipse cx="28" cy="60" rx="2" ry="3" fill="#9fcf45" stroke="#486b1f" stroke-width=".5"/>
     </g>
   </g></svg>`;
-  document.body.append(pumpkin);
+  (host||document.body).append(pumpkin);
   const motion = matchMedia('(prefers-reduced-motion: reduce)');
+  const hostPending=new Set(host?['mouth','clack','drool']:[]);
   let blinkTimer, openTimer, glanceTimer, mouthTimer, closeMouthTimer, droolTimer, droolEndTimer, frame, point;
   let clackTimer, clackEndTimer;
   const animate = () => !motion.matches && !document.body.classList.contains('reduce-motion');
@@ -72,10 +73,10 @@ export function createPumpkin({ random = Math.random } = {}) {
     mouthTimer = setTimeout(() => {
       if (pumpkin.hidden || !animate()) return;
       if (pumpkin.classList.contains('is-clacking')) { scheduleMouth(); return; }
-      pumpkin.classList.add('is-gaping');
+      pumpkin.classList.add('is-gaping');hostPending.delete('mouth');
       closeMouthTimer = setTimeout(() => pumpkin.classList.remove('is-gaping'), 1500);
       scheduleMouth();
-    }, 70000 + random() * 60000);
+    }, host ? (hostPending.has('mouth')?4500:20000) + random() * 1500 : 70000 + random() * 60000);
   }
   function updateAnimation() {
     clearAnimation();
@@ -87,19 +88,19 @@ export function createPumpkin({ random = Math.random } = {}) {
     clackTimer = setTimeout(() => {
       if (pumpkin.hidden || !animate()) return;
       if (!pumpkin.classList.contains('is-gaping')) {
-        pumpkin.classList.add('is-clacking');
+        pumpkin.classList.add('is-clacking');hostPending.delete('clack');
         clackEndTimer = setTimeout(() => pumpkin.classList.remove('is-clacking'), 1200);
       }
       scheduleClack();
-    }, 90000 + random() * 70000);
+    }, host ? (hostPending.has('clack')?10000:22000) + random() * 1500 : 90000 + random() * 70000);
   }
   function scheduleDrool() {
     droolTimer = setTimeout(() => {
       if (pumpkin.hidden || !animate()) return;
-      pumpkin.classList.add('is-drooling');
+      pumpkin.classList.add('is-drooling');hostPending.delete('drool');
       droolEndTimer = setTimeout(() => pumpkin.classList.remove('is-drooling'), 2300);
       scheduleDrool();
-    }, 120000 + random() * 90000);
+    }, host ? (hostPending.has('drool')?16000:26000) + random() * 1500 : 120000 + random() * 90000);
   }
   function hide() {
     pumpkin.hidden = true;
@@ -126,6 +127,7 @@ export function createPumpkin({ random = Math.random } = {}) {
   }
   const prefsObserver = new MutationObserver(motionChanged);
   prefsObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  if(!host){
   document.addEventListener('pointermove', move, { passive: true });
   document.addEventListener('pointerdown', pointerDown, { passive: true });
   document.documentElement.addEventListener('pointerleave', hide);
@@ -134,7 +136,8 @@ export function createPumpkin({ random = Math.random } = {}) {
   document.addEventListener('visibilitychange', hide);
   document.addEventListener('pointerlockchange', hide);
   motion.addEventListener('change', motionChanged);
-  return () => {
+  }else updateAnimation();
+  const dispose = () => {
     hide(); prefsObserver.disconnect();
     document.removeEventListener('pointermove', move);
     document.removeEventListener('pointerdown', pointerDown);
@@ -146,4 +149,5 @@ export function createPumpkin({ random = Math.random } = {}) {
     motion.removeEventListener('change', motionChanged);
     pumpkin.remove();
   };
+  return Object.assign(dispose,{node:pumpkin,move,hide});
 }

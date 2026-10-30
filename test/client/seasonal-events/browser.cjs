@@ -103,7 +103,7 @@ const simLoss=notice.querySelector('.seasonal-event-sim-loss');
 check(simLoss?.textContent==='sim battle losses'&&getComputedStyle(simLoss).color==='rgb(196, 119, 119)','entire sim battle losses phrase muted red');
 check(getComputedStyle(notice.querySelector('.seasonal-event-battle-death')).color==='rgb(217, 119, 6)','battle deaths dark orange');
 check(saved.seasonalEvents==='0'&&localStorage.getItem('seasonal-events')==='0','persist preference');
-stop();stop=initSeasonalEvents({now:()=>date});check(!document.querySelector('.seasonal-pumpkin'),'stays disabled after reinitialization');
+stop();stop=initSeasonalEvents({now:()=>date,random:()=>0});check(!document.querySelector('.seasonal-pumpkin'),'stays disabled after reinitialization');
 applySeasonalEventsPreference('1');check(toggle.checked&&document.querySelector('.seasonal-pumpkin'),'server preference restores setting');
 date=new Date(2026,10,3,23,59);refresh();check(document.querySelector('.seasonal-pumpkin'),'last event day');
 date=new Date(2026,10,4);refresh();check(!document.querySelector('.seasonal-pumpkin'),'event expires in open tab');
@@ -145,7 +145,7 @@ check(!notice.hidden,'failed calendar request retains last valid event');
 check(calendarFetches===3,'only live configuration signals fetch calendar');
 window.fetch=nativeFetch;stop();
 document.body.classList.remove('reduce-motion');
-initSeasonalEvents({now:()=>date});move();await delay(80);
+initSeasonalEvents({now:()=>date,random:()=>0});move();await delay(80);
 document.body.dataset.test=JSON.stringify({calendar:true,automaticStart:true,automaticEnd:true,liveNoticeUpdates:true,liveStart:true,liveEnd:true,liveUpdatePreservesArtwork:true,wholeSimLossPhraseColored:true,pointer:true,blink:true,glances:true,mouth:true,drool:true,clack:true,mouseOnly:true,tabSwitchStable:true,settings:true,persistence:true,reducedMotion:true,cleanup:true});
 </script>`;
 

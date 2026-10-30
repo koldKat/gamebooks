@@ -1,9 +1,9 @@
 /* Winter cursor companions and muted event accents. */
-.seasonal-companion { position:fixed;inset:0 auto auto 0;width:36px;height:36px;
+.seasonal-companion { position:fixed;inset:0 auto auto 0;width:32px;height:32px;
   pointer-events:none;user-select:none;z-index:2147483647;contain:layout style; }
 .seasonal-companion[hidden] { display:none; }
 .seasonal-companion svg { width:100%;height:100%;overflow:visible; }
-.seasonal-santa { width:48px;height:48px; }
+.seasonal-santa { width:32px;height:32px; }
 .seasonal-santa__pupils { transform:translate(var(--companion-look-x,0px),var(--companion-look-y,0px));transition:transform 220ms ease; }
 .seasonal-santa__eyes { transform-origin:24px 26px;transition:transform 65ms ease; }
 .seasonal-santa.is-blinking .seasonal-santa__eyes { transform:scaleY(.08); }
@@ -28,7 +28,7 @@
   48% { opacity:1;transform:translate(35px,-35px) rotate(15deg); }
   100% { opacity:0;transform:translate(65px,15px) rotate(40deg); }
 }
-.seasonal-champagne { width:40px;height:40px;filter:drop-shadow(0 0 2px #d9b56e60); }
+.seasonal-champagne { width:32px;height:32px;filter:drop-shadow(0 0 2px #d9b56e60); }
 .seasonal-champagne__body { transform-origin:24px 44px;animation:new-year-sway 3s ease-in-out infinite; }
 .seasonal-champagne__bubbles rect { animation:new-year-bubbles 2s ease-out infinite; }
 .seasonal-champagne__foam > *,.seasonal-champagne__toast,.seasonal-champagne__fireworks > g { opacity:0; }

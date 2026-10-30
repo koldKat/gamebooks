@@ -38,7 +38,7 @@ advance(69999);check(!lamp.classList.contains('is-flaring'),'flare is occasional
 check(lamp.classList.contains('is-flaring')&&getComputedStyle(fire).animationName==='diya-flare','wide flare animates');
 advance(1800);check(!lamp.classList.contains('is-flaring'),'flare ends');advance(18200);
 check(lamp.classList.contains('is-sparking'),'embers action begins');
-const ember=lamp.querySelector('.seasonal-diya__embers rect');check(getComputedStyle(ember).animationName==='diya-ember','embers rise');
+const ember=lamp.querySelector('.seasonal-diya__embers circle');check(getComputedStyle(ember).animationName==='diya-ember','embers rise');
 ember.getAnimations()[0].pause();ember.getAnimations()[0].currentTime=600;check(Number(getComputedStyle(ember).opacity)>0,'ember is visible');
 advance(2400);check(!lamp.classList.contains('is-sparking'),'embers end');advance(27600);
 check(lamp.classList.contains('is-smoking')&&getComputedStyle(fire).animationName==='diya-dip','flame dips for smoke');

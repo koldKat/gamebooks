@@ -1,0 +1,58 @@
+/* Additional mouse faces and their occasional, local special effects. */
+.seasonal-variant{width:32px;height:32px;}
+.seasonal-variant .variant-main{transform-origin:24px 27px;animation:variant-breathe 6s ease-in-out infinite;}
+.seasonal-variant__pupils{transform:translate(var(--companion-look-x,0px),var(--companion-look-y,0px));transition:transform 220ms ease;}
+.seasonal-variant__eyes{transform-box:fill-box;transform-origin:center;transition:transform 65ms ease;}
+.seasonal-variant.is-blinking .seasonal-variant__eyes{transform:scaleY(.08);}
+.variant-effect{opacity:0;}
+.seasonal-mummy.is-unwrapping .mummy-wraps{transform-origin:24px 23px;animation:mummy-uncovered 3.4s linear both;}
+.seasonal-mummy.is-unwrapping .mummy-band{animation:mummy-unroll 3.1s ease-in-out var(--band-delay) both;}
+.seasonal-mummy.is-unwrapping .mummy-loose{animation:mummy-loose 3.4s ease-in-out both;}
+.seasonal-mummy.is-unwrapping .mummy-ribbon{stroke-dasharray:65;animation:mummy-ribbon 3.4s ease-in-out both;}
+.seasonal-mummy.is-unwrapping .mummy-ribbon-right{animation-delay:140ms;}
+.seasonal-mummy.is-dusting .variant-main{animation:variant-sneeze 2.1s ease-in-out both;}
+.seasonal-mummy.is-dusting .mummy-dust{animation:variant-cloud 2.1s ease-out both;}
+.seasonal-mummy.is-runes .mummy-runes{animation:variant-flash 2.4s ease-in-out both;}
+.seasonal-zombie.is-exploding .zombie-brain-piece{animation:zombie-brain-burst 3s cubic-bezier(.2,.7,.3,1) both;}
+.seasonal-zombie.is-screaming .zombie-head{animation:variant-shake 120ms ease-in-out infinite;}
+.seasonal-zombie.is-screaming .zombie-mouth{transform-origin:24px 33px;animation:zombie-gape 2s ease-in-out both;}
+.seasonal-zombie.is-flies .zombie-flies{transform-origin:24px 17px;animation:variant-orbit 2.6s ease-in-out both;}
+.seasonal-lotus.is-blooming .lotus-petals{transform-origin:24px 35px;animation:lotus-bloom 2.6s ease-in-out both;}
+.seasonal-lotus.is-fireflies .lotus-fireflies{transform-origin:24px 24px;animation:variant-orbit 2.4s ease-in-out both;}
+.seasonal-lotus.is-radiant .lotus-halo{transform-origin:24px 24px;animation:variant-halo 2.2s ease-out both;}
+.seasonal-lantern.is-bright .lantern-halo{animation:variant-flash 2.4s ease-in-out both;}
+.seasonal-lantern.is-sparking .lantern-sparks{animation:variant-flash 2.5s ease-in-out both;}
+.seasonal-lantern.is-smoking .lantern-smoke{animation:variant-cloud 2.8s ease-out both;}
+.seasonal-snowman.is-hatpop .snowman-hat{transform-origin:24px 15px;animation:snowman-hat 2.2s ease-in-out both;}
+.seasonal-snowman.is-sneezing .snowman-snow{animation:variant-cloud 2.1s ease-out both;}
+.seasonal-snowman.is-scarf .snowman-scarf{transform-origin:12px 39px;animation:snowman-scarf 2.4s ease-in-out both;}
+.seasonal-reindeer.is-antlers .reindeer-antlers{animation:variant-flash 2s ease-in-out both;}
+.seasonal-reindeer.is-nose .reindeer-nose{animation:reindeer-nose 2s ease-in-out both;}
+.seasonal-reindeer.is-breath .reindeer-breath{animation:variant-cloud 2.4s ease-out both;}
+.seasonal-partyhat.is-horn .partyhat-horn{transform-origin:25px 37px;animation:variant-halo 2.4s ease-in-out both;}
+.seasonal-partyhat.is-confetti .partyhat-confetti{animation:variant-cloud 2.2s ease-out both;}
+.seasonal-partyhat.is-wiggling .partyhat-body{animation:variant-shake 180ms ease-in-out infinite;}
+.seasonal-star.is-comet .star-trail{animation:variant-flash 2.6s ease-in-out both;}
+.seasonal-star.is-sparkling .star-sparks{animation:variant-flash 2.2s ease-in-out both;}
+.seasonal-star.is-rainbow .star-face{animation:star-rainbow 2.4s ease-in-out both;}
+.seasonal-cursor-particles{position:fixed;pointer-events:none;z-index:2147483647;width:128px;height:128px;contain:layout style paint;}
+@keyframes variant-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
+@keyframes mummy-uncovered{0%,32%,78%,100%{opacity:1}40%,70%{opacity:0}}
+@keyframes mummy-unroll{0%,100%{transform:scaleX(1)}33%,75%{transform:scaleX(0)}}
+@keyframes mummy-loose{0%,100%{opacity:0}10%,30%,76%,90%{opacity:1}42%,68%{opacity:0}}
+@keyframes mummy-ribbon{0%,100%{stroke-dashoffset:65}25%,78%{stroke-dashoffset:0}45%,60%{stroke-dashoffset:-65}}
+@keyframes variant-cloud{0%{opacity:0;transform:translate(0,3px) scale(.5)}20%{opacity:.65}100%{opacity:0;transform:translate(5px,-17px) scale(1.2)}}
+@keyframes variant-flash{0%,100%{opacity:0}25%,70%{opacity:.85}45%{opacity:.35}}
+@keyframes variant-sneeze{0%,100%{transform:rotate(0)}30%{transform:rotate(-9deg) scale(.95)}45%{transform:rotate(7deg) scale(1.05)}65%{transform:rotate(0)}}
+@keyframes variant-shake{0%,100%{transform:translateX(-1px) rotate(-3deg)}50%{transform:translateX(1px) rotate(3deg)}}
+@keyframes zombie-brain-burst{0%,100%{transform:translate(0,0) rotate(0);opacity:1}12%{transform:translate(0,-1px) scale(1.1)}32%,57%{transform:translate(var(--brain-x),var(--brain-y)) rotate(var(--brain-turn));opacity:1}72%{transform:translate(var(--brain-x),var(--brain-y)) rotate(var(--brain-turn));opacity:.2}88%{transform:translate(0,0) rotate(0);opacity:1}}
+@keyframes zombie-gape{0%,100%{transform:scaleY(1)}25%,75%{transform:scaleY(1.7)}}
+@keyframes variant-orbit{0%,100%{opacity:0;transform:rotate(-15deg)}20%,75%{opacity:1}90%{transform:rotate(40deg)}}
+@keyframes lotus-bloom{0%,100%{transform:scale(1)}45%,65%{transform:scale(1.18,1.05)}}
+@keyframes variant-halo{0%,100%{opacity:0;transform:scale(.7)}30%{opacity:.7}85%{opacity:0;transform:scale(1.3)}}
+@keyframes snowman-hat{0%,100%{transform:translateY(0) rotate(0)}35%,55%{transform:translateY(-10px) rotate(9deg)}}
+@keyframes snowman-scarf{0%,100%{transform:rotate(0)}30%,70%{transform:rotate(-12deg)}50%{transform:rotate(8deg)}}
+@keyframes reindeer-nose{0%,100%{fill:#b96060}25%,65%{fill:#f09d77}45%{fill:#d67267}}
+@keyframes star-rainbow{0%,100%{fill:#d2b46e}25%{fill:#c18ba2}50%{fill:#86b1bd}75%{fill:#a2ba83}}
+body.reduce-motion .seasonal-variant *,body.reduce-motion .seasonal-inline-preview *{animation:none!important;transition:none!important;}
+@media(prefers-reduced-motion:reduce){.seasonal-variant *{animation:none!important;transition:none!important;}}
