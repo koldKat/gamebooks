@@ -110,7 +110,7 @@ body.covers-collapsed.right-collapsed.feed-collapsed .seasonal-background { disp
 .seasonal-background__icon, .seasonal-background__web { mask-size: 100% 100%; mask-repeat: no-repeat; mask-mode: alpha; }
 @media print { .seasonal-background { display: none; } }
 .seasonal-event-notice {
-  margin: 0 0 .9rem;
+  margin: 0 0 .4rem;
   padding: .6rem .8rem;
   border: 1px solid #6f5485;
   border-left: 3px solid #d58b48;
