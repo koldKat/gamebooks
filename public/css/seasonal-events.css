@@ -71,6 +71,8 @@ body.reduce-motion .seasonal-pumpkin * { transition: none; }
   z-index: 1;
   pointer-events: none;
   user-select: none;
+  contain:layout style paint;
+  isolation:isolate;
 }
 .seasonal-background[hidden], .seasonal-background__icon[hidden], .seasonal-background__web[hidden], .seasonal-background__haze[hidden] { display: none; }
 .seasonal-background__haze {
@@ -87,6 +89,7 @@ body.reduce-motion .seasonal-pumpkin * { transition: none; }
   color: #fff;
   opacity: .55;
   transform: rotate(-8deg);
+  contain:layout style paint;
 }
 .seasonal-background__icon[data-kind="1"] { color: #050507; --seasonal-opacity: .75; }
 .seasonal-background__icon[data-kind="2"] { color: #ee942e; --seasonal-opacity: .65; }
@@ -102,7 +105,7 @@ body.covers-collapsed.right-collapsed.feed-collapsed .seasonal-background { disp
 .seasonal-background__icon svg { width: 100%; height: 100%; fill: none; }
 .seasonal-background__icon[data-pixelated] { opacity: 1; filter: none; background: none; }
 .seasonal-background__icon[data-pixelated] svg { shape-rendering: crispEdges; }
-.seasonal-background__web { position: absolute; --seasonal-opacity: .43; background: none; }
+.seasonal-background__web { position: absolute; --seasonal-opacity: .43; background: none;contain:layout style paint; }
 .seasonal-background__web svg { width: 100%; height: 100%; fill: none; shape-rendering: crispEdges; }
 .seasonal-web__spider { transform:translateY(12px); }
 .seasonal-background__web[data-motion="climb"] .seasonal-web__spider { animation:seasonal-spider-climb 9s ease-in-out infinite; }
@@ -115,9 +118,9 @@ body.reduce-motion .seasonal-background__web * { animation:none !important; }
 @media(prefers-reduced-motion:reduce) { .seasonal-background__web * { animation:none !important; } }
 /* Mute only the painted pixels; silhouette masks keep the element's backing clear. */
 .seasonal-background__icon[data-pixelated] rect,
-.seasonal-background__web rect { fill-opacity: var(--seasonal-opacity, .55); }
+.seasonal-background__web :is(rect,path) { fill-opacity: var(--seasonal-opacity, .55); }
 .seasonal-background__icon[data-pixelated][data-animated] rect { fill-opacity:1; }
-.seasonal-background__web .seasonal-web__spider rect { fill-opacity:1; }
+.seasonal-background__web .seasonal-web__spider :is(rect,path) { fill-opacity:1; }
 .seasonal-background__web .seasonal-web__thread { fill-opacity:.55; }
 .seasonal-background__icon svg, .seasonal-background__web svg { background: none; }
 .seasonal-background__icon, .seasonal-background__web { mask-size: 100% 100%; mask-repeat: no-repeat; mask-mode: alpha; }

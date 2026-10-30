@@ -11,7 +11,7 @@ const {createSeasonalBackground}=await import('file://${base}/js/seasonal-events
 const {newYearArtwork}=await import('file://${base}/js/seasonal-events/winter-artwork.js');
 const {halloweenArtwork}=await import('file://${base}/js/seasonal-events/artwork.js');
 const check=(value,label)=>{if(!value)throw Error(label);},delay=ms=>new Promise(r=>setTimeout(r,ms));
-const stop=createSeasonalBackground();await delay(350);
+const stop=createSeasonalBackground({crawlSpiders:false});await delay(350);
 const webs=[...document.querySelectorAll('.seasonal-background__web:not([hidden])')];check(webs.length===2,'two animated corner webs');
 check(new Set(webs.map(w=>w.dataset.edge)).size===2,'one top and one bottom web');
 check(new Set(webs.map(w=>w.dataset.motion)).size===2,'one climbing and one swinging spider');
@@ -20,7 +20,7 @@ const observer=new MutationObserver(records=>redraws+=records.length);observer.o
 for(const web of webs){
  check(getComputedStyle(web).maskImage==='none','animated spider not clipped by a static mask');
  const anchor=web.querySelector('.seasonal-web__anchor'),spider=web.querySelector('.seasonal-web__spider'),thread=web.querySelector('.seasonal-web__thread');
- check([...spider.querySelectorAll('rect')].every(rect=>getComputedStyle(rect).fillOpacity==='1'),'spider pixels are opaque above the web');
+ const spiderPixels=[...spider.querySelectorAll('rect,path')];check(spiderPixels.length>0&&spiderPixels.every(rect=>getComputedStyle(rect).fillOpacity==='1'),'spider pixels are opaque above the web');
  const animations=[...web.querySelectorAll('*')].flatMap(el=>el.getAnimations());for(const a of animations){a.pause();a.currentTime=0;}
  const origin=new DOMPoint(0,0).matrixTransform(anchor.getScreenCTM()),start=spider.getBoundingClientRect();
  check(start.top>origin.y,'spider hangs below attachment even on flipped web');
@@ -49,12 +49,12 @@ for(const [index,art]of samples.entries()){
 const motionTiles=document.createElement('div');motionTiles.style.cssText='position:fixed;left:-5000px;top:0';document.body.append(motionTiles);
 for(const art of halloweenArtwork.filter(a=>a.kind!==4)){
  const tile=document.createElement('div');tile.innerHTML='<svg viewBox="0 0 48 48">'+art.svg+'</svg>';motionTiles.append(tile);
- const elements=[...tile.querySelectorAll('g,rect')],animations=elements.flatMap(el=>el.getAnimations());check(animations.length>0,'each Halloween sprite animates');
+ const elements=[...tile.querySelectorAll('g,rect,path')],animations=elements.flatMap(el=>el.getAnimations());check(animations.length>0,'each Halloween sprite animates');
  for(const a of animations){a.pause();a.effect.updateTiming({delay:0});a.currentTime=0;}
- const before=JSON.stringify(elements.map(e=>{const s=getComputedStyle(e);return[s.transform,s.opacity,s.fill];}));let changed=false;
+ const before=JSON.stringify(elements.map(e=>{const s=getComputedStyle(e);return[s.transform,s.opacity,s.fill,s.visibility];}));let changed=false;
  for(const fraction of [.4,.65,.9,.94]){
   for(const a of animations)a.currentTime=Number(a.effect.getTiming().duration)*fraction;
-  if(JSON.stringify(elements.map(e=>{const s=getComputedStyle(e);return[s.transform,s.opacity,s.fill];}))!==before)changed=true;
+  if(JSON.stringify(elements.map(e=>{const s=getComputedStyle(e);return[s.transform,s.opacity,s.fill,s.visibility];}))!==before)changed=true;
  }check(changed,'Halloween sprite animation '+art.svg.match(/haunt-sprite-[0-9]+/)?.[0]+' '+animations.map(a=>a.animationName+':'+a.effect.getTiming().delay).join(','));
 }
 motionTiles.remove();

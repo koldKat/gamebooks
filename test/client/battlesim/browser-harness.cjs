@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const { spawn } = require('node:child_process');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-module.exports = async function checkBrowser({ file, url, profile, root, width, chromium, timeoutMs = 20000, screenshotPath, screenshotCheck }) {
+module.exports = async function checkBrowser({ file, url, profile, root, width, chromium, timeoutMs = 20000, screenshotPath, screenshotCheck, collectBrowserMemory = false }) {
   if (!chromium || !fs.existsSync(chromium)) throw Error('Set CHROMIUM to a headless Chromium executable');
   const env = { ...process.env, TMPDIR: root };
   delete env.DISPLAY;
@@ -76,7 +76,12 @@ module.exports = async function checkBrowser({ file, url, profile, root, width, 
           const capture = await send('Page.captureScreenshot', {format:'jpeg',quality:75,captureBeyondViewport:false}, sessionId);
           fs.writeFileSync(screenshotPath, Buffer.from(capture.data, 'base64'));
         }
-        return JSON.parse(last.test);
+        const report=JSON.parse(last.test);
+        if(collectBrowserMemory){
+          report.heap=await send('Runtime.getHeapUsage',{},sessionId);
+          report.dom=await send('Memory.getDOMCounters',{},sessionId);
+        }
+        return report;
       }
       await delay(100);
     }

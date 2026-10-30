@@ -10,7 +10,7 @@ const html = `<!doctype html><meta charset="utf-8">
 <div id="landing-wrapper"><div id="covers-panel"><h2>Cover panel</h2><div class="card">Library</div></div><div id="feed-panel"><h2>Gamebook Tracker</h2><div class="seasonal-event-notice"><strong>Halloween event active:</strong> double XP for <span class="seasonal-event-loss">losses</span> and <span class="seasonal-event-battle-death">battle deaths</span>.</div><div class="card">Pinned announcement</div><div class="card">Activity feed</div></div><div id="landing-right"><h2>My Books</h2><div class="card">Progress and collections</div></div></div>
 <script>addEventListener('error',e=>document.body.dataset.failure=e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=String(e.reason));</script>
 <style>
-#covers-panel,#feed-panel,#landing-right{transition:transform .25s ease,left .25s ease,opacity .2s ease}
+[data-artwork="13"],[data-artwork="13"] svg{animation:none!important}#covers-panel,#feed-panel,#landing-right{transition:transform .25s ease,left .25s ease,opacity .2s ease}
 body.right-collapsed #landing-right{transform:translateX(100%)}
 body.right-collapsed #feed-panel{left:872px}
 body.covers-collapsed.right-collapsed #feed-panel{left:680px}
@@ -19,14 +19,15 @@ body.feed-collapsed #feed-panel{opacity:0;max-height:0;overflow:hidden}
 </style>
 <script type="module">
 let seed=42;Math.random=()=>((seed=(1664525*seed+1013904223)>>>0)/4294967296);
-const {createHalloweenBackground}=await import('file://${base}/js/seasonal-events/background.js');
+const {createSeasonalBackground}=await import('file://${base}/js/seasonal-events/background.js');
 const check=(ok,label)=>{if(!ok)throw Error(label);},delay=ms=>new Promise(r=>setTimeout(r,ms));
 const topButton=document.createElement('button');topButton.className='scroll-top-btn';
 topButton.style.cssText='position:fixed;bottom:22px;left:50%;width:32px;height:32px;opacity:0';
 document.body.append(topButton);
 const footer=document.createElement('footer');footer.id='app-footer';footer.textContent='Footer';
 footer.style.cssText='width:200px;height:30px;margin:auto';document.getElementById('landing-wrapper').append(footer);
-const stop=createHalloweenBackground();await delay(350);
+// Intentional crawling is checked separately; this fixture isolates layout redistribution.
+const stop=createSeasonalBackground({crawlSpiders:false});await delay(350);
 // Use a genuinely scrolling feed and a footer that can move in and out of view.
 const landing=document.getElementById('landing-wrapper'),feed=document.getElementById('feed-panel');
 landing.style.cssText='height:100vh;overflow:auto;position:relative';
@@ -43,7 +44,7 @@ if(innerWidth<1400){
  check(!document.querySelector('.seasonal-background__web:not([hidden])'),'tight gutters do not squeeze in large webs');
  document.body.dataset.test=JSON.stringify({narrow:true,icons:small.length,miniatures:true});
 }else{
- let icons=visible();check(icons.length===14,'seven icons per open gap');
+ let icons=visible();check(icons.length===4,'only two crawling spiders, cauldron and house');check(new Set(icons.map(n=>n.dataset.artwork)).size===4&&icons.every(n=>['14','15','20','24'].includes(n.dataset.artwork)),'unused artwork stays out of live scene');
 const webs=[...document.querySelectorAll('.seasonal-background__web')].filter(web=>!web.hidden);
 check(webs.length===2,'two anchored corner webs');
 check(new Set(webs.map(web=>web.dataset.edge)).size===2,'top and bottom corners');
@@ -52,20 +53,20 @@ for(const web of webs){const r=web.getBoundingClientRect(),anchor=Number(web.dat
  check(r.width>=72&&r.width<=128,'smaller corner web size');
  check(Math.abs(r.top)<1||Math.abs(r.bottom-innerHeight)<1,'web attached to screen edge');
  check(Math.abs(r.left-anchor)<1||Math.abs(r.right-anchor)<1,'web attached to panel edge');
- check(web.querySelector('rect[fill="#9b3749"], rect[fill="#7c9566"]'),'coloured spider on web');
+ check(web.querySelector(':is(rect,path)[fill="#9b3749"], :is(rect,path)[fill="#7c9566"]'),'coloured spider on web');
 }
 check(new Set(icons.map(icon=>icon.dataset.artwork)).size===icons.length,'distinct artwork, not resized duplicates');
-check(['7','8','9','10'].every(kind=>icons.some(icon=>icon.dataset.kind===kind)),'fat spiders, zombies, mummies and vampires appear in the normal scatter');
+check(['7','14','17'].every(kind=>icons.some(icon=>icon.dataset.kind===kind)),'crawling spiders, house and cauldron appear');
 for(const icon of icons.filter(icon=>icon.dataset.pixelated)){
- check([0,90,180,270].some(angle=>icon.style.transform.startsWith('rotate('+angle+'deg)')),'pixel sprites keep their square grid');
- const pixels=[...icon.querySelectorAll('rect')];check(pixels.length>0,'pixel sprite has pixel blocks');
+ check(icon.dataset.artwork==='13'||[0,90,180,270].some(angle=>icon.style.transform.startsWith('rotate('+angle+'deg)')),'pixel sprites keep their square grid');
+ const pixels=[...icon.querySelectorAll('rect')];check(icon.querySelector('rect,path'),'pixel sprite has compact painted shapes');check([...icon.querySelectorAll('path')].every(p=>p.getAttribute('d')&&!p.outerHTML.includes('undefined')),'valid compact pixel paths');
  check(pixels.every(pixel=>['x','y','width','height'].every(name=>Number(pixel.getAttribute(name))%2===0)&&Number(pixel.getAttribute('x'))+Number(pixel.getAttribute('width'))<=48&&Number(pixel.getAttribute('y'))+Number(pixel.getAttribute('height'))<=48&&pixel.getAttribute('fill')!=='undefined'),'valid unclipped pixel blocks');
 }
 check(icons.filter(icon=>icon.dataset.kind==='0').every(icon=>getComputedStyle(icon).color==='rgb(255, 255, 255)'),'white ghosts');
-check(icons.filter(icon=>icon.dataset.kind==='4').every(icon=>icon.querySelector('rect[fill="#9b3749"], rect[fill="#7c9566"]')),'colored spiders on white webs');
+check(icons.filter(icon=>icon.dataset.kind==='4').every(icon=>icon.querySelector(':is(rect,path)[fill="#9b3749"], :is(rect,path)[fill="#7c9566"]')),'colored spiders on white webs');
 const rects=icons.map(icon=>icon.getBoundingClientRect());
 check(rects.some(r=>r.left<680)&&rects.some(r=>r.left>1368),'both panel gaps');
-check(new Set(rects.map(r=>Math.round(r.width))).size>=5,'obvious size variety');
+check(new Set(rects.map(r=>Math.round(r.width))).size>=2,'spiders and bottom props keep suitable sizes');
 check(new Set(rects.filter(r=>r.left<680).map(r=>Math.round(r.left))).size>=2,'no left straight line');
 check(new Set(rects.filter(r=>r.left>1368).map(r=>Math.round(r.left))).size>=2,'no right straight line');
 const layer=document.querySelector('.seasonal-background');let redraws=0;
@@ -98,8 +99,8 @@ document.body.classList.add('right-collapsed','feed-collapsed');await delay(220)
 document.body.classList.add('covers-collapsed');await delay(220);
 check(getComputedStyle(layer).display==='none','all panels hidden removes icons');
 document.body.classList.remove('covers-collapsed','right-collapsed','feed-collapsed');await delay(350);
-check(getComputedStyle(layer).display!=='none'&&visible().length>=7,'restores with panels');
+check(getComputedStyle(layer).display!=='none'&&visible().length===4,'restores the four chosen sprites with panels');
 document.body.dataset.test=JSON.stringify({density:visible().length,bothSides:true,variedSizes:true,randomPositions:true,noScrollRedraws:true,endScroll:true,repeatLayoutStable:true,collapse:true,anchoredWebs:2,smallerWebs:true});
 }
 </script>`;
-(async()=>{try{fs.writeFileSync(file,html);for(const width of [2048,1280]){const result=await checkBrowser({file,root,profile:path.join(root,'profile-'+width),width,chromium:process.env.CHROMIUM,timeoutMs:12000,screenshotPath:width===1280?process.env.SEASONAL_SCREENSHOT:undefined});console.log(JSON.stringify({width,...result}));}}finally{fs.rmSync(root,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1;});
+(async()=>{try{fs.writeFileSync(file,html);for(const width of [2048,1280]){const result=await checkBrowser({file,root,profile:path.join(root,'profile-'+width),width,chromium:process.env.CHROMIUM,timeoutMs:12000,screenshotPath:width===Number(process.env.SEASONAL_SCREENSHOT_WIDTH||1280)?process.env.SEASONAL_SCREENSHOT:undefined});console.log(JSON.stringify({width,...result}));}}finally{fs.rmSync(root,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1;});
