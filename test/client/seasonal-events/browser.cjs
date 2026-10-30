@@ -23,6 +23,13 @@ const source = `<!doctype html><meta charset="utf-8">
 <script type="module">
 const nativeMedia=window.matchMedia.bind(window);
 window.matchMedia=query=>query==='(any-pointer: fine)'?{matches:true,addEventListener(){},removeEventListener(){}}:nativeMedia(query);
+// Exercise the rare effects without waiting several minutes in a browser check.
+const nativeTimeout=window.setTimeout.bind(window),rareDelays=[];
+window.setTimeout=(callback,ms,...args)=>{
+ const accelerated=new Map([[35000,10000],[45000,13000],[60000,18000]]);
+ if(accelerated.has(ms))rareDelays.push(ms);
+ return nativeTimeout(callback,accelerated.get(ms)??ms,...args);
+};
 const {initSeasonalEvents}=await import('file://${publicRoot}/js/seasonal-events/index.js');
 const {initSeasonalEventSettings,applySeasonalEventsPreference}=await import('file://${publicRoot}/js/seasonal-events/preferences.js');
 const check=(ok,label)=>{if(!ok)throw Error(label);};
@@ -53,6 +60,7 @@ check(!pumpkin.hidden,'follows mouse');check(pumpkin.getAttribute('aria-hidden')
 check(getComputedStyle(pumpkin).pointerEvents==='none','click through');
 check(document.elementFromPoint(220,190).id==='target','decoration does not block button');
 check(getComputedStyle(document.getElementById('target')).cursor==='pointer','normal cursor retained');
+check([35000,45000,60000].every(ms=>rareDelays.includes(ms)),'rare actions use longer intervals');
 await blink;await delay(220);
 check(!pumpkin.classList.contains('is-blinking'),'eyes reopen');
 check(pumpkin.style.getPropertyValue('--pumpkin-look-x')==='-2.0px','looks around');

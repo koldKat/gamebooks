@@ -75,7 +75,7 @@ export function createPumpkin({ random = Math.random } = {}) {
       pumpkin.classList.add('is-gaping');
       closeMouthTimer = setTimeout(() => pumpkin.classList.remove('is-gaping'), 1500);
       scheduleMouth();
-    }, 10000 + random() * 7000);
+    }, 35000 + random() * 30000);
   }
   function updateAnimation() {
     clearAnimation();
@@ -91,7 +91,7 @@ export function createPumpkin({ random = Math.random } = {}) {
         clackEndTimer = setTimeout(() => pumpkin.classList.remove('is-clacking'), 1200);
       }
       scheduleClack();
-    }, 13000 + random() * 10000);
+    }, 45000 + random() * 35000);
   }
   function scheduleDrool() {
     droolTimer = setTimeout(() => {
@@ -99,7 +99,7 @@ export function createPumpkin({ random = Math.random } = {}) {
       pumpkin.classList.add('is-drooling');
       droolEndTimer = setTimeout(() => pumpkin.classList.remove('is-drooling'), 2300);
       scheduleDrool();
-    }, 18000 + random() * 14000);
+    }, 60000 + random() * 45000);
   }
   function hide() {
     pumpkin.hidden = true;
