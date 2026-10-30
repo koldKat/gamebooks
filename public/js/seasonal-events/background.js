@@ -1,6 +1,7 @@
 // Sparse Halloween artwork in clear landing-page gaps, never over panels.
 import { seasonalGapPositions } from './gaps.js';
 import { halloweenArtwork } from './artwork.js';
+import { seasonalWebPositions } from './web-layout.js';
 
 // A document gets one scatter; returning to the same layout reproduces it exactly.
 const pageSeed = Math.floor(Math.random() * 0x100000000);
@@ -23,8 +24,9 @@ export function createHalloweenBackground() {
     patch.className = 'seasonal-background__haze';
     patch.hidden = true; layer.append(patch); return patch;
   });
-  const featured = [0, 2, 1, 3, 4, 14, 16, 18, 20];
-  const variants = halloweenArtwork.map((_, index) => index).filter(index => !featured.includes(index));
+  const featured = [0, 2, 1, 3, 14, 16, 18, 20];
+  const variants = halloweenArtwork.map((_, index) => index)
+    .filter(index => halloweenArtwork[index].kind !== 4 && !featured.includes(index));
   const random = layoutRandom();
   for (let i = variants.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
@@ -32,16 +34,24 @@ export function createHalloweenBackground() {
   }
   const portfolio = [...featured, ...variants];
   const nodes = [...portfolio, ...portfolio.slice(0,7).reverse()].map(index => {
-    const { kind, svg, pixelated } = halloweenArtwork[index];
+    const { kind, svg, pixelated, maskImage } = halloweenArtwork[index];
     const icon = document.createElement('span');
     icon.className = 'seasonal-background__icon';
     icon.dataset.kind = String(kind);
     icon.dataset.artwork = String(index);
     if (pixelated) icon.dataset.pixelated = 'true';
+    if (maskImage) icon.style.maskImage = maskImage;
     icon.dataset.rotation = String(kind === 4 ? Math.floor(random() * 4) * 90 : 0);
     icon.dataset.flip = random() < .5 ? '-1' : '1';
     icon.innerHTML = `<svg viewBox="0 0 48 48" focusable="false">${svg}</svg>`;
     return icon;
+  });
+  const webs = halloweenArtwork.filter(art => art.kind === 4).map(({ svg, maskImage }) => {
+    const web = document.createElement('span');
+    web.className = 'seasonal-background__web';
+    web.style.maskImage = maskImage;
+    web.innerHTML = `<svg viewBox="0 0 48 48" focusable="false">${svg}</svg>`;
+    return web;
   });
   function render() {
     const style = getComputedStyle(landing);
@@ -87,7 +97,20 @@ export function createHalloweenBackground() {
     }
     // Redistribute into newly opened space after a real panel-layout change.
     // Unchanged geometry returns above, preserving positions during ordinary use.
-    positions = seasonalGapPositions(innerWidth, innerHeight, occupied, { random: layoutRandom() });
+    const corners = seasonalWebPositions(innerWidth, innerHeight, occupied, { random: layoutRandom() });
+    const webAreas = corners.map(point => ({ left: point.left - 8, right: point.left + point.size + 8,
+      top: point.top - 8, bottom: point.top + point.size + 8 }));
+    for (const [index, web] of webs.entries()) {
+      const point = corners[index];
+      web.hidden = !point;
+      if (!point) continue;
+      web.style.left = `${point.left}px`; web.style.top = `${point.top}px`;
+      web.style.width = web.style.height = `${point.size}px`;
+      web.style.transform = `scale(${point.flipX}, ${point.flipY})`;
+      web.dataset.edge = point.edge; web.dataset.anchorX = String(point.anchorX);
+      if (!web.isConnected) layer.append(web);
+    }
+    positions = seasonalGapPositions(innerWidth, innerHeight, [...occupied, ...webAreas], { random: layoutRandom() });
     for (const [index, icon] of nodes.entries()) {
       const point = positions[index];
       icon.hidden = !point;
@@ -95,7 +118,7 @@ export function createHalloweenBackground() {
       icon.style.left = `${point.x - point.size / 2}px`;
       icon.style.top = `${point.y - point.size / 2}px`;
       icon.style.width = icon.style.height = `${point.size}px`;
-      const angle = icon.dataset.pixelated ? 0 : point.angle + Number(icon.dataset.rotation);
+      const angle = icon.dataset.pixelated ? Number(icon.dataset.rotation) : point.angle + Number(icon.dataset.rotation);
       icon.style.transform = `rotate(${angle}deg) scaleX(${icon.dataset.flip})`;
       if (!icon.isConnected) layer.append(icon);
     }

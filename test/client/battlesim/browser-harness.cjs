@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const { spawn } = require('node:child_process');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-module.exports = async function checkBrowser({ file, profile, root, width, chromium, timeoutMs = 20000, screenshotPath }) {
+module.exports = async function checkBrowser({ file, profile, root, width, chromium, timeoutMs = 20000, screenshotPath, screenshotCheck }) {
   if (!chromium || !fs.existsSync(chromium)) throw Error('Set CHROMIUM to a headless Chromium executable');
   const env = { ...process.env, TMPDIR: root };
   delete env.DISPLAY;
@@ -66,7 +66,13 @@ module.exports = async function checkBrowser({ file, profile, root, width, chrom
       last = result.value;
       if (last?.failure) throw Error('Browser assertion: ' + last.failure + (runtimeFailure ? '\n' + runtimeFailure : ''));
       if (last?.test) {
-        if (screenshotPath) {
+        if (screenshotCheck) {
+          const capture = await send('Page.captureScreenshot', {format:'png',captureBeyondViewport:false}, sessionId);
+          if (screenshotPath) fs.writeFileSync(screenshotPath, Buffer.from(capture.data, 'base64'));
+          const probe = await send('Runtime.evaluate', {expression: `(${screenshotCheck})(${JSON.stringify(capture.data)})`, awaitPromise:true, returnByValue:true}, sessionId);
+          if (probe.exceptionDetails || probe.result?.value !== true) throw Error('Screenshot check failed: ' + JSON.stringify(probe.exceptionDetails || probe.result));
+        }
+        if (screenshotPath && !screenshotCheck) {
           const capture = await send('Page.captureScreenshot', {format:'jpeg',quality:75,captureBeyondViewport:false}, sessionId);
           fs.writeFileSync(screenshotPath, Buffer.from(capture.data, 'base64'));
         }

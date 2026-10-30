@@ -1,26 +1,5 @@
 // Retro Halloween creatures drawn on a 24-pixel grid with a limited palette.
-const palette = {
-  O: '#27242f', E: '#938493', B: '#403344', b: '#766078',
-  R: '#9b3749', r: '#e47761', W: '#e1d8ba',
-  H: '#6c4e39', h: '#a58459', P: '#382925', Y: '#d8ad69',
-  Z: '#7c9566', z: '#a0ae7c', g: '#4b6048', G: '#434b54',
-  T: '#c8bb9c', t: '#8e826a', V: '#c8c5c5', v: '#85818f',
-  C: '#642f46', c: '#995267', N: '#15151e',
-};
-function sprite(kind, rows) {
-  let svg = '<g shape-rendering="crispEdges">';
-  rows.forEach((row, y) => {
-    // Merge horizontal pixel runs, keeping every edge on the same two-unit grid.
-    for (let x = 0; x < row.length;) {
-      const color = row[x];
-      let end = x + 1;
-      while (end < row.length && row[end] === color) end++;
-      if (color !== '.') svg += `<rect x="${x * 2}" y="${y * 2}" width="${(end - x) * 2}" height="2" fill="${palette[color]}"/>`;
-      x = end;
-    }
-  });
-  return { kind, pixelated: true, svg: svg + '</g>' };
-}
+import { pixelSprite as sprite } from './pixel-art.js';
 export const halloweenCreatures = [
   // Fat black widow: eight crooked legs, a swollen red-marked abdomen and fangs.
   sprite(7, [
