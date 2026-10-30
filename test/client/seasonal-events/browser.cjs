@@ -133,9 +133,31 @@ check(!notice.hidden&&document.querySelector('.seasonal-pumpkin'),'before automa
 date=new Date('2026-11-03T22:00:00Z');await delay(1250);
 check(notice.hidden&&!document.querySelector('.seasonal-pumpkin')&&!document.querySelector('.seasonal-background'),'notice and decorations end automatically');
 stop();date=new Date(2027,9,31);
+stop=initSeasonalEvents({now:()=>date,random:()=>0});
+const {seasonalEvents}=await import('file://${publicRoot}/js/seasonal-events/calendar.js');
+const originalCalendar=JSON.parse(JSON.stringify(seasonalEvents)),nativeFetch=window.fetch;
+let nextCalendar=originalCalendar,calendarFetches=0;
+window.fetch=async(url,options)=>{
+ check(String(url).endsWith('/seasonal-events/calendar.json')&&options.cache==='no-cache','live calendar revalidation');
+ calendarFetches++;return {ok:true,json:async()=>nextCalendar};
+};
+const beforeLiveBackground=document.querySelector('.seasonal-background');
+nextCalendar=originalCalendar.map(event=>({...event,description:'double XP for sim battle losses.'}));
+window.dispatchEvent(new Event('app-config-changed'));await delay(40);
+check(notice.textContent==='Halloween event active: double XP for sim battle losses.','SSE updates notice text in place');
+check(document.querySelector('.seasonal-background')===beforeLiveBackground,'SSE text updates preserve active artwork');
+nextCalendar=[];window.dispatchEvent(new Event('app-config-changed'));await delay(40);
+check(notice.hidden&&!document.querySelector('.seasonal-background'),'SSE removes inactive event in open tab');
+nextCalendar=originalCalendar;window.dispatchEvent(new Event('app-config-changed'));await delay(40);
+check(!notice.hidden&&document.querySelector('.seasonal-background'),'SSE starts newly active event in open tab');
+window.fetch=async()=>{throw Error('offline');};
+window.dispatchEvent(new Event('app-config-changed'));await delay(40);
+check(!notice.hidden,'failed calendar request retains last valid event');
+check(calendarFetches===3,'only live configuration signals fetch calendar');
+window.fetch=nativeFetch;stop();
 document.body.classList.remove('reduce-motion');
 initSeasonalEvents({now:()=>date});move();await delay(80);
-document.body.dataset.test=JSON.stringify({calendar:true,automaticStart:true,automaticEnd:true,wholeSimLossPhraseColored:true,pointer:true,blink:true,glances:true,mouth:true,drool:true,clack:true,background:true,tabSwitchStable:true,settings:true,persistence:true,reducedMotion:true,cleanup:true});
+document.body.dataset.test=JSON.stringify({calendar:true,automaticStart:true,automaticEnd:true,liveNoticeUpdates:true,liveStart:true,liveEnd:true,liveUpdatePreservesArtwork:true,wholeSimLossPhraseColored:true,pointer:true,blink:true,glances:true,mouth:true,drool:true,clack:true,background:true,tabSwitchStable:true,settings:true,persistence:true,reducedMotion:true,cleanup:true});
 </script>`;
 
 (async () => {

@@ -1,5 +1,5 @@
 // Activate seasonal decorations on their annual dates and honor player settings.
-import { activeSeasonalEvent, nextSeasonalRefreshDelay } from './calendar.js';
+import { activeSeasonalEvent, nextSeasonalRefreshDelay, reloadSeasonalCalendar } from './calendar.js';
 import { seasonalEventsEnabled, syncSeasonalEventSetting } from './preferences.js';
 import { createPumpkin } from './pumpkin.js';
 import { createHalloweenBackground } from './background.js';
@@ -9,6 +9,14 @@ export function initSeasonalEvents({ now = () => new Date(), random = Math.rando
   if (stopCurrent) return stopCurrent;
   const pointer = matchMedia('(any-pointer: fine)');
   let decoration, background, midnight;
+  let stopped = false, calendarRequest;
+  function reconcileCalendar() {
+    if (calendarRequest) return;
+    calendarRequest = reloadSeasonalCalendar()
+      .then(() => { if (!stopped) refresh(); })
+      .catch(() => {}) // Keep the last valid calendar when offline.
+      .finally(() => { calendarRequest = null; });
+  }
   function refresh() {
     clearTimeout(midnight);
     const date = now();
@@ -48,14 +56,17 @@ export function initSeasonalEvents({ now = () => new Date(), random = Math.rando
     if (event.key === 'seasonal-events' || event.key === null) refresh();
   }
   window.addEventListener('seasonal-events-change', refresh);
+  window.addEventListener('app-config-changed', reconcileCalendar);
   window.addEventListener('storage', storage);
   document.addEventListener('visibilitychange', refresh);
   pointer.addEventListener('change', refresh);
   stopCurrent = () => {
+    stopped = true;
     clearTimeout(midnight); decoration?.(); background?.();
     const notice = document.getElementById('seasonal-event-notice');
     if (notice) notice.hidden = true;
     window.removeEventListener('seasonal-events-change', refresh);
+    window.removeEventListener('app-config-changed', reconcileCalendar);
     window.removeEventListener('storage', storage);
     document.removeEventListener('visibilitychange', refresh);
     pointer.removeEventListener('change', refresh);

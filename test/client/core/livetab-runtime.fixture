@@ -26,7 +26,11 @@ async function tab() {
     postMessage(msg) { for (const peer of channels) if (peer !== this && peer.name === this.name) peer.onmessage?.({ data: msg }); }
   }
   const context = createContext({
-    document, window: { addEventListener: listener(windowListeners) },
+    document, Event,
+    window: {
+      addEventListener: listener(windowListeners),
+      dispatchEvent: event => { calls.push(['window-event', event.type]); for (const fn of windowListeners.get(event.type) || []) fn(event); return true; },
+    },
     localStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key) },
     Date: class extends Date { static now() { return now; } }, Math: { min: Math.min, random: () => id / 10 },
     EventSource: Stream, BroadcastChannel: Channel,
@@ -109,12 +113,21 @@ assert.equal(a.intervals.size, timers, 'repeated startup adds no polling');
 a.emit('/api/feed/stream', { type: 'config_changed', version: 'v2' });
 assert.equal(a.elements['app-version'].textContent, 'v2');
 assert.equal(b.elements['app-version'].textContent, 'v2');
+assert.equal(a.count('window-event'), 1, 'SSE config changes notify components in leader tab');
+assert.equal(b.count('window-event'), 1, 'SSE config changes notify components in follower tab');
+a.emit('/api/feed/stream', { type: 'config_changed', version: 'v2' });
+assert.equal(a.count('window-event'), 1, 'unchanged versions do not refetch component configuration');
+assert.equal(b.count('window-event'), 1);
 assert.equal(a.count('feed'), 0);
 a.state.appVersion='v2.1';
 await a.api._syncFeedVersionBaseline();
 assert.equal(a.elements['app-version'].textContent,'v2.1','an unchanged feed fingerprint still reconciles a missed header version');
 assert.equal(b.elements['app-version'].textContent,'v2.1','the leader relays the recovered header version to followers');
 assert.equal(a.count('feed'),0,'a header-only catch-up does not rebuild the feed');
+const configSignals = a.count('window-event');
+a.emit('/api/feed/stream', {type:'feed_changed',entity:'announcement'});
+assert.equal(a.count('window-event'),configSignals+1,'announcement SSE reconciles component configuration');
+assert.equal(b.count('window-event'),configSignals+1,'announcement reconciliation reaches follower tabs');
 a.emit('/api/feed/stream', {type:'feed_changed'}); a.emit('/api/feed/stream', {type:'feed_changed'});
 await a.timeout(1500); await b.timeout(1500);
 assert.equal(a.count('feed'), 1, 'feed event bursts coalesced');

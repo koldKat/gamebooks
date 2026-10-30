@@ -109,10 +109,19 @@ function _refreshAppXpStaggered() {
 
 // Use feed versions to avoid unchanged DOM rebuilds; reload on version-check failure.
 
+let _lastConfigVersion = null;
+function _signalConfigChange() {
+  window.dispatchEvent(new Event('app-config-changed'));
+}
+
 function _setHeaderVersion(version) {
   if(typeof version!=='string'||!version)return;
   const header=document.getElementById('app-version');
   if(header&&header.textContent!==version)header.textContent=version;
+  if (_lastConfigVersion !== version) {
+    _lastConfigVersion = version;
+    _signalConfigChange();
+  }
 }
 
 async function _fetchFeedVersion() {
@@ -235,6 +244,10 @@ function _takeLiveLeadership() {
 }
 
 function _applyFollowerLiveEvent(type, payload = null) {
+  if (type === 'config_reconcile') {
+    _signalConfigChange();
+    return;
+  }
   if (type === 'config_changed') {
     _setHeaderVersion(payload?.version);
     return;
@@ -310,11 +323,17 @@ function _connectFeedSSE() {
     _feedSource = _subscribeLive('feed', {
       enabled: () => _isLiveLeader,
       onReconnect: () => {
+        _signalConfigChange();
+        _broadcastLiveEvent('config_reconcile');
         _refreshFeedIfChanged();
         _broadcastLiveEvent('feed_changed');
       },
       onMessage: e => {
         let payload; try { payload = JSON.parse(e.data); } catch { payload = {}; }
+        if (payload.type === 'feed_changed' && payload.entity === 'announcement') {
+          _signalConfigChange();
+          _broadcastLiveEvent('config_reconcile');
+        }
         if (payload.type === 'config_changed') {
           _setHeaderVersion(payload.version);
           _broadcastLiveEvent('config_changed', { version: payload.version });

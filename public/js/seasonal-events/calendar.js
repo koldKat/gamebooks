@@ -1,6 +1,18 @@
 // Annual seasonal calendar and automatic day changes, using the server's Sofia date.
 import events from './calendar.json' with { type: 'json' };
 export const seasonalEvents = events;
+export async function reloadSeasonalCalendar() {
+  const response = await fetch(new URL('./calendar.json', import.meta.url), { cache: 'no-cache' });
+  if (!response.ok) throw new Error('Seasonal calendar unavailable');
+  const next = await response.json();
+  if (!Array.isArray(next) || next.some(event => !event || typeof event.id !== 'string'
+    || typeof event.title !== 'string' || typeof event.description !== 'string'
+    || !Number.isInteger(event.start) || !Number.isInteger(event.end)
+    || event.start < 101 || event.start > 1231 || event.end < 101 || event.end > 1231)) {
+    throw new Error('Invalid seasonal calendar');
+  }
+  seasonalEvents.splice(0, seasonalEvents.length, ...next);
+}
 const calendar = new Intl.DateTimeFormat('en-US', {
   timeZone: 'Europe/Sofia', year: 'numeric', month: 'numeric', day: 'numeric',
 });
