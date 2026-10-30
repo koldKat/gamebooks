@@ -1,5 +1,5 @@
 // Present explicit round choices, withdrawal and resumable dice controls for personnel combat.
-import { beginPersonnelRound, resolvePersonnelRoll, canEscapePersonnelFight, escapePersonnelFight } from './personnel-battle.js';
+import { beginPersonnelRound, resolvePersonnelRoll, canEscapePersonnelFight, escapePersonnelFight, continuePersonnelFight } from './personnel-battle.js';
 import { personnelLiving } from './personnel-rules.js';
 import { personnelField, personnelCheckbox, personnelSelect, personnelButton } from './personnel-form.js';
 
@@ -8,7 +8,16 @@ export function createPersonnelControlsPanel({document,holder,id,dispatch}) {
   function render(fight) {
     if(shown===fight)return;
     shown=fight;holder.replaceChildren();
-    if(!fight||fight.status!=='fighting')return;
+    if(!fight)return;
+    if(fight.status==='paused'){
+      const message=document.createElement('p');message.textContent='Combat paused at the printed checkpoint. Keep these casualties and consult the book.';holder.appendChild(message);
+      for(const option of fight.config.rules.continuations??[]){
+        if(option.note){const note=document.createElement('p');note.textContent=option.note;holder.appendChild(note);}
+        personnelButton(document,holder,option.label,()=>dispatch(current=>continuePersonnelFight(current,option.key),fight)).id=id+'-continue-'+option.key;
+      }
+      return;
+    }
+    if(fight.status!=='fighting')return;
     const rules=fight.config.rules;
     const send=update=>dispatch(update,fight);
     if(fight.phase==='roll'){
@@ -29,6 +38,7 @@ export function createPersonnelControlsPanel({document,holder,id,dispatch}) {
         if(next.phase==='roll')throw new RangeError('Too many pending combat checks');
         return next;
       })).id=id+'-resolve-round';
+      if(canEscapePersonnelFight(fight))personnelButton(document,holder,'Withdraw instead of firing',()=>send(escapePersonnelFight)).id=id+'-withdraw';
       return;
     }
     const inputs={},charges=[];

@@ -10,7 +10,7 @@ export function createPersonnelPanel({document,definition,getRoster,getPlayerDef
   const id=definition.stateKey;
   let overlay,launch,encounter,variants,setup,controls,report,start,cancel,note,shownRun,shownSelection,wasActive=false;
   const current=()=>Number(getBookId())===definition.id?getRun()?.[id]:null;
-  const active=state=>state?.fight?.status==='fighting';
+  const active=state=>['fighting','paused'].includes(state?.fight?.status);
   const close=()=>overlay?.classList.remove('active');
   function selected(state) {
     const entry=getRoster().find(e=>e.section===state.encounter);
@@ -30,7 +30,7 @@ export function createPersonnelPanel({document,definition,getRoster,getPlayerDef
           next.waveSurvivors=structuredClone(fight.enemies);
           next.waveSupplyDestroyed=Boolean(fight.setup.suppliesDestroyed);
         }
-        if(fight.round>0&&!fight.recorded&&fight.status!=='fighting'&&fight.status!=='cancelled'){
+        if(fight.round>0&&!fight.recorded&&!['fighting','paused','cancelled'].includes(fight.status)){
           fight.recorded=true;
           const outcome=['win','survived'].includes(fight.status)?'win':['loss','surrendered'].includes(fight.status)?'loss':fight.status;
           next.history.push({enemy:fight.config.label,outcome,section:fight.section,ts:Math.max(Date.now(),(next.history.at(-1)?.ts??0)+1)});

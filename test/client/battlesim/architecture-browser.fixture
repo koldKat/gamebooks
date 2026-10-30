@@ -338,6 +338,10 @@ for(const id of BOOK_IDS){
       app.state.playthroughs=[run];app.state.activePtIndex=0;module.render();
     }finally{Math.random=random;}
   }
+  if(id===1475){
+    const {checkColdCashPanel}=await import('REPO/test/client/battlesim/cold-cash-browser.mjs');
+    await checkColdCashPanel({app,module,overlay,requestedRosters,check});
+  }
   if(id===1474){
     const {checkPersonnelPanel}=await import('REPO/test/client/battlesim/personnel-browser.mjs');
     await checkPersonnelPanel({app,module,overlay,requestedRosters,check});

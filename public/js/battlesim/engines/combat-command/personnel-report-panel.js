@@ -15,7 +15,7 @@ export function renderPersonnelReport(holder,state) {
         +(a.chart?': AS '+a.strength+', Chart '+a.chart:'')+', roll '+a.total+': '+a.hits+' hits'
         +(a.bonusHits?' ('+a.bonusHits+' bonus)':'')+(a.ignoredHits?' · hit ignored':'')
         +(a.losses.length?' · '+a.losses.map(v=>v.count+' '+v.name).join(', '):''))+'</p>').join('')
-      +event.checks.map(c=>'<p>'+escape(c.kind+': '+c.total+(c.passed===undefined?'':c.passed?' · passed':' · failed'))+'</p>').join('')+'</div>').join('')
+      +event.checks.map(c=>'<p>'+escape(c.message??c.kind+': '+c.total+(c.passed===undefined?'':c.passed?' · passed':' · failed'))+'</p>').join('')+'</div>').join('')
     +'</div><h4 class="bsim-side-title">Battle history</h4>'
     +(state.history??[]).slice(-30).reverse().map(e=>'<p>'+escape(e.enemy+' · '+e.outcome)+'</p>').join('');
 }

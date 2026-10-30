@@ -1,6 +1,6 @@
 // Collect editable current personnel forces and explicit combat modifiers.
 import { createOpponentEditor,validateOpponents } from '../../opponents.js';
-import { personnelCheckbox, personnelSelect, personnelChartOptions, personnelButton } from './personnel-form.js';
+import { personnelCheckbox, personnelSelect, personnelChartOptions, personnelButton, personnelField } from './personnel-form.js';
 
 const baseFields = [{key:'count',label:'Current Manpower',min:0},
   {key:'initialCount',label:'Manpower before earlier losses',min:0},
@@ -12,13 +12,13 @@ const extraFields = [{key:'charges',label:'Explosive charges remaining',min:0},
   {key:'chargeChart',label:'Charge chart (if not specified)',options:personnelChartOptions},
   {key:'lossCheckFrequency',label:'Casualty morale checks',options:[{value:'',label:'Choose when required'},
     {value:'once',label:'Once after the threshold is passed'}, {value:'each-round',label:'At the end of every round thereafter'}]},
-  {key:'essentialFlag',label:'Mies is with this unit',options:[{value:'no',label:'No'},{value:'yes',label:'Yes'}]}];
+  {key:'essentialFlag',label:'The commander is with this unit',options:[{value:'no',label:'No'},{value:'yes',label:'Yes'}]}];
 const editable = unit => ({...unit, displayName:unit.name, initialCount:unit.initialCount??unit.count, chart:unit.chart??'', charges:unit.charges??0,
   chargeStrength:unit.chargeAttack?.strength??unit.chargeStrength??0,chargeChart:unit.chargeAttack?.chart??'',
   essentialFlag:unit.essential?'yes':'no',lossCheckFrequency:['once','each-round'].includes(unit.lossMorale?.frequency)?unit.lossMorale.frequency:''});
 
 export function createPersonnelSetupPanel({document,holder,id,t,getRoster,getPlayerDefaults}) {
-  let playerEditor,enemyEditor,preset,countSelect,initiative,modifiers={};
+  let playerEditor,enemyEditor,preset,countSelect,initiative,completedRounds,modifiers={};
   const defaults=()=>getPlayerDefaults();
   function editor(suffix,title,values,fields,presets=[]) {
     const result=createOpponentEditor({document,id:id+'-'+suffix,t,fields,presets:presets.map(editable),
@@ -34,13 +34,16 @@ export function createPersonnelSetupPanel({document,holder,id,t,getRoster,getPla
       const unit=data[index], charge=Boolean(preset?.rules.charge);
       for(const [key,visible]of [['chargeStrength',!charge&&Number(unit.charges)>0],['chargeChart',!charge&&Number(unit.charges)>0],
         ['lossCheckFrequency',Boolean(unit.lossMorale)],['initialCount',Boolean(unit.lossMorale)]])row.querySelector('[data-stat="'+key+'"]').closest('label').hidden=!visible;
+      row.querySelector('[data-stat="ordnance"]').closest('label').hidden=Boolean(preset?.rules.meleeOnly);
       if(preset?.playerChart)row.querySelector('[data-stat="chart"]').disabled=true;
     }
-    if(enemyEditor)for(const row of enemyEditor.element.querySelectorAll('fieldset'))row.querySelector('[data-stat="initialCount"]').closest('label').hidden=
-      !(preset?.rules.escape?.enemyLosses!==undefined||preset?.rules.enemyMorale?.lossesOver!==undefined);
+    if(enemyEditor)for(const row of enemyEditor.element.querySelectorAll('fieldset')){
+      row.querySelector('[data-stat="initialCount"]').closest('label').hidden=!(preset?.rules.escape?.enemyLosses!==undefined||preset?.rules.enemyMorale?.lossesOver!==undefined);
+      row.querySelector('[data-stat="ordnance"]').closest('label').hidden=Boolean(preset?.rules.meleeOnly);
+    }
   }
   function mount(state,selected) {
-    holder.replaceChildren();preset=selected;modifiers={};
+    holder.replaceChildren();preset=selected;modifiers={};initiative=null;completedRounds=null;
     const maximum=preset?.rules.maxPlayerUnits;
     const players=preset?.playerUnits??state.playerForce??state.custom?.player??[defaults().customPlayer];
     const initial=maximum?players.slice(0,maximum):players;
@@ -67,9 +70,13 @@ export function createPersonnelSetupPanel({document,holder,id,t,getRoster,getPla
         enemyEditor.set(preset.enemies.map(editable));
       });
     }
-    if(!preset)initiative=personnelSelect(document,holder,'Initiative',[{value:'player',label:'You first'},
-      {value:'enemy',label:'Enemy first'}],state.custom?.initiative??'player');
     const rules=preset?.rules??{};
+    if(rules.resumeRoundMinimum!==undefined){
+      completedRounds=document.createElement('input');completedRounds.type='number';completedRounds.min=String(rules.resumeRoundMinimum);completedRounds.max='1000000';completedRounds.step='1';completedRounds.value=String(rules.resumeRoundMinimum);completedRounds.id=id+'-completed-rounds';
+      personnelField(document,holder,'Complete rounds already played',completedRounds);
+    }
+    if(!preset||rules.chooseInitiative)initiative=personnelSelect(document,holder,'Initiative',[{value:'player',label:'You first'},
+      {value:'enemy',label:'Enemy first'}],preset?.initiative??rules.initiative??state.custom?.initiative??'player');
     if(rules.scramblerOrdnance!==undefined||rules.scramblerStrength!==undefined)modifiers.useScrambler=
       personnelCheckbox(document,holder,'Use a power weapon scrambler');
     if(rules.waves)modifiers.suppliesDestroyed=personnelCheckbox(document,holder,'Supply depot was destroyed (enemy Ordnance −4)',Boolean(state.waveSupplyDestroyed));
@@ -98,12 +105,14 @@ export function createPersonnelSetupPanel({document,holder,id,t,getRoster,getPla
   }
   function read() {
     const player=readRows(playerEditor,'player');
-    if(player.filter(unit=>unit.essential).length>1)throw new RangeError('Choose only one unit for Mies and his staff.');
+    if(player.filter(unit=>unit.essential).length>1)throw new RangeError('Choose only one unit for the commander and staff.');
     let enemies=enemyEditor?readRows(enemyEditor,'enemy'):[];
     if(preset)enemies=enemies.map((unit,index)=>({...unit,key:preset.enemies[index].key}));
     const config=preset?structuredClone(preset):{section:'custom',label:'Custom encounter',rules:{initiative:initiative.value},enemies};
     config.enemies=enemies;
+    if(preset?.rules.chooseInitiative){config.rules.initiative=initiative.value;delete config.initiative;}
     const setup=Object.fromEntries(Object.entries(modifiers).map(([key,input])=>[key,input.checked]));
+    if(completedRounds)setup.completedRounds=Number(completedRounds.value);
     return {player,config,setup,custom:{player,enemies,initiative:initiative?.value??'player'}};
   }
   function lock(value) {

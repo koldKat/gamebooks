@@ -1,5 +1,6 @@
 // Validate personnel combat values and apply casualties within one optional encounter.
 import { combatCommandHits } from './core.js';
+import { pendingPersonnelReinforcements, waitingPersonnelObjective } from './personnel-timing.js';
 
 export const personnelCopy = value => structuredClone(value);
 export function personnelInteger(value, min = 0, max = 1000000) {
@@ -65,7 +66,8 @@ export function personnelOutcome(fight) {
   if (fight.player.some(unit => unit.essential && (!unit.count || unit.retired))
       || rules.frontEssential && !fight.player[0].count || !personnelLiving(fight.player).length) {
     personnelFinish(fight, 'loss');
-  } else if (!rules.fixedAttack && !personnelLiving(fight.enemies).length) {
+  } else if (!rules.fixedAttack && !personnelLiving(fight.enemies).length
+      && !pendingPersonnelReinforcements(fight) && !waitingPersonnelObjective(fight)) {
     personnelFinish(fight, 'win');
   }
   return fight.status !== 'fighting';

@@ -22,11 +22,14 @@ export function personnelAttackInfo(fight, task) {
       power = Math.max(0, power - rules.supplyOrdnanceReduction);
     }
     if (player) {
+      if (rules.flank?.playerFiringDivisor && !fight.flankArrived) count = Math.ceil(count / rules.flank.playerFiringDivisor);
       if (!melee) power = Math.max(0, power - (fight.roundOptions.ordnanceReduction ?? 0));
       if (task.key === fight.player[0].key) count = Math.max(0, count - (fight.roundOptions.excluded ?? 0));
     }
     strength = count * power;
-    chart = player ? personnelAt(rules.playerChartRounds, fight.config.playerChart ?? unit.chart, fight.round) : unit.chart;
+    chart = player ? personnelAt(rules.playerChartRounds, fight.config.playerChart ?? unit.chart, fight.round)
+      : personnelAt(rules.enemyChartRounds, unit.chart, fight.round);
+    if (fight.flankArrived && rules.flank?.[player ? 'playerChart' : 'enemyChart']) chart = rules.flank[player ? 'playerChart' : 'enemyChart'];
     if (!player && fight.searchlightDestroyed) chart = rules.searchlight.enemyChart;
     chart = personnelChart(chart, rules[player ? 'playerChartShift' : 'enemyChartShift'] ?? 0);
   }

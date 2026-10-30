@@ -2,6 +2,7 @@
 import { personnelCopy, personnelDamage, personnelFinish, personnelInteger, personnelLiving,
   personnelOutcome } from './personnel-rules.js';
 import { personnelAttackInfo, personnelResolveAttack, personnelResolveHitSave } from './personnel-attacks.js';
+import { pendingPersonnelReinforcements, waitingPersonnelObjective } from './personnel-timing.js';
 
 export function personnelEscapeAllowed(fight, duringPlayerTurn = false) {
   if (fight.status !== 'fighting' || fight.melee || fight.config.rules.meleeOnly) return false;
@@ -97,6 +98,9 @@ export function personnelResolveTask(fight, task, result) {
     fight.openingCount = result.total;
     fight.openingRemaining = rules.openingAttacks.includesFirstReply ? 0 : result.total;
     fight.enemyFreeRounds = rules.openingAttacks.includesFirstReply ? result.total - 1 : 0;
+  } else if (task.kind === 'flank') {
+    check.passed = result.total >= rules.flank.minimumRoll;
+    if (check.passed) fight.flankArrived = true;
   } else if (task.kind === 'strike-count') fight.attackLimit = result.total;
   else if (task.kind === 'disruption') {
     check.passed = result.total >= unit.disruption.minimumRoll;
@@ -164,10 +168,20 @@ export function personnelQueueRound(fight, options) {
       }
     }
   } else enemy = enemies.find(u => u.key === options.targetKey) ?? (enemies.length === 1 ? enemies[0] : undefined);
-  if (!rules.fixedAttack && !enemy) throw new RangeError('Choose a surviving opponent');
+  if (!rules.fixedAttack && !enemy) {
+    if (!enemies.length && (pendingPersonnelReinforcements(fight) || waitingPersonnelObjective(fight))) {
+      fight.roundOptions = {};
+      fight.queue = [{ kind:'end' }];
+      return;
+    }
+    throw new RangeError('Choose a surviving opponent');
+  }
   fight.roundOptions = { ...personnelCopy(options), blocked: [], enemyKey: enemy?.key ?? null, opening,
     excluded: fight.continuingExclusion ?? 0 };
   const queue = [];
+  if (rules.flank && !fight.flankArrived && fight.round >= rules.flank.fromRound) {
+    queue.push({ kind:'flank', dice:1, label:'Flanking force: arrival check' });
+  }
   if (options.talk) {
     if (!rules.talk || !enemy) throw new RangeError('Talking is unavailable in this encounter');
     queue.push(personnelAttackTask('enemy', enemy.key), { kind: 'talk-finish' });
