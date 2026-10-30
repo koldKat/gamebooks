@@ -24,7 +24,9 @@ vm.runInNewContext(fs.readFileSync('server/routes/collectibles.js','utf8'),{modu
  throw Error(name);
 }});
 function send(res,status,data){res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(data));}
-const gift=fs.readFileSync('public/index.html','utf8').match(/<button type="button" data-open-collectibles[\s\S]*?<\/button>/)[0];
+const indexHtml=fs.readFileSync('public/index.html','utf8');
+const gift=indexHtml.match(/<button id="collectibles-btn"[\s\S]*?<\/button>/)[0];
+if(!indexHtml.includes(gift+'\n              <button id="display-settings-btn"'))throw Error('Gift belongs beside the app header settings');
 const html=`<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="/css/seasonal-events.css"><link rel="stylesheet" href="/css/collectibles.css"><style>body{background:#141d29;color:#ccc;font:14px sans-serif;margin:18px}.books-header-right{display:flex;justify-content:flex-end;gap:10px}#landing-wrapper{height:30px}</style>
 <div id="landing-wrapper"><div class="books-header-right">${gift}<button id="rubies-display"></button></div></div>
 <script>addEventListener('error',e=>document.body.dataset.failure=e.error?.stack||e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=e.reason?.stack||String(e.reason));</script>

@@ -1,16 +1,17 @@
 /* Collection dialog and its shared companion previews. */
 [data-open-collectibles],.m-topbar [data-open-collectibles]{display:inline-grid;place-items:center;width:30px;height:30px;flex-shrink:0;border:0;background:transparent;color:#bdb6a6;padding:4px;cursor:default;}
 [data-open-collectibles] svg{width:19px;height:19px;}
+#app-banner-tools #collectibles-btn{height:1.7rem;width:30px;padding:4px;flex:0 0 30px;border:1px solid #374151;border-radius:7px;background:#111827;color:#9ca3af;cursor:default;}
 #collectibles-dialog{width:min(540px,calc(100vw - 24px));max-height:calc(100dvh - 40px);box-sizing:border-box;margin:auto;padding:16px;border:1px solid #46505d;border-radius:10px;background:#19212c;color:#d8d7d1;color-scheme:dark;overflow:auto;cursor:default;}
 #collectibles-dialog::backdrop{background:#0009;}
 #collectibles-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px;}
 #collectibles-dialog h2{font-size:1rem;margin:0;}
 #collectibles-dialog header button{background:none;color:inherit;border:0;font-size:24px;cursor:default;}
 .collectibles-body{padding-top:12px;font-size:.85rem;}
-#collectibles-dialog .season-cursor-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
-#collectibles-dialog .collectible-item{min-width:0;padding:0 0 10px;border:1px solid #303b49;border-radius:8px;background:#1d2733;color:inherit;font:inherit;text-align:center;cursor:default;}
+#collectibles-dialog .season-cursor-gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;}
+#collectibles-dialog .collectible-item{min-width:0;padding:0 0 5px;border:1px solid #303b49;border-radius:8px;background:#1d2733;color:inherit;font:inherit;text-align:center;cursor:default;}
 #collectibles-dialog .collectible-item:focus-visible{outline:2px solid #c6ae7b;outline-offset:2px;}
-#collectibles-dialog .season-cursor-preview{height:116px;display:grid;place-items:center;contain:layout style paint;overflow:hidden;}
+#collectibles-dialog .season-cursor-preview{height:80px;display:grid;place-items:center;contain:layout style paint;overflow:hidden;}
 #collectibles-dialog .seasonal-inline-preview :is(.seasonal-pumpkin,.seasonal-diya,.seasonal-companion){position:relative!important;inset:auto!important;transform:none!important;width:60px!important;height:60px!important;z-index:auto!important;}
 #collectibles-dialog .collectible-item span{display:block;font-size:.75rem;}
 @media(max-width:360px){#collectibles-dialog .season-cursor-gallery{grid-template-columns:repeat(2,minmax(0,1fr));}}

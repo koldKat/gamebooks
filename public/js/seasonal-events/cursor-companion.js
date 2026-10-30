@@ -21,8 +21,8 @@ export function createCursorCompanion({name,svg,actions,face=false,random=Math.r
     point={x:event.clientX,y:event.clientY};if(frame!=null)return;
     frame=requestAnimationFrame(()=>{frame=null;
       const size=parseFloat(getComputedStyle(node).width)||36,reserve=size+42;
-      const x=point.x+reserve+16>innerWidth?point.x-reserve:point.x+16,y=point.y+reserve+20>innerHeight?point.y-reserve:point.y+20;
-      node.style.transform='translate3d('+Math.max(40,x)+'px,'+Math.max(44,y)+'px,0)';
+      const x=point.x+size+14>innerWidth?point.x-size-14:point.x+14,y=point.y+reserve+20>innerHeight?point.y-reserve:point.y+20;
+      node.style.transform='translate3d('+Math.max(0,x)+'px,'+Math.max(44,y)+'px,0)';
       if(node.hidden){node.hidden=false;start();}
     });
   }
