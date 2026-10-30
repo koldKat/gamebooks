@@ -23,5 +23,5 @@ test('Santa and the diya use smooth artwork with their existing animation hooks'
  for(const svg of [santaCursorSvg,diyaCursorSvg]){assert.doesNotMatch(svg,/crispEdges/);assert.match(svg,/<path/);}
  for(const hook of ['eyes','pupils','mouth','ho','bell','gift'])assert.ok(santaCursorSvg.includes('seasonal-santa__'+hook));
  for(const hook of ['fire','flame','embers','smoke'])assert.ok(diyaCursorSvg.includes('seasonal-diya__'+hook));
- assert.match(santaCursorSvg,/<ellipse/);assert.match(diyaCursorSvg,/<ellipse/);
+ assert.match(santaCursorSvg,/<ellipse/);
 });

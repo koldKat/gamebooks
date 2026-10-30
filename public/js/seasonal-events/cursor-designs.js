@@ -20,7 +20,7 @@ export const cursorDesigns={
   variant('lotus','Lotus',['is-blooming','is-fireflies','is-radiant'],[2600,2400,2200],'diwali'),
   variant('lantern','Lantern',['is-bright','is-sparking','is-smoking'],[2400,2500,2800],'diwali')],
  christmas:[{id:'santa',label:'Father Christmas',actions:['is-laughing','is-ringing','is-gifting'],colors:palettes.christmas,create:createSanta},
-  variant('snowman','Snowman',['is-hatpop','is-sneezing','is-scarf'],[2200,2100,2400],'christmas'),
+  variant('snowman','Snowman',['is-hatpop','is-sneezing','is-scarf'],[2200,3200,2400],'christmas'),
   variant('reindeer','Reindeer',['is-antlers','is-nose','is-breath'],[2000,2000,2400],'christmas')],
  'new-year':[{id:'champagne',label:'Champagne',actions:['is-popping','is-toasting','is-fireworks'],colors:palettes['new-year'],create:createNewYearChampagne},
   variant('partyhat','Party hat',['is-horn','is-confetti','is-wiggling'],[2400,2200,2200],'new-year'),

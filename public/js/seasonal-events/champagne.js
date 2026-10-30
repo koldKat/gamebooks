@@ -1,8 +1,12 @@
 // Draw a rounded champagne bottle and its bounded celebration effects in the shared cursor style.
-const body=`<path d="M20 7h8v13q0 3 5 7 4 3 4 9v6q0 4-5 4H16q-5 0-5-4v-6q0-6 4-9 5-4 5-7Z" fill="#497b58" stroke="#284c3c" stroke-width="1.4"/>
-<path d="M31 28q5 3 5 9v5q0 3-5 3H19q9-2 12-7Z" fill="#345e46"/><path d="M20 7h8v12h-8Z" fill="#c8a568" stroke="#8c7147" stroke-width="1.2"/><path d="M22 9v8m-6 16v8" stroke="#92b28b" stroke-width="1.2" stroke-linecap="round"/>
-<path d="m21 10 6 2m-6 1 6 2m-6 1 6 2" stroke="#e9ce8e" stroke-width=".6"/><path d="M17 29q-3 2-3 6m19-1v7" fill="none" stroke="#7fa06e" stroke-width="1" stroke-linecap="round"/><rect x="14" y="32" width="20" height="10" rx="2" fill="#e8dec0" stroke="#a98b55" stroke-width="1.1"/>
-<path d="m24 33 1.2 2.3 2.5.4-1.8 1.8.4 2.5-2.3-1.2-2.3 1.2.4-2.5-1.8-1.8 2.5-.4Z" fill="#b69a5d"/>`;
+const body=`<path d="M20 7h8v12q0 4 5 7 5 3 5 10v6q0 4-5 4H15q-5 0-5-4v-6q0-7 5-10 5-3 5-7Z" fill="#5d873a" stroke="#283b1b" stroke-width="1.5"/>
+<path d="M27 19q0 7 5 10 4 4 4 9v5q0 2-4 2H19q10-4 9-12Z" fill="#355729"/>
+<path d="M21 7h6v13h-6Z" fill="#d7a74e" stroke="#78501e" stroke-width="1"/><path d="m21 10 6 2m-6 1 6 2m-6 1 6 2" stroke="#ffe39a" stroke-width=".7"/>
+<path d="M21 22q-1 5-6 8-2 4-2 10m3-10 1-2m17 7v7" fill="none" stroke="#9fbd60" stroke-width="1.1" stroke-linecap="round"/>
+<path d="M13 32q11 3 22 0v10q-11 3-22 0Z" fill="#f0dfae" stroke="#7c5727" stroke-width="1.1"/>
+<path d="M15 34q9 2 18 0m-18 6q9 2 18 0" fill="none" stroke="#c29b4d" stroke-width=".6"/>
+<path d="m24 34 1.2 2.2 2.5.4-1.8 1.8.4 2.4-2.3-1.1-2.3 1.1.4-2.4-1.8-1.8 2.5-.4Z" fill="#b58231" stroke="#77501f" stroke-width=".5"/>
+<path d="m15 36 2 1-2 1m18-2-2 1 2 1" fill="none" stroke="#b78838" stroke-width=".6"/>`;
 const bubbles=[[-3,0],[2,-1],[5,2],[-5,3],[0,4]].map(([x,y],i)=>`<rect x="${23+x}" y="${5+y}" width="${i%2?2:3}" height="${i%2?2:3}" rx="1" style="--bubble-x:${x*2}px;animation-delay:${-i*.4}s"/>`).join('');
 const foam=Array.from({length:18},(_,i)=>{
   const dx=(i%2?-1:1)*(10+i%5*5),dy=-22-i%4*6;

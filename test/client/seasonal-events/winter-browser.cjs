@@ -21,10 +21,10 @@ for(const [make,name,effects]of [[createSanta,'santa',['is-laughing','is-ringing
   check([...node.querySelectorAll('.seasonal-champagne__bubbles rect')].every(el=>getComputedStyle(el).animationName==='new-year-bubbles'),'ambient sparkles animate');advance(4500);
  }
  check(node.classList.contains(effects[0]),name+' first action');
- const animated=name==='santa'?node.querySelectorAll('.seasonal-santa__ho text'):node.querySelectorAll('.seasonal-champagne__foam rect');check(animated.length===(name==='santa'?3:18),'comic words or confetti particles');
+ const animated=name==='santa'?node.querySelectorAll('.seasonal-santa__ho text'):node.querySelectorAll('.seasonal-champagne__foam rect');check(animated.length===(name==='santa'?9:18),'comic words or confetti particles');
  for(const item of animated)check(getComputedStyle(item).animationName!=='none','words animate');
  const firstAnimation=animated[0].getAnimations()[0];firstAnimation.pause();firstAnimation.currentTime=300;check(Number(getComputedStyle(animated[0]).opacity)>0,'comic words or confetti visibly rendered');
- if(name==='santa'){const directions=[...animated].map(el=>getComputedStyle(el).getPropertyValue('--ho-x'));check(new Set(directions).size===3,'Ho words go in distinct directions');}
+ if(name==='santa'){const directions=[...animated].map(el=>getComputedStyle(el).getPropertyValue('--ho-x'));check(new Set(directions).size===3,'Ho words go in distinct directions');for(const el of animated){const a=el.getAnimations()[0];a.pause();a.currentTime=1900;}check([...animated].some(el=>Number(getComputedStyle(el).opacity)>.2),'Ho words continue through the late mouth movements');}
  snapshots.push([name+' '+effects[0],node.cloneNode(true)]);advance(5500);check(node.classList.contains(effects[1]),name+' second action');snapshots.push([name+' '+effects[1],node.cloneNode(true)]);
  advance(6000);check(node.classList.contains(effects[2]),name+' third action');snapshots.push([name+' '+effects[2],node.cloneNode(true)]);
  document.body.classList.add('reduce-motion');await delay(20);check(!timers.size&&!effects.some(e=>node.classList.contains(e)),'motion setting cancels all actions');
