@@ -5,6 +5,7 @@
 .seasonal-variant__eyes{transform-box:fill-box;transform-origin:center;transition:transform 65ms ease;}
 .seasonal-variant.is-blinking .seasonal-variant__eyes{transform:scaleY(.08);}
 .variant-effect{opacity:0;}
+.seasonal-mummy.is-unwrapping :is(.seasonal-variant__eyes,.mummy-brows){animation:mummy-uncovered 3.4s linear both;}
 .seasonal-mummy.is-unwrapping .mummy-wraps{transform-origin:24px 23px;animation:mummy-uncovered 3.4s linear both;}
 .seasonal-mummy.is-unwrapping .mummy-band{animation:mummy-unroll 3.1s ease-in-out var(--band-delay) both;}
 .seasonal-mummy.is-unwrapping .mummy-loose{animation:mummy-loose 3.4s ease-in-out both;}

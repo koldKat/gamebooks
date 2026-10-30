@@ -1,14 +1,14 @@
 // Draw a rounded champagne bottle and its bounded celebration effects in the shared cursor style.
 const body=`<path d="M20 7h8v13q0 3 5 7 4 3 4 9v6q0 4-5 4H16q-5 0-5-4v-6q0-6 4-9 5-4 5-7Z" fill="#497b58" stroke="#284c3c" stroke-width="1.4"/>
-<path d="M20 7h8v12h-8Z" fill="#c8a568" stroke="#8c7147" stroke-width="1.2"/><path d="M22 9v8m-6 16v8" stroke="#92b28b" stroke-width="1.2" stroke-linecap="round"/>
-<rect x="14" y="32" width="20" height="10" rx="2" fill="#e8dec0" stroke="#a98b55" stroke-width="1.1"/>
+<path d="M31 28q5 3 5 9v5q0 3-5 3H19q9-2 12-7Z" fill="#345e46"/><path d="M20 7h8v12h-8Z" fill="#c8a568" stroke="#8c7147" stroke-width="1.2"/><path d="M22 9v8m-6 16v8" stroke="#92b28b" stroke-width="1.2" stroke-linecap="round"/>
+<path d="m21 10 6 2m-6 1 6 2m-6 1 6 2" stroke="#e9ce8e" stroke-width=".6"/><path d="M17 29q-3 2-3 6m19-1v7" fill="none" stroke="#7fa06e" stroke-width="1" stroke-linecap="round"/><rect x="14" y="32" width="20" height="10" rx="2" fill="#e8dec0" stroke="#a98b55" stroke-width="1.1"/>
 <path d="m24 33 1.2 2.3 2.5.4-1.8 1.8.4 2.5-2.3-1.2-2.3 1.2.4-2.5-1.8-1.8 2.5-.4Z" fill="#b69a5d"/>`;
 const bubbles=[[-3,0],[2,-1],[5,2],[-5,3],[0,4]].map(([x,y],i)=>`<rect x="${23+x}" y="${5+y}" width="${i%2?2:3}" height="${i%2?2:3}" rx="1" style="--bubble-x:${x*2}px;animation-delay:${-i*.4}s"/>`).join('');
 const foam=Array.from({length:18},(_,i)=>{
   const dx=(i%2?-1:1)*(10+i%5*5),dy=-22-i%4*6;
   return `<rect x="23" y="5" width="${i%3?2:4}" height="${i%3?2:4}" rx="1" style="--foam-x:${dx}px;--foam-y:${dy}px;--foam-delay:${i%4*60}ms"/>`;
 }).join('');
-const glass='<path d="M10 6h8v10l-2 4h-4l-2-4zM14 20v12M9 33h10" fill="none" stroke="#eee5d2" stroke-width="2"/><path d="M12 11h4v5l-1 2h-2l-1-2z" fill="#d9b56e"/>';
+const glass='<path d="M10 6h8v10q0 5-4 5t-4-5ZM14 21v11M9 33q5-2 10 0" fill="none" stroke="#eee5d2" stroke-width="2"/><path d="M12 11h4v5l-1 2h-2l-1-2z" fill="#d9b56e"/>';
 const burst=(x,y,color)=>[-1,0,1].flatMap(dx=>[-1,0,1].filter(dy=>dx||dy).map(dy=>`<rect x="${x+dx*9}" y="${y+dy*9}" width="3" height="3" fill="${color}"/>`)).join('')+`<path d="M${x} ${y-5}v10m-5-5h10" stroke="#f6dda0" stroke-width="2"/>`;
 
 export const champagneCursorSvg='<g class="seasonal-champagne__body">'+body
