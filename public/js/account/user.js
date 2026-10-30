@@ -2,6 +2,7 @@
 
 import { getUsername } from '../core/state.js';
 import { renderRoleBadge } from './role-badges.js';
+import { publicName } from '../core/public-name.js';
 
 let _adminUsername  = null;
 const _authorMap    = {};
@@ -46,7 +47,7 @@ export function contributorBadge(username) {
 }
 
 export function displayFor(username) {
-  return _authorMap[username]?.displayName || username;
+  return publicName(_authorMap[username]?.displayName || username);
 }
 
 export function registerAuthor(username, isAuthor, displayName) {

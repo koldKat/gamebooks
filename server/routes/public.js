@@ -8,6 +8,7 @@ const db   = require('../db');
 const { ROOT } = require('../paths');
 const { send, addSecurityHeaders } = require('../request-helpers');
 const { escapeHtml, escapeJsonString } = require('../html-escape');
+const { publicName } = require('../public-name');
 
 async function handlePublicUser(req, res, username) {
   const profile = db.getPublicProfile(decodeURIComponent(username));
@@ -257,7 +258,7 @@ function servePublicProfilePage(req, res, username) {
     }
 
     const SITE      = 'https://pathmap.net';
-    const dn        = profile.displayName || profile.username;
+    const dn        = publicName(profile.displayName || profile.username);
     const profileUrl = `${SITE}/user/${encodeURIComponent(profile.username)}`;
     const title     = `${dn} - Gamebook Tracker`;
     const desc      = `${dn} is level ${profile.level} on Gamebook Tracker, tracking ${profile.totalBooks} gamebook${profile.totalBooks !== 1 ? 's' : ''}.`;
@@ -272,7 +273,7 @@ function servePublicProfilePage(req, res, username) {
       `"@type":"Person"`,
       `"name":"${jsonEsc(dn)}"`,
       `"url":"${jsonEsc(profileUrl)}"`,
-      `"identifier":"${jsonEsc(profile.username)}"`,
+      `"identifier":"${jsonEsc(publicName(profile.username))}"`,
       profile.avatarUrl ? `"image":"${jsonEsc(SITE + profile.avatarUrl)}"` : null,
     ].filter(Boolean).join(',');
     const jsonLd = `<script type="application/ld+json">{${ldParts}}</script>`;
@@ -288,7 +289,7 @@ function servePublicProfilePage(req, res, username) {
   <meta property="og:image:type"  content="${imageType}">
   <meta property="og:site_name"   content="Gamebook Tracker">
   <meta property="og:locale"      content="en_US">
-  <meta property="profile:username" content="${escape(profile.username)}">`
+  <meta property="profile:username" content="${escape(publicName(profile.username))}">`
       )
       .replace(
         /<meta name="twitter:card"[\s\S]*?<meta name="twitter:image"[^>]*>/,
@@ -352,7 +353,7 @@ function servePublicFeedPage(req, res) {
   }
 
   function renderEntryText(e) {
-    const u  = escape(e.username);
+    const u  = escape(publicName(e.displayName || e.username));
     const bk = e.bookId ? `<a class="fb" href="${SITE}/book/${e.bookId}">${escape(e.bookName)}</a>` : `<span class="fb">${escape(e.bookName)}</span>`;
     if (e.type === 'run_completed') {
       const verb = e.result === 'success' ? 'won' : e.result === 'battle' ? 'died' : 'lost';

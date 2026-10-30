@@ -2,6 +2,7 @@
 
 import { apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
+import { publicName } from '../core/public-name.js';
 import { getCachedAllSeries, _refreshLibraryUi, setInvalidateAutocompleteCaches } from '../books.js';
 import { pauseCoversAutoRefresh, resumeCoversAutoRefresh } from '../covers.js';
 import { naturalCompare, matchesSearch } from '../core/sort.js';
@@ -144,7 +145,7 @@ function _csrRenderDropdown(q) {
     `<li data-idx="${i}" data-name="${escapeHtml(s.name)}" data-id="${s.id}">` +
       escapeHtml(s.name) +
       ((getCachedAllSeries() || []).some(cs => cs.id === s.id) ? `<span class="ac-sub ac-owned">${t('addbook.owned')}</span>` : '') +
-      (s.created_by_username ? `<span class="ac-sub">${t('addbook.by_creator', { name: escapeHtml(s.created_by_username) })}</span>` : '') +
+      (s.created_by_username ? `<span class="ac-sub">${t('addbook.by_creator', { name: escapeHtml(publicName(s.created_by_username)) })}</span>` : '') +
     `</li>`
   ).join('');
   _csrActiveIdx = -1;
@@ -231,7 +232,7 @@ export function initAddBook(mousedownOnOverlayRef) {
   );
   _setupPlainAutocomplete('esr-name', 'esr-name-dropdown', _loadSeriesAutocomplete,
     (s, q) => matchesSearch(s.name, q),
-    s => s.created_by_username ? `<span class="ac-sub">${t('addbook.by_creator', { name: escapeHtml(s.created_by_username) })}</span>` : ''
+    s => s.created_by_username ? `<span class="ac-sub">${t('addbook.by_creator', { name: escapeHtml(publicName(s.created_by_username)) })}</span>` : ''
   );
   _setupAuthorsAutocomplete('cb-authors', 'cb-authors-dropdown');
   _setupAuthorsAutocomplete('cc-authors', 'cc-authors-dropdown');

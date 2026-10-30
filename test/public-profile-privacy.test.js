@@ -4,6 +4,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
+const { publicName } = require('../server/public-name');
 
 test('public profile responses omit private progression and balances', () => {
   const user = { id: 7, username: 'Reader', public_profile: 1 };
@@ -38,7 +39,7 @@ test('public profile renderer never displays job progression from a stale respon
     if (!nodes.has(id)) nodes.set(id, { innerHTML: '', style: {}, classList: { remove() {} } });
     return nodes.get(id);
   } };
-  const context = vm.createContext({ document, escapeHtml: String, t: key => key });
+  const context = vm.createContext({ document, escapeHtml: String, publicName, t: key => key });
   const source = fs.readFileSync('public/js/account/public-profile.js', 'utf8')
     .replace(/^import .*;\n/gm, '').replace(/\bexport /g, '');
   vm.runInContext(source, context);

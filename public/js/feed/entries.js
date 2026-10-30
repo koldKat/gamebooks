@@ -1,5 +1,6 @@
 import { feedHooks as _hooks } from './state.js';
 import { escapeHtml } from '../core/util.js';
+import { publicName } from '../core/public-name.js';
 import { t } from '../i18n.js';
 import { _runTooltip, _runN, _firstResultRunLabel, _seriesTag, formatAnnBody } from './formatting.js';
 
@@ -14,7 +15,7 @@ export function renderEntry(e) {
   let userEl;
   if (isParty) {
     userEl = [...e.usernames].sort((a, b) => a.username.localeCompare(b.username)).map(u => {
-      const dn = escapeHtml(_hooks.displayFor?.(u.username) ?? u.username);
+      const dn = escapeHtml(publicName(_hooks.displayFor?.(u.username) ?? u.username));
       const av = u.avatarUrl ? ` data-avatar="${escapeHtml(u.avatarUrl)}"` : '';
       const level = Number.isFinite(+u.userLevel) ? ` data-user-level="${+u.userLevel}"` : '';
       const userTitle = u.userTitle ? ` data-user-title="${escapeHtml(u.userTitle)}"` : '';
@@ -23,7 +24,7 @@ export function renderEntry(e) {
         : `<span class="feed-user"${av}${level}${userTitle}>${dn}</span>${_hooks.adminBadge?.(u.username) ?? ''}${_hooks.authorBadge?.(u.username) ?? ''}${_hooks.contributorBadge?.(u.username) ?? ''}${_hooks.moderatorBadge?.(u.username) ?? ''}${_hooks.squireBadge?.(u.username) ?? ''}`;
     }).join('<span class="feed-party-sep">, </span>');
   } else {
-    const dn     = escapeHtml(_hooks.displayFor?.(e.username) ?? e.username);
+    const dn     = escapeHtml(publicName(_hooks.displayFor?.(e.username) ?? e.username));
     const user   = escapeHtml(e.username);
     const avatar = e.avatarUrl ? ` data-avatar="${escapeHtml(e.avatarUrl)}"` : '';
     const level  = Number.isFinite(+e.userLevel) ? ` data-user-level="${+e.userLevel}"` : '';

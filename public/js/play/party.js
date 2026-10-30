@@ -7,6 +7,7 @@ import { graphRuntime } from '../graph/runtime.js';
 import { render, suppressAutoNav, showAlert, showConfirm } from '../play.js';
 import { escapeHtml, shortcutLabel } from '../core/util.js';
 import { t } from '../i18n.js';
+import { publicName } from '../core/public-name.js';
 
 // Hooks into main.js for things that aren't part of this module's scope.
 let _hooks = {};
@@ -154,7 +155,7 @@ export async function loadPartyInvites() {
     section.innerHTML = invites.map(inv => `
       <div class="party-invite-card" data-invite-id="${inv.id}">
         <div class="party-invite-text">
-          ${t('party.invite_text', { inviter: `<strong>${escapeHtml(inv.inviter_username)}</strong>`, book: `<strong>${escapeHtml(inv.book_name)}</strong>` })}
+          ${t('party.invite_text', { inviter: `<strong>${escapeHtml(publicName(inv.inviter_username))}</strong>`, book: `<strong>${escapeHtml(inv.book_name)}</strong>` })}
         </div>
         <div class="party-invite-actions">
           <button class="party-invite-accept" data-id="${inv.id}">${t('party.accept')}</button>
@@ -213,7 +214,7 @@ function _wireInviteAutocomplete(inputId, sendBtnId, onSend) {
         if (version !== _ddVersion) return;
         if (!users?.length) { hideDd(); return; }
         const dd = getOrCreateDd();
-        dd.innerHTML = users.map(u => `<button data-username="${escapeHtml(u.username)}">${escapeHtml(u.username)}</button>`).join('');
+        dd.innerHTML = users.map(u => `<button data-username="${escapeHtml(u.username)}">${escapeHtml(publicName(u.username))}</button>`).join('');
         dd.querySelectorAll('button').forEach(btn => btn.addEventListener('mousedown', e => {
           e.preventDefault();
           inp.value = btn.dataset.username;
@@ -264,7 +265,7 @@ function _renderPartyModal(bookId, party) {
         return;
       }
       msgEl.style.color = '#34d399';
-      msgEl.textContent = t('party.invite_sent', { name: username });
+      msgEl.textContent = t('party.invite_sent', { name: publicName(username) });
       document.getElementById('party-invite-input').value = '';
       await connectPartySSE(bookId);
       _renderPartyModal(bookId, _currentParty);
@@ -281,7 +282,7 @@ function _renderPartyModal(bookId, party) {
       const avatar = m.avatar_path
         ? `<img class="party-member-avatar" src="/avatars/${escapeHtml(m.avatar_path)}" alt="">`
         : `<div class="party-member-avatar" style="display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#9ca3af">${escapeHtml(m.username[0].toUpperCase())}</div>`;
-      return `<div class="party-member-row">${avatar}<span>${escapeHtml(m.username)}</span>${isYou ? `<span class="party-member-you">${t('party.you')}</span>` : ''}</div>`;
+      return `<div class="party-member-row">${avatar}<span>${escapeHtml(publicName(m.username))}</span>${isYou ? `<span class="party-member-you">${t('party.you')}</span>` : ''}</div>`;
     }).join('');
     body.innerHTML = `
       <div class="party-section-label">${t('party.members')}</div>
@@ -307,7 +308,7 @@ function _renderPartyModal(bookId, party) {
       const j = await r.json().catch(() => ({}));
       if (!r.ok) { msgEl.style.color = '#ef4444'; msgEl.textContent = j.error || t('party.invite_failed'); return; }
       msgEl.style.color = '#34d399';
-      msgEl.textContent = t('party.invite_sent', { name: username });
+      msgEl.textContent = t('party.invite_sent', { name: publicName(username) });
       document.getElementById('party-invite-input').value = '';
     });
     document.getElementById('party-leave-btn').addEventListener('click', async () => {

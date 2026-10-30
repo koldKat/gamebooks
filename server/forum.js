@@ -3,6 +3,7 @@
 const SITE = 'https://pathmap.net';
 
 const { escapeHtml: esc } = require('./html-escape');
+const { publicName } = require('./public-name');
 function fmtDate(ts) {
   if (!ts) return '';
   return new Date(ts * 1000).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
@@ -54,7 +55,7 @@ function computeLevel(xp) {
   return Math.floor((-1 + Math.sqrt(1 + 8 * xp / 1000)) / 2);
 }
 function userPanel(u) {
-  const name    = u.username || '[deleted]';
+  const name    = publicName(u.username || '[deleted]');
   const level   = u.xp != null ? computeLevel(u.xp) : null;
   const initial = name[0].toUpperCase();
   const avatar  = u.avatar_path
@@ -479,7 +480,7 @@ function renderForumCategory(category, threads) {
         const replies = t.reply_count + (t.reply_count === 1 ? ' reply' : ' replies');
         return '<div class="thread-card" data-thread-id="' + t.id + '" data-last-post-at="' + (t.last_post_at || 0) + '" data-tooltip="' + esc(t.title) + '">'
           + '<div class="thread-title">' + badges + '<a class="nav-btn" href="/forum/thread/' + t.id + '">' + esc(t.title) + '</a></div>'
-          + '<div class="thread-meta">by <span class="author">' + esc(t.username || '[deleted]') + '</span> · ' + fmtDate(t.created_at) + '</div>'
+          + '<div class="thread-meta">by <span class="author">' + esc(publicName(t.username || '[deleted]')) + '</span> · ' + fmtDate(t.created_at) + '</div>'
           + '<div class="thread-stats"><span>' + replies + '</span><span>last: ' + fmtRelative(t.last_post_at) + '</span></div>'
           + '</div>';
       }).join('\n');

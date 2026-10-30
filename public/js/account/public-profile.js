@@ -3,6 +3,7 @@ import { ensureGraphLibrary } from '../core/graph-library.js';
 
 import { isValidSecId } from '../core/state.js';
 import { escapeHtml } from '../core/util.js';
+import { publicName } from '../core/public-name.js';
 import { t } from '../i18n.js';
 
 // Callbacks wired in by main.js at boot
@@ -46,7 +47,7 @@ export function closePublicModal() {
 
 export async function openPublicProfile(username) {
   openPublicModal();
-  document.getElementById('pub-modal-title').innerHTML = escapeHtml(_hooks.displayFor?.(username) ?? username) + (_hooks.adminBadge?.(username) ?? '') + (_hooks.authorBadge?.(username) ?? '') + (_hooks.contributorBadge?.(username) ?? '') + (_hooks.moderatorBadge?.(username) ?? '') + (_hooks.squireBadge?.(username) ?? '');
+  document.getElementById('pub-modal-title').innerHTML = escapeHtml(publicName(_hooks.displayFor?.(username) ?? username)) + (_hooks.adminBadge?.(username) ?? '') + (_hooks.authorBadge?.(username) ?? '') + (_hooks.contributorBadge?.(username) ?? '') + (_hooks.moderatorBadge?.(username) ?? '') + (_hooks.squireBadge?.(username) ?? '');
   document.getElementById('pub-back-btn').style.display = 'none';
   document.getElementById('pub-modal-body').innerHTML = `<p class="pub-loading">${t('pub.loading')}</p>`;
   try {
@@ -66,7 +67,7 @@ export function renderPublicProfile(profile) {
   _hooks.onRegisterSquire?.(profile.username, !!profile.isSquire);
   document.getElementById('pub-back-btn').style.display = 'none';
   document.getElementById('public-modal').classList.remove('pub-modal--run');
-  const _dn = profile.displayName || profile.username;
+  const _dn = publicName(profile.displayName || profile.username);
   document.getElementById('pub-modal-title').innerHTML = escapeHtml(_dn) + (_hooks.adminBadge?.(profile.username) ?? '') + (_hooks.authorBadge?.(profile.username) ?? '') + (_hooks.contributorBadge?.(profile.username) ?? '') + (_hooks.moderatorBadge?.(profile.username) ?? '') + (_hooks.squireBadge?.(profile.username) ?? '');
   const body = document.getElementById('pub-modal-body');
   body.style.padding  = '';

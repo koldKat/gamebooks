@@ -8,6 +8,7 @@ import { closePublicModal, renderPublicProfile, openPublicRun, _destroyPubNetwor
 import { refreshCoinsDisplay } from '../progression/shop.js';
 import { escapeHtml, fetchPublic as publicFetch } from '../core/util.js';
 import { t } from '../i18n.js';
+import { publicName } from '../core/public-name.js';
 
 export function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, userLoggedIn, userOwnsBook, userCanRate = true) {
   _destroyPubNetworks();
@@ -125,8 +126,8 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
         ? `<img class="cover-act-avatar" src="${escapeHtml(e.avatarUrl)}" alt="">`
         : `<div class="cover-act-avatar cover-act-avatar-ph">${initial}</div>`;
       const userEl = e.publicProfile
-        ? `<button class="cover-act-username" data-username="${escapeHtml(e.username)}">${escapeHtml(e.username)}</button>`
-        : `<span class="cover-act-username-plain">${escapeHtml(e.username)}</span>`;
+        ? `<button class="cover-act-username" data-username="${escapeHtml(e.username)}">${escapeHtml(publicName(e.username))}</button>`
+        : `<span class="cover-act-username-plain">${escapeHtml(publicName(e.username))}</span>`;
       const bookLabel = (multiBook || bookMeta?.isContainer)
         ? `<span class="cover-act-header-book">${escapeHtml(e.bookName)}</span>` : '';
       activityHtml += `<div class="cover-act-entry cover-act-entry--collapsed">
@@ -349,7 +350,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
   body.querySelectorAll('.cover-act-username').forEach(btn => {
     btn.addEventListener('click', async () => {
       const username = btn.dataset.username;
-      document.getElementById('pub-modal-title').innerHTML = escapeHtml(coversState._hooks.displayFor?.(username) ?? username) + (coversState._hooks.adminBadge?.(username) ?? '') + (coversState._hooks.authorBadge?.(username) ?? '') + (coversState._hooks.contributorBadge?.(username) ?? '') + (coversState._hooks.moderatorBadge?.(username) ?? '') + (coversState._hooks.squireBadge?.(username) ?? '');
+      document.getElementById('pub-modal-title').innerHTML = escapeHtml(publicName(coversState._hooks.displayFor?.(username) ?? username)) + (coversState._hooks.adminBadge?.(username) ?? '') + (coversState._hooks.authorBadge?.(username) ?? '') + (coversState._hooks.contributorBadge?.(username) ?? '') + (coversState._hooks.moderatorBadge?.(username) ?? '') + (coversState._hooks.squireBadge?.(username) ?? '');
       document.getElementById('pub-modal-body').innerHTML  = `<p class="pub-loading">${t('covers.loading')}</p>`;
       backBtn.style.display = '';
       backBtn.onclick = () => renderCoverActivity(bookId, bookName, entries, currentMyRating, { ...bookMeta, avgRating: currentAvg, voteCount: currentCount }, userLoggedIn, userOwnsBook, bookCanRate);

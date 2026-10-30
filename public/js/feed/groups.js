@@ -1,5 +1,6 @@
 import { feedHooks as _hooks } from './state.js';
 import { escapeHtml } from '../core/util.js';
+import { publicName } from '../core/public-name.js';
 import { t } from '../i18n.js';
 import { renderEntry, _makeEntryHtml } from './entries.js';
 
@@ -17,7 +18,7 @@ export function createDayRenderer() {
     if (firstEntry.usernames && firstEntry.usernames.length > 1) {
       const sorted = [...firstEntry.usernames].sort((a, b) => a.username.localeCompare(b.username));
       const parts = sorted.map((u, i) => {
-          const dn     = escapeHtml(_hooks.displayFor?.(u.username) ?? u.username);
+          const dn     = escapeHtml(publicName(_hooks.displayFor?.(u.username) ?? u.username));
           const badges = (_hooks.adminBadge?.(u.username) ?? '') + (_hooks.authorBadge?.(u.username) ?? '') + (_hooks.contributorBadge?.(u.username) ?? '') + (_hooks.moderatorBadge?.(u.username) ?? '') + (_hooks.squireBadge?.(u.username) ?? '');
           const comma  = i < sorted.length - 1 ? ',' : '';
           const av     = u.avatarUrl ? ` data-avatar="${escapeHtml(u.avatarUrl)}"` : '';
@@ -28,7 +29,7 @@ export function createDayRenderer() {
         });
       return parts.join(' ');
     }
-    const dn     = escapeHtml(_hooks.displayFor?.(k) ?? k);
+    const dn     = escapeHtml(publicName(_hooks.displayFor?.(k) ?? k));
     const badges = (_hooks.adminBadge?.(k) ?? '') + (_hooks.authorBadge?.(k) ?? '') + (_hooks.contributorBadge?.(k) ?? '') + (_hooks.moderatorBadge?.(k) ?? '') + (_hooks.squireBadge?.(k) ?? '');
     const av     = firstEntry.avatarUrl ? ` data-avatar="${escapeHtml(firstEntry.avatarUrl)}"` : '';
     const level  = Number.isFinite(+firstEntry.userLevel) ? ` data-user-level="${+firstEntry.userLevel}"` : '';
