@@ -4,6 +4,7 @@ import { seasonalEventsEnabled, syncSeasonalEventSetting } from './preferences.j
 import { seasonalThemes } from './themes.js';
 import { seasonPreview, isSeasonPreviewStorageKey } from './preview.js';
 import { renderSeasonalNotice } from './notice.js';
+import { recordSeenCompanion } from './collectibles.js';
 
 let stopCurrent;
 export function initSeasonalEvents({ now = () => new Date(), random = Math.random, getPreview = seasonPreview } = {}) {
@@ -33,7 +34,7 @@ export function initSeasonalEvents({ now = () => new Date(), random = Math.rando
     const active = seasonalEventsEnabled() && visible && !!seasonalThemes[event?.id];
     const nextTheme = active ? event.id : null;
     if (themeId !== nextTheme) { decoration?.(); decoration = null; themeId = nextTheme; }
-    if (active && pointer.matches && !decoration) decoration = seasonalThemes[event.id].cursor({ random, preview:!!preview });
+    if (active && pointer.matches && !decoration) decoration = seasonalThemes[event.id].cursor({ random, preview:!!preview, onSeen:recordSeenCompanion });
     if ((!active || !pointer.matches) && decoration) { decoration(); decoration = null; }
     syncSeasonalEventSetting();
     midnight = setTimeout(refresh, nextSeasonalRefreshDelay(date));

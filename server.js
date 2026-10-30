@@ -139,6 +139,7 @@ const {
 } = require('./server/routes/books');
 
 const { handleShopPurchase, handleClaimBonusGc, handleDiamondExchange, handleRubyExchange } = require('./server/routes/shop');
+const { handleCollectibles } = require('./server/routes/collectibles');
 const { handleReadingAccess, handleReadingMatter } = require('./server/routes/reading-access');
 
 const {
@@ -452,6 +453,8 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET'    && urlPath === '/api/books')    return await handleGetBooks(req, res);
     if (method === 'POST'   && urlPath === '/api/books')    return await handleCreateBook(req, res);
     if (method === 'GET'    && urlPath === '/api/profile')        return await handleGetProfile(req, res);
+    if (method === 'GET' && urlPath === '/api/collectibles') return await handleCollectibles(req, res);
+    if (method === 'POST' && (m = urlPath.match(/^\/api\/collectibles\/([a-z-]+)\/(seen|claim)$/))) return await handleCollectibles(req, res, m[1], m[2]);
     if (method === 'PATCH'  && urlPath === '/api/profile')        return await handleUpdateProfile(req, res);
     if (method === 'POST'   && urlPath === '/api/shop/purchase')  return await handleShopPurchase(req, res);
     if (method === 'POST'   && urlPath === '/api/shop/exchange-diamonds') return await handleDiamondExchange(req, res);

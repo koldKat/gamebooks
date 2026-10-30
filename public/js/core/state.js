@@ -59,8 +59,8 @@ export function resetState() {
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 export function getToken()        { return localStorage.getItem('gamebook_auth_token'); }
-export function setToken(token)   { localStorage.setItem('gamebook_auth_token', token); }
-export function clearToken()      { localStorage.removeItem('gamebook_auth_token'); }
+export function setToken(token)   { localStorage.setItem('gamebook_auth_token', token); window.dispatchEvent(new Event('auth-token-change')); }
+export function clearToken()      { localStorage.removeItem('gamebook_auth_token'); window.dispatchEvent(new Event('auth-token-change')); }
 export function getUsername()     { return localStorage.getItem('gamebook_username'); }
 export function setUsername(name) { localStorage.setItem('gamebook_username', name); }
 export function clearUsername()   { localStorage.removeItem('gamebook_username'); }

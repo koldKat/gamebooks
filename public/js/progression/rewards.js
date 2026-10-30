@@ -19,6 +19,7 @@ let _lastRewardLevel     = null;
 let _lastHeartbeatGold   = null;
 let _lastDiamondsEarned  = null;
 let _lastRubiesEarned = null;
+let _lastCollectibleRubies = null;
 let _lastRewardUserKey   = null;
 let _rewardAccumXp       = 0;
 let _rewardAccumCoins    = 0;
@@ -107,6 +108,7 @@ export function _resetRewardSnapshotState() {
   closeBlackMarket();
   updateRubiesDisplay(null);
   _lastRubiesEarned = null;
+  _lastCollectibleRubies = null;
   updateDiamondsDisplay(null);
   updateHeartbeatCoinsDisplay(null);
   _lastHeartbeatGold = null;
@@ -140,8 +142,11 @@ export function _processRewardSnapshot(data, opts = {}) {
   const silentGold = _lastHeartbeatGold === null ? 0 : Math.max(0, heartbeatGold - _lastHeartbeatGold);
   _lastHeartbeatGold = heartbeatGold;
   const rubiesEarned = data.rubiesEarned;
+  const collectibleRubies = Number(data.rubiesCollectibleEarned) || 0;
+  const silentRubies = _lastCollectibleRubies === null ? 0 : Math.max(0,collectibleRubies-_lastCollectibleRubies);
+  _lastCollectibleRubies = collectibleRubies;
   const rubyDelta = Number.isSafeInteger(rubiesEarned) && _lastRubiesEarned !== null
-    ? Math.max(0, rubiesEarned - _lastRubiesEarned) : 0;
+    ? Math.max(0, rubiesEarned - _lastRubiesEarned - silentRubies) : 0;
   _lastRubiesEarned = Number.isSafeInteger(rubiesEarned) ? rubiesEarned : null;
   const diamondsEarned = data.diamondsEarned;
   const diamondDelta = Number.isSafeInteger(diamondsEarned) && _lastDiamondsEarned !== null

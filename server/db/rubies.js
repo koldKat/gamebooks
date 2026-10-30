@@ -15,6 +15,7 @@ function initializeRubies(db) {
     CREATE TABLE IF NOT EXISTS user_rubies (
       user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
       rubies_earned INTEGER NOT NULL DEFAULT 0 CHECK(rubies_earned>=0),
+      rubies_collectibles INTEGER NOT NULL DEFAULT 0 CHECK(rubies_collectibles>=0),
       rubies_spent INTEGER NOT NULL DEFAULT 0 CHECK(rubies_spent>=0),
       rubies_bought INTEGER NOT NULL DEFAULT 0 CHECK(rubies_bought>=0),
       CHECK(rubies_earned+rubies_bought>=rubies_spent));
@@ -36,6 +37,9 @@ function initializeRubies(db) {
         rubies_generated=rubies_generated+(completions+1)/10-completions/10,
         completions=completions+1 WHERE id=1;
     END;`);
+  if (!db.prepare('PRAGMA table_info(user_rubies)').all().some(column=>column.name==='rubies_collectibles')) {
+    db.exec('ALTER TABLE user_rubies ADD COLUMN rubies_collectibles INTEGER NOT NULL DEFAULT 0 CHECK(rubies_collectibles>=0)');
+  }
 }
 
 function createRubyCompletionChecker(db) {
@@ -139,6 +143,7 @@ function rubyInfoForUser(db, userId) {
   if (!row) return {};
   return {
     rubiesEarned: row?.rubies_earned || 0,
+    rubiesCollectibleEarned: row?.rubies_collectibles || 0,
     rubiesBalance: (row?.rubies_earned || 0)+(row?.rubies_bought || 0)-(row?.rubies_spent || 0),
     rubiesExchanged: row?.rubies_spent || 0, rubiesBought: row?.rubies_bought || 0,
     rubyExchangeRate: row.rate, rubyBuyRate: row.rate,

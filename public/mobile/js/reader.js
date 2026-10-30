@@ -211,6 +211,7 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
       <button id="m-back-btn">${t('mobile.back_home')}</button>
       <button id="m-reading-menu-btn" class="m-pane-toggle-btn" aria-label="${t('liveread.menu')}" style="display:none">${ICON_MENU}</button>
       <span class="m-book-title">${_escapeHtml(book.name)}</span>
+      <button type="button" data-open-collectibles aria-label="Collectibles"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 10h16v11H4zM3 6h18v4H3zM12 6v15"/><path d="M12 6H8a2 2 0 1 1 2-2zm0 0h4a2 2 0 1 0-2-2z"/></svg></button>
       <button id="m-toggle-text-btn" class="m-pane-toggle-btn" aria-label="${t('mobile.text_only')}">${ICON_TEXT}</button>
       <button id="m-toggle-graph-btn" class="m-pane-toggle-btn" aria-label="${t('mobile.graph_only')}">${ICON_GRAPH}</button>
     </div>
