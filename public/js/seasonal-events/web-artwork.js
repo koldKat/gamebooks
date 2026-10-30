@@ -2,7 +2,7 @@
 import { pixelSprite } from './pixel-art.js';
 
 function cornerWeb(spiderColor, spokes, radii) {
-  const pixels = Array.from({ length: 48 }, () => Array(48).fill('.'));
+  let pixels = Array.from({ length: 48 }, () => Array(48).fill('.'));
   const plot = (x, y, color = 'F') => {
     x = Math.round(x); y = Math.round(y);
     if (x >= 0 && x < 48 && y >= 0 && y < 48) pixels[y][x] = color;
@@ -29,8 +29,9 @@ function cornerWeb(spiderColor, spokes, radii) {
       }
     }
   }
-  // A short loose thread ends in a separate dark-legged, coloured spider.
-  line(29, 12, 29, 25, 'f');
+  const silk=pixelSprite(4,pixels.map(row=>row.join('')),1);
+  pixels=Array.from({length:48},()=>Array(48).fill('.'));
+  // Keep the spider separate so corner orientation cannot reverse gravity.
   for (const side of [-1, 1]) {
     for (let i = 0; i < 4; i++) {
       line(29 + side * 2, 27 + i, 29 + side * 5, 25 + i * 2, 'O');
@@ -41,7 +42,10 @@ function cornerWeb(spiderColor, spokes, radii) {
     if ((y !== 26 && y !== 32) || (x >= 28 && x <= 30)) plot(x, y, spiderColor);
   }
   plot(28, 27, 'r'); plot(30, 27, 'r');
-  return pixelSprite(4, pixels.map(row => row.join('')), 1);
+  const spider=pixelSprite(4,pixels.map(row=>row.join('')),1);
+  const svg=silk.svg+'<rect x="29" y="12" width="1" height="13" fill="#b6bfce"/>'+spider.svg;
+  return {...silk,svg,webSvg:silk.svg,spiderSvg:spider.svg,
+    maskImage:`url("data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">'+svg+'</svg>')}")`};
 }
 
 export const halloweenWebs = [

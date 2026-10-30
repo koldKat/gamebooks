@@ -3,6 +3,7 @@
   pointer-events:none;user-select:none;z-index:2147483647;contain:layout style; }
 .seasonal-companion[hidden] { display:none; }
 .seasonal-companion svg { width:100%;height:100%;overflow:visible; }
+.seasonal-santa { width:48px;height:48px; }
 .seasonal-santa__pupils { transform:translate(var(--companion-look-x,0px),var(--companion-look-y,0px));transition:transform 220ms ease; }
 .seasonal-santa__eyes { transform-origin:24px 26px;transition:transform 65ms ease; }
 .seasonal-santa.is-blinking .seasonal-santa__eyes { transform:scaleY(.08); }
@@ -27,31 +28,35 @@
   48% { opacity:1;transform:translate(35px,-35px) rotate(15deg); }
   100% { opacity:0;transform:translate(65px,15px) rotate(40deg); }
 }
-.seasonal-popper { filter:drop-shadow(0 0 2px #d9b56e60); }
-.seasonal-popper__body { transform-origin:17px 34px;animation:new-year-bob 2.8s ease-in-out infinite; }
-.seasonal-popper__sparkles > g { transform-box:fill-box;transform-origin:center;animation:new-year-twinkle 1.8s steps(2,end) infinite; }
-.seasonal-popper__sparkles > g:nth-child(2) { animation-delay:-.6s; }
-.seasonal-popper__sparkles > g:nth-child(3) { animation-delay:-1.2s; }
-.seasonal-popper__confetti rect,.seasonal-popper__fireworks > g,.seasonal-popper__horn,.seasonal-popper__toot { opacity:0; }
-.seasonal-popper.is-popping .seasonal-popper__body { animation:new-year-recoil 450ms ease-out 2; }
-.seasonal-popper.is-popping .seasonal-popper__confetti rect { animation:new-year-pop 2s ease-out both;animation-delay:var(--pop-delay);transform-box:fill-box;transform-origin:center; }
-.seasonal-popper.is-fireworks .seasonal-popper__fireworks > g { transform-box:fill-box;transform-origin:center;animation:new-year-firework 1.5s ease-out both; }
-.seasonal-popper.is-fireworks .seasonal-popper__fireworks > g:nth-child(2) { animation-delay:.65s; }
-.seasonal-popper.is-tooting .seasonal-popper__horn { transform-origin:0 0;animation:new-year-horn 2.4s steps(5,end) both; }
-.seasonal-popper.is-tooting .seasonal-popper__toot { animation:new-year-toot 2.4s ease-out both; }
-@keyframes new-year-bob { 0%,100% { transform:rotate(-6deg) translateY(0); } 50% { transform:rotate(5deg) translateY(-2px); } }
-@keyframes new-year-twinkle { 0%,100% { opacity:.25;transform:scale(.55); } 50% { opacity:1;transform:scale(1.1); } }
-@keyframes new-year-recoil { 0%,100% { transform:rotate(-6deg); } 25% { transform:translate(-4px,4px) rotate(-17deg); } 65% { transform:rotate(9deg); } }
-@keyframes new-year-pop { 0% { opacity:0;transform:translate(0,0) scale(.4); } 12% { opacity:1; } 70% { opacity:1; } 100% { opacity:0;transform:translate(var(--pop-x),var(--pop-y)) translateY(22px) rotate(200deg); } }
+.seasonal-champagne { width:40px;height:40px;filter:drop-shadow(0 0 2px #d9b56e60); }
+.seasonal-champagne__body { transform-origin:24px 44px;animation:new-year-sway 3s ease-in-out infinite; }
+.seasonal-champagne__bubbles rect { animation:new-year-bubbles 2s ease-out infinite; }
+.seasonal-champagne__foam > *,.seasonal-champagne__toast,.seasonal-champagne__fireworks > g { opacity:0; }
+.seasonal-champagne.is-popping .seasonal-champagne__cork { animation:new-year-cork 2.2s ease-out both; }
+.seasonal-champagne.is-popping .seasonal-champagne__jet { transform-origin:24px 8px;animation:new-year-foam 2s ease-out both; }
+.seasonal-champagne.is-popping .seasonal-champagne__foam rect { animation:new-year-spray 2s ease-out both;animation-delay:var(--foam-delay); }
+.seasonal-champagne.is-toasting .seasonal-champagne__toast { animation:new-year-toast 2.4s ease-in-out both; }
+.seasonal-champagne.is-toasting .seasonal-champagne__glass-left { transform-origin:14px 32px;animation:new-year-clink-left 2.4s ease-in-out both; }
+.seasonal-champagne.is-toasting .seasonal-champagne__glass-right { transform-origin:14px 32px;animation:new-year-clink-right 2.4s ease-in-out both; }
+.seasonal-champagne.is-toasting .seasonal-champagne__clink { animation:new-year-clink-flash 2.4s steps(1,end) both; }
+.seasonal-champagne.is-fireworks .seasonal-champagne__fireworks > g { transform-box:fill-box;transform-origin:center;animation:new-year-firework 1.8s ease-out both; }
+.seasonal-champagne.is-fireworks .seasonal-champagne__fireworks > g:nth-child(2) { animation-delay:.65s; }
+@keyframes new-year-sway { 0%,100% { transform:rotate(-12deg); } 50% { transform:rotate(-6deg); } }
+@keyframes new-year-bubbles { 0% { opacity:0;transform:translate(0,0); } 25%,55% { opacity:.8; } 100% { opacity:0;transform:translate(var(--bubble-x),-20px); } }
+@keyframes new-year-cork { 0% { opacity:1;transform:translate(0,0); } 12%,65% { opacity:1; } 80% { opacity:0;transform:translate(24px,-42px) rotate(100deg); } 95% { opacity:0;transform:translate(0,0); } 100% { opacity:1; } }
+@keyframes new-year-foam { 0%,100% { opacity:0;transform:scaleY(.1); } 15%,60% { opacity:1;transform:scaleY(1); } }
+@keyframes new-year-spray { 0% { opacity:0;transform:translate(0,0); } 15%,60% { opacity:1; } 100% { opacity:0;transform:translate(var(--foam-x),var(--foam-y)) translateY(20px); } }
+@keyframes new-year-toast { 0%,100% { opacity:0; } 15%,85% { opacity:1; } }
+@keyframes new-year-clink-left { 0%,100% { transform:translateX(-5px) rotate(-8deg); } 40%,55% { transform:rotate(22deg); } }
+@keyframes new-year-clink-right { 0%,100% { transform:translateX(5px) rotate(8deg); } 40%,55% { transform:rotate(-22deg); } }
+@keyframes new-year-clink-flash { 0%,38%,65%,100% { opacity:0; } 39%,64% { opacity:1; } }
 @keyframes new-year-firework { 0% { opacity:0;transform:scale(.15); } 20% { opacity:1; } 75% { opacity:.8; } 100% { opacity:0;transform:scale(1.8) rotate(12deg); } }
-@keyframes new-year-horn { 0%,100% { opacity:0;transform:scaleX(.1); } 12%,65% { opacity:1;transform:scaleX(1); } 85% { opacity:1;transform:scaleX(.3); } }
-@keyframes new-year-toot { 0% { opacity:0;transform:translate(0,10px) scale(.5); } 25%,60% { opacity:1; } 100% { opacity:0;transform:translate(16px,-18px) scale(1.2); } }
 body.reduce-motion .seasonal-companion * { animation:none !important;transition:none !important; }
 body.reduce-motion .seasonal-santa__ho text,body.reduce-motion .seasonal-santa__bell,body.reduce-motion .seasonal-santa__gift,
-body.reduce-motion .seasonal-popper__confetti rect,body.reduce-motion .seasonal-popper__fireworks > g,body.reduce-motion .seasonal-popper__horn,body.reduce-motion .seasonal-popper__toot { opacity:0; }
+body.reduce-motion .seasonal-champagne__foam > *,body.reduce-motion .seasonal-champagne__toast,body.reduce-motion .seasonal-champagne__fireworks > g,body.reduce-motion .seasonal-champagne__bubbles { opacity:0; }
 @media(prefers-reduced-motion:reduce) {
   .seasonal-companion * { animation:none !important;transition:none !important; }
-  .seasonal-santa__ho text,.seasonal-santa__bell,.seasonal-santa__gift,.seasonal-popper__confetti rect,.seasonal-popper__fireworks > g,.seasonal-popper__horn,.seasonal-popper__toot { opacity:0; }
+  .seasonal-santa__ho text,.seasonal-santa__bell,.seasonal-santa__gift,.seasonal-champagne__foam > *,.seasonal-champagne__toast,.seasonal-champagne__fireworks > g,.seasonal-champagne__bubbles { opacity:0; }
 }
 @media print { .seasonal-companion { display:none; } }
 .seasonal-event-notice[data-season="christmas"] { background:#1b2923;border-color:#546c57;border-left-color:#b67872; }

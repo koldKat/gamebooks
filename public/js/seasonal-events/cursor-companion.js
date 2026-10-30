@@ -20,8 +20,9 @@ export function createCursorCompanion({name,svg,actions,face=false,random=Math.r
     if(event.pointerType!=='mouse'||document.hidden||document.pointerLockElement)return hide();
     point={x:event.clientX,y:event.clientY};if(frame!=null)return;
     frame=requestAnimationFrame(()=>{frame=null;
-      const x=point.x+78>innerWidth?point.x-76:point.x+16,y=point.y+78>innerHeight?point.y-76:point.y+20;
-      node.style.transform='translate3d('+Math.max(30,x)+'px,'+Math.max(30,y)+'px,0)';
+      const size=parseFloat(getComputedStyle(node).width)||36,reserve=size+42;
+      const x=point.x+reserve+16>innerWidth?point.x-reserve:point.x+16,y=point.y+reserve+20>innerHeight?point.y-reserve:point.y+20;
+      node.style.transform='translate3d('+Math.max(40,x)+'px,'+Math.max(44,y)+'px,0)';
       if(node.hidden){node.hidden=false;start();}
     });
   }

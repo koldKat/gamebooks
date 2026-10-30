@@ -2,6 +2,7 @@
 import { seasonalGapPositions } from './gaps.js';
 import { halloweenArtwork } from './artwork.js';
 import { seasonalWebPositions } from './web-layout.js';
+import { createZombieDrop } from './zombie-drop.js';
 
 // A document gets one scatter; returning to the same layout reproduces it exactly.
 const pageSeed = Math.floor(Math.random() * 0x100000000);
@@ -20,10 +21,11 @@ export function createSeasonalBackground({ id = 'halloween', artwork = halloween
   layer.setAttribute('aria-hidden', 'true');
   document.body.append(layer);
   const panels = [...document.querySelectorAll('#covers-panel, #feed-panel, #landing-right, .panel-toggle, .scroll-top-btn, #app-footer')];
-  let timer, signature, positions = [];
+  let timer, signature, positions = [],occupiedColumns=[];
   const haze = Array.from({ length: 3 }, () => {
     const patch = document.createElement('div');
     patch.className = 'seasonal-background__haze';
+    patch.setAttribute('aria-hidden','true');
     patch.hidden = true; layer.append(patch); return patch;
   });
   featured = featured.filter(index => artwork[index]);
@@ -38,29 +40,42 @@ export function createSeasonalBackground({ id = 'halloween', artwork = halloween
   const pool = [...portfolio, ...portfolio.slice(0,7).reverse()];
   while (pool.length < 42 && portfolio.length) pool.push(...portfolio);
   const nodes = pool.map(index => {
-    const { kind, svg, pixelated, maskImage } = artwork[index];
+    const { kind, svg, pixelated, maskImage,animated } = artwork[index];
     const icon = document.createElement('span');
     icon.className = 'seasonal-background__icon';
+    icon.setAttribute('aria-hidden','true');
     icon.dataset.kind = String(kind);
     icon.dataset.artwork = String(index);
     if (pixelated) icon.dataset.pixelated = 'true';
-    if (maskImage) icon.style.maskImage = maskImage;
+    if(animated)icon.dataset.animated='true';
+    if (maskImage&&!animated) icon.style.maskImage = maskImage;
     icon.dataset.rotation = String(kind === 4 ? Math.floor(random() * 4) * 90 : 0);
     icon.dataset.flip = random() < .5 ? '-1' : '1';
     icon.innerHTML = `<svg viewBox="0 0 48 48" focusable="false">${svg}</svg>`;
     return icon;
   });
-  const webs = artwork.filter(art => cornerWebs && art.kind === 4).map(({ svg, maskImage }) => {
+  const webs = artwork.filter(art => cornerWebs && art.kind === 4).map(({ svg, maskImage,webSvg,spiderSvg },index) => {
     const web = document.createElement('span');
     web.className = 'seasonal-background__web';
-    web.style.maskImage = maskImage;
-    web.innerHTML = `<svg viewBox="0 0 48 48" focusable="false">${svg}</svg>`;
+    web.setAttribute('aria-hidden','true');
+    if(webSvg&&spiderSvg){
+      web.dataset.motion=index%2?'swing':'climb';
+      web.innerHTML='<svg viewBox="0 0 48 48" focusable="false"><g class="seasonal-web__silk">'+webSvg+'</g>'
+        +'<g class="seasonal-web__anchor"><g class="seasonal-web__swing"><rect class="seasonal-web__thread" x="-.5" y="0" width="1" height="12" fill="#b6bfce"/>'
+        +'<g class="seasonal-web__spider"><g transform="translate(-29 -25)">'+spiderSvg+'</g></g></g></g></svg>';
+    }else{
+      web.style.maskImage=maskImage;
+      web.innerHTML=`<svg viewBox="0 0 48 48" focusable="false">${svg}</svg>`;
+    }
     return web;
   });
+  const physics=id==='halloween'?createZombieDrop({layer,nodes,getColumns:()=>occupiedColumns}):null;
+  if(physics)layer.removeAttribute('aria-hidden');
   function render() {
     const style = getComputedStyle(landing);
     layer.hidden = style.visibility === 'hidden' || style.display === 'none' || !landing.getClientRects().length;
     if (['covers-collapsed', 'right-collapsed', 'feed-collapsed'].every(name => document.body.classList.contains(name))) layer.hidden = true;
+    physics?.visible(!layer.hidden);
     if (layer.hidden) return;
     const occupied = panels.filter(panel => {
       const s = getComputedStyle(panel), rect = panel.getBoundingClientRect();
@@ -89,6 +104,7 @@ export function createSeasonalBackground({ id = 'halloween', artwork = halloween
     signature = nextSignature;
     const columns = occupied.filter(rect => rect.top === 0 && rect.bottom === innerHeight && rect.right - rect.left > 100)
       .sort((a, b) => a.left - b.left);
+    occupiedColumns=columns;
     const gaps = []; let edge = 0;
     for (const column of columns) {
       if (column.left - edge >= 150) gaps.push({ left: edge, width: column.left - edge });
@@ -111,6 +127,7 @@ export function createSeasonalBackground({ id = 'halloween', artwork = halloween
       web.style.left = `${point.left}px`; web.style.top = `${point.top}px`;
       web.style.width = web.style.height = `${point.size}px`;
       web.style.transform = `scale(${point.flipX}, ${point.flipY})`;
+      web.querySelector('.seasonal-web__anchor')?.setAttribute('transform',`translate(29 ${point.flipY===1?12:31}) scale(1 ${point.flipY})`);
       web.dataset.edge = point.edge; web.dataset.anchorX = String(point.anchorX);
       if (!web.isConnected) layer.append(web);
     }
@@ -126,6 +143,7 @@ export function createSeasonalBackground({ id = 'halloween', artwork = halloween
       icon.style.transform = `rotate(${angle}deg) scaleX(${icon.dataset.flip})`;
       if (!icon.isConnected) layer.append(icon);
     }
+    physics?.layout();
   }
   function schedule() {
     clearTimeout(timer); timer = setTimeout(render, 280);
@@ -149,6 +167,7 @@ export function createSeasonalBackground({ id = 'halloween', artwork = halloween
     clearTimeout(timer); resize.disconnect(); changes.disconnect();
     window.removeEventListener('resize', schedule);
     document.removeEventListener('transitionend', settled, true);
+    physics?.dispose();
     layer.remove();
   };
 }

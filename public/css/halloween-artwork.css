@@ -1,0 +1,88 @@
+/* Creature-specific Halloween motion stays inside stable decoration slots. */
+.seasonal-background__icon[data-animated] { mask-image:none;background:none; }
+.seasonal-background__icon[data-animated] svg { overflow:visible; }
+.seasonal-background__icon[data-interactive="zombie"]:not([data-drop-state]) { pointer-events:auto;cursor:pointer; }
+.seasonal-background__icon[data-interactive="zombie"]:focus-visible { outline:1px dashed #9b3749;outline-offset:4px; }
+.seasonal-background__icon[data-drop-state] { z-index:2; }
+.seasonal-background__icon[data-drop-state="falling"] .halloween-animated,
+.seasonal-background__icon[data-drop-state="falling"] .halloween-animated * { animation:none !important; }
+.seasonal-background__icon[data-drop-state="splat"] rect { fill-opacity:1; }
+.seasonal-background__icon[data-drop-state="splat"] svg { animation:haunt-splat 400ms ease-out both;transform-origin:24px 46px; }
+.seasonal-background__icon[data-animated] rect { fill-opacity:1; }
+.seasonal-background__icon .halloween-animated { opacity:var(--seasonal-opacity,.55); }
+.halloween-animated,.halloween-animated > g { transform-box:view-box;transform-origin:24px 24px;animation-delay:var(--haunt-delay,0s); }
+.haunt-kind-0 { animation:haunt-drift 5.6s ease-in-out infinite; }
+.haunt-kind-0 .haunt-part--hem { transform-origin:24px 34px;animation:haunt-hem 2.6s steps(3,end) infinite; }
+.haunt-sprite-6 { animation-duration:6.8s; }
+.haunt-sprite-7 { animation-duration:4.8s; }
+.haunt-kind-1 { animation:haunt-reaper 7s ease-in-out infinite; }
+.haunt-part--tool { transform-origin:39px 32px;animation:haunt-scythe 5.4s ease-in-out infinite; }
+.haunt-part--eyes { transform-box:fill-box;transform-origin:center;animation:haunt-blink 6.7s steps(1,end) infinite; }
+.haunt-kind-2 { animation:haunt-pumpkin 7s ease-in-out infinite; }
+.haunt-part--ember { animation:haunt-ember 2.7s steps(2,end) infinite; }
+.haunt-part--ember rect { animation:haunt-jacklight 2.7s steps(3,end) infinite; }
+.haunt-part--stalk { transform-origin:24px 10px;animation:haunt-stalk 3.6s ease-in-out infinite; }
+.haunt-kind-3 { animation:haunt-bat-hover 3s ease-in-out infinite; }
+.haunt-part--wing-left { transform-origin:22px 22px;animation:haunt-wing 720ms steps(3,end) infinite; }
+.haunt-part--wing-right { transform-origin:26px 22px;animation:haunt-wing 720ms steps(3,end) infinite; }
+.haunt-kind-5 { animation:haunt-grave 13s steps(2,end) infinite; }
+.haunt-part--jaw { animation:haunt-jaw 5.3s steps(2,end) infinite; }
+.haunt-kind-6 { transform-origin:24px 42px;animation:haunt-cat 4.7s ease-in-out infinite; }
+.haunt-part--tail { transform-origin:16px 34px;animation:haunt-tail 3.8s ease-in-out infinite; }
+.haunt-kind-7 { animation:haunt-creep 5s steps(4,end) infinite; }
+.haunt-part--legs-left { transform-origin:18px 22px;animation:haunt-legs 1.9s steps(2,end) infinite; }
+.haunt-part--legs-right { transform-origin:32px 22px;animation:haunt-legs 1.9s steps(2,end) infinite reverse; }
+.haunt-kind-8,.haunt-kind-9 { animation:haunt-stagger 6.4s ease-in-out infinite; }
+.haunt-part--brain { transform-box:fill-box;transform-origin:center;animation:haunt-brain 3.2s ease-in-out infinite; }
+.haunt-part--finger-0,.haunt-part--finger-1,.haunt-part--finger-2,.haunt-part--finger-3,.haunt-part--thumb { transform-origin:24px 25px;animation:haunt-finger 4.8s steps(3,end) infinite; }
+.haunt-part--finger-1 { animation-delay:-1s; }.haunt-part--finger-2 { animation-delay:-2s; }.haunt-part--finger-3 { animation-delay:-3s; }
+.haunt-part--thumb { transform-origin:12px 30px;animation-direction:reverse; }
+.haunt-part--cloth { transform-origin:34px 26px;animation:haunt-cloth 2.8s steps(3,end) infinite; }
+.haunt-kind-10 { animation:haunt-vampire 6.2s ease-in-out infinite; }
+.haunt-part--cape { transform-origin:24px 20px;animation:haunt-cape 3.7s ease-in-out infinite; }
+.haunt-part--fangs { animation:haunt-fangs 6s steps(2,end) infinite; }
+.haunt-kind-12 { transform-origin:24px 40px;animation:haunt-hat 5.5s ease-in-out infinite; }
+.haunt-part--brim { transform-origin:24px 34px;animation:haunt-hem 3.5s ease-in-out infinite; }
+.haunt-part--glint { animation:haunt-glint 4s steps(2,end) infinite; }
+.haunt-kind-13,.haunt-kind-16 { transform-origin:24px 42px;animation:haunt-scarecrow 7.5s ease-in-out infinite; }
+.haunt-part--arm-left { transform-origin:18px 22px;animation:haunt-arm 4.4s ease-in-out infinite; }
+.haunt-part--arm-right { transform-origin:30px 22px;animation:haunt-arm 4.4s ease-in-out infinite reverse; }
+.haunt-kind-14 { transform-origin:24px 44px;animation:haunt-grave 17s steps(2,end) infinite; }
+.haunt-part--windows { animation:haunt-window 5.1s steps(1,end) infinite; }
+.haunt-part--flame { transform-origin:24px 10px;animation:haunt-flame 900ms steps(3,end) infinite; }
+.halloween-animated,.halloween-animated > g { animation-delay:var(--haunt-delay,0s); }
+.halloween-animated > .haunt-part--finger-1 { animation-delay:-1s; }.halloween-animated > .haunt-part--finger-2 { animation-delay:-2s; }.halloween-animated > .haunt-part--finger-3 { animation-delay:-3s; }
+@keyframes haunt-drift { 0%,100%{transform:translate(0,2px)}50%{transform:translate(2px,-3px)} }
+@keyframes haunt-hem { 0%,100%{transform:translateX(-1px) scaleX(.97)}50%{transform:translateX(1px) scaleX(1.03)} }
+@keyframes haunt-reaper { 0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)} }
+@keyframes haunt-scythe { 0%,100%{transform:rotate(-3deg)}50%{transform:rotate(4deg)} }
+@keyframes haunt-blink { 0%,90%,96%,100%{transform:scaleY(1)}92%,94%{transform:scaleY(.08)} }
+@keyframes haunt-pumpkin { 0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)} }
+@keyframes haunt-ember { 0%,100%{opacity:.8}25%{opacity:.35}40%{opacity:1}65%{opacity:.55} }
+@keyframes haunt-jacklight { 0%,100%{fill:#15151e}35%{fill:#e7a34b}65%{fill:#95422d} }
+@keyframes haunt-stalk { 0%,100%{transform:rotate(-3deg)}50%{transform:rotate(6deg)} }
+@keyframes haunt-bat-hover { 0%,100%{transform:translateY(1px)}50%{transform:translateY(-3px)} }
+@keyframes haunt-wing { 0%,100%{transform:scaleY(1)}50%{transform:scaleY(.4)} }
+@keyframes haunt-grave { 0%,85%,100%{transform:translateX(0)}88%,94%{transform:translateX(-1px)}91%,97%{transform:translateX(1px)} }
+@keyframes haunt-jaw { 0%,70%,100%{transform:translateY(0)}76%,88%{transform:translateY(3px)}82%,94%{transform:translateY(1px)} }
+@keyframes haunt-cat { 0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.04)} }
+@keyframes haunt-tail { 0%,100%{transform:rotate(-8deg)}50%{transform:rotate(9deg)} }
+@keyframes haunt-creep { 0%,100%{transform:translate(-1px,0)}50%{transform:translate(1px,2px)} }
+@keyframes haunt-legs { 0%,100%{transform:translateY(-1px) rotate(-2deg)}50%{transform:translateY(1px) rotate(2deg)} }
+@keyframes haunt-stagger { 0%,100%{transform:rotate(-2deg) translateX(-1px)}50%{transform:rotate(2deg) translateX(1px)} }
+@keyframes haunt-brain { 0%,100%{transform:scale(1)}50%{transform:scale(1.07)} }
+@keyframes haunt-finger { 0%,65%,100%{transform:rotate(0)}80%{transform:rotate(7deg) translateY(1px)} }
+@keyframes haunt-cloth { 0%,100%{transform:translate(0,0) rotate(-5deg)}50%{transform:translate(2px,-1px) rotate(6deg)} }
+@keyframes haunt-vampire { 0%,100%{transform:translateY(1px)}50%{transform:translateY(-2px)} }
+@keyframes haunt-cape { 0%,100%{transform:scaleX(.97)}50%{transform:scaleX(1.04)} }
+@keyframes haunt-fangs { 0%,75%,100%{transform:translateY(0)}84%,92%{transform:translateY(2px)} }
+@keyframes haunt-hat { 0%,100%{transform:rotate(-3deg) translateY(0)}50%{transform:rotate(4deg) translateY(-2px)} }
+@keyframes haunt-glint { 0%,80%,100%{opacity:1}90%{opacity:.4} }
+@keyframes haunt-scarecrow { 0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)} }
+@keyframes haunt-arm { 0%,100%{transform:rotate(-5deg)}50%{transform:rotate(6deg)} }
+@keyframes haunt-window { 0%,60%,100%{opacity:1}62%,68%{opacity:.15}65%,73%{opacity:.8} }
+@keyframes haunt-flame { 0%,100%{transform:translateX(-.5px) scaleY(.9)}50%{transform:translateX(.5px) scaleY(1.15)} }
+@keyframes haunt-splat { 0%{transform:scaleX(.65) scaleY(1.25)}40%{transform:scaleX(1.15) scaleY(.8)}100%{transform:scale(1)} }
+body.reduce-motion .halloween-animated,body.reduce-motion .halloween-animated * { animation:none !important; }
+body.reduce-motion .seasonal-background__icon[data-drop-state="splat"] svg { animation:none !important; }
+@media(prefers-reduced-motion:reduce){.halloween-animated,.halloween-animated *,.seasonal-background__icon[data-drop-state="splat"] svg{animation:none !important;}}
