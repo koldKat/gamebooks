@@ -132,3 +132,32 @@ test('seasonal XP remains mandatory while retaining the level cap and impersonat
   f.impersonate();assert.equal(f.award('battle_run','impersonated'),false);assert.equal(f.xp(),999);
   assert.equal(f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n,1);
 });
+
+
+test('Fatemaster saved outcomes use real seasonal XP awards without rewarding pauses or withdrawals', async t => {
+  const {createFatemasterState}=await import('../public/js/battlesim/engines/fatemaster/state.js');
+  const source=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');
+  const registration=source.slice(source.indexOf('const SIM_HISTORY_KEYS ='),source.indexOf('const RETIRED_SIM_HISTORY_KEYS ='));
+  const start=source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
+  const end=source.indexOf('\n  }\n\n  // Award every',start);
+  assert.ok(start>0&&end>start);
+  for(const [date,winXp,lossXp]of [['2026-10-31T12:00:00Z',10,10],['2026-11-08T12:00:00Z',20,5],['2026-12-31T12:00:00Z',20,10]]){
+    const f=fixture(t);f.date(date);
+    vm.runInContext(registration+'\nfunction syncFatemasterOutcomes(newPt,oldPt){const userId=1;'+source.slice(start,end)+'\n}',f.context);
+    const run={path:['1','418'],inventory:[{id:'keep',count:2}],sim1475:{history:[{ts:1,outcome:'win'}]}};
+    const protectedBefore=JSON.stringify(run);let saves=0;
+    const store=createFatemasterState(()=>({run,bookId:1476,definition:{id:1476,stateKey:'sim1476'},saveState:()=>saves++}));
+    for(const outcome of ['paused','cancelled','withdrawn','win','loss']){
+      const previous=structuredClone(run),before=f.xp();
+      assert.equal(store.update(state=>{state.fight={status:outcome,player:{strength:9,agility:8,power:7},section:'418',label:'Giant Spider'};return state;}),true);
+      f.context.syncFatemasterOutcomes(run,previous);
+      assert.equal(f.xp()-before,outcome==='win'?winXp:outcome==='loss'?lossXp:0,date+'/'+outcome);
+      f.context.syncFatemasterOutcomes(run,previous);assert.equal(f.xp()-before,outcome==='win'?winXp:outcome==='loss'?lossXp:0,'duplicate save');
+      const count=run.sim1476.history.length;
+      assert.equal(store.update(state=>state),true);assert.equal(run.sim1476.history.length,count,'record each fight once');
+    }
+    assert.equal(saves,10);assert.equal(JSON.stringify(Object.fromEntries(Object.entries(run).filter(([key])=>key!=='sim1476'))),protectedBefore);
+    assert.deepEqual(run.sim1476.history.map(e=>e.outcome),['withdrawn','win','loss']);
+    assert.equal(f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n,2);
+  }
+});

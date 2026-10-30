@@ -338,6 +338,10 @@ for(const id of BOOK_IDS){
       app.state.playthroughs=[run];app.state.activePtIndex=0;module.render();
     }finally{Math.random=random;}
   }
+  if(id===1476){
+    const {checkFatemasterPanel}=await import('REPO/test/client/battlesim/fatemaster/panel-browser.mjs');
+    await checkFatemasterPanel({app,module,overlay,requestedRosters,check});
+  }
   if(id===1475){
     const {checkColdCashPanel}=await import('REPO/test/client/battlesim/cold-cash-browser.mjs');
     await checkColdCashPanel({app,module,overlay,requestedRosters,check});

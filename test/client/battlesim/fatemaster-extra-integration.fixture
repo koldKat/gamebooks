@@ -1,0 +1,17 @@
+localStorage.setItem('gamebook_lang','LANGUAGE');
+const app=await import('REPO/public/js/core/state.js');
+const rosterSeeds=ROSTER_SEEDS,requestedRosters=new Set();let writes=0;
+window.fetch=async(url,options={})=>{
+ if(options.method&&options.method!=='GET')writes++;
+ const id=String(url).match(/\/api\/books\/(\d+)\/enemies$/)?.[1];if(id)requestedRosters.add(Number(id));
+ return new Response(JSON.stringify(id?(rosterSeeds[id]||[]):{}),{headers:{'Content-Type':'application/json'}});
+};
+const check=(v,label)=>{if(!v)throw Error(label);};console.warn=(message,error)=>{if(error instanceof Error)throw error;};
+app.setCurrentBookId(1476);app.state.playthroughs=[{startedAt:1,path:[1]}];app.state.activePtIndex=0;
+const loader=await import('REPO/public/'+('MODE'==='mobile'?'mobile/js/battlesim-dispatch':'js/battlesim/loader')+'.js');
+await loader['MODE'==='mobile'?'openSimForBook':'showBattleSimForBook'](1476);
+if('MODE'!=='mobile')document.getElementById('sim1476-btn').click();
+const module=await import('REPO/public/js/battlesim/battlesim1476.js');
+const {checkFatemasterRarePanel}=await import('REPO/test/client/battlesim/fatemaster/rare-browser.mjs');
+await checkFatemasterRarePanel({app,module,check});
+document.body.dataset.test=JSON.stringify({mode:'MODE',language:'LANGUAGE',width:innerWidth,books:[1476],requestedRosters:[...requestedRosters],writes,productionWrites:0,poison:true,weaponBreak:true,thresholdPause:true,viperEscape:true});

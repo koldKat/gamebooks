@@ -755,6 +755,8 @@ Where a simulator offers **Custom opponents**, type a name to see roster suggest
 
 Urowen custom opponents use normal 1d6 damage; select the printed encounter for special damage rules.
 
+Fatemaster fights use your current Strength, Agility and Power. After an enemy hits, choose which pool takes the damage. Enter a dice total to use a roll made outside the app, or leave it blank to roll automatically. Combat spells can require further dice or target choices; those pending choices survive a reload. A withdrawal or encounter threshold can pause combat for instructions in the reader without claiming a victory. Shared Inventory and Equipment are not changed by the simulator.
+
 **Good to know:**
 - Each simulator follows the exact rules for its specific book (dice counts, damage tables, special abilities)
 - Some simulators read your current equipment and character sheet to prefill your stats
