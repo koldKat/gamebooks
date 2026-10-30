@@ -28,7 +28,7 @@ const indexHtml=fs.readFileSync('public/index.html','utf8');
 const gift=indexHtml.match(/<button id="collectibles-btn"[\s\S]*?<\/button>/)[0];
 if(!indexHtml.includes(gift+'\n              <button id="display-settings-btn"'))throw Error('Gift belongs beside the app header settings');
 const header=indexHtml.slice(indexHtml.indexOf('<div id="app-banner">'),indexHtml.indexOf('<div id="books-tip-bar">'));
-const html=`<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="/css/landing.css"><link rel="stylesheet" href="/css/reduce-motion.css"><link rel="stylesheet" href="/css/mobile.css"><link rel="stylesheet" href="/css/seasonal-events.css"><link rel="stylesheet" href="/css/collectibles.css"><style>body{background:#141d29;color:#ccc;font:14px sans-serif;margin:18px}#landing-wrapper{position:static;display:block}#rubies-display{position:fixed;right:18px;bottom:18px}</style>
+const html=`<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="/css/landing.css"><link rel="stylesheet" href="/css/reduce-motion.css"><link rel="stylesheet" href="/css/mobile.css"><link rel="stylesheet" href="/css/seasonal-events.css"><link rel="stylesheet" href="/css/collectibles.css"><link rel="stylesheet" href="/css/tooltip.css"><style>body{background:#141d29;color:#ccc;font:14px sans-serif;margin:18px}#landing-wrapper{position:static;display:block}#rubies-display{position:fixed;right:18px;bottom:18px}</style>
 <div id="landing-wrapper">${header}</div><button id="rubies-display"></button>
 <script>addEventListener('error',e=>document.body.dataset.failure=e.error?.stack||e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=e.reason?.stack||String(e.reason));</script>
 <script type="module">
@@ -63,7 +63,10 @@ document.querySelector('[data-open-collectibles]').click();await until(()=>docum
 check(document.querySelector('dialog').open,'gift opens dialog');
 check(!document.querySelector('dialog').textContent.match(/diamond|claim|reward|year/i),'no reward hints');
 check(getComputedStyle(document.querySelector('.collectible-item')).cursor==='default','no click cursor hint');
-check(document.querySelector('.collectible-item').title.includes('Halloween')&&document.querySelector('.collectible-item').title.includes('2026'),'hover gives event and collection date');
+const tile=document.querySelector('.collectible-item');
+check(!tile.title&&tile.dataset.tooltip.includes('Halloween')&&tile.dataset.tooltip.includes('2026'),'hover gives event and collection date without browser title');
+tile.dispatchEvent(new MouseEvent('mouseover',{bubbles:true}));tile.dispatchEvent(new MouseEvent('mousemove',{bubbles:true,clientX:160,clientY:200}));
+const tip=document.getElementById('app-tooltip');check(tip.closest('dialog')&&getComputedStyle(tip).display==='block'&&getComputedStyle(tip).backgroundColor==='rgb(31, 41, 55)','themed tooltip appears in dialog top layer');
 await until(()=>document.querySelectorAll('.season-cursor-preview > *').length===2);
 document.querySelector('.collectible-item').click();document.querySelector('.collectible-item').click();
 await until(()=>document.getElementById('rubies-display').textContent.trim()==='1');

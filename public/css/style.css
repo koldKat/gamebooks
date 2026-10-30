@@ -1,3 +1,4 @@
+@import url('./tooltip.css');
 :root {
   --sidebar-w:  270px;
   --legend-w:   195px;
@@ -7,30 +8,6 @@
 @media (max-width: 1100px) { :root { --landing-panel-w: 300px; } }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-/* ── App tooltip ──────────────────────────────────────────────── */
-
-#app-tooltip {
-  display: none;
-  position: fixed;
-  background: #1f2937;
-  border: 1px solid #374151;
-  border-radius: 7px;
-  color: #d1d5db;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  font-size: 0.80rem;
-  padding: 0.4rem 0.7rem;
-  white-space: nowrap;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-  pointer-events: none;
-  /* Tooltips must sit above hover previews and login overlays. */
-  z-index: 10001;
-}
-#app-tooltip.tip-wrap {
-  white-space: normal;
-  max-width: 260px;
-  line-height: 1.6;
-}
 
 /* ── vis-network tooltip ──────────────────────────────────────── */
 

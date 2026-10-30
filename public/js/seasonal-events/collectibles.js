@@ -4,6 +4,7 @@ import {cursorDesigns} from './cursor-designs.js';
 import {createDesignPreviews} from './cursor-previews.js';
 import {seasonalEvents} from './calendar.js';
 import {updateRubiesDisplay} from '../progression/rubies.js';
+import {initTooltip} from '../ui-helpers/tooltip.js';
 import '../ui-helpers/dialog-escape.js';
 
 let identity=getToken(),seen=new Set(),pending=new Set(),retryAt=new Map(),dialog,stopPreviews,request=0;
@@ -39,6 +40,7 @@ export async function recordSeenCompanion(id){
 
 export async function openCollectibles(){
  const token=checkIdentity();if(!token)return;
+ initTooltip();
  if(!dialog){
   dialog=document.createElement('dialog');dialog.id='collectibles-dialog';
   dialog.setAttribute('aria-labelledby','collectibles-title');

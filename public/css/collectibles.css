@@ -3,12 +3,13 @@
 .m-topbar [data-open-collectibles] svg{width:18px;height:18px;}
 .gift-icon{display:inline-block;width:.85em;height:.85em;vertical-align:-.1em;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 7h8v4H3zm10 0h8v4h-8zM4 13h7v8H4zm9 0h7v8h-7z'/%3E%3Cpath d='M12 7H8a2.5 2.5 0 1 1 2.5-2.5L12 7zm0 0h4a2.5 2.5 0 1 0-2.5-2.5L12 7z' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E") center/contain no-repeat;}
 @media(max-width:768px){#app-banner-tools .gift-icon{width:18px;height:18px;}}
-#collectibles-dialog{width:min(540px,calc(100vw - 24px));max-height:calc(100dvh - 40px);box-sizing:border-box;margin:auto;padding:16px;border:1px solid #46505d;border-radius:10px;background:#19212c;color:#d8d7d1;color-scheme:dark;overflow:auto;cursor:default;}
+#collectibles-dialog{width:min(540px,calc(100vw - 24px));max-height:calc(100dvh - 40px);box-sizing:border-box;margin:auto;padding:8px 10px 10px;border:1px solid #46505d;border-radius:10px;background:#19212c;color:#d8d7d1;color-scheme:dark;overflow:auto;cursor:default;}
 #collectibles-dialog::backdrop{background:#0009;}
-#collectibles-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px;}
-#collectibles-dialog h2{font-size:1rem;margin:0;}
-#collectibles-dialog header button{background:none;color:inherit;border:0;font-size:24px;cursor:default;}
-.collectibles-body{padding-top:12px;font-size:.85rem;}
+#collectibles-dialog header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0;}
+#collectibles-dialog h2{font-size:.9rem;line-height:1.1;margin:0;}
+#collectibles-dialog header button{display:grid;place-items:center;width:24px;height:24px;padding:0;background:none;color:inherit;border:0;font-size:20px;line-height:1;cursor:default;}
+.collectibles-body{padding-top:4px;font-size:.85rem;}
+#collectibles-dialog #app-tooltip{white-space:pre-line;}
 #collectibles-dialog .season-cursor-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:4px;}
 #collectibles-dialog .collectible-item{min-width:0;padding:0 0 5px;border:1px solid #303b49;border-radius:8px;background:#1d2733;color:inherit;font:inherit;text-align:center;cursor:default;}
 #collectibles-dialog .collectible-item:focus-visible{outline:2px solid #c6ae7b;outline-offset:2px;}
