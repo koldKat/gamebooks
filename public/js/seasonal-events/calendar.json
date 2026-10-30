@@ -2,7 +2,7 @@
   {
     "id": "halloween",
     "title": "Halloween event active",
-    "description": "double XP for losses and battle deaths.",
+    "description": "double XP for losses, battle deaths and sim battle losses.",
     "start": 1028,
     "end": 1103,
     "xpMultiplier": 2,
