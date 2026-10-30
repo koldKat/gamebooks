@@ -1,4 +1,4 @@
-// Check actual composited screen pixels outside every Halloween silhouette.
+// Check actual composited screen pixels outside both seasonal artwork pools.
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const checkBrowser=require('../battlesim/browser-harness.cjs');
 const root=fs.mkdtempSync(path.join(process.env.TMPDIR||os.tmpdir(),'seasonal-transparency-'));
@@ -8,12 +8,15 @@ const html=`<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="fi
 <script>addEventListener('error',e=>document.body.dataset.failure=e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=String(e.reason));</script>
 <script type="module">
 const {halloweenArtwork}=await import('file://${base}/js/seasonal-events/artwork.js');
+const {diwaliArtwork}=await import('file://${base}/js/seasonal-events/diwali-artwork.js');
+if(halloweenArtwork.length!==27||diwaliArtwork.length!==27)throw Error('Each season needs 27 sprites');
+const artwork=[...halloweenArtwork,...diwaliArtwork];
 window.transparentSamples=[];
-for(const [index,art]of halloweenArtwork.entries()){
+for(const [index,art]of artwork.entries()){
  const icon=document.createElement('span');icon.className=art.kind===4?'seasonal-background__web':'seasonal-background__icon';
  icon.dataset.kind=art.kind;icon.dataset.pixelated='true';
- const left=20+(index%7)*145,top=20+Math.floor(index/7)*160,flip=index%2?-1:1;
- icon.style.cssText='position:fixed;left:'+left+'px;top:'+top+'px;width:96px;height:96px;transform:scaleX('+flip+');background:#ff00ff';
+ const left=20+(index%13)*80,top=20+Math.floor(index/13)*80,flip=index%2?-1:1;
+ icon.style.cssText='position:fixed;left:'+left+'px;top:'+top+'px;width:64px;height:64px;transform:scaleX('+flip+');background:#ff00ff';
  icon.style.maskImage=art.maskImage;icon.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">'+art.svg+'</svg>';document.body.append(icon);
  // Deliberately paint an opaque element background: the mask must still reveal
  // the striped page outside the glyph, catching a future rectangular matte.
@@ -23,11 +26,11 @@ for(const [index,art]of halloweenArtwork.entries()){
  const canvas=document.createElement('canvas');canvas.width=canvas.height=48;const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0);
  const rgba=ctx.getImageData(0,0,48,48).data;
  for(const [x,y]of [[1,1],[46,1],[1,46],[46,46],[4,4],[43,43]]){
-  if(rgba[(y*48+x)*4+3]===0)window.transparentSamples.push([Math.floor(left+(flip===1?x+.5:47.5-x)*2),Math.floor(top+(y+.5)*2)]);
+  if(rgba[(y*48+x)*4+3]===0)window.transparentSamples.push([Math.floor(left+(flip===1?x+.5:47.5-x)*64/48),Math.floor(top+(y+.5)*64/48)]);
  }
 }
 if(window.transparentSamples.length<80)throw Error('Insufficient transparent screen samples');
-requestAnimationFrame(()=>requestAnimationFrame(()=>document.body.dataset.test=JSON.stringify({sprites:22,transparentSamples:window.transparentSamples.length})));
+requestAnimationFrame(()=>requestAnimationFrame(()=>document.body.dataset.test=JSON.stringify({sprites:artwork.length,halloween:27,diwali:27,transparentSamples:window.transparentSamples.length})));
 </script>`;
 const screenshotCheck=async function(base64){
  const image=new Image();const loaded=new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=reject;});image.src='data:image/png;base64,'+base64;await loaded;

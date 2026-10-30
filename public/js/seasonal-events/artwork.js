@@ -1,5 +1,6 @@
 // One Halloween artwork pool in a consistent retro pixel style.
 import { halloweenClassics } from './classic-artwork.js';
 import { halloweenCreatures } from './creature-artwork.js';
+import { hauntedArtwork } from './haunted-artwork.js';
 
-export const halloweenArtwork = [...halloweenClassics, ...halloweenCreatures];
+export const halloweenArtwork = [...halloweenClassics, ...halloweenCreatures, ...hauntedArtwork];

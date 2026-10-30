@@ -34,7 +34,7 @@ export function initSeasonalEvents({ now = () => new Date(), random = Math.rando
     const active = seasonalEventsEnabled() && visible && !!seasonalThemes[event?.id];
     const nextTheme = active ? event.id : null;
     if (themeId !== nextTheme) { decoration?.(); background?.(); decoration = background = null; themeId = nextTheme; }
-    if (active && pointer.matches && !decoration) decoration = seasonalThemes[event.id].cursor({ random });
+    if (active && pointer.matches && !decoration) decoration = seasonalThemes[event.id].cursor({ random, preview:!!preview });
     if ((!active || !pointer.matches) && decoration) { decoration(); decoration = null; }
     if (active && !background) background = seasonalThemes[event.id].background();
     if (!active && background) { background(); background = null; }

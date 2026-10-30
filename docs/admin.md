@@ -32,6 +32,8 @@ The **Seasons** tab lists the live calendar, each event's window and rewards. Si
 
 **Test no season** hides seasonal decorations for your preview. **Stop testing — use live season** removes the override and immediately restores the calendar's event. Ctrl+Y's **Seasonal events** setting still controls decoration visibility. Previews do not add decorations to the canvas/play area. Live events continue to activate and expire automatically even while an admin is testing another season.
 
+Both seasonal cards show their 27 sprites. To test Diwali's cursor, move your mouse in the main app. Its flame flickers continuously; test mode demonstrates its flare, rising embers and smoke curl within the first 20 seconds, then uses the same longer intervals as Halloween. **Reduce animations** keeps the lamp still.
+
 Diwali dates are year-specific, with a three-day margin on either side. The tab shows the last configured year so future dates can be added to the shared calendar without changing the seasonal controller. An unknown future date never silently repeats November 8.
 
 ## Stats cards

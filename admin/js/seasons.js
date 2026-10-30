@@ -3,6 +3,7 @@ import { seasonalEvents, activeSeasonalEvents, seasonWindow, reloadSeasonalCalen
 import { setSeasonPreviewUser, seasonPreview, setSeasonPreview, applySeasonPreviewPreference, isSeasonPreviewStorageKey } from '/js/seasonal-events/preview.js';
 import { apiFetch, getToken } from '/js/core/state.js';
 import { diwaliArtwork } from '/js/seasonal-events/diwali-artwork.js';
+import { halloweenArtwork } from '/js/seasonal-events/artwork.js';
 let bound = false;
 export async function loadSeasons() {
   const target = document.getElementById('seasons-list'), status = document.getElementById('seasons-status');
@@ -36,10 +37,16 @@ export async function loadSeasons() {
       test.disabled = preview === event.id; test.dataset.seasonTest = event.id;
       test.addEventListener('click', () => changePreview(event.id));
       card.append(heading, dates, detail);
-      if (event.id === 'diwali') {
+      const artwork = { diwali:diwaliArtwork, halloween:halloweenArtwork }[event.id];
+      if (artwork) {
         const samples = document.createElement('div'); samples.className = 'season-samples'; samples.setAttribute('aria-hidden','true');
-        for (const artwork of diwaliArtwork) samples.insertAdjacentHTML('beforeend', `<svg viewBox="0 0 48 48">${artwork.svg}</svg>`);
+        for (const sprite of artwork) samples.insertAdjacentHTML('beforeend', `<svg viewBox="0 0 48 48" focusable="false">${sprite.svg}</svg>`);
         card.append(samples);
+      }
+      if (event.id === 'diwali') {
+        const cursorHint = document.createElement('p');
+        cursorHint.textContent = 'Move your mouse in the main app to see the lamp. In test mode, its flare, embers and smoke appear during the first 20 seconds, then happen occasionally.';
+        card.append(cursorHint);
         const coverage = document.createElement('p'); coverage.className = 'muted';
         coverage.textContent = `Moving festival dates are published through ${Math.max(...Object.keys(event.dates).map(Number))}.`;
         card.append(coverage);
