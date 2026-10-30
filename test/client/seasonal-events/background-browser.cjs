@@ -15,6 +15,7 @@ body.right-collapsed #landing-right{transform:translateX(100%)}
 body.right-collapsed #feed-panel{left:872px}
 body.covers-collapsed.right-collapsed #feed-panel{left:680px}
 body.feed-collapsed #feed-panel{opacity:0;max-height:0;overflow:hidden}
+@media(max-width:1400px){#covers-panel,#landing-right{width:240px}#feed-panel{left:240px;width:calc(100vw - 480px);padding:24px}}
 </style>
 <script type="module">
 let seed=42;Math.random=()=>((seed=(1664525*seed+1013904223)>>>0)/4294967296);
@@ -22,6 +23,13 @@ const {createHalloweenBackground}=await import('file://${base}/js/seasonal-event
 const check=(ok,label)=>{if(!ok)throw Error(label);},delay=ms=>new Promise(r=>setTimeout(r,ms));
 const stop=createHalloweenBackground();await delay(350);
 const visible=()=>[...document.querySelectorAll('.seasonal-background__icon')].filter(icon=>!icon.hidden);
+if(innerWidth<1400){
+ const small=visible();check(small.length>0,'icons present in tight feed gutters');
+ check(small.every(icon=>parseFloat(icon.style.width)<=16),'responsive miniature icons');
+ check(small.every(icon=>{const r=icon.getBoundingClientRect();return(r.left>=240&&r.right<=264)||(r.left>=1016&&r.right<=1040);}),'miniatures stay within empty gutters');
+ check(small.some(icon=>icon.getBoundingClientRect().left<264)&&small.some(icon=>icon.getBoundingClientRect().left>1016),'both narrow gutters');
+ document.body.dataset.test=JSON.stringify({narrow:true,icons:small.length,miniatures:true});
+}else{
 let icons=visible();check(icons.length>=7&&icons.length<=12,'event decoration density');
 check(new Set(icons.map(icon=>icon.dataset.artwork)).size===icons.length,'distinct artwork, not resized duplicates');
 check(icons.filter(icon=>icon.dataset.kind==='0').every(icon=>getComputedStyle(icon).color==='rgb(255, 255, 255)'),'white ghosts');
@@ -52,5 +60,6 @@ check(getComputedStyle(layer).display==='none','all panels hidden removes icons'
 document.body.classList.remove('covers-collapsed','right-collapsed','feed-collapsed');await delay(350);
 check(getComputedStyle(layer).display!=='none'&&visible().length>=7,'restores with panels');
 document.body.dataset.test=JSON.stringify({density:visible().length,bothSides:true,variedSizes:true,randomPositions:true,noScrollRedraws:true,collapse:true});
+}
 </script>`;
-(async()=>{try{fs.writeFileSync(file,html);const result=await checkBrowser({file,root,profile:path.join(root,'profile'),width:2048,chromium:process.env.CHROMIUM,timeoutMs:12000,screenshotPath:process.env.SEASONAL_SCREENSHOT});console.log(JSON.stringify(result));}finally{fs.rmSync(root,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1;});
+(async()=>{try{fs.writeFileSync(file,html);for(const width of [2048,1280]){const result=await checkBrowser({file,root,profile:path.join(root,'profile-'+width),width,chromium:process.env.CHROMIUM,timeoutMs:12000,screenshotPath:width===1280?process.env.SEASONAL_SCREENSHOT:undefined});console.log(JSON.stringify({width,...result}));}}finally{fs.rmSync(root,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1;});

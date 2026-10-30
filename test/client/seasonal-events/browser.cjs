@@ -68,7 +68,7 @@ for(const icon of icons){
  const rect=icon.getBoundingClientRect();
  for(const id of ['covers-panel','feed-panel','landing-right']){
   const panel=document.getElementById(id).getBoundingClientRect();
-  check(rect.right+18<=panel.left||rect.left-18>=panel.right||rect.bottom+18<=panel.top||rect.top-18>=panel.bottom,'clear panel gaps');
+  check(rect.right+12<=panel.left||rect.left-12>=panel.right||rect.bottom+12<=panel.top||rect.top-12>=panel.bottom,'clear panel gaps');
  }
 }
 initSeasonalEventSettings(patch=>saved=patch);

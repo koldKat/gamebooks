@@ -45,6 +45,10 @@ export function createHalloweenBackground() {
         && rect.right > 0 && rect.left < innerWidth && rect.bottom > 0 && rect.top < innerHeight;
     }).map(panel => {
       const rect = panel.getBoundingClientRect();
+      if (panel.id === 'feed-panel') {
+        const style = getComputedStyle(panel);
+        return {left:rect.left+parseFloat(style.paddingLeft),right:rect.right-parseFloat(style.paddingRight),top:0,bottom:innerHeight};
+      }
       return ['covers-panel', 'feed-panel', 'landing-right'].includes(panel.id)
         ? {left:rect.left,right:rect.right,top:0,bottom:innerHeight}
         : {left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom};
