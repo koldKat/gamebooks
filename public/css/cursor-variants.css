@@ -20,6 +20,12 @@
 .seasonal-zombie.is-screaming .zombie-head{animation:variant-shake 120ms ease-in-out infinite;}
 .seasonal-zombie.is-screaming .zombie-mouth{transform-origin:24px 33px;animation:zombie-gape 2s ease-in-out both;}
 .seasonal-zombie.is-flies .zombie-flies{transform-origin:24px 17px;animation:variant-orbit 2.6s ease-in-out both;}
+.seasonal-zombie.is-vomiting .zombie-head{animation:zombie-retch 3.4s ease-in-out both;}
+.seasonal-zombie.is-vomiting .zombie-mouth{transform-origin:24px 33px;animation:zombie-gape 3.4s ease-in-out both;}
+.seasonal-zombie.is-vomiting .zombie-vomit{animation:zombie-vomit-reveal 3.4s linear both;}
+.seasonal-zombie.is-vomiting .zombie-vomit-stream{stroke-dasharray:32;animation:zombie-vomit-flow 3.4s ease-in-out both;}
+.seasonal-zombie.is-vomiting .zombie-vomit-drops circle{animation:zombie-vomit-drop .65s ease-in infinite;}
+.seasonal-zombie.is-vomiting .zombie-vomit-splat{transform-origin:34px 55px;animation:zombie-vomit-pool 3.4s ease-out both;}
 .seasonal-lotus.is-blooming .lotus-petals{transform-origin:24px 35px;animation:lotus-bloom 2.6s ease-in-out both;}
 .seasonal-lotus.is-fireflies .lotus-fireflies{transform-origin:24px 24px;animation:variant-orbit 2.4s ease-in-out both;}
 .seasonal-lotus.is-radiant .lotus-halo{transform-origin:24px 24px;animation:variant-halo 2.2s ease-out both;}
@@ -55,6 +61,11 @@
 @keyframes variant-shake{0%,100%{transform:translateX(-1px) rotate(-3deg)}50%{transform:translateX(1px) rotate(3deg)}}
 @keyframes zombie-brain-burst{0%,100%{transform:translate(0,0) rotate(0);opacity:1}12%{transform:translate(0,-1px) scale(1.1)}32%,57%{transform:translate(var(--brain-x),var(--brain-y)) rotate(var(--brain-turn));opacity:1}72%{transform:translate(var(--brain-x),var(--brain-y)) rotate(var(--brain-turn));opacity:.2}88%{transform:translate(0,0) rotate(0);opacity:1}}
 @keyframes zombie-gape{0%,100%{transform:scaleY(1)}25%,75%{transform:scaleY(1.7)}}
+@keyframes zombie-retch{0%,100%{transform:rotate(0)}8%,18%{transform:rotate(-4deg) translateY(-1px)}13%,23%{transform:rotate(3deg)}32%,74%{transform:rotate(0) translateY(1px)}}
+@keyframes zombie-vomit-reveal{0%,23%,98%,100%{opacity:0}28%,85%{opacity:1}}
+@keyframes zombie-vomit-flow{0%,24%{stroke-dashoffset:32;opacity:0}28%{opacity:1}48%,70%{stroke-dashoffset:0;opacity:1}84%,100%{stroke-dashoffset:-32;opacity:0}}
+@keyframes zombie-vomit-drop{0%{transform:translate(0,0);opacity:0}20%{opacity:1}100%{transform:translate(var(--vomit-x),15px);opacity:0}}
+@keyframes zombie-vomit-pool{0%,35%{transform:scale(.1);opacity:0}58%,82%{transform:scale(1);opacity:1}100%{transform:scale(1.1);opacity:0}}
 @keyframes variant-orbit{0%,100%{opacity:0;transform:rotate(-15deg)}20%,75%{opacity:1}90%{transform:rotate(40deg)}}
 @keyframes lotus-bloom{0%,100%{transform:scale(1)}45%,65%{transform:scale(1.18,1.05)}}
 @keyframes variant-halo{0%,100%{opacity:0;transform:scale(.7)}30%{opacity:.7}85%{opacity:0;transform:scale(1.3)}}
