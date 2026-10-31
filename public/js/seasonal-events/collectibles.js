@@ -61,7 +61,12 @@ export async function openCollectibles(){
   const data=await response.json();
   if(sequence!==request||token!==getToken()||!dialog.open)return;
   const collected=designs.filter(d=>data.items.includes(d.id));
-  body.textContent=collected.length?'':'No collectibles yet.';
+  body.replaceChildren();
+  if(!collected.length){
+   const empty=document.createElement('p');empty.className='collectibles-empty';
+   empty.textContent='You have no collectibles yet.';empty.setAttribute('role','status');
+   body.append(empty);return;
+  }
   const dateFormat=new Intl.DateTimeFormat(undefined,{dateStyle:'medium',timeZone:'Europe/Sofia'});
   stopPreviews=createDesignPreviews(body,collected,id=>claim(id,token),id=>{
    const season=Object.entries(cursorDesigns).find(([,entries])=>entries.some(d=>d.id===id))?.[0];

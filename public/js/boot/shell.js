@@ -98,7 +98,6 @@ export function initShell() {
       if (!e.state?.mobilePanel) document.body.classList.remove('mobile-books-open', 'mobile-addbook-open');
     });
     document.getElementById('mobile-books-btn').addEventListener('click', () => _openMobilePanel('books'));
-    document.getElementById('mobile-books-close-btn').addEventListener('click', () => history.back());
     // Open the mobile catalog full-screen instead of using the desktop side panel.
     document.getElementById('mobile-addbook-btn').addEventListener('click', () => {
       _openMobilePanel('addbook');

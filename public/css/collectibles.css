@@ -9,6 +9,7 @@
 #collectibles-dialog h2{font-size:.9rem;line-height:1.1;margin:0;}
 #collectibles-dialog header button{display:grid;place-items:center;width:24px;height:24px;padding:0;background:none;color:inherit;border:0;font-size:20px;line-height:1;cursor:default;}
 .collectibles-body{padding-top:4px;font-size:.85rem;}
+.collectibles-empty{margin:0;padding:16px 8px;text-align:center;color:#9ca3af;}
 #collectibles-dialog #app-tooltip{white-space:pre-line;}
 .collectibles-reward-layer{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.45rem;pointer-events:none;z-index:2;}
 .collectibles-reward-layer .diamond-icon{width:.95rem;height:.95rem;flex-shrink:0;}

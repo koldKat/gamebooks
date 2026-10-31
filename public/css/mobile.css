@@ -36,8 +36,7 @@
     z-index: 60;
     align-self: flex-start;
     width: 100%;
-    /* flex (via the body.mobile-addbook-open rule below) for the same ‹ +
-       label vertical-centering reason as the mobile-books-close-btn rule. */
+    /* Center the return glyph and label together. */
     align-items: center;
     gap: 0.3rem;
     text-align: left;
@@ -114,27 +113,6 @@
   body.guest-browsing #mobile-books-btn { display: none !important; }
   #mobile-login-btn { display: none !important; }
   body.guest-browsing #mobile-login-btn { display: inline-flex !important; }
-  #mobile-books-close-btn { display: none !important; }
-  body.mobile-books-open #mobile-books-close-btn {
-    /* Keep the return-to-feed button reachable while scrolling. */
-    display: flex !important;
-    position: sticky;
-    top: 0;
-    z-index: 60;
-    align-self: flex-start;
-    width: 100%;
-    /* Use flex alignment to center the glyph and label. */
-    align-items: center;
-    gap: 0.3rem;
-    text-align: left;
-    background: #111827;
-    border: none;
-    color: #9ca3af;
-    font-size: 0.95rem;
-    padding: 0.25rem 0 1rem;
-    cursor: pointer;
-  }
-
   /* Mobile entry buttons use the shared four-second pulse.
      They intentionally remain animated under reduce-motion as primary navigation. */
   #mobile-books-btn {
