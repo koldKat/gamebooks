@@ -1,4 +1,5 @@
 // Manage decorative mouse companion motion, timed actions and complete lifecycle cleanup.
+import { cursorPosition } from './cursor-position.js';
 export function createCursorCompanion({name,svg,actions,face=false,random=Math.random,preview=false,host=null}) {
   const node=document.createElement('div');node.className='seasonal-companion seasonal-'+name;node.hidden=!host;
   node.setAttribute('aria-hidden','true');node.innerHTML='<svg viewBox="0 0 48 48" focusable="false">'+svg+'</svg>';(host||document.body).append(node);
@@ -20,9 +21,9 @@ export function createCursorCompanion({name,svg,actions,face=false,random=Math.r
     if(event.pointerType!=='mouse'||document.hidden||document.pointerLockElement)return hide();
     point={x:event.clientX,y:event.clientY};if(frame!=null)return;
     frame=requestAnimationFrame(()=>{frame=null;
-      const size=parseFloat(getComputedStyle(node).width)||36,reserve=size+42;
-      const x=point.x+size+14>innerWidth?point.x-size-14:point.x+14,y=point.y+reserve+20>innerHeight?point.y-reserve:point.y+20;
-      node.style.transform='translate3d('+Math.max(0,x)+'px,'+Math.max(44,y)+'px,0)';
+      const style=getComputedStyle(node);
+      const {x,y}=cursorPosition(point,parseFloat(style.width)||32,parseFloat(style.height)||32,innerWidth,innerHeight);
+      node.style.transform='translate3d('+x+'px,'+y+'px,0)';
       if(node.hidden){node.hidden=false;start();}
     });
   }

@@ -1,4 +1,5 @@
 // A decorative pumpkin beside the mouse, with occasional creepy facial animations.
+import { cursorPosition } from './cursor-position.js';
 export function createPumpkin({ random = Math.random, host = null } = {}) {
   const pumpkin = document.createElement('div');
   pumpkin.className = 'seasonal-pumpkin';
@@ -113,8 +114,8 @@ export function createPumpkin({ random = Math.random, host = null } = {}) {
     if (frame != null) return;
     frame = requestAnimationFrame(() => {
       frame = null;
-      const x = point.x + 48 > innerWidth ? point.x - 46 : point.x + 14;
-      const y = point.y + 62 > innerHeight ? point.y - 58 : point.y + 14;
+      const style = getComputedStyle(pumpkin);
+      const { x, y } = cursorPosition(point, parseFloat(style.width) || 32, parseFloat(style.height) || 32, innerWidth, innerHeight);
       pumpkin.style.transform = `translate3d(${Math.max(0, x)}px, ${Math.max(0, y)}px, 0)`;
       if (pumpkin.hidden) { pumpkin.hidden = false; updateAnimation(); }
     });

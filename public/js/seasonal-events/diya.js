@@ -1,5 +1,6 @@
 // A small Diwali lamp follows the mouse, with a gentle motion-aware flame.
 import { diyaCursorSvg } from './diya-artwork.js';
+import { cursorPosition } from './cursor-position.js';
 export function createDiya({ random = Math.random, preview = false, host = null } = {}) {
   const lamp = document.createElement('div');
   lamp.className = 'seasonal-diya'; lamp.hidden = !host;
@@ -54,8 +55,8 @@ export function createDiya({ random = Math.random, preview = false, host = null 
     if (frame != null) return;
     frame = requestAnimationFrame(() => {
       frame = null;
-      const x = point.x + 48 > innerWidth ? point.x - 46 : point.x + 14;
-      const y = point.y + 48 > innerHeight ? point.y - 46 : point.y + 14;
+      const style = getComputedStyle(lamp);
+      const { x, y } = cursorPosition(point, parseFloat(style.width) || 32, parseFloat(style.height) || 32, innerWidth, innerHeight);
       lamp.style.transform = `translate3d(${Math.max(0,x)}px, ${Math.max(0,y)}px, 0)`;
       if (lamp.hidden) { lamp.hidden = false; updateAnimation(); }
     });

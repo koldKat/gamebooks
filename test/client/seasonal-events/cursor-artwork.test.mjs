@@ -11,11 +11,11 @@ test('every seasonal theme contains only its mouse companion',()=>{
   assert.equal(typeof theme.cursor,'function');assert.deepEqual(Object.keys(theme),['cursor']);
  }
 });
-test('each event has three distinct companions with three occasional actions each',()=>{
+test('each event has three distinct companions with their occasional actions',()=>{
  const ids=new Set();
  for(const designs of Object.values(cursorDesigns)){
   assert.equal(designs.length,3);
-  for(const design of designs){assert.ok(!ids.has(design.id));ids.add(design.id);assert.equal(design.actions.length,3);assert.equal(typeof design.create,'function');}
+  for(const design of designs){assert.ok(!ids.has(design.id));ids.add(design.id);assert.equal(design.actions.length,design.id==='zombie'?4:3);assert.equal(typeof design.create,'function');}
  }
  assert.equal(ids.size,12);
 });

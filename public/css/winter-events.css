@@ -9,8 +9,8 @@
 .seasonal-santa.is-blinking .seasonal-santa__eyes { transform:scaleY(.08); }
 .seasonal-santa__ho text,.seasonal-santa__bell,.seasonal-santa__gift { opacity:0; }
 .seasonal-santa__mouth { transform-origin:24px 36px; }
-.seasonal-santa.is-laughing .seasonal-santa__mouth { animation:santa-laugh 300ms steps(2,end) infinite; }
-.seasonal-santa.is-laughing .seasonal-santa__ho text { animation:santa-ho .85s ease-out both;animation-delay:var(--ho-delay); }
+.seasonal-santa.is-laughing .seasonal-santa__mouth { animation:santa-laugh 800ms ease-in-out 3; }
+.seasonal-santa.is-laughing .seasonal-santa__ho text { animation:santa-ho 1.4s ease-out both;animation-delay:var(--ho-delay); }
 .seasonal-santa.is-ringing .seasonal-santa__bell { opacity:1;transform-origin:24px 4px;animation:santa-bell 280ms ease-in-out infinite alternate; }
 .seasonal-santa.is-gifting .seasonal-santa__gift { animation:santa-gift 2.8s ease-in-out both; }
 @keyframes santa-laugh { 0%,100% { transform:scaleY(1); } 50% { transform:scaleY(3); } }
