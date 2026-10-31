@@ -338,6 +338,10 @@ for(const id of BOOK_IDS){
       app.state.playthroughs=[run];app.state.activePtIndex=0;module.render();
     }finally{Math.random=random;}
   }
+  if(id===1483){
+    const {checkKnightmarePanel}=await import('REPO/test/client/battlesim/knightmare/panel-browser.mjs');
+    await checkKnightmarePanel({app,module,overlay,requestedRosters,check});
+  }
   if(id===1477){
     const {checkFirelordPanel}=await import('REPO/test/client/battlesim/fatemaster/firelord-browser.mjs');
     await checkFirelordPanel({app,module,overlay,requestedRosters,check});

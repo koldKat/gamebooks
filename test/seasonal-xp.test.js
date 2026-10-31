@@ -163,6 +163,39 @@ test('Fatemaster saved outcomes use real seasonal XP awards without rewarding pa
   }
 });
 
+test('Knightmare duel outcomes award seasonal XP once and exclude active or cancelled duels', async t => {
+  const {createKnightmareState}=await import('../public/js/battlesim/engines/knightmare/state.js');
+  const {startKnightmareFight,knightmareRound,cancelKnightmareFight}=await import('../public/js/battlesim/engines/knightmare/core.js');
+  const source=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');
+  const registration=source.slice(source.indexOf('const SIM_HISTORY_KEYS ='),source.indexOf('const RETIRED_SIM_HISTORY_KEYS ='));
+  const start=source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
+  const end=source.indexOf('\n  }\n\n  // Award every',start);
+  assert.ok(start>0&&end>start);
+  for(const [date,winXp,lossXp]of [['2026-10-31T12:00:00Z',10,10],['2026-11-08T12:00:00Z',20,5],['2026-12-31T12:00:00Z',20,10]]){
+    const f=fixture(t);f.date(date);
+    vm.runInContext(registration+'\nfunction syncKnightmareOutcomes(newPt,oldPt){const userId=1;'+source.slice(start,end)+'\n}',f.context);
+    const run={path:['1','11'],inventory:[{id:'keep',count:2}],sim1473:{history:[{ts:1,outcome:'win'}]}};
+    const protectedBefore=JSON.stringify(run);
+    const store=createKnightmareState(()=>({run,bookId:1483,definition:{id:1483,stateKey:'sim1483'},saveState:()=>{}}));
+    for(const outcome of ['fighting','cancelled','win','loss']){
+      const previous=structuredClone(run),before=f.xp();
+      let fight=startKnightmareFight({lifeForce:'GREEN'},{name:'Synthetic opponent',lifeForce:'GREEN'},{dieSides:6,playerHitMax:2});
+      if(outcome==='cancelled')fight=cancelKnightmareFight(fight);
+      if(outcome==='win'||outcome==='loss')for(let round=0;round<3;round++)fight=knightmareRound(fight,{expectedRound:round,die:outcome==='win'?1:6});
+      assert.equal(fight.status,outcome);
+      assert.equal(store.update(state=>({...state,fight})),true);
+      f.context.syncKnightmareOutcomes(run,previous);
+      const expected=outcome==='win'?winXp:outcome==='loss'?lossXp:0;
+      assert.equal(f.xp()-before,expected,date+'/'+outcome);
+      f.context.syncKnightmareOutcomes(run,previous);assert.equal(f.xp()-before,expected,'duplicate save');
+      const count=run.sim1483.history.length;store.update(state=>state);assert.equal(run.sim1483.history.length,count);
+    }
+    assert.deepEqual(run.sim1483.history.map(entry=>entry.outcome),['cancelled','win','loss']);
+    assert.equal(JSON.stringify(Object.fromEntries(Object.entries(run).filter(([key])=>key!=='sim1483'))),protectedBefore);
+    assert.equal(f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n,2);
+  }
+});
+
 test('formation saved outcomes award seasonal XP once and include opening-shot losses but exclude checkpoints', async t => {
   const {createFormationState}=await import('../public/js/battlesim/engines/combat-command/formation-state.js');
   const {startFormationFight,beginFormationRound,resolveFormationRoll,cancelFormationFight}=
