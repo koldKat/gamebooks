@@ -50,6 +50,35 @@ test('named section links remain inert fragments and can be disabled in access p
   }
 });
 
+test('printed number-and-letter map references remain safe section fragments', () => {
+  for (const marker of ['1A', '6D', '105b']) {
+    for (const sectionLinks of [true, false]) {
+      const href = '#section-' + marker;
+      const { mount, document } = setup([source('P', [source('A', [textNode(marker)], { href })])]);
+      assert.equal(renderReadingMatter(mount, 1496, '<p>Location</p>', document, { sectionLinks }), true);
+      assert.equal(mount.children[0].children[0].attrs.href, sectionLinks ? href : undefined);
+    }
+  }
+  for (const marker of ['0A', '1A extra', '1A/../../other', '1234567A']) {
+    const { mount, document } = setup([source('P', [source('A', [], { href: '#section-' + marker })])]);
+    assert.equal(renderReadingMatter(mount, 1496, '<p>Location</p>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
+test('left-aligned native illustration bands retain only their canonical bounded width', () => {
+  const attrs = { class: 'reading-art-stack', 'data-source-width-percent': '94.14414414414415', style: 'width:94.14414414414415%;margin:0' };
+  const image = source('IMG', [], { src: `/api/books/1496/reading-images/${'a'.repeat(64)}.png` });
+  const { mount, document } = setup([source('FIGURE', [image], attrs)]);
+  assert.equal(renderReadingMatter(mount, 1496, '<figure>Original tail</figure>', document), true);
+  assert.equal(mount.children[0].attrs.style, attrs.style);
+  for (const style of ['width:95%', attrs.style + ';position:fixed', attrs.style + ';margin-left:10em']) {
+    const { mount, document } = setup([source('FIGURE', [image], { ...attrs, style })]);
+    assert.equal(renderReadingMatter(mount, 1496, '<figure>Original tail</figure>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
 test('illustrated prose retains both text and this book’s protected artwork without accepting arbitrary styles', () => {
   const content = [source('FIGURE', [source('P', [textNode('Original prose')])]),
     source('FIGURE', [source('IMG', [], { src: `/api/books/1495/reading-images/${'a'.repeat(64)}.png` })])];

@@ -85,7 +85,7 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
     const target = document.createElement(node.tagName === 'A' && !sectionLinks ? 'span' : node.tagName.toLowerCase());
     for (const attr of node.attributes) {
       if (node.tagName === 'IMG' && ['src', 'alt', 'loading'].includes(attr.name)) continue;
-      if (node.tagName === 'A' && attr.name === 'href' && /^#section-(?:[1-9]\d{0,5}|[a-zA-Z][a-zA-Z0-9_-]{0,63})$/.test(attr.value)) {
+      if (node.tagName === 'A' && attr.name === 'href' && /^#section-(?:[1-9]\d{0,5}[a-zA-Z]?|[a-zA-Z][a-zA-Z0-9_-]{0,63})$/.test(attr.value)) {
         if (sectionLinks) target.setAttribute('href', attr.value);
         continue;
       }
@@ -121,11 +121,12 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
       }
       if (attr.name === 'style') {
         if (node.tagName === 'FIGURE' && node.getAttribute('class') === 'reading-art-stack'
-            && node.getAttribute('data-source-right-width-percent') !== null) {
-          const width = Number(node.getAttribute('data-source-right-width-percent'));
+            && (node.getAttribute('data-source-right-width-percent') !== null || node.getAttribute('data-source-width-percent') !== null)) {
+          const rightAligned = node.getAttribute('data-source-right-width-percent') !== null;
+          const width = Number(node.getAttribute(rightAligned ? 'data-source-right-width-percent' : 'data-source-width-percent'));
           // Keep the same inert alignment when markup is displayed directly
           // as a story section or copied through the frontmatter renderer.
-          const canonical = `width:${width}%;margin:0 0 0 auto`;
+          const canonical = `width:${width}%${rightAligned ? ';margin:0 0 0 auto' : ';margin:0'}`;
           if (!(width > 0 && width <= 100) || attr.value !== canonical) throw new Error('Invalid native band style');
           target.setAttribute('style', canonical);
           continue;

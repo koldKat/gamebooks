@@ -2769,7 +2769,7 @@ At the first startup after deployment, a one-time transaction grants zero-cost u
 
 The access check used by section requests does not fetch frontmatter; only a locked preview loads it.
 
-Structured player matter renders through a shared inert HTML allowlist on desktop and mobile. It preserves headings, paragraphs, emphasis, underlining, numbered lists, tables and this book's protected images. Paragraphs and headings may use only `text-align:center`; other CSS, executable elements and event attributes are rejected before any content is inserted.
+Structured player matter renders through a shared inert HTML allowlist on desktop and mobile. It preserves headings, paragraphs, emphasis, underlining, numbered lists, tables and this book's protected images. Paragraphs and headings accept bounded alignment, indentation, margins and font sizes. Safe section fragments support numeric IDs, named entries and printed number-and-letter markers such as `6D`. Native artwork bands retain a bounded width and validated left or right alignment, including zero-margin adjoining pieces. Arbitrary layout, executable elements and event attributes are rejected before any content is inserted.
 
 Wide source tables can use a `reading-wide-table` inside a focusable `reading-table-scroll` figure. The shared reader styles preserve readable column widths and horizontal scrolling within the figure, with the first column held in view. The matter allowlist accepts these classes, `tabindex="0"`, and the fixed accessible label `Wide table: scroll horizontally`; arbitrary table styles and event attributes remain rejected.
 
