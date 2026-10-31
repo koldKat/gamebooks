@@ -79,6 +79,8 @@ After editing any `docs/*.md` file, run `npm run docs:build` before declaring th
 
 ## Tech stack quick reference
 
+Book imports and audits must follow the user's permanent [manual-first workflow rules](AGENTS.md) and [recovery procedure](BOOK_IMPORTS.md). Resume from `memory/book_import_handoff.json` and its authoritative checkpoint. Direct source and reader inspection is primary; repeated helper tuning for small gains is not the workflow.
+
 - **DB**: SQLite via `better-sqlite3`, path: `database.sqlite` in project root
 - **Server**: `server.js`, plain Node.js, no framework
 - **Frontend**: ES modules, served with `Cache-Control: no-cache` — no version query strings
