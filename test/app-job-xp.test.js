@@ -17,17 +17,36 @@ test('app job progression mirrors app XP thresholds and includes players without
     INSERT INTO user_job_xp VALUES(1,1000),(2,2000);`);
   const source = fs.readFileSync('server/db/admin.js','utf8');
   let queries = 0;
-  const context = vm.createContext({ db: { prepare(sql) { queries++; return db.prepare(sql); } }, getJobTitle, getTitleForLevel: n => 'Level '+n });
+  let heartbeatBase = 1, heartbeatMultiplier = 1;
+  const context = vm.createContext({ db: { prepare(sql) { queries++; return db.prepare(sql); } }, getJobTitle, getTitleForLevel: n => 'Level '+n,
+    getXpAmount: () => heartbeatBase, seasonalXpMultiplier: () => heartbeatMultiplier });
   vm.runInContext(source.slice(source.indexOf('function appJobProgression('),source.indexOf('function adminGetUsers(')),context);
   const before = db.prepare('SELECT total_changes() n').get().n;
   const summary = context.getAppXpSummary();
   assert.equal(queries,1); assert.equal(summary.users,3);
+  assert.equal(db.prepare('SELECT total_changes() n').get().n,before);
   assert.equal(summary.xp,9000); assert.equal(summary.level,2);
+  assert.equal(summary.heartbeatRatePerMin,3); assert.equal(summary.xpBoostPct,0);
+  db.exec('UPDATE users SET xp_boost_pct=100,bonus_heartbeat_xp=10,xp_from_boost=99 WHERE id=1');
+  const boosted = context.getAppXpSummary();
+  assert.equal(boosted.xpBoostPct,3.3);
+  assert.equal(boosted.heartbeatRatePerMin,4.2);
+  assert.equal(boosted.xpFromBoost,99);
+  heartbeatMultiplier=2;
+  assert.equal(context.getAppXpSummary().heartbeatRatePerMin,8.4);
+  heartbeatBase=2;
+  assert.ok(Math.abs(context.getAppXpSummary().heartbeatRatePerMin-14.6)<1e-10);
+  heartbeatBase=1; heartbeatMultiplier=1;
+  // A player at the dynamic cap receives plain, whole heartbeat XP only up to the buffer limit.
+  db.exec('UPDATE users SET xp=9998 WHERE id=1');
+  assert.equal(context.getAppXpSummary().heartbeatRatePerMin,3);
+  db.exec('UPDATE users SET xp=9999 WHERE id=1');
+  assert.equal(context.getAppXpSummary().heartbeatRatePerMin,2);
+  db.exec('UPDATE users SET xp=3000,xp_boost_pct=0,bonus_heartbeat_xp=0,xp_from_boost=0 WHERE id=1');
   assert.equal(summary.jobXp,3000); assert.equal(summary.jobLevel,1);
   assert.equal(summary.jobRubyMiningEvents,9999);
   assert.equal(summary.jobRubyMiningInterval,10000);
   assert.equal(summary.jobAverageEventsPerRuby,10000000/(1000+2/3));
-  assert.equal(db.prepare('SELECT total_changes() n').get().n,before);
   db.prepare('UPDATE users SET bonus_diamond_dig_purchased=99 WHERE id=1').run();
   assert.equal(context.getAppXpSummary().jobAverageEventsPerRuby,10000000/1001);
   assert.equal(summary.jobTitle,'Digger'); assert.equal(summary.jobLevelXp,3000); assert.equal(summary.jobNextLevelXp,9000);
@@ -40,6 +59,11 @@ test('app job progression mirrors app XP thresholds and includes players without
   const empty = context.getAppXpSummary(); assert.equal(empty.jobLevel,0); assert.equal(empty.jobXp,0);
   assert.equal(empty.jobNextLevelXp,1);
   assert.equal(empty.jobAverageEventsPerRuby,10000);
+  assert.equal(empty.heartbeatRatePerMin,0); assert.equal(empty.xpBoostPct,0);
+  const insert=db.prepare('INSERT INTO users(id,xp,xp_boost_pct,bonus_heartbeat_xp) VALUES(?,?,?,?)');
+  for(let id=1;id<=20;id++)insert.run(id,id===1?66000:0,id===1?100:0,id===1?3:0);
+  // Level 11 gives one free heartbeat upgrade as well as the three purchased upgrades.
+  assert.ok(Math.abs(context.getAppXpSummary().heartbeatRatePerMin-20.54)<1e-10);
 });
 
 test('app SSE sends only aggregate refreshes to the restricted non-admin viewer', () => {

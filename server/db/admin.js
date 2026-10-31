@@ -4,10 +4,11 @@
 const { getShopPurchaseTotals, getShopRefundRows } = require('./shop-purchases');
 
 const { db, _naturalCompareByName, _getPdfSize, _getEpubSize } = require('./connection');
-const { computeLevel, getTitleForLevel, getUserXpInfo, getAllUsersXpInfo, awardXp, awardCoins, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS, RETIRED_SIM_HISTORY_KEYS = [] } = require('./xp');
+const { computeLevel, getTitleForLevel, getUserXpInfo, getAllUsersXpInfo, getXpAmount, awardXp, awardCoins, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS, RETIRED_SIM_HISTORY_KEYS = [] } = require('./xp');
 const { purgeExpiredSessions } = require('./auth');
 const { rubyInfoForUser } = require('./rubies');
 const { getJobTitle } = require('./job-xp');
+const { seasonalXpMultiplier } = require('../seasonal-events');
 const { hasDiamondAccess } = require('./diamonds');
 const { getRatingStats } = require('./rating-stats');
 const { collectDashboardStats } = require('./gameplay-stats');
@@ -986,28 +987,35 @@ function appJobProgression(jobXp, users) {
 }
 
 function getAppXpSummary() {
+  const heartbeatBase = getXpAmount('idle_heartbeat');
+  const heartbeatMultiplier = seasonalXpMultiplier('idle_heartbeat');
   const row = db.prepare(
-    `SELECT COUNT(*) AS users, COALESCE(SUM(u.xp), 0) AS totalXp,
+    `WITH players AS (
+       SELECT *, MAX(0, CAST(floor((-1 + sqrt(1 + 8.0 * xp / 1000.0)) / 2) AS INTEGER)) AS heartbeatLevel
+       FROM users
+     ), heartbeat AS (
+       SELECT *, (? + (bonus_heartbeat_xp + MAX(0, heartbeatLevel - 10)) * 0.1) * ? AS heartbeatBase
+       FROM players
+     )
+     SELECT COUNT(*) AS users, COALESCE(SUM(u.xp), 0) AS totalXp,
             COALESCE(SUM(j.xp), 0) AS totalJobXp,
             COALESCE(SUM(COALESCE(jobDigLevel, 0) + MIN(u.bonus_diamond_dig_purchased, COALESCE(jobDigLevel, 0))), 0) AS totalJobDigBonus,
             COALESCE((SELECT dig_events FROM diamond_market WHERE id=1), 0) AS jobRubyMiningEvents,
             COALESCE(SUM(u.xp_from_boost), 0) AS totalXpFromBoost,
-            COALESCE(SUM(u.xp_boost_pct), 0) AS totalXpBoostPct,
-            COALESCE(SUM(u.bonus_heartbeat_xp), 0) AS totalBonusHeartbeatXp,
-            COALESCE(SUM(
-              MAX(0, CASE
-                WHEN u.xp <= 0 THEN 0
-                ELSE CAST(floor((-1 + sqrt(1 + 8.0 * u.xp / 1000.0)) / 2) AS INTEGER)
-              END - 10)
-            ), 0) AS totalFreeHeartbeat,
+            COALESCE(AVG(u.xp_boost_pct), 0) AS averageXpBoostPct,
+            COALESCE(SUM(CASE WHEN u.heartbeatLevel >= (SELECT COUNT(*) FROM users)
+              THEN MIN(CAST(floor(u.heartbeatBase) AS INTEGER),
+                MAX(0, 1000 * (u.heartbeatLevel + 1) * (u.heartbeatLevel + 2) / 2 - 1 - u.xp))
+              ELSE u.heartbeatBase * (1 + u.xp_boost_pct / 1000.0)
+            END), 0) AS heartbeatRatePerMin,
             COALESCE(SUM(CASE WHEN u.xp <= 0 THEN 0 ELSE CAST(floor((-1 + sqrt(1 + 8.0 * u.xp / 1000.0)) / 2) AS INTEGER) END), 0) AS sumLevels,
             COALESCE(MIN(CASE WHEN u.xp <= 0 THEN 0 ELSE CAST(floor((-1 + sqrt(1 + 8.0 * u.xp / 1000.0)) / 2) AS INTEGER) END), 0) AS minLevel,
             COALESCE(MAX(CASE WHEN u.xp <= 0 THEN 0 ELSE CAST(floor((-1 + sqrt(1 + 8.0 * u.xp / 1000.0)) / 2) AS INTEGER) END), 0) AS maxLevel
-     FROM users u LEFT JOIN (
+     FROM heartbeat u LEFT JOIN (
        SELECT user_id, xp, CAST(floor((-1 + sqrt(1 + 8.0 * xp / 1000.0)) / 2) AS INTEGER) AS jobDigLevel
        FROM user_job_xp
      ) j ON j.user_id=u.id`
-  ).get();
+  ).get(heartbeatBase, heartbeatMultiplier);
   const users        = row.users || 0;
   const totalXp      = row.totalXp || 0;
   const scale        = Math.max(1, users * 1000);
@@ -1016,9 +1024,9 @@ function getAppXpSummary() {
   const levelXp       = scale * level * (level + 1) / 2;
   const nextLevelXp   = scale * (level + 1) * (level + 2) / 2;
   const totalXpFromBoost = row.totalXpFromBoost || 0;
-  // Sum active boost rates (stored in tenths of a percent), not historical boosted-XP fractions.
-  const xpBoostPct   = Math.round(row.totalXpBoostPct) / 10;
-  const heartbeatRatePerMin = users + (row.totalBonusHeartbeatXp + row.totalFreeHeartbeat) * 0.1;
+  // Player percentages do not add together; historical boosted XP is a separate total.
+  const xpBoostPct   = Math.round(row.averageXpBoostPct) / 10;
+  const heartbeatRatePerMin = row.heartbeatRatePerMin;
 
   // Average individual levels, not the level computed from average XP.
   const sumLevels    = row.sumLevels || 0;
