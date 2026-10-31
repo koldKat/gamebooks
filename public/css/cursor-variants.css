@@ -47,7 +47,7 @@
 .seasonal-star.is-comet .star-trail{animation:variant-flash 2.6s ease-in-out both;}
 .seasonal-star.is-sparkling .star-sparks{animation:variant-flash 2.2s ease-in-out both;}
 .seasonal-star.is-rainbow .star-face{animation:star-rainbow 2.4s ease-in-out both;}
-.seasonal-cursor-particles{position:fixed;pointer-events:none;z-index:2147483647;width:128px;height:128px;contain:layout style paint;}
+.seasonal-cursor-particles{position:fixed;pointer-events:none;z-index:9998;width:128px;height:128px;contain:layout style paint;}
 @keyframes variant-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
 @keyframes mummy-fire-reveal{0%,36%,78%,100%{opacity:0}43%,68%{opacity:1}}
 @keyframes mummy-fire-flicker{from{transform:scale(.9,.85) rotate(-4deg)}to{transform:scale(1.05,1.12) rotate(3deg)}}

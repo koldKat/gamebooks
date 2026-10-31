@@ -1,13 +1,13 @@
 @import url('./winter-events.css');
 @import url('./cursor-variants.css');
-/* Seasonal cursor companions stay decorative and never intercept interaction. */
+/* Cursor companions stay below hover previews (9999) and shared tooltips (10001). */
 .seasonal-pumpkin {
   position: fixed;
   top: 0;
   left: 0;
   width: 32px;
   height: 32px;
-  z-index: 2147483647;
+  z-index: 9998;
   pointer-events: none;
   user-select: none;
   filter: drop-shadow(0 2px 2px #0008);
@@ -86,7 +86,7 @@
 .seasonal-event-notice[data-season="diwali"] strong { color:#dfc18a; }
 .seasonal-preview-hint { font-size: .78rem; color: #a9a4b3; margin-top: .25rem; }
 .seasonal-diya { position: fixed; inset: 0 auto auto 0; width: 32px; height: 32px;
-  z-index: 2147483647; pointer-events: none; user-select: none; contain: layout style; }
+  z-index: 9998; pointer-events: none; user-select: none; contain: layout style; }
 .seasonal-diya[hidden] { display:none; }
 .seasonal-diya svg { width:100%; height:100%; overflow:visible; }
 .seasonal-diya__fire, .seasonal-diya__flame { transform-origin:22.5px 21px; }
