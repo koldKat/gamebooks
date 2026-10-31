@@ -138,7 +138,7 @@ await inflight;
 assert.equal(sync.body.classList.contains('covers-collapsed'), false, 'new local override wins over stale GET');
 sync.respond(async () => ({ ok: true, json: async () => ({ 'covers-collapsed': '1' }) }));
 await sync.api.syncPrefs();
-assert.equal(sync.body.classList.contains('covers-collapsed'), false, 'changed override retained until next sync');
+assert.equal(sync.body.classList.contains('covers-collapsed'), true, 'acknowledged save does not mask a newer remote change');
 await sync.api.syncPrefs();
 assert.equal(sync.body.classList.contains('covers-collapsed'), true, 'acknowledged unchanged override can be cleared');
 const count = sync.requests.length;
@@ -153,6 +153,22 @@ sync.respond(async () => { throw Error('network failure'); });
 await sync.api.syncPrefs(); sync.api.savePrefs({ legendCollapsed: '1' });
 await Promise.resolve();
 assert.equal(sync.effects.length, before, 'network failures handled without applying state');
+
+// A PATCH acknowledgement during a stale GET must not undo the click, but
+// the following live sync must immediately accept another device's change.
+const racing = await harness();
+const oldGet = deferred(), savedPatch = deferred();
+racing.respond(options => options ? savedPatch.promise : oldGet.promise);
+const reading = racing.api.syncPrefs();
+racing.api.savePrefs({ bookExpanded: { 7: '0' } });
+savedPatch.resolve({ ok: true });
+await Promise.resolve();
+oldGet.resolve({ ok: true, json: async () => ({ bookExpanded: { 7: '1' } }) });
+await reading;
+assert.equal(racing.effects.findLast(e => e[0] === 'expanded')[1][7], '0');
+racing.respond(async () => ({ ok: true, json: async () => ({ bookExpanded: { 7: '1' } }) }));
+await racing.api.syncPrefs();
+assert.equal(racing.effects.findLast(e => e[0] === 'expanded')[1][7], '1');
 
 const startup = await harness();
 startup.respond(async () => ({ ok: true, json: async () => ({ stashExpanded: { 3: '0' } }) }));
@@ -192,6 +208,25 @@ await filters.api.syncPrefs();
 assert.deepEqual(filters.effects.find(e => e[0] === 'feed-filters')[1], { runs: false }, 'another player does not inherit unsynced filters');
 
 const desktop = await harness(), phone = await harness();
+let libraryPrefs = {};
+for (const device of [desktop, phone]) device.respond(async options => {
+  if (options) {
+    const patch = JSON.parse(options.body);
+    for (const [key, values] of Object.entries(patch)) libraryPrefs[key] = { ...libraryPrefs[key], ...values };
+  }
+  return { ok: true, json: async () => plain(libraryPrefs) };
+});
+for (const key of ['bookExpanded', 'seriesExpanded', 'stashExpanded']) {
+  const id = key === 'seriesExpanded' ? 'main:7' : '7';
+  for (const [sender, receiver, value] of [[desktop, phone, '0'], [phone, desktop, '1'], [desktop, phone, '0']]) {
+    sender.api.savePrefs({ [key]: { [id]: value } });
+    await Promise.resolve(); // PATCH has been acknowledged before the live GET.
+    await receiver.api.syncPrefs();
+    const index = ['bookExpanded', 'seriesExpanded', 'stashExpanded'].indexOf(key) + 1;
+    assert.equal(receiver.effects.findLast(e => e[0] === 'expanded')[index][id], value,
+      `${key} follows the first live notification in either direction`);
+  }
+}
 const expansion = await harness();
 expansion.storage.set('ui_prefs_v1:Player', JSON.stringify({ bookExpanded: { 1: '0', 2: '0' } }));
 expansion.api.savePrefs({ bookExpanded: { 1: '1' }, seriesExpanded: { 'main:1': '0' } });

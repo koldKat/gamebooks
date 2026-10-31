@@ -33,23 +33,30 @@ export function initBooksXpPanels() {
   }
 }
 
-let _localPrefOverrides   = {};
+let _pendingPrefWrites = new Set();
+const _activePrefSyncs = new Set();
 let _prefOwner = null;
 let _landingPanelRestoreState = null;
 let _playPanelRestoreState    = null;
 let _feedScrollBeforeCollapse  = null;
 const prefMapKeys = ['feedFilters', 'bookExpanded', 'seriesExpanded', 'stashExpanded'];
 
+function mergePrefs(base, patch) {
+  const next = { ...base, ...patch };
+  for (const key of prefMapKeys) if (patch[key]) next[key] = { ...base[key], ...patch[key] };
+  return next;
+}
+
 export function savePrefs(patch) {
   if (!getToken()) return;
   if (_prefOwner !== getUsername()) {
-    _localPrefOverrides = {};
+    _pendingPrefWrites = new Set();
     _prefOwner = getUsername();
   }
-  const overrides = { ...patch };
-  for (const key of prefMapKeys) if (patch[key])
-    overrides[key] = { ..._localPrefOverrides[key], ...patch[key] };
-  Object.assign(_localPrefOverrides, overrides);
+  const pending = _pendingPrefWrites;
+  pending.add(patch);
+  const sessionToken = getToken();
+  for (const sync of _activePrefSyncs) if (sync.token === sessionToken) sync.patches.push(patch);
   try {
     const key = `ui_prefs_v1:${getUsername()}`;
     const cached = JSON.parse(localStorage.getItem(key) || '{}');
@@ -57,7 +64,11 @@ export function savePrefs(patch) {
     for (const key of prefMapKeys) if (patch[key]) next[key] = { ...cached[key], ...patch[key] };
     localStorage.setItem(key, JSON.stringify(next));
   } catch {}
-  apiFetch('/api/prefs', { method: 'PATCH', body: JSON.stringify(patch) }).catch(() => {});
+  apiFetch('/api/prefs', { method: 'PATCH', body: JSON.stringify(patch) }).then(r => {
+    // Only unacknowledged writes override remote state. Keeping saved values
+    // here made the next change from another device appear to be ignored.
+    if (r.ok) pending.delete(patch);
+  }).catch(() => {});
 }
 
 export function applyPrefs(p, { renderBooks = true } = {}) {
@@ -126,25 +137,23 @@ export async function syncPrefs(options) {
   if (!sessionToken) return;
   const username = getUsername();
   if (_prefOwner !== username) {
-    _localPrefOverrides = {};
+    _pendingPrefWrites = new Set();
     _prefOwner = username;
   }
+  const sync = { token: sessionToken, patches: [..._pendingPrefWrites] };
+  _activePrefSyncs.add(sync);
   try {
-    const snapshotBefore = { ..._localPrefOverrides };
     const r = await apiFetch('/api/prefs');
     if (!r.ok) return;
     const serverPrefs = await r.json();
     if (getToken() !== sessionToken) return;
-    // Merge current overrides after the request, preserving preferences changed while it was in flight.
-    const prefs = { ...serverPrefs, ..._localPrefOverrides };
-    for (const key of prefMapKeys) if (_localPrefOverrides[key])
-      prefs[key] = { ...serverPrefs[key], ..._localPrefOverrides[key] };
+    // Protect clicks made during this GET, even if their PATCH already finished.
+    const prefs = sync.patches.reduce(mergePrefs, serverPrefs);
     applyPrefs(prefs, options);
     try { localStorage.setItem(`ui_prefs_v1:${username}`, JSON.stringify(prefs)); } catch {}
-    for (const k of Object.keys(snapshotBefore)) {
-      if (_localPrefOverrides[k] === snapshotBefore[k]) delete _localPrefOverrides[k];
-    }
-  } catch {}
+  } catch {} finally {
+    _activePrefSyncs.delete(sync);
+  }
 }
 
 export function _setLandingPanelCollapsed(prefKey, collapsed) {
