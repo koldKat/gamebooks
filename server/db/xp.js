@@ -444,8 +444,7 @@ function awardIdleHeartbeatXp(userId) {
   const curLevel = computeLevel(curXp);
   if (!isImpersonatingContext() && _liveUserCount() <= curLevel) {
     const room       = Math.max(0, xpForLevel(curLevel + 1) - 1 - curXp);
-    const freeBoosts = Math.max(0, curLevel - 10);
-    const add        = Math.min(Math.floor((base + ((row?.bonus_heartbeat_xp ?? 0) + freeBoosts) * 0.1)
+    const add        = Math.min(Math.floor((base * curLevel * 0.1 + (row?.bonus_heartbeat_xp ?? 0) * 0.1)
       * seasonalXpMultiplier('idle_heartbeat')), room);
     if (add > 0) db.prepare('UPDATE users SET xp = xp + ? WHERE id = ?').run(add, userId);
     _rollBonusGc(userId, curXp, row?.pending_bonus_gc, row?.bonus_gc_chance_purchased);
@@ -453,10 +452,10 @@ function awardIdleHeartbeatXp(userId) {
     return { awarded: add > 0, coinRolled: !row?.pending_bonus_gc && !!pendingAfter, heartbeatCoinsAwarded };
   }
   const purchased  = row?.bonus_heartbeat_xp ?? 0;
-  const freeBoosts = Math.max(0, computeLevel(row?.xp || 0) - 10);
   const carry      = row?.heartbeat_carry ?? 0;
-  const rawAmount   = base + ((purchased + freeBoosts) * 0.1);
-  const total       = rawAmount + carry;
+  const rawAmount   = (base * curLevel + purchased) * 0.1;
+  // Round floating-point noise so ten 0.1 ticks pay out on the tenth minute.
+  const total       = Math.round((rawAmount + carry) * 1e10) / 1e10;
   const wholeAmount = Math.floor(total);
   const newCarry    = total - wholeAmount;
   const minuteRef   = String(Math.floor(Date.now() / 60_000));
@@ -537,7 +536,7 @@ function userXpInfoFromRow(row, bonusGcClaimed) {
     bonusUndos:        row?.bonus_undos       || 0,
     bonusFastTravels:  row?.bonus_fast_travels || 0,
     bonusHeartbeatXp:     row?.bonus_heartbeat_xp || 0,
-    bonusHeartbeatXpFree: Math.max(0, level - 10),
+    bonusHeartbeatXpFree: level,
     xpFromBoost:       row?.xp_from_boost     || 0,
     bonusGcChancePurchased: row?.bonus_gc_chance_purchased || 0,
     bonusGcMintPurchased:   row?.bonus_gc_mint_purchased || 0,

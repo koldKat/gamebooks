@@ -26,22 +26,22 @@ test('app job progression mirrors app XP thresholds and includes players without
   assert.equal(queries,1); assert.equal(summary.users,3);
   assert.equal(db.prepare('SELECT total_changes() n').get().n,before);
   assert.equal(summary.xp,9000); assert.equal(summary.level,2);
-  assert.equal(summary.heartbeatRatePerMin,3); assert.equal(summary.xpBoostPct,0);
+  assert.ok(Math.abs(summary.heartbeatRatePerMin-0.6)<1e-10); assert.equal(summary.xpBoostPct,0);
   db.exec('UPDATE users SET xp_boost_pct=100,bonus_heartbeat_xp=10,xp_from_boost=99 WHERE id=1');
   const boosted = context.getAppXpSummary();
   assert.equal(boosted.xpBoostPct,10);
-  assert.equal(boosted.heartbeatRatePerMin,4.2);
+  assert.ok(Math.abs(boosted.heartbeatRatePerMin-1.72)<1e-10);
   assert.equal(boosted.xpFromBoost,99);
   heartbeatMultiplier=2;
-  assert.equal(context.getAppXpSummary().heartbeatRatePerMin,8.4);
+  assert.ok(Math.abs(context.getAppXpSummary().heartbeatRatePerMin-3.44)<1e-10);
   heartbeatBase=2;
-  assert.ok(Math.abs(context.getAppXpSummary().heartbeatRatePerMin-14.6)<1e-10);
+  assert.ok(Math.abs(context.getAppXpSummary().heartbeatRatePerMin-4.68)<1e-10);
   heartbeatBase=1; heartbeatMultiplier=1;
   // A player at the dynamic cap receives plain, whole heartbeat XP only up to the buffer limit.
   db.exec('UPDATE users SET xp=9998 WHERE id=1');
-  assert.equal(context.getAppXpSummary().heartbeatRatePerMin,3);
+  assert.ok(Math.abs(context.getAppXpSummary().heartbeatRatePerMin-1.4)<1e-10);
   db.exec('UPDATE users SET xp=9999 WHERE id=1');
-  assert.equal(context.getAppXpSummary().heartbeatRatePerMin,2);
+  assert.equal(context.getAppXpSummary().heartbeatRatePerMin,0.4);
   db.exec('UPDATE users SET xp=3000,xp_boost_pct=0,bonus_heartbeat_xp=0,xp_from_boost=0 WHERE id=1');
   assert.equal(summary.jobXp,3000); assert.equal(summary.jobLevel,1);
   assert.equal(summary.jobRubyMiningEvents,9999);
@@ -62,8 +62,8 @@ test('app job progression mirrors app XP thresholds and includes players without
   assert.equal(empty.heartbeatRatePerMin,0); assert.equal(empty.xpBoostPct,0);
   const insert=db.prepare('INSERT INTO users(id,xp,xp_boost_pct,bonus_heartbeat_xp) VALUES(?,?,?,?)');
   for(let id=1;id<=20;id++)insert.run(id,id===1?66000:0,id===1?100:0,id===1?3:0);
-  // Level 11 gives one free heartbeat upgrade as well as the three purchased upgrades.
-  assert.ok(Math.abs(context.getAppXpSummary().heartbeatRatePerMin-20.54)<1e-10);
+  // Level 11 gives 1.1 base XP/min, plus three purchases and a 10% XP boost.
+  assert.ok(Math.abs(context.getAppXpSummary().heartbeatRatePerMin-1.54)<1e-10);
   // Both app metrics are cumulative: boost sums current player percentages, independent of past XP.
   db.exec('UPDATE users SET xp=0,xp_boost_pct=0,bonus_heartbeat_xp=0; UPDATE users SET xp=1100,xp_from_boost=100,xp_boost_pct=1 WHERE id=1; UPDATE users SET xp=900,xp_boost_pct=100 WHERE id=2');
   assert.equal(context.getAppXpSummary().xpBoostPct,10.1);

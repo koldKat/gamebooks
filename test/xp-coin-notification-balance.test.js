@@ -10,7 +10,8 @@ function fixture({ xp = 495999, purchased = 16, bonus = 393, spent = 899 } = {})
   db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, xp INTEGER, xp_boost_pct INTEGER DEFAULT 0,
     xp_boost_carry REAL DEFAULT 0, xp_from_boost INTEGER DEFAULT 0, coins_spent INTEGER DEFAULT 0,
     bonus_coins INTEGER DEFAULT 0, pending_bonus_gc INTEGER DEFAULT 0, bonus_gc_generated INTEGER DEFAULT 0,
-    bonus_gc_chance_purchased INTEGER DEFAULT 0, bonus_gc_mint_purchased INTEGER DEFAULT 0);
+    bonus_gc_chance_purchased INTEGER DEFAULT 0, bonus_gc_mint_purchased INTEGER DEFAULT 0,
+    bonus_heartbeat_xp INTEGER DEFAULT 0, heartbeat_carry REAL DEFAULT 0, heartbeat_minutes_banked INTEGER DEFAULT 0);
     CREATE TABLE notifications (id INTEGER PRIMARY KEY, user_id INTEGER, type TEXT, payload TEXT);
     CREATE TABLE xp_events (id INTEGER PRIMARY KEY, user_id INTEGER, event TEXT, ref TEXT, template_id INTEGER,
       UNIQUE(user_id,event,ref));
@@ -43,6 +44,36 @@ test('same-tick level and mint rewards report the final spendable balance', t =>
   ]);
   assert.equal(f.balance(), 14);
   assert.equal(f.db.prepare('SELECT bonus_coins FROM users WHERE id=1').get().bonus_coins, 394);
+});
+
+test('level-based heartbeats preserve earned XP and carry, accumulate tenths and deduplicate minutes', t => {
+  const f = fixture({ xp: 1500, purchased: 0, bonus: 0, spent: 0 });
+  t.after(() => f.db.close());
+  const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
+  let minute = 100;
+  Object.assign(f.context, { getXpAmount: () => 1, advanceHeartbeatCoins: () => false,
+    Date: { now: () => minute * 60000 } });
+  vm.runInContext(source.slice(source.indexOf('function awardXp('), source.indexOf('function getUserXpInfo(')), f.context);
+  const state = () => f.db.prepare('SELECT xp,heartbeat_carry FROM users WHERE id=1').get();
+  assert.deepEqual(state(), { xp: 1500, heartbeat_carry: 0 });
+  for (let n = 1; n <= 10; n++, minute++) {
+    assert.equal(f.context.awardIdleHeartbeatXp(1).awarded, true);
+    const beforeRetry = state();
+    assert.equal(f.context.awardIdleHeartbeatXp(1).awarded, false);
+    assert.deepEqual(state(), beforeRetry);
+    assert.equal(state().xp, n === 10 ? 1501 : 1500);
+  }
+  assert.equal(state().heartbeat_carry, 0);
+  // Existing fractional entitlement remains; two purchases add another 0.2/min.
+  f.db.exec('UPDATE users SET heartbeat_carry=0.7,bonus_heartbeat_xp=2,xp_boost_pct=100');
+  f.context.awardIdleHeartbeatXp(1);
+  assert.deepEqual(state(), { xp: 1502, heartbeat_carry: 0 });
+  assert.equal(f.db.prepare('SELECT xp_boost_carry FROM users').get().xp_boost_carry, 0.1);
+  // A level-zero player starts at zero and keeps all previously earned XP.
+  f.db.exec('UPDATE users SET xp=500,bonus_heartbeat_xp=0,heartbeat_carry=0');
+  minute++;
+  f.context.awardIdleHeartbeatXp(1);
+  assert.deepEqual(state(), { xp: 500, heartbeat_carry: 0 });
 });
 
 test('admin-only notifications preserve XP, level rewards and coin minting', t => {

@@ -105,11 +105,11 @@ test('New Year doubles every XP event and amount override without duplicating aw
 test('capped heartbeat banking receives the winter bonus and keeps the cap',t=>{
   const f=fixture(t);f.date('2026-12-25T12:00:00Z');
   vm.runInContext('_liveUserCount=()=>0;getXpAmount=()=>1;',f.context);
-  f.db.prepare('UPDATE users SET xp=990 WHERE id=1').run();
-  assert.equal(f.context.awardIdleHeartbeatXp(1).awarded,true);assert.equal(f.xp(),992);
-  f.db.prepare('UPDATE users SET xp=998 WHERE id=1').run();f.context.awardIdleHeartbeatXp(1);assert.equal(f.xp(),999);
+  f.db.prepare('UPDATE users SET xp=65990 WHERE id=1').run();
+  assert.equal(f.context.awardIdleHeartbeatXp(1).awarded,true);assert.equal(f.xp(),65992);
+  f.db.prepare('UPDATE users SET xp=65998 WHERE id=1').run();f.context.awardIdleHeartbeatXp(1);assert.equal(f.xp(),65999);
   assert.equal(f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n,0);
-  f.impersonate();assert.equal(f.context.awardIdleHeartbeatXp(1).awarded,false);assert.equal(f.xp(),999);
+  f.impersonate();assert.equal(f.context.awardIdleHeartbeatXp(1).awarded,false);assert.equal(f.xp(),65999);
 });
 
 test('real Diwali win rewards preserve deduplication, first-win overrides and normal boosts', t => {

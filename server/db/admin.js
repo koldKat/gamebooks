@@ -994,7 +994,7 @@ function getAppXpSummary() {
        SELECT *, MAX(0, CAST(floor((-1 + sqrt(1 + 8.0 * xp / 1000.0)) / 2) AS INTEGER)) AS heartbeatLevel
        FROM users
      ), heartbeat AS (
-       SELECT *, (? + (bonus_heartbeat_xp + MAX(0, heartbeatLevel - 10)) * 0.1) * ? AS heartbeatBase
+       SELECT *, ((? * heartbeatLevel + bonus_heartbeat_xp) * 0.1) * ? AS heartbeatBase
        FROM players
      )
      SELECT COUNT(*) AS users, COALESCE(SUM(u.xp), 0) AS totalXp,

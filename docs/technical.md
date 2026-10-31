@@ -1471,7 +1471,7 @@ Caps are enforced in `purchaseShopItem` - returns `{ error: 'cap_reached', cap, 
 - `xp_from_boost` stores only the **extra** XP (`boosted - baseWhole`), incremented per event.
 - On level-up detected in `_awardXpTx`: `xp_boost_pct` is incremented immediately; the triggering event uses the pre-level boost; the next event uses the new boost.
 - One-time startup backfill (guarded by `level_boost_backfilled` key) grants existing players their level-based boost retroactively. Does **not** backfill `xp_from_boost`.
-- Purchased Heartbeat XP changes the idle heartbeat base from `1` to `1 + (bonus_heartbeat_xp × 0.1)`, then multiplied by the normal boost before flooring.
+- Heartbeat XP starts at `level × 0.1` per minute, plus `bonus_heartbeat_xp × 0.1` for purchases. The configured `idle_heartbeat` value (default `1`) scales the level-based part. Fractional heartbeat XP accumulates before whole XP is awarded with seasonal and normal boosts. Level 0 starts at zero; level 1 earns one base XP every ten minutes. This applies prospectively: previously earned XP and saved fractional carry are retained.
 - Purchased undos and fast travels stack on top of the level-based formula in `maxUndos()` / `maxFastTravels()`.
 
 **Extra coin milestones:** coin rewards not tied to XP are tracked in `coin_events` and accumulated in `users.bonus_coins`. Deduped by `(user_id, event, ref)`, so recalculation/backfill is safe.
@@ -1997,7 +1997,7 @@ Registration assigns a random `join_template_id` and broadcasts `user_joined` th
 | `handleUpdateBook` | `add_isbn`, `add_issn`, `add_asin`, `add_pages`, `add_authors`, `add_description` each fired if the respective field was null before and is now set; `make_book_public` if `is_public` was false and is now true; `add_book_to_series` (10) if series was not previously set and is now set; `add_series_number` (5) if series number was previously empty and is now set while the book belongs to a series; `add_book_to_anthology` (10) if anthology parent was not previously set and is now set; `add_anthology_order` (5) if anthology order was previously empty and is now set while the book belongs to an anthology |
 | `handleCreateSeries` | `create_series` (50) if `!result.existed`; `add_series_description` (10) if `!result.existed && description` |
 | `handleUpdateSeries` | `add_series_description` (10) if series previously had no description and description is now set |
-| `POST /api/heartbeat` route | `idle_heartbeat` (1 XP max per minute, keyed by a server-side minute bucket, always authenticated - the route 401s otherwise) |
+| `POST /api/heartbeat` route | `idle_heartbeat` (level-based fractional XP accumulated once per server-side minute bucket, always authenticated - the route 401s otherwise) |
 | `handleSetPrefs` | `favorite_cover` (5) when `favoriteBookIds` / `favoriteSeriesIds` gains a new cover ID |
 | `handleUploadCover` | `upload_cover` |
 | `handleUploadAvatar` | `upload_avatar` (only on first upload) |
@@ -2215,7 +2215,7 @@ Values are `'1'` (collapsed/hidden) or `'0'` (expanded/visible). `ui_prefs` is a
 
 `#play-bottom-stack` is the bottom-center tracker stack that now contains both `#play-btns-bar` and `#play-xp-summary`. The XP panel is a live mirror of the books-screen XP summary, rendered through the shared helper `_renderXpSummary(prefix, data)`. It displays level, title, XP bar, current XP text, and boost line, and persists its collapsed state via `ui_prefs.playXpCollapsed`.
 
-**Heartbeat XP rate:** each XP bar shows the current idle rate: `rate = 1 + (bonusHeartbeatXp + max(0, level-10)) * 0.1` per minute.
+**Heartbeat XP rate:** each XP bar shows the base idle rate: `rate = (bonusHeartbeatXp + bonusHeartbeatXpFree) * 0.1` per minute, where `bonusHeartbeatXpFree` is the player's level. The default rate is `level × 0.1`, plus purchased upgrades.
 
 **Animated XP gain:** the books-screen and play-area bars tween to the new value when XP changes (profile modal always snaps instantly). Duration scales with level. A level-up crossed mid-animation fills to 100%, resets, and continues in the new level.
 
