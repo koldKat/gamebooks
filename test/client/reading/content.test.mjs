@@ -35,6 +35,46 @@ test('plain text retains legacy rendering without heading or sentence guessing',
   }
 });
 
+test('named section links remain inert fragments and can be disabled in access previews', () => {
+  for (const sectionLinks of [true, false]) {
+    const { mount, document } = setup([source('P', [source('A', [textNode('Prologue')], { href: '#section-prologue' })])]);
+    assert.equal(renderReadingMatter(mount, 1495, '<p>Prologue</p>', document, { sectionLinks }), true);
+    const link = mount.children[0].children[0];
+    assert.equal(link.tag, sectionLinks ? 'a' : 'span');
+    assert.equal(link.attrs.href, sectionLinks ? '#section-prologue' : undefined);
+  }
+  for (const href of ['#section-0', '#section--1', '#section-prologue extra', '#section-' + 'a'.repeat(65), 'javascript:alert(1)', 'https://example.com/#section-prologue']) {
+    const { mount, document } = setup([source('P', [source('A', [], { href })])]);
+    assert.equal(renderReadingMatter(mount, 1495, '<p></p>', document), false, href);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
+test('illustrated prose retains both text and this book’s protected artwork without accepting arbitrary styles', () => {
+  const content = [source('FIGURE', [source('P', [textNode('Original prose')])]),
+    source('FIGURE', [source('IMG', [], { src: `/api/books/1495/reading-images/${'a'.repeat(64)}.png` })])];
+  const attrs = { class: 'reading-illustrated-prose' };
+  const { mount, document } = setup([source('FIGURE', content, attrs)]);
+  assert.equal(renderReadingMatter(mount, 1495, '<figure></figure>', document), true);
+  assert.deepEqual(mount.children[0].attrs, attrs);
+  assert.equal(mount.children[0].children[0].children[0].children[0].textContent, 'Original prose');
+  for (const invalid of [{ class: 'reading-illustrated-prose hidden' }, { style: 'position:fixed' }, { onclick: 'bad()' }]) {
+    const { mount, document } = setup([source('FIGURE', content, { ...attrs, ...invalid })]);
+    assert.equal(renderReadingMatter(mount, 1495, '<figure></figure>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
+test('original price lists preserve their source rows with only the permitted table class', () => {
+  const row = source('TR', [source('TD', [textNode('Book … ')]), source('TD', [textNode('$2.95')])]);
+  const { mount, document } = setup([source('TABLE', [source('TBODY', [row])], { class: 'reading-source-prices' })]);
+  assert.equal(renderReadingMatter(mount, 1495, '<table></table>', document), true);
+  assert.equal(mount.children[0].attrs.class, 'reading-source-prices');
+  assert.equal(mount.children[0].children[0].children[0].children.length, 2);
+  const invalid = setup([source('TABLE', [row], { class: 'reading-source-prices hidden' })]);
+  assert.equal(renderReadingMatter(invalid.mount, 1495, '<table></table>', invalid.document), false);
+});
+
 test('wide source tables retain a keyboard-accessible scroll container with strict attributes', () => {
   const attrs = { class: 'reading-table-scroll', tabindex: '0', 'aria-label': 'Wide table: scroll horizontally' };
   const table = source('TABLE', [source('TR', [source('TD', [textNode('101+')])])], { class: 'reading-wide-table' });
@@ -138,7 +178,7 @@ test('source rules render between matter blocks without accepting attributes', (
 });
 
 test('source hanging paragraphs retain their layout without allowing arbitrary classes', () => {
-  for (const className of ['reading-hanging', 'reading-hanging-wide']) {
+  for (const className of ['reading-hanging', 'reading-hanging-wide', 'reading-verse-line']) {
     const { mount, document } = setup([
       source('P', [textNode('Abbot—A man who is head of a monastery.')], { class: className }),
     ]);

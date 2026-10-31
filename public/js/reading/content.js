@@ -85,11 +85,11 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
     const target = document.createElement(node.tagName === 'A' && !sectionLinks ? 'span' : node.tagName.toLowerCase());
     for (const attr of node.attributes) {
       if (node.tagName === 'IMG' && ['src', 'alt', 'loading'].includes(attr.name)) continue;
-      if (node.tagName === 'A' && attr.name === 'href' && /^#section-[1-9]\d{0,5}$/.test(attr.value)) {
+      if (node.tagName === 'A' && attr.name === 'href' && /^#section-(?:[1-9]\d{0,5}|[a-zA-Z][a-zA-Z0-9_-]{0,63})$/.test(attr.value)) {
         if (sectionLinks) target.setAttribute('href', attr.value);
         continue;
       }
-      if (node.tagName === 'TABLE' && attr.name === 'class' && ['reading-encounter-table', 'reading-wide-table'].includes(attr.value)) {
+      if (node.tagName === 'TABLE' && attr.name === 'class' && ['reading-encounter-table', 'reading-wide-table', 'reading-source-prices'].includes(attr.value)) {
         target.setAttribute('class', attr.value);
         continue;
       }
@@ -97,11 +97,11 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
         target.setAttribute('class', attr.value);
         continue;
       }
-      if (node.tagName === 'P' && attr.name === 'class' && ['reading-hanging', 'reading-hanging-wide', 'reading-indented'].includes(attr.value)) {
+      if (node.tagName === 'P' && attr.name === 'class' && ['reading-hanging', 'reading-hanging-wide', 'reading-indented', 'reading-verse-line'].includes(attr.value)) {
         target.setAttribute('class', attr.value);
         continue;
       }
-      if (node.tagName === 'FIGURE' && attr.name === 'class' && ['reading-art-parts', 'reading-art-stack', 'reading-table-scroll'].includes(attr.value)) {
+      if (node.tagName === 'FIGURE' && attr.name === 'class' && ['reading-art-parts', 'reading-art-stack', 'reading-table-scroll', 'reading-illustrated-prose'].includes(attr.value)) {
         target.setAttribute('class', attr.value);
         continue;
       }
