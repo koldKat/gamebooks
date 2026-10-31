@@ -74,8 +74,10 @@
 .reading-art-parts > img,
 .reading-frontmatter--structured figure.reading-art-parts > img { display: block; flex: 0 1 auto; min-width: 0; max-width: none; height: auto; margin: 0; padding: 0; border: 0; }
 .reading-art-stack,
+.liveread-body figure.reading-art-stack,
+.m-top figure.reading-art-stack,
 .reading-frontmatter--structured figure.reading-art-stack {
-  display: block; max-width: 100%; margin: 1em auto; padding: 0; border: 0;
+  display: block; width: fit-content; max-width: 100%; margin: 1em auto; padding: 0; border: 0;
 }
 .reading-art-stack > img,
 .reading-frontmatter--structured figure.reading-art-stack > img {

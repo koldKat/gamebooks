@@ -120,6 +120,16 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
         continue;
       }
       if (attr.name === 'style') {
+        if (node.tagName === 'FIGURE' && node.getAttribute('class') === 'reading-art-stack'
+            && node.getAttribute('data-source-right-width-percent') !== null) {
+          const width = Number(node.getAttribute('data-source-right-width-percent'));
+          // Keep the same inert alignment when markup is displayed directly
+          // as a story section or copied through the frontmatter renderer.
+          const canonical = `width:${width}%;margin:0 0 0 auto`;
+          if (!(width > 0 && width <= 100) || attr.value !== canonical) throw new Error('Invalid native band style');
+          target.setAttribute('style', canonical);
+          continue;
+        }
         target.setAttribute('style', proseStyle(node.tagName, attr.value));
         continue;
       }

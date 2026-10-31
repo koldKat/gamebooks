@@ -51,7 +51,8 @@ test('wide source tables retain a keyboard-accessible scroll container with stri
 
 test('native illustration bands align right without accepting arbitrary layout or image URLs', () => {
   const image = letter => source('IMG', [], { src: `/api/books/1494/reading-images/${letter.repeat(64)}.png` });
-  const band = { class: 'reading-art-stack', 'data-source-right-width-percent': '72.66666666666667' };
+  const band = { class: 'reading-art-stack', 'data-source-right-width-percent': '72.66666666666667',
+    style: 'width:72.66666666666667%;margin:0 0 0 auto' };
   const { mount, document } = setup([
     source('FIGURE', [source('FIGURE', [image('a')], band), image('b')], { class: 'reading-art-stack' }),
   ]);
@@ -65,6 +66,7 @@ test('native illustration bands align right without accepting arbitrary layout o
     { ...band, 'data-source-width-percent': '80' },
     { ...band, class: 'reading-art-parts' },
     { ...band, style: 'position:fixed' },
+    { ...band, style: 'width:50%;margin:0 0 0 auto' },
   ]) {
     const { mount, document } = setup([source('P', [textNode('Prefix')]), source('FIGURE', [image('a')], attrs)]);
     assert.equal(renderReadingMatter(mount, 1494, '<p>Prefix</p>', document), false);
