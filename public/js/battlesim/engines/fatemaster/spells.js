@@ -1,8 +1,10 @@
 // Resolve Fatemaster combat spells, paid interruptions and saved magical-defence choices.
 import {conscious, damageOpponent, integer, participating, rollDice} from './rules.js';
 import {beginAction, enemyTurnTasks, event, pump} from './flow.js';
+import {applyFatemasterCastFury, pauseFatemasterSpell, validateFatemasterSpellConsequences} from './spell-effects.js';
+import {queueFatemasterSpellParalysis} from './hazards.js';
 
-const COSTS = Object.freeze({healing:1,light:1,invisibility:2,footsteps:1,bolt:1,slumber:2,repel:2});
+const COSTS = Object.freeze({healing:1,light:1,invisibility:2,footsteps:1,bolt:1,slumber:2,repel:2,sesame:2,flyfeet:1,float:1});
 
 function nextPending(fight, pending) {
   fight.pending = pending;
@@ -12,6 +14,7 @@ function nextPending(fight, pending) {
 
 export function castFatemaster(original, spell, options = {}) {
   const fight = beginAction(original);
+  validateFatemasterSpellConsequences(fight.rules);
   if (!Object.hasOwn(COSTS, spell)) throw new Error('Unknown combat spell');
   const power = spell === 'bolt' ? integer(options.power, 'Power Bolt cost', 1, 3) : COSTS[spell];
   const source = options.source ?? 'power';
@@ -58,11 +61,8 @@ function finishEffects(fight) {
       event(fight, 'footsteps-hit', {enemyId:enemy.id, damage});
     }
   }
-  if (fight.rules.survivingCastAttackBonus) {
-    const bonus = integer(fight.rules.survivingCastAttackBonus, 'casting frenzy bonus', 1, 10);
-    for (const enemy of fight.opponents.filter(conscious)) enemy.attackBase += bonus;
-    event(fight, 'casting-frenzy', {bonus});
-  }
+  applyFatemasterCastFury(fight);
+  if (fight.rules.pauseAfterSpellEffects?.includes(casting.spell)) return pauseFatemasterSpell(fight);
   const awakened = fight.opponents.filter(enemy => conscious(enemy) && enemy.condition === 'dormant');
   for (const enemy of awakened) enemy.condition = 'active';
   if (awakened.length) {
@@ -70,6 +70,7 @@ function finishEffects(fight) {
     event(fight, 'opponents-awakened', {enemyIds:awakened.map(enemy => enemy.id)});
   }
   event(fight, 'spell-finish', {spell:casting.spell});
+  queueFatemasterSpellParalysis(fight, casting);
   fight.casting = null;
   fight.pending = null;
   return pump(fight);
@@ -83,6 +84,11 @@ function advanceEffects(fight) {
 export function resolveFatemasterSpell(original) {
   const fight = beginAction(original, 'spell-resolve'), casting = fight.casting, spell = casting.spell;
   fight.pending = null;
+  if (fight.rules.pauseBeforeSpellEffects?.includes(spell)
+      || (fight.rules.healingDetection && spell !== 'healing')) return pauseFatemasterSpell(fight);
+  if (fight.rules.healingDetection && !casting.detectionPassed) {
+    return nextPending(fight, {kind:'spell-check', check:'casting-detection', dice:2});
+  }
   const blocked = fight.rules.noMagic || fight.rules.castingFails || fight.rules.failedSpells?.includes(spell)
     || (spell === 'footsteps' && fight.rules.footstepsRequiresInvisible && !casting.alreadyInvisible
       && !(fight.rules.footstepsWhenUnseen && casting.alreadyUnseen));
@@ -96,6 +102,19 @@ export function resolveFatemasterSpell(original) {
     const before = fight.player[casting.pool];
     fight.player[casting.pool] = Math.min(max, before + 6);
     event(fight, 'healing', {pool:casting.pool, amount:fight.player[casting.pool] - before});
+    return finishEffects(fight);
+  }
+  if (['sesame','flyfeet','float'].includes(spell)) {
+    if (spell === 'sesame' && fight.rules.sesameOpensRoof) {
+      fight.rules.roofOpen = true;
+      event(fight, 'roof-opened');
+    } else if (spell === 'flyfeet' && fight.rules.flyfeetDamage) {
+      const tasks = [{kind:'damage',source:'climbing',amount:integer(fight.rules.flyfeetDamage,'climbing damage',1)}];
+      if (fight.rules.roofOpen) tasks.push({kind:'finish',status:'withdrawn',reason:null});
+      else tasks.push(...enemyTurnTasks(fight));
+      fight.queue.unshift(...tasks);
+      event(fight, 'climbing-attempt', {roofOpen:Boolean(fight.rules.roofOpen)});
+    } else event(fight, 'spell-no-combat-effect', {spell});
     return finishEffects(fight);
   }
   if (fight.rules.disablingSpells?.includes(spell)) {
@@ -112,6 +131,16 @@ export function resolveFatemasterSpell(original) {
   }
   casting.effects = fight.opponents.filter(participating).map(enemy => ({spell, enemyId:enemy.id}));
   return advanceEffects(fight);
+}
+
+export function resolveFatemasterSpellCheck(original, die) {
+  const fight = beginAction(original, 'spell-check');
+  if (fight.pending.check !== 'casting-detection' || !fight.rules.healingDetection || fight.casting.spell !== 'healing') throw new Error('No casting detection check');
+  const roll = rollDice(2, die), success = roll.total <= fight.player.agility;
+  event(fight, 'casting-detection', {...roll, agility: fight.player.agility, success});
+  if (!success) return pauseFatemasterSpell(fight);
+  fight.casting.detectionPassed = true;
+  return nextPending(fight, {kind:'spell-resolve'});
 }
 
 export function resolveFatemasterSpellDice(original, die) {
@@ -143,9 +172,11 @@ export function resolveFatemasterSpellSave(original, die) {
   const fight = beginAction(original, 'spell-save'), effect = fight.pending.effect;
   const enemy = fight.opponents.find(enemy => enemy.id === effect.enemyId), roll = rollDice(1, die), score = roll.total + 1;
   const resisted = score <= enemy.power;
+  if (resisted) fight.casting.resisted = true;
   if (score === enemy.power) enemy.power = Math.max(0, enemy.power - 1);
   event(fight, 'opponent-spell-save', {enemyId:enemy.id, spell:effect.spell, ...roll, score, resisted});
   if (!resisted) {
+    fight.casting.hadEffect = true;
     if (effect.spell === 'bolt') damageOpponent(enemy, effect.amount, 'strength');
     else if (effect.spell === 'slumber') enemy.condition = 'asleep';
     else if (effect.spell === 'repel') enemy.condition = 'repelled';

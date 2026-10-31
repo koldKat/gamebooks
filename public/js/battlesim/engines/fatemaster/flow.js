@@ -18,7 +18,12 @@ export function outcome(fight) {
     enemy.strength < fight.rules.stopBelow && enemy.agility < fight.rules.stopBelow)) {
     fight.status = 'paused';
     fight.pauseReason = 'opponent-threshold';
+  } else if (fight.rules.stopRemaining && !fight.casting && fight.opponents.filter(enemy => conscious(enemy)
+      && !['asleep', 'helpless'].includes(enemy.condition)).length === fight.rules.stopRemaining) {
+    fight.status = 'paused';
+    fight.pauseReason = 'remaining-opponents';
   } else if (fight.opponents.every(enemy => !conscious(enemy) || ['asleep', 'helpless'].includes(enemy.condition))
+      && !fight.flameRoundPending
       && fight.pending?.check !== 'weapon-break' && !fight.queue.some(task => task.check === 'weapon-break')) {
     fight.status = 'win';
   }
@@ -35,7 +40,7 @@ export function enemyTurnTasks(fight) {
     const enemy = fight.opponents.find(conscious);
     return enemy ? [{kind: 'drain', enemyId: enemy.id}] : [];
   }
-  if (fight.rules.response === 'miss-bolt') return [];
+  if (['miss-bolt', 'flame'].includes(fight.rules.response)) return [];
   return activeAttackers(fight).map(enemy => ({kind: 'enemy', enemyId: enemy.id}));
 }
 
@@ -49,6 +54,8 @@ export function pump(fight) {
     if (task.kind === 'round-end') {
       fight.round++;
       fight.phase = 'player';
+    } else if (task.kind === 'flame-round-end') {
+      fight.flameRoundPending = false;
     } else if (task.kind === 'finish') {
       fight.status = task.status;
       fight.pauseReason = task.reason ?? null;
@@ -65,7 +72,7 @@ export function pump(fight) {
       if (enemy && conscious(enemy) && enemy.condition === 'active') fight.pending = task;
     } else if (task.kind === 'damage') {
       if (task.amount > 0) fight.pending = task;
-    } else if (['check', 'hostile-save', 'hostile-damage', 'spell-resolve'].includes(task.kind)) {
+    } else if (['check', 'hostile-save', 'hostile-damage', 'spell-resolve', 'opening-hit', 'flame-round'].includes(task.kind)) {
       fight.pending = task;
     } else {
       throw new Error('Unsupported combat task');

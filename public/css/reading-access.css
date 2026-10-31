@@ -46,6 +46,10 @@
   width: 32%;
   text-align: left;
 }
+.reading-encounter-table tr > th[scope="row"]:nth-child(3) {
+  width: 32%;
+  text-align: left;
+}
 .reading-table-scroll {
   max-width: 100%;
   overflow-x: auto;

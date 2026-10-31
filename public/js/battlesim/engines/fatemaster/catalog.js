@@ -41,8 +41,25 @@ export function prepareFatemasterEncounter(entry, options = {}) {
       const bonus = integer(variant.enemyAttackBonus,'variant attack modifier',-100,100);
       for (const group of config.groups) group.each.attackBonus += bonus;
     }
+    if (variant.enemyDefenceBonus !== undefined) {
+      const bonus = integer(variant.enemyDefenceBonus,'variant defence modifier',-100,100);
+      for (const group of config.groups) group.each.defenceBonus += bonus;
+    }
   }
   if (config.rules.response === 'miss-bolt') config.rules.counterBoltDice = integer(options.counterBoltDice,'explicit counter-bolt dice',1,3);
+  if (config.rules.disarm && options.disarmInterpretation !== undefined) {
+    const interpretations = {
+      'raw-hit': {basis:'raw',requiresHit:true},
+      'raw-special': {basis:'raw',requiresHit:false},
+      'score-hit': {basis:'score',requiresHit:true}
+    };
+    if (!Object.hasOwn(interpretations,options.disarmInterpretation)) throw new Error('Choose a weapon-swap roll interpretation');
+    Object.assign(config.rules.disarm,interpretations[options.disarmInterpretation]);
+  }
+  if (config.rules.survivingCastBonusMode && options.furyMode !== undefined) {
+    if (!['once','per-cast'].includes(options.furyMode)) throw new Error('Choose a casting fury interpretation');
+    config.rules.survivingCastBonusMode = options.furyMode;
+  }
   return config;
 }
 

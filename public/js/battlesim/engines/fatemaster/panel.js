@@ -32,7 +32,7 @@ export function createFatemasterPanel({document,definition,t,getRoster,getPlayer
     const token=stateStore.snapshot();
     if(!token){shownToken=null;setupRun=null;close();return;}
     const state=token.state,preset=getRoster().find(e=>e.section===state.encounter),active=locked(state),key=state.encounter+'|'+state.variant;
-    if(setupRun!==token.run||setupKey!==key||wasLocked&&!active){
+    if(setupRun!==token.run||setupKey!==key||active||wasLocked&&!active){
       setup.mount(state,preset);
       variant.replaceChildren();
       for(const item of preset?.variants??[]){const option=document.createElement('option');option.value=item.key;option.textContent=item.label;variant.appendChild(option);}

@@ -1,6 +1,9 @@
 // Resolve single Fatemaster encounters while retaining every unfinished combat choice.
 import {combatant, conscious, damageOpponent, enemyAttack, enemyDefence, integer, playerAttack, playerDefence, rollDice} from './rules.js';
 import {applyPlayerDamage, beginAction, enemyTurnTasks, event, outcome, pump, queueEnemyTurn} from './flow.js';
+import {applyFatemasterAutomaticHit, applyFatemasterWeaponSwap, disarmQualifies, validateFatemasterAttackEffects} from './attack-effects.js';
+import {queueFatemasterFlameRound, settleFatemasterFlameRound, validateFatemasterHazards} from './hazards.js';
+import {validateFatemasterSpellConsequences} from './spell-effects.js';
 
 export function startFatemasterFight(player, opponents, rules = {}, options = {}) {
   if (!Array.isArray(opponents) || !opponents.length || opponents.length > 50) throw new Error('Invalid opponents');
@@ -9,7 +12,14 @@ export function startFatemasterFight(player, opponents, rules = {}, options = {}
     opponents: opponents.map((enemy, index) => ({...combatant(enemy), id: `enemy-${index}`, group: String(enemy.group ?? index)})),
     rules: structuredClone(rules), round: 1, status: 'fighting', phase: 'player', pending: null, queue: [], events: [], invisibleTo: []
   };
-  if (!['normal', 'drain', 'miss-bolt'].includes(rules.response ?? 'normal')) throw new Error('Invalid enemy response');
+  validateFatemasterAttackEffects(fight.rules, fight.opponents);
+  validateFatemasterSpellConsequences(fight.rules);
+  if (options.roofOpen !== undefined) {
+    if (typeof options.roofOpen !== 'boolean') throw new Error('Invalid cage roof state');
+    fight.rules.roofOpen = options.roofOpen;
+  }
+  if (!['normal', 'drain', 'miss-bolt', 'flame'].includes(rules.response ?? 'normal')) throw new Error('Invalid enemy response');
+  validateFatemasterHazards(fight.rules);
   if (rules.response === 'miss-bolt') integer(rules.counterBoltDice, 'explicit counter-bolt dice', 1, 3);
   if (rules.stopBelow !== undefined) integer(rules.stopBelow, 'opponent threshold', 1);
   if (options.invisible) fight.invisibleTo = fight.opponents.map(enemy => enemy.id);
@@ -22,6 +32,10 @@ export function startFatemasterFight(player, opponents, rules = {}, options = {}
   }
   const initiative = options.initiative ?? rules.initiative ?? 'player';
   if (!['player', 'enemy'].includes(initiative)) throw new Error('Invalid initiative');
+  if (rules.openingAutomaticHit && !options.openingAlreadyApplied) {
+    if (initiative !== 'player') throw new Error('An automatic opening cannot also be a surprise enemy turn');
+    fight.queue.push({kind: 'opening-hit'});
+  }
   if (initiative === 'enemy') queueEnemyTurn(fight);
   event(fight, 'start');
   return pump(fight);
@@ -33,22 +47,41 @@ export function attackFatemaster(original, targetId, die) {
   if (['asleep', 'helpless'].includes(enemy.condition)) throw new Error('Use the helpless-opponent action');
   const roll = rollDice(2, die), score = roll.total + playerAttack(fight.player) - enemyDefence(enemy);
   fight.rules.unseen = false;
-  const hit = score >= 7, immune = fight.rules.requiresSpecialWeapon && fight.player.weaponKind === 'normal';
+  const swap = disarmQualifies(fight, enemy, roll, score);
+  const hit = score >= 7 || swap, immune = fight.rules.requiresSpecialWeapon && fight.player.weaponKind === 'normal';
   const damage = hit && !immune ? fight.player.damage : 0;
   enemy.condition = 'active';
   if (hit) {
     damageOpponent(enemy, damage);
   }
   event(fight, 'player-attack', {enemyId: enemy.id, ...roll, score, hit, damage});
+  if (swap) applyFatemasterWeaponSwap(fight, enemy);
   if (hit && fight.rules.weaponBreak) fight.queue.push({kind: 'check', check: 'weapon-break'});
+  if (fight.rules.response === 'flame' && (score < 9 || fight.opponents.every(enemy => !conscious(enemy)))) {
+    queueFatemasterFlameRound(fight, !hit);
+    return pump(fight);
+  }
   // Crossing the printed threshold pauses even if one pool was reduced to zero.
   if (outcome(fight) !== 'fighting') return fight;
   if (!hit && fight.rules.response === 'miss-bolt') {
     fight.queue.push({kind: 'hostile-save', dice: fight.rules.counterBoltDice}, {kind: 'round-end'});
-  } else if (score < 9) {
+  } else if (score < 9 && !swap) {
     queueEnemyTurn(fight);
   }
   return pump(fight);
+}
+
+export function resolveFatemasterOpeningHit(original, targetId) {
+  const fight = beginAction(original, 'opening-hit');
+  const enemy = fight.opponents.find(enemy => enemy.id === targetId && conscious(enemy));
+  if (!enemy || ['asleep', 'helpless'].includes(enemy.condition)) throw new Error('Choose an opening attack target');
+  fight.pending = null;
+  applyFatemasterAutomaticHit(fight, enemy);
+  return pump(fight);
+}
+
+export function resolveFatemasterFlameRound(original, apply) {
+  return settleFatemasterFlameRound(beginAction(original, 'flame-round'), apply);
 }
 
 export function resolveFatemasterEnemy(original, die) {
@@ -87,7 +120,11 @@ export function resolveFatemasterCheck(original, die) {
     if (!['strength', 'agility'].includes(escape.pool)) throw new Error('Invalid escape check');
     const success = escape.parity ? (roll.total % 2 === (escape.successEven === false ? 1 : 0)) : roll.total <= fight.player[escape.pool];
     event(fight, 'escape-check', {...roll, success});
-    if (escape.mode === 'damage-check') queueEscapeCompletion(fight, {...escape,damage:success ? escape.successDamage : escape.failureDamage});
+    if (escape.mode === 'damage-check' && !success && escape.failureOutcome === 'continue') {
+      const damage = integer(escape.failureDamage, 'failed escape damage', 0);
+      if (damage) fight.queue.push({kind:'damage', source:'escape', amount:damage});
+      fight.queue.push({kind:'round-end'});
+    } else if (escape.mode === 'damage-check') queueEscapeCompletion(fight, {...escape,damage:success ? escape.successDamage : escape.failureDamage});
     else if (success) queueEscapeCompletion(fight, escape);
     else if (escape.failureOutcome === 'paused') fight.queue.push({kind:'finish',status:'paused',reason:'failed-escape-check'});
     else queueEnemyTurn(fight);
@@ -102,7 +139,12 @@ export function resolveFatemasterHostileSave(original, die) {
   if (score === fight.player.power) fight.player.power = Math.max(0, fight.player.power - 1);
   event(fight, 'hostile-save', {...roll, score, resisted});
   fight.pending = null;
-  if (!resisted) fight.queue.unshift({kind: 'hostile-damage', dice: pending.dice});
+  if (pending.effect === 'paralysis') {
+    if (!resisted) {
+      fight.status = 'loss';
+      fight.lossReason = 'paralysis';
+    } else if (pending.withdraw) fight.status = 'withdrawn';
+  } else if (!resisted) fight.queue.unshift({kind: 'hostile-damage', dice: pending.dice});
   return pump(fight);
 }
 
@@ -127,14 +169,15 @@ export function withdrawFatemaster(original, optionKey) {
     if (!selected) throw new Error('Choose a printed escape option');
     escape = selected;
   }
-  if (!escape || !['free', 'blocked', 'check', 'damage-check', 'damage', 'enemy-turns', 'climb', 'reader'].includes(escape.mode)) throw new Error('No ordinary escape in this encounter');
+  if (!escape || !['free', 'blocked', 'check', 'damage-check', 'damage', 'enemy-turns', 'climb', 'reader', 'magic-save'].includes(escape.mode)) throw new Error('No ordinary escape in this encounter');
   fight.chosenEscape = structuredClone(escape);
   event(fight, 'escape-attempt', {mode: escape.mode});
   const invisible = fight.opponents.filter(conscious).every(enemy => fight.invisibleTo.includes(enemy.id));
   const unavailable = (escape.requiresInvisible && !invisible)
     || (escape.requiresInvisibleOrUnseen && !invisible && !fight.rules.unseen);
-  if (escape.mode === 'reader') fight.queue.push({kind:'finish',status:'paused',reason:'reader-consequence'});
+  if (escape.mode === 'reader') fight.queue.push({kind:'finish',status:'paused',reason:escape.resumable === false ? 'story-consequence' : 'reader-consequence'});
   else if (escape.mode === 'blocked' || unavailable) queueEnemyTurn(fight);
+  else if (escape.mode === 'magic-save') fight.queue.push({kind:'hostile-save', effect:'paralysis', withdraw:true});
   else if (['check','damage-check'].includes(escape.mode)) fight.queue.push({kind: 'check', check: 'escape'});
   else {
     if ((escape.mode === 'enemy-turns' || escape.mode === 'climb') && !(escape.skipTurnsWhenInvisible && invisible)) {

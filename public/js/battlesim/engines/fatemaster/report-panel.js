@@ -17,6 +17,7 @@ export function renderFatemasterReport(holder,state,t) {
     if(e.resisted!==undefined)details.push(tr(e.resisted?'resisted':'not_resisted'));
     if(e.success!==undefined)details.push(tr(e.success?'passed':'failed'));
     if(e.broken!==undefined)details.push(tr(e.broken?'broken':'intact'));
+    if(e.apply!==undefined)details.push(tr(e.apply?'apply_flame':'skip_flame'));
     return '<p>'+escape(tr('round',{round:e.round})+' · '+tr('event.'+e.type)+(name?' · '+name:'')+(details.length?' · '+details.join(' · '):''))+'</p>';
   }).join('');
   holder.innerHTML='<h4 class="bsim-side-title">'+escape(tr(fight?'status.'+fight.status:'ready'))+'</h4>'

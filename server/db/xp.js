@@ -725,6 +725,7 @@ SIM_HISTORY_KEYS.push('sim1362', 'sim1436', 'sim1437', 'sim1438', 'sim1439', 'si
 SIM_HISTORY_KEYS.push('sim1474');
 SIM_HISTORY_KEYS.push('sim1475');
 SIM_HISTORY_KEYS.push('sim1476');
+SIM_HISTORY_KEYS.push('sim1477');
 SIM_HISTORY_KEYS.push('sim1473');
 const RETIRED_SIM_HISTORY_KEYS = ['sim758', 'sim2116'];
 

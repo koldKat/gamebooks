@@ -1,6 +1,6 @@
 // Present only the available Fatemaster combat action or saved pending choice.
-import {assignFatemasterDamage,attackFatemaster,disengageFatemaster,equipFatemasterWeapon,finishFatemasterHelplessOpponent,resolveFatemasterCheck,resolveFatemasterEnemy,resolveFatemasterHostileDamage,resolveFatemasterHostileSave,resumeFatemasterFight,withdrawFatemaster} from './battle.js';
-import {allocateFatemasterSpell,castFatemaster,resolveFatemasterSpell,resolveFatemasterSpellDice,resolveFatemasterSpellSave} from './spells.js';
+import {assignFatemasterDamage,attackFatemaster,disengageFatemaster,equipFatemasterWeapon,finishFatemasterHelplessOpponent,resolveFatemasterCheck,resolveFatemasterEnemy,resolveFatemasterFlameRound,resolveFatemasterHostileDamage,resolveFatemasterHostileSave,resolveFatemasterOpeningHit,resumeFatemasterFight,withdrawFatemaster} from './battle.js';
+import {allocateFatemasterSpell,castFatemaster,resolveFatemasterSpell,resolveFatemasterSpellCheck,resolveFatemasterSpellDice,resolveFatemasterSpellSave} from './spells.js';
 import {conscious} from './rules.js';
 import {button,checkbox,dice,number,numeric,select,text} from './form.js';
 
@@ -9,12 +9,23 @@ export function renderFatemasterControls({document,holder,id,t,fight,dispatch}) 
   const tr=(key,params)=>t('battlesim.fatemaster.'+key,params);
   const act=(label,change,key)=>button(document,holder,tr(label),()=>dispatch(change),id+'-'+key);
   if(fight.status==='paused'){
-    text(document,holder,tr(fight.pauseReason==='opponent-threshold'?'threshold_pause':'reader_pause'));
-    if(fight.pauseReason!=='opponent-threshold')act('resume',resumeFatemasterFight,'resume');
+    const resumable=['reader-consequence','reader-check','failed-escape-check'].includes(fight.pauseReason);
+    text(document,holder,tr(fight.pauseReason==='opponent-threshold'?'threshold_pause':fight.pauseReason==='remaining-opponents'?'remaining_pause':resumable?'reader_pause':'consequence_pause'));
+    if(resumable)act('resume',resumeFatemasterFight,'resume');
     return;
   }
   if(fight.status!=='fighting')return;
   const pending=fight.pending;
+  if(pending?.kind==='opening-hit'){
+    text(document,holder,tr('opening_hit_note'));
+    const target=select(document,holder,tr('target'),fight.opponents.filter(conscious).map(e=>({value:e.id,label:e.name})));
+    act('automatic_hit',f=>resolveFatemasterOpeningHit(f,target.value),'opening-hit');return;
+  }
+  if(pending?.kind==='flame-round'){
+    text(document,holder,tr('final_flame_note',{amount:pending.amount}));
+    act('apply_flame',f=>resolveFatemasterFlameRound(f,true),'apply-flame');
+    act('skip_flame',f=>resolveFatemasterFlameRound(f,false),'skip-flame');return;
+  }
   if(pending?.kind==='damage'){
     text(document,holder,tr('choose_damage',{amount:pending.amount}));
     for(const pool of ['strength','agility']){
@@ -38,7 +49,7 @@ export function renderFatemasterControls({document,holder,id,t,fight,dispatch}) 
   if(pending?.kind==='spell-resolve'){act('resolve_spell',resolveFatemasterSpell,'resolve');return;}
   if(pending){
     const actions={enemy:resolveFatemasterEnemy,check:resolveFatemasterCheck,'hostile-save':resolveFatemasterHostileSave,
-      'hostile-damage':resolveFatemasterHostileDamage,'spell-dice':resolveFatemasterSpellDice,'spell-save':resolveFatemasterSpellSave};
+      'hostile-damage':resolveFatemasterHostileDamage,'spell-dice':resolveFatemasterSpellDice,'spell-save':resolveFatemasterSpellSave,'spell-check':resolveFatemasterSpellCheck};
     const count=pending.kind==='spell-save'||pending.kind==='hostile-save'?1:pending.dice??2;
     text(document,holder,tr('pending.'+(pending.check??pending.kind)));
     const input=number(document,holder,tr('dice',{count}),'',count,count*6);input.id=id+'-dice';
@@ -57,7 +68,7 @@ export function renderFatemasterControls({document,holder,id,t,fight,dispatch}) 
   for(const option of fight.rules.escapeOptions??[])act('escape.'+option.key,f=>withdrawFatemaster(f,option.key),'flee-'+option.key);
   if(targets.every(e=>e.condition==='repelled'||fight.rules.ignoreInvisible&&fight.invisibleTo.includes(e.id)))act('disengage',disengageFatemaster,'disengage');
   const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent=tr('spells');details.appendChild(summary);holder.appendChild(details);
-  const spell=select(document,details,tr('spell'),['healing','invisibility','footsteps','bolt','slumber','repel','light'].map(value=>({value,label:tr('spell.'+value)})));
+  const spell=select(document,details,tr('spell'),['healing','invisibility','footsteps','bolt','slumber','repel','light',...(fight.rules.additionalSpells??[])].map(value=>({value,label:tr('spell.'+value)})));
   const source=select(document,details,tr('spell_source'),[{value:'power',label:tr('power')},{value:'scroll',label:tr('scroll')}]);
   const power=select(document,details,tr('bolt_power'),[1,2,3],1);
   const pool=select(document,details,tr('healing_pool'),['strength','agility'].map(value=>({value,label:tr(value)})));
