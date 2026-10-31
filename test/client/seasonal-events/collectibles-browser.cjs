@@ -81,6 +81,11 @@ await openCollectibles();check(!document.querySelector('.collectible-item'),'oth
 clearToken();check(!document.querySelector('dialog').open,'logout closes collection');
 setToken('one');await fetch('/seed',{method:'POST'});await openCollectibles();await until(()=>document.querySelectorAll('.season-cursor-preview > *').length>=6);
 check(document.querySelectorAll('.collectible-item').length===12,'all twelve items can be collected');
+document.body.classList.add('reduce-motion');await delay(25);
+const collectiblePumpkin=document.querySelector('dialog .seasonal-pumpkin');
+collectiblePumpkin.classList.add('is-clacking');
+check(scheduledTimers.size>0&&getComputedStyle(collectiblePumpkin.querySelector('.seasonal-pumpkin__upper-teeth')).animationName==='pumpkin-clack-upper','collectibles animate with reduced app animations');
+collectiblePumpkin.classList.remove('is-clacking');document.body.classList.remove('reduce-motion');
 check(getComputedStyle(document.querySelector('.season-cursor-gallery')).gridTemplateColumns.split(' ').length===(innerWidth>600?6:3),'compact item grid');
 check(document.querySelector('dialog').getBoundingClientRect().right<=innerWidth,'dialog fits viewport');
 document.querySelector('.collectible-item:nth-child(3)').click();await until(()=>document.querySelector('dialog .reward-float--rubies'));

@@ -4,7 +4,7 @@ export function createCursorCompanion({name,svg,actions,face=false,random=Math.r
   node.setAttribute('aria-hidden','true');node.innerHTML='<svg viewBox="0 0 48 48" focusable="false">'+svg+'</svg>';(host||document.body).append(node);
   const motion=matchMedia('(prefers-reduced-motion: reduce)'),timers=new Set(),pending=new Set(preview?actions.map(a=>a.name):[]);
   let frame,point,currentAction;
-  const animate=()=>!motion.matches&&!document.body.classList.contains('reduce-motion');
+  const animate=()=>!motion.matches;
   function after(callback,ms){const id=setTimeout(()=>{timers.delete(id);callback();},ms);timers.add(id);return id;}
   function clear(){for(const id of timers)clearTimeout(id);timers.clear();node.classList.remove('is-blinking',...actions.map(a=>a.name));currentAction=null;node.style.setProperty('--companion-look-x','0px');node.style.setProperty('--companion-look-y','0px');}
   function action(effect){after(()=>{

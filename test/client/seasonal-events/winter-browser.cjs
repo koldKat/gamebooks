@@ -27,8 +27,8 @@ for(const [make,name,effects]of [[createSanta,'santa',['is-laughing','is-ringing
  if(name==='santa'){const directions=[...animated].map(el=>getComputedStyle(el).getPropertyValue('--ho-x'));check(new Set(directions).size===3,'Ho words go in distinct directions');for(const el of animated){const a=el.getAnimations()[0];a.pause();a.currentTime=1900;}check([...animated].some(el=>Number(getComputedStyle(el).opacity)>.2),'Ho words continue through the late mouth movements');}
  snapshots.push([name+' '+effects[0],node.cloneNode(true)]);advance(5500);check(node.classList.contains(effects[1]),name+' second action');snapshots.push([name+' '+effects[1],node.cloneNode(true)]);
  advance(6000);check(node.classList.contains(effects[2]),name+' third action');snapshots.push([name+' '+effects[2],node.cloneNode(true)]);
- document.body.classList.add('reduce-motion');await delay(20);check(!timers.size&&!effects.some(e=>node.classList.contains(e)),'motion setting cancels all actions');
- if(name==='champagne')check(getComputedStyle(node.querySelector('.seasonal-champagne__body')).animationName==='none','reduced motion stops popper');
+ document.body.classList.add('reduce-motion');await delay(20);check(timers.size>0&&node.classList.contains(effects[2]),'app setting preserves companion actions');
+ if(name==='champagne')check(getComputedStyle(node.querySelector('.seasonal-champagne__body')).animationName!=='none','app setting preserves popper');
  document.body.classList.remove('reduce-motion');await delay(20);check(timers.size>0,'animations resume');
  move(innerWidth-1,innerHeight-1);await delay(25);const rect=node.getBoundingClientRect();check(rect.right<=innerWidth&&rect.bottom<=innerHeight,'viewport edges');
  move(1,1,'touch');check(node.hidden&&!timers.size,'touch cleanup');move();await delay(25);window.dispatchEvent(new Event('blur'));check(node.hidden&&!timers.size,'blur cleanup');

@@ -59,8 +59,6 @@
   75% { opacity: 1; transform: scaleY(1); }
   100% { opacity: 0; transform: translateY(4px) scaleY(1); }
 }
-body.reduce-motion .seasonal-pumpkin__body { animation: none; }
-body.reduce-motion .seasonal-pumpkin * { transition: none; }
 @media (prefers-reduced-motion: reduce) {
   .seasonal-pumpkin * { transition: none; }
 }
@@ -125,8 +123,6 @@ body.reduce-motion .seasonal-pumpkin * { transition: none; }
   100% { opacity:0; transform:translate(6px,-20px) scale(1.2); }
 }
 @keyframes diya-dip { 0%,100% { transform:scale(1); opacity:1; } 24% { transform:scale(.8,.65); opacity:.7; } }
-body.reduce-motion .seasonal-diya * { animation:none !important; }
-body.reduce-motion .seasonal-diya__embers circle, body.reduce-motion .seasonal-diya__smoke path { opacity:0; }
 @media (prefers-reduced-motion: reduce) {
   .seasonal-diya * { animation:none !important; }
   .seasonal-diya__embers circle, .seasonal-diya__smoke path { opacity:0; }

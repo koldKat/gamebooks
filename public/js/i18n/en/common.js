@@ -44,7 +44,7 @@ export default {
     'shortcuts.f1':    'Open this popup',
     'shortcuts.ctrlx': 'Hide or restore all landing panels, or all play-area side panels',
     'shortcuts.ctrly': 'Open landing page settings (cover tooltip appearance, background source, feed day-covers, transparent day cards, seasonal events, reduce animations)',
-    'settings.seasonal_events': 'Seasonal events',
+    'settings.seasonal_events': 'Disable seasonal sprites',
     'shortcuts.inventory': 'Open / close the Inventory panel (play area only, not while typing)',
     'shortcuts.charsheet': 'Open / close the Character Sheet (play area only, not while typing)',
     'shortcuts.equipment': 'Open / close the Equipment panel (play area only, not while typing)',

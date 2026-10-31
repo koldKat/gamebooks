@@ -39,7 +39,7 @@ export function createPumpkin({ random = Math.random, host = null } = {}) {
   const hostPending=new Set(host?['mouth','clack','drool']:[]);
   let blinkTimer, openTimer, glanceTimer, mouthTimer, closeMouthTimer, droolTimer, droolEndTimer, frame, point;
   let clackTimer, clackEndTimer;
-  const animate = () => !motion.matches && !document.body.classList.contains('reduce-motion');
+  const animate = () => !motion.matches;
   function clearAnimation() {
     clearTimeout(blinkTimer); clearTimeout(openTimer); clearTimeout(glanceTimer);
     clearTimeout(mouthTimer); clearTimeout(closeMouthTimer);

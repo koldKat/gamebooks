@@ -8,7 +8,7 @@ const original={timeout:window.setTimeout,clear:window.clearTimeout,frame:window
 let clock=0,serial=0;const timers=new Map(),frames=new Map();
 window.setTimeout=(fn,ms)=>{timers.set(++serial,{fn,due:clock+ms});return serial;};window.clearTimeout=id=>timers.delete(id);window.requestAnimationFrame=fn=>{frames.set(++serial,fn);return serial;};window.cancelAnimationFrame=id=>frames.delete(id);Object.defineProperty(performance,'now',{configurable:true,value:()=>clock});
 const advance=ms=>{const until=clock+ms;let task;while((task=[...timers].filter(([,v])=>v.due<=until).sort((a,b)=>a[1].due-b[1].due)[0])){clock=task[1].due;timers.delete(task[0]);task[1].fn();}clock=until;};
-const frame=ms=>{advance(ms);const work=[...frames.values()];frames.clear();for(const fn of work)fn(clock);};
+const frame=ms=>{advance(ms);for(const id of [...frames.keys()]){const fn=frames.get(id);if(fn){frames.delete(id);fn(clock);}}};
 const move=()=>{document.dispatchEvent(new PointerEvent('pointermove',{pointerType:'mouse',clientX:250,clientY:200}));frame(1);};
 for(const designs of Object.values(cursorDesigns))for(const [index,randomValue]of [0,.34,.67].entries()){const end=createRotatingCursor(designs,{random:()=>randomValue});const node=document.querySelector('.seasonal-'+designs[index].id);check(node,'reload can start with '+designs[index].id);check(getComputedStyle(node).width==='32px'&&getComputedStyle(node).height==='32px','every live cursor matches the pumpkin scale');document.dispatchEvent(new PointerEvent('pointermove',{pointerType:'mouse',clientX:innerWidth-1,clientY:200}));frame(1);const gap=innerWidth-1-node.getBoundingClientRect().right;check(gap>=13&&gap<=15,'right-edge gap stays close to the pointer '+designs[index].id);end();}
 let stop=createRotatingCursor(cursorDesigns.halloween,{random:()=>0});move();
@@ -18,8 +18,8 @@ move();advance(5000);check(document.querySelector('.seasonal-cursor-particles'),
 for(let i=0;i<20;i++)frame(100);check(document.querySelector('.seasonal-mummy')&&!document.querySelector('.seasonal-pumpkin')&&!document.querySelector('canvas'),'particles reform into a different cursor');
 stop();check(!document.querySelector('.seasonal-companion,.seasonal-pumpkin,canvas')&&timers.size===0&&frames.size===0,'rotation and companion cleanup remove all work');
 stop=createRotatingCursor(cursorDesigns.halloween,{random:()=>0,switchDelay:()=>1000});move();advance(1000);frame(1);window.dispatchEvent(new Event('blur'));check(!document.querySelector('canvas')&&[...document.querySelectorAll('.seasonal-companion,.seasonal-pumpkin')].every(n=>n.hidden),'blur cancels particle effects and hides the companion');stop();
-document.body.classList.add('reduce-motion');stop=createRotatingCursor(cursorDesigns.halloween,{random:()=>0,switchDelay:()=>1000});for(let i=0;i<3;i++){move();advance(1000);}check(!document.querySelector('canvas')&&document.querySelector('.seasonal-pumpkin'),'reduced motion disables reformation');stop();document.body.classList.remove('reduce-motion');
-check(timers.size===0&&frames.size===0,'no remaining test callbacks');
+document.body.classList.add('reduce-motion');stop=createRotatingCursor(cursorDesigns.halloween,{random:()=>0,switchDelay:()=>1000});for(let i=0;i<3;i++){move();advance(1000);}check(document.querySelector('canvas'),'app reduced motion preserves reformation');stop();document.body.classList.remove('reduce-motion');
+check(timers.size===0&&frames.size===0,'no remaining test callbacks '+JSON.stringify({timers:[...timers.values()].map(t=>String(t.fn).slice(0,100)),frames:[...frames.values()].map(String)}));
 for(const [season,designs]of Object.entries(cursorDesigns)){
  check(designs.length===3&&new Set(designs.map(d=>d.id)).size===3,'three unique companions '+season);
  for(const design of designs.slice(1)){

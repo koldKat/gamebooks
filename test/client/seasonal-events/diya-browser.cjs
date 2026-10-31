@@ -45,9 +45,9 @@ check(lamp.classList.contains('is-smoking')&&getComputedStyle(fire).animationNam
 const smoke=lamp.querySelector('.seasonal-diya__smoke path');check(getComputedStyle(smoke).animationName==='diya-smoke','smoke curls animate');
 smoke.getAnimations()[0].pause();smoke.getAnimations()[0].currentTime=600;check(Number(getComputedStyle(smoke).opacity)>0,'smoke is visible');
 document.body.classList.add('reduce-motion');await delay(20);
-check(!timers.size&&!lamp.classList.contains('is-smoking'),'setting cancels active effect and all timers');
-check(getComputedStyle(flame).animationName==='none','setting stops flicker');
-document.body.classList.remove('reduce-motion');await delay(20);check(timers.size===3,'animation resumes after preference');
+check(timers.size>0&&lamp.classList.contains('is-smoking'),'app setting preserves active effect and timers');
+check(getComputedStyle(flame).animationName==='diya-flicker','app setting preserves flicker');
+document.body.classList.remove('reduce-motion');await delay(20);
 motion.matches=true;for(const listener of mediaListeners)listener();check(!timers.size,'system reduced motion cancels timers');
 motion.matches=false;for(const listener of mediaListeners)listener();check(timers.size===3,'system preference resumes timers');
 move(innerWidth-1,innerHeight-1);await delay(30);const rect=lamp.getBoundingClientRect();check(rect.right<=innerWidth&&rect.bottom<=innerHeight,'stays inside viewport');

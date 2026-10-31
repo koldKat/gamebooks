@@ -9,7 +9,7 @@ export function createRotatingCursor(designs,{random=Math.random,preview=false,o
    if(!disposed&&!document.hidden&&!document.pointerLockElement&&!current.node.hidden&&getComputedStyle(current.node).opacity!=='0')onSeen(designs[index].id);
   });
  }
- const allowed=()=>!disposed&&!document.hidden&&!document.pointerLockElement&&!motion.matches&&!document.body.classList.contains('reduce-motion');
+ const allowed=()=>!disposed&&!document.hidden&&!document.pointerLockElement&&!motion.matches;
  function account(){if(lastTick!==null){const end=Math.min(performance.now(),lastActivity+15000);remaining-=Math.max(0,end-lastTick);lastTick=null;}}
  function pause(){account();clearTimeout(timer);timer=null;if(transition)transition.finish(false);}
  function arm(){if(timer!==null||!allowed()||!point||transition)return;lastTick=performance.now();timer=setTimeout(tick,Math.min(15000,Math.max(1,remaining)));}

@@ -65,5 +65,4 @@
 @keyframes snowman-scarf{0%,100%{transform:rotate(0)}30%,70%{transform:rotate(-12deg)}50%{transform:rotate(8deg)}}
 @keyframes reindeer-nose{0%,100%{fill:#b96060}25%,65%{fill:#f09d77}45%{fill:#d67267}}
 @keyframes star-rainbow{0%,100%{fill:#d2b46e}25%{fill:#c18ba2}50%{fill:#86b1bd}75%{fill:#a2ba83}}
-body.reduce-motion .seasonal-variant *,body.reduce-motion .seasonal-inline-preview *{animation:none!important;transition:none!important;}
 @media(prefers-reduced-motion:reduce){.seasonal-variant *{animation:none!important;transition:none!important;}}

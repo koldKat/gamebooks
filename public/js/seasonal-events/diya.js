@@ -15,7 +15,7 @@ export function createDiya({ random = Math.random, preview = false, host = null 
   const previewPending = new Set(preview ? effects.map(effect => effect.name) : []);
   const timers = new Set();
   let frame, point, endEffect, currentEffect;
-  const animate = () => !motion.matches && !document.body.classList.contains('reduce-motion');
+  const animate = () => !motion.matches;
   function clearAnimation() {
     for (const timer of timers) clearTimeout(timer);
     timers.clear(); clearTimeout(endEffect);

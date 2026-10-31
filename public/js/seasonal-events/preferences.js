@@ -7,7 +7,7 @@ export function seasonalEventsEnabled() {
 
 export function syncSeasonalEventSetting() {
   const checkbox = document.getElementById('seasonal-events-cb');
-  if (checkbox) checkbox.checked = seasonalEventsEnabled();
+  if (checkbox) checkbox.checked = !seasonalEventsEnabled();
 }
 
 export function applySeasonalEventsPreference(value) {
@@ -20,7 +20,7 @@ export function applySeasonalEventsPreference(value) {
 export function initSeasonalEventSettings(savePrefs) {
   syncSeasonalEventSetting();
   document.getElementById('seasonal-events-cb')?.addEventListener('change', event => {
-    const value = event.target.checked ? '1' : '0';
+    const value = event.target.checked ? '0' : '1';
     applySeasonalEventsPreference(value);
     savePrefs({ seasonalEvents: value });
   });

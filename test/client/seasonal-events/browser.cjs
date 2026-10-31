@@ -81,8 +81,10 @@ const rect=pumpkin.getBoundingClientRect();check(rect.right<=innerWidth&&rect.bo
 move(150,150,'touch');check(pumpkin.hidden,'no touch cursor');move();await delay(60);
 window.dispatchEvent(new Event('blur'));check(pumpkin.hidden,'hides on blur');move();await delay(60);
 document.body.classList.add('reduce-motion');await delay(30);
-check(pumpkin.style.getPropertyValue('--pumpkin-look-x')==='0px'&&!pumpkin.classList.contains('is-blinking'),'reduced animation preference');
-check(!pumpkin.classList.contains('is-clacking')&&!pumpkin.classList.contains('is-drooling'),'reduced motion clears mouth effects');
+check(!pumpkin.hidden,'app reduced animation preference keeps companion active');
+pumpkin.classList.add('is-clacking');
+check(getComputedStyle(pumpkin.querySelector('.seasonal-pumpkin__upper-teeth')).animationName==='pumpkin-clack-upper','app preference preserves companion animations');
+pumpkin.classList.remove('is-clacking');
 document.getElementById('landing-wrapper').style.visibility='visible';await delay(350);
 check(!document.querySelector('.seasonal-background,.seasonal-background__icon,.seasonal-background__web'),'no background decorations');
 let tabHidden=false;Object.defineProperty(document,'hidden',{configurable:true,get:()=>tabHidden});
@@ -92,19 +94,19 @@ for(let i=0;i<3;i++){
  check(document.querySelector('.seasonal-pumpkin')===pumpkin&&!document.querySelector('.seasonal-background'),'tab switch retains only the mouse companion');
 }
 initSeasonalEventSettings(patch=>saved=patch);
-const toggle=document.getElementById('seasonal-events-cb');check(toggle.checked,'enabled by default');
-toggle.checked=false;toggle.dispatchEvent(new Event('change'));
+const toggle=document.getElementById('seasonal-events-cb');check(!toggle.checked,'sprites enabled by default with disable unchecked');
+toggle.checked=true;toggle.dispatchEvent(new Event('change'));
 check(!document.querySelector('.seasonal-pumpkin'),'turn off immediately');
 check(!document.querySelector('.seasonal-background'),'background follows visual preference');
 const notice=document.getElementById('seasonal-event-notice');
-check(!notice.hidden&&notice.textContent==='Halloween event active: double XP for losses, battle deaths and sim battle losses.','reward notice independent of decorations');
+check(!notice.hidden&&notice.textContent.startsWith('Halloween event active (ETE: ')&&notice.textContent.endsWith('): double XP for losses, battle deaths and sim battle losses.'),'reward notice independent of decorations');
 check(getComputedStyle(notice.querySelector('.seasonal-event-loss')).color==='rgb(248, 113, 113)','losses red');
 const simLoss=notice.querySelector('.seasonal-event-sim-loss');
 check(simLoss?.textContent==='sim battle losses'&&getComputedStyle(simLoss).color==='rgb(196, 119, 119)','entire sim battle losses phrase muted red');
 check(getComputedStyle(notice.querySelector('.seasonal-event-battle-death')).color==='rgb(217, 119, 6)','battle deaths dark orange');
 check(saved.seasonalEvents==='0'&&localStorage.getItem('seasonal-events')==='0','persist preference');
 stop();stop=initSeasonalEvents({now:()=>date,random:()=>0});check(!document.querySelector('.seasonal-pumpkin'),'stays disabled after reinitialization');
-applySeasonalEventsPreference('1');check(toggle.checked&&document.querySelector('.seasonal-pumpkin'),'server preference restores setting');
+applySeasonalEventsPreference('1');check(!toggle.checked&&document.querySelector('.seasonal-pumpkin'),'server preference restores setting');
 date=new Date(2026,10,3,23,59);refresh();check(document.querySelector('.seasonal-pumpkin'),'last event day');
 date=new Date(2026,10,4);refresh();check(!document.querySelector('.seasonal-pumpkin'),'event expires in open tab');
 check(notice.hidden,'notice expires');
@@ -133,7 +135,7 @@ window.fetch=async(url,options)=>{
 const beforeLiveCursor=document.querySelector('.seasonal-pumpkin');
 nextCalendar=originalCalendar.map(event=>({...event,description:'double XP for sim battle losses.'}));
 window.dispatchEvent(new Event('app-config-changed'));await delay(40);
-check(notice.textContent==='Halloween event active: double XP for sim battle losses.','SSE updates notice text in place');
+check(notice.textContent.startsWith('Halloween event active (ETE: ')&&notice.textContent.endsWith('): double XP for sim battle losses.'),'SSE updates notice text in place');
 check(document.querySelector('.seasonal-pumpkin')===beforeLiveCursor,'SSE text updates preserve the mouse companion');
 nextCalendar=[];window.dispatchEvent(new Event('app-config-changed'));await delay(40);
 check(notice.hidden&&!document.querySelector('.seasonal-background'),'SSE removes inactive event in open tab');

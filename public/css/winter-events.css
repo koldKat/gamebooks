@@ -49,9 +49,6 @@
 @keyframes new-year-clink-right { 0%,100% { transform:translateX(5px) rotate(8deg); } 40%,55% { transform:rotate(-22deg); } }
 @keyframes new-year-clink-flash { 0%,38%,65%,100% { opacity:0; } 39%,64% { opacity:1; } }
 @keyframes new-year-firework { 0% { opacity:0;transform:scale(.15); } 20% { opacity:1; } 75% { opacity:.8; } 100% { opacity:0;transform:scale(1.8) rotate(12deg); } }
-body.reduce-motion .seasonal-companion * { animation:none !important;transition:none !important; }
-body.reduce-motion .seasonal-santa__ho text,body.reduce-motion .seasonal-santa__bell,body.reduce-motion .seasonal-santa__gift,
-body.reduce-motion .seasonal-champagne__foam > *,body.reduce-motion .seasonal-champagne__toast,body.reduce-motion .seasonal-champagne__fireworks > g,body.reduce-motion .seasonal-champagne__bubbles { opacity:0; }
 @media(prefers-reduced-motion:reduce) {
   .seasonal-companion * { animation:none !important;transition:none !important; }
   .seasonal-santa__ho text,.seasonal-santa__bell,.seasonal-santa__gift,.seasonal-champagne__foam > *,.seasonal-champagne__toast,.seasonal-champagne__fireworks > g,.seasonal-champagne__bubbles { opacity:0; }
