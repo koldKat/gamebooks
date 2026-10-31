@@ -35,13 +35,13 @@ export function _saveExpandedPref(kind, key, localKey, expanded) {
   const map = { ..._getExpandMap(kind), [key]: val };
   if (kind === 'book') {
     booksState._bookExpandedPrefs = map;
-    booksState._hooks.savePrefs?.({ bookExpanded: map });
+    booksState._hooks.savePrefs?.({ bookExpanded: { [key]: val } });
   } else if (kind === 'series') {
     booksState._seriesExpandedPrefs = map;
-    booksState._hooks.savePrefs?.({ seriesExpanded: map });
+    booksState._hooks.savePrefs?.({ seriesExpanded: { [key]: val } });
   } else {
     booksState._stashExpandedPrefs = map;
-    booksState._hooks.savePrefs?.({ stashExpanded: map });
+    booksState._hooks.savePrefs?.({ stashExpanded: { [key]: val } });
   }
 }
 

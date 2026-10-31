@@ -11,8 +11,14 @@ export async function initRouting() {
     bootState._suppressHistory = true;
     try {
       const s = e.state;
+      // Panels and their dialogs stay on the main screen. Do not replace their
+      // history state or rebuild the library when Back only changes an overlay.
+      if (s?.mobilePanel || s?.dialogOpen) return;
       if (s?.view === 'book') await navigateToBook(s.bookId);
-      else if (getToken())    await showBooks();
+      else if (getToken()) {
+        const onMain = currentBookId === null && document.getElementById('books-screen')?.style.display !== 'none';
+        if (!onMain) await showBooks();
+      }
       // Guest back navigation must return to the feed, not the login overlay.
       else if (!document.body.classList.contains('guest-browsing')) showLogin();
     } finally {

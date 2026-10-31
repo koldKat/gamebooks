@@ -192,6 +192,18 @@ await filters.api.syncPrefs();
 assert.deepEqual(filters.effects.find(e => e[0] === 'feed-filters')[1], { runs: false }, 'another player does not inherit unsynced filters');
 
 const desktop = await harness(), phone = await harness();
+const expansion = await harness();
+expansion.storage.set('ui_prefs_v1:Player', JSON.stringify({ bookExpanded: { 1: '0', 2: '0' } }));
+expansion.api.savePrefs({ bookExpanded: { 1: '1' }, seriesExpanded: { 'main:1': '0' } });
+expansion.api.savePrefs({ stashExpanded: { 3: '1' } });
+assert.deepEqual(JSON.parse(expansion.storage.get('ui_prefs_v1:Player')).bookExpanded, { 1: '1', 2: '0' });
+expansion.respond(async () => ({ ok: true, json: async () => ({
+  bookExpanded: { 1: '0', 2: '1' }, seriesExpanded: { 'main:2': '1' }, stashExpanded: { 4: '0' },
+}) }));
+await expansion.api.syncPrefs();
+assert.deepEqual(plain(expansion.effects.find(e => e[0] === 'expanded').slice(1)), [
+  { 1: '1', 2: '1' }, { 'main:1': '0', 'main:2': '1' }, { 3: '1', 4: '0' },
+], 'in-flight local toggles preserve other device changes in every expansion map');
 let accountPrefs = {};
 for (const device of [desktop, phone]) {
   device.respond(async options => {

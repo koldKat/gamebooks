@@ -6,6 +6,9 @@ import { getToken, apiFetch, setCurrentUserLevel, setBonusUndos, setBonusFastTra
 import { renderLogin } from './auth.js';
 import { renderReader } from './reader.js';
 import { t } from '../../js/i18n.js';
+import { initMainAppReturn, returnToMainApp } from './navigation.js';
+
+initMainAppReturn();
 
 // Measure --vh from innerHeight for embedded browsers with unreliable viewport units.
 function _setVhVar() {
@@ -25,7 +28,7 @@ function showLogin() {
 
 async function showReader(book) {
   mount.innerHTML = '';
-  await renderReader(mount, book, () => { window.location.href = '/'; });
+  await renderReader(mount, book, returnToMainApp);
   window.appStartup?.ready();
 }
 
@@ -103,7 +106,7 @@ async function loadThenShowReader() {
     window.appStartup?.fail();
     mount.innerHTML = `<div class="m-login"><p class="m-error">${_escapeHtml(t('auth.network_error'))}</p>
       <button id="m-load-back" type="button">${_escapeHtml(t('mobile.back_home'))}</button></div>`;
-    document.getElementById('m-load-back').addEventListener('click', () => { window.location.href = '/'; });
+    document.getElementById('m-load-back').addEventListener('click', returnToMainApp);
   }
 }
 

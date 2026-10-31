@@ -7,7 +7,7 @@ import { _setupCtxSubmenuFlip } from '../play/bg.js';
 import { setAdminUsername } from '../account/user.js';
 import { fetchPublic as publicFetch } from '../core/util.js';
 import { _toggleShortcutsModal } from './helpers.js';
-import { _openMobilePanel } from './navigation.js';
+import { _openMobilePanel, _syncMobilePanelHistory } from './navigation.js';
 import { initAppRefresh } from './app-refresh.js';
 
 export function initShell() {
@@ -95,8 +95,9 @@ export function initShell() {
   if (!bootState._mobilePanelWired) {
     bootState._mobilePanelWired = true;
     window.addEventListener('popstate', e => {
-      if (!e.state?.mobilePanel) document.body.classList.remove('mobile-books-open', 'mobile-addbook-open');
+      _syncMobilePanelHistory(e.state);
     });
+    _syncMobilePanelHistory(history.state);
     document.getElementById('mobile-books-btn').addEventListener('click', () => _openMobilePanel('books'));
     // Open the mobile catalog full-screen instead of using the desktop side panel.
     document.getElementById('mobile-addbook-btn').addEventListener('click', () => {

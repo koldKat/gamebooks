@@ -44,6 +44,17 @@ test('loading a library preserves saved stash preferences rather than treating i
   assert.equal(h.get('7'), true);
   assert.equal(h.saved.length, 0);
 });
+test('a toggle sends only its changed key rather than overwriting another device’s map', () => {
+  const h = setup(true);
+  h.context.setExpandedPrefs({ 1: '0', 2: '1' }, { 'main:1': '0', 'main:2': '1' }, { 1: '0', 2: '1' });
+  h.context._saveExpandedPref('book', '1', 'bk_expanded_1', true);
+  h.context._saveExpandedPref('series', 'main:1', 'sr_expanded_1', true);
+  h.context._saveExpandedPref('stash', '1', 'stash_expanded_1', true);
+  assert.deepEqual(JSON.parse(JSON.stringify(h.saved)), [
+    { bookExpanded: { 1: '1' } }, { seriesExpanded: { 'main:1': '1' } }, { stashExpanded: { 1: '1' } },
+  ]);
+  assert.equal(h.booksState._bookExpandedPrefs['2'], '1');
+});
 test('an existing copy in another stash keeps its own state', () => {
   const h = setup(true);
   h.booksState._cachedStashes = [{ id: 7, seriesIds: [1] }, { id: 8, seriesIds: [1] }];

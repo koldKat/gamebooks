@@ -1,6 +1,23 @@
 // Replace only changed top-level library groups, preserving other DOM and bindings.
 const snapshots = new WeakMap();
 
+function expansionChanged(nodes, prefs) {
+  if (!prefs) return false;
+  for (const node of nodes) {
+    const rows = [...node.querySelectorAll('[data-expanded]')];
+    if (node.matches('[data-expanded]')) rows.push(node);
+    for (const row of rows) {
+      const d = row.dataset;
+      const key = row.classList.contains('stash-header-row') ? `stash:${d.stashId}`
+        : row.classList.contains('series-header-row') ? `series:${d.stashId || 'main'}:${d.seriesId}`
+        : d.containerId ? `book:${d.containerId}` : null;
+      // Search visibility is temporary; data-expanded retains the saved preference.
+      if (key && Object.hasOwn(prefs, key) && prefs[key] !== d.expanded) return true;
+    }
+  }
+  return false;
+}
+
 export function updateBooksList(root, blocks) {
   let previous = snapshots.get(root) || new Map();
   if ([...previous.values()].some(record => record.nodes.some(node => node.parentNode !== root))) previous = new Map();
@@ -11,7 +28,7 @@ export function updateBooksList(root, blocks) {
     const fingerprint = block.fingerprint ?? block.html;
     const old = previous.get(block.key);
     let nodes = old?.nodes;
-    if (!old || old.fingerprint !== fingerprint) {
+    if (!old || old.fingerprint !== fingerprint || expansionChanged(nodes, block.expansion)) {
       const template = document.createElement('template');
       template.innerHTML = block.html;
       nodes = [...template.content.children];

@@ -11,14 +11,18 @@ import {_refreshBooksListOnly,_applySavedBookResponse} from 'file://${repo}/publ
 import {booksState} from 'file://${repo}/public/js/books/state.js';
 import {coversState} from 'file://${repo}/public/js/covers/state.js';
 import {renderCoverActivity} from 'file://${repo}/public/js/covers/book-dialog.js';
+import {syncPrefs} from 'file://${repo}/public/js/ui-helpers/prefs.js';
 const check=(value,label)=>{if(!value)throw Error(label);};
 try {
  localStorage.setItem('gamebook_auth_token','fixture-only');
- let rows,edit,meta,checks=0,libraryRequests=0;
+ let rows,edit,meta,checks=0,libraryRequests=0,remotePrefs={},prefWrites=0;
  const series=[{id:1,name:'Old series',is_owner:true},{id:2,name:'New series',is_owner:true},{id:3,name:'Unrelated series',is_owner:true}];
  window.fetch=async (url,options={})=>{
   let result=[];
-  if(options.method==='PATCH') {
+  if(url==='/api/prefs') {
+   if(options.method==='PATCH') {prefWrites++;const patch=JSON.parse(options.body);for(const key of Object.keys(patch))remotePrefs[key]={...remotePrefs[key],...patch[key]};}
+   result=structuredClone(remotePrefs);
+  }else if(options.method==='PATCH') {
    const saved=JSON.parse(options.body);
    rows=rows.map(b=>b.id===42?{...b,...saved,series_id:saved.series_name==='New series'?2:null}:b);
    meta={...meta,seriesId:rows[0].series_id,seriesName:saved.series_name,ownSeriesName:saved.series_name};
@@ -115,6 +119,31 @@ try {
  for(let n=0;bigGroup.querySelectorAll('.book-item--child').length<250&&n<100;n++)await new Promise(resolve=>setTimeout(resolve,20));
  check(bigGroup.querySelectorAll('.book-item--child').length===250,'reclaimed group uses current stable builder');
  check(!document.getElementById('books-list').textContent.includes('=>'),'no lazy source text leaks into DOM');
+ // An SSE-triggered preference refresh must update the live DOM even when the
+ // library records themselves have not changed, including nested lazy groups.
+ document.getElementById('books-list').replaceChildren();
+ booksState._cachedStashes=null;
+ booksState._bookExpandedPrefs={};booksState._seriesExpandedPrefs={};booksState._stashExpandedPrefs={};
+ rows=[{id:700,name:'Main anthology',is_container:1},{id:701,name:'Main child',parent_book_id:700},
+  {id:710,name:'Series anthology',is_container:1,series_id:71},{id:711,name:'Series child',parent_book_id:710},
+  {id:720,name:'Stash series anthology',is_container:1,series_id:72},{id:721,name:'Stash series child',parent_book_id:720},
+  {id:730,name:'Stash anthology',is_container:1},{id:731,name:'Stash child',parent_book_id:730},
+  {id:999,name:'Stable standalone'}];
+ const syncedSeries=[{id:71,name:'Main series'},{id:72,name:'Stashed series'}];
+ const syncedStashes=[{id:70,name:'Shared stash',seriesIds:[72],bookIds:[730]}];
+ renderBooksList(structuredClone(rows),syncedSeries,syncedStashes);
+ const stable=document.querySelector('.book-open-btn[data-id="999"]').closest('.book-item');
+ for(const expanded of ['0','1','0','1']) {
+  remotePrefs={bookExpanded:{700:expanded,710:expanded,720:expanded,730:expanded},seriesExpanded:{'main:71':expanded,'70:72':expanded},stashExpanded:{70:expanded}};
+  await syncPrefs();
+  for(const selector of ['[data-container-id="700"]','.series-header-row[data-series-id="71"]','.stash-header-row[data-stash-id="70"]'])
+   check(document.querySelector(selector)?.dataset.expanded===expanded,'remote expansion updates visible '+selector);
+  if(expanded==='1')for(const selector of ['[data-container-id="710"]','[data-container-id="720"]','[data-container-id="730"]','.series-header-row[data-series-id="72"]'])
+   check(document.querySelector(selector)?.dataset.expanded==='1','remote expansion reaches nested '+selector);
+  check(document.querySelector('.book-open-btn[data-id="999"]').closest('.book-item')===stable,'remote expansion preserves unrelated DOM');
+  checks++;
+ }
+ check(prefWrites===0,'receiving remote expansion never echoes a preference write');
  document.body.dataset.test=JSON.stringify({width:innerWidth,checks});
 }catch(error){document.body.dataset.failure=error.stack;}
 `;

@@ -20,6 +20,7 @@ function setup(fetchOverride) {
     apiFetch: fetchOverride || (async path => ({ ok: true, json: async () => path === '/api/profile' ? {} : [{ id: 1, hasLiveReading: true }] })),
     renderReader: () => { renderCalls++; return pending; }, renderLogin() {},
     setCurrentUserLevel() {}, setBonusUndos() {}, setBonusFastTravels() {},
+    initMainAppReturn() {}, returnToMainApp() {},
     setInterval: () => 1, clearInterval() {}, t: key => key,
     console: { error() {} },
   });

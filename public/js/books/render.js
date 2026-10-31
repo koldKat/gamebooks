@@ -38,6 +38,14 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
   const list = document.getElementById('books-list');
   const fingerprint = (...data) => JSON.stringify([isAdmin, isModerator, booksState._currentUserId,
     booksState._hooks.getHasPdfAccess?.() ?? false, booksState._activeSeriesRuns, ...data]);
+  const containerExpansion = items => Object.fromEntries(items.filter(b => b.is_container).map(b =>
+    [`book:${b.id}`, _getExpandedPref('book', String(b.id), `bk_expanded_${b.id}`) ? '1' : '0']));
+  const seriesExpansion = (series, stashId = null) => {
+    const { activeBooks } = _getSeriesActiveBooksForContext(series, stashId);
+    return { ...containerExpansion(activeBooks),
+      [`series:${stashId ?? 'main'}:${series.id}`]:
+        _getExpandedPref('series', `${stashId ?? 'main'}:${series.id}`, `${stashId ? `stash_${stashId}_sr_` : 'sr_'}expanded_${series.id}`) ? '1' : '0' };
+  };
 
   if (!books.length && !allSeries.length && !booksState._cachedStashes.length) {
     updateBooksList(list, [{ key: 'empty', html: `<p class="books-empty">${t('books.empty')}</p>` }]);
@@ -315,15 +323,17 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     }
     parts.push('</div>');
     blocks.push({ key: `stash:${stash.id}`, html: parts.slice(blockStart).join(''),
-      fingerprint: fingerprint(stash, stashBooksRaw, stashSeries.map(s => [s, _getSeriesActiveBooksForContext(s, stash.id).activeBooks])) });
+      fingerprint: fingerprint(stash, stashBooksRaw, stashSeries.map(s => [s, _getSeriesActiveBooksForContext(s, stash.id).activeBooks])),
+      expansion: Object.assign({ [`stash:${stash.id}`]: stashExpanded ? '1' : '0' },
+        containerExpansion(stashBooksRaw), ...stashSeries.map(s => seriesExpansion(s, stash.id))) });
   }
 
   // ── Series sections ─────────────────────────────────────────────────────────
   for (const s of visibleSeries) blocks.push({ key: `series:${s.id}`, html: _renderSeriesSection(s),
-    fingerprint: fingerprint(s, _getSeriesActiveBooksForContext(s).activeBooks) });
+    fingerprint: fingerprint(s, _getSeriesActiveBooksForContext(s).activeBooks), expansion: seriesExpansion(s) });
 
   // ── No-series: containers then standalone ───────────────────────────────────
-  for (const b of _sortBooks(noSeries.filter(b =>  b.is_container))) blocks.push({ key: `book:${b.id}`, html: _renderContainerItem(b), fingerprint: fingerprint(b, childrenMap[b.id] || []) });
+  for (const b of _sortBooks(noSeries.filter(b =>  b.is_container))) blocks.push({ key: `book:${b.id}`, html: _renderContainerItem(b), fingerprint: fingerprint(b, childrenMap[b.id] || []), expansion: containerExpansion([b]) });
   for (const b of _sortBooks(noSeries.filter(b => !b.is_container))) blocks.push({ key: `book:${b.id}`, html: _bookItemHtml(b, false, false, 0, null, isAdmin), fingerprint: fingerprint(b) });
 
   for (const root of updateBooksList(list, blocks)) _wireRenderedContent(root);
