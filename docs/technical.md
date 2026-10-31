@@ -2221,7 +2221,7 @@ Values are `'1'` (collapsed/hidden) or `'0'` (expanded/visible). `ui_prefs` is a
 
 ### App-wide XP widget (`progression/app-xp.js`)
 
-The boost percentage is the average current player boost, while the XP in brackets is the cumulative XP earned from boosts. The heartbeat rate sums each player's boosted rate, including the configured heartbeat reward, free and purchased heartbeat upgrades and live seasonal multiplier. Players at the dynamic level cap contribute only their remaining plain, whole heartbeat XP buffer. This is a combined rate assuming every player is active, rather than observed XP per minute; fractional carries can change individual ticks.
+The earned boost percentage is `100 * SUM(xp_from_boost) / (SUM(xp) - SUM(xp_from_boost))`, rounded to one decimal, or zero when base XP is zero. It describes the actual cumulative increase over combined base XP, rather than the sum or average of current player boost percentages. The XP in brackets is the same cumulative XP earned from boosts. The heartbeat rate sums each player's current boosted rate, including the configured heartbeat reward, free and purchased heartbeat upgrades and live seasonal multiplier. Players at the dynamic level cap contribute only their remaining plain, whole heartbeat XP buffer. This is a combined rate assuming every player is active, rather than observed XP per minute; fractional carries can change individual ticks.
 
 Desktop XP widgets, reward snapshots/floaties and the Gold Coin shop are grouped in `public/js/progression/`. Callers import the three modules directly; there is no root `progression.js` facade. Mobile keeps its separate reader/toast implementation.
 
