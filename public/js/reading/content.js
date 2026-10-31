@@ -1,3 +1,5 @@
+import { copySourceSheet } from './source-sheet.js';
+
 const ELEMENTS = new Set(['P', 'H2', 'H3', 'H4', 'OL', 'UL', 'LI', 'STRONG', 'EM', 'U', 'BR', 'HR', 'FIGURE', 'FIGCAPTION', 'IMG',
   'TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'TH', 'TD', 'CAPTION', 'A']);
 
@@ -82,6 +84,7 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
     if (node.nodeType === 3) return document.createTextNode(node.textContent);
     if (node.nodeType !== 1 || !ELEMENTS.has(node.tagName)) throw new Error('Unsupported reading markup');
     if (node.tagName === 'FIGURE' && node.getAttribute('class') === 'reading-source-frame') return copySourceFrame(node);
+    if (node.tagName === 'FIGURE' && node.getAttribute('class') === 'reading-source-sheet') return copySourceSheet(node, document, imagePath);
     const target = document.createElement(node.tagName === 'A' && !sectionLinks ? 'span' : node.tagName.toLowerCase());
     for (const attr of node.attributes) {
       if (node.tagName === 'IMG' && ['src', 'alt', 'loading'].includes(attr.name)) continue;

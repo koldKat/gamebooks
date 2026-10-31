@@ -412,6 +412,41 @@ function framedMatter(overrides = {}, imageOverrides = {}, captionChildren = nul
   ], { class: 'reading-source-frame', 'data-source-width': '412', 'data-source-height': '641',
     'data-heading-box': '45,155,305,179', 'data-body-box': '35,207,315,495', 'data-font-size': '14', 'data-line-height': '18', ...overrides });
 }
+
+function originalSheet(overrides = {}, imageOverrides = {}, textOverrides = {}, textChildren = [textNode('Fighting')]) {
+  const label = source('P', textChildren, { 'data-source-box': '100,170,240,205', 'data-source-font': '30',
+    'data-source-baseline': '196', 'data-source-weight': 'normal', ...textOverrides });
+  label.textContent = 'Fighting';
+  return source('FIGURE', [source('IMG', [], { src: '/api/books/1497/reading-images/' + 'a'.repeat(64) + '.png',
+    'data-source-box': '20,20,650,1200', ...imageOverrides }), label],
+  { class: 'reading-source-sheet', 'data-source-width': '800', 'data-source-height': '1400', ...overrides });
+}
+
+test('original sheets preserve independent protected artwork and native text labels responsively', () => {
+  const { mount, document } = setup([originalSheet()]);
+  assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), true);
+  const sheet = mount.children[0];
+  assert.match(sheet.attrs.style, /width:100%;max-width:800px;aspect-ratio:800\/1400;container-type:inline-size;overflow:hidden/);
+  assert.equal(sheet.children[0].src, '/api/books/1497/reading-images/' + 'a'.repeat(64) + '.png');
+  assert.match(sheet.children[0].attrs.style, /left:2.5%;/);
+  assert.equal(sheet.children[1].children[0].textContent, 'Fighting');
+  assert.match(sheet.children[1].attrs.style, /font-size:3.75cqw/);
+});
+
+test('original sheet layers reject unsafe content, invalid geometry and cross-book assets atomically', () => {
+  const rejected = [originalSheet({ onclick: 'bad()' }), originalSheet({ 'data-source-width': '9000' }),
+    originalSheet({}, { src: '/api/books/1496/reading-images/' + 'a'.repeat(64) + '.png' }),
+    originalSheet({}, { onload: 'bad()' }), originalSheet({}, { 'data-source-box': '-1,0,20,20' }),
+    originalSheet({}, {}, { 'data-source-font': '101' }), originalSheet({}, {}, { 'data-source-weight': 'bold;position:fixed' }),
+    originalSheet({}, {}, { 'data-source-box': '0,0,900,20' }), originalSheet({}, {}, { 'data-source-baseline': '1401' }),
+    originalSheet({}, {}, { style: 'position:fixed' }), originalSheet({}, {}, {}, [source('SCRIPT')]),
+  ];
+  for (const sheet of rejected) {
+    const { mount, document } = setup([source('P', [textNode('Prefix')]), sheet]);
+    assert.equal(renderReadingMatter(mount, 1497, '<p>Prefix</p><figure></figure>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
 test('source-framed instructions retain protected art and prose in validated source coordinates', () => {
   const {mount, document} = setup([framedMatter()]);
   assert.equal(renderReadingMatter(mount, 1209, '<figure class="reading-source-frame"></figure>', document), true);
