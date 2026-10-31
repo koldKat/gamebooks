@@ -29,7 +29,7 @@ test('app job progression mirrors app XP thresholds and includes players without
   assert.equal(summary.heartbeatRatePerMin,3); assert.equal(summary.xpBoostPct,0);
   db.exec('UPDATE users SET xp_boost_pct=100,bonus_heartbeat_xp=10,xp_from_boost=99 WHERE id=1');
   const boosted = context.getAppXpSummary();
-  assert.equal(boosted.xpBoostPct,1.1);
+  assert.equal(boosted.xpBoostPct,10);
   assert.equal(boosted.heartbeatRatePerMin,4.2);
   assert.equal(boosted.xpFromBoost,99);
   heartbeatMultiplier=2;
@@ -64,11 +64,11 @@ test('app job progression mirrors app XP thresholds and includes players without
   for(let id=1;id<=20;id++)insert.run(id,id===1?66000:0,id===1?100:0,id===1?3:0);
   // Level 11 gives one free heartbeat upgrade as well as the three purchased upgrades.
   assert.ok(Math.abs(context.getAppXpSummary().heartbeatRatePerMin-20.54)<1e-10);
-  // Earned boost is weighted by actual XP, including players whose current boost differs.
+  // Both app metrics are cumulative: boost sums current player percentages, independent of past XP.
   db.exec('UPDATE users SET xp=0,xp_boost_pct=0,bonus_heartbeat_xp=0; UPDATE users SET xp=1100,xp_from_boost=100,xp_boost_pct=1 WHERE id=1; UPDATE users SET xp=900,xp_boost_pct=100 WHERE id=2');
-  assert.equal(context.getAppXpSummary().xpBoostPct,5.3); // 100 / (2000 - 100), not 100 / 2000.
+  assert.equal(context.getAppXpSummary().xpBoostPct,10.1);
   db.exec('UPDATE users SET xp=0,xp_from_boost=0');
-  assert.equal(context.getAppXpSummary().xpBoostPct,0);
+  assert.equal(context.getAppXpSummary().xpBoostPct,10.1);
 });
 
 test('app SSE sends only aggregate refreshes to the restricted non-admin viewer', () => {

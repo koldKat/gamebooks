@@ -1002,6 +1002,7 @@ function getAppXpSummary() {
             COALESCE(SUM(COALESCE(jobDigLevel, 0) + MIN(u.bonus_diamond_dig_purchased, COALESCE(jobDigLevel, 0))), 0) AS totalJobDigBonus,
             COALESCE((SELECT dig_events FROM diamond_market WHERE id=1), 0) AS jobRubyMiningEvents,
             COALESCE(SUM(u.xp_from_boost), 0) AS totalXpFromBoost,
+            COALESCE(SUM(u.xp_boost_pct), 0) AS totalXpBoostPct,
             COALESCE(SUM(CASE WHEN u.heartbeatLevel >= (SELECT COUNT(*) FROM users)
               THEN MIN(CAST(floor(u.heartbeatBase) AS INTEGER),
                 MAX(0, 1000 * (u.heartbeatLevel + 1) * (u.heartbeatLevel + 2) / 2 - 1 - u.xp))
@@ -1023,9 +1024,8 @@ function getAppXpSummary() {
   const levelXp       = scale * level * (level + 1) / 2;
   const nextLevelXp   = scale * (level + 1) * (level + 2) / 2;
   const totalXpFromBoost = row.totalXpFromBoost || 0;
-  // Express the earned boost relative to the base XP that generated the combined total.
-  const baseXp = totalXp - totalXpFromBoost;
-  const xpBoostPct = baseXp > 0 ? Math.round(totalXpFromBoost / baseXp * 1000) / 10 : 0;
+  // App-wide totals sum each player's current boost, stored in tenths of a percent.
+  const xpBoostPct = Math.round(row.totalXpBoostPct) / 10;
   const heartbeatRatePerMin = row.heartbeatRatePerMin;
 
   // Average individual levels, not the level computed from average XP.
