@@ -111,9 +111,12 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
         target.setAttribute(attr.name, attr.value);
         continue;
       }
-      if (node.tagName === 'FIGURE' && attr.name === 'data-source-width-percent' && node.getAttribute('class') === 'reading-art-stack') {
+      if (node.tagName === 'FIGURE' && ['data-source-width-percent', 'data-source-right-width-percent'].includes(attr.name) && node.getAttribute('class') === 'reading-art-stack') {
         if (!/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(attr.value) || Number(attr.value) <= 0 || Number(attr.value) > 100) throw new Error('Invalid image width');
-        target.setAttribute('style', `width:${Number(attr.value)}%`);
+        if (node.getAttribute('data-source-width-percent') !== null && node.getAttribute('data-source-right-width-percent') !== null) throw new Error('Conflicting image widths');
+        // A narrow native band can retain a protruding illustration detail
+        // without including neighboring prose in the full-width lower crop.
+        target.setAttribute('style', `width:${Number(attr.value)}%${attr.name === 'data-source-right-width-percent' ? ';margin:0 0 0 auto' : ''}`);
         continue;
       }
       if (attr.name === 'style') {

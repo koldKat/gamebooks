@@ -49,6 +49,31 @@ test('wide source tables retain a keyboard-accessible scroll container with stri
   }
 });
 
+test('native illustration bands align right without accepting arbitrary layout or image URLs', () => {
+  const image = letter => source('IMG', [], { src: `/api/books/1494/reading-images/${letter.repeat(64)}.png` });
+  const band = { class: 'reading-art-stack', 'data-source-right-width-percent': '72.66666666666667' };
+  const { mount, document } = setup([
+    source('FIGURE', [source('FIGURE', [image('a')], band), image('b')], { class: 'reading-art-stack' }),
+  ]);
+  assert.equal(renderReadingMatter(mount, 1494, '<figure></figure>', document), true);
+  assert.equal(mount.children[0].children[0].attrs.style, 'width:72.66666666666667%;margin:0 0 0 auto');
+  assert.equal(mount.children[0].children[1].src, `/api/books/1494/reading-images/${'b'.repeat(64)}.png`);
+  for (const attrs of [
+    { ...band, 'data-source-right-width-percent': '0' },
+    { ...band, 'data-source-right-width-percent': '100.1' },
+    { ...band, 'data-source-right-width-percent': '50%;position:fixed' },
+    { ...band, 'data-source-width-percent': '80' },
+    { ...band, class: 'reading-art-parts' },
+    { ...band, style: 'position:fixed' },
+  ]) {
+    const { mount, document } = setup([source('P', [textNode('Prefix')]), source('FIGURE', [image('a')], attrs)]);
+    assert.equal(renderReadingMatter(mount, 1494, '<p>Prefix</p>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+  const foreign = setup([source('FIGURE', [source('IMG', [], { src: '/api/books/1/reading-images/' + 'a'.repeat(64) + '.png' })], band)]);
+  assert.equal(renderReadingMatter(foreign.mount, 1494, '<figure></figure>', foreign.document), false);
+});
+
 test('source-centered matter and underlined headings render with canonical alignment', () => {
   const { mount, document } = setup([
     source('H2', [source('U', [textNode('WARNING!')])], { style: ' text-align : center; ' }),
