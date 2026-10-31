@@ -136,7 +136,7 @@
 .exchange-shop-balance { display: inline-flex; align-items: center; gap: 0.25rem; }
 .exchange-shop-balance .shop-modal-balance { white-space: nowrap; }
 .exchange-shop-diamonds { color: #fda4af; background: #351922; border-color: #9f1239; }
-#exchange-shop-modal { width: 520px; max-width: min(92vw, 520px); }
+#exchange-shop-modal { width: 460px; max-width: min(92vw, 460px); }
 .exchange-shop-body { padding: 0.65rem 0.85rem 0.5rem; overflow-y: auto; font-size: 0.85rem; }
 .exchange-shop-body .secondary-btn, .exchange-shop-body .shop-buy-btn {
   box-sizing: border-box; height: 28px; padding: 0 0.65rem;
