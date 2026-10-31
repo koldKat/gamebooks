@@ -350,6 +350,10 @@ for(const id of BOOK_IDS){
     const {checkPersonnelPanel}=await import('REPO/test/client/battlesim/personnel-browser.mjs');
     await checkPersonnelPanel({app,module,overlay,requestedRosters,check});
   }
+  if(id===1473){
+    const {checkFormationPanel}=await import('REPO/test/client/battlesim/formation-browser.mjs');
+    await checkFormationPanel({app,module,overlay,requestedRosters,check});
+  }
   if(id===1472){
     const {checkBlackRoadPanel}=await import('REPO/test/client/battlesim/black-road-browser.mjs');
     await checkBlackRoadPanel({app,module,overlay,requestedRosters,check});

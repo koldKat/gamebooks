@@ -161,3 +161,55 @@ test('Fatemaster saved outcomes use real seasonal XP awards without rewarding pa
     assert.equal(f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n,2);
   }
 });
+
+test('formation saved outcomes award seasonal XP once and include opening-shot losses but exclude checkpoints', async t => {
+  const {createFormationState}=await import('../public/js/battlesim/engines/combat-command/formation-state.js');
+  const {startFormationFight,beginFormationRound,resolveFormationRoll,cancelFormationFight}=
+    await import('../public/js/battlesim/engines/combat-command/formation-battle.js');
+  const source=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');
+  const registration=source.slice(source.indexOf('const SIM_HISTORY_KEYS ='),source.indexOf('const RETIRED_SIM_HISTORY_KEYS ='));
+  const start=source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
+  const end=source.indexOf('\n  }\n\n  // Award every',start);
+  const unit=(key,count)=>({key,name:key,count,ordnance:1,melee:1,morale:null});
+  const tables=hits=>Object.fromEntries([...'ABCDEFG'].map(chart=>[chart,Array.from({length:11},()=>Array(11).fill(hits))]));
+  function resolved(status){
+    const attack={side:'player',actors:[{key:'p',stat:'melee'}],chart:'C',targets:['e']};
+    const config={label:'Synthetic formation',enemies:[unit('e',1)],rounds:[{from:1,attacks:[attack]}]};
+    if(status==='loss'){
+      config.opening=[{side:'enemy',fixedStrength:10,chart:'E',targets:['p']}];
+      return resolveFormationRoll(startFormationFight([unit('p',1)],config,tables(1)),2);
+    }
+    if(status==='escaped'){
+      config.engagements={enemy:{e:{initial:1,increment:1,every:2}}};
+      config.escapeAtStart={side:'enemy',keys:['e']};
+      let fight=startFormationFight([unit('p',1)],config,tables(1));
+      fight=resolveFormationRoll(beginFormationRound(fight),2);
+      return beginFormationRound(fight);
+    }
+    if(status!=='win'){config.reportOnly=true;config.roundLimit=1;}
+    let fight=resolveFormationRoll(beginFormationRound(startFormationFight([unit('p',1)],config,tables(1))),2);
+    if(status==='cancelled')fight=cancelFormationFight(fight);
+    return fight;
+  }
+  for(const [date,winXp,lossXp]of [['2026-10-31T12:00:00Z',10,10],['2026-11-08T12:00:00Z',20,5],['2026-12-31T12:00:00Z',20,10]]){
+    const f=fixture(t);f.date(date);
+    vm.runInContext(registration+'\nfunction syncFormationOutcomes(newPt,oldPt){const userId=1;'+source.slice(start,end)+'\n}',f.context);
+    const run={path:['1'],inventory:[{id:'keep',count:2}],sim1472:{history:[{ts:1,outcome:'win'}]}};
+    const protectedBefore=JSON.stringify(run);
+    const store=createFormationState(()=>({run,bookId:1473,definition:{id:1473,stateKey:'sim1473'},saveState:()=>{}}));
+    for(const outcome of ['paused','cancelled','escaped','win','loss']){
+      const previous=structuredClone(run),before=f.xp(),fight=resolved(outcome);
+      assert.equal(fight.status,outcome);
+      if(outcome==='loss')assert.equal(fight.round,0);
+      assert.equal(store.update(state=>({...state,fight})),true);
+      f.context.syncFormationOutcomes(run,previous);
+      const expected=outcome==='win'?winXp:outcome==='loss'?lossXp:0;
+      assert.equal(f.xp()-before,expected,date+'/'+outcome);
+      f.context.syncFormationOutcomes(run,previous);assert.equal(f.xp()-before,expected,'duplicate save');
+      const count=run.sim1473.history.length;store.update(state=>state);assert.equal(run.sim1473.history.length,count);
+    }
+    assert.deepEqual(run.sim1473.history.map(entry=>entry.outcome),['escaped','win','loss']);
+    assert.equal(JSON.stringify(Object.fromEntries(Object.entries(run).filter(([key])=>key!=='sim1473'))),protectedBefore);
+    assert.equal(f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n,2);
+  }
+});

@@ -76,6 +76,10 @@
 .reading-frontmatter--structured figure.reading-art-stack > img {
   display: block; width: 100%; max-width: 100%; height: auto; margin: 0; padding: 0; border: 0;
 }
+.reading-art-stack > figure.reading-art-parts,
+.reading-frontmatter--structured figure.reading-art-stack > figure.reading-art-parts {
+  margin: 0; width: 100%;
+}
 .liveread-body img.reading-inline-symbol,
 .m-top img.reading-inline-symbol,
 .reading-frontmatter--structured img.reading-inline-symbol {
