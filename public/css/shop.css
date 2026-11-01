@@ -500,7 +500,7 @@
   padding: 0.3rem 0.6rem 0.35rem;
   border: 1px solid #374151;
   border-radius: 8px;
-  background: rgba(31, 41, 55, 0.65);
+  background: rgba(31, 41, 55, 0.5);
 }
 .books-xp-panel[hidden] { display: none; }
 #books-app-xp-panel { margin-bottom: -0.8rem; }
