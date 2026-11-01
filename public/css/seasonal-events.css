@@ -65,7 +65,7 @@
 @media print { .seasonal-pumpkin { display: none; } }
 .seasonal-event-notice {
   margin: 0 0 .4rem;
-  padding: .55rem .8rem .5rem;
+  padding: .4rem .8rem .35rem;
   border: 1.5px solid #6f5485;
   border-left: 3px solid #d58b48;
   border-radius: 7px;
