@@ -93,7 +93,7 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
         if (sectionLinks) target.setAttribute('href', attr.value);
         continue;
       }
-      if (node.tagName === 'TABLE' && attr.name === 'class' && ['reading-encounter-table', 'reading-wide-table', 'reading-source-prices', 'reading-word-list'].includes(attr.value)) {
+      if (node.tagName === 'TABLE' && attr.name === 'class' && ['reading-encounter-table', 'reading-wide-table', 'reading-source-prices', 'reading-word-list', 'reading-word-list reading-word-list-serif'].includes(attr.value)) {
         target.setAttribute('class', attr.value);
         continue;
       }
@@ -118,13 +118,35 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
       }
       if (node.tagName === 'FIGURE' && ['data-source-width-percent', 'data-source-right-width-percent'].includes(attr.name) && node.getAttribute('class') === 'reading-art-stack') {
         if (!/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(attr.value) || Number(attr.value) <= 0 || Number(attr.value) > 100) throw new Error('Invalid image width');
-        if (node.getAttribute('data-source-width-percent') !== null && node.getAttribute('data-source-right-width-percent') !== null) throw new Error('Conflicting image widths');
+        if (node.getAttribute('data-source-max-width') !== null
+            || (node.getAttribute('data-source-width-percent') !== null && node.getAttribute('data-source-right-width-percent') !== null)) throw new Error('Conflicting image widths');
         // A narrow native band can retain a protruding illustration detail
         // without including neighboring prose in the full-width lower crop.
         target.setAttribute('style', `width:${Number(attr.value)}%${attr.name === 'data-source-right-width-percent' ? ';margin:0 0 0 auto' : ''}`);
         continue;
       }
+      if (node.tagName === 'FIGURE' && attr.name === 'data-source-max-width' && node.getAttribute('class') === 'reading-art-stack') {
+        if (!/^\d+$/.test(attr.value) || Number(attr.value) < 32 || Number(attr.value) > 4000
+            || node.getAttribute('data-source-width-percent') !== null
+            || node.getAttribute('data-source-right-width-percent') !== null) throw new Error('Invalid native image display width');
+        target.setAttribute(attr.name, attr.value);
+        const base = `width:100%;max-width:${Number(attr.value)}px`;
+        const style = node.getAttribute('style');
+        if (style !== null && style !== base && style !== `${base};margin:1em 0`) throw new Error('Invalid native image display style');
+        target.setAttribute('style', style || base);
+        continue;
+      }
       if (attr.name === 'style') {
+        if (node.tagName === 'FIGURE' && node.getAttribute('class') === 'reading-art-stack'
+            && node.getAttribute('data-source-max-width') !== null) {
+          const width = Number(node.getAttribute('data-source-max-width'));
+          if (!/^\d+$/.test(node.getAttribute('data-source-max-width')) || width < 32 || width > 4000
+              || node.getAttribute('data-source-width-percent') !== null
+              || node.getAttribute('data-source-right-width-percent') !== null
+              || ![`width:100%;max-width:${width}px`, `width:100%;max-width:${width}px;margin:1em 0`].includes(attr.value)) throw new Error('Invalid native image display style');
+          target.setAttribute('style', attr.value);
+          continue;
+        }
         if (node.tagName === 'FIGURE' && node.getAttribute('class') === 'reading-art-stack'
             && (node.getAttribute('data-source-right-width-percent') !== null || node.getAttribute('data-source-width-percent') !== null)) {
           const rightAligned = node.getAttribute('data-source-right-width-percent') !== null;

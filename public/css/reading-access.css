@@ -145,6 +145,11 @@
 .reading-frontmatter--structured table.reading-word-list td {
   border: 0; padding: .15em .3em; text-align: left; white-space: nowrap; background: none;
 }
+.liveread-body table.reading-word-list-serif,
+.m-top table.reading-word-list-serif,
+.reading-frontmatter--structured table.reading-word-list-serif {
+  font-family: "Times New Roman", serif;
+}
 .reading-gate-prose > h2 {
   margin: 0 0 0.7rem;
   font-size: 1.1em;

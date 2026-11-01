@@ -320,6 +320,44 @@ test('stacked original image strips retain their order and bounded source width'
   assert.equal(renderReadingMatter(wrongClass, 1285, '<figure>Map</figure>', wrongDocument), false);
 });
 
+test('compact source word lists can retain serif typography', () => {
+  const value = 'reading-word-list reading-word-list-serif';
+  const { mount, document } = setup([
+    source('TABLE', [source('TBODY', [source('TR', [source('TD', [textNode('12-18')])])])], { class: value }),
+  ]);
+  assert.equal(renderReadingMatter(mount, 1502, '<table>Numbers</table>', document), true);
+  assert.equal(mount.children[0].attrs.class, value);
+  const { mount: bad, document: badDocument } = setup([source('TABLE', [], { class: value + ' hidden' })]);
+  assert.equal(renderReadingMatter(bad, 1502, '<table>Numbers</table>', badDocument), false);
+  assert.equal(bad.children.length, 0);
+});
+
+test('native image stacks keep a compact display width across repeated rendering', () => {
+  const image = () => source('IMG', [], { src: `/api/books/1502/reading-images/${'a'.repeat(64)}.png` });
+  const attrs = { class: 'reading-art-stack', 'data-source-max-width': '100', style: 'width:100%;max-width:100px' };
+  for (const input of [attrs, { class: attrs.class, 'data-source-max-width': '100' },
+    { style: attrs.style, 'data-source-max-width': '100', class: attrs.class },
+    { ...attrs, style: attrs.style + ';margin:1em 0' },
+    { style: attrs.style + ';margin:1em 0', 'data-source-max-width': '100', class: attrs.class }]) {
+    const { mount, document } = setup([source('FIGURE', [image(), image()], input)]);
+    assert.equal(renderReadingMatter(mount, 1502, '<figure>Emblem</figure>', document), true);
+    assert.equal(mount.children[0].attrs['data-source-max-width'], '100');
+    assert.equal(mount.children[0].attrs.style, input.style || attrs.style);
+    assert.equal(mount.children[0].children.length, 2);
+  }
+  for (const bad of [
+    ...['0', '31', '4001', '-100', '100.5', 'Infinity', '100px', '100;position:fixed'].map(width => ({ ...attrs, 'data-source-max-width': width })),
+    { ...attrs, style: 'width:100%;max-width:100px;position:fixed' },
+    { ...attrs, 'data-source-width-percent': '50' },
+    { ...attrs, 'data-source-right-width-percent': '50' },
+    { ...attrs, class: 'reading-art-parts' },
+  ]) {
+    const { mount, document } = setup([source('P', [textNode('Prefix')]), source('FIGURE', [image()], bad)]);
+    assert.equal(renderReadingMatter(mount, 1502, '<p>Prefix</p>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
 test('inline source symbols remain protected images within their sentence', () => {
   const src = `/api/books/1285/reading-images/${'a'.repeat(64)}.png`;
   const { mount, document } = setup([
