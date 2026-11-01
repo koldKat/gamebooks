@@ -65,14 +65,14 @@
 @media print { .seasonal-pumpkin { display: none; } }
 .seasonal-event-notice {
   margin: 0 0 .4rem;
-  padding: .6rem .8rem;
-  border: 1px solid #6f5485;
+  padding: .55rem .8rem .5rem;
+  border: 1.5px solid #6f5485;
   border-left: 3px solid #d58b48;
   border-radius: 7px;
   background: #191b2b;
   color: #d9d7e7;
   font-size: .85rem;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 .seasonal-event-notice strong { color: #f0b17e; font-weight: 600; }
 .seasonal-event-ete { opacity:.8; white-space:nowrap; font-size:.9em; }
