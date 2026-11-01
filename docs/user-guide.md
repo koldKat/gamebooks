@@ -588,6 +588,8 @@ Every level gives you a small passive chance (0.01% per level) of a lucky gold c
 
 When you get lucky, a small coin icon in the books screen header (just left of the **F1** button) lights up with a golden glow - click it to claim the coin. It stays dim and unclickable the rest of the time, and only one can ever be waiting at once, so there's no rush once it appears.
 
+Claiming lucky coins also earns alternating milestone gifts: a ruby at 50, 150, 250 and so on, and a diamond at 100, 200, 300 and so on. Each milestone gives one gem. Previous claims count too.
+
 ---
 
 ## Rating

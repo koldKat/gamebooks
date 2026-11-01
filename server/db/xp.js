@@ -330,19 +330,24 @@ const _claimBonusGcTx = db.transaction((userId) => {
   if (!row?.pending_bonus_gc) return { error: 'nothing_to_claim' };
   const beforeDiamonds = _appXpHook
     ? db.prepare('SELECT diamonds_earned FROM user_diamonds WHERE user_id=?').get(userId)?.diamonds_earned || 0 : null;
+  const beforeRubies = _appXpHook
+    ? db.prepare('SELECT rubies_earned FROM user_rubies WHERE user_id=?').get(userId)?.rubies_earned || 0 : null;
   db.prepare('UPDATE users SET pending_bonus_gc = 0 WHERE id = ?').run(userId);
   awardCoins(userId, 'bonus_gc_claim', Date.now(), 1);
   const afterDiamonds = beforeDiamonds === null ? 0
     : db.prepare('SELECT diamonds_earned FROM user_diamonds WHERE user_id=?').get(userId)?.diamonds_earned || 0;
-  return { ok: true, diamondDelta: beforeDiamonds === null ? 0 : afterDiamonds - beforeDiamonds };
+  const afterRubies = beforeRubies === null ? 0
+    : db.prepare('SELECT rubies_earned FROM user_rubies WHERE user_id=?').get(userId)?.rubies_earned || 0;
+  return { ok: true, diamondDelta: beforeDiamonds === null ? 0 : afterDiamonds - beforeDiamonds,
+    rubyDelta: beforeRubies === null ? 0 : afterRubies - beforeRubies };
 });
 
 // Same central safety net as awardCoins/awardXp above.
 function claimBonusGc(userId) {
   if (isImpersonatingContext()) return { error: 'impersonating' };
   const result = _claimBonusGcTx.immediate(userId);
-  if (result.diamondDelta > 0) {
-    try { _appXpHook?.({ userId, diamondDelta: result.diamondDelta }); } catch (_) {}
+  if (result.diamondDelta > 0 || result.rubyDelta > 0) {
+    try { _appXpHook?.({ userId, diamondDelta: result.diamondDelta, rubyDelta: result.rubyDelta }); } catch (_) {}
   }
   return result;
 }

@@ -17,6 +17,7 @@ function moduleWithDb(file, db, dependencies = {}) {
   const context = { module: { exports: {} }, require(name) {
     if (name === './connection') return { db, _naturalCompareByName: (a, b) => a.name.localeCompare(b.name) };
     if (name === './job-xp') return require('../server/db/job-xp');
+    if (name === './rating-stats') return require('../server/db/rating-stats');
     if (name in dependencies) return dependencies[name];
     throw Error('Unexpected dependency ' + name);
   } };
@@ -179,7 +180,7 @@ test('bulk XP summaries match individual calculations without one query pair per
   const fields = 'xp coins_spent xp_boost_pct bonus_undos bonus_fast_travels bonus_heartbeat_xp bonus_coins admin_gifted_coins xp_from_boost bonus_gc_chance_purchased bonus_gc_mint_purchased pending_bonus_gc bonus_diamond_dig_purchased bonus_diamond_exchange_purchased'.split(' ');
   raw.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, ${fields.map(f => f + ' INTEGER DEFAULT 0').join(',')});
     CREATE TABLE coin_events (user_id, event, amount);
-    CREATE TABLE user_diamonds (user_id INTEGER PRIMARY KEY, qualifying_events INTEGER DEFAULT 0, diamonds_earned INTEGER, diamonds_spent INTEGER DEFAULT 0, diamonds_bought INTEGER DEFAULT 0);
+    CREATE TABLE user_diamonds (user_id INTEGER PRIMARY KEY, qualifying_events INTEGER DEFAULT 0, diamonds_earned INTEGER, diamonds_spent INTEGER DEFAULT 0, diamonds_bought INTEGER DEFAULT 0, dig_progress INTEGER DEFAULT 0);
     CREATE TABLE diamond_market (id INTEGER PRIMARY KEY, diamonds INTEGER);
     CREATE TABLE user_job_xp (user_id INTEGER PRIMARY KEY, xp INTEGER);
     CREATE TABLE job_xp_policy (id INTEGER PRIMARY KEY, user_count INTEGER);

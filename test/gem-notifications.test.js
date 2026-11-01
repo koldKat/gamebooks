@@ -14,7 +14,7 @@ function fixture(t) {
     CREATE TABLE xp_events(user_id INTEGER,event TEXT,ref TEXT,UNIQUE(user_id,event,ref));
     CREATE TABLE coin_events(user_id INTEGER,event TEXT,ref TEXT,amount INTEGER,UNIQUE(user_id,event,ref));
     CREATE TABLE notifications(user_id INTEGER,type TEXT,payload TEXT);`);
-  initializeDiamondBalances(db);initializeLuckyCoinDiamonds(db);initializeRubies(db);
+  initializeDiamondBalances(db);initializeRubies(db);initializeLuckyCoinDiamonds(db);
   initializeGemNotifications(db);initializeGemNotifications(db);
   const notices=()=>db.prepare('SELECT user_id,type,payload FROM notifications ORDER BY rowid').all()
     .map(n=>({...n,payload:JSON.parse(n.payload)}));
@@ -28,11 +28,17 @@ test('diamond mining and Lucky Coin awards notify once at the actual earning thr
   insert.run('999');insert.run('999');
   assert.deepEqual(notices(),[{user_id:1,type:'diamond_gain',payload:{amount:1,balance:1}}]);
   db.exec("INSERT INTO xp_events VALUES(1,'idle_heartbeat','one'); INSERT INTO coin_events VALUES(1,'bonus_gc_claim','claim',250)");
-  assert.deepEqual(notices().at(-1),{user_id:1,type:'diamond_gain',payload:{amount:2,balance:3}});
+  assert.deepEqual(notices().slice(-2),[
+    {user_id:1,type:'ruby_gain',payload:{amount:2,balance:2}},
+    {user_id:1,type:'diamond_gain',payload:{amount:3,balance:4}},
+  ]);
   db.exec("INSERT OR IGNORE INTO coin_events VALUES(1,'bonus_gc_claim','claim',250)");
-  assert.equal(notices().length,2);
+  assert.equal(notices().length,3);
   db.exec("INSERT INTO coin_events VALUES(2,'bonus_gc_claim','first',100)");
-  assert.deepEqual(notices().at(-1),{user_id:2,type:'diamond_gain',payload:{amount:1,balance:1}});
+  assert.deepEqual(notices().slice(-2),[
+    {user_id:2,type:'ruby_gain',payload:{amount:1,balance:1}},
+    {user_id:2,type:'diamond_gain',payload:{amount:1,balance:1}},
+  ]);
 });
 
 test('ruby insert, later completions and multiple-credit backfills notify without trade or restart duplicates',t=>{
