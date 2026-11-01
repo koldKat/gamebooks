@@ -147,7 +147,7 @@ button, input {
   display: flex;
   flex-direction: column;
 }
-.m-top p { margin: 0 0 0.9rem; text-align: justify; hyphens: auto; }
+.m-top p { margin: 0 0 0.9rem; text-align: justify; hyphens: auto; overflow-wrap: anywhere; }
 .m-top p:last-child { margin-bottom: 0; }
 .m-top > * { flex-shrink: 0; min-width: 0; }
 .m-top figure { margin: 0 0 0.9rem; min-width: 0; }
