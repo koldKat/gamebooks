@@ -21,6 +21,7 @@ import { TROPHY_SVG, BROKEN_SHIELD_SVG, terminalHeadingKey } from '../../js/read
 import { showReadingGate } from '../../js/reading/access.js';
 import { renderReadingMatter } from '../../js/reading/content.js';
 import { bindReadingMapEntry, isReadingMapSection, readingChoices } from '../../js/reading/map-entry.js';
+import { bindReadingPreviousEntry } from '../../js/reading/previous-entry.js';
 
 // Debounce reward checks by 750ms to allow deferred server awards to land.
 // Merge nearby toast deltas instead of overwriting feedback.
@@ -416,7 +417,7 @@ async function _showSection(sec) {
   _hideGraphLoading();
   _updateRunControls();
 
-  _bindMapEntry(top, token);
+  _bindReadingNavigation(top, token);
 
   // Show non-section links as bonus prose without changing the graph or run path.
   top.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -530,7 +531,7 @@ async function _showExtra(key, readOnly = false) {
   top.innerHTML = `${data.html}<p class="m-back-link"><a href="#" id="m-extra-back">${t('mobile.back')}</a></p>`;
   _readingViewReadOnly = readOnly;
   top.scrollTop = 0;
-  _bindMapEntry(top, token, readOnly);
+  _bindReadingNavigation(top, token, readOnly);
   document.getElementById('m-extra-back')?.addEventListener('click', e => {
     e.preventDefault();
     _returnToCurrent();
@@ -557,12 +558,12 @@ async function _showExtra(key, readOnly = false) {
   });
 }
 
-function _bindMapEntry(top, token, readOnly = false) {
+function _bindReadingNavigation(top, token, readOnly = false) {
   const bookId = currentBookId;
   const authToken = getToken();
   const run = currentPlaythrough();
   const sec = currentSection();
-  bindReadingMapEntry(top, {
+  const options = {
     canNavigate: () => !readOnly && token === _showToken && bookId === currentBookId && authToken === getToken()
       && run != null && run === currentPlaythrough() && sec === currentSection(),
     onNavigate(marker) {
@@ -571,7 +572,9 @@ function _bindMapEntry(top, token, readOnly = false) {
       _commitChoices(sec, [...(state.graph[sec]?.choices || []), marker]);
       _navigate(marker);
     },
-  });
+  };
+  bindReadingMapEntry(top, options);
+  bindReadingPreviousEntry(top, { ...options, getPath: () => run?.path });
 }
 
 // Preview without moving the run or graph center; in-text links lead to more previews.
@@ -605,6 +608,7 @@ async function _previewSection(sec) {
     <p class="m-back-link"><a href="#" id="m-preview-return">${t('mobile.preview_return')}</a></p>`;
   _readingViewReadOnly = true;
   bindReadingMapEntry(top, { canNavigate: () => false, onNavigate() {} });
+  bindReadingPreviousEntry(top, { canNavigate: () => false });
   top.scrollTop = 0;
 
   document.getElementById('m-preview-return').addEventListener('click', e => {

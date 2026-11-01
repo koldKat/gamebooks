@@ -28,6 +28,7 @@ function setup() {
     currentSection: () => run?.path.at(-1), parseSecId: raw => Number(raw),
     isSectionMapped: sec => sec === 100, navigated, previewed,
     bindReadingMapEntry() {},
+    bindReadingPreviousEntry() {},
     renderReadingMatter(mount) { mount.links = ['#section-100', '#section-81'].map(makeLink); return true; },
     apiFetch: async url => {
       requests.push(url);

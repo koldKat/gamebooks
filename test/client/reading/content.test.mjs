@@ -50,6 +50,22 @@ test('named section links remain inert fragments and can be disabled in access p
   }
 });
 
+test('printed previous-entry instructions retain only the exact local fragment and become inert in previews', () => {
+  for (const sectionLinks of [true, false]) {
+    const { mount, document } = setup([source('P', [source('A', [textNode('Go back and try again!')], { href: '#reading-previous-entry' })])]);
+    assert.equal(renderReadingMatter(mount, 1501, '<p>Go back</p>', document, { sectionLinks }), true);
+    const link = mount.children[0].children[0];
+    assert.equal(link.tag, sectionLinks ? 'a' : 'span');
+    assert.equal(link.attrs.href, sectionLinks ? '#reading-previous-entry' : undefined);
+  }
+  for (const attrs of [{ href: '#reading-previous-entry/extra' }, { href: '#reading-previous-entry extra' },
+    { href: '#reading-previous-entry', onclick: 'bad()' }, { href: '#reading-previous-entry', target: '_blank' }]) {
+    const { mount, document } = setup([source('P', [source('A', [], attrs)])]);
+    assert.equal(renderReadingMatter(mount, 1501, '<p>Go back</p>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
 test('printed number-and-letter map references remain safe section fragments', () => {
   for (const marker of ['1A', '6D', '105b']) {
     for (const sectionLinks of [true, false]) {
@@ -102,6 +118,16 @@ test('original price lists preserve their source rows with only the permitted ta
   assert.equal(mount.children[0].children[0].children[0].children.length, 2);
   const invalid = setup([source('TABLE', [row], { class: 'reading-source-prices hidden' })]);
   assert.equal(renderReadingMatter(invalid.mount, 1495, '<table></table>', invalid.document), false);
+});
+
+test('source word lists preserve their columns without allowing arbitrary table attributes', () => {
+  const row = source('TR', ['TWEETER', 'PARA-GOOMBA', 'PHANTO'].map(word => source('TD', [source('STRONG', [textNode(word)])])));
+  const { mount, document } = setup([source('TABLE', [source('TBODY', [row])], { class: 'reading-word-list' })]);
+  assert.equal(renderReadingMatter(mount, 1501, '<table></table>', document), true);
+  assert.equal(mount.children[0].attrs.class, 'reading-word-list');
+  assert.equal(mount.children[0].children[0].children[0].children.length, 3);
+  const rejected = setup([source('TABLE', [row], { class: 'reading-word-list hidden' })]);
+  assert.equal(renderReadingMatter(rejected.mount, 1501, '<table></table>', rejected.document), false);
 });
 
 test('wide source tables retain a keyboard-accessible scroll container with strict attributes', () => {
@@ -310,6 +336,21 @@ test('inline source symbols remain protected images within their sentence', () =
     const { mount, document } = setup([source('P', [source('IMG', [], attrs)])]);
     assert.equal(renderReadingMatter(mount, 1285, '<p>Roll</p>', document), false);
     assert.equal(mount.children.length, 0);
+  }
+});
+
+test('native opening initials and words retain their protected inline class without accepting extra attributes', () => {
+  const src = `/api/books/1501/reading-images/${'a'.repeat(64)}.png`;
+  for (const className of ['reading-inline-initial', 'reading-inline-word']) {
+    const { mount, document } = setup([source('P', [source('IMG', [], { src, alt: 'M', class: className }), textNode('ario')])]);
+    assert.equal(renderReadingMatter(mount, 1501, '<p>Mario</p>', document), true);
+    assert.equal(mount.children[0].children[0].attrs.class, className);
+    for (const attrs of [{ src, class: className + ' hidden' }, { src, class: className, style: 'height:99em' },
+      { src: src.replace('/1501/', '/1502/'), class: className }]) {
+      const rejected = setup([source('P', [source('IMG', [], attrs)])]);
+      assert.equal(renderReadingMatter(rejected.mount, 1501, '<p>Mario</p>', rejected.document), false);
+      assert.equal(rejected.mount.children.length, 0);
+    }
   }
 });
 

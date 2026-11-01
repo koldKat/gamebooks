@@ -8,7 +8,7 @@ for (const [name, path] of [
   ['mobile', '../../../public/mobile/js/reader.js'],
 ]) {
   const source = readFileSync(new URL(path, import.meta.url), 'utf8');
-  const start = source.indexOf('function _bindMapEntry(');
+  const start = source.indexOf('function _bindReadingNavigation(');
   const end = source.indexOf('\n}\n', start) + 2;
   assert.ok(start >= 0 && end > start);
   const binding = source.slice(start, end);
@@ -25,11 +25,12 @@ for (const [name, path] of [
       currentPlaythrough: () => run, currentSection: () => run.path.at(-1),
       _showToken: 1, _previewSec: null, _accessPending: false, _accessLocked: false,
       bindReadingMapEntry: (_container, options) => { handlers = options; },
+      bindReadingPreviousEntry() {},
       navigate, _navigate: navigate, commitChoices, _commitChoices: commitChoices,
       suppressAutoNav() {}, _showSection() {},
     });
     vm.runInContext(binding, context);
-    context._bindMapEntry({}, 1);
+    context._bindReadingNavigation({}, 1);
     return { visits, state, handlers };
   }
 

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { sectionLabel } from '../../../public/js/core/section-labels.js';
+import { bindReadingPreviousEntry } from '../../../public/js/reading/previous-entry.js';
 
 const source = readFileSync(new URL('../../../public/mobile/js/reader.js', import.meta.url), 'utf8')
   .replace(/^import[\s\S]*?;$/gm, '').replace(/^export /gm, '');
@@ -25,7 +26,7 @@ function setup() {
   let run = { path: [1], completed: false }, auth = 'one';
   const context = vm.createContext({
     document: { getElementById: id => id === 'm-top' ? top : { style: {}, addEventListener() {} } },
-    console, state, sectionLabel, currentBookId: 570, currentPlaythrough: () => run,
+    console, state, sectionLabel, bindReadingPreviousEntry, currentBookId: 570, currentPlaythrough: () => run,
     currentSection: () => run.path.at(-1), getToken: () => auth,
     isValidSecId: value => Number.isInteger(value) && value > 0 && value <= 150,
     isTerminal: value => value === 0 || value === -1, parseSecId: Number,

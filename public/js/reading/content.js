@@ -88,15 +88,17 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
     const target = document.createElement(node.tagName === 'A' && !sectionLinks ? 'span' : node.tagName.toLowerCase());
     for (const attr of node.attributes) {
       if (node.tagName === 'IMG' && ['src', 'alt', 'loading'].includes(attr.name)) continue;
-      if (node.tagName === 'A' && attr.name === 'href' && /^#section-(?:[1-9]\d{0,5}[a-zA-Z]?|[a-zA-Z][a-zA-Z0-9_-]{0,63})$/.test(attr.value)) {
+      if (node.tagName === 'A' && attr.name === 'href' && (attr.value === '#reading-previous-entry'
+          || /^#section-(?:[1-9]\d{0,5}[a-zA-Z]?|[a-zA-Z][a-zA-Z0-9_-]{0,63})$/.test(attr.value))) {
         if (sectionLinks) target.setAttribute('href', attr.value);
         continue;
       }
-      if (node.tagName === 'TABLE' && attr.name === 'class' && ['reading-encounter-table', 'reading-wide-table', 'reading-source-prices'].includes(attr.value)) {
+      if (node.tagName === 'TABLE' && attr.name === 'class' && ['reading-encounter-table', 'reading-wide-table', 'reading-source-prices', 'reading-word-list'].includes(attr.value)) {
         target.setAttribute('class', attr.value);
         continue;
       }
-      if (node.tagName === 'IMG' && attr.name === 'class' && attr.value === 'reading-inline-symbol') {
+      if (node.tagName === 'IMG' && attr.name === 'class'
+          && ['reading-inline-symbol', 'reading-inline-initial', 'reading-inline-word'].includes(attr.value)) {
         target.setAttribute('class', attr.value);
         continue;
       }

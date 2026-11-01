@@ -31,7 +31,7 @@
 .reading-frontmatter--structured { white-space: normal; }
 .reading-frontmatter--structured figure { margin: 0 0 1rem; }
 .reading-frontmatter--structured figure img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
-.reading-frontmatter--structured p > img:not(.reading-inline-symbol) { display: block; max-width: 100%; height: auto; margin: 1em auto; }
+.reading-frontmatter--structured p > img:not(.reading-inline-symbol):not(.reading-inline-initial):not(.reading-inline-word) { display: block; max-width: 100%; height: auto; margin: 1em auto; }
 .reading-illustrated-prose,
 .reading-frontmatter--structured figure.reading-illustrated-prose {
   display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
@@ -121,6 +121,29 @@
 .reading-frontmatter--structured img.reading-inline-symbol {
   display: inline-block; width: auto; max-width: 0.85em; height: auto; max-height: 1.15em;
   vertical-align: baseline; margin: 0 0.12em; padding: 0; border: 0;
+}
+.liveread-body img.reading-inline-initial,
+.m-top img.reading-inline-initial,
+.reading-frontmatter--structured img.reading-inline-initial,
+.liveread-body img.reading-inline-word,
+.m-top img.reading-inline-word,
+.reading-frontmatter--structured img.reading-inline-word {
+  display: inline-block; width: auto; max-width: 100%; height: 1.8em;
+  vertical-align: baseline; margin: 0 .02em 0 0; padding: 0; border: 0;
+}
+.liveread-body img.reading-inline-word,
+.m-top img.reading-inline-word,
+.reading-frontmatter--structured img.reading-inline-word { height: 1em; }
+.liveread-body table.reading-word-list,
+.m-top table.reading-word-list,
+.reading-frontmatter--structured table.reading-word-list {
+  width: max-content; max-width: 100%; margin: 0 auto; table-layout: auto;
+  border: 0; border-collapse: collapse; font-family: Arial, sans-serif;
+}
+.liveread-body table.reading-word-list td,
+.m-top table.reading-word-list td,
+.reading-frontmatter--structured table.reading-word-list td {
+  border: 0; padding: .15em .3em; text-align: left; white-space: nowrap; background: none;
 }
 .reading-gate-prose > h2 {
   margin: 0 0 0.7rem;

@@ -11,6 +11,7 @@ import { TROPHY_SVG, BROKEN_SHIELD_SVG, terminalHeadingKey } from './liveread-sh
 import { showReadingGate } from './access.js';
 import { renderReadingMatter } from './content.js';
 import { bindReadingMapEntry, isReadingMapSection, readingChoices } from './map-entry.js';
+import { bindReadingPreviousEntry } from './previous-entry.js';
 
 // Shares the activity feed's loading indicator and feed.css, loaded on index.html.
 const _loadingHtml = () => `<div class="liveread-loading">
@@ -121,7 +122,7 @@ async function _showSection(sec) {
   body.scrollTop = 0;
   if (isReadingMapSection(data)) (state.graph[sec] ||= { choices: [] }).manualNavigation = true;
   if (data.choices?.length) commitChoices(sec, readingChoices(data, state.graph[sec]?.choices, state.graph[sec]?.manualNavigation));
-  _bindMapEntry(body, token);
+  _bindReadingNavigation(body, token);
   // Hovering an in-text choice link highlights the matching node on the graph,
   // same as the run trail's pills and the choice-list buttons (play.js).
   if (network) {
@@ -150,7 +151,7 @@ async function _showExtra(key) {
   const data = result.data;
   body.innerHTML = `${data.html}<p class="liveread-back"><a href="#" id="liveread-back-link">${t('btn.back')}</a></p>`;
   body.scrollTop = 0;
-  _bindMapEntry(body, token);
+  _bindReadingNavigation(body, token);
   document.getElementById('liveread-back-link')?.addEventListener('click', e => {
     e.preventDefault();
     const sec = _shownSec;
@@ -159,12 +160,12 @@ async function _showExtra(key) {
   });
 }
 
-function _bindMapEntry(body, token) {
+function _bindReadingNavigation(body, token) {
   const bookId = currentBookId;
   const authToken = getToken();
   const run = currentPlaythrough();
   const sec = currentSection();
-  bindReadingMapEntry(body, {
+  const options = {
     canNavigate: () => token === _showToken && bookId === currentBookId && authToken === getToken()
       && run != null && run === currentPlaythrough() && sec === currentSection()
       && _previewSec === null && !_accessPending && !_accessLocked,
@@ -178,7 +179,9 @@ function _bindMapEntry(body, token) {
       } finally { suppressAutoNav(false); }
       if (currentSection() === marker) _showSection(marker);
     },
-  });
+  };
+  bindReadingMapEntry(body, options);
+  bindReadingPreviousEntry(body, { ...options, getPath: () => run?.path });
 }
 
 // Frontmatter/backmatter for the open book; fetched once the gate clears.
@@ -323,6 +326,7 @@ export async function previewSection(sec) {
   _updateHeading(sec);
   body.innerHTML = `<p class="liveread-preview-banner">${t('mobile.preview_banner', { sec: sectionLabel(sec, currentBookId) })}</p>${data.html}<p class="liveread-back"><a href="#" id="liveread-preview-return">${t('mobile.preview_return')}</a></p>`;
   bindReadingMapEntry(body, { canNavigate: () => false, onNavigate() {} });
+  bindReadingPreviousEntry(body, { canNavigate: () => false });
   body.scrollTop = 0;
   document.getElementById('liveread-preview-return').addEventListener('click', e => {
     e.preventDefault();
