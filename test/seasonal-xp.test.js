@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const Database = require('better-sqlite3');
 const { seasonalXpMultiplier } = require('../server/seasonal-events');
+const { initializeSeasonParticipation, recordSeasonParticipation } = require('../server/db/season-participation');
 
 test('Diwali doubles normal and simulator wins only within its moving Sofia dates', () => {
   for (const event of ['win_run','first_win','first_win_ow','battlesim_win']) {
@@ -49,9 +50,12 @@ function fixture(t) {
     CREATE TABLE xp_events(user_id INTEGER,event TEXT,ref TEXT,template_id INTEGER,UNIQUE(user_id,event,ref));
     CREATE TABLE coin_events(user_id INTEGER,event TEXT,ref TEXT,amount INTEGER,UNIQUE(user_id,event,ref));
     CREATE TABLE notifications(user_id INTEGER,type TEXT,payload TEXT);
-    CREATE TABLE level_up_templates(id INTEGER,active INTEGER);`);
+    CREATE TABLE level_up_templates(id INTEGER,active INTEGER);
+    CREATE TABLE user_job_xp(user_id INTEGER PRIMARY KEY,xp INTEGER DEFAULT 0);`);
+  initializeSeasonParticipation(db, new Date('2026-02-01T12:00:00Z'));
   let date = new Date('2026-10-31T12:00:00Z'), impersonating = false;
   const context = vm.createContext({db, Math, _appXpHook:null, _xpFeedHook:null,
+    recordSeasonParticipation:(db,id,event)=>recordSeasonParticipation(db,id,event,date),
     _insertNotif:db.prepare('INSERT INTO notifications VALUES(?,?,?)'),
     isImpersonatingContext:()=>impersonating,
     seasonalXpMultiplier:event=>seasonalXpMultiplier(event,date),
@@ -80,6 +84,25 @@ test('real XP transaction doubles losses, preserves boosts and never re-awards a
   f.date('2026-11-04T12:00:00Z');
   f.award('death_run','run:5');assert.equal(f.xp(),480,'normal amount after event');
   assert.equal(f.award('death_run','run:1'),false);assert.equal(f.xp(),480);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM seasonal_participation_days').get().n,1);
+});
+
+test('season participation requires a genuine positive award and ignores duplicates and impersonation', t => {
+  const f = fixture(t);
+  f.award('death_run', 'zero', 0);
+  f.award('win_run', 'unrelated', 20);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM seasonal_participation_days').get().n, 0);
+  f.award('death_run', 'real', 20); f.award('death_run', 'real', 20);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM seasonal_participation_days').get().n, 1);
+  f.date('2026-11-01T12:00:00Z'); f.impersonate(); f.award('death_run', 'preview', 20);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM seasonal_participation_days').get().n, 1);
+});
+
+test('a fully capped award with no XP gain does not create a participation day', t => {
+  const f = fixture(t); f.context._liveUserCount = () => 0;
+  f.db.exec('UPDATE users SET xp=999'); f.award('death_run', 'capped', 20);
+  assert.equal(f.xp(), 999);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM seasonal_participation_days').get().n, 0);
 });
 
 test('Christmas doubles wins, new runs, full-book milestones and heartbeats only', t => {

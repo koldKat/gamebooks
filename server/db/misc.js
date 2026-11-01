@@ -5,6 +5,7 @@
 const { db, _naturalCompareByName } = require('./connection');
 const { _insertNotif, coinBalance, computeLevel } = require('./xp');
 const { createBulkGcGifts } = require('./bulk-gifts');
+const { createSeasonPayouts } = require('./season-payouts');
 const { adminNotificationSql } = require('./notification-policy');
 
 const adminNotificationFilter = adminNotificationSql('type', 'payload');
@@ -111,11 +112,13 @@ function getAppBirthTimestamp() {
 }
 
 const bulkGcGifts = createBulkGcGifts({ db, getSupply: getAdminGcSupply, computeLevel, gift: adminGiftGc });
+const settleSeasonParticipation = createSeasonPayouts({ db, getSupply: getAdminGcSupply, gift: adminGiftGc });
 
 module.exports = {
   getNotifications, markNotificationsSeen,
   getAllBooksForExport, getBookForExport,
   getAdminGcSupply, adminGiftGc,
+  settleSeasonParticipation,
   adminPreviewBulkGc: bulkGcGifts.preview, adminGiftBulkGc: bulkGcGifts.send,
   getAppBirthTimestamp,
   backupDb: dest => db.backup(dest),

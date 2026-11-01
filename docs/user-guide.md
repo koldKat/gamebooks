@@ -37,6 +37,8 @@ Halloween runs from **October 28 through November 3** each year. Halloween compa
 
 **New Year** runs **December 29–January 4**. The companions are the champagne bottle, a party hat and a celebration star. The bottle keeps its bubbles, cork and foam, clinking glasses and fireworks. The party hat has a horn, confetti and a wiggle; the star has a comet trail, sparkles and a color shimmer. Every XP award is doubled, including job XP. Both winter events use the same mouse-companion and reduced-animation settings.
 
+When an event ends, each player receives **1 gold coin for each Sofia calendar day on which they earned qualifying double XP**. Multiple qualifying actions on the same day count once. Rewards come from the Gamemaster's pool only if it can cover every participant in full; otherwise that event's entire payout is skipped permanently. Recipients receive a short thank-you notification.
+
 ### Centre - Activity feed
 
 Shows what everyone's been up to over the last 30 days. You don't need an account to read it.

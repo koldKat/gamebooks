@@ -12,6 +12,7 @@ let _rubyCompletionChecker;
 const { getJobTitle } = require('./job-xp');
 const { advanceHeartbeatCoins } = require('./heartbeat-coins');
 const { seasonalXpMultiplier } = require('../seasonal-events');
+const { recordSeasonParticipation } = require('./season-participation');
 
 // ── Impersonation tokens ──────────────────────────────────────────────────────
 
@@ -374,6 +375,7 @@ const _awardXpTx = db.transaction((userId, event, ref, amount) => {
   if (r.changes > 0) _rollBonusGc(userId, beforeXp, before?.pending_bonus_gc, before?.bonus_gc_chance_purchased);
   if (r.changes > 0 && boosted > 0) {
     db.prepare('UPDATE users SET xp = xp + ?, xp_from_boost = xp_from_boost + ?, xp_boost_carry = ? WHERE id = ?').run(boosted, extraWhole, newCarry, userId);
+    recordSeasonParticipation(db, userId, event);
     try { _appXpHook?.({ userId, xpDelta: boosted }); } catch (_) {}
     const after    = db.prepare('SELECT xp FROM users WHERE id = ?').get(userId)?.xp ?? 0;
     const lvBefore = computeLevel(beforeXp);
@@ -446,7 +448,10 @@ function awardIdleHeartbeatXp(userId) {
     const room       = Math.max(0, xpForLevel(curLevel + 1) - 1 - curXp);
     const add        = Math.min(Math.floor((base * curLevel * 0.1 + (row?.bonus_heartbeat_xp ?? 0) * 0.1)
       * seasonalXpMultiplier('idle_heartbeat')), room);
-    if (add > 0) db.prepare('UPDATE users SET xp = xp + ? WHERE id = ?').run(add, userId);
+    if (add > 0) db.transaction(() => {
+      db.prepare('UPDATE users SET xp = xp + ? WHERE id = ?').run(add, userId);
+      recordSeasonParticipation(db, userId, 'idle_heartbeat');
+    })();
     _rollBonusGc(userId, curXp, row?.pending_bonus_gc, row?.bonus_gc_chance_purchased);
     const pendingAfter = db.prepare('SELECT pending_bonus_gc FROM users WHERE id = ?').get(userId)?.pending_bonus_gc;
     return { awarded: add > 0, coinRolled: !row?.pending_bonus_gc && !!pendingAfter, heartbeatCoinsAwarded };

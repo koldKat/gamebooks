@@ -160,6 +160,7 @@ db.exec(`
 
 require('./db/diamonds').initializeDiamondBalances(db);
 require('./db/job-xp').initializeJobXp(db);
+require('./db/season-participation').initializeSeasonParticipation(db);
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS coin_events (
@@ -931,6 +932,7 @@ const {
   getNotifications, markNotificationsSeen,
   getAllBooksForExport, getBookForExport,
   getAdminGcSupply, adminGiftGc, adminPreviewBulkGc, adminGiftBulkGc,
+  settleSeasonParticipation,
   getAppBirthTimestamp,
   backupDb,
 } = require('./db/misc');
@@ -1014,6 +1016,7 @@ module.exports = {
   getAppBirthTimestamp,
   getAdminGcSupply, adminGiftGc, adminPreviewBulkGc, adminGiftBulkGc,
   readingAccess,
+  settleSeasonParticipation,
   backupDb,
 };
 

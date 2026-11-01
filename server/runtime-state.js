@@ -202,6 +202,15 @@ const _uptimeStart = Math.floor(Date.now() / 1000);
 const _sessionStartAt  = parseInt(db.getAdminSetting('server_session_start_at') || String(_uptimeStart));
 const _appBirthAt      = db.getAppBirthTimestamp(); // MIN(created_at) across users + books
 const _activeTagline   = db.getRandomTagline();
+function _settleSeasonParticipation() {
+  const { userIds } = db.settleSeasonParticipation(_appBirthAt);
+  if (userIds.length) {
+    const { userBadgePush } = require('./sse');
+    for (const userId of userIds) userBadgePush(userId);
+  }
+}
+_runBackgroundTask('season participation rewards', _settleSeasonParticipation);
+setInterval(() => _runBackgroundTask('season participation rewards', _settleSeasonParticipation), 60_000).unref();
 // Sample every 10s to bound unmeasured gaps, including short crash cycles.
 setInterval(() => {
   _runBackgroundTask('uptime heartbeat', () => {
