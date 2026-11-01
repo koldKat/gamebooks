@@ -270,11 +270,13 @@ export function userProgressTooltipHtml(u) {
   const upgrade = (label, count, bonus) => `<tr><th scope="row">${label}</th><td>${number(count).toLocaleString()}</td><td>${esc(bonus)}</td></tr>`;
   const percent = (count, step = 0.1) => `+${(number(count) * step).toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
   const balance = Number.isFinite(+u.coinsBalance) ? +u.coinsBalance : 0;
+  const heartbeatRate = ((number(u.bonusHeartbeatXp) + number(u.bonusHeartbeatXpFree ?? u.level)) * 0.1)
+    .toLocaleString(undefined, { maximumFractionDigits: 1 });
   return `<div class="admin-progress-tooltip"><strong>${esc(u.username)}</strong>`
     + (u.display_name && u.display_name !== u.username ? `<div class="admin-progress-alias">${esc(u.display_name)}</div>` : '')
     + section('Level', number(u.level), u.title, number(u.xp), number(u.levelXp), number(u.nextLevelXp), 'admin-progress-main')
     + section('Job Level', job, u.jobTitle, number(u.jobXp), 1000*job*(job+1)/2, 1000*(job+1)*(job+2)/2, 'admin-progress-job', 'EV')
-    + `<div class="admin-progress-caption"><span>XP boost: ${number(u.xpBoostPct)}%</span></div>`
+    + `<div class="admin-progress-caption"><span>XP boost: ${number(u.xpBoostPct)}%</span><span>Heartbeat: +${heartbeatRate} XP/min</span></div>`
     + '<dl class="admin-progress-facts">'
     + fact('Bronze coins', number(u.bronzeBalance).toLocaleString(), 'val-bronze')
     + fact('Silver coins', number(u.silverBalance).toLocaleString(), 'val-silver')
