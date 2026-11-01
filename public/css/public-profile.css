@@ -78,7 +78,7 @@
 }
 
 .pub-modal-body:has(> .pub-profile-header) {
-  padding: 0.4rem 0.45rem;
+  padding: 0.625rem;
 }
 
 #pub-graph-container {
