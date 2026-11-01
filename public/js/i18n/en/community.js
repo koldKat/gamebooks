@@ -32,7 +32,6 @@ export default {
     'feed.header_sub': '(last 30 days)',
     'feed.empty':      'No activity in the last 30 days.',
     'feed.filter.label': 'Activity filters',
-    'feed.filter.caption': 'Filter:',
     'feed.filter.catalog': 'Catalog',
     'feed.filter.library': 'Library',
     'feed.filter.runs': 'Runs',

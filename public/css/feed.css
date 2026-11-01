@@ -35,19 +35,10 @@
 .feed-header-label { white-space: nowrap; }
 .feed-filters {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.25rem;
   margin-left: auto;
-}
-.feed-filter-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #d1d5db;
-  margin-right: 0.15rem;
-  text-transform: none;
-  letter-spacing: 0;
 }
 .feed-filter-btn {
   appearance: none;

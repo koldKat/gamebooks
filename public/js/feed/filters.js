@@ -23,7 +23,7 @@ export function feedHeaderHtml(canFilter, disabled) {
   const heading = `${t('feed.header')} <span class="feed-header-sub">${t('feed.header_sub')}</span>`;
   if (!canFilter) return `<div id="feed-header">${heading}</div>`;
   const buttons = FEED_FILTERS.map(key => `<button type="button" class="feed-filter-btn" data-feed-filter="${key}" aria-pressed="${!disabled.has(key)}">${escapeHtml(t('feed.filter.' + key))}</button>`).join('');
-  return `<div id="feed-header" class="feed-header--filters"><span class="feed-header-label">${heading}</span><div class="feed-filters" role="group" aria-label="${escapeHtml(t('feed.filter.label'))}"><span class="feed-filter-label">${escapeHtml(t('feed.filter.caption'))}</span>${buttons}</div></div>`;
+  return `<div id="feed-header" class="feed-header--filters"><span class="feed-header-label">${heading}</span><div class="feed-filters" role="group" aria-label="${escapeHtml(t('feed.filter.label'))}">${buttons}</div></div>`;
 }
 
 export function bindFeedFilters(root, toggle) {
