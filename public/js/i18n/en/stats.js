@@ -108,7 +108,7 @@ export default {
     'stats.series':              'Series',
     'stats.rating':              'Rating',
     'stats.votes':               'Votes',
-    'stats.average':             'Average',
+    'stats.average':             'Avg.',
 
     'stats.categories':     'Categories',
     'stats.threads':        'Threads',
