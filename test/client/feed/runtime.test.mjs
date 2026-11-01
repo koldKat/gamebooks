@@ -12,6 +12,6 @@ test('feed preserves rendering, loading, interactions, previews and day covers',
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const { digest, cases } = JSON.parse(result.stdout);
   assert.equal(cases, 38);
-  // Includes the player, book and news filter ordering in the rendered header.
-  assert.equal(digest, '5615821549a4529aab1f5fd4538d4752a8e123be8b77dfc438e8ed8595aa6dfe');
+  // Includes the Filter caption and player, book and news filter ordering.
+  assert.equal(digest, 'a0fa85a12d1b98163ef39b14f946deb9c633514ace3ffbbb2e48677e96fc3ebc');
 });
