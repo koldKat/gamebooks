@@ -155,7 +155,7 @@
   overflow-wrap: anywhere;
 }
 .stats-rating-table th { color: #9ca3af; font-weight: 400; }
-.stats-rating-table th:first-child { text-align: left; width: 22%; }
+.stats-rating-table th:first-child { text-align: left; width: 2.6rem; padding-left: 0; }
 .stats-rating-table tbody tr:nth-child(n + 3) th { text-align: right; white-space: nowrap; }
 .stats-rating-table thead th { padding-bottom: 0.15rem; }
 .stats-rating-table td { color: #e5e7eb; }
