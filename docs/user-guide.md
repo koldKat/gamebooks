@@ -590,6 +590,8 @@ When you get lucky, a small coin icon in the books screen header (just left of t
 
 Claiming lucky coins also earns alternating milestone gifts: a ruby at 50, 150, 250 and so on, and a diamond at 100, 200, 300 and so on. Each milestone gives one gem. Previous claims count too.
 
+Players' combined lucky coin claims also replenish the shared market: one ruby for every 500 claimed coins and one diamond for every 1,000. At each 1,000-coin milestone, both gems are mined.
+
 ---
 
 ## Rating

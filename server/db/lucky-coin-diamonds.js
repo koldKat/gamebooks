@@ -45,6 +45,42 @@ function initializeLuckyCoinDiamonds(db) {
           lucky_diamonds_earned=lucky_diamonds_earned+(lucky_coins_claimed+NEW.amount+50)/100-(lucky_coins_claimed+50)/100,
           lucky_coins_claimed=lucky_coins_claimed+NEW.amount WHERE user_id=NEW.user_id;
       END;`);
+    // Global supply uses display names here: diamond_market stores rubies and
+    // ruby_market stores diamonds. This permanent total survives ledger cleanup
+    // and account deletion; existing lifetime claim counters seed it only once.
+    db.exec(`CREATE TABLE IF NOT EXISTS lucky_coin_market_mining (
+        id INTEGER PRIMARY KEY CHECK(id=1),
+        claimed_coins INTEGER NOT NULL DEFAULT 0 CHECK(claimed_coins>=0),
+        rubies_mined INTEGER NOT NULL DEFAULT 0 CHECK(rubies_mined>=0),
+        diamonds_mined INTEGER NOT NULL DEFAULT 0 CHECK(diamonds_mined>=0));
+      INSERT OR IGNORE INTO lucky_coin_market_mining(id,claimed_coins)
+        SELECT 1,COALESCE(SUM(lucky_coins_claimed),0) FROM user_diamonds;
+      UPDATE diamond_market SET
+        diamonds=diamonds+(SELECT MAX(0,claimed_coins/500-rubies_mined) FROM lucky_coin_market_mining WHERE id=1),
+        diamonds_mined=diamonds_mined+(SELECT MAX(0,claimed_coins/500-rubies_mined) FROM lucky_coin_market_mining WHERE id=1)
+        WHERE id=1;
+      UPDATE ruby_market SET
+        rubies=rubies+(SELECT MAX(0,claimed_coins/1000-diamonds_mined) FROM lucky_coin_market_mining WHERE id=1),
+        rubies_generated=rubies_generated+(SELECT MAX(0,claimed_coins/1000-diamonds_mined) FROM lucky_coin_market_mining WHERE id=1)
+        WHERE id=1;
+      UPDATE lucky_coin_market_mining SET
+        rubies_mined=MAX(rubies_mined,claimed_coins/500),
+        diamonds_mined=MAX(diamonds_mined,claimed_coins/1000) WHERE id=1;
+      CREATE TRIGGER IF NOT EXISTS mine_lucky_coin_market_gems AFTER INSERT ON coin_events
+      WHEN NEW.event='bonus_gc_claim' AND NEW.amount>0 BEGIN
+        UPDATE diamond_market SET
+          diamonds=diamonds+(SELECT (claimed_coins+NEW.amount)/500-claimed_coins/500 FROM lucky_coin_market_mining WHERE id=1),
+          diamonds_mined=diamonds_mined+(SELECT (claimed_coins+NEW.amount)/500-claimed_coins/500 FROM lucky_coin_market_mining WHERE id=1)
+          WHERE id=1;
+        UPDATE ruby_market SET
+          rubies=rubies+(SELECT (claimed_coins+NEW.amount)/1000-claimed_coins/1000 FROM lucky_coin_market_mining WHERE id=1),
+          rubies_generated=rubies_generated+(SELECT (claimed_coins+NEW.amount)/1000-claimed_coins/1000 FROM lucky_coin_market_mining WHERE id=1)
+          WHERE id=1;
+        UPDATE lucky_coin_market_mining SET
+          rubies_mined=rubies_mined+(claimed_coins+NEW.amount)/500-claimed_coins/500,
+          diamonds_mined=diamonds_mined+(claimed_coins+NEW.amount)/1000-claimed_coins/1000,
+          claimed_coins=claimed_coins+NEW.amount WHERE id=1;
+      END;`);
   }).immediate();
 }
 

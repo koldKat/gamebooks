@@ -110,7 +110,7 @@ test('50 and 150 give only rubies, 100 and 200 give only diamonds, with claim fl
   ]);
 });
 
-test('existing 100-coin ruby rewards are reconciled without clawbacks or repeat credits', t => {
+test('existing rewards are reconciled and shared stock is mined without repeat credits', t => {
   const f=fixture(t);
   f.db.exec(`ALTER TABLE user_diamonds ADD COLUMN lucky_coins_claimed INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE user_diamonds ADD COLUMN lucky_diamonds_earned INTEGER NOT NULL DEFAULT 0;
@@ -130,6 +130,64 @@ test('existing 100-coin ruby rewards are reconciled without clawbacks or repeat 
   initializeLuckyCoinDiamonds(f.db);
   assert.equal(f.wallet().diamonds_earned,52);
   assert.deepEqual(f.db.prepare('SELECT * FROM user_rubies ORDER BY user_id').all(),diamonds);
-  assert.deepEqual(f.db.prepare('SELECT * FROM diamond_market').get(),market);
-  assert.deepEqual(f.db.prepare('SELECT * FROM ruby_market').get(),rubyMarket);
+  assert.deepEqual(f.db.prepare('SELECT * FROM diamond_market').get(),{
+    ...market,diamonds:market.diamonds+2,diamonds_mined:market.diamonds_mined+2,
+  });
+  assert.deepEqual(f.db.prepare('SELECT * FROM ruby_market').get(),{
+    ...rubyMarket,rubies:rubyMarket.rubies+1,rubies_generated:rubyMarket.rubies_generated+1,
+  });
+});
+
+test('global claims mine a ruby every 500 and both gems at 1000, across players and batches', t => {
+  const f=fixture(t);initializeLuckyCoinDiamonds(f.db);
+  const supply=()=>({
+    rubies:f.db.prepare('SELECT diamonds,diamonds_mined FROM diamond_market').get(),
+    diamonds:f.db.prepare('SELECT rubies,rubies_generated FROM ruby_market').get(),
+    progress:f.db.prepare('SELECT * FROM lucky_coin_market_mining').get(),
+  });
+  f.add(1,'a',499);
+  assert.equal(supply().rubies.diamonds,0);
+  f.add(2,'a',1);
+  assert.equal(supply().rubies.diamonds,1);
+  assert.equal(supply().diamonds.rubies,0);
+  f.add(2,'b',499);
+  assert.equal(supply().rubies.diamonds,1);
+  f.add(1,'b',1);
+  assert.deepEqual(supply(),{
+    rubies:{diamonds:2,diamonds_mined:2},diamonds:{rubies:1,rubies_generated:1},
+    progress:{id:1,claimed_coins:1000,rubies_mined:2,diamonds_mined:1},
+  });
+  f.add(1,'b',1);f.add(1,'mint',5000,'coin_mint_bonus');f.add(2,'zero',0);f.add(2,'negative',-5000);
+  assert.equal(supply().progress.claimed_coins,1000);
+  f.add(2,'batch',2501);
+  assert.deepEqual(supply(),{
+    rubies:{diamonds:7,diamonds_mined:7},diamonds:{rubies:3,rubies_generated:3},
+    progress:{id:1,claimed_coins:3501,rubies_mined:7,diamonds_mined:3},
+  });
+});
+
+test('global mining keeps its remainder after spending, ledger cleanup, deletion and restart', t => {
+  const f=fixture(t);initializeLuckyCoinDiamonds(f.db);f.add(1,'old',1499);
+  f.db.exec('UPDATE diamond_market SET diamonds=0;UPDATE ruby_market SET rubies=0;DELETE FROM coin_events;DELETE FROM users WHERE id=1');
+  initializeLuckyCoinDiamonds(f.db);initializeLuckyCoinDiamonds(f.db);
+  assert.deepEqual(f.db.prepare('SELECT * FROM lucky_coin_market_mining').get(),{
+    id:1,claimed_coins:1499,rubies_mined:2,diamonds_mined:1,
+  });
+  assert.equal(f.db.prepare('SELECT diamonds FROM diamond_market').get().diamonds,0);
+  assert.equal(f.db.prepare('SELECT rubies FROM ruby_market').get().rubies,0);
+  f.add(2,'new',1);
+  assert.equal(f.db.prepare('SELECT diamonds FROM diamond_market').get().diamonds,1);
+  assert.equal(f.db.prepare('SELECT diamonds_mined FROM diamond_market').get().diamonds_mined,3);
+  assert.equal(f.db.prepare('SELECT rubies FROM ruby_market').get().rubies,0);
+});
+
+test('failed claim transactions roll back shared supply and global mining progress', t => {
+  const f=fixture(t);initializeLuckyCoinDiamonds(f.db);f.add(2,'old',999);
+  const snapshot=()=>['diamond_market','ruby_market','lucky_coin_market_mining'].map(table=>f.db.prepare('SELECT * FROM '+table).all());
+  const before=snapshot(),h=claims(f);
+  f.db.exec(`UPDATE users SET pending_bonus_gc=1 WHERE id=1;
+    CREATE TRIGGER reject_notification BEFORE INSERT ON notifications BEGIN SELECT RAISE(ABORT,'failed notification');END;`);
+  assert.throws(h.claim,/failed notification/);
+  assert.deepEqual(snapshot(),before);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM coin_events').get().n,1);
 });
