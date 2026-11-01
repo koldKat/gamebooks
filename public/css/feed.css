@@ -43,6 +43,9 @@
 }
 .feed-filter-label {
   font-size: 0.72rem;
+  font-weight: 600;
+  color: #d1d5db;
+  margin-right: 0.15rem;
   text-transform: none;
   letter-spacing: 0;
 }
