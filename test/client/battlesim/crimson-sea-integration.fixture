@@ -1,0 +1,117 @@
+localStorage.setItem('gamebook_lang','LANGUAGE');
+const app=await import('REPO/public/js/core/state.js');
+const desktop=await import('REPO/public/js/battlesim/loader.js');
+const mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const seeds=ROSTER_SEEDS,check=(value,label)=>{if(!value)throw Error(label);};
+let requests=0,writes=0;
+window.fetch=async(url,options={})=>{
+  if(options.method&&options.method!=='GET'){
+    check(String(url)==='/api/books/1543/state'&&options.method==='PUT','unexpected mocked write');writes++;
+  }
+  const id=String(url).match(/\/api\/books\/(\d+)\/enemies$/)?.[1];if(id)requests++;
+  return new Response(JSON.stringify(id?(seeds[id]||[]):{}),{headers:{'Content-Type':'application/json'}});
+};
+console.warn=(message,error)=>{if(error instanceof Error)throw error;};
+app.setCurrentBookId(1543);app.state.playthroughs=[{startedAt:1,path:[1]}];app.state.activePtIndex=0;
+if('MODE'==='mobile')await mobile.openSimForBook(1543);else await desktop.showBattleSimForBook(1543);
+const module=await import('REPO/public/js/battlesim/battlesim1543.js');
+const {getRoster}=await import('REPO/public/js/battlesim/books/1543/definition.js');
+const {sagardEncounterTurn}=await import('REPO/public/js/battlesim/engines/sagard/encounter.js');
+const el=key=>document.getElementById('sim1543-'+key),current=()=>app.currentPlaythrough().sim1543;
+const set=(key,value)=>{const input=el(key);check(input,'missing '+key);if(input.type==='checkbox')input.checked=value;else input.value=value;};
+const choose=(key,value)=>{set(key,value);el(key).dispatchEvent(new Event('change',{bubbles:true}));};
+const alert=()=>document.getElementById('confirm-overlay')?.classList.contains('active');
+const click=key=>{check(el(key)&&!el(key).disabled,'disabled '+key);el(key).click();check(!alert(),'unexpected alert '+document.getElementById('confirm-message')?.textContent);};
+const fields=key=>[...el('opponents').querySelectorAll('[data-stat="'+key+'"]')];
+function fresh(){app.state.playthroughs=[{startedAt:1,path:[1],inventory:['Story key'],trophies:['Keep'],experienceMarks:7,sim8:{keep:true}}];module.render();}
+const protectedState=()=>JSON.stringify([app.currentPlaythrough().inventory,app.currentPlaythrough().trophies,app.currentPlaythrough().experienceMarks,app.currentPlaythrough().sim8,app.currentPlaythrough().path]);
+if(!el('overlay').classList.contains('active'))el('btn').click();
+check(el('overlay').classList.contains('active'),'real loader opens simulator');
+const triggerStyle=getComputedStyle(el('btn'));
+check(triggerStyle.backgroundColor==='rgba(31, 41, 55, 0.88)'&&triggerStyle.textTransform==='uppercase','shared launcher theme');
+const cases=[];let restored=0,opponentRows=0,manualPresets=0;
+const resume=()=>{app.currentPlaythrough().sim1543=JSON.parse(JSON.stringify(current()));const before=JSON.stringify(current());module.render();check(JSON.stringify(current())===before,'render changed saved action');restored++;};
+const begin=section=>{fresh();choose('encounter',section);choose('manualDice',true);};
+const next=(die=1)=>{const turn=sagardEncounterTurn(current().fight);if(turn.targets.length)set('target',turn.targets[0]);set('die',die);click('attack');};
+fresh();check(el('level').value==='3','initial level three');
+check(!el('stunStone').checked&&!el('spiritLuck').checked,'no automatic equipment');
+choose('manualDice',true);fields('hp')[0].value='1';fields('hp')[0].dispatchEvent(new Event('change',{bubbles:true}));
+click('start');next(4);check(current().history.length===1,'custom fight works');
+cases.push('custom fight and manually held equipment');
+
+for(const entry of getRoster()){
+  begin(entry.section);opponentRows+=entry.opponents.length;
+  if(entry.mode==='manual'){
+    check(el('start').disabled&&el('note').textContent.includes('no opponent HP'),'manual missing HP');
+    check(!current().fight&&current().history.length===0,'manual source gap awards nothing');manualPresets++;continue;
+  }
+  choose('level',5);choose('weapon','normal');choose('armor',2);
+  const before=protectedState();click('start');
+  check(el('hp').disabled&&el('encounter').disabled,'running setup locked');
+  for(let n=0;current().fight.status==='fighting';n++){
+    check(n<1200,'stalled section '+entry.section);const fight=current().fight,turn=sagardEncounterTurn(fight);
+    if(turn.kind==='chooseAction')click('ram');
+    else if(turn.kind==='chooseDuel')click('volley');
+    else if(turn.kind==='allocate'){
+      set('target',turn.targets[0]);set('amount',Math.min(turn.pendingDamage,fight.opponents.find(row=>row.id===turn.targets[0]).hp));click('attack');
+    }else next(turn.kind==='initiative'?2:['swallow','crewCasualties','enemyAttack','enemyVolley'].includes(turn.kind)||turn.attackerId?.startsWith('enemy')?1:4);
+    resume();
+  }
+  const expected=entry.section==='45'?'fled':'win';
+  check(current().fight.status===expected,'source result '+entry.section);
+  check(current().history.length===(expected==='win'?1:0),'source history '+entry.section);
+  check(protectedState()===before,'story changed '+entry.section);
+}
+check(opponentRows===62&&manualPresets===1,'all reviewed source rows covered');
+cases.push('all 29 automatic presets plus manual missing HP, serialized resume after every action');
+
+begin('1');click('start');set('die',4);click('grapple');
+check(current().fight.status==='fighting','grapple waits for reply');next(1);
+check(current().fight.status==='win'&&current().fight.destination==='9','grapple completed');
+cases.push('grappling permits enemy reply');
+
+begin('89');choose('stunStone',true);click('start');set('die',1);click('stone');
+check(current().fight.phase==='lamp','stone offers lamp');click('skip-lamp');
+check(current().fight.phase==='stoneAttack','free attacks retained');next(4);check(current().fight.phase==='lamp','four offers lamp');
+next(4);check(current().fight.destination==='85','lamp success destination');
+cases.push('held stone and Genie lamp controls');
+
+begin('11');choose('hp',1);choose('spiritLuck',true);choose('stunStone',true);click('start');click('duel');
+set('die',4);click('stone');next(4);check(current().fight.stunStone.broken,'stone broke');
+next(1);next(4);check(sagardEncounterTurn(current().fight).kind==='recovery','group recovery offered');
+click('heal-spiritLuck');check(current().fight.hero.hp===20&&!current().fight.healing.spiritLuck,'group recovery consumed');
+check(!el('stunStone').checked,'broken stone unavailable');
+cases.push('group duel stone breakage and fatal-hit recovery');
+
+begin('56');choose('hp',1);choose('spiritLuck',true);choose('stunStone',true);click('start');next(4);next(4);
+check(current().fight.phase==='recovery','monster recovery offered');click('heal-spiritLuck');
+set('die',1);click('stone');next(1);next(1);check(current().fight.phase==='heroAttack','monster free attacks retained');
+cases.push('monster swallowing recovery and stone attacks');
+
+begin('74');choose('opponentIndex',3);click('start');check(current().fight.opponents.length===1,'single galleon record');
+click('naval-withdraw');check(current().history.length===0&&current().fight.status==='withdrawn','breakoff not a win');
+cases.push('galleon record selection and breakoff');
+
+begin('72');choose('shipHp',2);click('start');next();click('missile');next(2);
+check(current().fight.opponents[0].hp===11&&sagardEncounterTurn(current().fight).attackerId==='enemy0','selected ship missile hit');
+next(2);check(current().fight.ship.hp===1&&el('hp').value==='20','ship damage is separate');
+next();click('board');next(1);check(current().fight.phase==='boardEnemy'&&current().fight.boardEnemyShots===11,'boarding retains enemy crew');
+next(4);check(current().fight.status==='loss'&&current().history.length===1,'boarding defeat records once');
+cases.push('missile reply, separate ship HP and boarding casualties');
+
+begin('69');choose('plundered',4);click('start');check(current().history.length===0&&current().fight.status==='withdrawn','no mutineers awards no win');
+cases.push('manual plunder count');
+
+begin('6');choose('weapon','cutlass');click('start');next(4);check(current().fight.opponents[0].hp===6,'cutlass four misses');
+begin('6');choose('weapon','scimitar');click('start');next(4);check(current().fight.opponents[0].hp===1,'scimitar four exactly five');
+cases.push('held weapon face exceptions');
+fresh();click('start');el('cancel').click();check(alert(),'cancellation confirmation');
+app.state.playthroughs=[{startedAt:2,path:[1]}];module.render();document.getElementById('confirm-ok').click();
+check(!current(),'stale cancellation cannot affect another playthrough');
+el('btn').click();
+check(!el('overlay').querySelector('.bsim-col-right input,.bsim-col-right select,.bsim-col-right button'),'report has no controls');
+check(requests===1,'roster loads once');
+check(document.querySelectorAll('#sim1543-overlay').length===1,'single overlay');
+check(el('overlay').querySelector('.bsim-col-left #sim1543-start')&&el('overlay').querySelector('.bsim-col-right #sim1543-start')===null,'controls remain left');
+check(el('overlay').querySelector('.bsim-modal').getBoundingClientRect().width<=innerWidth+1,'fits viewport');
+document.body.dataset.test=JSON.stringify({mode:'MODE',language:'LANGUAGE',width:innerWidth,encounters:30,opponentRows,manualPresets,restored,cases,mockedStateWrites:writes,productionWrites:0});

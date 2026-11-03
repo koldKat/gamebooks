@@ -68,6 +68,11 @@ async function handleAdminStats(req, res) {
   send(res, 200, _buildAdminStatsPayload());
 }
 
+async function handleAdminSeasonPayouts(req, res) {
+  if (!requireLocalhost(req, res)) return;
+  send(res, 200, { reports: db.getSeasonPayoutReports() });
+}
+
 async function handleAdminGetUser(req, res, userId) {
   if (!requireLocalhost(req, res)) return;
   const user = db.adminGetUser(userId);
@@ -565,6 +570,7 @@ module.exports = {
   handleAdminUpdateSeries,
   handleAdminDeleteSeries,
   handleAdminStats,
+  handleAdminSeasonPayouts,
   handleAdminGetUser,
   handleAdminGetBookStats,
   handleAdminGetUsers,

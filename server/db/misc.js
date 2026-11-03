@@ -5,7 +5,7 @@
 const { db, _naturalCompareByName } = require('./connection');
 const { _insertNotif, coinBalance, computeLevel } = require('./xp');
 const { createBulkGcGifts } = require('./bulk-gifts');
-const { createSeasonPayouts } = require('./season-payouts');
+const { createSeasonPayouts, getSeasonPayoutReports } = require('./season-payouts');
 const { adminNotificationSql } = require('./notification-policy');
 
 const adminNotificationFilter = adminNotificationSql('type', 'payload');
@@ -119,6 +119,7 @@ module.exports = {
   getAllBooksForExport, getBookForExport,
   getAdminGcSupply, adminGiftGc,
   settleSeasonParticipation,
+  getSeasonPayoutReports: () => getSeasonPayoutReports(db),
   adminPreviewBulkGc: bulkGcGifts.preview, adminGiftBulkGc: bulkGcGifts.send,
   getAppBirthTimestamp,
   backupDb: dest => db.backup(dest),

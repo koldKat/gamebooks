@@ -1,0 +1,80 @@
+localStorage.setItem('gamebook_lang','LANGUAGE');
+const app=await import('REPO/public/js/core/state.js');
+const desktop=await import('REPO/public/js/battlesim/loader.js');
+const mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const seeds=ROSTER_SEEDS, check=(value,label)=>{if(!value)throw Error(label);};
+let requests=0,writes=0;
+window.fetch=async(url,options={})=>{
+  if(options.method&&options.method!=='GET')writes++;
+  const id=String(url).match(/\/api\/books\/(\d+)\/enemies$/)?.[1];
+  if(id)requests++;
+  return new Response(JSON.stringify(id?(seeds[id]||[]):{}),{headers:{'Content-Type':'application/json'}});
+};
+console.warn=(message,error)=>{if(error instanceof Error)throw error;};
+app.setCurrentBookId(1527);app.state.playthroughs=[{startedAt:1,path:[1]}];app.state.activePtIndex=0;
+if('MODE'==='mobile')await mobile.openSimForBook(1527);else await desktop.showBattleSimForBook(1527);
+const module=await import('REPO/public/js/battlesim/battlesim1527.js');
+const {getRoster}=await import('REPO/public/js/battlesim/books/1527/definition.js');
+const el=key=>document.getElementById('sim1527-'+key), current=()=>app.currentPlaythrough().sim1527;
+const set=(key,value)=>{const input=el(key);check(input,'missing control '+key);if(input.type==='checkbox')input.checked=value;else input.value=value;};
+const choose=(key,value)=>{set(key,value);el(key).dispatchEvent(new Event('change',{bubbles:true}));};
+const click=key=>{check(el(key),'missing action '+key);el(key).click();check(!document.getElementById('confirm-overlay')?.classList.contains('active'),'unexpected alert '+document.getElementById('confirm-message')?.textContent);};
+function fresh(){app.state.playthroughs=[{startedAt:1,path:[1],inventory:['Story key'],sim8:{keep:true}}];module.render();}
+const protectedState=()=>JSON.stringify([app.currentPlaythrough().inventory,app.currentPlaythrough().sim8,app.currentPlaythrough().path]);
+function custom(){choose('encounter','custom');choose('mode','melee');set('fists',0);set('energy',100);set('maxEnergy',100);const root=el('overlay');root.querySelector('[data-stat="expertise"]').value=0;root.querySelector('[data-stat="fists"]').value=0;root.querySelector('[data-stat="health"]').value=1;}
+const results=[];
+fresh();custom();const protectedBefore=protectedState();click('start');
+check(current().fight.status==='fighting','custom fight starts without preset');
+check(el('expertise').disabled&&el('encounter').disabled&&el('start').disabled,'setup locks');
+const before=JSON.stringify(current());module.render();check(JSON.stringify(current())===before,'render does not mutate fight');
+el('overlay').querySelector('.inv-close-btn').click();el('btn').click();check(current().fight.round===0,'reopen retains fight');
+set('spend',1);click('round');check(current().fight.status==='win'&&current().history.length===1,'custom round and history');
+module.render();check(current().history.length===1,'history not duplicated');
+set('quantity-gristle-tube',1);click('save-stats');choose('item','gristle-tube');click('use-item');
+check(current().player.energy===109&&current().player.inventory['gristle-tube']===0,'postfight recovery persists');
+check(current().fight.player.energy===99,'historical fight retained');check(protectedState()===protectedBefore,'unrelated run data preserved');
+results.push('custom fight, setup lock, reopen, once-only history, postfight recovery');
+
+fresh();custom();set('quantity-pipe-wrench',1);set('hero-melee','pipe-wrench');click('start');check(el('spend').max==='7','weapon expertise changes maximum commitment');
+set('spend',7);click('round');check(current().player.energy===93,'weapon ENERGY cost uses commitment');
+fresh();custom();choose('mode','ranged');set('quantity-microwave-grenade',1);el('overlay').querySelector('[data-stat="expertise"]').value=99;el('overlay').querySelector('[data-stat="health"]').value=1;
+click('start');choose('item','microwave-grenade');click('use-item');check(el('spend').value==='0'&&el('spend').disabled,'automatic round costs zero');
+click('round');check(current().player.energy===100&&current().fight.status==='win','grenade actual UI resolution');
+results.push('weapon loadout and automatic grenade round');
+
+fresh();custom();el('overlay').querySelector('[data-stat="health"]').value=5;click('start');set('spend',2);click('round');
+const spent=current().player.energy;el('cancel').click();check(document.getElementById('confirm-overlay').classList.contains('active'),'cancel confirmation');
+document.getElementById('confirm-ok').click();check(current().fight.status==='cancelled'&&current().history.length===0&&current().player.energy===spent,'cancel retains costs without invented outcome');
+fresh();custom();click('start');el('cancel').click();app.state.playthroughs=[{startedAt:2,path:[1]}];module.render();document.getElementById('confirm-ok').click();
+check(!app.currentPlaythrough().sim1527,'stale cancel does not touch new run');results.push('cancel and stale confirmation');
+
+for(const entry of getRoster()){
+  fresh();choose('encounter',entry.section);set('expertise',1000);set('energy',10000);set('fists',0);
+  for(const input of el('overlay').querySelectorAll('[data-stat="fists"]'))if(!input.disabled&&!input.value)input.value=1;
+  click('start');const f=current().fight;check(f?.encounter.section===entry.section,'source preset starts '+entry.section);check(f.opponents.length===entry.combat.opponents.length,'source group '+entry.section);
+  check(el('encounter').disabled&&el('expertise').disabled,'preset setup lock '+entry.section);
+  if(f.mode==='space'){click('allocate');click('stations');click('volley');}
+  else {set('spend',10);click('round');}
+  check(current().fight.round===1,'preset first round '+entry.section);
+}
+results.push('all43 source encounters start and resolve first round');
+
+const shieldEntry=getRoster().find(entry=>entry.combat.mode==='space'&&entry.combat.opponents[0].unprintedShieldFists);
+fresh();choose('encounter',shieldEntry.section);
+const shieldField=el('overlay').querySelector('[data-stat="shields"]'),shieldFists=el('overlay').querySelector('[data-stat="shieldFists"]');
+check(shieldFists.disabled,'unprinted FISTS disabled for zero shields');shieldField.value=1;shieldField.dispatchEvent(new Event('input',{bubbles:true}));
+check(!shieldFists.disabled,'editing shields permits manual FISTS');shieldFists.value=1;click('start');
+check(current().fight.opponents[0].shields===1&&current().fight.opponents[0].shieldFists===1,'edited shield values retained');
+results.push('zero-shield presets and manually entered shield FISTS');
+
+fresh();choose('encounter','9');choose('copilot','horizon');set('quantity-hull-repair-kit',1);click('save-stats');
+check(current().player.copilot.trait==='horizon','source co-pilot selection');
+click('start');click('allocate');click('stations');
+const saved=JSON.stringify(current());module.render();check(JSON.stringify(current())===saved,'space rolled phase persists');
+check(!el('overlay').querySelector('.bsim-col-right input,.bsim-col-right select,.bsim-col-right button'),'right column contains reports only');
+const modal=el('overlay').querySelector('.inv-modal'), bounds=modal.getBoundingClientRect();
+check(bounds.left>=-1&&bounds.right<=innerWidth+1,'modal fits viewport');
+check(document.documentElement.scrollWidth<=innerWidth+1,'no document horizontal overflow');
+check(requests===1,'catalog loaded once through real loader');
+check(!document.querySelector('#confirm-overlay.active'),'no hidden failure alert');
+document.body.setAttribute('data-test',JSON.stringify({mode:'MODE',language:'LANGUAGE',width:innerWidth,cases:results,encounters:getRoster().length,requests,writes,productionWrites:0}));

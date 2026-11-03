@@ -1,6 +1,6 @@
 # Gamebook Tracker - Guide
 
-Keep track of every branch, every choice, and every playthrough in your favourite gamebooks. Works with Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, and anything else that uses numbered sections.
+Keep track of every branch, every choice, and every playthrough in your favorite gamebooks. Works with Fighting Fantasy, Choose Your Own Adventure, Lone Wolf, and anything else that uses numbered sections.
 
 ---
 
@@ -21,25 +21,30 @@ An author's rating shows its vote count beside the average. Both are derived fro
 - **Sort** - Latest (default), Oldest, A–Z, Z–A, or Random
 - **Filter** - All, Books, Anthologies, Series, or Favorites
 - **Search** - searches titles, authors, series names, and child book names; type `anthology` or `series` to filter by type
-- **Favorites** - while logged in, hover a cover and click the ★ to save it as a favourite; your first favourite earns **5 XP**
+- **Favorites** - while logged in, hover a cover and click the ★ to save it as a favorite; your first favorite earns **5 XP**
 - The wall refreshes automatically whenever books are added or changed
 - For players with PDF/EPUB access, an anthology's file badges also show when one of its public stories has that file format.
 
-> Click the ⚙ (cog) button in the header, or press **Ctrl+Y**, to adjust the cover-title font size, toggle bold text, hide Cyrillic covers, toggle **Reduce animations** (useful on low-powered devices), **Seasonal events**, and **Show covers in feed** / **Transparent background for day cards**.
+Open the ⚙ settings button or press **Ctrl+Y** to adjust cover titles, background options, animation preferences, seasonal sprites, and feed appearance.
 
-Each seasonal event has three mouse companions. Reloading picks one at random. After roughly 12–20 minutes of active mouse time, it can burst into particles and reform as one of the other two. Idle time, hidden tabs and reduced motion do not trigger changes. Companions appear only on the main app page.
+### Seasonal events
 
-Halloween runs from **October 28 through November 3** each year. Halloween companions are the pumpkin, mummy head and zombie head. All three blink and look around. The pumpkin keeps its mouth shake, drool and teeth clacking. The mummy occasionally unwraps to a skull and rewraps, sneezes dust or glows with runes. The zombie can burst its brain outward and reform it, scream and shake, or attract a few flies. Seasonal visuals consist only of mouse companions; no objects appear between panels. Turn the companion off with **Seasonal events** in Ctrl+Y settings; **Reduce animations** keeps it still. The event notice explains **double XP for losses and battle deaths**, including first-loss achievements and simulator defeats. The XP bonus and notice remain active with the companion disabled, using the server’s Sofia calendar.
+The notice above the activity feed shows the active event, its XP bonuses, and the time remaining. Between events, it shows the next event and its countdown.
 
-**Diwali**, the Festival of Lights, runs for three days before and three days after its main day, inclusive. Its date moves each year; in **2026 the event runs November 5–11**. The mouse companions are a diya lamp, a lotus and a lantern. The lamp keeps its flickering flame, flares, embers and smoke; the lotus blooms and glows, and the lantern brightens, sparkles and releases smoke. Diwali gives **double XP for normal wins and simulator wins**, including first-win awards. Activation and expiry happen automatically in open tabs, using Europe/Sofia dates. The same Ctrl+Y decoration setting and Reduce animations preference apply. If events overlap, both reward notices remain visible; the nearest festival supplies the mouse companion.
+| Event | Window | Double XP |
+|-------|--------|-----------|
+| Halloween | October 28-November 3 | Losses, battle deaths, and simulator losses |
+| Diwali | Three days before through three days after its main day | Wins and simulator wins |
+| Christmas | December 22-28 | Wins, simulator wins, new runs, whole-book discovery or mapping, and heartbeats |
+| New Year | December 29-January 4 | All XP awards, including job XP |
 
-**Christmas** runs **December 22–28**. The companions are Father Christmas, a snowman and a reindeer. Father Christmas keeps his comic “Ho!” laugh, bell and gift; the snowman tips his hat, sneezes snow and flutters his scarf; the reindeer sparkles, lights his nose and breathes a little cloud. Christmas doubles XP for wins, simulator wins, new runs, discovering or mapping every section of a book, and heartbeats.
+Dates follow Europe/Sofia time. Diwali's date changes each year. Event activation and ending update automatically in open tabs.
 
-**New Year** runs **December 29–January 4**. The companions are the champagne bottle, a party hat and a celebration star. The bottle keeps its bubbles, cork and foam, clinking glasses and fireworks. The party hat has a horn, confetti and a wiggle; the star has a comet trail, sparkles and a color shimmer. Every XP award is doubled, including job XP. Both winter events use the same mouse-companion and reduced-animation settings.
+Seasonal mouse companions appear only on the main app page. Enable **Disable seasonal sprites** in Ctrl+Y settings to hide them. **Reduce animations** does not control these companions. Hiding companions does not disable event bonuses.
 
-When an event ends, each player receives **1 gold coin for each Sofia calendar day on which they earned qualifying double XP**. Multiple qualifying actions on the same day count once. Rewards come from the Gamemaster's pool only if it can cover every participant in full; otherwise that event's entire payout is skipped permanently. Recipients receive a short thank-you notification.
+After an event, participation can earn one gold coin for each day you earned qualifying double XP. Multiple actions on the same day count once. The reward is issued only if the admin pool can cover every participant in full; otherwise that event's payout is skipped. Recipients receive a thank-you notification.
 
-### Centre - Activity feed
+### Center - Activity feed
 
 Shows what everyone's been up to over the last 30 days. You don't need an account to read it.
 
@@ -68,13 +73,13 @@ Each day's card shows the covers of the public books played that day, faded behi
 | *player* **fell in battle in** *book* **for the first time** | First ever battle-death in that book |
 | *player* **won in all books of** *series / anthology* | Every book in a collection completed |
 | *player* **discovered / visited every section of** *book* | Reached 100% mapping or 100% visiting |
-| *player* **reached level N** | Someone levelled up |
+| *player* **reached level N** | Someone leveled up |
 | *player* **joined** | A new player registered |
 
 **Clicking things in the feed:**
 - **A username** (if that player has a public profile) → see their books and completed playthroughs
 - **A book name** → opens that book's activity; if it belongs to a series, a series link appears too
-- **The result word** (won / lost / fell in battle / died, if the run is public) → opens a view of that playthrough's path on the graph, with a legend overlay in the top-right corner explaining the node colours
+- **The result word** (won / lost / fell in battle / died, if the run is public) → opens a view of that playthrough's path on the graph, with a legend overlay in the top-right corner explaining the node colors
 
 ### Right - Login / Books
 
@@ -88,7 +93,7 @@ This is either the login form or your books list, depending on whether you're si
 |----------|--------|
 | **Ctrl+X** | Hide or restore all three panels |
 | **F1** | Open the Cheat Sheet |
-| **Ctrl+Y** | Landing page settings (cover-title font size/bold/hide Cyrillic, background source, seasonal events, reduce animations, feed day covers, transparent day cards) |
+| **Ctrl+Y** | Landing page settings (cover-title font size/bold/hide Cyrillic, background source, disable seasonal sprites, reduce animations, feed day covers, transparent day cards) |
 
 **Escape:** dismisses open autocomplete suggestions first. Press it again to close the top dialog; dialogs underneath stay open. Saving and uploading can temporarily block dismissal.
 
@@ -141,7 +146,7 @@ Each book card shows a progress bar for sections you've visited across all playt
 | **✎** | Edit the book details (name, sections, identifiers, cover) |
 | **✕** | Delete the book and your progress (asks for confirmation) |
 
-If a Gamemaster shared a book with you, **✎** is visible but greyed out - only the creator can change the book's details.
+If a Gamemaster shared a book with you, **✎** is visible but grayed out - only the creator can change the book's details.
 
 ### Player roles
 
@@ -151,8 +156,7 @@ If a Gamemaster shared a book with you, **✎** is visible but greyed out - only
 | Lorekeeper | Purple diamond |
 | Pathmaker | Green star |
 | Fateweaver | Gold star |
-
-All four role badges use SVG icons with the same size and alignment.
+| Squire | Bronze-orange shield |
 
 ### Lorekeepers
 
@@ -170,7 +174,6 @@ Click **Create Book** at the top of the books screen. As you type the name, a dr
 - **Cover** - optional image upload
 
 Leave any optional fields blank and fill them in later using the **✎** button.
-
 
 For books with gaps in their section numbering, enter the actual count in **Total sections** and the largest printed label in **Highest section number** when adding or editing the book. For example, 420 total sections and a highest number of 1003 allow section 1003 during play, while progress uses 420. Leave the optional maximum blank for ordinary sequential numbering.
 
@@ -305,7 +308,7 @@ The **Undo** button takes you back to the last real decision point. If several s
 | **✝ Loss** | Mark this playthrough as a regular death |
 | **Battle Death ⚔** | Mark a battle death at your current section; also flags that section as a battle location on the map |
 
-Each one asks you to confirm before it's finalised.
+Each one asks you to confirm before it's finalized.
 
 ---
 
@@ -328,18 +331,18 @@ You can have several playthroughs going at once; only one is active at a time.
 
 Every section you've ever visited appears on the graph as a dot (called a node). Lines between dots show which sections lead to which.
 
-### Line colours
+### Line colors
 
-| Colour | Meaning |
+| Color | Meaning |
 |--------|---------|
-| Red (thick if you travelled it this run) | This path leads to a dead end |
-| Green (thick if you travelled it this run) | This path leads to victory |
-| Orange (thick) | You travelled this path in the current or viewed playthrough, with no definite outcome |
-| Grey | You didn't travel this path in the current run |
+| Red (thick if you traveled it this run) | This path leads to a dead end |
+| Green (thick if you traveled it this run) | This path leads to victory |
+| Orange (thick) | You traveled this path in the current or viewed playthrough, with no definite outcome |
+| Gray | You didn't travel this path in the current run |
 
-### Dot colours
+### Dot colors
 
-| Colour | Meaning |
+| Color | Meaning |
 |--------|---------|
 | Orange (solid) | Where you are right now |
 | Blue (solid) | Visited in the current or viewed playthrough |
@@ -350,7 +353,7 @@ Every section you've ever visited appears on the graph as a dot (called a node).
 | Dark with green outline | This section has a path to victory |
 | Dark orange | Flagged as a battle location |
 | Purple (solid) | Fully mapped - choices recorded |
-| Grey (solid) | Seen but not yet mapped |
+| Gray (solid) | Seen but not yet mapped |
 | Yellow (solid) | The starting section |
 
 ### Moving dots
@@ -374,7 +377,7 @@ Right-clicking a dot opens a menu with these options:
 - **Priority** - mark as High (green ▲), Normal, or Low (red ▽)
 - **Fast Travel** - jump directly to that section mid-playthrough (see below)
 - **Toggle battle ⚔** - mark or unmark this section as a battle location
-- **Color 🎨** - apply one of 16 colours to the dot
+- **Color 🎨** - apply one of 16 colors to the dot
 - **Delete node** - remove this dot and any dead-end descendants (asks for confirmation)
 
 ### Fast Travel
@@ -512,7 +515,7 @@ Click **Save as Template** to save the current loadout (including any custom nam
 
 ## Notebook
 
-Click **Notebook** (bottom-centre of the graph area) to open a freeform text area shared across all playthroughs for this book.
+Click **Notebook** (bottom-center of the graph area) to open a freeform text area shared across all playthroughs for this book.
 
 - **Save** - save your notes and close the window
 - **Close / ✕ / click outside / Esc** - close without saving
@@ -538,7 +541,7 @@ Your current level, title, and progress toward the next level are also shown her
 
 ## Levels
 
-You earn XP naturally - playing books, mapping sections, completing playthroughs, sharing books publicly, organising series, uploading avatars, and more. No grinding required.
+You earn XP naturally - playing books, mapping sections, completing playthroughs, sharing books publicly, organizing series, uploading avatars, and more.
 
 **Clean run:** complete a run with a victory or loss (including battle death) without using Undo or Fast Travel to earn **50 base XP**, plus your normal boost. Awarded once per book, not separately for each outcome. In open-world series, usage in other books during that series run also counts.
 
@@ -549,7 +552,7 @@ Rewards appear as floating notices at the bottom-right of the screen:
 
 Every level you gain adds a permanent **+0.1% XP boost** to all future XP. Shop purchases stack on top.
 
-XP and average-level bar fills show fractional progress; the number labels keep their usual readable formatting.
+Your XP bars show fractional progress. Fractional heartbeat XP accumulates between awards, and the displayed heartbeat rate includes current boosts.
 
 Your XP bar also shows your **heartbeat XP rate** (the passive XP you earn just for having the tracker open) in aqua on the right of the level row - e.g. **+6.7 heartbeat XP/min**. If you've bought XP boosts in the shop, the boost percentage shows in aqua too, with the total bonus XP shown beside it.
 
@@ -572,7 +575,7 @@ Click **GC** in the books screen header to open the shop.
 | Item | Cost | Effect | Cap |
 |------|------|--------|-----|
 | **XP Boost** | 1, 2, 3… GC (goes up each time) | +0.1% to all future XP, permanently | Level × 0.1% |
-| **Heartbeat XP** | 1, 2, 3… GC (goes up each time) | +0.1 to idle XP per purchase | Level × 0.1 XP |
+| **Heartbeat XP** | 1, 2, 3… GC (goes up each time) | +0.1 base XP per minute per purchase | Purchases limited by your level |
 | **Extra Undo** | 3, 6, 9… GC (escalates per purchase) | +1 undo per playthrough, permanently | 1 per 10 levels |
 | **Fast Travel** | 5, 10, 15… GC (escalates per purchase) | +1 Fast Travel per playthrough, permanently | 1 per 10 levels |
 | **Lucky Coin Chance** | 1, 2, 3… GC (goes up each time) | +0.01% chance per XP event of a lucky gold coin appearing | Level × 0.01% |
@@ -596,7 +599,7 @@ Players' combined lucky coin claims also replenish the shared market: one ruby f
 
 ## Rating
 
-Rate any book, anthology, or series with 1–5 stars (half-star increments).
+Rate any book, anthology, or series with 0.5–5 stars (half-star increments).
 
 **Requirements:**
 - **Book** - complete at least one playthrough (any outcome)
@@ -689,7 +692,7 @@ Simulator character stats travel between compatible rules systems, including red
 
 Teal diamond shapes on the graph mark portal sections - they connect a section in one book to a section in another. When your playthrough reaches one, a **Portal destinations** panel appears in the sidebar.
 
-Travelling through a portal:
+Traveling through a portal:
 1. Saves your character sheet and carries your current possessions and compatible simulator character stats
 2. Marks your playthrough as paused at this portal
 3. Opens the target book at the destination section
@@ -745,9 +748,9 @@ The ZIP is saved with the book's real name (e.g. `The Citadel of Chaos.zip`).
 
 ## Battle Simulators
 
-Some books come with a built-in **Battle Simulator** that appears automatically when you open them. It handles the book's specific combat rules so you can focus on the adventure, not the maths.
+Some books come with a built-in **Battle Simulator** that appears automatically when you open them. Use it to resolve an encounter while reading the adventure.
 
-When a simulator is available, a panel appears in the play area alongside your tracker - no special setup needed.
+Open its button in the play area, or press **S**. Enter your current character values and any relevant equipment before starting a fight.
 
 On mobile, the simulator loads when you tap its button. If a network-error message appears, reconnect and tap the button again to retry.
 
@@ -759,12 +762,9 @@ On mobile, the simulator loads when you tap its button. If a network-error messa
 
 Where a simulator offers **Custom opponents**, type a name to see roster suggestions, then adjust the stats or add another opponent. Printed encounters remain available for their special rules; custom fights do not choose a story destination for you. Opponent setup is locked during an active fight.
 
-Urowen custom opponents use normal 1d6 damage; select the printed encounter for special damage rules.
-
-Fatemaster fights use your current Strength, Agility and Power. After an enemy hits, choose which pool takes the damage. Enter a dice total to use a roll made outside the app, or leave it blank to roll automatically. Combat spells can require further dice or target choices; those pending choices survive a reload. A withdrawal or encounter threshold can pause combat for instructions in the reader without claiming a victory. Shared Inventory and Equipment are not changed by the simulator.
-
 **Good to know:**
-- Each simulator follows the exact rules for its specific book (dice counts, damage tables, special abilities)
+- Choose a preset for its encounter rules, or use custom opponents where offered
+- Some encounters require manual resolution when the source lacks necessary combat values
 - Some simulators read your current equipment and character sheet to prefill your stats
 - The simulator doesn't affect your section tracker - it's a helper, not a replacement
 
@@ -772,31 +772,20 @@ Fatemaster fights use your current Strength, Agility and Power. After an enemy h
 
 ## Live Reading
 
-Some books have their actual text available to read right inside the app. Click **Read Book** in the play area to open it.
+Books with reading text have a **Read Book** button in the play area. Opening the reader resumes your active run or starts one if none is active. A failed progress load shows recovery controls rather than creating an empty replacement run.
 
-Clicking a graph section does not open or reopen the reader. Section previews are available only while you have explicitly opened Live Reading, and only for mapped sections.
+- Click a choice in the text to move forward and update the graph.
+- Hover a choice to highlight its destination on the graph.
+- Adjust text size with the **− 100% +** control.
+- Use the **☰ menu** for available frontmatter and backmatter, then return to your current section.
+- With the reader open, click a previously read mapped section to preview it without moving your run. Use **Return to where you left off** to resume.
+- Mark the run's outcome through the normal tracker controls.
 
-For every readable book, opening the reader automatically starts a new run if none is active, including after deleting all runs or resetting progress. There is no start-a-run warning. If a run is already active, reading resumes it.
+Clicking a graph section does not open or reopen Live Reading. Unvisited sections cannot be previewed, and unavailable reference material is shown disabled.
 
-**Reading access:** All currently available readable books, including *Assassins of Allansia*, are free for players to read. Only administrators see its experimental zero-cost unlock flow. Existing runs and permanent unlocks are preserved; paid purchasing is not enabled.
+Map-driven passages can include the original map and a marker field. Follow the map's connections, enter your chosen marker, and continue. Your selected connections are saved. The tracker does not solve the map or choose a route; marker entry is disabled while previewing an earlier passage.
 
-If the mobile reader fails to open after unlocking, use the displayed retry button or return home. The unlock stays saved, so retrying does not require another purchase. A failed progress load will not start a run from an empty fallback state.
-
-Unlock confirmation appears in place in the reader's bottom footer, not in a popup. **Cancel** restores the original button; **Confirm** shows the price with the gold coin icon. Both actions are disabled while the request is pending.
-
-**How it works:**
-- The panel shows the current section's prose, with every choice as a clickable link
-- Clicking a choice moves your run forward and reveals that section on your graph automatically - no manual note-taking needed
-- Hover a choice to see where it leads highlighted on the graph before you click it
-- Adjust text size with the "− 100% +" control in the panel header
-- The **☰ menu** next to the close button opens the book's reference material - **Frontmatter** (the introduction) and **Backmatter** (the rules and reference) - each with a link back to where you left off. An option is greyed out when the book has nothing for it
-- The graph stays visible and interactive underneath - you can still edit notes, colours, and connections by hand exactly as before
-- Marking a run as a Victory or a Loss shows a trophy or broken-shield end screen instead of a plain "The End" line
-- Click any purple ("Mapped") dot on the graph to re-read that section's text without moving your run - a "Return to where you left off" link brings you back. Only sections you've actually read before are clickable this way; grey ("Discovered") dots you haven't visited yet stay off-limits, so you can't read ahead just by clicking around the map
-
-Not every book has this yet - it's rolling out gradually, one book at a time.
-
-In map-driven books, some passages include a marker field and the original map. Follow the map's connections, enter your chosen marker, and press **Go**. Your selected connections are saved; the tracker does not invent map routes or automatically choose your next move. Marker entry is disabled while previewing an earlier passage.
+Reading availability is shown for each book. A saved unlock remains valid when retrying a failed reader load.
 
 ---
 
@@ -882,7 +871,7 @@ The **bell 🔔** turns solid green when you have unseen notifications. Click it
 
 The **Inbox** button shows a count of unread messages from the Gamemaster. Click it to open your conversations.
 
-- Your messages appear on the right in blue; Gamemaster messages on the left in grey
+- Your messages appear on the right in blue; Gamemaster messages on the left in gray
 - Click any conversation to open it; **← Back** to return to the list
 - Opening a conversation marks it as read and clears the badge
 - Use **+ Attach** below the reply box to attach files to your reply (same file types and 64 MB limit as feedback)

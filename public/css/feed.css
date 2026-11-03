@@ -142,6 +142,9 @@ body.no-feed-glass-cards .feed-day-card--glass::before { display: none !importan
   padding: 0.2rem 0;
   line-height: 1.4;
 }
+.feed-entry:has(> .feed-announcement) {
+  padding-top: 0;
+}
 .feed-entry--party {
   border-left: 2px solid #2dd4bf;
   padding-left: 0.5rem;
@@ -158,6 +161,7 @@ body.no-feed-glass-cards .feed-day-card--glass::before { display: none !importan
   padding-left: 0.5rem;
   margin-left: -0.5rem;
 }
+.feed-entry--joblevel { border-left-color: #fb7185; }
 .feed-entry--rated {
   border-left: 2px solid #33cc33;
   padding-left: 0.5rem;
@@ -337,16 +341,14 @@ body.no-feed-glass-cards .feed-day-card--glass::before { display: none !importan
 
 .feed-announcement {
   position: relative;
+  min-inline-size: 0;
   border: 1.5px solid #f59e0b;
   border-radius: 7px;
-  padding: 0.55rem 0.8rem 0.5rem;
-  margin: 0.15rem 0;
+  padding: 0 0.5rem 0.5rem;
+  margin: 0 -0.5rem 0.15rem;
 }
 .feed-ann-title {
-  position: absolute;
-  top: -0.62em;
-  left: 0.7rem;
-  background: #1f2937;
+  margin-left: -0.1rem;
   padding: 0 0.35rem;
   font-size: 0.72rem;
   font-weight: 700;
@@ -367,19 +369,17 @@ body.no-feed-glass-cards .feed-day-card--glass::before { display: none !importan
 
 .feed-pinned-card {
   position: relative;
+  min-inline-size: 0;
   border: 1.5px solid #f59e0b;
   border-radius: 7px;
-  padding: 0.55rem 0.8rem 0.5rem;
-  margin: 0.4rem 0;
+  padding: 0 0.8rem 0.5rem;
+  margin: 0 0 0.4rem;
 }
 .feed-pinned-legend {
-  position: absolute;
-  top: -0.62em;
-  left: 0.7rem;
+  margin-left: -0.1rem;
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  background: #1f2937;
   padding: 0 0.35rem;
   font-size: 0.82rem;
   font-weight: 700;
@@ -428,4 +428,4 @@ body.right-collapsed #landing-right { transform: translateX(var(--landing-panel-
 .feed-group-toggle .squire-badge { color: #fb923c; }
 
 .feed-entry--joblevel .feed-level,
-.feed-entry--joblevel .feed-title { color: #c084fc; }
+.feed-entry--joblevel .feed-title { color: #fb7185; }

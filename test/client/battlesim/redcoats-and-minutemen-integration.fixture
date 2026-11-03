@@ -1,0 +1,96 @@
+localStorage.setItem('gamebook_lang','LANGUAGE');
+const app=await import('REPO/public/js/core/state.js');
+const desktop=await import('REPO/public/js/battlesim/loader.js');
+const mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const seeds=ROSTER_SEEDS,check=(value,label)=>{if(!value)throw Error(label);};
+let requests=0,writes=0;
+window.fetch=async(url,options={})=>{
+  if(options.method&&options.method!=='GET')writes++;
+  const id=String(url).match(/\/api\/books\/(\d+)\/enemies$/)?.[1];
+  if(id)requests++;
+  return new Response(JSON.stringify(id?(seeds[id]||[]):{}),{headers:{'Content-Type':'application/json'}});
+};
+console.warn=(message,error)=>{if(error instanceof Error)throw error;};
+app.setCurrentBookId(1537);app.state.playthroughs=[{startedAt:1,path:[1]}];app.state.activePtIndex=0;
+if('MODE'==='mobile')await mobile.openSimForBook(1537);else await desktop.showBattleSimForBook(1537);
+const module=await import('REPO/public/js/battlesim/battlesim1537.js');
+const {getRoster}=await import('REPO/public/js/battlesim/books/1537/definition.js');
+const {realLifeTurn}=await import('REPO/public/js/battlesim/engines/real-life/core.js');
+const el=key=>document.getElementById('sim1537-'+key),current=()=>app.currentPlaythrough().sim1537;
+const set=(key,value)=>{const input=el(key);check(input,'missing '+key);if(input.type==='checkbox')input.checked=value;else input.value=value;};
+const choose=(key,value)=>{set(key,value);el(key).dispatchEvent(new Event('change',{bubbles:true}));};
+const click=key=>{el(key).click();check(!document.getElementById('confirm-overlay')?.classList.contains('active'),'unexpected alert '+document.getElementById('confirm-message')?.textContent);};
+const next=(a=6,b=6)=>{set('die1',a);set('die2',b);click('attack');};
+function fresh(){app.state.playthroughs=[{startedAt:1,path:[1],inventory:['Story key'],sim8:{keep:true}}];module.render();}
+const protectedState=()=>JSON.stringify([app.currentPlaythrough().inventory,app.currentPlaythrough().sim8,app.currentPlaythrough().path]);
+const enemyFields=key=>[...el('opponents').querySelectorAll('[data-stat="'+key+'"]')];
+const results=[];
+check(el('firearm')&&el('agility')&&!el('javelin')&&!el('luck'),'book-specific current combat fields');
+check(new Set([...el('overlay').querySelectorAll('[id]')].map(e=>e.id)).size===el('overlay').querySelectorAll('[id]').length,'unique control IDs');
+fresh();choose('encounter','custom');choose('manualDice',true);
+enemyFields('skill')[0].value=0;enemyFields('wounds')[0].value=1;
+const untouched=protectedState();click('start');
+check(current().fight.status==='fighting','custom fight without preset');
+check(el('encounter').disabled&&el('wounds').disabled&&enemyFields('skill')[0].disabled,'setup locked');
+check(!el('setup').open,'setup collapses');
+const saved=JSON.stringify(current());module.render();check(JSON.stringify(current())===saved,'render preserves fight');
+el('close').click();el('btn').click();check(current().fight.cursor===0,'reopen retains turn');
+next(1,1);check(current().fight.status==='win'&&current().history.length===1,'custom win and history');
+module.render();check(current().history.length===1&&protectedState()===untouched,'once-only history and unrelated state');
+results.push('custom fight, setup lock, reopen, once-only history');
+
+fresh();choose('encounter','custom');choose('weapon','firearm');choose('manualDice',true);
+choose('firearm',6);choose('sword',0);enemyFields('wounds')[0].value=4;click('start');next(3,3);
+check(current().fight.opponents[0].wounds===2&&current().fight.log[0].skill===6,'custom firearm damage');
+results.push('custom pistol');
+
+fresh();choose('encounter','custom');choose('manualDice',true);enemyFields('wounds')[0].value=10;
+click('start');next();next(3,3);const wounds=current().fight.hero.wounds;el('cancel').click();
+check(document.getElementById('confirm-overlay').classList.contains('active'),'cancel confirmation');
+document.getElementById('confirm-ok').click();
+check(current().fight.status==='cancelled'&&current().history.length===0&&current().player.wounds===wounds,'cancel retains Wounds');
+fresh();choose('encounter','custom');click('start');el('cancel').click();
+app.state.playthroughs=[{startedAt:2,path:[1]}];module.render();document.getElementById('confirm-ok').click();
+check(!current(),'stale cancellation rejected');results.push('cancel and run isolation');
+
+let restored=0,opponentRows=0;
+for(const entry of getRoster()){
+  fresh();choose('encounter',entry.section);choose('manualDice',true);
+  for(const key of ['strength','sword','firearm','agility','horsemanship'])set(key,99);
+  set('wounds',1000);click('start');
+  check(current().fight.encounter.section===entry.section,'source preset '+entry.section);
+  check(current().fight.opponents.length===entry.opponents.length,'source group '+entry.section);opponentRows+=entry.opponents.length;
+  check(el('encounter').disabled&&el('weapon').disabled&&el('agility').disabled,'source setup lock');
+  for(let i=0;current().fight.status==='fighting';i++){
+    check(i<100,'stalled '+entry.section);const own=realLifeTurn(current().fight).attacker==='hero';next(own?1:6,own?1:6);
+    app.currentPlaythrough().sim1537=JSON.parse(JSON.stringify(current()));const before=JSON.stringify(current());module.render();
+    check(JSON.stringify(current())===before,'saved turn changed');restored++;
+  }
+  check(current().fight.status==='win'&&current().history.length===1,'source outcome/history '+entry.section);
+}
+check(opponentRows===25,'complete source rows');results.push('all18 encounters and25 opponents across reloads');
+
+
+for(const [late,target]of[[false,'39'],[true,'184']]){
+ fresh();choose('encounter','259');choose('manualDice',true);click('start');
+ if(late){for(let i=0;i<4;i++)next();check(current().fight.status==='fighting','no premature timed stop');next(1,1);}
+ else{next(3,3);next();next(3,3);}
+ check(current().fight.status==='win'&&current().fight.destination===target,'timed victory '+target);
+ check(el('results').textContent.includes('section '+target),'timed result visible');
+}
+results.push('early and late sentry victories');
+fresh();choose('encounter','143');choose('manualDice',true);choose('strength',0);click('start');
+for(let i=0;i<4;i++)next();
+check(current().fight.status==='win'&&current().fight.destination==='239'&&current().fight.round===2,'bear survival');
+check(current().fight.opponents[0].damage===2,'bear damage');results.push('two-round Strength bear survival');
+for(const sid of['118','290']){
+ fresh();choose('encounter',sid);choose('manualDice',true);click('start');
+ check(realLifeTurn(current().fight).attacker==='enemy0','mounted enemy first '+sid);next();
+ check(realLifeTurn(current().fight).attacker==='hero','hero replies '+sid);
+}
+results.push('mounted attackers first without invented modifiers');
+check(!el('overlay').querySelector('.bsim-col-right input,.bsim-col-right select,.bsim-col-right button'),'results only on right');
+const bounds=el('overlay').querySelector('.inv-modal').getBoundingClientRect();
+check(bounds.left>=-1&&bounds.right<=innerWidth+1,'modal fits');check(document.documentElement.scrollWidth<=innerWidth+1,'no overflow');
+check(requests===1,'roster fetched once');
+document.body.dataset.test=JSON.stringify({mode:'MODE',language:'LANGUAGE',width:innerWidth,cases:results,encounters:getRoster().length,opponentRows,restored,requests,writes,productionWrites:0});

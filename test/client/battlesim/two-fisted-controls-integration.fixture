@@ -1,0 +1,40 @@
+localStorage.setItem('gamebook_lang','LANGUAGE');
+const app=await import('REPO/public/js/core/state.js'),desktop=await import('REPO/public/js/battlesim/loader.js'),mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const seeds=ROSTER_SEEDS,check=(value,label)=>{if(!value)throw Error(label);};
+window.fetch=async url=>new Response(JSON.stringify(seeds[String(url).match(/\/api\/books\/(\d+)\/enemies$/)?.[1]]||{}));
+console.warn=(message,error)=>{if(error instanceof Error)throw error;};
+app.setCurrentBookId(1527);app.state.playthroughs=[{startedAt:1,path:[1]}];app.state.activePtIndex=0;
+if('MODE'==='mobile')await mobile.openSimForBook(1527);else await desktop.showBattleSimForBook(1527);
+const module=await import('REPO/public/js/battlesim/battlesim1527.js');
+const el=key=>document.getElementById('sim1527-'+key),data=()=>app.currentPlaythrough().sim1527;
+const set=(key,value)=>{const input=el(key);check(input,'missing '+key);if(input.type==='checkbox')input.checked=value;else input.value=value;};
+const choose=(key,value)=>{set(key,value);el(key).dispatchEvent(new Event('change',{bubbles:true}));};
+const click=key=>{check(el(key),'missing action '+key);el(key).click();check(!document.querySelector('#confirm-overlay.active'),'unexpected alert '+document.getElementById('confirm-message')?.textContent);};
+function fresh(){app.state.playthroughs=[{startedAt:1,path:[1]}];module.render();}
+function field(label){const row=[...el('actions').querySelectorAll('.inv-edit-row')].find(row=>row.firstElementChild.textContent===label);check(row,'missing field '+label);return row.querySelector('input,select');}
+const random=Math.random;Math.random=()=>0;
+try{
+fresh();choose('mode','ranged');set('fists',0);set('rightStuffAvailable',true);el('overlay').querySelector('[data-stat="expertise"]').value=99;
+click('start');set('spend',1);click('round');check(data().fight.pending,'failed ranged roll awaits decision');
+const energy=data().player.energy;click('right-stuff');check(!data().fight.pending&&!data().player.rightStuffAvailable,'Right Stuff resolves and consumes availability');
+check(data().player.energy===energy&&data().player.injuries===1,'reroll costs no additional ENERGY');
+
+fresh();choose('encounter','18');set('expertise',1000);set('fists',0);set('quantity-trobble',1);click('start');choose('item','trobble');click('use-item');
+check(el('trobble-target')&&el('trobble-target').value!==el('target').value,'Trobble gets an unmatched target');
+set('spend',1);click('round');check(data().fight.log.some(event=>event.type==='exchange'&&event.who==='trobble'),'Trobble actual UI exchange');
+
+fresh();choose('encounter','9');choose('copilot','horizon');set('expertise',10);set('fists',0);set('ship-hull',100);set('ship-maxHull',100);
+click('start');data().fight.fires=[{name:'Cockpit fire',expertise:5,fists:1,health:1}];module.render();
+field('Cockpit fire').value='both';click('allocate');check(data().fight.status==='firefighting','cockpit firefight starts');
+set('spend',10);click('round');check(data().fight.status==='fighting'&&data().fight.stage==='allocated'&&!data().fight.fires.length,'fire round finishes and resumes ship stations');
+check(data().player.energy===50&&data().player.copilot.trait==='horizon','firefight keeps current player and crew');
+click('stations');check(data().fight.stage==='rolled','station phase continues after fire');
+
+fresh();choose('encounter','9');set('expertise',10);set('rightStuffAvailable',true);set('ship-shieldsDown',true);
+el('overlay').querySelector('[data-stat="manoeuvre"]').value=99;click('start');
+field('WEAPONS allocation').value=1;field('WEAPONS FISTS').value=1;field('SHIELDS allocation').value=1;
+click('allocate');click('stations');check(el('reroll-weapons')&&el('reroll-shields')&&!el('reroll-manoeuvre'),'only real failed station rerolls shown');
+const power=data().player.ship.power;click('reroll-shields');check(!data().player.rightStuffAvailable&&data().player.ship.power===power,'station reroll costs no extra POWER');
+check(!el('reroll-weapons')&&!el('reroll-shields'),'spent Right Stuff controls disappear');
+document.body.setAttribute('data-test',JSON.stringify({mode:'MODE',language:'LANGUAGE',width:innerWidth,cases:['ground Right Stuff','Trobble targeting','cockpit firefighting and station continuation','station reroll availability and cost'],productionWrites:0}));
+}finally{Math.random=random;}

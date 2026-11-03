@@ -1,0 +1,9 @@
+/* Shared presentation for server-rendered public book summaries and catalogue pages. */
+.public-catalogue { margin: 0 auto; padding: 20px; max-width: 960px; background: #111827; color: #d1d5db; font: 16px/1.5 Georgia, serif; }
+.public-catalogue a, .public-book-summary a { color: #f5a623; }
+.public-catalogue-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin: 0 0 16px; font-size: .85rem; }
+.public-book-summary h2 { font-size: 1rem; }
+.public-book-links { list-style: none; padding: 0; margin: 0 0 20px; }
+.public-book-links li { padding: 8px 0; border-bottom: 1px solid #374151; overflow-wrap: anywhere; }
+.public-book-links li span { display: block; color: #9ca3af; font-size: .85rem; }
+.public-book-summary .book-modal-description { white-space: pre-line; }

@@ -1,15 +1,30 @@
-// Render live seasonal reward notices and clearly labelled private previews.
-import {seasonalEndTime,formatSeasonalRemaining} from './remaining-time.js';
-export function renderSeasonalNotice(events, preview = null, date = new Date()) {
+// Render active events, the next calendar event, and clearly labelled private previews.
+import {seasonalEndTime,seasonalStartTime,formatSeasonalRemaining} from './remaining-time.js';
+export function renderSeasonalNotice(events, preview = null, date = new Date(), nextEvent = null) {
   const notice = document.getElementById('seasonal-event-notice');
   if (!notice) return;
-  notice.hidden = !events.length && !preview;
-  const updateRemaining=()=>{for(const node of notice.querySelectorAll('[data-season-end]'))node.textContent=formatSeasonalRemaining(Number(node.dataset.seasonEnd),date.getTime());};
-  const signature = JSON.stringify([events.map(event => [event.id,event.title,event.description,event.window?.end]), preview]);
+  const upcoming = !events.length && !preview ? nextEvent : null;
+  notice.hidden = !events.length && !preview && !upcoming;
+  const updateRemaining=()=>{for(const node of notice.querySelectorAll('[data-season-end],[data-season-start]'))node.textContent=formatSeasonalRemaining(Number(node.dataset.seasonEnd ?? node.dataset.seasonStart),date.getTime());};
+  const signature = JSON.stringify([events.map(event => [event.id,event.title,event.description,event.window?.end]), preview,
+    upcoming && [upcoming.id,upcoming.name,upcoming.title,upcoming.window?.start]]);
   if (notice.dataset.seasonalContent === signature) { updateRemaining(); return; }
   notice.dataset.seasonalContent = signature;
-  notice.dataset.season = events[0]?.id || '';
+  notice.dataset.season = events[0]?.id || upcoming?.id || '';
+  notice.dataset.mode = upcoming ? 'upcoming' : 'active';
   notice.replaceChildren();
+  if (upcoming) {
+    const line = document.createElement('div'), title = document.createElement('strong');
+    title.textContent = `Next event: ${upcoming.name || upcoming.title.replace(/ event active$/, '')}`;
+    const start = seasonalStartTime(upcoming);
+    if (start !== null) {
+      const countdown = document.createElement('span'), label = document.createElement('span'), remaining = document.createElement('span');
+      countdown.className = 'seasonal-event-eta'; countdown.dataset.tooltip = 'Estimated time to start'; countdown.setAttribute('aria-live', 'off');
+      label.className = 'seasonal-event-eta-label'; label.textContent = 'ETA:'; remaining.dataset.seasonStart = String(start);
+      countdown.append(' (', label, ' ', remaining, ')'); title.append(countdown);
+    }
+    line.append(title); notice.append(line);
+  }
   for (const event of events) {
     const line = document.createElement('div'), title = document.createElement('strong');
     line.dataset.season = event.id;

@@ -516,11 +516,11 @@ if (!baseline) {
   assert.ok(feed.innerHTML.includes('feed-pinned-card'), 'saved news preferences keep pinned announcements visible');
   assert.equal((feed.innerHTML.match(/aria-pressed="false"/g) || []).length, 2, 'unknown saved keys ignored');
   api.applyFeedFilterPrefs(Object.fromEntries(filters.FEED_FILTERS.map(key => [key, false])));
-  assert.ok(feed.innerHTML.startsWith('<div class="feed-pinned-card">'), 'pinned announcement stays first with all filters disabled');
+  assert.ok(feed.innerHTML.startsWith('<fieldset class="feed-pinned-card">'), 'pinned announcement stays first with all filters disabled');
   assert.ok(!feed.innerHTML.includes('feed-day-card'), 'all filters disabled hides ordinary activity');
   assert.ok(!feed.innerHTML.includes('feed-empty'), 'visible pinned announcement prevents empty state');
   await api.loadFeed();
-  assert.ok(feed.innerHTML.startsWith('<div class="feed-pinned-card">'), 'live refresh retains pinned announcement with all filters disabled');
+  assert.ok(feed.innerHTML.startsWith('<fieldset class="feed-pinned-card">'), 'live refresh retains pinned announcement with all filters disabled');
   api.applyFeedFilterPrefs({ catalog: true });
   assert.equal((feed.innerHTML.match(/aria-pressed="true"/g) || []).length, 7, 'remote preference sync restores selected categories');
   token = 'lorekeeper';

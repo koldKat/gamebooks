@@ -84,6 +84,10 @@ check(!document.querySelector('dialog .season-cursor-gallery')&&activePreviewObs
 clearToken();check(!document.querySelector('dialog').open,'logout closes collection');
 setToken('one');await fetch('/seed',{method:'POST'});await openCollectibles();await until(()=>document.querySelectorAll('.season-cursor-preview > *').length>=6);
 check(document.querySelectorAll('.collectible-item').length===12,'all twelve items can be collected');
+const collection=await api();
+const displayed=[...document.querySelectorAll('.collectible-item [data-cursor-preview]')].map(node=>node.dataset.cursorPreview);
+check(displayed.every((id,i)=>!i||collection.collectedAt[displayed[i-1]]>=collection.collectedAt[id]),'newest collection date first');
+check(new Set(displayed.map(id=>collection.collectedAt[id])).size===12,'ordering checked against distinct dates');
 document.body.classList.add('reduce-motion');await delay(25);
 const collectiblePumpkin=document.querySelector('dialog .seasonal-pumpkin');
 collectiblePumpkin.classList.add('is-clacking');
@@ -101,7 +105,7 @@ document.body.dataset.test=JSON.stringify({hiddenNotCollected:true,mouseDiscover
 const server=http.createServer(async(req,res)=>{
  try{
   if(req.url==='/')return res.end(html);
-  if(req.url==='/seed'){for(const [id,season]of Object.entries(items)){db.prepare('UPDATE users SET ui_prefs=? WHERE id=1').run(JSON.stringify({seasonPreview:season}));store.discover(1,id);}return res.end('{}');}
+  if(req.url==='/seed'){let order=0;for(const [id,season]of Object.entries(items)){db.prepare('UPDATE users SET ui_prefs=? WHERE id=1').run(JSON.stringify({seasonPreview:season}));store.discover(1,id);db.prepare('UPDATE user_collectibles SET seen_at=? WHERE user_id=1 AND item_id=?').run(Date.parse('2026-10-31T14:30:42Z')+(++order)*1000,id);}return res.end('{}');}
   if(req.url==='/api/profile')return send(res,200,rubyInfoForUser(db,1));
   const match=req.url.match(/^\/api\/collectibles\/([a-z-]+)\/(seen|claim)$/);
   if(req.url==='/api/collectibles'||match)return await route.exports.handleCollectibles(req,res,match?.[1],match?.[2]);

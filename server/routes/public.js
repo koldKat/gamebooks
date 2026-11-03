@@ -9,6 +9,7 @@ const { ROOT } = require('../paths');
 const { send, addSecurityHeaders } = require('../request-helpers');
 const { escapeHtml, escapeJsonString } = require('../html-escape');
 const { publicName } = require('../public-name');
+const { renderPublicPage, renderCatalogue } = require('../public-seo');
 
 async function handlePublicUser(req, res, username) {
   const profile = db.getPublicProfile(decodeURIComponent(username));
@@ -28,222 +29,47 @@ async function handlePublicSeriesRun(req, res, seriesId, userId, runIndex) {
   send(res, 200, data);
 }
 
-function servePublicBookPage(req, res, bookId) {
-  const meta = db.getPublicBookMeta(bookId);
-  const indexPath = path.join(ROOT, 'index.html');
-  fs.readFile(indexPath, 'utf8', (err, html) => {
-    if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found'); }
-    if (!meta) {
-      res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found');
-    }
+function servePublicCataloguePage(req, res) {
+  const query = new URL(req.url, 'http://localhost').searchParams;
+  const pageText = query.get('page') || '1';
+  const type = query.get('type') || 'books';
+  if (!/^[1-9]\d*$/.test(pageText) || !Number.isSafeInteger(Number(pageText)) || !['books', 'series'].includes(type)) {
+    res.writeHead(404, {'Content-Type': 'text/plain'}); return res.end('Not found');
+  }
+  const items = type === 'series' ? db.getAllPublicSeries() : db.getAllPublicBooks();
+  const collator = new Intl.Collator('en', {numeric: true, sensitivity: 'base'});
+  items.sort((a, b) => collator.compare(a.name, b.name) || a.id - b.id);
+  const html = renderCatalogue(items, {type, page: Number(pageText)});
+  addSecurityHeaders(res);
+  res.writeHead(html ? 200 : 404, {'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300'});
+  res.end(html || 'Not found');
+}
 
-    const SITE = 'https://pathmap.net';
-    const bookUrl  = `${SITE}/book/${bookId}`;
-    const title    = `${meta.name} - Gamebook Tracker`;
-    const desc     = meta.description
-      ? meta.description.slice(0, 200)
-      : `Track and map every branch of ${meta.name} across all your playthroughs on Gamebook Tracker.`;
-    const imageUrl = meta.coverPath ? `${SITE}${meta.coverPath}` : `${SITE}/og-image.png`;
-    const imageType = meta.coverPath ? 'image/jpeg' : 'image/png';
-
-    const escape  = escapeHtml;
-    const jsonEsc = escapeJsonString;
-
-    // Build JSON-LD structured data
-    const ldAuthors = meta.authors
-      ? meta.authors.split(/[,;]+/).map(a => a.trim()).filter(Boolean)
-          .map(a => `{"@type":"Person","name":"${jsonEsc(a)}"}`)
-          .join(',')
-      : null;
-    const ldParts = [
-      `"@context":"https://schema.org"`,
-      `"@type":"Book"`,
-      `"name":"${jsonEsc(meta.name)}"`,
-      `"url":"${jsonEsc(bookUrl)}"`,
-      meta.description ? `"description":"${jsonEsc(meta.description.slice(0, 500))}"` : null,
-      ldAuthors        ? `"author":[${ldAuthors}]`                                     : null,
-      meta.isbn        ? `"isbn":"${jsonEsc(meta.isbn)}"`                              : null,
-      meta.issn        ? `"issn":"${jsonEsc(meta.issn)}"`                              : null,
-      meta.pages       ? `"numberOfPages":${meta.pages}`                               : null,
-      meta.coverPath   ? `"image":"${jsonEsc(SITE + meta.coverPath)}"`                 : null,
-      `"publisher":{"@type":"Organization","name":"Gamebook Tracker","url":"${SITE}"}`,
-    ].filter(Boolean).join(',');
-    const jsonLd = `<script type="application/ld+json">{${ldParts}}</script>`;
-
-    // Replace the default OG/Twitter block with book-specific tags
-    const injected = html
-      .replace(
-        /<meta property="og:type"[\s\S]*?<meta property="og:locale"[^>]*>/,
-        `<meta property="og:type"        content="book">
-  <meta property="og:url"         content="${escape(bookUrl)}">
-  <meta property="og:title"       content="${escape(title)}">
-  <meta property="og:description" content="${escape(desc)}">
-  <meta property="og:image"       content="${escape(imageUrl)}">
-  <meta property="og:image:type"  content="${imageType}">
-  <meta property="og:site_name"   content="Gamebook Tracker">
-  <meta property="og:locale"      content="en_US">`
-      )
-      .replace(
-        /<meta name="twitter:card"[\s\S]*?<meta name="twitter:image"[^>]*>/,
-        `<meta name="twitter:card"        content="summary_large_image">
-  <meta name="twitter:url"         content="${escape(bookUrl)}">
-  <meta name="twitter:title"       content="${escape(title)}">
-  <meta name="twitter:description" content="${escape(desc)}">
-  <meta name="twitter:image"       content="${escape(imageUrl)}">`
-      )
-      .replace(
-        /<link rel="canonical"[^>]*>/,
-        `<link rel="canonical" href="${escape(bookUrl)}">`
-      )
-      .replace(
-        /<title>[^<]*<\/title>/,
-        `<title>${escape(title)}</title>`
-      )
-      .replace('</head>', `${jsonLd}\n</head>`);
-
+function servePublicContentPage(req, res, meta, kind) {
+  if (!meta || (kind === 'anthology' && !meta.isContainer)) {
+    res.writeHead(404, {'Content-Type': 'text/plain'}); return res.end('Not found');
+  }
+  if (kind === 'book' && meta.isContainer) {
+    res.writeHead(301, {Location: '/anthology/' + meta.id}); return res.end();
+  }
+  fs.readFile(path.join(ROOT, 'index.html'), 'utf8', (err, html) => {
+    if (err) {res.writeHead(500, {'Content-Type': 'text/plain'}); return res.end('Unable to load page');}
     addSecurityHeaders(res);
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
-    res.end(injected);
+    res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache'});
+    res.end(renderPublicPage(html, meta, kind));
   });
 }
 
-// ── Public anthology SSR page ─────────────────────────────────────────────────
+function servePublicBookPage(req, res, bookId) {
+  servePublicContentPage(req, res, db.getPublicBookMeta(bookId), 'book');
+}
 
 function servePublicAnthologyPage(req, res, anthologyId) {
-  const meta = db.getPublicBookMeta(anthologyId);
-  const indexPath = path.join(ROOT, 'index.html');
-  fs.readFile(indexPath, 'utf8', (err, html) => {
-    if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found'); }
-    if (!meta || !meta.isContainer) {
-      res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found');
-    }
-
-    const SITE         = 'https://pathmap.net';
-    const pageUrl      = `${SITE}/anthology/${anthologyId}`;
-    const title        = `${meta.name} - Gamebook Tracker`;
-    const childCount   = (meta.children || []).length;
-    const desc         = meta.description
-      ? meta.description.slice(0, 200)
-      : `${meta.name} - an anthology containing ${childCount} gamebook${childCount !== 1 ? 's' : ''}. Track every story on Gamebook Tracker.`;
-    const imageUrl     = meta.coverUrl ? `${SITE}${meta.coverUrl}` : `${SITE}/og-image.png`;
-    const imageType    = meta.coverUrl ? 'image/jpeg' : 'image/png';
-
-    const escape  = escapeHtml;
-    const jsonEsc = escapeJsonString;
-
-    const ldAuthors = meta.authors
-      ? meta.authors.split(/[,;]+/).map(a => a.trim()).filter(Boolean)
-          .map(a => `{"@type":"Person","name":"${jsonEsc(a)}"}`)
-          .join(',')
-      : null;
-    const ldParts = [
-      `"@context":"https://schema.org"`,
-      `"@type":"Book"`,
-      `"name":"${jsonEsc(meta.name)}"`,
-      `"url":"${jsonEsc(pageUrl)}"`,
-      meta.description ? `"description":"${jsonEsc(meta.description.slice(0, 500))}"` : null,
-      ldAuthors        ? `"author":[${ldAuthors}]`                                     : null,
-      meta.isbn        ? `"isbn":"${jsonEsc(meta.isbn)}"`                              : null,
-      meta.issn        ? `"issn":"${jsonEsc(meta.issn)}"`                              : null,
-      meta.pages       ? `"numberOfPages":${meta.pages}`                               : null,
-      meta.coverUrl    ? `"image":"${jsonEsc(SITE + meta.coverUrl)}"`                  : null,
-      `"publisher":{"@type":"Organization","name":"Gamebook Tracker","url":"${SITE}"}`,
-    ].filter(Boolean).join(',');
-    const jsonLd = `<script type="application/ld+json">{${ldParts}}</script>`;
-
-    const injected = html
-      .replace(
-        /<meta property="og:type"[\s\S]*?<meta property="og:locale"[^>]*>/,
-        `<meta property="og:type"        content="book">
-  <meta property="og:url"         content="${escape(pageUrl)}">
-  <meta property="og:title"       content="${escape(title)}">
-  <meta property="og:description" content="${escape(desc)}">
-  <meta property="og:image"       content="${escape(imageUrl)}">
-  <meta property="og:image:type"  content="${imageType}">
-  <meta property="og:site_name"   content="Gamebook Tracker">
-  <meta property="og:locale"      content="en_US">`
-      )
-      .replace(
-        /<meta name="twitter:card"[\s\S]*?<meta name="twitter:image"[^>]*>/,
-        `<meta name="twitter:card"        content="summary_large_image">
-  <meta name="twitter:url"         content="${escape(pageUrl)}">
-  <meta name="twitter:title"       content="${escape(title)}">
-  <meta name="twitter:description" content="${escape(desc)}">
-  <meta name="twitter:image"       content="${escape(imageUrl)}">`
-      )
-      .replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="${escape(pageUrl)}">`)
-      .replace(/<title>[^<]*<\/title>/, `<title>${escape(title)}</title>`)
-      .replace('</head>', `${jsonLd}\n</head>`);
-
-    addSecurityHeaders(res);
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
-    res.end(injected);
-  });
+  servePublicContentPage(req, res, db.getPublicBookMeta(anthologyId), 'anthology');
 }
 
-// ── Public series SSR page ────────────────────────────────────────────────────
-
 function servePublicSeriesPage(req, res, seriesId) {
-  const data = db.getPublicSeriesInfo(seriesId);
-  const indexPath = path.join(ROOT, 'index.html');
-  fs.readFile(indexPath, 'utf8', (err, html) => {
-    if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found'); }
-    if (!data || !data.isPublic) {
-      res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found');
-    }
-
-    const SITE      = 'https://pathmap.net';
-    const pageUrl   = `${SITE}/series/${seriesId}`;
-    const title     = `${data.name} - Series - Gamebook Tracker`;
-    const bookCount = data.books.length;
-    const desc      = data.description
-      ? data.description.slice(0, 200)
-      : `${data.name} - a gamebook series with ${bookCount} entr${bookCount !== 1 ? 'ies' : 'y'}. Track every book on Gamebook Tracker.`;
-
-    const escape  = escapeHtml;
-    const jsonEsc = escapeJsonString;
-
-    const ldParts = [
-      `"@context":"https://schema.org"`,
-      `"@type":"BookSeries"`,
-      `"name":"${jsonEsc(data.name)}"`,
-      `"url":"${jsonEsc(pageUrl)}"`,
-      data.description ? `"description":"${jsonEsc(data.description.slice(0, 500))}"` : null,
-      bookCount > 0
-        ? `"hasPart":[${data.books.map(b => `{"@type":"Book","name":"${jsonEsc(b.name)}","url":"${SITE}/book/${b.id}"}`).join(',')}]`
-        : null,
-      `"publisher":{"@type":"Organization","name":"Gamebook Tracker","url":"${SITE}"}`,
-    ].filter(Boolean).join(',');
-    const jsonLd = `<script type="application/ld+json">{${ldParts}}</script>`;
-
-    const injected = html
-      .replace(
-        /<meta property="og:type"[\s\S]*?<meta property="og:locale"[^>]*>/,
-        `<meta property="og:type"        content="website">
-  <meta property="og:url"         content="${escape(pageUrl)}">
-  <meta property="og:title"       content="${escape(title)}">
-  <meta property="og:description" content="${escape(desc)}">
-  <meta property="og:image"       content="${escape(SITE + '/og-image.png')}">
-  <meta property="og:image:type"  content="image/png">
-  <meta property="og:site_name"   content="Gamebook Tracker">
-  <meta property="og:locale"      content="en_US">`
-      )
-      .replace(
-        /<meta name="twitter:card"[\s\S]*?<meta name="twitter:image"[^>]*>/,
-        `<meta name="twitter:card"        content="summary">
-  <meta name="twitter:url"         content="${escape(pageUrl)}">
-  <meta name="twitter:title"       content="${escape(title)}">
-  <meta name="twitter:description" content="${escape(desc)}">
-  <meta name="twitter:image"       content="${escape(SITE + '/og-image.png')}">`
-      )
-      .replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="${escape(pageUrl)}">`)
-      .replace(/<title>[^<]*<\/title>/, `<title>${escape(title)}</title>`)
-      .replace('</head>', `${jsonLd}\n</head>`);
-
-    addSecurityHeaders(res);
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
-    res.end(injected);
-  });
+  servePublicContentPage(req, res, db.getPublicSeriesInfo(seriesId), 'series');
 }
 
 // ── Public profile SSR page ───────────────────────────────────────────────────
@@ -301,6 +127,7 @@ function servePublicProfilePage(req, res, username) {
       )
       .replace(/<link rel="canonical"[^>]*>/, `<link rel="canonical" href="${escape(profileUrl)}">`)
       .replace(/<title>[^<]*<\/title>/, `<title>${escape(title)}</title>`)
+      .replace(/<meta name="description"[^>]*>/, () => `<meta name="description" content="${escape(desc)}">`)
       .replace('</head>', `${jsonLd}\n</head>`);
 
     addSecurityHeaders(res);
@@ -455,6 +282,7 @@ function servePublicFeedPage(req, res) {
 }
 
 module.exports = {
+  servePublicCataloguePage,
   handlePublicUser, handlePublicRun, handlePublicSeriesRun,
   servePublicBookPage,
   servePublicAnthologyPage,

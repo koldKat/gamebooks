@@ -22,6 +22,7 @@ import { showReadingGate } from '../../js/reading/access.js';
 import { renderReadingMatter } from '../../js/reading/content.js';
 import { bindReadingMapEntry, isReadingMapSection, readingChoices } from '../../js/reading/map-entry.js';
 import { bindReadingPreviousEntry } from '../../js/reading/previous-entry.js';
+import { bindReadingSourceFlipbooks } from '../../js/reading/source-flipbook.js';
 
 // Debounce reward checks by 750ms to allow deferred server awards to land.
 // Merge nearby toast deltas instead of overwriting feedback.
@@ -559,6 +560,7 @@ async function _showExtra(key, readOnly = false) {
 }
 
 function _bindReadingNavigation(top, token, readOnly = false) {
+  bindReadingSourceFlipbooks(top, currentBookId);
   const bookId = currentBookId;
   const authToken = getToken();
   const run = currentPlaythrough();
@@ -607,6 +609,7 @@ async function _previewSection(sec) {
     ${data.html}
     <p class="m-back-link"><a href="#" id="m-preview-return">${t('mobile.preview_return')}</a></p>`;
   _readingViewReadOnly = true;
+  bindReadingSourceFlipbooks(top, currentBookId);
   bindReadingMapEntry(top, { canNavigate: () => false, onNavigate() {} });
   bindReadingPreviousEntry(top, { canNavigate: () => false });
   top.scrollTop = 0;

@@ -1,0 +1,158 @@
+localStorage.setItem('gamebook_lang','LANGUAGE');
+const app=await import('REPO/public/js/core/state.js');
+const desktop=await import('REPO/public/js/battlesim/loader.js');
+const mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const seeds=ROSTER_SEEDS,check=(value,label)=>{if(!value)throw Error(label);};
+let requests=0,writes=0;
+window.fetch=async(url,options={})=>{
+  if(options.method&&options.method!=='GET')writes++;
+  const id=String(url).match(/\/api\/books\/(\d+)\/enemies$/)?.[1];if(id)requests++;
+  return new Response(JSON.stringify(id?(seeds[id]||[]):{}),{headers:{'Content-Type':'application/json'}});
+};
+console.warn=(message,error)=>{if(error instanceof Error)throw error;};
+app.setCurrentBookId(1542);app.state.playthroughs=[{startedAt:1,path:[1]}];app.state.activePtIndex=0;
+if('MODE'==='mobile')await mobile.openSimForBook(1542);else await desktop.showBattleSimForBook(1542);
+const module=await import('REPO/public/js/battlesim/battlesim1542.js');
+const {getRoster}=await import('REPO/public/js/battlesim/books/1542/definition.js');
+const {sagardTurn}=await import('REPO/public/js/battlesim/engines/sagard/core.js');
+const el=key=>document.getElementById('sim1542-'+key),current=()=>app.currentPlaythrough().sim1542;
+const set=(key,value)=>{const input=el(key);check(input,'missing '+key);if(input.type==='checkbox')input.checked=value;else input.value=value;};
+const choose=(key,value)=>{set(key,value);el(key).dispatchEvent(new Event('change',{bubbles:true}));};
+const alert=()=>document.getElementById('confirm-overlay')?.classList.contains('active');
+const click=key=>{el(key).click();check(!alert(),'unexpected alert '+document.getElementById('confirm-message')?.textContent);};
+const fields=key=>[...el('opponents').querySelectorAll('[data-stat="'+key+'"]')];
+const next=(die=1)=>{const turn=sagardTurn(current().fight);if(turn.targets.length>1)set('target',turn.targets[0]);set('die',die);click('attack');};
+function fresh(){app.state.playthroughs=[{startedAt:1,path:[1],inventory:['Story key'],trophies:['Keep'],experienceMarks:7,sim8:{keep:true}}];module.render();}
+const protectedState=()=>JSON.stringify([app.currentPlaythrough().inventory,app.currentPlaythrough().trophies,app.currentPlaythrough().experienceMarks,app.currentPlaythrough().sim8,app.currentPlaythrough().path]);
+if(!el('overlay').classList.contains('active'))el('btn').click();
+check(el('overlay').classList.contains('active'),'real loader opens simulator');
+const triggerStyle=getComputedStyle(el('btn'));
+check(triggerStyle.backgroundColor==='rgba(31, 41, 55, 0.88)'&&triggerStyle.textTransform==='uppercase','shared launcher theme');
+const {ALL_PANEL_OVERLAY_IDS,registerPanelShortcut}=await import('REPO/public/js/core/util.js');
+for(const id of [1539,1540,1541,1542])check(ALL_PANEL_OVERLAY_IDS.includes('sim'+id+'-overlay'),'registered overlay '+id);
+const inventoryOverlay=document.getElementById('inv-overlay'),inventoryTrigger=document.createElement('button');document.body.append(inventoryTrigger);
+for(const id of [1539,1540,1541]){const overlay=document.createElement('div');overlay.id='sim'+id+'-overlay';overlay.classList.add('active');document.body.append(overlay);}
+registerPanelShortcut('KeyI',{getButton:()=>inventoryTrigger,getOverlay:()=>inventoryOverlay,
+  otherOverlayIds:ALL_PANEL_OVERLAY_IDS.filter(id=>id!=='inv-overlay'),open:()=>inventoryOverlay.classList.add('active'),close:()=>inventoryOverlay.classList.remove('active')});
+document.body.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyI',bubbles:true}));
+check(inventoryOverlay.classList.contains('active')&&[1539,1540,1541,1542].every(id=>!document.getElementById('sim'+id+'-overlay').classList.contains('active')),'inventory shortcut closes all recent simulators');
+if('MODE'==='desktop'){
+  document.body.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyS',bubbles:true}));
+  check(el('overlay').classList.contains('active')&&!inventoryOverlay.classList.contains('active'),'simulator shortcut closes inventory');
+}else{
+  inventoryOverlay.classList.remove('active');await mobile.openSimForBook(1542);
+  check(el('overlay').classList.contains('active'),'mobile tap entry reopens simulator');
+}
+const cases=[];let restored=0,opponentRows=0,manualPresets=0;
+const resume=()=>{app.currentPlaythrough().sim1542=JSON.parse(JSON.stringify(current()));const before=JSON.stringify(current());module.render();check(JSON.stringify(current())===before,'render changed saved action');restored++;};
+const begin=(section)=>{fresh();choose('encounter',section);choose('manualDice',true);};
+fresh();check(el('level').value==='3','initial level three');
+for(const item of ['poisonDaggers','fireDarts','arrows'])check(el('ammo-'+item).value==='0','no automatic missiles');
+check(!el('spiritLuck').checked,'no automatic Spirit luck');
+choose('manualDice',true);fields('hp')[0].value='1';fields('hp')[0].dispatchEvent(new Event('change',{bubbles:true}));
+const untouched=protectedState();click('start');next(4);
+check(current().fight.status==='win'&&current().history.length===1,'custom fight works');
+check(protectedState()===untouched,'custom fight preserves story state');cases.push('manual current values, zero automatic acquisitions, custom win');
+
+for(const entry of getRoster()){
+  begin(entry.section);opponentRows+=entry.opponents.length;
+  if(entry.mode==='manual'){
+    check(el('start').disabled&&el('note').textContent.includes('clipped'),'manual clipped count');
+    el('start').click();check(!current().fight&&current().history.length===0,'manual source gap awards nothing');manualPresets++;continue;
+  }
+  if(entry.openings)choose('opening',entry.openings[0].id);
+  choose('level',5);choose('weapon',true);choose('armor',true);choose('shield',10);
+  choose('fang',true);choose('moss',true);choose('spiritLuck',true);
+  if(entry.section==='38')check(fields('hp')[0].disabled&&fields('hp')[0].value==='','immortal HP stays blank');
+  const before=protectedState();click('start');
+  check(el('hp').disabled&&el('encounter').disabled,'running setup locked');
+  for(let n=0;current().fight.status==='fighting';n++){
+    check(n<1000,'stalled encounter '+entry.section);const fight=current().fight,turn=sagardTurn(fight);
+    if(turn.kind==='recovery')click('heal-spiritLuck');
+    else if(fight.hero.hp<=8&&['fang','moss','spiritLuck'].some(item=>fight.healing[item]))click('heal-'+['fang','moss','spiritLuck'].find(item=>fight.healing[item]));
+    else if(turn.kind==='prelude')click('attack');
+    else if(turn.kind==='escape'){set('die',2);click('flee');}
+    else next(turn.kind==='retrieve'?1:turn.attackerId?.startsWith('enemy')?1:4);
+    resume();
+  }
+  const expected=entry.section==='38'?'fled':'win';
+  check(current().fight.status===expected,'source result '+entry.section);
+  check(current().history.length===(expected==='win'?1:0),'source history '+entry.section);
+  check(protectedState()===before,'story changed '+entry.section);
+}
+check(opponentRows===89&&manualPresets===1,'all reviewed source rows covered');
+cases.push('all twenty-eight automatic source presets and one manual source gap, save/resume after every action');
+
+begin('36');el('start').click();check(alert()&&!current().fight,'missing approach rejected');document.getElementById('confirm-ok').click();
+choose('opening','32');click('start');next(4);check(sagardTurn(current().fight).attackerId==='hero','second opening strike');next(4);
+check(current().fight.opponents[0].hp===19&&current().fight.opponents[0].level===4,'Assassin weakens immediately');
+check(sagardTurn(current().fight).attackerId==='enemy0','reply after two strikes');
+begin('36');choose('opening','30');click('start');check(sagardTurn(current().fight).attackerId==='enemy0','enemy-first approach');
+begin('36');choose('opening','21-23');click('start');next(2);check(sagardTurn(current().fight).attackerId==='hero','parity approach');
+begin('36');choose('opening','32');fields('level')[0].value='1';fields('level')[0].dispatchEvent(new Event('change',{bubbles:true}));click('start');
+check(current().fight.opponents[0].level===1&&!current().fight.opponents[0].hpBands,'manual enemy level override retained');
+cases.push('all Assassin approaches, HP bands and editable level override');
+
+begin('14');click('start');check(el('flee').disabled,'first complete round before fleeing');next(1);
+for(let n=0;n<3;n++)next(1);set('die',2);click('flee');
+check(current().fight.escapeQueue.length===3,'one dagger per surviving Slith');
+next(2);resume();next(1);next(2);check(current().fight.status==='fled'&&current().fight.hero.hp===14,'survivor volley resolved once');
+check(current().history.length===0&&current().fight.destination==='19','volley escape has no win reward');
+begin('22');click('start');const random=Math.random;Math.random=()=>{throw Error('no die for valuables escape');};click('flee');Math.random=random;
+check(current().fight.status==='fled'&&current().fight.destination==='24','valuables escape without random roll');
+begin('25');click('start');for(let n=0;n<3;n++)next(1);set('die',2);click('flee');check(current().fight.status==='fighting','one-only escape rejects two');
+next(1);for(let n=0;n<3;n++)next(1);set('die',1);click('flee');check(current().fight.status==='fled','one-only escape accepts one');
+cases.push('mandatory round, survivor-counted escape volley, automatic valuables escape and die-one escape');
+
+begin('35');click('start');next(1);check(sagardTurn(current().fight).attackerId==='hero','repeated double first strike');next(1);next(1);
+next(1);check(sagardTurn(current().fight).attackerId==='hero','double strike repeats next round');
+begin('49');click('start');next(1);next(4);check(current().fight.status==='withdrawn'&&current().fight.destination==='65'&&current().history.length===0,'first wound is reading transition');
+begin('74');choose('armor',true);click('start');check(current().fight.hero.hp===20,'opening injury not duplicated');next(1);next(4);
+check(current().fight.hero.hp===19,'flamebat ignores armor');
+begin('85');click('start');next(1);check(sagardTurn(current().fight).attackerId==='hero','low-half initiative');set('die',2);click('flee');
+check(current().fight.status==='withdrawn'&&current().fight.destination==='86'&&current().fight.hero.hp===20&&current().history.length===0,'jump reports source without automated pit death');
+begin('94');click('start');next(2);set('die',2);click('flee');check(sagardTurn(current().fight).attackerId==='hero'&&el('flee').disabled,'failed slip preserves ordinary attack');
+next(1);next(1);next(1);set('die',4);click('flee');check(current().fight.destination==='96'&&current().fight.status==='fled','four slips past guards');
+begin('95');choose('level',4);choose('hp',10);click('start');check(current().fight.hero.level===2&&current().setup.level===4&&current().fight.hero.hp===10,'temporary fumes retain current level and HP');
+begin('62');check(el('hp').max==='25','printed HP exception available');choose('hp',25);click('start');check(current().fight.hero.hp===25,'printed HP accepted without reset');
+cases.push('double strikes, first-wound stop, armor-ignoring bats, jump/slip exceptions and temporary hero values');
+
+begin('96');const alliedHp=[...el('allies').querySelectorAll('[data-stat="hp"]')];
+for(const field of alliedHp){field.value='1';field.dispatchEvent(new Event('change',{bubbles:true}));}
+click('start');for(let n=0;n<3;n++)next(1);
+check(sagardTurn(current().fight).targets[0]==='hero','first head assigned to hero');
+for(let n=0;n<3;n++)next(1);check(sagardTurn(current().fight).targets[0]==='ally0','fourth head assigned to first guard');next(1);
+check(current().fight.allies[0].hp===0&&sagardTurn(current().fight).targets[0]==='hero','dead guard heads retarget hero');
+begin('101');choose('armor',true);choose('level',0);click('start');
+while(current().fight.round<7){next(1);resume();}
+check(sagardTurn(current().fight).attackerId==='enemy2','reinforcement attacks first in round seven');next(1);
+check(sagardTurn(current().fight).attackerId==='hero','reinforcement only attacks once before hero');
+cases.push('printed Hydra head assignments and round-seven reinforcement');
+
+fresh();choose('manualDice',true);choose('hp',1);choose('opponentFirst',true);choose('spiritLuck',true);click('start');next(4);
+check(current().fight.phase==='recovery'&&current().history.length===0,'recovery pending before loss reward');resume();el('close').click();el('btn').click();
+check(current().fight.phase==='recovery','pending recovery survives reopening');click('heal-spiritLuck');
+check(current().fight.hero.hp===20&&!current().fight.healing.spiritLuck&&current().history.length===0,'Spirit luck spent without premature loss');
+fresh();choose('manualDice',true);choose('hp',1);choose('opponentFirst',true);choose('spiritLuck',true);click('start');next(4);click('attack');
+check(current().fight.status==='loss'&&current().history.length===1,'explicitly declined recovery records one loss');
+cases.push('Spirit luck pending death, persistence, consumption and declined recovery');
+
+fresh();choose('manualDice',true);choose('ammo-poisonDaggers',2);
+el('opponents').querySelector('details>button').click();fields('level')[1].value='1';fields('hp')[1].value='10';
+el('opponents').dispatchEvent(new Event('change',{bubbles:true}));
+click('start');set('target','enemy0');click('throw-poisonDaggers');resume();check(current().fight.opponents[0].hp===0,'poison defeats low-level enemy');
+set('target','enemy1');click('throw-poisonDaggers');check(current().fight.status==='win'&&current().setup.ammo.poisonDaggers===0,'two missiles spent and remembered');
+begin('77');choose('ammo-arrows',2);choose('dahliaOil',true);click('start');set('target','enemy0');set('die',1);click('throw-arrows');
+check(current().fight.opponents[0].hp===10&&current().fight.ammo.arrows===1,'prelude odd arrow misses');set('die',2);click('throw-arrows');
+check(current().fight.opponents[0].hp===0&&current().fight.ammo.arrows===0,'prelude even arrow disables head');click('attack');check(sagardTurn(current().fight).attackerId==='hero','explicit begin melee');
+begin('96');choose('ammo-arrows',1);click('start');set('target','enemy0');set('die',3);click('throw-arrows');
+check(current().fight.opponents[0].hp===0&&sagardTurn(current().fight).attackerId==='ally0','combat arrow has distinct hit rule and replaces attack');
+begin('89');click('start');next(4);const hp=current().fight.opponents[0].hp;click('surrender');check(current().fight.status==='withdrawn'&&current().fight.opponents[0].hp===hp&&current().history.length===0,'surrender retains casualties and awards nothing');
+cases.push('zero automatic ammunition, two-shot poison turn, distinct arrow rules and surrender');
+
+fresh();click('start');el('cancel').click();check(alert(),'cancellation confirmation');app.state.playthroughs=[{startedAt:2,path:[1]}];module.render();document.getElementById('confirm-ok').click();
+check(!current(),'stale cancellation cannot affect another playthrough');
+check(!el('overlay').querySelector('.bsim-col-right input,.bsim-col-right select,.bsim-col-right button'),'right side is report only');
+el('btn').click();const bounds=el('overlay').querySelector('.inv-modal').getBoundingClientRect();check(bounds.left>=-1&&bounds.right<=innerWidth+1,'modal fits');
+check(document.documentElement.scrollWidth<=innerWidth+1,'no document overflow');check(requests===1,'catalog fetched once through real loader');
+document.body.dataset.test=JSON.stringify({mode:'MODE',language:'LANGUAGE',width:innerWidth,cases,encounters:getRoster().length,automatedEncounters:28,opponentRows,manualPresets,restored,requests,writes,productionWrites:0});

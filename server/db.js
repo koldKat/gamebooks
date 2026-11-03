@@ -901,6 +901,7 @@ const {
   setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setSquire, setPdfAccess, setDisplayName,
   getPublicProfile, getProfileStats,
   getPublicCovers, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
+  getPublicCoverPaths,
   getPublicBookMeta, getAllPublicBooks, getPublicBooksInSeries, getAllPublicSeries, getAllPublicAnthologies,
   getBookActivity, getPublicRun, getPublicSeriesRun,
 } = require('./db/feed');
@@ -932,6 +933,7 @@ const {
   getAllBooksForExport, getBookForExport,
   getAdminGcSupply, adminGiftGc, adminPreviewBulkGc, adminGiftBulkGc,
   settleSeasonParticipation,
+  getSeasonPayoutReports,
   getAppBirthTimestamp,
   backupDb,
 } = require('./db/misc');
@@ -982,6 +984,7 @@ module.exports = {
   getFeed,
   getFeedVersion,
   setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setSquire, setPdfAccess, setDisplayName, adminUpdateUser, getPublicProfile, getProfileStats, getPublicRun, getPublicSeriesRun, getPublicCovers, getAllPublicBooks, getAllPublicSeries, getAllPublicAnthologies, getPublicBooksInSeries, getBookActivity, getPublicBookMeta, getPublicSeriesInfo, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
+  getPublicCoverPaths,
   getBookRating, setBookRating, getSeriesRating, setSeriesRating, canUserRateBook, canUserRateSeries, setBookBgPref, getBookBgPref,
   awardXp, awardCoins, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc, processStateXp, runXpMigration, migratePublicBookXp, migrateEquipmentXp, setXpFeedHook, setAppXpHook,
   getXpAmount, getXpConfig, setXpAmount,
@@ -1016,6 +1019,7 @@ module.exports = {
   getAdminGcSupply, adminGiftGc, adminPreviewBulkGc, adminGiftBulkGc,
   readingAccess,
   settleSeasonParticipation,
+  getSeasonPayoutReports,
   backupDb,
 };
 
@@ -1024,7 +1028,9 @@ require('./db/rubies').initializeRubies(db);
 require('./db/collectibles').initializeCollectibles(db);
 require('./db/gem-notifications').initializeGemNotifications(db);
 require('./db/lucky-coin-diamonds').initializeLuckyCoinDiamonds(db);
+require('./db/vote-gems').initializeVoteGems(db);
 require('./db/notification-policy').initializeNotificationPolicy(db);
 require('./db/gem-rebrand').retireExchangeUpgrade(db);
 require('./db/job-digging').migrateJobDigging(db, coinBalance);
 require('./db/rubies').backfillRubies(db);
+require('./db/job-level-rubies').initializeJobLevelRubies(db);

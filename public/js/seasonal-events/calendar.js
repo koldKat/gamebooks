@@ -1,6 +1,6 @@
 // Annual seasonal calendar and automatic day changes, using the server's Sofia date.
 import events from './calendar.json' with { type: 'json' };
-import { activeSeasons, seasonWindow } from './schedule.js';
+import { activeSeasons, nextSeason, seasonWindow } from './schedule.js';
 export { seasonWindow };
 export const seasonalEvents = events;
 export async function reloadSeasonalCalendar() {
@@ -43,3 +43,4 @@ export function activeSeasonalEvent(date = new Date()) {
   return activeSeasonalEvents(date)[0] || null;
 }
 export function activeSeasonalEvents(date = new Date()) { return activeSeasons(seasonalEvents, date); }
+export function nextSeasonalEvent(date = new Date()) { return nextSeason(seasonalEvents, date); }

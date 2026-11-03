@@ -106,7 +106,7 @@ export function renderEntry(e) {
     html = t('feed.tmpl.run_started', { user: userEl, n: _runN(e.runIndex), book: bookBtn(e.bookId, e.bookName) });
   } else if (e.type === 'user_joined') {
     const tmpl = e.joinTemplate || t('feed.join_default');
-    html = tmpl.replace('{name}', () => userEl);
+    html = tmpl.replaceAll('{name}', () => userEl);
     extraClass = 'feed-entry--join';
   } else if (e.type === 'job_level_up') {
     extraClass = 'feed-entry--joblevel';
@@ -122,10 +122,11 @@ export function renderEntry(e) {
   } else if (e.type === 'level_up') {
     extraClass = 'feed-entry--levelup';
     const lvTmpl = e.levelUpTemplate || t('feed.levelup_default');
-    html = lvTmpl
-      .replace('{name}',  userEl)
-      .replace('{title}', `<span class="feed-title">${escapeHtml(e.levelTitle)}</span>`)
-      .replace('{level}', `<span class="feed-level">${e.level}</span>`);
+    html = lvTmpl.replace(/\{(name|title|level)\}/g, (_, key) => ({
+      name: userEl,
+      title: `<span class="feed-title">${escapeHtml(e.levelTitle)}</span>`,
+      level: `<span class="feed-level">${e.level}</span>`,
+    })[key]);
   } else if (e.type === 'all_visited') {
     html = t('feed.tmpl.all_visited', { user: userEl, book: bookBtn(e.bookId, e.bookName) });
   } else if (e.type === 'all_discovered') {
@@ -169,7 +170,7 @@ export function renderEntry(e) {
     html = t('feed.tmpl.rated_series', { user: userEl, series: _seriesTag(e), stars: _hooks.starsHtml?.(e.rating) ?? '' });
     extraClass = 'feed-entry--rated';
   } else if (e.type === 'announcement') {
-    html = `<div class="feed-announcement"><span class="feed-ann-title">${escapeHtml(e.title)}</span><div class="feed-ann-body">${formatAnnBody(e.body, e.bookCovers)}</div></div>`;
+    html = `<fieldset class="feed-announcement"><legend class="feed-ann-title">${escapeHtml(e.title)}</legend><div class="feed-ann-body">${formatAnnBody(e.body, e.bookCovers)}</div></fieldset>`;
   }
   if (isParty && html && e.type !== 'party_formed') html += ` <span class="feed-party-badge">${t('feed.party_badge')}</span>`;
   return { html, isParty, extraClass };

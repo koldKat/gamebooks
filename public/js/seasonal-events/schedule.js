@@ -30,3 +30,15 @@ export function activeSeasons(events, date = new Date()) {
     return window ? [{ ...event, window }] : [];
   }).sort((a, b) => Math.abs(Date.parse(a.window.center) - today) - Math.abs(Date.parse(b.window.center) - today));
 }
+
+// Find the next activation window from calendar data, without event-specific rules.
+export function nextSeason(events, date = new Date()) {
+  const today = seasonalDay(date), key = iso(today), year = new Date(today).getUTCFullYear();
+  const upcoming = events.flatMap(event => {
+    const years = event.dates ? Object.keys(event.dates).map(Number).filter(y => y >= year - 1) : [year, year + 1];
+    return years.map(y => seasonWindow(event, y)).filter(window => window && window.start > key)
+      .map(window => ({...event, window}));
+  });
+  upcoming.sort((a, b) => a.window.start.localeCompare(b.window.start));
+  return upcoming[0] ?? null;
+}

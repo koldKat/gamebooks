@@ -5,7 +5,7 @@ const Database = require('better-sqlite3');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const { initializeSeasonParticipation, recordSeasonParticipation } = require('../server/db/season-participation');
-const { createSeasonPayouts } = require('../server/db/season-payouts');
+const { createSeasonPayouts, getSeasonPayoutReports } = require('../server/db/season-payouts');
 const events = require('../public/js/seasonal-events/calendar.json');
 
 function fixture(t, initialize = true) {
@@ -77,7 +77,37 @@ test('a failed gift rolls back all recipients, the pool charge and settlement ma
   assert.throws(() => f.settle('2026-11-04T00:00:00Z', broken), /injected failure/);
   assert.deepEqual(f.balances(), [0, 0, 0]); assert.equal(f.gifted(), 0); assert.equal(f.notifications().length, 0);
   assert.equal(f.db.prepare('SELECT COUNT(*) n FROM seasonal_participation_payouts').get().n, 0);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM seasonal_participation_recipients').get().n, 0);
   assert.equal(f.settle('2026-11-04T00:00:00Z').results[0].status, 'paid');
+});
+
+test('payout reports preserve the exact recipients and pool debit after renames, deletion and repeated ticks', t => {
+  const f = fixture(t); halloween(f);
+  f.settle('2026-11-04T00:00:00Z');
+  const [report] = getSeasonPayoutReports(f.db);
+  assert.equal(report.name, 'Halloween');
+  assert.equal(report.startsOn, '2026-10-28'); assert.equal(report.endsOn, '2026-11-03');
+  assert.equal(report.paidGc, f.gifted()); assert.equal(report.eligibleGc, 3);
+  assert.equal(report.recipientCount, 2); assert.equal(report.status, 'paid');
+  assert.deepEqual(report.recipients, [
+    { user_id: 1, username: 'Alice', qualifying_days: 2, paid_gc: 2 },
+    { user_id: 2, username: 'Bob', qualifying_days: 1, paid_gc: 1 },
+  ]);
+  f.db.exec("UPDATE users SET username='Renamed' WHERE id=1; DELETE FROM users WHERE id=2;");
+  initializeSeasonParticipation(f.db, new Date('2026-11-05T00:00:00Z'));
+  f.settle('2026-11-05T00:00:00Z');
+  assert.deepEqual(getSeasonPayoutReports(f.db), [report]);
+  assert.equal(report.recipients.reduce((sum, row) => sum + row.paid_gc, 0), report.paidGc);
+});
+
+test('skipped payout reports distinguish eligible gold from actual zero spending', t => {
+  const f = fixture(t); halloween(f); f.supply(2);
+  f.settle('2026-11-04T00:00:00Z');
+  const [report] = getSeasonPayoutReports(f.db);
+  assert.equal(report.status, 'skipped'); assert.equal(report.paidGc, 0); assert.equal(report.eligibleGc, 3);
+  assert.deepEqual(report.recipients.map(row => [row.username, row.qualifying_days, row.paid_gc]),
+    [['Alice', 2, 0], ['Bob', 1, 0]]);
+  assert.equal(f.gifted(), 0);
 });
 
 test('Sofia midnight counts separate days while repeated actions on one day count once', t => {

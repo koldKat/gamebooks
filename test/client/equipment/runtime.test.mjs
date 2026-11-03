@@ -12,6 +12,6 @@ test('equipment preserves stack transfers, slot rendering, metadata, templates, 
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const { cases, exports, digest } = JSON.parse(result.stdout);
   assert.equal(cases, 16); assert.equal(exports, 4);
-  // Captured from e6883df's unsplit equipment controller with identical fixtures.
-  assert.equal(digest, '6746a9a28983cb24f49d2a7942fdc9ee5aeb84ac8a504cac7eb6b846641e1504');
+  // The snapshot includes the equipment markup, including its mannequin artwork.
+  assert.equal(digest, '0e087fc396000ce50308a180513489bb13f1622620a704e412db0c1f19c4116c');
 });

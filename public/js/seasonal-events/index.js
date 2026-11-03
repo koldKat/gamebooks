@@ -1,5 +1,5 @@
 // Activate seasonal decorations on their annual dates and honor player settings.
-import { activeSeasonalEvents, seasonalEvents, nextSeasonalRefreshDelay, reloadSeasonalCalendar } from './calendar.js';
+import { activeSeasonalEvents, nextSeasonalEvent, seasonalEvents, nextSeasonalRefreshDelay, reloadSeasonalCalendar } from './calendar.js';
 import { seasonalEventsEnabled, syncSeasonalEventSetting } from './preferences.js';
 import { seasonalThemes } from './themes.js';
 import { seasonPreview, isSeasonPreviewStorageKey } from './preview.js';
@@ -28,8 +28,9 @@ export function initSeasonalEvents({ now = () => new Date(), random = Math.rando
       && seasonalEvents.some(event => event.id === override)) ? override : null;
     const events = preview ? seasonalEvents.filter(event => event.id === preview) : activeSeasonalEvents(date);
     const event = events[0];
-    renderSeasonalNotice(events, preview, date);
-    if(!preview&&!document.hidden&&events.some(event=>event.window?.end))countdown=setTimeout(refresh,60000-date.getTime()%60000+50);
+    const upcoming = !preview && !events.length ? nextSeasonalEvent(date) : null;
+    renderSeasonalNotice(events, preview, date, upcoming);
+    if(!preview&&!document.hidden&&(upcoming||events.some(event=>event.window?.end)))countdown=setTimeout(refresh,60000-date.getTime()%60000+50);
     // Keep the mouse companion and its action timers when returning to this tab.
     const landing = document.getElementById('landing-wrapper');
     const visible = !landing || (getComputedStyle(landing).display !== 'none' && getComputedStyle(landing).visibility !== 'hidden');

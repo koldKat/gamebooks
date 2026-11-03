@@ -60,41 +60,18 @@
   fill: url(#eqGlowGrad);
 }
 .eq-dummy-figure {
-  opacity: 0.44;
+  opacity: 0.62;
 }
-.eq-dummy-torso {
-  fill: rgba(31, 41, 55, 0.2);
-  stroke: #64748b;
-  stroke-width: 4;
+.eq-dummy-outline {
+  fill: url(#eqFigureGrad);
+  stroke: #8290a3;
+  stroke-width: 1.7;
   stroke-linejoin: round;
 }
-.eq-dummy-neck {
-  fill: rgba(100, 116, 139, 0.22);
-  stroke: #64748b;
-  stroke-width: 3;
-  stroke-linejoin: round;
-}
-.eq-dummy-head {
-  fill: rgba(31, 41, 55, 0.22);
-  stroke: #64748b;
-  stroke-width: 4;
-  stroke-linejoin: round;
-}
-.eq-dummy-arm,
-.eq-dummy-leg {
+.eq-dummy-detail {
   fill: none;
-  stroke: #64748b;
-  stroke-width: 8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.eq-dummy-shoulder-line,
-.eq-dummy-centerline,
-.eq-dummy-beltline,
-.eq-dummy-base {
-  fill: none;
-  stroke: rgba(203, 213, 225, 0.36);
-  stroke-width: 3;
+  stroke: rgba(148, 163, 184, 0.45);
+  stroke-width: 1.15;
   stroke-linecap: round;
   stroke-linejoin: round;
 }

@@ -1,468 +1,188 @@
 # Gamebook Tracker - Admin Panel
 
-The admin panel is a localhost-only interface for server operators. It is not accessible to regular players.
-
-The admin interface is English-only; it does not use the player app's language selector or translation tables.
-
-Tables use compact vertical padding for headers, rows, badges, and action buttons; text sizes are unchanged.
-
----
+The admin panel is the server operator's interface for accounts, catalog entries, announcements, rewards, and maintenance. For player controls, use the [Guide](/guide.html). API ownership, storage, and deployment details belong in the [Technical Reference](/admin/technical).
 
 ## Access
 
-### Reading Unlock Trial
+Open `http://localhost:3000/admin` on the server machine. The panel and `/api/admin/*` accept real localhost connections only. Forwarded-IP headers do not grant access. No separate admin-panel login is required.
 
-Only administrators see the 0-GC reading-unlock trial for *Assassins of Allansia* (book 263). Other players read it freely without a purchase button; direct purchase requests cannot enter the admin-only trial. Paid purchases remain disabled. Existing saved runs in imported books receive permanent access once at the first startup after deployment, without tester labels. Imported introduction/rules text is shown before unlocking; check extraction quality before expanding the trial. Policy lives in `server/db/reading-access.js`; `adminOnly: true` restricts the purchase flow to current administrators. Set `testBookId: null` and keep `paidEnabled: false` to disable the trial. Unlocks survive disabling the policy, removing a book from a library, and starting another run. There is no admin unlock editor yet.
+The interface is English-only. Main-app Gamemaster permissions and localhost operator access are separate: actions in the player app still use that account's permissions.
 
-Mobile progress-load failures stop reader initialization instead of creating an empty replacement run. If unlocking succeeds but the reader fails to open, the player gets retry/back controls and keeps the permanent unlock.
+## Navigation and editing
 
-Unlocking requires player confirmation before any purchase request. Across all readable books, opening the reader automatically starts a run if none is active (including after resetting/deleting runs); existing active runs resume normally. Locked previews do not start runs before unlocking.
+Select a tab to load its contents. **Refresh** reloads the current tab and dashboard. Players, Books, Series, and Anthologies have search, sorting, counts, and clear-search controls. Books, Series, and Anthologies use 50 rows per page.
 
-Unlock confirmation is inline in the reader footer, with Cancel/Confirm controls and no modal popup.
+Player lists initially show recently active accounts, with a control to reveal inactive accounts. Searching includes inactive accounts. Clicking a player or book opens its detail view; **Edit** opens a dialog without leaving the current list.
 
-Open `http://localhost:3000/admin` in a browser on the same machine as the server.
+Editors support Save, Cancel, and Escape. Escape dismisses autocomplete before the editor. While saving, controls and dismissal are disabled. Errors remain visible in the dialog so you can correct or retry the action.
 
-All `/api/admin/*` routes and the panel itself reject any connection that is not from localhost (`127.0.0.1`, `::1`, or `::ffff:127.0.0.1`). No login is required - the localhost restriction is the sole access control. `X-Forwarded-For` and similar headers are never trusted.
-
----
-
-## Seasons
-
-The **Seasons** tab lists the live calendar, each event's window and rewards. Sign in to your administrator account in the main app first, then use **Test season** to preview Halloween, Diwali, Christmas or New Year in your main-app tab. The selected preview replaces the displayed event only for that account. It syncs through private account preferences to your other tabs and devices, stays stable when changing tabs or scrolling, and never changes another player's event or the server's actual XP rewards.
-
-**Test no season** hides seasonal decorations for your preview. **Stop testing, use live season** removes the override and immediately restores the calendar's event. Ctrl+Y's **Seasonal events** setting still controls decoration visibility. Previews do not add decorations to the canvas/play area. Live events continue to activate and expire automatically even while an admin is testing another season.
-
-Each seasonal card shows three live animated companion previews. They use the same artwork and actions as the main app, with a short repeating demonstration cycle. Off-screen previews and hidden admin tabs stop their timers and animations. **Reduce animations** keeps them still. **Test season** still previews the selected season only for your account in the main app; its starting companion is random, and its rare changes use active mouse time.
-
-Christmas runs December 22–28. New Year runs December 29–January 4 and doubles every XP award, including job XP. Christmas doubles wins, simulator wins, new runs, discovering or mapping whole books, and heartbeats. These bonuses follow the live calendar even during a private preview.
-
-## Stats cards
-
-The top of the panel groups aggregate metrics into six compact panels:
+## Dashboard
 
 | Group | What it shows |
 |-------|---------------|
-| **Players** | Registered accounts, players active in the last five minutes, one hour and 24 hours, accounts created in seven days, and unexpired sign-in sessions excluding impersonation. A player can have several sessions. |
-| **Catalog** | Standalone and all playable books (including anthology children), anthologies, series, attached PDFs/EPUBs, books with live reading, catalog sections and battle simulators. |
-| **Activity** | Mapped/discovered nodes, active/total runs, finished/shared runs, run wins/losses, simulator battles won/lost, total simulator battles and win rate. Node totals use the most-mapped player copy of each book; runs and simulator battles count started runs across players. |
-| **Gold & coins** | Lifetime gold earned, available and spent, shop upgrades, Gamemaster supply/remaining coins, Lucky Coins generated/claimed, and current bronze/silver balances. |
-| **Rubies** | Lifetime earned rubies, player balances, sold/bought totals, rubies earned from Lucky Coin claims, shared market stock and lifetime app-mined rubies. Mining and Lucky Coin rewards count as earned; purchases count separately. |
-| **Diamonds** | Completion rewards and player balances, sold/bought totals, shared stock, app-generated supply and the current GC exchange rate. Account details show the latest 20 completion rewards and trades. |
-| **Server** | Application/database sizes, used/allocated heap, process memory, CPU, incoming/outgoing traffic, current process uptime, lifetime uptime/downtime and app age. The Vacuum button retains its confirmation. |
+| Players | Registered and active accounts, recent registrations, and sign-in sessions |
+| Catalog | Playable books, anthology containers, series, attachments, live reading, and simulators |
+| Activity | Mapping, playthroughs, outcomes, and simulator usage |
+| Gold and coins | Earned, available, and spent balances; upgrades; admin pool; lucky-coin activity |
+| Rubies | Earned and held rubies, trades, and shared market supply |
+| Diamonds | Completion rewards, balances, trades, and shared market supply |
+| Server | Application/database size, memory, CPU, traffic, uptime, and downtime |
 
-Labels and numeric columns align within each group, with tabular digits and currency colors. Wide screens place server metrics in a full-width strip; narrower screens use fewer columns. Statistics refresh in place without replacing the panels.
+A player can have several sessions. Catalog node totals use the most-mapped player copy of each book; playthrough and simulator totals count activity across players. Expand **Stats for Nerds** for the detailed breakdown.
 
-Dashboard polling pauses while the browser tab is hidden and refreshes when it becomes visible. Application Size uses an asynchronous directory scan with a shared five-minute cache; changed ignore patterns trigger a fresh calculation.
+Statistics update while the panel is visible. Background polling pauses when its browser tab is hidden.
 
-**Stats for Nerds** (expandable section):
-- Players: total accounts, admin count, undos performed, fast travels performed
-- Books / Series / Anthologies: separate unique-count and library-count totals, plus unique authors and average sections per playable book
-- Gameplay: total runs, finished runs, wins, losses, battle deaths, battle simulators available, sim battles fought/won/lost
-- XP events: total event records, distinct event types
-- Gold Coins & Shop: earned/spent/in-circulation plus purchased upgrades, including Heartbeat XP, Lucky Coin Chance, and Coin Mint, with in-circulation totals also reflecting extra milestone GC rewards
-- Forum: active posts, active threads
+### Main-app aggregate widgets
 
-**Live header badges:** the main app now uses `/api/user/stream` (authenticated SSE) to nudge the Inbox, Forum, and notification-bell badges immediately when their state changes. The stream sends only a lightweight refresh event; the client refetches the relevant badge endpoints when it receives one. The old 60-second polling remains as a fallback. The same event also triggers a UI-prefs re-sync (`GET /api/prefs`), so a pref changed on one device/tab (e.g. the feed's cover toggles) reaches any other open session for that player live, instead of only on its next fresh page load.
+Gamemasters can also see the app-wide XP and average-player-level widgets in the main app. The app widget pools XP and adds players' boost and heartbeat rates. The average widget averages individual player levels and shows the level spread. These are different measures.
 
----
+## Players
 
-## Players tab
+The Players tab shows identity, registration and activity dates, library and run totals, level, currency activity, sessions, approximate location, and the last app domain used. Click a username for account details, refunds, and a searchable library.
 
-Admin uses the app’s dark surfaces, amber focus, compact controls, themed scrollbars, and consistent dialogs. Only the selected tab loads its data; Refresh reloads that tab and the dashboard.
+| Action | Effect |
+|--------|--------|
+| **Edit** | Change account details, password, email, public profile, or feed visibility |
+| **Clear sessions** | Sign the player out on every device |
+| **Lock / Unlock** | Block or restore login; protected accounts cannot be locked |
+| **Fateweaver** | Assign or remove author identity and optional display name |
+| **Pathmaker** | Assign or remove contributor identity |
+| **Lorekeeper** | Assign or remove public-catalog moderation |
+| **Squire** | Assign or remove the independent badge and reward qualification |
+| **Grant/Revoke Book Access** | Control access to downloadable PDF and EPUB attachments |
+| **Impersonate** | Create a one-time sign-in link for the player's account |
+| **Refund** | Refund the latest or all purchases of a selected shop upgrade |
+| **Delete** | Permanently remove the player and associated data; unavailable for protected accounts |
 
-Players, Books, Series, and Anthologies share a left-aligned search toolbar with a clear button and a total count. Search is case-insensitive, ignores surrounding spaces, and filters as you type. The count shows all loaded items, before filtering. Players keep their original view: every player active within the last 30 days is visible without pagination, with a separate button to reveal inactive accounts. Search includes inactive players and sorting never truncates the list. Books, Series and Anthologies use 50 rows per page.
+Impersonated activity does not earn XP or coins or update the player's presence. Impersonation still opens the player's saved data; make changes only when intended.
 
-Lists all registered accounts. Columns: Username, Joined, Last Active, Inactive (days), Books, Runs, Active, Wins, Loss, Battle, Lvl, Earned, Spent, Gifted, Lucky (bonus GC lottery claims), Sess, Location, Domain, Actions. The search box filters by username or display name live as you type; inactive matches appear directly while searching.
+Lorekeepers can edit public-book, anthology, and series metadata and public covers without owning a library copy. They cannot edit another creator's private titles, unpublish that creator's public titles, upload restricted attachments, or change other players' progress. Removing a title from their own library affects only their memberships.
 
-Username badges: **ADMIN**, **PROTECTED**, **AUTHOR**, **CONTRIBUTOR**, **LOCKED**.
+Squire adds no permissions. It lowers the public-book or public-anthology completion threshold for diamond rewards to 25 sections, compared with the normal 50. Assignment checks eligible previous completions without revoking existing rewards.
 
-- **Location** - country flag + approximate city from the last login, resolved via offline GeoIP database.
-- **Domain** - which of the app's domains (e.g. koldkat.net / pathmap.net / bookplay.net) the player was last seen on, read from the `Host` header on their most recent authenticated request (`last_domain` column, `-` until their first request after this was added). Unlike Location, this isn't throttled - it just no-ops when the domain hasn't changed since the last write.
-- **Level** - shown with XP progress bar.
+## Books
 
-Clicking a username opens a **player detail** view: compact account-details table (Joined, Books, Sessions, Runs, Last Location, Domain, Level) beside a separate refund table and a searchable, sortable library with 50 books per page. Only the current page loads saved gameplay. Books initially sort by latest update; choosing a gameplay column sorts the complete matching library. Header book counts and permanent run totals remain account-wide. Editing an account or book directly loads metadata without scanning its gameplay.
+The Books tab lists standalone books and playable anthology children. Anthology containers have their own tab. Click a book for statistics, playthroughs, ratings, and attachments.
 
-Editing uses consistent modal dialogs for players, books, series, anthologies, inventory items, tips, and announcements. Every editable table groups **Edit** with its other buttons in the right-hand **Actions** column; cards put the same blue **Edit** button first. Editing opens over the current list without navigating into details, including books in a player's library. Detail views also use the same **Edit** button. Dialogs provide a title and close button, scroll within smaller viewports, keep keyboard focus inside, and support Cancel or Escape. Escape dismisses autocomplete suggestions before the editor, and never closes another dialog underneath it. Controls and dismissal are disabled while saving; failures stay in the dialog with an error message. Saving refreshes the current list or detail view.
+The editor includes title, section counts, pages, identifiers, authors, description, visibility, cover, series, anthology membership, and order. **Discoverable sections** is an optional completion limit; leaving it blank uses the book's total. **Highest section number** supports books whose printed labels have gaps.
 
-### Player actions
+The admin series selector searches the global catalog. Selecting **Part of anthology** makes the entry a child of that container. Container books have no independent section total or playthroughs.
 
-| Action | Description |
-|--------|-------------|
-| **Clear sessions** | Forces logout on all devices immediately |
-| **Lock** | Sets `locked_until` far in future; player cannot log in. Not available for protected accounts. |
-| **Unlock** | Clears the lock; restores login access |
-| **Edit** | Update username, author display name, password, email, public profile, and feed visibility in a dialog. Role toggles remain separate actions in the player detail view. |
-| **Fateweaver** | Toggle `is_author` flag and optionally set a display name |
-| **Pathmaker** | Toggle `is_contributor` flag |
-| **Lorekeeper** | Toggle `is_moderator`; permits editing public books, anthologies and series |
-| **Squire** | Toggle the independent `is_squire` role and bronze-orange shield badge; adds no permissions |
-| **Grant/Revoke Book Access** | Toggle `pdf_access` flag - allows the player to download a book's PDF and EPUB files via `GET /books/:path`. Button shows "Grant Book Access" when the player does not have access, "Revoke Book Access" when they do. |
-| **Impersonate** | Generate a one-time login URL to log in as the player without their password |
-| **Refund** | Refund a shop item: specify item key such as `xp_boost`, `heartbeat_xp`, `undo`, `fast_travel`, `gc_chance`, or `gc_mint`, and whether to refund all purchases or just the latest |
-| **Delete** | Permanently remove player and all their data (cascades). Not available for protected accounts. |
+### Attachments and covers
 
----
+- Upload or replace PDF and EPUB files up to 256 MB each.
+- The detail view shows the existing format, size, download link, and removal control.
+- First-upload XP is awarded separately for PDF and EPUB. Replacing a file does not award it again; removal does not revoke previously earned XP.
+- Cover controls upload, replace, or remove the image.
 
-## Books tab
+Book Access for downloads is separate from Live Reading availability. Reading-access policy is maintained in the server configuration; the panel does not provide a general unlock-policy editor.
 
-Lists every non-container book across all players (standalone books and anthology children - anthology containers themselves are listed separately in the **Anthologies tab**, since a container has no playthroughs of its own and the Wins/Losses/Battle columns would be meaningless for it). Columns: Book, Owner, Sections, Wins, Losses, Battle, Last Updated, Actions. Paginated at 50 rows/page. The search box filters by book name or owner username live as you type through the shared `getFiltered()`/`getSorted()` pipeline in `admin/js/core.js`.
+### Other actions
 
-Clicking a book name opens the **book detail view** with three sections:
+| Action | Effect |
+|--------|--------|
+| **Gift** | Add the book to another player's library; unavailable if already owned |
+| **Delete rating** | Remove the selected player's rating |
+| **Delete book** | Permanently remove the catalog entry and its data; blocked while other readers retain it |
 
-- **Stats** - section counts, run totals, wins/losses, full playthroughs table
-- **Ratings** - all ratings with username, score, and delete button per rating
-- **PDF** - upload (max 256 MB, must start with `%PDF`); awards `pdf_available` XP to the uploader (or all library holders when uploaded from localhost) on **first upload only** - re-uploading to replace an existing PDF does not award XP again. Delete removes the file (XP not revoked). Existing PDF is shown as a `PDF (X MB)` link with size and a Remove button.
-- **EPUB** - upload (max 256 MB, must be a ZIP whose first bytes are `PK\x03\x04` and that contains `application/epub+zip` in its first 100 bytes); awards `epub_available` XP (150) on **first upload only**, independent of `pdf_available`. A book may have both a PDF and an EPUB at once. Delete removes the file (XP not revoked). Existing EPUB is shown as an `EPUB (X MB)` link with size and a Remove button.
+Player-side **Reset Book** clears that player's progress and per-book progress locks. It does not revoke previously earned XP.
 
-The **Edit** dialog, available from the Books table or book detail view, includes all metadata fields:
+## Series and anthologies
 
-- **Name**, **Total Sections**, **Pages**, **ISBN**, **ASIN**, **ISSN**, **Author(s)**, **Description**
-- **Discoverable sections** - optional completion limit, preserved when editing; blank means all sections. Must be a whole number from 1 to Total Sections for playable books.
-- **Make public** - `is_public` toggle
-- **Is anthology (container)** - marks this book as a parent container. `total_sections` is stored as 0 when checked.
-- **Series** - text input with datalist autocomplete from `/api/admin/series`. Resolved to `series_id` on save via `getOrCreateSeries`.
-- **Note:** unlike the main app, which shows players only their own series in the edit dropdowns, the admin panel intentionally exposes the global series list here.
-- **# in series** - free text (e.g. `12` or `XII`).
-- **Part of anthology** - dropdown of all container books (`is_container = 1`), populated from `GET /api/admin/anthologies`. Selecting a parent links this book as a child.
-- **Order** - integer sort order within the parent anthology.
-- **PDF upload/remove** - upload a PDF (max 256 MB); existing PDF shown as a `PDF (X MB)` link with size; XP only awarded on first upload per book.
-- **EPUB upload/remove** - upload an EPUB (max 256 MB); existing EPUB shown as an `EPUB (X MB)` link with size; `epub_available` XP only awarded on first upload per book.
-- **Cover upload/remove** - upload/replace/remove cover image.
+The Series editor changes name, description, visibility, and **Open world series**. Deleting a series unlinks its books and removes the series' memberships and shared run data. Review the confirmation carefully.
 
-**Saving** sends a `PATCH /api/books/:id` from localhost, which bypasses the per-player creator check and minimum section count (admin can set sections to 1).
+The Anthologies editor includes shared bibliographic metadata, cover, attachments, and series membership. Deleting a container leaves its children as standalone entries rather than deleting their adventures. Deletion is blocked while other readers retain the container.
 
-**Anthology behaviour:** the stats view for a container book shows aggregate child-book stats. Deleting a container orphans its children - handle children separately.
-**Reset semantics:** the normal player-side **Reset Book** flow does not revoke XP. It clears saved state and run history for that player/book and removes only the per-book progress XP locks so future reruns can earn progress XP again.
+Open-world series share run identity and character possessions across books and use portal connections. This changes playthrough behavior; it is not merely a display grouping. Player instructions are in the Guide.
 
-### Book actions
+## Seasons
 
-| Action | Description |
-|--------|-------------|
-| **Gift** | Add the book to another player's library. Blocked if target already has it. |
-| **Delete rating** | Remove an individual player's rating |
-| **Delete book** | Permanently remove book and all run data. Blocked with `409` if other players have it in their library. |
+The Seasons tab shows event windows, live status, rewards, and animated companion previews.
 
----
+To test an event:
 
-## Series tab
+1. Sign in to your administrator account in the main app.
+2. In Seasons, select **Test season** on the event card.
+3. Return to the main-app tab and move the mouse to view its companion.
+4. Use **Test no season** to preview no companion, or **Stop testing, use live season** to restore the live calendar.
 
-Lists all series across all players. Columns: Name, Creator, Books (count), Public, Created, Description, Actions. Open World is available in the editor. Paginated at 50 rows/page. The search box filters by series name or creator username live as you type through the shared `storeData`/`getFiltered` pipeline; column headers sort the full list before pagination.
+The override affects only that account and synchronizes its open sessions. Actual XP rewards continue to follow the live calendar. Previews appear on the main app page, not in the play area. Ensure **Disable seasonal sprites** is off in Ctrl+Y settings to see them.
 
-- **Edit** - opens a dialog to update name, description, public flag, and the **Open world series** checkbox.
-- **Delete** - removes the series entirely, unlinks all books (`series_id = NULL`), and removes all `user_series` rows. Requires confirmation.
+### Event payout reports
 
-## Anthologies tab
+Expand a processed event to see its recipients, qualifying days, and gold paid from the admin pool. Reports remain available after account deletion and update while the tab is open.
 
-Lists all anthology container books (`is_container = 1`) across all players. Columns: Name, Creator, Books (child count), Public, Created, Description, Actions. Paginated at 50 rows/page. Uses `GET /api/admin/anthologies` (`db.getAllAnthologiesAdmin()`), a dedicated query separate from the Books tab's `adminGetBooks()`. The search box filters by anthology name or creator username live as you type through the same `storeData`/`getFiltered` pipeline as Series.
+If the pool cannot cover every participant in full, the entire event payout is permanently skipped. Its report shows zero paid and the skipped amount.
 
-- **Edit** - opens the shared book/anthology dialog directly from the table, including cover, PDF, EPUB, metadata, and series membership. The container flag and existing associations are populated before editing.
-- **Delete** - removes the container row. Children are **not** cascade-deleted; the foreign key (`parent_book_id → books ON DELETE SET NULL`) automatically orphans them (`parent_book_id = NULL`) rather than deleting them. Blocked with the same `has_readers` `409` response as a normal book delete if any `user_books` rows exist for the container itself. Reuses the existing `DELETE /api/admin/books/:id` endpoint.
+## Tips and inventory items
 
-### Open world series
+Tips can be added, edited, enabled, disabled, classified as real or silly, and deleted. Disabled tips are excluded from the player rotation.
 
-Ticking the **Open world series** checkbox on a series (via the Edit dialog in the admin Series tab, or via the Edit Series modal in the main app) sets `series.is_open_world = 1`. This enables the following for every book in that series:
+The Inventory tab manages the shared item catalog used by player inventory and equipment pickers. Search or filter items, then add or edit their name, type, description, artwork, and active status. Changing the shared catalog is separate from editing an individual player's possessions.
 
-- Per-series shared runs (`series_runs` table) instead of independent per-book runs.
-- Portal nodes on the graph (teal diamonds ◇) that can be created by book authors/trackers to link sections in one book to sections in another book in the same series.
-- A series character sheet that travels with the player between books.
-- Cross-book activity feed entries (`series_run_started`, `series_run_completed`) instead of the per-book `run_started`/`run_completed` events.
+## Feedback
 
-**Schema:** `series.is_open_world INTEGER DEFAULT 0` is added via `ALTER TABLE` migration at server startup. The `series_runs` and `series_characters` tables are also created at startup if absent (see technical.md for the full schema).
+Feedback is searchable by player, email, and message. Unread threads are highlighted; opening one marks it read. Unsent replies remain available while navigating the open admin page.
 
----
+- **Reply** stores an admin message and sends email when SMTP is configured.
+- **Mark as read** clears the unread state.
+- **Delete** hides the thread from the admin inbox. Permanent deletion occurs only after both sides delete it; a later reply can restore a hidden thread.
 
-## Tips tab
+Attached images open in a viewer; other files have download links. Attachment-enabled replies can be sent through the main-app inbox where available. The admin reply form accepts text.
 
-Lists all tips from the `tips` table. Filterable by type (real/silly) and active status.
+## Announcements
 
-- **Active toggle** (checkbox) - enable/disable a tip without deleting it. Inactive tips are never shown in the app.
-- **Edit** or **click text** - opens a dialog for the text, type, and active status.
-- **→ Silly / → Real** - flips the type between real and silly in one click.
-- **Delete** - removes the tip permanently. Requires confirmation.
-- **Add New Tip** form at the bottom - enter text, select type (real/silly), click **Add Tip**.
+Create a draft with a title and body, review it, then publish. Drafts and published announcements are searchable and paginated. Pinning an announcement replaces the existing pinned notice.
 
-Tip counts (real vs. silly) are shown in the tab. The app alternates real and silly in a shuffled deck; changing the ratio here affects the displayed sequence after the next server restart or `/api/tips` cache refresh.
+| Action | Effect |
+|--------|--------|
+| **New / Edit** | Create or update the title and body |
+| **Publish / Unpublish** | Show or hide the announcement in the player feed |
+| **Pin / Unpin** | Control the pinned notice without changing publication status |
+| **Delete** | Permanently remove the announcement |
 
----
-
-## Feedback tab
-
-Shows 20 feedback threads per page, with search across usernames, email addresses, and message text. Unread threads are highlighted and the tab shows a red count badge. Only opening a thread marks it read. Unsent replies survive page changes and refreshes within the open admin page.
-
-Feedback also appears in **koldKat's inbox** in the main app: koldKat's inbox loads all threads (not just his own), with `admin_unread` mapped to `user_unread` so the inbox badge lights up for new submissions. Replying from koldKat's inbox sends as 'admin' and triggers an email if the thread has an email address. Threads with email addresses can also be handled from this tab.
-
-Players can attach files to their initial feedback submission and to inbox replies. Attached images appear inline in the message and open in an image viewer when clicked; other files appear as download links. The admin feedback tab uses `fmtAttachments()` in `admin/js/core.js`. Feedback notification and inbox reply emails include the new message's attachments, with images embedded inline. The admin reply (`POST /api/admin/feedback/:id/reply`) does not support attachments; use the inbox for attachment-enabled replies.
-
-- **Mark as read** - clears the unread highlight for that thread
-- **Reply** - appends an admin message; if SMTP is active, also emails the player
-- **Delete** - hides the thread from the admin inbox. The thread, messages, and attachment files are permanently removed only after both sides delete it; file cleanup failures are queued for retry. A new player reply brings a hidden thread back to the admin inbox.
-
----
-
-## Announcements tab
-
-Announcements are notices shown to all players in the app. Workflow: draft → published → pinned. Drafts and published notices each show 10 per page, with a shared title/body search. Pinned notices sort first; older notices remain searchable.
-
-| Action | Description |
-|--------|-------------|
-| **New** | Create a draft with title + body (both required) |
-| **Edit** | Update title/body (works in any state) |
-| **Publish** | Make visible to players |
-| **Unpublish** | Hide from players (returns to draft) |
-| **Pin** | Mark as pinned (only one pinned at a time; pinning another auto-unpins the previous) |
-| **Unpin** | Remove pin (stays published) |
-| **Delete** | Permanently remove |
-
-The body field accepts a small custom markup (parsed by `formatAnnBody()` in `public/js/feed.js` for the public feed, and duplicated in `admin/js/announcements.js` so the admin card preview renders it the same way instead of showing raw tags):
+Supported body markup:
 
 | Syntax | Result |
 |--------|--------|
-| `**bold**` | **bold** |
-| `*italic*` | *italic* |
-| `***bold italic***` | bold + italic (nests correctly, but renders via slightly overlapping tags - browsers handle this fine) |
-| `__underline__` | underlined |
-| `~~strikethrough~~` | strikethrough |
-| `{color:name}text{/color}` | colored text - `name` is one of `red`, `orange`, `amber`, `green`, `teal`, `blue`, `purple`, `pink` |
-| `[label](https://url)` | clickable link |
+| `**bold**` | Bold |
+| `*italic*` | Italic |
+| `***bold italic***` | Bold italic |
+| `__underline__` | Underlined |
+| `~~strikethrough~~` | Strikethrough |
+| `{color:name}text{/color}` | Colored text: red, orange, amber, green, teal, blue, purple, or pink |
+| `[label](https://url)` | Link |
 
----
+## Gold pool and gifts
 
-## Admin GC pool
+**GC Earned** is the pool's lifetime supply generated from platform activity. **GC Available** is the amount currently available after gifts and event payouts. Replacing an attachment does not add another contribution; removing it removes that file's contribution.
 
-The admin panel shows two GC figures: **GC Earned** and **GC Available** (`GET /api/admin/gc-supply`).
+To gift a player, use their account's gift action. For a bulk gift, use **Gift gold coins to everyone** in Tools, enter the amount per player level and an optional message, then review the recipients and total cost before confirming. Level 0 receives nothing.
 
-**Earned** is a running total calculated from site-wide metrics - it grows automatically as the site is used:
+A bulk gift is applied in full or not at all. Changed recipients or levels require a new preview. Retrying a completed request does not send the gift twice.
 
-| Contribution | Rate |
-|---|---|
-| Players | 1 GC each |
-| Books (non-anthology) | 1 GC each |
-| Series | 1 GC each |
-| Anthologies | 1 GC each |
-| `visit_all` XP events (any player) | 1 GC each |
-| Level-ups across all players (capped at level 100 per player) | 1 GC each |
-| Distinct author names on books | 1 GC each |
-| PDFs attached to books | 1 GC each |
-| EPUBs attached to books | 1 GC each |
-| Days since app birth | 1 GC per day |
-| Series fully-visited completions (`visit_all_series` coin events) | N GC each (N = child book count) |
-| Anthology fully-visited completions (`visit_all_anthology` coin events) | N GC each (N = child book count) |
+## Tools and maintenance
 
-**Available** = Earned − total GC gifted so far (`admin_gc_gifted` in `admin_settings`).
+| Tool | Use |
+|------|-----|
+| **XP Configuration** | Change future base XP amounts for event types; save changed values |
+| **App Version** | Update the displayed release version; coordinate with the release file |
+| **Notepad** | Keep private operator notes |
+| **Backups** | Inspect backup files and select files for deletion |
+| **Size Ignore Patterns** | Exclude matching paths from application-size and backup-file listings |
+| **Vacuum** | Run the confirmed database-maintenance action |
 
-PDF and EPUB contributions include anthology attachments and all existing files. Each format contributes separately; replacing a file adds nothing extra, and removing it removes its contribution.
+XP settings apply immediately. Failed saves retain unsaved changes for retry. Changing an amount does not recalculate previously earned XP.
 
-Gifting a player GC (`POST /api/admin/users/:id/gift-gc`) increments `users.bonus_coins` and `admin_gifted_coins`, increments `admin_gc_gifted`, and sends a `gc_gift` notification.
+Automatic backup ZIPs contain the database only. Preserve uploaded files and protected reading artwork separately for a full server restore. The Technical Reference explains backup storage and restoration.
 
----
+## SMTP and email
 
-## Tools tab
+SMTP settings take effect without restarting the server and override environment defaults. Configure host, port, TLS mode, username, optional From address, and password.
 
-**Gift gold coins to everyone** appears first. Enter whole GC per level and an optional message, then review the recipients, total cost and available admin pool before confirming. At 3 GC per level, a level 10 account receives 30 GC. All accounts are included; level 0 receives nothing. Each recipient gets the usual gift notification and message. The entire gift and pool debit are atomic, retries cannot duplicate a completed request, and changed levels or recipients require a fresh preview.
+- Port **465** normally uses implicit TLS.
+- Port **587** normally uses STARTTLS.
+- Leaving the password blank preserves the saved password.
+- **Test SMTP** sends a test message to the configured SMTP username.
 
-The preview uses `GET /api/admin/gift-gc-all?coinsPerLevel=3`; confirmation posts `coinsPerLevel`, `message`, `previewHash` and a unique `requestId` to the same endpoint. Completed request receipts are stored under `gc_bulk_gift:<requestId>` in `admin_settings`.
-
-The **Clean run** XP event (`clean_run`) defaults to 50 base XP, once per player/book for a completed win or loss without Undo or Fast Travel. It is editable in XP Configuration like other event amounts.
-
-**XP Configuration** uses a compact three-column grid, falling back to two columns and then one on smaller screens. Each event shows only its readable label (with "ow" expanded to "open world") and minus/plus buttons that change the amount by 1 XP; decimal amounts can still be typed directly. Internal event keys are unchanged. Save validates every amount, submits only changed events, and disables the inputs while saving. Changes apply immediately. If a request fails midway, retrying sends only the remaining changes.
-
-| Section | Persisted | Description |
-|---------|-----------|-------------|
-| App Version | `app_version` | Version string shown in app banner; served via `GET /api/config` |
-| Notepad | `notepad` | Free-text scratchpad, admin-only |
-| SMTP / Email | `smtp_*` keys | Email transport settings; see SMTP section below |
-| Backups | filesystem | Lists all `*backup*` files with sizes; supports multi-select delete |
-| Size Ignore Patterns | `size_ignore_patterns` | Glob patterns excluded from Application Size and Backup finder |
-
----
-
-## SMTP / email
-
-Configure outbound email for feedback replies. Settings stored in `admin_settings` table; override `.env` variables. Changes take effect immediately without restart.
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `smtp_host` | env `SMTP_HOST` | SMTP server hostname |
-| `smtp_port` | `465` | Port: 465 for implicit TLS, 587 for STARTTLS |
-| `smtp_secure` | `true` | `true` = implicit TLS (port 465); `false` = STARTTLS (port 587) |
-| `smtp_user` | env `SMTP_USER` | Login username; also default To/From address |
-| `smtp_from` | falls back to `smtp_user` | Explicit From address |
-| `smtp_pass` | env `SMTP_PASS` | Password (blank save is a no-op; DB takes precedence over env) |
-
-**Test SMTP** button sends a test email to `smtp_user`. Status indicator shows whether a transporter is currently active.
-
----
-
-## Admin settings keys (`admin_settings` table)
-
-| Key | Default | Description |
-|-----|---------|-------------|
-| `notepad` | `''` | Free-text scratchpad |
-| `app_version` | `'0.8.8.1'` | Version string in app banner |
-| `size_ignore_patterns` | (see Tools tab) | Newline-separated glob patterns |
-| `smtp_host` | `''` | SMTP hostname |
-| `smtp_port` | `'465'` | SMTP port |
-| `smtp_secure` | `'true'` | Implicit TLS flag |
-| `smtp_user` | `''` | SMTP login / From address |
-| `smtp_from` | `''` | Explicit From address |
-| `smtp_pass` | `''` | SMTP password (write-only via UI) |
-| `is_public_migrated` | `'1'` | One-time migration guard: sets pre-existing books to public |
-| `level_boost_backfilled` | `'1'` | One-time migration guard: XP boost back-fill for existing players |
-| `pdf_xp_backfilled` | `'1'` | One-time migration guard: 200 XP for players with PDF books in library |
-| `library_add_xp_backfilled` | `'1'` | One-time migration guard: XP for existing library additions |
-| `level_up_coin_backfilled` | `'1'` | One-time migration guard: 1 GC per level already earned |
-| `playtime_coin_backfilled` | `'1'` | One-time migration guard: 1 GC per 24h of tracked playtime already earned |
-| `book_complete_coin_backfilled` | `'1'` | One-time migration guard: 1 GC for each book already at 100% visited |
-| `group_complete_coin_backfilled` | `'1'` | One-time migration guard: N GC for each series/anthology already fully visited |
-
----
-
-## Feed event types reference
-
-The activity feed (`getFeed()`) produces the following event types. The two newest are generated only for open world series:
-
-| `type` | When generated | Notes |
-|--------|----------------|-------|
-| `run_started` | Per-book run begins (non-open-world books only) | Suppressed for books in open world series |
-| `run_completed` | Per-book run ends (non-open-world books only) | Suppressed for books in open world series |
-| `series_run_started` | First time any book in an open world series starts a given series run index | One entry per series run, regardless of how many books are played |
-| `series_run_completed` | A series run ends with `success`, `death`, or `battle` in any book | One entry per series run end; clickable if `is_public` |
-| `book_created` | Player starts tracking a book | - |
-| `level_up` | Player gains a level | - |
-| `all_visited` | All sections visited in a book | - |
-| `all_discovered` | All sections discovered in a book | - |
-| `announcement` | Admin-published announcement within 30-day window | - |
-| `user_joined` | A player registered on the site | Uses the player's permanently assigned `join_template_id` from the `join_templates` table; rendered with an amber left border (`.feed-entry--join`). `feedPush` fires at registration so live-connected clients see it immediately. |
-
-Every event type's query also selects `is_author`/`is_contributor`/`display_name` so Fateweaver/Pathmaker stars show up correctly next to a player's name even when their profile is private (private profiles never get a page view that would otherwise populate the client's badge cache). See `docs/technical.md` for the full audit.
-
----
-
-## App-wide XP widget
-
-Shown only when the logged-in account is the admin (`db.isUserAdmin`), a small panel sits above the personal XP summary on the **Books** screen (in a violet accent to distinguish it from the player's own gold/cyan bar). It mirrors the same shape - level, title, heartbeat rate, XP bar, XP text, boost line - but the numbers are aggregated across every account: total XP earned app-wide (same number Stats for Nerds shows as "Total XP earned", just not compact-formatted), an "app level" scaled by player count (same formula as the "App level" figure in Stats for Nerds), every player's active boost rate added together, and a combined heartbeat rate as if every player were online at once. It refreshes on login, shortly after any site activity (deliberately staggered by ~1.2s so it doesn't animate in lockstep with your own XP bar), and every 60 seconds as a fallback while the tab is visible. Backed by `GET /api/app-xp` (token auth + admin check, not a localhost-only `/api/admin/*` route, since it needs to render inside the normal logged-in app).
-
-**Live floaters:** whenever any other player earns XP or GC, a small floater pops up showing their username and the amount, in the same violet/pink theme, centered between the activity feed and the covers panel. Only shown while you're on the Books screen (never during play), and only for other players - your own gains as admin still show through your normal personal floaters. Backed by `GET /api/app-xp/stream`, an admin-only SSE stream.
-
-## Avg Player Level widget
-
-Sits directly above the App-wide XP widget, same shape again but in teal/lime. Unlike the App widget's level (which is a single pooled-XP figure that a few high-XP players can skew upward), this is the **average of each player's own level** - the same metric behind Stats for Nerds' "Avg player level" figure. The top-right tag shows total player count instead of a heartbeat rate. The bar fill shows how close the *whole app* is to ticking the average level up by one (the fractional part of the raw average, e.g. 1.98 → 98% full). The text line shows the sum of every player's level and exactly how many more total levels need to be gained (by anyone) to cross into the next average level. The bottom line shows the lowest-to-highest level spread across all players. It doesn't animate like the other two bars - it only moves on an actual level-up and by a tiny amount, so it just snaps to the new value.
-
----
-
-## API endpoints
-
-All endpoints require a localhost connection. No auth token.
-
-### Stats & tools
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/admin` | Admin panel HTML |
-| GET | `/api/admin/stats` | Aggregate stats object |
-| POST | `/api/admin/vacuum` | Purge expired sessions and VACUUM; returns updated stats |
-| GET | `/api/admin/settings` | All editable settings including SMTP fields |
-| POST | `/api/admin/settings` | Save one setting: `{ key, value }` |
-| POST | `/api/admin/smtp/test` | Send a test email via current transporter |
-| GET | `/api/admin/appsize` | App directory size in bytes: `{ bytes }` |
-| GET | `/api/admin/backups` | List backup files: `[{ rel, name, size, mtime }]` newest-first |
-| DELETE | `/api/admin/backups` | Delete backup files: `{ paths: string[] }` |
-| GET | `/api/admin/heap` | Node.js process heap statistics |
-
-### Players
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/admin/users` | All players with book, session, run, wins, losses counts |
-| GET | `/api/admin/users/:id` | Single player detail with per-book breakdown |
-| POST | `/api/admin/users/:id/edit` | Update player fields: `{ username?, display_name?, is_admin?, is_protected?, is_author?, is_contributor? }` |
-| POST | `/api/admin/users/:id/clear-sessions` | Invalidate all sessions |
-| POST | `/api/admin/users/:id/lock` | Lock account (403 on protected accounts) |
-| POST | `/api/admin/users/:id/unlock` | Unlock account |
-| POST | `/api/admin/users/:id/author` | Set author flag: `{ isAuthor: bool, displayName?: string }` |
-| POST | `/api/admin/users/:id/contributor` | Set contributor flag: `{ isContributor: bool }` |
-| POST | `/api/admin/users/:id/impersonate` | Generate one-time impersonation URL: returns `{ url }` |
-| POST | `/api/admin/users/:id/refund` | Refund shop item: `{ item: string, all?: bool }` |
-| POST | `/api/admin/users/:id/pdf-access` | Toggle Book Access (gates both PDF and EPUB downloads): `{ pdfAccess: bool }` → `{ ok: true }` |
-| DELETE | `/api/admin/users/:id` | Delete player and all data (403 on protected accounts) |
-
-### Books
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/admin/books` | All non-container books across all players (standalone + anthology children only - containers excluded, see Anthologies below) |
-| GET | `/api/admin/books/:id/stats` | Per-book stats and full playthroughs list (includes `series_name`, `series_number`, `is_container`, `parent_book_id`, `book_order`) |
-| GET | `/api/admin/series` | All series → `[{id, name, description, is_public}]` - used for datalist autocomplete in book edit form |
-| GET | `/api/admin/books/:id/ratings` | All ratings: `[{ userBookId, username, rating }]` |
-| POST | `/api/admin/books/:id/gift` | Add book to library: `{ targetUserId: int, sourceUserId?: int }` |
-| DELETE | `/api/admin/books/:id/ratings/:userBookId` | Delete a specific rating |
-| DELETE | `/api/admin/books/:id` | Delete book (409 if other players have it in library) |
-
-PDF upload/delete use `POST /api/books/:id/pdf` and `DELETE /api/books/:id/pdf`; EPUB upload/delete use `POST /api/books/:id/epub` and `DELETE /api/books/:id/epub`. Cover upload uses `POST /api/books/:id/cover`. These routes are not under `/api/admin/` but accept localhost connections without creator checks.
-
-### Anthologies
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/admin/anthologies` | All anthology containers (`is_container = 1`) with creator username and child-book count: `[{id, name, description, is_public, created_at, created_by_username, child_count}]` (`db.getAllAnthologiesAdmin()`) |
-| DELETE | `/api/admin/books/:id` | Same delete route as regular books. Children are orphaned (`parent_book_id = NULL`) via foreign key, not cascade-deleted. |
-
-### Series
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/admin/series/all` | All series with creator username and book count: `[{id, name, description, is_public, is_open_world, created_at, created_by_username, book_count}]` |
-| PATCH | `/api/admin/series/:id` | Update series: `{ name, description?, is_public, is_open_world? }` |
-| DELETE | `/api/admin/series/:id` | Delete series - orphans all linked books, removes all `user_series` rows, removes all `series_runs` and `series_characters` rows |
-
-### Tips
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/admin/tips` | All tips: `[{id, text, type, active, created_at}]` |
-| POST | `/api/admin/tips` | Create tip: `{ text, type: 'real'\|'silly' }` |
-| PATCH | `/api/admin/tips/:id` | Update tip: `{ text?, type?, active? }` (partial update) |
-| DELETE | `/api/admin/tips/:id` | Delete tip permanently |
-
-### Inventory
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/admin/items` | All inventory items (the shared icon catalog every player's Inventory/Equipment draws from) |
-| POST | `/api/admin/items` | Create item: `{ name, type, svg_data, description? }` |
-| PATCH | `/api/admin/items/:id` | Update item (partial): `{ name?, description?, type?, svg_data?, active? }` |
-| DELETE | `/api/admin/items/:id` | Delete item permanently |
-
-The API always returns every item - type filter, active filter, search (by name/description), and pagination are all client-side only, in `admin/js/inventory.js`'s `_renderInventory()`/`renderInventoryGrid()`. Page size is **10 full rows**, not a fixed item count: `#inv-grid` uses `grid-template-columns: repeat(auto-fill, minmax(170px, 1fr))`, so the number of columns (and therefore items per page) depends on window width - `_inventoryColumnsPerRow()` reads the actual rendered column count back from `getComputedStyle` rather than recalculating it, so it always matches what really rendered even if the grid's CSS changes later. Recalculated on every render and on window resize (debounced, only while the Inventory tab is visible) so a page is never left with a half-filled last row after a resize. Changing any filter or the search query resets back to page 1; a resize does not, since the same items are still meant to be in view, just reflowed.
-
-### Feedback
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/admin/feedback` | All feedback threads with full message history |
-| POST | `/api/admin/feedback/:id/reply` | Append admin reply (and email player if SMTP active): `{ reply }` |
-| POST | `/api/admin/feedback/:id/read` | Mark thread as read |
-| DELETE | `/api/admin/feedback/:id` | Delete thread and all messages |
-
-### Announcements
-
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/admin/announcements` | All announcements (drafts and published) |
-| POST | `/api/admin/announcements` | Create draft: `{ title, body }` |
-| PATCH | `/api/admin/announcements/:id` | Update title/body: `{ title, body }` |
-| POST | `/api/admin/announcements/:id/publish` | Publish (visible to players) |
-| POST | `/api/admin/announcements/:id/unpublish` | Unpublish (back to draft) |
-| POST | `/api/admin/announcements/:id/pin` | Pin (auto-unpins previous) |
-| POST | `/api/admin/announcements/:id/unpin` | Unpin (stays published) |
-| DELETE | `/api/admin/announcements/:id` | Delete permanently |
-
-The API always returns every announcement - the 30-day cutoff is admin-UI-only (client-side filter in `admin/index.html`'s `loadAnnouncements()`), matching the same 30-day window the public feed already uses for the `announcement` entry type. Published announcements older than 30 days are collapsed behind a "Show N announcements (30+ days)" button at the bottom of the Published list (pinned announcements are always exempt, regardless of age) - same collapse-behind-a-button convention as the Players table's "Show N inactive players (31+ days)", not a hover/toggle affordance.
-
-### Lorekeeper role
-
-Use **Mark as Lorekeeper** or **Remove Lorekeeper** in a player’s detail actions. Lorekeepers receive a purple diamond badge and an assignment notification. The role permits metadata edits for public books, anthologies and series, plus cover edits for public books and anthologies, without library membership. They can remove any book, anthology or series from their own library regardless of its creator, and delete their own stashes. Other players’ library entries and progress are preserved. Creator permissions still apply to their own private books, anthologies and series. The role does not permit editing other players’ private titles, unpublishing another creator’s public title, admin actions or PDF/EPUB uploads. Lorekeeper totals appear in Stats for Nerds.
-
-### Squire role
-
-Use **Mark as Squire** or **Remove Squire** in a player’s detail actions. Squire is assigned manually and defaults off for every account. Its bronze-orange shield appears beside the other role badges in admin, public profiles and feed entries, including party members. First assignment sends a role notification; repeating the assignment does not duplicate it. Squire adds no permissions or restrictions and does not change existing roles. Squires qualify for diamond completion rewards at 25 sections rather than 100, including the combined section count for public anthologies. Existing eligible completions are checked on assignment; previously earned diamonds are preserved. The **Squires** total appears in Stats for Nerds.
+A failed email delivery does not remove the stored feedback reply. Check the displayed transport status and test result before relying on email notifications.

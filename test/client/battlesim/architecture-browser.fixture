@@ -91,6 +91,49 @@ for(const id of BOOK_IDS){
     const options = [...overlay.querySelectorAll('[role="option"]')];
     check(options.some(option => option.textContent.includes(rosterSeeds[id][0].name)), 'legacy roster displays installed opponent ' + id);
   }
+  if(id===1555){
+    const el=key=>document.getElementById('sim1555-'+key),run=app.currentPlaythrough(),data=()=>run.sim1555;
+    const {ENCOUNTERS}=await import('REPO/public/js/battlesim/books/1555/definition.js');
+    check(ENCOUNTERS.length===6&&requestedRosters.has(id),'Crystal Maze DB roster');
+    run.inventory={keep:['item']};run.sim1544={keep:'fight'};
+    const preserved=JSON.stringify([run.inventory,run.sim1544]);
+    const set=(key,value)=>{el(key).value=value;el(key).dispatchEvent(new Event('change',{bubbles:true}));};
+    const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    const random=Math.random;
+    try{
+      set('playerRating',12);
+      el('editor').querySelector('[data-stat="rating"]').value=0;
+      el('start').click();check(data().fight&&!data().fight.outcome&&el('mode').disabled,'custom duel starts and locks');
+      Math.random=()=>0;el('roll').click();check(data().fight.outcome==='win'&&data().history.length===1,'custom victory');
+      module.render();check(data().history.length===1,'victory recorded once');
+      for(const preset of ENCOUNTERS){
+        set('mode',preset.mode);
+        const name=el('editor').querySelector('[role="combobox"]');name.value=preset.name;
+        name.dispatchEvent(new Event('input',{bubbles:true}));
+        const option=el('editor').querySelector('[role="option"]');check(option,'preset autocomplete '+preset.sourceSection);
+        option.dispatchEvent(new Event('pointerdown',{bubbles:true}));
+        if(preset.mode==='opposed')set('playerRating',7);
+        el('start').click();
+        check(data().fight.enemyRating===preset.rating&&data().fight.mode===preset.mode,'preset stats '+preset.sourceSection);
+        check(data().fight.next===preset.first,'preset first shot '+preset.sourceSection);
+        if(preset.mode==='crossbow')check(data().fight.playerRating===preset.playerRating,'preset red faces '+preset.sourceSection);
+        const saved=JSON.stringify(data());el('close').click();button.click();
+        check(JSON.stringify(data())===saved,'reopen preserves duel '+preset.sourceSection);
+        cancel();
+      }
+      set('mode','crossbow');set('playerRating',0);set('first','enemy');
+      el('editor').querySelector('[data-stat="rating"]').value=6;el('start').click();el('roll').click();
+      check(data().fight.outcome==='loss'&&data().history.length===2,'crossbow defeat recorded');
+      el('start').click();const saved=JSON.stringify(data());el('cancel').click();app.setCurrentBookId(1);
+      document.getElementById('confirm-ok').click();check(JSON.stringify(data())===saved,'stale cancellation ignored');
+      app.setCurrentBookId(id);button.click();cancel();
+      app.state.playthroughs=[{startedAt:2,path:[1]}];app.state.activePtIndex=0;el('start').click();
+      check(!app.currentPlaythrough().sim1555,'stale controls cannot modify a different run');
+      app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();
+      check(JSON.stringify([run.inventory,run.sim1544])===preserved,'other simulator and inventory preserved');
+      check(data().history.length===2,'cancellations never create rewards');
+    }finally{Math.random=random;}
+  }
   if(id===1455){
     const el=key=>document.getElementById('sim1455-'+key),run=app.currentPlaythrough(),data=()=>run.sim1455;
     const {getRoster}=await import('REPO/public/js/battlesim/books/1455/definition.js');

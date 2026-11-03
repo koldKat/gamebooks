@@ -33,7 +33,14 @@ function initializeSeasonParticipation(db, now = new Date()) {
         status TEXT NOT NULL CHECK(status IN ('paid','skipped')),
         total_gc INTEGER NOT NULL, recipients INTEGER NOT NULL,
         processed_at INTEGER NOT NULL, PRIMARY KEY(season_id,starts_on));
+      CREATE TABLE IF NOT EXISTS seasonal_participation_recipients (
+        season_id TEXT NOT NULL, starts_on TEXT NOT NULL, user_id INTEGER NOT NULL,
+        username TEXT NOT NULL, qualifying_days INTEGER NOT NULL, paid_gc INTEGER NOT NULL,
+        PRIMARY KEY(season_id,starts_on,user_id));
       CREATE INDEX IF NOT EXISTS seasonal_participation_ends ON seasonal_participation_days(ends_on);`);
+    if (!db.pragma('table_info(seasonal_participation_payouts)').some(column => column.name === 'event_name')) {
+      db.exec("ALTER TABLE seasonal_participation_payouts ADD COLUMN event_name TEXT NOT NULL DEFAULT ''");
+    }
     if (db.prepare('SELECT 1 FROM seasonal_participation_policy WHERE id=1').get()) return;
     db.prepare('INSERT INTO seasonal_participation_policy VALUES(1,?)').run(dayKey(now));
     // Include already logged participation in festivals active at first deployment.

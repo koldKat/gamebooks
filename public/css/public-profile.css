@@ -10,6 +10,8 @@
 }
 .pub-overlay.active { display: flex; }
 
+a.book-modal-parent-btn, a.book-modal-series-btn, a.book-modal-child-row { text-decoration: none; }
+
 /* Inherit modal chrome; override only profile-specific styles. */
 .pub-modal {
   width: min(560px, 92vw);
@@ -31,14 +33,15 @@
   flex-shrink: 0;
 }
 
-.pub-modal-hdr span {
+.pub-modal-hdr #pub-modal-title {
   flex: 1;
   font-weight: 600;
   color: #f5a623;
   font-size: 0.8rem;
   line-height: 1;
+  margin: 0;
 }
-.pub-modal-hdr span .pub-modal-type,
+.pub-modal-hdr #pub-modal-title .pub-modal-type,
 .pub-modal-type {
   font-weight: 400 !important;
   font-size: 0.78rem;

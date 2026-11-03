@@ -7,9 +7,11 @@ import { t } from '../i18n.js';
 // ── Cover/series activity modals ───────────────────────────────────────────────
 export async function openCoverActivity(bookId, bookName) {
   openPublicModal();
-  document.getElementById('pub-modal-title').textContent = bookName;
   document.getElementById('pub-back-btn').style.display  = 'none';
-  document.getElementById('pub-modal-body').innerHTML    = `<p class="pub-loading">${t('covers.loading')}</p>`;
+  const body = document.getElementById('pub-modal-body');
+  const serverRendered = body.dataset.serverEntry === `book:${bookId}`;
+  if (!serverRendered) document.getElementById('pub-modal-title').textContent = bookName;
+  if (!serverRendered) body.innerHTML = `<p class="pub-loading">${t('covers.loading')}</p>`;
   try {
     const res = getToken()
       ? await apiFetch(`/api/public/book/${bookId}/activity`)
@@ -35,15 +37,19 @@ export async function openCoverActivity(bookId, bookName) {
 
     coversState.renderCoverActivity(bookId, data.book?.name ?? bookName, data.entries ?? [], userRating, data.book, userLoggedIn, userOwnsBook, userCanRate);
   } catch {
-    document.getElementById('pub-modal-body').innerHTML = `<p class="pub-error">${t('covers.activity_load_failed')}</p>`;
+    if (!serverRendered) body.innerHTML = `<p class="pub-error">${t('covers.activity_load_failed')}</p>`;
+  } finally {
+    delete body.dataset.serverEntry;
   }
 }
 
 export async function openSeriesActivity(seriesId, seriesName) {
   openPublicModal();
-  document.getElementById('pub-modal-title').textContent = seriesName;
   document.getElementById('pub-back-btn').style.display  = 'none';
-  document.getElementById('pub-modal-body').innerHTML    = `<p class="pub-loading">${t('covers.loading')}</p>`;
+  const body = document.getElementById('pub-modal-body');
+  const serverRendered = body.dataset.serverEntry === `series:${seriesId}`;
+  if (!serverRendered) document.getElementById('pub-modal-title').textContent = seriesName;
+  if (!serverRendered) body.innerHTML = `<p class="pub-loading">${t('covers.loading')}</p>`;
   try {
     // Include optional auth so the server can filter per-user PDF metadata.
     const token = getToken();
@@ -52,7 +58,9 @@ export async function openSeriesActivity(seriesId, seriesName) {
     const data = await res.json();
     coversState.renderSeriesActivity(data);
   } catch {
-    document.getElementById('pub-modal-body').innerHTML = `<p class="pub-error">${t('covers.series_load_failed')}</p>`;
+    if (!serverRendered) body.innerHTML = `<p class="pub-error">${t('covers.series_load_failed')}</p>`;
+  } finally {
+    delete body.dataset.serverEntry;
   }
 }
 

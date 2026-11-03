@@ -5,6 +5,7 @@ import { coversState } from './state.js';
 import { getToken, apiFetch } from '../core/state.js';
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
+import { publicEntryLinks, handlePublicEntryClick } from './helpers.js';
 
 export function renderSeriesActivity(data) {
   const backBtn = document.getElementById('pub-back-btn');
@@ -86,6 +87,7 @@ export function renderSeriesActivity(data) {
   }
 
   body.innerHTML = html;
+  publicEntryLinks(body);
 
   const editSeriesBtn = body.querySelector('#edit-public-series-btn');
   editSeriesBtn?.addEventListener('click', () => {
@@ -127,7 +129,8 @@ export function renderSeriesActivity(data) {
   });
 
   body.querySelectorAll('.book-modal-child-row').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', event => {
+      if (!handlePublicEntryClick(event)) return;
       backBtn.style.display = '';
       backBtn.onclick = () => openSeriesActivity(data.id, data.name);
       openCoverActivity(+btn.dataset.bookId, btn.dataset.bookName);

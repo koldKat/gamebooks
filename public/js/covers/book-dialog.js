@@ -1,4 +1,4 @@
-import { _isMobile } from './helpers.js';
+import { _isMobile, publicEntryLinks, handlePublicEntryClick } from './helpers.js';
 import { _syncCoverLibraryMembership } from './grid.js';
 import { openCoverActivity, openSeriesActivity } from './activity.js';
 import { _seriesRowBadges } from './badges.js';
@@ -150,6 +150,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
   }
 
   body.innerHTML = headerHtml + activityHtml;
+  publicEntryLinks(body);
 
   body.querySelectorAll('.cover-act-toggle').forEach(toggle => {
     toggle.addEventListener('click', () => {
@@ -376,7 +377,8 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
   });
 
   body.querySelectorAll('.book-modal-parent-btn, .book-modal-child-btn, .book-modal-child-row').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', event => {
+      if (!handlePublicEntryClick(event)) return;
       backBtn.style.display = '';
       backBtn.onclick = () => renderCoverActivity(bookId, bookName, entries, currentMyRating, { ...bookMeta, avgRating: currentAvg, voteCount: currentCount }, userLoggedIn, userOwnsBook, bookCanRate);
       openCoverActivity(+btn.dataset.bookId, btn.dataset.bookName);
@@ -384,7 +386,8 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
   });
 
   body.querySelectorAll('.book-modal-series-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', event => {
+      if (!handlePublicEntryClick(event)) return;
       const sid = +btn.dataset.seriesId;
       if (!sid) return;
       backBtn.style.display = '';

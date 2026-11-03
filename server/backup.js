@@ -7,13 +7,12 @@ const { purgeDeletedFeedbackThreads } = require('./db/feedback');
 const { cleanupFeedbackAttachments } = require('./feedback-cleanup');
 
 const BACKUP_DIR  = path.join(__dirname, '..', 'backups');
-const KEEP_HOURS  = 7 * 24; // keep 7 days of hourly backups
-const INTERVAL_MS = 60 * 60 * 1000; // 1 hour
+const KEEP_DAYS = 30;
 
 function pad(n) { return String(n).padStart(2, '0'); }
 
 function pruneBackups() {
-  const cutoff = Date.now() - KEEP_HOURS * 60 * 60 * 1000;
+  const cutoff = Date.now() - KEEP_DAYS * 24 * 60 * 60 * 1000;
   for (const file of fs.readdirSync(BACKUP_DIR)) {
     if (!file.startsWith('backup-') || !file.endsWith('.zip')) continue;
     const full = path.join(BACKUP_DIR, file);
@@ -33,13 +32,18 @@ async function runBackup() {
   fs.mkdirSync(BACKUP_DIR, { recursive: true });
 
   const now   = new Date();
-  const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}h`;
+  const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
   const snap  = path.join(BACKUP_DIR, `backup-${stamp}.sqlite`);
   const zip   = path.join(BACKUP_DIR, `backup-${stamp}.zip`);
 
-  if (fs.existsSync(zip)) {
+  // Existing hourly archives also satisfy today's backup after the schedule change.
+  const alreadyBackedUp = fs.readdirSync(BACKUP_DIR).some(file =>
+    file === path.basename(zip) ||
+    (file.startsWith(`backup-${stamp}_`) && file.endsWith('.zip'))
+  );
+  if (alreadyBackedUp) {
     pruneBackups();
-    return; // already done this hour
+    return;
   }
 
   await db.backupDb(snap);
@@ -60,23 +64,22 @@ async function runBackup() {
   console.log(`[backup] created ${zip}`);
 }
 
-function msUntilNextHour() {
+function msUntilNextDay() {
   const now  = new Date();
   const next = new Date(now);
-  next.setMinutes(0, 0, 0);
-  next.setHours(next.getHours() + 1);
+  next.setHours(24, 0, 0, 0);
   return next - now;
 }
 
 function start() {
-  // Run at startup
+  // Catch up on startup if today's backup does not exist.
   runBackup().catch(e => console.error('[backup] startup run failed:', e));
 
-  // Schedule hourly on the hour
+  // Recalculate local midnight each day, including daylight-saving changes.
   setTimeout(function tick() {
     runBackup().catch(e => console.error('[backup] scheduled run failed:', e));
-    setTimeout(tick, INTERVAL_MS);
-  }, msUntilNextHour());
+    setTimeout(tick, msUntilNextDay());
+  }, msUntilNextDay());
 }
 
 module.exports = { start, BACKUP_DIR };

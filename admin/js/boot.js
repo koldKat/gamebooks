@@ -1,4 +1,5 @@
 // Admin startup, tooltips, and tab switching.
+import '/js/ui-helpers/browser-autocomplete.js';
 
 import { userProgressTooltipHtml } from './core.js';
 import { loadTips } from './tips.js';

@@ -1,0 +1,67 @@
+localStorage.setItem('gamebook_lang','LANGUAGE');
+const app=await import('REPO/public/js/core/state.js');
+const desktop=await import('REPO/public/js/battlesim/loader.js');
+const mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const seeds=ROSTER_SEEDS,check=(value,label)=>{if(!value)throw Error(label);};
+let writes=0,requests=0;
+window.fetch=async(url,options={})=>{
+  if(options.method&&options.method!=='GET'){check(String(url)==='/api/books/1544/state'&&options.method==='PUT','unexpected write');writes++;}
+  const id=String(url).match(/\/api\/books\/(\d+)\/enemies$/)?.[1];if(id)requests++;
+  return new Response(JSON.stringify(id?(seeds[id]||[]):{}),{headers:{'Content-Type':'application/json'}});
+};
+console.warn=(message,error)=>{if(error instanceof Error)throw error;};
+app.setCurrentBookId(1544);app.state.playthroughs=[{startedAt:1,path:[1]}];app.state.activePtIndex=0;
+if('MODE'==='mobile')await mobile.openSimForBook(1544);else await desktop.showBattleSimForBook(1544);
+const module=await import('REPO/public/js/battlesim/battlesim1544.js');
+const {getRoster}=await import('REPO/public/js/battlesim/books/1544/definition.js');
+const {sagardEncounterTurn}=await import('REPO/public/js/battlesim/engines/sagard/encounter.js');
+const el=k=>document.getElementById('sim1544-'+k),current=()=>app.currentPlaythrough().sim1544;
+const set=(k,v)=>{const node=el(k);check(node,'missing '+k);if(node.type==='checkbox')node.checked=v;else node.value=v;};
+const choose=(k,v)=>{set(k,v);el(k).dispatchEvent(new Event('change',{bubbles:true}));};
+const click=k=>{check(el(k)&&!el(k).disabled,'disabled '+k);el(k).click();check(!document.getElementById('confirm-overlay')?.classList.contains('active'),'unexpected alert '+document.getElementById('confirm-message')?.textContent);};
+const fields=k=>[...el('opponents').querySelectorAll('[data-stat="'+k+'"]')];
+function fresh(){app.state.playthroughs=[{startedAt:1,path:[1],inventory:['Keep'],trophies:['Keep'],experienceMarks:3,sim8:{keep:true}}];module.render();}
+const protectedState=()=>JSON.stringify([app.currentPlaythrough().inventory,app.currentPlaythrough().trophies,app.currentPlaythrough().experienceMarks,app.currentPlaythrough().sim8,app.currentPlaythrough().path]);
+let restored=0,rows=0,automatic=0,manual=0;
+const resume=()=>{app.currentPlaythrough().sim1544=JSON.parse(JSON.stringify(current()));const before=JSON.stringify(current());module.render();check(JSON.stringify(current())===before,'render mutated state');restored++;};
+const begin=s=>{fresh();choose('encounter',s);choose('manualDice',true);};
+const next=die=>{const turn=sagardEncounterTurn(current().fight);if(turn.targets.length)choose('target',turn.targets[0]);set('die',die);click('attack');resume();};
+if(!el('overlay').classList.contains('active'))el('btn').click();
+check(el('overlay').classList.contains('active'),'real loader opens panel');
+fresh();check(el('level').value==='4'&&el('magicDaggerPower').value==='0'&&!el('monkeyWhistle').checked,'initial equipment not granted');
+choose('manualDice',true);fields('hp')[0].value=1;fields('hp')[0].dispatchEvent(new Event('change',{bubbles:true}));click('start');next(4);check(current().history.length===1,'custom fight');
+for(const entry of getRoster()){
+  begin(entry.section);rows+=entry.opponents.length;
+  if(entry.mode==='manual'){check(el('start').disabled&&el('note').textContent.includes('omits'),'missing source chart remains manual');manual++;continue;}
+  if(entry.openings)choose('opening',entry.openings[0].id);
+  choose('level',6);choose('armor',2);
+  const protectedBefore=protectedState();click('start');automatic++;
+  check(el('hp').disabled&&el('encounter').disabled,'setup locked');
+  for(let n=0;current().fight.status==='fighting';n++){
+    check(n<1800,'stalled '+entry.section);const fight=current().fight,turn=sagardEncounterTurn(fight);
+    if(turn.kind==='chooseDuel'){click('volley');resume();}
+    else if(turn.kind==='interferenceActivate')next(1);
+    else if(turn.kind==='interferenceTarget')next(4);
+    else if(turn.kind==='enemyEscape')next(1);
+    else next(turn.attackerId?.startsWith('enemy')||turn.kind==='enemyVolley'?1:turn.kind==='initiative'?2:4);
+  }
+  check(current().fight.status==='win','winning preset '+entry.section);check(current().history.length===1,'once-only history');
+  check(protectedState()===protectedBefore,'story state preserved');
+}
+check(rows===67&&automatic===28&&manual===1,'full reviewed catalog');
+begin('90');click('start');next(4);const wounded=current().fight.opponents[0].hp,queue=JSON.stringify(current().fight.queue),cursor=current().fight.cursor;
+click('strategy-pendant');resume();check(current().fight.opponents[0].hp===wounded&&current().fight.cursor===cursor&&JSON.stringify(current().fight.queue)===queue,'switch preserves fight');
+next(4);check(sagardEncounterTurn(current().fight).kind==='pendantConfirm','confirmation separate');click('strategy-normal');resume();
+check(sagardEncounterTurn(current().fight).attackerId==='enemy0','abandoned action consumed');
+begin('92');click('start');check(current().fight.opponents[0].hp===null,'no invented pendant HP');next(1);next(4);next(3);check(current().fight.status==='win','pendant confirmation UI');
+begin('70');choose('saltBags',3);choose('useSalt',true);click('start');check(current().fight.saltBags===2&&current().fight.opponents[0].hp===0,'held salt used');
+begin('5');choose('magicDaggerPower',6);click('start');next(2);click('dagger-damage');resume();check(current().fight.magicDaggerPower===5,'dagger power consumed');
+begin('75');choose('opening','79');choose('monkeyWhistle',true);choose('tehniteWeapons',true);choose('alliesRemaining',1);choose('enemiesRemaining',10);click('start');click('whistle');
+for(let n=0;current().fight.round<3;n++){check(n<80,'reinforcement wait');const turn=sagardEncounterTurn(current().fight);if(turn.kind==='chooseDuel'){click('volley');resume();}else next(1);}
+check(current().fight.monkeys.remaining===10,'helpers arrive after two rounds');
+if(sagardEncounterTurn(current().fight).kind==='chooseDuel')click('volley');next(2);check(current().fight.enemiesRemaining===9,'Tehnite human kill');
+check(sagardEncounterTurn(current().fight).kind==='monkeyVolley','separate helper volley');next(2);check(current().fight.enemiesRemaining===9,'helpers not buffed');
+check(requests===1,'one roster load');
+check(!el('overlay').querySelector('.bsim-col-right input,.bsim-col-right select,.bsim-col-right button'),'controls on left');
+check(el('overlay').querySelector('.bsim-modal').getBoundingClientRect().width<=innerWidth+1,'fits viewport');
+document.body.dataset.test=JSON.stringify({mode:'MODE',language:'LANGUAGE',width:innerWidth,automatic,manual,rows,restored,mockedStateWrites:writes,productionWrites:0});

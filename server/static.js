@@ -10,6 +10,7 @@ const { addSecurityHeaders } = require('./request-helpers');
 const { getEtagCache, MIME } = require('./runtime-state');
 const { serveFile } = require('./file-transfer');
 const { legacyBookDownload } = require('./book-files');
+const { escapeHtml } = require('./html-escape');
 
 function serveStatic(req, res) {
   const _spath  = req.url.split('?')[0];
@@ -34,91 +35,40 @@ function serveStatic(req, res) {
   serveFile(req, res, filePath, { headers, gzip: gzipExts.has(ext), etagCache: getEtagCache() });
 }
 
+function serveRobots(req, res) {
+  const covers = db.getPublicCoverPaths().map(name => 'Allow: /covers/' + name.split('/').map(encodeURIComponent).join('/') + '$');
+  const text = ['User-agent: *', 'Allow: /', 'Disallow: /avatars/', 'Disallow: /covers/', 'Disallow: /api/', ...covers, '', 'Sitemap: https://pathmap.net/sitemap.xml', ''].join('\n');
+  addSecurityHeaders(res);
+  res.writeHead(200, {'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'public, max-age=300'});
+  res.end(text);
+}
+
 function serveSitemap(req, res) {
   const SITE = 'https://pathmap.net';
-  const today = new Date().toISOString().slice(0, 10);
-  let guideLastmod = today;
-  try { guideLastmod = fs.statSync(path.join(ROOT, 'guide.html')).mtime.toISOString().slice(0, 10); } catch (_) {}
-  const books       = db.getBooksForSitemap();
-  const anthologies = db.getAnthologiesForSitemap();
-  const series      = db.getSeriesForSitemap();
-  const profiles    = db.getPublicProfilesForSitemap();
-  const threads     = db.forumGetThreadsForSitemap();
-  const categories  = db.forumGetCategories();
-
-  const profileEntries = profiles.map(p =>
-    `  <url>\n    <loc>${SITE}/user/${encodeURIComponent(p.username)}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>`
-  ).join('\n');
-
-  const bookEntries = books.map(b => {
-    const lastmod = b.updated_at
-      ? new Date(b.updated_at * 1000).toISOString().slice(0, 10)
-      : today;
-    return `  <url>\n    <loc>${SITE}/book/${b.id}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.8</priority>\n  </url>`;
-  }).join('\n');
-
-  const anthologyEntries = anthologies.map(b => {
-    const lastmod = b.updated_at
-      ? new Date(b.updated_at * 1000).toISOString().slice(0, 10)
-      : today;
-    return `  <url>\n    <loc>${SITE}/anthology/${b.id}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.75</priority>\n  </url>`;
-  }).join('\n');
-
-  const seriesEntries = series.map(s => {
-    const lastmod = s.created_at
-      ? new Date(s.created_at * 1000).toISOString().slice(0, 10)
-      : today;
-    return `  <url>\n    <loc>${SITE}/series/${s.id}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.75</priority>\n  </url>`;
-  }).join('\n');
-
-  const categoryEntries = categories.map(c =>
-    `  <url>\n    <loc>${SITE}/forum/c/${c.slug}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.65</priority>\n  </url>`
-  ).join('\n');
-
-  const threadEntries = threads.map(t => {
-    const lastmod = t.last_post_at
-      ? new Date(t.last_post_at * 1000).toISOString().slice(0, 10)
-      : today;
-    return `  <url>\n    <loc>${SITE}/forum/thread/${t.id}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>`;
-  }).join('\n');
-
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${SITE}/</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>${SITE}/guide.html</loc>
-    <lastmod>${guideLastmod}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>${SITE}/feed</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>${SITE}/forum</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-${profileEntries}
-${bookEntries}
-${anthologyEntries}
-${seriesEntries}
-${categoryEntries}
-${threadEntries}
-</urlset>`;
-
+  const entries = [];
+  const add = (url, seconds) => {
+    const date = Number(seconds) > 0 && Number(seconds) <= Date.now() / 1000 ? new Date(Number(seconds) * 1000) : null;
+    const lastmod = date && Number.isFinite(date.getTime()) ? '<lastmod>' + date.toISOString().slice(0, 10) + '</lastmod>' : '';
+    entries.push('  <url><loc>' + escapeHtml(SITE + url) + '</loc>' + lastmod + '</url>');
+  };
+  const modified = name => {try {return fs.statSync(path.join(ROOT, name)).mtimeMs / 1000;} catch {return null;}};
+  add('/', modified('index.html'));
+  add('/guide.html', modified('guide.html'));
+  add('/catalogue');
+  add('/catalogue?type=series');
+  add('/feed');
+  add('/forum');
+  for (const profile of db.getPublicProfilesForSitemap()) add('/user/' + encodeURIComponent(profile.username));
+  for (const book of db.getBooksForSitemap()) add('/book/' + book.id, book.updated_at);
+  for (const book of db.getAnthologiesForSitemap()) add('/anthology/' + book.id, book.updated_at);
+  // There is no reliable series/profile/category modification timestamp. Omit it.
+  for (const series of db.getSeriesForSitemap()) add('/series/' + series.id);
+  for (const category of db.forumGetCategories()) add('/forum/c/' + encodeURIComponent(category.slug));
+  for (const thread of db.forumGetThreadsForSitemap()) add('/forum/thread/' + thread.id, thread.last_post_at);
+  const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + entries.join('\n') + '\n</urlset>';
   addSecurityHeaders(res);
-  res.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600' });
+  res.writeHead(200, {'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': 'public, max-age=3600'});
   res.end(xml);
 }
 
-module.exports = { serveStatic, serveSitemap };
+module.exports = { serveStatic, serveSitemap, serveRobots };

@@ -291,6 +291,11 @@ function setAppXpHook(fn) {
   _appXpHook = typeof fn === 'function' ? fn : null;
 }
 
+function reportGemReward(userId, { diamondDelta = 0, rubyDelta = 0 }) {
+  if (isImpersonatingContext() || !(diamondDelta > 0 || rubyDelta > 0)) return;
+  try { _appXpHook?.({ userId, diamondDelta, rubyDelta }); } catch (_) {}
+}
+
 const _awardCoinsTx = db.transaction((userId, event, ref, amount) => {
   const r = db.prepare(
     'INSERT OR IGNORE INTO coin_events (user_id, event, ref, amount) VALUES (?, ?, ?, ?)'
@@ -736,6 +741,20 @@ SIM_HISTORY_KEYS.push('sim1475');
 SIM_HISTORY_KEYS.push('sim1476');
 SIM_HISTORY_KEYS.push('sim1477');
 SIM_HISTORY_KEYS.push('sim1483');
+SIM_HISTORY_KEYS.push('sim1525');
+SIM_HISTORY_KEYS.push('sim1527');
+SIM_HISTORY_KEYS.push('sim1533');
+SIM_HISTORY_KEYS.push('sim1534');
+SIM_HISTORY_KEYS.push('sim1535');
+SIM_HISTORY_KEYS.push('sim1536');
+SIM_HISTORY_KEYS.push('sim1537');
+SIM_HISTORY_KEYS.push('sim1539');
+SIM_HISTORY_KEYS.push('sim1540');
+SIM_HISTORY_KEYS.push('sim1541');
+SIM_HISTORY_KEYS.push('sim1542');
+SIM_HISTORY_KEYS.push('sim1543');
+SIM_HISTORY_KEYS.push('sim1544');
+SIM_HISTORY_KEYS.push('sim1555');
 SIM_HISTORY_KEYS.push('sim1473');
 const RETIRED_SIM_HISTORY_KEYS = ['sim758', 'sim2116'];
 
@@ -1097,7 +1116,7 @@ module.exports = {
   getXpAmount, getXpConfig, setXpAmount,
   TITLES, computeLevel, xpForLevel, getTitleForLevel,
   coinMintPct, coinsFromXp, coinBalance,
-  setXpFeedHook, setAppXpHook,
+  setXpFeedHook, setAppXpHook, reportGemReward,
   awardCoins, awardXp, awardIdleHeartbeatXp, getUserXpInfo, getAllUsersXpInfo, claimBonusGc,
   getBookCreator, getBookIdentifiers,
   _discoveredSet, _visitedSet, _mappedSet, _permanentVisitedCount,

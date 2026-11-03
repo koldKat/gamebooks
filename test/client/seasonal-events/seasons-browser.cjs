@@ -25,6 +25,7 @@ const classes={halloween:'.seasonal-pumpkin',diwali:'.seasonal-diya',christmas:'
 const active=season=>Boolean(document.querySelector(classes[season]));
 const none=()=>!document.querySelector('.seasonal-pumpkin,.seasonal-diya,.seasonal-companion');
 const noBackground=()=>!document.querySelector('.seasonal-background,.seasonal-background__icon,.seasonal-background__web');
+const nextNotice=name=>{const n=document.getElementById('seasonal-event-notice');return !n.hidden&&n.dataset.mode==='upcoming'&&n.querySelector('strong')?.textContent.startsWith('Next event: '+name+' (ETA:');};
 const ad=document.getElementById('admin'),other=document.getElementById('other');
 await until(()=>ad.contentDocument?.querySelector('[data-season-test="diwali"]')&&other.contentDocument?.body.dataset.ready);
 const click=async selector=>{await until(()=>ad.contentDocument.querySelector(selector)&&!ad.contentDocument.querySelector(selector).disabled);ad.contentDocument.querySelector(selector).click();};
@@ -50,13 +51,25 @@ await click('[data-season-test="diwali"]');await until(()=>active('diwali'));
 applySeasonalEventsPreference('0');check(none()&&!document.getElementById('seasonal-event-notice').hidden,'Ctrl+Y hides mouse companions but keeps notices');applySeasonalEventsPreference('1');
 document.getElementById('landing-wrapper').style.display='none';await delay(50);check(none(),'play area gets no mouse companions');document.getElementById('landing-wrapper').style.display='';await delay(100);
 await click('#seasons-automatic');await until(()=>seasonPreview()===null);
+clock=Date.parse('2026-11-03T21:59:59.750Z')-(Date.now()-baseTime);document.dispatchEvent(new Event('visibilitychange'));await delay(600);
+check(none()&&nextNotice('Diwali'),'Halloween automatically becomes the next Diwali notice');
+const etaNode=document.querySelector('#seasonal-event-notice strong'),initialEta=document.querySelector('.seasonal-event-eta').textContent;
+check(getComputedStyle(document.querySelector('.seasonal-event-eta-label')).color==='rgb(251, 191, 36)','ETA label has the countdown accent');
+clock+=60000;document.dispatchEvent(new Event('visibilitychange'));
+check(document.querySelector('#seasonal-event-notice strong')===etaNode&&document.querySelector('.seasonal-event-eta').textContent!==initialEta,'ETA advances without rebuilding the notice');
 clock=Date.parse('2026-11-04T21:59:59.750Z')-(Date.now()-baseTime);document.dispatchEvent(new Event('visibilitychange'));check(none(),'before automatic event start');await delay(600);check(active('diwali')&&noBackground(),'Diwali starts at midnight with only the mouse companion');
-clock=Date.parse('2026-11-11T21:59:59.750Z')-(Date.now()-baseTime);document.dispatchEvent(new Event('visibilitychange'));await delay(600);check(none()&&document.getElementById('seasonal-event-notice').hidden,'Diwali ends automatically');
+check(document.getElementById('seasonal-event-notice').dataset.mode==='active'&&!document.querySelector('.seasonal-event-eta'),'next notice becomes the live event');
+clock=Date.parse('2026-11-11T21:59:59.750Z')-(Date.now()-baseTime);document.dispatchEvent(new Event('visibilitychange'));await delay(600);check(none()&&nextNotice('Christmas'),'Diwali ends with next Christmas notice');
 for(const[stamp,season]of [['2026-12-21T21:59:59.750Z','christmas'],['2026-12-28T21:59:59.750Z','new-year'],['2027-01-04T21:59:59.750Z',null]]){
  clock=Date.parse(stamp)-(Date.now()-baseTime);document.dispatchEvent(new Event('visibilitychange'));await delay(600);check(season?active(season):none(),'winter midnight transition '+stamp);check(noBackground(),'winter calendar changes never add background objects');
 }
+check(nextNotice('Diwali'),'winter expiry selects next year moving festival');
+const {seasonalEvents}=await import('/js/seasonal-events/calendar.js');
+await fetch('/test-calendar',{method:'POST',body:JSON.stringify([...seasonalEvents,{id:'spring-test',name:'Spring Celebration',title:'Spring Celebration event active',description:'Calendar-only test.',dates:{2027:'2027-02-20'},daysAround:2}])});
+window.dispatchEvent(new Event('app-config-changed'));await until(()=>nextNotice('Spring Celebration'));
+check(Number(document.querySelector('[data-season-start]').dataset.seasonStart)===Date.parse('2027-02-17T22:00:00Z'),'new calendar entry supplies its own activation ETA');
 await click('[data-season-test="diwali"]');await until(()=>active('diwali'));ad.hidden=true;
-document.body.dataset.test=JSON.stringify({privatePreview:true,otherAccountUnaffected:true,liveRestored:true,off:true,settings:true,mouseOnly:true,noBackgroundSprites:true,automaticStartAndEnd:true,winterPreview:true,winterYearBoundary:true});
+document.body.dataset.test=JSON.stringify({privatePreview:true,otherAccountUnaffected:true,liveRestored:true,off:true,settings:true,mouseOnly:true,noBackgroundSprites:true,automaticStartAndEnd:true,winterPreview:true,winterYearBoundary:true,nextEvent:true,etaUpdates:true,calendarPlugin:true,configRefresh:true});
 </script>`;
 const other=base+`<script type="module">${common}
 const {initSeasonalEvents}=await import('/js/seasonal-events/index.js');initSeasonalEvents()();
@@ -64,14 +77,19 @@ const {setSeasonPreviewUser,seasonPreview}=await import('/js/seasonal-events/pre
 initSeasonalEvents({now:()=>new Date('2026-10-30T12:00:00Z'),random:()=>0});document.body.dataset.ready='1';</script>`;
 const admin=`<meta charset="utf-8"><link rel="stylesheet" href="/css/admin-seasons.css"><link rel="stylesheet" href="/css/seasonal-events.css"><style>${adminStyle}</style>${adminMarkup}<script type="module">import{loadSeasons}from'/admin/js/seasons.js';document.getElementById('tab-seasons').classList.add('active');if(!localStorage.getItem('gamebook_auth_token'))localStorage.setItem('gamebook_auth_token','test-admin');await loadSeasons();if(document.querySelector('.season-samples'))throw Error('Retired sprite galleries are still visible');if(document.querySelectorAll('[data-cursor-preview]').length!==12)throw Error('Each event needs three live companion previews');await new Promise(r=>setTimeout(r,200));const previewRoots=()=>document.querySelectorAll('.season-cursor-preview > *').length;if(!previewRoots())throw Error('Visible companion previews did not start');if(!document.getAnimations().length)throw Error('Admin companion previews are not animated');const firstGallery=document.querySelector('.season-cursor-gallery');firstGallery.style.display='none';await new Promise(r=>setTimeout(r,100));if(firstGallery.querySelector('.season-cursor-preview > *'))throw Error('Offscreen previews did not stop');firstGallery.style.display='';await new Promise(r=>setTimeout(r,100));let previewHidden=true;Object.defineProperty(document,'hidden',{configurable:true,get:()=>previewHidden});document.dispatchEvent(new Event('visibilitychange'));if(previewRoots())throw Error('Hidden admin tab retains running companions');previewHidden=false;document.dispatchEvent(new Event('visibilitychange'));if(!previewRoots())throw Error('Visible admin tab did not resume previews');if(getComputedStyle(document.getElementById('seasons-list')).gridTemplateColumns.split(' ').length!==(innerWidth>680?2:1))throw Error('Season cards need two columns on desktop and one on narrow screens');if(${Boolean(process.env.SEASONS_FOCUS_NEW_YEAR)})document.querySelector('[data-season-test="new-year"]').closest('.season-card').scrollIntoView({block:'center'});document.body.dataset.test=JSON.stringify({adminSeasons:true,cards:document.querySelectorAll('.season-card').length,spriteGalleries:0,liveCompanionPreviews:12,hiddenPreviewsPaused:true,offscreenPreviewsPaused:true});</script>`;
 let accountPrefs={seasonPreview:'automatic'};
+let calendarOverride=null;
 const server=http.createServer((req,res)=>{
+  if(req.url==='/test-calendar'&&req.method==='POST'){
+    let body='';req.on('data',chunk=>body+=chunk);req.on('end',()=>{calendarOverride=JSON.parse(body);res.end('{}');});return;
+  }
+  if(req.url==='/js/seasonal-events/calendar.json'&&calendarOverride){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify(calendarOverride));}
   if(req.url==='/api/prefs'){
     res.setHeader('Content-Type','application/json');
     if(req.method==='PATCH'){let body='';req.on('data',chunk=>body+=chunk);req.on('end',()=>{accountPrefs={...accountPrefs,...JSON.parse(body)};res.end(JSON.stringify(accountPrefs));});return;}
     return res.end(JSON.stringify(accountPrefs));
   }
   if(req.url==='/api/profile'){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify({id:1,isAdmin:true}));}
-  if(['/', '/other','/admin-test'].includes(req.url)){if(req.url==='/')accountPrefs={seasonPreview:'automatic'};res.setHeader('Content-Type','text/html');return res.end(req.url==='/'?main:req.url==='/other'?other:admin);}
+  if(['/', '/other','/admin-test'].includes(req.url)){if(req.url==='/'){accountPrefs={seasonPreview:'automatic'};calendarOverride=null;}res.setHeader('Content-Type','text/html');return res.end(req.url==='/'?main:req.url==='/other'?other:admin);}
   const filename=path.join(project,req.url.startsWith('/admin/')?'':'public',req.url);
   if(!filename.startsWith(project+path.sep)){res.writeHead(403);return res.end();}
   res.setHeader('Content-Type',filename.endsWith('.js')?'text/javascript':filename.endsWith('.json')?'application/json':filename.endsWith('.css')?'text/css':'text/plain');
@@ -83,6 +101,7 @@ const server=http.createServer((req,res)=>{
     const result=await checkBrowser({url:'http://127.0.0.1:'+server.address().port+'/',root,profile:path.join(root,'profile-'+width),width,chromium:process.env.CHROMIUM,timeoutMs:20000,screenshotPath:process.env.SEASONS_SCREENSHOT_PREFIX?process.env.SEASONS_SCREENSHOT_PREFIX+'-'+width+'.jpg':undefined});
     console.log(JSON.stringify({width,...result}));
   }
+  calendarOverride=null;
   const adminResult=await checkBrowser({url:'http://127.0.0.1:'+server.address().port+'/admin-test',root,profile:path.join(root,'profile-admin'),width:1100,chromium:process.env.CHROMIUM,screenshotPath:process.env.SEASONS_SCREENSHOT_PREFIX?process.env.SEASONS_SCREENSHOT_PREFIX+'-admin.jpg':undefined});
   if(adminResult.cards!==4)throw Error('Admin did not render both seasonal cards');console.log(JSON.stringify(adminResult));
 }finally{await new Promise(r=>server.close(r));fs.rmSync(root,{recursive:true,force:true})}})().catch(error=>{console.error(error);process.exitCode=1});

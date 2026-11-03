@@ -1,16 +1,19 @@
-// Calculate event time remaining through the final Europe/Sofia calendar day.
+// Calculate activation and expiry countdowns at Europe/Sofia calendar boundaries.
 import {seasonalDay} from './schedule.js';
-export function seasonalEndTime(event){
- const end=event.window?.end;
- if(!end)return null;
- const nextDay=Date.parse(end+'T00:00:00Z')+86400000;
- if(!Number.isFinite(nextDay))return null;
- let low=nextDay-12*3600000,high=nextDay+12*3600000;
+function seasonalMidnight(day){
+ if(!Number.isFinite(day))return null;
+ let low=day-12*3600000,high=day+12*3600000;
  while(high-low>1){
   const middle=Math.floor((low+high)/2);
-  if(seasonalDay(new Date(middle))<nextDay)low=middle;else high=middle;
+  if(seasonalDay(new Date(middle))<day)low=middle;else high=middle;
  }
  return high;
+}
+export function seasonalStartTime(event){
+ return event.window?.start ? seasonalMidnight(Date.parse(event.window.start+'T00:00:00Z')) : null;
+}
+export function seasonalEndTime(event){
+ return event.window?.end ? seasonalMidnight(Date.parse(event.window.end+'T00:00:00Z')+86400000) : null;
 }
 export function formatSeasonalRemaining(end,now){
  const milliseconds=Math.max(0,end-now);

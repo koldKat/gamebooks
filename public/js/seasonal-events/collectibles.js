@@ -60,7 +60,8 @@ export async function openCollectibles(){
   const response=await apiFetch('/api/collectibles');if(!response.ok)throw Error();
   const data=await response.json();
   if(sequence!==request||token!==getToken()||!dialog.open)return;
-  const collected=designs.filter(d=>data.items.includes(d.id));
+  const collected=designs.filter(d=>data.items.includes(d.id))
+   .sort((a,b)=>(data.collectedAt?.[b.id]||0)-(data.collectedAt?.[a.id]||0));
   body.replaceChildren();
   if(!collected.length){
    const empty=document.createElement('p');empty.className='collectibles-empty';

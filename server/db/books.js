@@ -4,8 +4,9 @@
 
 const { db, _foldForSearch, _naturalCompare, _naturalCompareByName, _getPdfSize, _getEpubSize } = require('./connection');
 const {
-  awardXp, awardCoins, _discoveredSet, _visitedSet, _mappedSet, _permanentVisitedCount, _checkGroupMilestone,
+  awardXp, awardCoins, reportGemReward, _discoveredSet, _visitedSet, _mappedSet, _permanentVisitedCount, _checkGroupMilestone,
 } = require('./xp');
+const { awardRatingVote } = require('./vote-gems');
 
 // Live reading is account-unrestricted; retain one gate for any future access policy.
 function _canLiveRead(_userId) {
@@ -1283,11 +1284,15 @@ function setBookRating(userId, bookId, rating) {
   const ownBookId = _getUserBookId(userId, bookId);
   if (ownBookId === null) return null;
   if (rating !== null && !canUserRateBook(userId, bookId)) return { blocked: true };
-  db.prepare('UPDATE user_books SET rating = ?, rated_at = ? WHERE user_id = ? AND book_id = ?')
-    .run(rating, rating !== null ? Math.floor(Date.now() / 1000) : null, userId, ownBookId);
+  const gems = db.transaction(() => {
+    db.prepare('UPDATE user_books SET rating = ?, rated_at = ? WHERE user_id = ? AND book_id = ?')
+      .run(rating, rating !== null ? Math.floor(Date.now() / 1000) : null, userId, ownBookId);
+    return rating !== null ? awardRatingVote(db, userId, 'book', ownBookId) : null;
+  }).immediate();
+  if (gems) reportGemReward(userId, gems);
   const xpAwarded = rating !== null ? awardXp(userId, 'rate_book', ownBookId) : false;
   const agg = _getAggregateRating(bookId);
-  return { userBookId: ownBookId, xpAwarded, avgRating: agg.avgRating, voteCount: agg.voteCount };
+  return { userBookId: ownBookId, xpAwarded, avgRating: agg.avgRating, voteCount: agg.voteCount, gems };
 }
 
 function _getAggregateSeriesRating(seriesId) {
@@ -1311,11 +1316,15 @@ function setSeriesRating(userId, seriesId, rating) {
   const member = db.prepare('SELECT 1 FROM user_series WHERE user_id = ? AND series_id = ?').get(userId, seriesId);
   if (!member) return null;
   if (rating !== null && !canUserRateSeries(userId, seriesId)) return { blocked: true };
-  db.prepare('UPDATE user_series SET rating = ?, rated_at = ? WHERE user_id = ? AND series_id = ?')
-    .run(rating, rating !== null ? Math.floor(Date.now() / 1000) : null, userId, seriesId);
+  const gems = db.transaction(() => {
+    db.prepare('UPDATE user_series SET rating = ?, rated_at = ? WHERE user_id = ? AND series_id = ?')
+      .run(rating, rating !== null ? Math.floor(Date.now() / 1000) : null, userId, seriesId);
+    return rating !== null ? awardRatingVote(db, userId, 'series', seriesId) : null;
+  }).immediate();
+  if (gems) reportGemReward(userId, gems);
   const xpAwarded = rating !== null ? awardXp(userId, 'rate_series', String(seriesId)) : false;
   const agg = _getAggregateSeriesRating(seriesId);
-  return { xpAwarded, avgRating: agg.avgRating, voteCount: agg.voteCount };
+  return { xpAwarded, avgRating: agg.avgRating, voteCount: agg.voteCount, gems };
 }
 
 module.exports = {

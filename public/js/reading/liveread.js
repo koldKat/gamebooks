@@ -12,6 +12,7 @@ import { showReadingGate } from './access.js';
 import { renderReadingMatter } from './content.js';
 import { bindReadingMapEntry, isReadingMapSection, readingChoices } from './map-entry.js';
 import { bindReadingPreviousEntry } from './previous-entry.js';
+import { bindReadingSourceFlipbooks } from './source-flipbook.js';
 
 // Shares the activity feed's loading indicator and feed.css, loaded on index.html.
 const _loadingHtml = () => `<div class="liveread-loading">
@@ -161,6 +162,7 @@ async function _showExtra(key) {
 }
 
 function _bindReadingNavigation(body, token) {
+  bindReadingSourceFlipbooks(body, currentBookId);
   const bookId = currentBookId;
   const authToken = getToken();
   const run = currentPlaythrough();
@@ -325,6 +327,7 @@ export async function previewSection(sec) {
   _previewSec = sec;
   _updateHeading(sec);
   body.innerHTML = `<p class="liveread-preview-banner">${t('mobile.preview_banner', { sec: sectionLabel(sec, currentBookId) })}</p>${data.html}<p class="liveread-back"><a href="#" id="liveread-preview-return">${t('mobile.preview_return')}</a></p>`;
+  bindReadingSourceFlipbooks(body, currentBookId);
   bindReadingMapEntry(body, { canNavigate: () => false, onNavigate() {} });
   bindReadingPreviousEntry(body, { canNavigate: () => false });
   body.scrollTop = 0;

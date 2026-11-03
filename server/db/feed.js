@@ -1103,8 +1103,12 @@ function getPublicCovers() {
 
 function getBooksForSitemap() {
   return db.prepare(
-    'SELECT id, updated_at FROM books WHERE is_public = 1 AND parent_book_id IS NULL AND is_container = 0 ORDER BY id'
+    'SELECT id, updated_at FROM books WHERE is_public = 1 AND is_container = 0 ORDER BY id'
   ).all();
+}
+
+function getPublicCoverPaths() {
+  return db.prepare('SELECT DISTINCT cover_path FROM books WHERE is_public = 1 AND cover_path IS NOT NULL AND cover_path != ? ORDER BY cover_path').all('').map(row => row.cover_path);
 }
 
 function getAnthologiesForSitemap() {
@@ -1129,10 +1133,12 @@ function getPublicBookMeta(bookId) {
   const row = db.prepare(
     `SELECT b.id, b.name, b.description, b.authors, b.cover_path, b.total_sections, b.max_section_number,
             b.isbn, b.issn, b.asin, b.pages, b.is_container,
+            s.id AS seriesId, s.name AS seriesName,
             p.id AS parentId, p.name AS parentName, p.cover_path AS parentCoverPath,
             p.description AS parentDescription
      FROM books b
      LEFT JOIN books p ON p.id = b.parent_book_id AND p.is_public = 1
+     LEFT JOIN series s ON s.id = COALESCE(b.series_id, p.series_id) AND s.is_public = 1
      WHERE b.id = ?
        AND b.is_public = 1`
   ).get(bookId);
@@ -1152,6 +1158,8 @@ function getPublicBookMeta(bookId) {
     isContainer:   row.is_container === 1,
     parentId:      row.parentId   || null,
     parentName:    row.parentName || null,
+    seriesId:      row.seriesId || null,
+    seriesName:    row.seriesName || null,
   };
   if (result.isContainer) {
     const primaryChildren = db.prepare('SELECT id, name, total_sections, book_order FROM books WHERE parent_book_id = ? AND is_public = 1').all(bookId);
@@ -1595,6 +1603,7 @@ module.exports = {
   setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setSquire, setPdfAccess, setDisplayName,
   getPublicProfile, getProfileStats,
   getPublicCovers, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
+  getPublicCoverPaths,
   getPublicBookMeta, getAllPublicBooks, getPublicBooksInSeries, getAllPublicSeries, getAllPublicAnthologies,
   getBookActivity, getPublicRun, getPublicSeriesRun,
 };

@@ -158,6 +158,7 @@ const {
 
 const {
   handleAdminStats,
+  handleAdminSeasonPayouts,
   handleAdminGetUser,
   handleAdminGetBookStats,
   handleAdminGetUsers,
@@ -236,12 +237,13 @@ const {
   serveForumThread,
 } = require('./server/routes/forum');
 
-const { serveStatic, serveSitemap } = require('./server/static');
+const { serveStatic, serveSitemap, serveRobots } = require('./server/static');
 
 const {
   handlePublicUser, handlePublicRun, handlePublicSeriesRun,
   servePublicBookPage, servePublicAnthologyPage, servePublicSeriesPage,
   servePublicProfilePage, servePublicFeedPage,
+  servePublicCataloguePage,
 } = require('./server/routes/public');
 
 // ── Router ────────────────────────────────────────────────────────────────────
@@ -523,6 +525,7 @@ const _routeRequest = async (req, res) => {
     if ((m = urlPath.match(/^\/admin\/js\/([a-zA-Z0-9_-]+\.js)$/)) && method === 'GET')
       return serveAdminFile(req, res, `js/${m[1]}`);
     if (method === 'GET'  && urlPath === '/api/admin/stats')  return await handleAdminStats(req, res);
+    if (method === 'GET' && urlPath === '/api/admin/seasons/payouts') return await handleAdminSeasonPayouts(req, res);
     if (method === 'GET'  && urlPath === '/api/admin/users')  return await handleAdminGetUsers(req, res);
     if (method === 'GET'  && urlPath === '/api/admin/books')  return await handleAdminGetBooks(req, res);
     if (method === 'POST' && (m = urlPath.match(/^\/api\/admin\/books\/(\d+)\/import-complete$/))) return handleImportComplete(req, res, +m[1]);
@@ -614,7 +617,9 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET' && urlPath === '/api/config') return await handlePublicConfig(req, res);
 
     if (method === 'GET' && urlPath === '/sitemap.xml') return serveSitemap(req, res);
+    if (method === 'GET' && urlPath === '/robots.txt') return serveRobots(req, res);
     if (method === 'GET' && urlPath === '/feed') return servePublicFeedPage(req, res);
+    if (method === 'GET' && urlPath === '/catalogue') return servePublicCataloguePage(req, res);
     if (method === 'GET' && (m = urlPath.match(publicBookPageRe)))      return servePublicBookPage(req, res, +m[1]);
     if (method === 'GET' && (m = urlPath.match(publicAnthologyPageRe))) return servePublicAnthologyPage(req, res, +m[1]);
     if (method === 'GET' && (m = urlPath.match(publicSeriesPageRe)))    return servePublicSeriesPage(req, res, +m[1]);

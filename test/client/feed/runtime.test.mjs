@@ -12,6 +12,6 @@ test('feed preserves rendering, loading, interactions, previews and day covers',
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const { digest, cases } = JSON.parse(result.stdout);
   assert.equal(cases, 38);
-  // Includes the player, book and news filter ordering in the rendered header.
-  assert.equal(digest, '5615821549a4529aab1f5fd4538d4752a8e123be8b77dfc438e8ed8595aa6dfe');
+  // Includes filter ordering and native fieldset/legend announcement borders.
+  assert.equal(digest, 'a85c3ff66601bb9d229855ebd64166a9e23b90b2fc125347db5760249b38cec8');
 });

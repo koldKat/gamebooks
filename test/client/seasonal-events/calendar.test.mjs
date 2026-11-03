@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { activeSeasonalEvent, activeSeasonalEvents, seasonalEvents, seasonWindow, nextSeasonalRefreshDelay } from '../../../public/js/seasonal-events/calendar.js';
+import { activeSeasonalEvent, activeSeasonalEvents, nextSeasonalEvent, seasonalEvents, seasonWindow, nextSeasonalRefreshDelay } from '../../../public/js/seasonal-events/calendar.js';
+import {nextSeason} from '../../../public/js/seasonal-events/schedule.js';
 
 test('Halloween runs from October 28 through November 3, inclusive, every year', () => {
   for (const year of [2026, 2027, 2028]) {
@@ -60,4 +61,24 @@ test('open-tab checks schedule both event boundaries on Sofia time', () => {
 test('midnight scheduling follows Sofia daylight-saving changes', () => {
   assert.equal(nextSeasonalRefreshDelay(new Date('2026-03-28T22:00:00Z')), 23 * 3600000 + 100);
   assert.equal(nextSeasonalRefreshDelay(new Date('2026-10-24T21:00:00Z')), 25 * 3600000 + 100);
+});
+
+test('the next event uses activation windows, moving dates and the next year', () => {
+  const next = nextSeasonalEvent(new Date('2026-11-03T22:00:00Z'));
+  assert.equal(next.id, 'diwali'); assert.equal(next.window.start, '2026-11-05');
+  assert.equal(nextSeasonalEvent(new Date('2026-11-11T22:00:00Z')).id, 'christmas');
+  assert.equal(nextSeasonalEvent(new Date('2027-01-04T22:00:00Z')).id, 'diwali');
+  assert.equal(nextSeasonalEvent(new Date('2034-11-14T22:00:00Z')).id, 'christmas');
+  const winter = seasonalEvents.filter(e => e.id === 'new-year');
+  assert.equal(nextSeason(winter, new Date('2027-01-05T12:00:00Z')).window.start, '2027-12-29');
+});
+
+test('new calendar entries participate without event-specific code or a fixed year horizon', () => {
+  const future = {id: 'future', title: 'Future event active', dates: {2038: '2038-02-02'}, daysAround: 2};
+  assert.deepEqual(nextSeason([future], new Date('2026-01-05T12:00:00Z')).window,
+    {start: '2038-01-31', end: '2038-02-04', center: '2038-02-02'});
+  const added = {id: 'new-event', title: 'New event active', start: 1115, end: 1121, day: 1118};
+  assert.equal(nextSeason([...seasonalEvents, added], new Date('2026-11-12T12:00:00Z')).id, 'new-event');
+  assert.equal(nextSeason([], new Date()), null);
+  assert.equal(nextSeason([future], new Date('2039-01-05T12:00:00Z')), null);
 });

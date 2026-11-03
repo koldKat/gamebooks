@@ -219,6 +219,143 @@ test('Knightmare duel outcomes award seasonal XP once and exclude active or canc
   }
 });
 
+test('Real Life saved outcomes award seasonal XP once and exclude unfinished bouts and voluntary exits', async t => {
+  const {createRealLifeState} = await import('../public/js/battlesim/engines/real-life/state.js');
+  const {startRealLifeFight, realLifeStep, endRealLifeFight} = await import('../public/js/battlesim/engines/real-life/core.js');
+  const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
+  const registration = source.slice(source.indexOf('const SIM_HISTORY_KEYS ='), source.indexOf('const RETIRED_SIM_HISTORY_KEYS ='));
+  const start = source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
+  const end = source.indexOf('\n  }\n\n  // Award every', start);
+  assert.ok(start > 0 && end > start);
+  for (const bookId of [1533, 1534, 1535, 1537, 1539]) for (const [date, winXp, lossXp] of [['2026-10-31T12:00:00Z', 10, 10], ['2026-11-08T12:00:00Z', 20, 5], ['2026-12-31T12:00:00Z', 20, 10]]) {
+    const f = fixture(t); f.date(date);
+    vm.runInContext(registration + '\nfunction syncRealLifeOutcomes(newPt,oldPt){const userId=1;' + source.slice(start, end) + '\n}', f.context);
+    const run = {path: ['1'], inventory: [{id: 'keep', count: 2}], sim8: {history: [{ts: 1, outcome: 'win'}]}};
+    const beforeOther = JSON.stringify(run);
+    const simKey = 'sim' + bookId;
+    const store = createRealLifeState(() => ({run, bookId, definition: {id: bookId, stateKey: simKey}, saveState: () => {}}));
+    for (const outcome of ['fighting', 'cancelled', 'interrupted', 'escaped', 'surrendered', 'win', 'loss']) {
+      const previous = structuredClone(run), before = f.xp();
+      const encounter = {name: 'Synthetic opponent', weapon: 'sword', opponents: [{name: 'Opponent', skill: 7, wounds: 4}],
+        escapeTarget: '2', surrenderTarget: '3', ...(outcome === 'interrupted' ? {attackLimit: 1} : {}), opponentFirst: outcome === 'loss'};
+      let fight = startRealLifeFight({strength: 7, sword: 7, firearm: 7, horsemanship: 7, wounds: 4}, encounter);
+      if (['cancelled', 'escaped', 'surrendered'].includes(outcome)) fight = endRealLifeFight(fight, outcome);
+      else if (['win', 'loss', 'interrupted'].includes(outcome)) fight = realLifeStep(fight, {}, () => outcome === 'interrupted' ? 6 : 1);
+      assert.equal(fight.status, outcome);
+      assert.equal(store.update(state => ({...state, fight})), true);
+      f.context.syncRealLifeOutcomes(run, previous);
+      const expected = outcome === 'win' ? winXp : outcome === 'loss' ? lossXp : 0;
+      assert.equal(f.xp() - before, expected, date + '/' + outcome);
+      f.context.syncRealLifeOutcomes(run, previous); assert.equal(f.xp() - before, expected, 'Duplicate save');
+    }
+    assert.deepEqual(run[simKey].history.map(entry => entry.outcome), ['win', 'loss']);
+    assert.equal(JSON.stringify(Object.fromEntries(Object.entries(run).filter(([key]) => key !== simKey))), beforeOther);
+    assert.equal(f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n, 2);
+  }
+});
+
+test('lethal firearm outcomes award seasonal XP once and exclude interruptions and cancellations', async t => {
+  const {createFirearmState} = await import('../public/js/battlesim/engines/real-life-firearms/state.js');
+  const {startFirearmFight, resolveFirearmTurn, cancelFirearmFight} = await import('../public/js/battlesim/engines/real-life-firearms/core.js');
+  const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
+  const registration = source.slice(source.indexOf('const SIM_HISTORY_KEYS ='), source.indexOf('const RETIRED_SIM_HISTORY_KEYS ='));
+  const start = source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
+  const end = source.indexOf('\n  }\n\n  // Award every', start);
+  assert.ok(start > 0 && end > start);
+  for (const bookId of [1536, 1540]) for (const [date, winXp, lossXp] of [['2026-10-31T12:00:00Z', 10, 10], ['2026-11-08T12:00:00Z', 20, 5], ['2026-12-31T12:00:00Z', 20, 10]]) {
+    const f = fixture(t); f.date(date);
+    vm.runInContext(registration + '\nfunction syncFirearmOutcomes(newPt,oldPt){const userId=1;' + source.slice(start, end) + '\n}', f.context);
+    const run = {path: ['1'], inventory: [{id: 'keep', count: 2}]};
+    const simKey = 'sim' + bookId;
+    const store = createFirearmState(() => ({run, bookId, definition: {id: bookId, stateKey: simKey}, saveState: () => {}}));
+    for (const outcome of ['fighting', 'cancelled', 'interrupted', 'win', 'loss']) {
+      const previous = structuredClone(run), before = f.xp();
+      const spec = {name: 'Synthetic opponent', opponents: [{name: 'Foe', skill: outcome === 'interrupted' ? 0 : 7}],
+        ...(outcome === 'interrupted' ? {enemyShotsEachLimit: 1} : {}), opponentFirst: outcome === 'loss'};
+      let fight = startFirearmFight(outcome === 'interrupted' ? 0 : 7, spec);
+      if (outcome === 'cancelled') fight = cancelFirearmFight(fight);
+      else if (['win', 'loss'].includes(outcome)) fight = resolveFirearmTurn(fight, [1, 1]);
+      else if (outcome === 'interrupted') fight = resolveFirearmTurn(resolveFirearmTurn(fight, [6, 6]), [6, 6]);
+      assert.equal(fight.status, outcome); assert.equal(store.update(state => ({...state, fight})), true);
+      f.context.syncFirearmOutcomes(run, previous);
+      const expected = outcome === 'win' ? winXp : outcome === 'loss' ? lossXp : 0;
+      assert.equal(f.xp() - before, expected, date + '/' + outcome);
+      f.context.syncFirearmOutcomes(run, previous); assert.equal(f.xp() - before, expected, 'Duplicate save');
+    }
+    assert.deepEqual(run[simKey].history.map(entry => entry.outcome), ['win', 'loss']);
+    assert.deepEqual(run.inventory, [{id: 'keep', count: 2}]); assert.deepEqual(run.path, ['1']);
+    assert.equal(f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n, 2);
+  }
+});
+
+test('Sagard outcomes award seasonal XP once while escape, withdrawal and cancellation add no reward', async t => {
+  const {createSagardState} = await import('../public/js/battlesim/engines/sagard/state.js');
+  const {startSagardFight, resolveSagardTurn, fleeSagardFight, cancelSagardFight} = await import('../public/js/battlesim/engines/sagard/core.js');
+  const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
+  const registration = source.slice(source.indexOf('const SIM_HISTORY_KEYS ='), source.indexOf('const RETIRED_SIM_HISTORY_KEYS ='));
+  const start = source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
+  const end = source.indexOf('\n  }\n\n  // Award every', start);
+  assert.ok(start > 0 && end > start);
+  for (const [date, winXp, lossXp] of [['2026-10-31T12:00:00Z', 10, 10], ['2026-11-08T12:00:00Z', 20, 5], ['2026-12-31T12:00:00Z', 20, 10]]) {
+    const f = fixture(t); f.date(date);
+    vm.runInContext(registration + '\nfunction syncSagardOutcomes(newPt,oldPt){const userId=1;' + source.slice(start, end) + '\n}', f.context);
+    const run = {path: ['1'], inventory: [{id: 'keep', count: 2}]};
+    const store = createSagardState(() => ({run, bookId: 1541, definition: {id: 1541, stateKey: 'sim1541'}, saveState: () => {}}));
+    const rules = {maxHeroHp: 20, damageByLevel: Object.fromEntries(Array.from({length: 6}, (_, level) => [level, [0, 1, 2, 3]]))};
+    for (const outcome of ['fighting', 'cancelled', 'fled', 'withdrawn', 'win', 'loss']) {
+      const previous = structuredClone(run), before = f.xp();
+      let fight = startSagardFight({level: 2, hp: outcome === 'loss' ? 1 : 20},
+        {name: 'Synthetic encounter', opponents: [{name: 'Synthetic foe', level: 2, hp: outcome === 'win' ? 1 : 10}],
+          initiative: outcome === 'loss' ? 'enemy' : 'hero', breakOffAfterFirstRound: outcome === 'withdrawn'}, rules);
+      if (outcome === 'cancelled') fight = cancelSagardFight(fight);
+      else if (outcome === 'fled') fight = fleeSagardFight(fight, 2);
+      else if (outcome === 'withdrawn') fight = resolveSagardTurn(resolveSagardTurn(resolveSagardTurn(fight, 1), 1), null, {decision: 'leave'});
+      else if (['win', 'loss'].includes(outcome)) fight = resolveSagardTurn(fight, 2);
+      assert.equal(fight.status, outcome); assert.equal(store.update(state => ({...state, fight})), true);
+      f.context.syncSagardOutcomes(run, previous);
+      const expected = outcome === 'win' ? winXp : outcome === 'loss' ? lossXp : 0;
+      assert.equal(f.xp() - before, expected, date + '/' + outcome);
+      f.context.syncSagardOutcomes(run, previous); assert.equal(f.xp() - before, expected, 'Duplicate save');
+    }
+    assert.deepEqual(run.sim1541.history.map(entry => entry.outcome), ['win', 'loss']);
+    assert.deepEqual(run.inventory, [{id: 'keep', count: 2}]); assert.deepEqual(run.path, ['1']);
+    assert.equal(f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n, 2);
+  }
+});
+
+test('Green Hydra pending recovery awards nothing and final win or declined defeat awards seasonal XP exactly once', async t => {
+  const {createSagardState} = await import('../public/js/battlesim/engines/sagard/state.js');
+  const {startSagardFight, resolveSagardTurn, healSagardFight} = await import('../public/js/battlesim/engines/sagard/core.js');
+  const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
+  const registration = source.slice(source.indexOf('const SIM_HISTORY_KEYS ='), source.indexOf('const RETIRED_SIM_HISTORY_KEYS ='));
+  const start = source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
+  const end = source.indexOf('\n  }\n\n  // Award every', start);
+  assert.ok(start > 0 && end > start);
+  for (const [date, winXp, lossXp] of [['2026-10-31T12:00:00Z', 10, 10], ['2026-11-08T12:00:00Z', 20, 5], ['2026-12-31T12:00:00Z', 20, 10]]) {
+    const f = fixture(t); f.date(date);
+    vm.runInContext(registration + '\nfunction syncHydraOutcomes(newPt,oldPt){const userId=1;' + source.slice(start, end) + '\n}', f.context);
+    const run = {path: ['1'], inventory: ['Keep']};
+    const store = createSagardState(() => ({run, bookId: 1542, definition: {id: 1542, stateKey: 'sim1542'}, saveState: () => {}}));
+    const rules = {maxHeroHp: 20, spiritLuckEnabled: true, damageByLevel: Object.fromEntries(Array.from({length: 6}, (_, level) => [level, [0, 1, 2, 3]]))};
+    const pending = () => resolveSagardTurn(startSagardFight({level: 3, hp: 1},
+      {name: 'Synthetic recovery encounter', initiative: 'enemy', opponents: [{name: 'Synthetic foe', level: 1, hp: 1}]}, rules, {spiritLuck: true}), 2);
+    const save = fight => {
+      const previous = structuredClone(run);
+      assert.equal(store.update(state => ({...state, fight})), true);
+      f.context.syncHydraOutcomes(run, previous); const awarded = f.xp();
+      f.context.syncHydraOutcomes(run, previous); assert.equal(f.xp(), awarded, 'duplicate save');
+    };
+    let fight = pending(); assert.equal(fight.phase, 'recovery'); save(fight); assert.equal(f.xp(), 0);
+    fight = healSagardFight(fight, 'spiritLuck'); save(fight); assert.equal(f.xp(), 0);
+    fight = resolveSagardTurn(fight, 2); save(fight); assert.equal(f.xp(), winXp);
+    fight = pending(); save(fight); assert.equal(f.xp(), winXp);
+    fight = resolveSagardTurn(fight, null, {decision: 'decline'}); save(fight); assert.equal(f.xp(), winXp + lossXp);
+    assert.deepEqual(run.sim1542.history.map(entry => entry.outcome), ['win', 'loss']);
+    assert.deepEqual(run.inventory, ['Keep']); assert.deepEqual(run.path, ['1']);
+    assert.equal(f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n, 2);
+  }
+});
+
 test('formation saved outcomes award seasonal XP once and include opening-shot losses but exclude checkpoints', async t => {
   const {createFormationState}=await import('../public/js/battlesim/engines/combat-command/formation-state.js');
   const {startFormationFight,beginFormationRound,resolveFormationRoll,cancelFormationFight}=

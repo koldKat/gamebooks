@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {seasonalEndTime,formatSeasonalRemaining} from '../../../public/js/seasonal-events/remaining-time.js';
+import {seasonalEndTime,seasonalStartTime,formatSeasonalRemaining} from '../../../public/js/seasonal-events/remaining-time.js';
 test('ETE ends at the first Sofia midnight after the last inclusive day, including DST',()=>{
  for(const [day,stamp]of [['2026-11-03','2026-11-03T22:00:00Z'],['2027-01-04','2027-01-04T22:00:00Z'],['2026-03-29','2026-03-29T21:00:00Z'],['2026-10-25','2026-10-25T22:00:00Z']]){
   assert.equal(seasonalEndTime({window:{end:day}}),Date.parse(stamp));
@@ -14,4 +14,10 @@ test('remaining time is compact, advances by minutes and never becomes negative'
  assert.equal(formatSeasonalRemaining(end,end-59000),'<1m');
  assert.equal(formatSeasonalRemaining(end,end),'0m');
  assert.equal(formatSeasonalRemaining(end,end+1),'0m');
+});
+test('ETA counts down to the first active Sofia midnight, including daylight-saving boundaries',()=>{
+ for(const [day,stamp]of [['2026-11-05','2026-11-04T22:00:00Z'],['2026-03-29','2026-03-28T22:00:00Z'],['2026-03-30','2026-03-29T21:00:00Z'],['2026-10-25','2026-10-24T21:00:00Z'],['2026-10-26','2026-10-25T22:00:00Z']])
+  assert.equal(seasonalStartTime({window:{start:day}}),Date.parse(stamp));
+ assert.equal(seasonalStartTime({}),null);
+ assert.equal(seasonalStartTime({window:{start:'invalid'}}),null);
 });

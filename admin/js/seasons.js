@@ -3,9 +3,13 @@ import { seasonalEvents, activeSeasonalEvents, seasonWindow, reloadSeasonalCalen
 import { setSeasonPreviewUser, seasonPreview, setSeasonPreview, applySeasonPreviewPreference, isSeasonPreviewStorageKey } from '/js/seasonal-events/preview.js';
 import { apiFetch, getToken } from '/js/core/state.js';
 import {createCursorPreviews} from '/js/seasonal-events/cursor-previews.js';
+import { loadSeasonReports } from './season-reports.js';
 let bound = false;
 let stopPreviews=()=>{};
 export async function loadSeasons() {
+  void loadSeasonReports();
+  const refresh = document.getElementById('season-payout-refresh');
+  refresh.onclick = loadSeasonReports;
   const target = document.getElementById('seasons-list'), status = document.getElementById('seasons-status');
   try {
     const sessionToken = getToken();
@@ -47,6 +51,9 @@ export async function loadSeasons() {
       document.getElementById('seasons-automatic').addEventListener('click', () => changePreview(null));
       document.getElementById('seasons-off').addEventListener('click', () => changePreview('off'));
       window.addEventListener('storage', event => { if (isSeasonPreviewStorageKey(event.key)) loadSeasons(); });
+      setInterval(() => {
+        if (!document.hidden && document.getElementById('tab-seasons').classList.contains('active')) void loadSeasonReports();
+      }, 60_000);
     }
   } catch (error) {
     stopPreviews();

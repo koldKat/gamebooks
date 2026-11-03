@@ -542,6 +542,7 @@ async function handleSetBookRating(req, res, bookId) {
   send(res, 200, { rating: rating ?? null, xpAwarded: result.xpAwarded, avgRating: result.avgRating, voteCount: result.voteCount });
   // Push every rating change: feed entries display current ratings, even without a new XP award.
   feedPush({ type: 'feed_changed', entity: 'book', action: 'rated', id: bookId });
+  if (result.gems?.diamondDelta > 0 || result.gems?.rubyDelta > 0) userBadgePush(userId);
 }
 
 async function handleGetSeriesRating(req, res, seriesId) {
@@ -565,6 +566,7 @@ async function handleSetSeriesRating(req, res, seriesId) {
   // Same reasoning as handleSetBookRating above - the feed reads the live rating,
   // so push on every change, not just the first.
   feedPush({ type: 'feed_changed', entity: 'series', action: 'rated', id: seriesId });
+  if (result.gems?.diamondDelta > 0 || result.gems?.rubyDelta > 0) userBadgePush(userId);
 }
 
 async function handleSetBookBgPref(req, res, bookId) {
