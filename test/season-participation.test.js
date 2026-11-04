@@ -100,6 +100,16 @@ test('payout reports preserve the exact recipients and pool debit after renames,
   assert.equal(report.recipients.reduce((sum, row) => sum + row.paid_gc, 0), report.paidGc);
 });
 
+test('payout reports show the most recently processed report first', t => {
+  const f = fixture(t);
+  const insert = f.db.prepare(`INSERT INTO seasonal_participation_payouts
+    (season_id,starts_on,ends_on,status,total_gc,recipients,processed_at,event_name)
+    VALUES(?,?,?,'paid',0,0,?,?)`);
+  insert.run('older-report', '2026-10-28', '2026-11-03', 100, 'Older report');
+  insert.run('newer-report', '2026-09-01', '2026-09-07', 200, 'Newer report');
+  assert.deepEqual(getSeasonPayoutReports(f.db).map(row => row.seasonId), ['newer-report', 'older-report']);
+});
+
 test('skipped payout reports distinguish eligible gold from actual zero spending', t => {
   const f = fixture(t); halloween(f); f.supply(2);
   f.settle('2026-11-04T00:00:00Z');

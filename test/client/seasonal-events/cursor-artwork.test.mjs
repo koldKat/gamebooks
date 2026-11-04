@@ -6,7 +6,7 @@ import {diyaCursorSvg} from '../../../public/js/seasonal-events/diya-artwork.js'
 import {cursorDesigns} from '../../../public/js/seasonal-events/cursor-designs.js';
 
 test('every seasonal theme contains only its mouse companion',()=>{
- assert.deepEqual(Object.keys(seasonalThemes),['halloween','diwali','christmas','new-year']);
+ assert.deepEqual(Object.keys(seasonalThemes),Object.keys(cursorDesigns));
  for(const theme of Object.values(seasonalThemes)){
   assert.equal(typeof theme.cursor,'function');assert.deepEqual(Object.keys(theme),['cursor']);
  }
@@ -17,7 +17,7 @@ test('each event has three distinct companions with their occasional actions',()
   assert.equal(designs.length,3);
   for(const design of designs){assert.ok(!ids.has(design.id));ids.add(design.id);assert.equal(design.actions.length,design.id==='zombie'?4:3);assert.equal(typeof design.create,'function');}
  }
- assert.equal(ids.size,12);
+ assert.equal(ids.size,21);
 });
 test('Santa and the diya use smooth artwork with their existing animation hooks',()=>{
  for(const svg of [santaCursorSvg,diyaCursorSvg]){assert.doesNotMatch(svg,/crispEdges/);assert.match(svg,/<path/);}

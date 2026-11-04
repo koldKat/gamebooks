@@ -4,6 +4,7 @@
 .seasonal-variant__pupils{transform:translate(var(--companion-look-x,0px),var(--companion-look-y,0px));transition:transform 220ms ease;}
 .seasonal-variant__eyes{transform-box:fill-box;transform-origin:center;transition:transform 65ms ease;}
 .seasonal-variant.is-blinking .seasonal-variant__eyes{transform:scaleY(.08);}
+.seasonal-companion.is-blinking .seasonal-variant__eyes{transform:scaleY(.08);}
 .variant-effect{opacity:0;}
 .seasonal-mummy.is-unwrapping :is(.seasonal-variant__eyes,.mummy-brows){animation:mummy-uncovered 3.4s linear both;}
 .seasonal-mummy.is-unwrapping .mummy-eye-fire{animation:mummy-fire-reveal 3.4s linear both;}

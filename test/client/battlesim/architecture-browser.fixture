@@ -91,6 +91,56 @@ for(const id of BOOK_IDS){
     const options = [...overlay.querySelectorAll('[role="option"]')];
     check(options.some(option => option.textContent.includes(rosterSeeds[id][0].name)), 'legacy roster displays installed opponent ' + id);
   }
+  if(id===1566){
+    const el=key=>document.getElementById('sim1566-'+key),run=app.currentPlaythrough(),data=()=>run.sim1566;
+    const {ENCOUNTERS,RULES}=await import('REPO/public/js/battlesim/books/1566/definition.js');
+    check(ENCOUNTERS.length===26&&RULES.chart.values.flat().length===99&&requestedRosters.has(id),'Shinte database encounters and chart');
+    run.inventory={keep:['item']};run.sim1555={keep:'other fight'};
+    const preserved=JSON.stringify([run.inventory,run.sim1555]);
+    const set=(key,value)=>{el(key).value=value;el(key).dispatchEvent(new Event('change',{bubbles:true}));};
+    const flag=(key,value)=>{el(key).checked=value;el(key).dispatchEvent(new Event('change',{bubbles:true}));};
+    const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    for(const [key,value]of Object.entries({cs:0,ds:25,pp:30,maxPP:40,sp:10,maxSP:20,agility:9,guile:9}))set(key,value);
+    set('first','player');set('zeroColumn',5);
+    const custom=el('editor');custom.querySelector('[role="combobox"]').value='Custom chart test';
+    for(const [key,value]of Object.entries({cs:20,ds:20,pp:5}))custom.querySelector('[data-stat="'+key+'"]').value=value;
+    el('start').click();check(data().fight&&!data().fight.outcome&&el('cs').disabled,'custom fight starts and locks setup');
+    set('manualTotal',2);el('attack').click();
+    check(data().fight.pending?.kind==='K'&&!el('manual').hidden&&el('attack').disabled,'K waits for manual resolution');
+    check(data().fight.playerPP===30&&data().fight.enemies[0].pp===5,'K guesses no health changes');
+    set('manualPlayerPp',28);set('manualEnemyPp',0);el('resolveK').click();
+    check(data().fight.outcome==='win'&&data().history.length===1,'manual K victory recorded');
+    module.render();check(data().history.length===1,'K result recorded once');
+    for(const preset of ENCOUNTERS){
+      set('encounter',preset.section);set('cs',25);set('ds',25);set('pp',30);set('first','enemy');
+      check(el('editor').querySelectorAll('fieldset').length===1,'printed group remains one pool '+preset.section);
+      el('start').click();
+      check(data().fight?.section===preset.section,'printed encounter starts '+preset.section);
+      check(data().fight.enemies.length===1&&data().fight.enemies[0].cs===preset.cs&&data().fight.enemies[0].ds===preset.ds,'printed opponent stats '+preset.section);
+      check(data().fight.enemies[0].pp===preset.pp-(preset.section==='408'?9:0),'printed PP and opening strike '+preset.section);
+      if(preset.section==='408')check(data().fight.next==='enemy','guile strike spent player attack');
+      const saved=JSON.stringify(data());el('close').click();button.click();check(JSON.stringify(data())===saved,'reopen preserves fight '+preset.section);
+      cancel();
+    }
+    set('encounter','84');flag('horse',true);flag('monkey',true);flag('turtle',true);set('first','enemy');
+    el('start').click();check(data().fight.receiver==='Duchess'&&data().fight.playerPP===20&&data().setup.hero.pp===30,'mare health separate');
+    set('manualTotal',7);el('attack').click();
+    check(data().fight.playerPP===17&&data().setup.hero.pp===30,'only mare takes damage');
+    const random=Math.random;try{Math.random=()=>0;el('net').click();}finally{Math.random=random;}
+    check(data().fight.netUsed&&data().fight.enemies[0].pp===27&&el('net').disabled,'one net with Monkey bonus');
+    el('turtleRecovery').click();check(data().setup.hero.pp===31&&data().setup.hero.sp===11&&data().fight.playerPP===17,'Turtle restores Tsai while mare stays injured');
+    check(el('turtleRecovery').disabled,'Turtle once per fight');
+    set('newCs',20);set('newDs',20);el('switchWeapon').click();
+    check(data().fight.next==='enemy'&&data().fight.player.cs===20&&data().fight.csModifier===6,'weapon switching costs own attack and preserves encounter bonus');
+    const saved=JSON.stringify(data());el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();
+    check(JSON.stringify(run.sim1566)===saved,'stale cancellation ignored');
+    app.setCurrentBookId(id);button.click();cancel();
+    app.state.playthroughs=[{startedAt:2,path:[1]}];app.state.activePtIndex=0;el('start').click();
+    check(!app.currentPlaythrough().sim1566,'stale controls cannot initialize another run');
+    app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();
+    check(data().history.length===1,'cancellations never award outcomes');
+    check(JSON.stringify([run.inventory,run.sim1555])===preserved,'inventory and unrelated simulator preserved');
+  }
   if(id===1555){
     const el=key=>document.getElementById('sim1555-'+key),run=app.currentPlaythrough(),data=()=>run.sim1555;
     const {ENCOUNTERS}=await import('REPO/public/js/battlesim/books/1555/definition.js');

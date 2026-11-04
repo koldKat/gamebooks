@@ -7,7 +7,15 @@
     "end": 1103,
     "day": 1031,
     "xpMultiplier": 2,
-    "xpEvents": ["death_run", "battle_run", "first_loss", "first_battle_death", "first_loss_ow", "first_battle_death_ow", "battlesim_loss"]
+    "xpEvents": [
+      "death_run",
+      "battle_run",
+      "first_loss",
+      "first_battle_death",
+      "first_loss_ow",
+      "first_battle_death_ow",
+      "battlesim_loss"
+    ]
   },
   {
     "id": "diwali",
@@ -15,13 +23,98 @@
     "description": "Festival of Lights: double XP for wins and sim battle wins.",
     "daysAround": 3,
     "dates": {
-      "2026": "2026-11-08", "2027": "2027-10-29", "2028": "2028-10-17",
-      "2029": "2029-11-05", "2030": "2030-10-26", "2031": "2031-11-14",
-      "2032": "2032-11-02", "2033": "2033-10-22", "2034": "2034-11-10"
+      "2026": "2026-11-08",
+      "2027": "2027-10-29",
+      "2028": "2028-10-17",
+      "2029": "2029-11-05",
+      "2030": "2030-10-26",
+      "2031": "2031-11-14",
+      "2032": "2032-11-02",
+      "2033": "2033-10-22",
+      "2034": "2034-11-10"
     },
-    "dateSources": ["https://www.timeanddate.com/holidays/india/diwali", "https://www.hinduplace.com/festival/diwali-dates-widget/"],
+    "dateSources": [
+      "https://www.timeanddate.com/holidays/india/diwali",
+      "https://www.hinduplace.com/festival/diwali-dates-widget/"
+    ],
     "xpMultiplier": 2,
-    "xpEvents": ["win_run", "first_win", "first_win_ow", "battlesim_win"]
+    "xpEvents": [
+      "win_run",
+      "first_win",
+      "first_win_ow",
+      "battlesim_win"
+    ]
+  },
+  {
+    "id": "thanksgiving",
+    "title": "Thanksgiving event active",
+    "description": "double XP for sharing runs, rating books and series, and creating or joining parties.",
+    "rule": {
+      "month": 11,
+      "weekday": 4,
+      "occurrence": 4
+    },
+    "daysAround": 3,
+    "xpMultiplier": 2,
+    "xpEvents": [
+      "share_run",
+      "rate_book",
+      "rate_series",
+      "create_party",
+      "join_party"
+    ]
+  },
+  {
+    "id": "st-nicholas",
+    "title": "St. Nicholas event active",
+    "description": "double XP for book contributions.",
+    "start": 1203,
+    "end": 1209,
+    "day": 1206,
+    "xpMultiplier": 2,
+    "xpEvents": [
+      "add_book",
+      "add_isbn",
+      "add_issn",
+      "add_asin",
+      "add_pages",
+      "add_authors",
+      "add_description",
+      "make_book_public",
+      "upload_cover",
+      "favorite_cover",
+      "add_book_to_series",
+      "add_series_number",
+      "add_book_to_anthology",
+      "add_anthology_order",
+      "create_series",
+      "add_series_description",
+      "make_series_public",
+      "series_open_world",
+      "book_added_by_other",
+      "series_added_by_other",
+      "pdf_available",
+      "epub_available"
+    ]
+  },
+  {
+    "id": "st-lucia",
+    "title": "St. Lucia event active",
+    "description": "double XP for discovering and visiting sections, and discovering or mapping whole books, series and anthologies.",
+    "start": 1210,
+    "end": 1216,
+    "day": 1213,
+    "xpMultiplier": 2,
+    "xpEvents": [
+      "discover_node",
+      "visit_node",
+      "discover_all",
+      "visit_all",
+      "discover_all_series",
+      "visit_all_series",
+      "discover_all_anthology",
+      "visit_all_anthology"
+    ]
   },
   {
     "id": "christmas",
@@ -31,7 +124,22 @@
     "end": 1228,
     "day": 1225,
     "xpMultiplier": 2,
-    "xpEvents": ["win_run", "first_win", "first_win_ow", "battlesim_win", "run_depth", "discover_all", "visit_all", "discover_all_series", "visit_all_series", "discover_all_anthology", "visit_all_anthology", "won_all_series", "won_all_anthology", "idle_heartbeat"]
+    "xpEvents": [
+      "win_run",
+      "first_win",
+      "first_win_ow",
+      "battlesim_win",
+      "run_depth",
+      "discover_all",
+      "visit_all",
+      "discover_all_series",
+      "visit_all_series",
+      "discover_all_anthology",
+      "visit_all_anthology",
+      "won_all_series",
+      "won_all_anthology",
+      "idle_heartbeat"
+    ]
   },
   {
     "id": "new-year",
@@ -41,6 +149,8 @@
     "end": 104,
     "day": 101,
     "xpMultiplier": 2,
-    "xpEvents": ["*"]
+    "xpEvents": [
+      "*"
+    ]
   }
 ]

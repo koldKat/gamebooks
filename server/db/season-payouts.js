@@ -46,7 +46,7 @@ function getSeasonPayoutReports(db) {
   const recipients = db.prepare(`SELECT user_id,username,qualifying_days,paid_gc
     FROM seasonal_participation_recipients WHERE season_id=? AND starts_on=?
     ORDER BY paid_gc DESC,qualifying_days DESC,username COLLATE NOCASE,user_id`);
-  return db.prepare(`SELECT * FROM seasonal_participation_payouts ORDER BY ends_on DESC,season_id`).all()
+  return db.prepare(`SELECT * FROM seasonal_participation_payouts ORDER BY processed_at DESC,ends_on DESC,season_id`).all()
     .map(row => ({
       seasonId: row.season_id, name: row.event_name || row.season_id,
       startsOn: row.starts_on, endsOn: row.ends_on, processedAt: row.processed_at,

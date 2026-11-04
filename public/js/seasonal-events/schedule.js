@@ -9,6 +9,13 @@ export function seasonalDay(date = new Date()) {
 }
 const iso = stamp => new Date(stamp).toISOString().slice(0, 10);
 export function seasonWindow(season, year) {
+  if (season.rule) {
+    const {month, weekday, occurrence} = season.rule;
+    const first = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+    const day = 1 + (weekday - first + 7) % 7 + (occurrence - 1) * 7;
+    const center = Date.UTC(year, month - 1, day), radius = season.daysAround ?? 3;
+    return {start: iso(center - radius * DAY), end: iso(center + radius * DAY), center: iso(center)};
+  }
   if (season.dates) {
     const date = season.dates[year];
     if (!date) return null;

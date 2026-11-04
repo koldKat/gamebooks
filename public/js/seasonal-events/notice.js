@@ -15,7 +15,9 @@ export function renderSeasonalNotice(events, preview = null, date = new Date(), 
   notice.replaceChildren();
   if (upcoming) {
     const line = document.createElement('div'), title = document.createElement('strong');
-    title.textContent = `Next event: ${upcoming.name || upcoming.title.replace(/ event active$/, '')}`;
+    const name = document.createElement('span'); name.className = 'seasonal-event-name';
+    name.textContent = upcoming.name || upcoming.title.replace(/ event active$/, '');
+    title.append('Next event: ', name);
     const start = seasonalStartTime(upcoming);
     if (start !== null) {
       const countdown = document.createElement('span'), label = document.createElement('span'), remaining = document.createElement('span');

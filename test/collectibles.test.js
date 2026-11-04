@@ -61,3 +61,10 @@ test('wallet failure rolls the claim back and account deletion cascades',t=>{
  db.prepare('DELETE FROM users WHERE id=1').run();assert.deepEqual(store.list(1),[]);
  assert.equal(wallet(1).rubiesBalance,undefined);
 });
+
+test('all nine new companions register during their live event and remain account scoped',t=>{
+ const {store,time}=fixture(t);
+ const groups=[['2026-11-26T12:00:00Z',['turkey','acorn','harvest-pie']],['2026-12-06T12:00:00Z',['nicholas','ribbon-gift','treat-boot']],['2026-12-13T12:00:00Z',['lucia-candle','saffron-bun','candle-crown']]];
+ for(const [date,items] of groups){time(date);for(const item of items)assert.equal(store.discover(1,item),true);assert.equal(store.discover(1,'pumpkin'),false);}
+ assert.equal(store.list(1).length,9);assert.deepEqual(store.list(2),[]);
+});

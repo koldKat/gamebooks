@@ -18,7 +18,12 @@ for(const [make,name,effects]of [[createSanta,'santa',['is-laughing','is-ringing
   check(node.style.getPropertyValue('--companion-look-x')==='-2.0px','Santa looks around');advance(1150);
  }else{
   const body=node.querySelector('.seasonal-champagne__body');check(getComputedStyle(body).animationName==='new-year-sway','popper constantly bobs');const animation=body.getAnimations()[0];animation.pause();animation.currentTime=0;const a=getComputedStyle(body).transform;animation.currentTime=1500;check(getComputedStyle(body).transform!==a,'popper visibly moves');
-  check([...node.querySelectorAll('.seasonal-champagne__bubbles rect')].every(el=>getComputedStyle(el).animationName==='new-year-bubbles'),'ambient sparkles animate');advance(4500);
+  check([...node.querySelectorAll('.seasonal-champagne__bubbles rect')].every(el=>getComputedStyle(el).animationName==='new-year-bubbles'),'ambient sparkles animate');
+  check(node.querySelector('.seasonal-variant__eyes [fill="#fffdf7"]'),'champagne has white eyes');
+  advance(3200);check(node.classList.contains('is-blinking'),'champagne blinks');
+  check(getComputedStyle(node.querySelector('.seasonal-variant__eyes')).transform!=='none','champagne blink visibly closes eyes');
+  advance(150);check(!node.classList.contains('is-blinking'),'champagne opens eyes');
+  check(node.style.getPropertyValue('--companion-look-x')==='-2.0px','champagne looks around');advance(1150);
  }
  check(node.classList.contains(effects[0]),name+' first action');
  const animated=name==='santa'?node.querySelectorAll('.seasonal-santa__ho text'):node.querySelectorAll('.seasonal-champagne__foam rect');check(animated.length===(name==='santa'?3:18),'comic words or confetti particles');
@@ -37,6 +42,6 @@ for(const [make,name,effects]of [[createSanta,'santa',['is-laughing','is-ringing
 const stopLive=createNewYearChampagne({random:()=>0});move();await delay(25);advance(69999);check(!document.querySelector('.seasonal-champagne').classList.contains('is-popping'),'live actions retain Halloween timing');advance(1);check(document.querySelector('.seasonal-champagne').classList.contains('is-popping'),'live first action at70seconds');stopLive();check(!timers.size,'live timer cleanup');
 window.setTimeout=nativeTimeout;window.clearTimeout=nativeClear;
 for(let row=0;row<2;row++){const group=document.createElement('div');group.className='samples';document.body.append(group);for(const[label,node]of snapshots.slice(row*3,row*3+3)){const sample=document.createElement('div');sample.className='sample';sample.textContent=label;node.removeAttribute('style');node.classList.remove('is-blinking');sample.append(node);group.append(sample);for(const el of node.querySelectorAll('*')){el.style.animationPlayState='paused';for(const animation of el.getAnimations())animation.currentTime=950;}}}
-document.body.dataset.test=JSON.stringify({santaBlink:true,santaLook:true,comicHo:true,bell:true,gift:true,champagneSways:true,bubbles:true,corkAndFoam:true,clinkingGlasses:true,fireworks:true,reducedMotion:true,pointer:true,cleanup:true});
+document.body.dataset.test=JSON.stringify({santaBlink:true,santaLook:true,comicHo:true,bell:true,gift:true,champagneWhiteEyes:true,champagneBlink:true,champagneLook:true,champagneSways:true,bubbles:true,corkAndFoam:true,clinkingGlasses:true,fireworks:true,reducedMotion:true,pointer:true,cleanup:true});
 </script>`;
 (async()=>{try{fs.writeFileSync(file,html);console.log(JSON.stringify(await checkBrowser({file,root,profile:path.join(root,'profile'),width:800,chromium:process.env.CHROMIUM,screenshotPath:process.env.WINTER_SCREENSHOT})));}finally{fs.rmSync(root,{recursive:true,force:true});}})().catch(error=>{console.error(error);process.exitCode=1;});

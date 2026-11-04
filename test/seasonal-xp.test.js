@@ -407,3 +407,15 @@ test('formation saved outcomes award seasonal XP once and include opening-shot l
     assert.equal(f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n,2);
   }
 });
+
+
+test('new festivals double only their agreed XP actions, including unlisted attachment rewards',()=>{
+ const groups=[
+  ['2026-11-26T12:00:00Z',['share_run','rate_book','rate_series','create_party','join_party'],['win_run','pdf_available','visit_node']],
+  ['2026-12-06T12:00:00Z',['add_book','add_description','add_isbn','add_authors','upload_cover','make_book_public','create_series','make_series_public','pdf_available','epub_available'],['share_run','win_run','idle_heartbeat']],
+  ['2026-12-13T12:00:00Z',['discover_node','visit_node','discover_all','visit_all','discover_all_series','visit_all_series','discover_all_anthology','visit_all_anthology'],['win_run','share_run','pdf_available','idle_heartbeat']]
+ ];
+ for(const [stamp,yes,no] of groups){const date=new Date(stamp);for(const event of yes)assert.equal(seasonalXpMultiplier(event,date),2,event);for(const event of no)assert.equal(seasonalXpMultiplier(event,date),1,event);}
+ const nicholas=require('../public/js/seasonal-events/calendar.json').find(e=>e.id==='st-nicholas');
+ assert.doesNotMatch(nicholas.description,/pdf|epub|attachment/i);
+});

@@ -18,4 +18,4 @@ For recovery, read [BOOK_IMPORTS.md](BOOK_IMPORTS.md), then `memory/book_import_
 
 The current import goal remains active until the whole requested batch is complete. A checkpoint or one completed book does not complete the batch.
 
-- **Git cadence:** Commit and push accumulated changes automatically during ongoing work, at most twice per Europe/Sofia calendar day and at least 12 hours after the last successful commit and push. Check the saved timestamps first. Do not commit every small change or make empty commits. This user instruction from 2026-11-03 replaces the previous requirement to wait for an explicit commit request each time.
+- **Git cadence:** Commit and push accumulated changes automatically during ongoing work, at most three times per Europe/Sofia calendar day and at least 7 hours after the last successful commit and push. Check the saved timestamps first. Do not commit every small change or make empty commits. This user instruction from 2026-11-03 replaces the previous requirement to wait for an explicit commit request each time.

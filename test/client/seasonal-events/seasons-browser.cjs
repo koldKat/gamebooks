@@ -10,7 +10,7 @@ const base=`<meta charset="utf-8"><link rel="stylesheet" href="/css/seasonal-eve
 <div id="landing-wrapper"><div id="covers-panel" class="panel"><h2>Library</h2></div><div id="feed-panel" class="panel"><div id="seasonal-event-notice" class="seasonal-event-notice" hidden></div><h2>Activity feed</h2></div><div id="landing-right" class="panel"><h2>Community</h2></div></div><input id="seasonal-events-cb" type="checkbox" hidden>`;
 const captureErrors=`addEventListener('error',e=>document.body.dataset.failure=e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=String(e.reason));`;
 const common=`const nativeMedia=matchMedia.bind(window);window.matchMedia=q=>q==='(any-pointer: fine)'?{matches:true,addEventListener(){},removeEventListener(){}}:nativeMedia(q);`;
-const main=base+`<iframe id="admin" src="/admin-test"></iframe><iframe id="other" src="/other"></iframe><script>${captureErrors}</script><script type="module">
+const main=base+`<iframe id="admin" src="/admin-embed"></iframe><iframe id="other" src="/other"></iframe><script>${captureErrors}</script><script type="module">
 ${common}
 localStorage.setItem('gamebook_auth_token','test-admin');localStorage.setItem('seasonal-events','1');localStorage.removeItem('seasonal-preview:1');
 const {initSeasonalEvents}=await import('/js/seasonal-events/index.js');initSeasonalEvents()();
@@ -21,7 +21,7 @@ const baseTime=Date.now();let clock=Date.parse('2026-10-30T12:00:00Z');
 const stop=initSeasonalEvents({now:()=>new Date(clock+Date.now()-baseTime),random:()=>0});
 const delay=ms=>new Promise(r=>setTimeout(r,ms)),check=(ok,msg)=>{if(!ok)throw Error(msg)};
 const until=async fn=>{for(let i=0;i<80;i++){if(fn())return;await delay(50)}throw Error('Timed out waiting for browser state')};
-const classes={halloween:'.seasonal-pumpkin',diwali:'.seasonal-diya',christmas:'.seasonal-santa','new-year':'.seasonal-champagne'};
+const classes={halloween:'.seasonal-pumpkin',diwali:'.seasonal-diya',christmas:'.seasonal-santa','new-year':'.seasonal-champagne',thanksgiving:'.seasonal-turkey','st-nicholas':'.seasonal-nicholas','st-lucia':'.seasonal-lucia-candle'};
 const active=season=>Boolean(document.querySelector(classes[season]));
 const none=()=>!document.querySelector('.seasonal-pumpkin,.seasonal-diya,.seasonal-companion');
 const noBackground=()=>!document.querySelector('.seasonal-background,.seasonal-background__icon,.seasonal-background__web');
@@ -35,14 +35,14 @@ check(initialEte?.includes('(ETE:'),'live event shows its remaining time');clock
 check(document.querySelector('#seasonal-event-notice strong').textContent.startsWith('Halloween event active (ETE:')&&document.querySelector('#seasonal-event-notice strong').textContent.endsWith('):'),'ETE belongs in the event heading before the colon');
 check(getComputedStyle(document.querySelector('.seasonal-event-ete-label')).color==='rgb(251, 191, 36)','ETE label has an accent color');
 check(document.querySelector('.seasonal-event-ete').textContent!==initialEte,'remaining time advances without recreating the notice');
-for(const season of ['diwali','christmas','new-year']){
+for(const season of ['diwali','christmas','new-year','thanksgiving','st-nicholas','st-lucia']){
  await click('[data-season-test="'+season+'"]');await until(()=>active(season));await delay(60);
  check(seasonPreview()===season,'admin preview reaches main app '+season);
  document.dispatchEvent(new PointerEvent('pointermove',{clientX:120,clientY:120,pointerType:'mouse'}));await delay(50);
  const cursor=document.querySelector(classes[season]);check(!cursor.hidden&&getComputedStyle(cursor).pointerEvents==='none','mouse companion follows pointer without intercepting input '+season);
  check(noBackground(),'no background objects for '+season);
  check(other.contentDocument.querySelector('.seasonal-pumpkin')&&other.contentWindow.readPreview()===null,'other account retains its live Halloween companion');
- document.dispatchEvent(new Event('visibilitychange'));await delay(50);check(document.querySelector(classes[season])===cursor,'tab return preserves current companion');
+ document.dispatchEvent(new Event('visibilitychange'));await delay(50);check(document.querySelector(classes[season])===cursor,'tab return preserves current companion '+season+' preview='+seasonPreview());
 }
 check(document.getElementById('seasonal-event-notice').textContent.includes('preview (only you)'),'private preview labelled');
 await click('#seasons-automatic');await until(()=>active('halloween'));
@@ -59,7 +59,7 @@ clock+=60000;document.dispatchEvent(new Event('visibilitychange'));
 check(document.querySelector('#seasonal-event-notice strong')===etaNode&&document.querySelector('.seasonal-event-eta').textContent!==initialEta,'ETA advances without rebuilding the notice');
 clock=Date.parse('2026-11-04T21:59:59.750Z')-(Date.now()-baseTime);document.dispatchEvent(new Event('visibilitychange'));check(none(),'before automatic event start');await delay(600);check(active('diwali')&&noBackground(),'Diwali starts at midnight with only the mouse companion');
 check(document.getElementById('seasonal-event-notice').dataset.mode==='active'&&!document.querySelector('.seasonal-event-eta'),'next notice becomes the live event');
-clock=Date.parse('2026-11-11T21:59:59.750Z')-(Date.now()-baseTime);document.dispatchEvent(new Event('visibilitychange'));await delay(600);check(none()&&nextNotice('Christmas'),'Diwali ends with next Christmas notice');
+clock=Date.parse('2026-11-11T21:59:59.750Z')-(Date.now()-baseTime);document.dispatchEvent(new Event('visibilitychange'));await delay(600);check(none()&&nextNotice('Thanksgiving'),'Diwali ends with next Thanksgiving notice');
 for(const[stamp,season]of [['2026-12-21T21:59:59.750Z','christmas'],['2026-12-28T21:59:59.750Z','new-year'],['2027-01-04T21:59:59.750Z',null]]){
  clock=Date.parse(stamp)-(Date.now()-baseTime);document.dispatchEvent(new Event('visibilitychange'));await delay(600);check(season?active(season):none(),'winter midnight transition '+stamp);check(noBackground(),'winter calendar changes never add background objects');
 }
@@ -75,7 +75,31 @@ const other=base+`<script type="module">${common}
 const {initSeasonalEvents}=await import('/js/seasonal-events/index.js');initSeasonalEvents()();
 const {setSeasonPreviewUser,seasonPreview}=await import('/js/seasonal-events/preview.js');setSeasonPreviewUser({id:2,isAdmin:true});window.readPreview=seasonPreview;
 initSeasonalEvents({now:()=>new Date('2026-10-30T12:00:00Z'),random:()=>0});document.body.dataset.ready='1';</script>`;
-const admin=`<meta charset="utf-8"><link rel="stylesheet" href="/css/admin-seasons.css"><link rel="stylesheet" href="/css/seasonal-events.css"><style>${adminStyle}</style>${adminMarkup}<script type="module">import{loadSeasons}from'/admin/js/seasons.js';document.getElementById('tab-seasons').classList.add('active');if(!localStorage.getItem('gamebook_auth_token'))localStorage.setItem('gamebook_auth_token','test-admin');await loadSeasons();if(document.querySelector('.season-samples'))throw Error('Retired sprite galleries are still visible');if(document.querySelectorAll('[data-cursor-preview]').length!==12)throw Error('Each event needs three live companion previews');await new Promise(r=>setTimeout(r,200));const previewRoots=()=>document.querySelectorAll('.season-cursor-preview > *').length;if(!previewRoots())throw Error('Visible companion previews did not start');if(!document.getAnimations().length)throw Error('Admin companion previews are not animated');const firstGallery=document.querySelector('.season-cursor-gallery');firstGallery.style.display='none';await new Promise(r=>setTimeout(r,100));if(firstGallery.querySelector('.season-cursor-preview > *'))throw Error('Offscreen previews did not stop');firstGallery.style.display='';await new Promise(r=>setTimeout(r,100));let previewHidden=true;Object.defineProperty(document,'hidden',{configurable:true,get:()=>previewHidden});document.dispatchEvent(new Event('visibilitychange'));if(previewRoots())throw Error('Hidden admin tab retains running companions');previewHidden=false;document.dispatchEvent(new Event('visibilitychange'));if(!previewRoots())throw Error('Visible admin tab did not resume previews');if(getComputedStyle(document.getElementById('seasons-list')).gridTemplateColumns.split(' ').length!==(innerWidth>680?2:1))throw Error('Season cards need two columns on desktop and one on narrow screens');if(${Boolean(process.env.SEASONS_FOCUS_NEW_YEAR)})document.querySelector('[data-season-test="new-year"]').closest('.season-card').scrollIntoView({block:'center'});document.body.dataset.test=JSON.stringify({adminSeasons:true,cards:document.querySelectorAll('.season-card').length,spriteGalleries:0,liveCompanionPreviews:12,hiddenPreviewsPaused:true,offscreenPreviewsPaused:true});</script>`;
+const admin=`<meta charset="utf-8"><link rel="stylesheet" href="/css/admin-seasons.css"><link rel="stylesheet" href="/css/seasonal-events.css"><style>${adminStyle}</style>${adminMarkup}<script type="module">import{loadSeasons}from'/admin/js/seasons.js';document.getElementById('tab-seasons').classList.add('active');if(!localStorage.getItem('gamebook_auth_token'))localStorage.setItem('gamebook_auth_token','test-admin');await loadSeasons();if(document.querySelector('.season-samples'))throw Error('Retired sprite galleries are still visible');if(document.querySelectorAll('[data-cursor-preview]').length!==21)throw Error('Each event needs three live companion previews');await new Promise(r=>setTimeout(r,200));const previewRoots=()=>document.querySelectorAll('.season-cursor-preview > *').length;if(!previewRoots())throw Error('Visible companion previews did not start');if(!document.getAnimations().length)throw Error('Admin companion previews are not animated');const firstGallery=document.querySelector('.season-cursor-gallery');firstGallery.style.display='none';await new Promise(r=>setTimeout(r,100));if(firstGallery.querySelector('.season-cursor-preview > *'))throw Error('Offscreen previews did not stop');firstGallery.style.display='';await new Promise(r=>setTimeout(r,100));let previewHidden=true;Object.defineProperty(document,'hidden',{configurable:true,get:()=>previewHidden});document.dispatchEvent(new Event('visibilitychange'));if(previewRoots())throw Error('Hidden admin tab retains running companions');previewHidden=false;document.dispatchEvent(new Event('visibilitychange'));if(!previewRoots())throw Error('Visible admin tab did not resume previews');if(getComputedStyle(document.getElementById('seasons-list')).gridTemplateColumns.split(' ').length!==(innerWidth>680?2:1))throw Error('Season cards need two columns on desktop and one on narrow screens');if(${Boolean(process.env.SEASONS_FOCUS_NEW_YEAR)})document.querySelector('[data-season-test="new-year"]').closest('.season-card').scrollIntoView({block:'center'});document.body.dataset.test=JSON.stringify({adminSeasons:true,cards:document.querySelectorAll('.season-card').length,spriteGalleries:0,liveCompanionPreviews:21,hiddenPreviewsPaused:true,offscreenPreviewsPaused:true});</script>`;
+const embeddedAdmin=admin.replace('<script type="module">',
+  '<div id="confirm-overlay"><div id="confirm-dialog"><p id="confirm-message"></p><button id="confirm-ok"></button><button id="confirm-cancel"></button></div></div><script type="module">');
+const adminRegression=admin.replace('<script type="module">',
+  '<div id="confirm-overlay"><div id="confirm-dialog"><p id="confirm-message"></p><button id="confirm-ok"></button><button id="confirm-cancel"></button></div></div><script type="module">')
+  .replace('document.body.dataset.test=JSON.stringify({adminSeasons:true', `
+const nativeFetch=window.fetch;
+for(const failedPath of ['/api/profile','/api/prefs']){
+  window.fetch=(url,options)=>String(url)===failedPath?Promise.resolve(new Response('{}',{status:401})):nativeFetch(url,options);
+  await loadSeasons();
+  if(document.querySelectorAll('.season-card').length!==7||document.querySelectorAll('[data-cursor-preview]').length!==21)throw Error('Session failure erased calendar cards: '+failedPath);
+  if([...document.querySelectorAll('[data-season-test],#seasons-automatic,#seasons-off')].some(button=>!button.disabled))throw Error('Unavailable preview controls must be disabled');
+}
+window.fetch=nativeFetch;await loadSeasons();
+const {loadSeasonReports}=await import('/admin/js/season-reports.js');
+const report=(id,processedAt,endsOn)=>({seasonId:id,name:id,startsOn:'2026-10-01',endsOn,processedAt,paidGc:0,eligibleGc:0,status:'paid',recipientCount:0,recipients:[]});
+window.fetch=(url,options)=>String(url)==='/api/admin/seasons/payouts'?Promise.resolve(new Response(JSON.stringify({reports:[report('older',100,'2026-11-03'),report('newer',200,'2026-10-01')]}))):nativeFetch(url,options);
+await loadSeasonReports();window.fetch=nativeFetch;
+if(!document.querySelector('.season-payout-report').dataset.report.startsWith('newer:'))throw Error('Report order must use newest processed date');
+const notice=document.createElement('div');notice.id='seasonal-event-notice';notice.className='seasonal-event-notice';document.body.append(notice);
+const {renderSeasonalNotice}=await import('/js/seasonal-events/notice.js');
+renderSeasonalNotice([],null,new Date('2026-11-04T12:00:00Z'),{id:'diwali',name:'Diwali',title:'Diwali event active',window:{start:'2026-11-05'}});
+const colors=[notice.querySelector('strong'),notice.querySelector('.seasonal-event-name'),notice.querySelector('.seasonal-event-eta-label'),notice.querySelector('[data-season-start]')].map(node=>getComputedStyle(node).color);
+if(new Set(colors).size!==4)throw Error('Next-event label, name, ETA label and countdown need distinct colors');
+document.body.dataset.test=JSON.stringify({profileFailureKeepsCards:true,prefsFailureKeepsCards:true,reportsNewestFirst:true,noticeColorsDistinct:true,adminSeasons:true`);
 let accountPrefs={seasonPreview:'automatic'};
 let calendarOverride=null;
 const server=http.createServer((req,res)=>{
@@ -89,7 +113,7 @@ const server=http.createServer((req,res)=>{
     return res.end(JSON.stringify(accountPrefs));
   }
   if(req.url==='/api/profile'){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify({id:1,isAdmin:true}));}
-  if(['/', '/other','/admin-test'].includes(req.url)){if(req.url==='/'){accountPrefs={seasonPreview:'automatic'};calendarOverride=null;}res.setHeader('Content-Type','text/html');return res.end(req.url==='/'?main:req.url==='/other'?other:admin);}
+  if(['/', '/other','/admin-test','/admin-embed'].includes(req.url)){if(req.url==='/'){accountPrefs={seasonPreview:'automatic'};calendarOverride=null;}res.setHeader('Content-Type','text/html');return res.end(req.url==='/'?main:req.url==='/other'?other:req.url==='/admin-embed'?embeddedAdmin:adminRegression);}
   const filename=path.join(project,req.url.startsWith('/admin/')?'':'public',req.url);
   if(!filename.startsWith(project+path.sep)){res.writeHead(403);return res.end();}
   res.setHeader('Content-Type',filename.endsWith('.js')?'text/javascript':filename.endsWith('.json')?'application/json':filename.endsWith('.css')?'text/css':'text/plain');
@@ -103,5 +127,5 @@ const server=http.createServer((req,res)=>{
   }
   calendarOverride=null;
   const adminResult=await checkBrowser({url:'http://127.0.0.1:'+server.address().port+'/admin-test',root,profile:path.join(root,'profile-admin'),width:1100,chromium:process.env.CHROMIUM,screenshotPath:process.env.SEASONS_SCREENSHOT_PREFIX?process.env.SEASONS_SCREENSHOT_PREFIX+'-admin.jpg':undefined});
-  if(adminResult.cards!==4)throw Error('Admin did not render both seasonal cards');console.log(JSON.stringify(adminResult));
+  if(adminResult.cards!==7)throw Error('Admin did not render both seasonal cards');console.log(JSON.stringify(adminResult));
 }finally{await new Promise(r=>server.close(r));fs.rmSync(root,{recursive:true,force:true})}})().catch(error=>{console.error(error);process.exitCode=1});

@@ -18,7 +18,8 @@ export async function loadSeasonReports() {
       target.append(element('p', 'No completed event payouts yet. Reports appear automatically after an event ends.', 'muted'));
       return;
     }
-    for (const report of reports) {
+    for (const report of [...reports].sort((a, b) => b.processedAt - a.processedAt
+      || b.endsOn.localeCompare(a.endsOn) || a.seasonId.localeCompare(b.seasonId))) {
       const details = element('details', undefined, 'season-payout-report');
       details.dataset.report = `${report.seasonId}:${report.startsOn}`;
       details.open = expanded.has(details.dataset.report);

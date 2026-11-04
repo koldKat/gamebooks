@@ -241,6 +241,8 @@ Desktop and mobile load simulator modules and translations lazily. Launcher regi
 
 Shared engines accept declarative rules rather than branching on book IDs. Panels own DOM and lifecycle; state and combat modules receive live application context through callbacks. Pending actions must reject stale account, book, or run contexts.
 
+The Shinté engine resolves separate CS-versus-DS attacks through database-backed combat charts. Encounter adapters supply initiative, modifiers and the recipient of damage. Undefined chart results wait for explicit manual resolution without advancing the turn.
+
 Saved fights retain their rule version, turn, participants, resources, pending decisions, and history. Rendering does not migrate or reset them. Each completed outcome is recorded once; canceled or incomplete encounters must not be reported as victories.
 
 Custom encounters use the common opponent editor. Missing or derived source attributes remain explicitly unavailable until the appropriate engine resolves them; setup must not invent substitute values. Ordinary custom fights do not require a preset.

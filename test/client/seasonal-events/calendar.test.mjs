@@ -66,9 +66,9 @@ test('midnight scheduling follows Sofia daylight-saving changes', () => {
 test('the next event uses activation windows, moving dates and the next year', () => {
   const next = nextSeasonalEvent(new Date('2026-11-03T22:00:00Z'));
   assert.equal(next.id, 'diwali'); assert.equal(next.window.start, '2026-11-05');
-  assert.equal(nextSeasonalEvent(new Date('2026-11-11T22:00:00Z')).id, 'christmas');
+  assert.equal(nextSeasonalEvent(new Date('2026-11-11T22:00:00Z')).id, 'thanksgiving');
   assert.equal(nextSeasonalEvent(new Date('2027-01-04T22:00:00Z')).id, 'diwali');
-  assert.equal(nextSeasonalEvent(new Date('2034-11-14T22:00:00Z')).id, 'christmas');
+  assert.equal(nextSeasonalEvent(new Date('2034-11-14T22:00:00Z')).id, 'thanksgiving');
   const winter = seasonalEvents.filter(e => e.id === 'new-year');
   assert.equal(nextSeason(winter, new Date('2027-01-05T12:00:00Z')).window.start, '2027-12-29');
 });
@@ -81,4 +81,30 @@ test('new calendar entries participate without event-specific code or a fixed ye
   assert.equal(nextSeason([...seasonalEvents, added], new Date('2026-11-12T12:00:00Z')).id, 'new-event');
   assert.equal(nextSeason([], new Date()), null);
   assert.equal(nextSeason([future], new Date('2039-01-05T12:00:00Z')), null);
+});
+
+
+test('Thanksgiving follows the fourth Thursday forever, with three days on either side', () => {
+  const season=seasonalEvents.find(e=>e.id==='thanksgiving');
+  for(const [year,day] of [[2026,26],[2027,25],[2028,23],[2029,22],[2030,28]]) {
+    const window=seasonWindow(season,year);
+    assert.equal(window.center,`${year}-11-${day}`);
+    const center=Date.parse(window.center+'T12:00:00Z');
+    for(let offset=-4;offset<=4;offset++)assert.equal(activeSeasonalEvents(new Date(center+offset*86400000)).some(e=>e.id===season.id),Math.abs(offset)<=3);
+  }
+  for(const year of [2040,2100,2200]) {
+    const center=new Date(seasonWindow(season,year).center+'T12:00:00Z');
+    assert.equal(center.getUTCDay(),4);assert.ok(center.getUTCDate()>=22&&center.getUTCDate()<=28);
+  }
+});
+test('St. Nicholas and St. Lucia hand over at Sofia midnight without overlap',()=>{
+  for(const year of [2026,2027,2050]) {
+    for(const [id,start,end,center] of [['st-nicholas','12-03','12-09','12-06'],['st-lucia','12-10','12-16','12-13']])
+      assert.deepEqual(seasonWindow(seasonalEvents.find(e=>e.id===id),year),{start:year+'-'+start,end:year+'-'+end,center:year+'-'+center});
+    assert.equal(activeSeasonalEvent(new Date(year+'-12-02T21:59:59Z')),null);
+    assert.equal(activeSeasonalEvent(new Date(year+'-12-02T22:00:00Z')).id,'st-nicholas');
+    assert.equal(activeSeasonalEvent(new Date(year+'-12-09T21:59:59Z')).id,'st-nicholas');
+    assert.equal(activeSeasonalEvent(new Date(year+'-12-09T22:00:00Z')).id,'st-lucia');
+    assert.equal(activeSeasonalEvent(new Date(year+'-12-16T22:00:00Z')),null);
+  }
 });

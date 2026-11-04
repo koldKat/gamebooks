@@ -1,6 +1,23 @@
 {
-  "pumpkin": "halloween", "mummy": "halloween", "zombie": "halloween",
-  "diya": "diwali", "lotus": "diwali", "lantern": "diwali",
-  "santa": "christmas", "snowman": "christmas", "reindeer": "christmas",
-  "champagne": "new-year", "partyhat": "new-year", "star": "new-year"
+  "pumpkin": "halloween",
+  "mummy": "halloween",
+  "zombie": "halloween",
+  "diya": "diwali",
+  "lotus": "diwali",
+  "lantern": "diwali",
+  "santa": "christmas",
+  "snowman": "christmas",
+  "reindeer": "christmas",
+  "champagne": "new-year",
+  "partyhat": "new-year",
+  "star": "new-year",
+  "turkey": "thanksgiving",
+  "acorn": "thanksgiving",
+  "harvest-pie": "thanksgiving",
+  "nicholas": "st-nicholas",
+  "ribbon-gift": "st-nicholas",
+  "treat-boot": "st-nicholas",
+  "lucia-candle": "st-lucia",
+  "saffron-bun": "st-lucia",
+  "candle-crown": "st-lucia"
 }

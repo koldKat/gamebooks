@@ -54,7 +54,7 @@
   .seasonal-santa__ho text,.seasonal-santa__bell,.seasonal-santa__gift,.seasonal-champagne__foam > *,.seasonal-champagne__toast,.seasonal-champagne__fireworks > g,.seasonal-champagne__bubbles { opacity:0; }
 }
 @media print { .seasonal-companion { display:none; } }
-.seasonal-event-notice[data-season="christmas"] { background:#1b2923;border-color:#546c57;border-left-color:#b67872; }
+.seasonal-event-notice[data-season="christmas"] { background:rgb(27 41 35 / 50%);border-color:#546c57;border-left-color:#b67872; }
 .seasonal-event-notice[data-season="christmas"] strong { color:#dfb8a1; }
-.seasonal-event-notice[data-season="new-year"] { background:#202737;border-color:#566784;border-left-color:#c5a963; }
+.seasonal-event-notice[data-season="new-year"] { background:rgb(32 39 55 / 50%);border-color:#566784;border-left-color:#c5a963; }
 .seasonal-event-notice[data-season="new-year"] strong { color:#e1c890; }

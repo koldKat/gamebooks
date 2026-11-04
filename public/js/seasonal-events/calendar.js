@@ -12,6 +12,9 @@ export async function reloadSeasonalCalendar() {
     || (event.dates ? Object.entries(event.dates).some(([year, date]) =>
       !/^\d{4}$/.test(year) || !new RegExp(`^${year}-\\d{2}-\\d{2}$`).test(date)
       || !Number.isFinite(Date.parse(date + 'T00:00:00Z')))
+      : event.rule ? !Number.isInteger(event.rule.month) || event.rule.month < 1 || event.rule.month > 12
+        || !Number.isInteger(event.rule.weekday) || event.rule.weekday < 0 || event.rule.weekday > 6
+        || !Number.isInteger(event.rule.occurrence) || event.rule.occurrence < 1 || event.rule.occurrence > 4
       : !Number.isInteger(event.start) || !Number.isInteger(event.end)
         || event.start < 101 || event.start > 1231 || event.end < 101 || event.end > 1231))) {
     throw new Error('Invalid seasonal calendar');

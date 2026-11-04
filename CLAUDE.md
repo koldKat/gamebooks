@@ -6,7 +6,7 @@ Use American English for app copy, announcements and communication. Preserve the
 
 ## Git commits and pushes
 
-Commit and push accumulated changes automatically during ongoing work, no more than twice per Europe/Sofia calendar day and at least 12 hours after the last successful commit and push. Check the saved timestamps before doing so. Do not make empty commits or commit each small change. The user authorized this standing cadence on 2026-11-03; it replaces the earlier instruction to wait for an explicit request every time.
+Commit and push accumulated changes automatically during ongoing work, no more than three times per Europe/Sofia calendar day and at least 7 hours after the last successful commit and push. Check the saved timestamps before doing so. Do not make empty commits or commit each small change. The user authorized this standing cadence on 2026-11-03; it replaces the earlier instruction to wait for an explicit request every time.
 
 ---
 

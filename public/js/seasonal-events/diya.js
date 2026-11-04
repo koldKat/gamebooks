@@ -1,90 +1,10 @@
-// A small Diwali lamp follows the mouse, with a gentle motion-aware flame.
-import { diyaCursorSvg } from './diya-artwork.js';
-import { cursorPosition } from './cursor-position.js';
-export function createDiya({ random = Math.random, preview = false, host = null } = {}) {
-  const lamp = document.createElement('div');
-  lamp.className = 'seasonal-diya'; lamp.hidden = !host;
-  lamp.setAttribute('aria-hidden', 'true');
-  lamp.innerHTML = `<svg viewBox="0 0 48 48" focusable="false">${diyaCursorSvg}</svg>`;
-  (host||document.body).append(lamp);
-  const motion = matchMedia('(prefers-reduced-motion: reduce)');
-  const effects = [
-    { name:'is-flaring', delay:70000, spread:60000, duration:1800, previewDelay:4500 },
-    { name:'is-sparking', delay:90000, spread:70000, duration:2400, previewDelay:10000 },
-    { name:'is-smoking', delay:120000, spread:90000, duration:3000, previewDelay:16000 },
-  ];
-  const previewPending = new Set(preview ? effects.map(effect => effect.name) : []);
-  const timers = new Set();
-  let frame, point, endEffect, currentEffect;
-  const animate = () => !motion.matches;
-  function clearAnimation() {
-    for (const timer of timers) clearTimeout(timer);
-    timers.clear(); clearTimeout(endEffect);
-    lamp.classList.remove(...effects.map(effect => effect.name));
-    currentEffect = null;
-  }
-  function schedule(effect) {
-    const timer = setTimeout(() => {
-      timers.delete(timer);
-      if (lamp.hidden || !animate()) return;
-      if (!currentEffect) {
-        previewPending.delete(effect.name);
-        currentEffect = effect.name;
-        lamp.classList.add(currentEffect);
-        endEffect = setTimeout(() => {
-          lamp.classList.remove(effect.name);
-          currentEffect = null;
-        }, effect.duration);
-      }
-      schedule(effect);
-    }, previewPending.has(effect.name) ? effect.previewDelay + random() * 2000
-      : host ? 20000 + random() * 5000 : effect.delay + random() * effect.spread);
-    timers.add(timer);
-  }
-  function updateAnimation() {
-    clearAnimation();
-    if (!lamp.hidden && animate()) effects.forEach(schedule);
-  }
-  function hide() {
-    lamp.hidden = true; cancelAnimationFrame(frame); frame = null;
-    clearAnimation();
-  }
-  function move(event) {
-    if (event.pointerType !== 'mouse' || document.hidden || document.pointerLockElement) return hide();
-    point = { x:event.clientX, y:event.clientY };
-    if (frame != null) return;
-    frame = requestAnimationFrame(() => {
-      frame = null;
-      const style = getComputedStyle(lamp);
-      const { x, y } = cursorPosition(point, parseFloat(style.width) || 32, parseFloat(style.height) || 32, innerWidth, innerHeight);
-      lamp.style.transform = `translate3d(${Math.max(0,x)}px, ${Math.max(0,y)}px, 0)`;
-      if (lamp.hidden) { lamp.hidden = false; updateAnimation(); }
-    });
-  }
-  function down(event) { if (event.pointerType !== 'mouse') hide(); }
-  let lastMotion = animate();
-  function motionChanged() {
-    const next = animate();
-    if (next !== lastMotion) { lastMotion = next; updateAnimation(); }
-  }
-  const prefsObserver = new MutationObserver(motionChanged);
-  prefsObserver.observe(document.body, { attributes:true, attributeFilter:['class'] });
-  motion.addEventListener('change', motionChanged);
-  if(!host){
-  document.addEventListener('pointermove', move, { passive:true });
-  document.addEventListener('pointerdown', down, { passive:true });
-  document.documentElement.addEventListener('pointerleave', hide);
-  for (const name of ['blur','resize']) window.addEventListener(name, hide);
-  for (const name of ['visibilitychange','pointerlockchange']) document.addEventListener(name, hide);
-  }else updateAnimation();
-  const dispose = () => {
-    hide(); lamp.remove(); prefsObserver.disconnect();
-    motion.removeEventListener('change', motionChanged);
-    document.removeEventListener('pointermove', move);
-    document.removeEventListener('pointerdown', down);
-    document.documentElement.removeEventListener('pointerleave', hide);
-    for (const name of ['blur','resize']) window.removeEventListener(name, hide);
-    for (const name of ['visibilitychange','pointerlockchange']) document.removeEventListener(name, hide);
-  };
-  return Object.assign(dispose,{node:lamp,move,hide});
+// The lamp shares the face, action timers and complete cleanup used by other companions.
+import {diyaCursorSvg} from './diya-artwork.js';
+import {createCursorCompanion} from './cursor-companion.js';
+export function createDiya(options={}) {
+  return createCursorCompanion({...options,name:'diya',svg:diyaCursorSvg,face:true,actions:[
+    {name:'is-flaring',delay:70000,spread:60000,duration:1800,previewDelay:4500},
+    {name:'is-sparking',delay:90000,spread:70000,duration:2400,previewDelay:10000},
+    {name:'is-smoking',delay:120000,spread:90000,duration:3000,previewDelay:16000},
+  ]});
 }

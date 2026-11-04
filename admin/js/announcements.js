@@ -135,6 +135,7 @@ function renderAnnouncements() {
   const query = document.getElementById('announcements-search').value.trim();
   const rows = announcementRows.filter(row => !query || matchesQuery(row.title,query) || matchesQuery(row.body,query));
   document.getElementById('announcements-meta').textContent = `${rows.length} of ${announcementRows.length} announcements`;
+  document.getElementById('ann-drafts-section').hidden = !rows.some(row => row.is_draft === 1);
   for (const [key, draft, target] of [['ann-drafts',1,'ann-drafts-list'],['ann-published',0,'ann-published-list']]) {
     const list = document.getElementById(target);
     renderPaged(key, rows.filter(row => row.is_draft === draft).sort((a,b) => (b.pinned||0)-(a.pinned||0) || (b.published_at||b.created_at)-(a.published_at||a.created_at) || b.id-a.id), page => {

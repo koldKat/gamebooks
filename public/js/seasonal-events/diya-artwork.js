@@ -9,5 +9,7 @@ export const diyaCursorSvg=`
 <path d="M10 26q14-6 28 0M13 31q11 5 22 0" fill="none" stroke="#ffd17a" stroke-width="1" stroke-linecap="round"/>
 <path d="M23 29q4-3 1-7" fill="none" stroke="#ffdf97" stroke-width="1.8" stroke-linecap="round"/>
 <path d="m14 36 3 3 3-2 4 4 4-4 3 2 3-3m-15 5 5 2 5-2" fill="none" stroke="#70371d" stroke-width=".8" stroke-linejoin="round"/>
+<g class="seasonal-variant__eyes"><path d="M12 36q4-5 8 0-4 5-8 0Zm16 0q4-5 8 0-4 5-8 0Z" fill="#fffdf7" stroke="#713b20" stroke-width="1"/><g class="seasonal-variant__pupils"><ellipse cx="16" cy="36" rx="1.2" ry="2" fill="#302a27"/><ellipse cx="32" cy="36" rx="1.2" ry="2" fill="#302a27"/></g></g>
+<path d="M21 41q3 2 6 0" fill="none" stroke="#713b20" stroke-width="1.2" stroke-linecap="round"/>
 <g class="seasonal-diya__embers" fill="#ffe094"><circle cx="21" cy="11" r="1.4"/><circle cx="26" cy="14" r="1"/><circle cx="18" cy="15" r="1"/></g>
 <g class="seasonal-diya__smoke" fill="none" stroke="#c5b69c" stroke-width="1.5" stroke-linecap="round"><path d="M23 20q-7-4 0-8t-1-8"/><path d="M26 18q6-4 0-8t2-7"/></g>`;

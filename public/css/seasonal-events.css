@@ -1,5 +1,6 @@
 @import url('./winter-events.css');
 @import url('./cursor-variants.css');
+@import url('./late-autumn-companions.css');
 /* Cursor companions stay below hover previews (9999) and shared tooltips (10001). */
 .seasonal-pumpkin {
   position: fixed;
@@ -69,7 +70,7 @@
   border: 1.5px solid #6f5485;
   border-left: 3px solid #d58b48;
   border-radius: 7px;
-  background: #191b2b;
+  background: rgb(25 27 43 / 50%);
   color: #d9d7e7;
   font-size: .85rem;
   line-height: 1.45;
@@ -82,8 +83,12 @@
 .seasonal-event-battle-death { color: #d97706; font-weight: 600; }
 .seasonal-event-win { color: #d7b36c; font-weight: 600; }
 .seasonal-event-sim-win { color: #8fb5a3; font-weight: 600; }
-.seasonal-event-notice[data-season="diwali"] { background:#231f1a; border-color:#735e3f; border-left-color:#c9a65e; }
+.seasonal-event-notice[data-season="diwali"] { background:rgb(35 31 26 / 50%); border-color:#735e3f; border-left-color:#c9a65e; }
 .seasonal-event-notice[data-season="diwali"] strong { color:#dfc18a; }
+.seasonal-event-notice[data-mode="upcoming"] strong { color:#aeb8c7; }
+.seasonal-event-notice[data-mode="upcoming"] .seasonal-event-name { color:#9fc9cf; }
+.seasonal-event-notice[data-mode="upcoming"] .seasonal-event-eta { color:#aeb8c7; opacity:1; }
+.seasonal-event-notice[data-mode="upcoming"] [data-season-start] { color:#d2d9e2; }
 .seasonal-preview-hint { font-size: .78rem; color: #a9a4b3; margin-top: .25rem; }
 .seasonal-diya { position: fixed; inset: 0 auto auto 0; width: 32px; height: 32px;
   z-index: 9998; pointer-events: none; user-select: none; contain: layout style; }
