@@ -7,6 +7,7 @@ import { _assignGridPositions } from './layout-grid.js';
 import { _assignLocalPositions } from './layout-local.js';
 import { _buildOverlayCache } from './overlay-cache.js';
 import { syncPhysics } from './physics.js';
+import { updateChangedItems } from './dataset-updates.js';
 
 export function syncGraph() {
   if (!visNodes || !visEdges) return;
@@ -44,7 +45,7 @@ export function syncGraph() {
         : (isXBookReachable
           ? { ...nodeColor(sec), border: '#22d3ee', highlight: { ...(nodeColor(sec).highlight || {}), border: '#67e8f9' } }
           : nodeColor(sec)),
-      title:       nodeTitle(sec, portals),
+      title:       nodeTitle(sec, portals, visNodes.get(sec)?.title),
       shape:       isPortal ? 'diamond' : 'dot',
       size:        isPortal ? 16 : 14,
       borderWidth: (hasTerminal || hasBattle) ? 4 : (isPortal || isXBookReachable) ? 3 : 2,
@@ -55,7 +56,7 @@ export function syncGraph() {
     };
     nodeUpdates.push(nodeUpdate);
   });
-  visNodes.update(nodeUpdates);
+  updateChangedItems(visNodes, nodeUpdates);
 
   visNodes.getIds().forEach(id => {
     if (!allSections.has(id)) visNodes.remove(id);
@@ -91,7 +92,7 @@ export function syncGraph() {
       });
     });
   });
-  visEdges.update(edgeUpdates);
+  updateChangedItems(visEdges, edgeUpdates);
   visEdges.getIds().forEach(id => {
     if (!liveEdgeIds.has(id)) visEdges.remove(id);
   });

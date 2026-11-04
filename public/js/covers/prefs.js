@@ -5,6 +5,7 @@ import { getToken } from '../core/state.js';
 import { t } from '../i18n.js';
 import { applySeasonalEventsPreference } from '../seasonal-events/preferences.js';
 import { applySeasonPreviewPreference } from '../seasonal-events/preview.js';
+import { applyFloatiesPreference } from '../progression/floaties.js';
 
 // ── Cover settings ─────────────────────────────────────────────────────────────
 export function _applyCoverTooltipTitlePrefs() {
@@ -140,6 +141,7 @@ export function resetFeedDisplayPrefsForLogout() {
 
 // ── Prefs state setter (called from applyPrefs in main.js) ────────────────────
 export function setCoversPrefsState(p) {
+  if ('disableFloaties' in p) applyFloatiesPreference(p.disableFloaties);
   if ('seasonPreview' in p) applySeasonPreviewPreference(p.seasonPreview);
   if ('seasonalEvents' in p) applySeasonalEventsPreference(p.seasonalEvents);
   _setCoverFavoritesFromPrefs(p);

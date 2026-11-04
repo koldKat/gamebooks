@@ -79,7 +79,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
   const showWidget = userOwnsBook || voteCount > 0;
   if (showWidget) {
     headerHtml += `<div class="star-rating" data-book-id="${bookId}">
-      ${coversState._hooks.starsHtml?.(avgRating) ?? ''}
+      ${!userLoggedIn || userOwnsBook ? (coversState._hooks.starsHtml?.(userLoggedIn ? userRating : avgRating) ?? '') : ''}
       <span class="star-label">${coversState._hooks.starLabelHtml?.(avgRating, voteCount) ?? ''}</span>
     </div>`;
   }
@@ -293,7 +293,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
     if (!bookCanRate) starWidget.dataset.tooltip = t('covers.rate_gate_book');
 
     const updateDisplay = (hoverVal) => {
-      const displayVal = hoverVal !== null ? hoverVal : currentAvg;
+      const displayVal = hoverVal !== null ? hoverVal : currentMyRating;
       starWidget.querySelectorAll('.star').forEach(s => {
         const p = +s.dataset.pos;
         s.className = (displayVal !== null && displayVal >= p) ? 'star on'

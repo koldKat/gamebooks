@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 test('collection snapshots suppress duplicate generic reward floaters',()=>{
  const noop=()=>{},floaters=[];
- const context=vm.createContext({getUsername:()=> 'player',getToken:()=> 'token',
+ const context=vm.createContext({window:{addEventListener:noop},waitForCameraIdle:()=>false,floatiesEnabled:()=>true,getUsername:()=> 'player',getToken:()=> 'token',
   updateCoinsDisplay:noop,updateHeartbeatCoinsDisplay:noop,renderBooksXpSummary:noop,saveRewardCache:noop,
   _broadcastLiveEvent:noop,_scheduleLiveUiRefresh:noop,RUBY_SVG:'diamond',DIAMOND_SVG:'ruby',
   clearRewardCache:noop,closeBlackMarket:noop,updateRubiesDisplay:noop,updateDiamondsDisplay:noop});
@@ -26,7 +26,7 @@ test('collection snapshots suppress duplicate generic reward floaters',()=>{
 
 test('mint gains produce coin feedback even when the purchase reduces the balance',()=>{
  const noop=()=>{},gains=[];
- const context=vm.createContext({getUsername:()=> 'player',getToken:()=> 'token',
+ const context=vm.createContext({window:{addEventListener:noop},waitForCameraIdle:()=>false,floatiesEnabled:()=>true,getUsername:()=> 'player',getToken:()=> 'token',
   updateCoinsDisplay:noop,updateHeartbeatCoinsDisplay:noop,renderBooksXpSummary:noop,saveRewardCache:noop,
   _broadcastLiveEvent:noop,_scheduleLiveUiRefresh:noop,RUBY_SVG:'diamond',DIAMOND_SVG:'ruby'});
  vm.runInContext(fs.readFileSync('public/js/progression/rewards.js','utf8').replace(/^import .*;\n/gm,'').replace(/^export /gm,''),context);

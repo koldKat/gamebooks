@@ -381,6 +381,8 @@ a.book-modal-parent-btn, a.book-modal-series-btn, a.book-modal-child-row { text-
   min-width: 0;
 }
 
+.series-modal-header .book-modal-meta { flex: 1; }
+
 .book-modal-sections {
   font-size: 0.8rem;
   color: #9ca3af;

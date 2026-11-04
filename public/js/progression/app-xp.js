@@ -7,6 +7,8 @@ import { RUBY_SVG } from './rubies.js';
 import { DIAMOND_SVG } from './diamonds.js';
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
+import { floatiesEnabled } from './floaties.js';
+import { waitForCameraIdle } from '../graph/camera-motion.js';
 
 let _hooks = {};
 export function setAppXpHooks(h) { _hooks = h || {}; }
@@ -31,16 +33,18 @@ function _paintXp(xp, data) {
   const mini = document.getElementById('books-app-mini-level-fill');
   if (mini) mini.style.width = `${pct}%`;
   const toGo = Math.max(0, Math.round(nextLevelXp - xp));
-  document.getElementById('app-xp-text').innerHTML =
-    `<span class="xp-val">${Math.round(xp).toLocaleString()} XP</span> · ${toGo.toLocaleString()} to next LVL`;
+  const label = document.getElementById('app-xp-text');
+  const html = `<span class="xp-val">${Math.round(xp).toLocaleString()} XP</span> · ${toGo.toLocaleString()} to next LVL`;
+  if (label.innerHTML !== html) label.innerHTML = html;
 }
 
 function _paintBoost(boostXp, data) {
   const boostEl = document.getElementById('app-xp-boost');
   const xpBoostPct = Number(data?.xpBoostPct) || 0;
-  boostEl.innerHTML = xpBoostPct > 0
+  const html = xpBoostPct > 0
     ? `<span style="color:#22d3ee">+${xpBoostPct}% total boost</span> <span>(${Math.round(Math.max(0, boostXp)).toLocaleString()} XP)</span>`
     : '';
+  if (boostEl.innerHTML !== html) boostEl.innerHTML = html;
 }
 
 function _paintJobXp(xp, data, miningEvents = data?.jobRubyMiningEvents) {
@@ -59,8 +63,9 @@ function _paintJobXp(xp, data, miningEvents = data?.jobRubyMiningEvents) {
   if (mini) mini.style.width = `${pct}%`;
   document.getElementById('app-job-xp-level').textContent = t('appxp.job_level', { n: level });
   document.getElementById('app-job-xp-title').textContent = t('job.title.' + Math.min(level, 20));
-  document.getElementById('app-job-xp-label').innerHTML =
-    `<span class="job-xp-val">${Math.floor(xp).toLocaleString()} EV</span> · ${Math.ceil(nextLevelXp - xp).toLocaleString()} to next LVL`;
+  const label = document.getElementById('app-job-xp-label');
+  const html = `<span class="job-xp-val">${Math.floor(xp).toLocaleString()} EV</span> · ${Math.ceil(nextLevelXp - xp).toLocaleString()} to next LVL`;
+  if (label.innerHTML !== html) label.innerHTML = html;
   const nextRuby = document.getElementById('app-job-xp-next-ruby');
   const rubyCost = document.getElementById('app-job-xp-ruby-cost');
   const bar = document.getElementById('app-job-xp-bar');
@@ -118,8 +123,10 @@ function _runAnimQueue(gen) {
     return;
   }
   const start = performance.now();
+  const resume=()=>requestAnimationFrame(step);
   function step(now) {
     if (gen !== _animGen) return; // An old frame must not alter a newer login's animation.
+    if (waitForCameraIdle(resume)) return;
     const t = durationMs > 0 ? Math.min(1, (now - start) / durationMs) : 1;
     const jobT = jobDurationMs > 0 ? Math.min(1, (now - start) / jobDurationMs) : 1;
     const current      = fromXp      + (toXp      - fromXp)      * t;
@@ -253,7 +260,8 @@ function _isMainScreenVisible() {
 
 // Place app reward floaters opposite personal rewards, in the available panel gap.
 function _positionAppRewardLayer(layer) {
-  layer.style.bottom = '1rem';
+  // Measure before writing, as the graph camera may be animating underneath.
+  let left = '50%';
   if (_isMainScreenVisible() && !_isBooksScreenVisible()) {
     const dice     = document.getElementById('dice-roller-wrap');
     const playStack = document.getElementById('play-bottom-stack');
@@ -261,49 +269,50 @@ function _positionAppRewardLayer(layer) {
     const stackRect = playStack?.getBoundingClientRect();
     if (diceRect?.width > 0 && stackRect?.width > 0 && stackRect.left > diceRect.right) {
       const centerX = diceRect.right + ((stackRect.left - diceRect.right) / 2);
-      layer.style.left = `${Math.round(centerX)}px`;
-      layer.style.transform = 'translateX(-50%)';
-      return;
+      left = `${Math.round(centerX)}px`;
     }
-    layer.style.left = '50%';
-    layer.style.transform = 'translateX(-50%)';
-    return;
-  }
-  const covers = document.getElementById('covers-panel');
-  const feed   = document.getElementById('feed-panel');
-  const coversRect = covers?.getBoundingClientRect();
-  const feedRect   = feed?.getBoundingClientRect();
-  // Require visible, positive-width anchors and enough space before spawning floaters.
-  const MIN_GAP = 200;
-  if (coversRect?.width > 0 && feedRect?.width > 0 && (feedRect.left - coversRect.right) >= MIN_GAP) {
-    const centerX = coversRect.right + ((feedRect.left - coversRect.right) / 2);
-    layer.style.left = `${Math.round(centerX)}px`;
-    layer.style.transform = 'translateX(-50%)';
   } else {
-    layer.style.left = '50%';
-    layer.style.transform = 'translateX(-50%)';
+    const covers = document.getElementById('covers-panel');
+    const feed   = document.getElementById('feed-panel');
+    const coversRect = covers?.getBoundingClientRect();
+    const feedRect   = feed?.getBoundingClientRect();
+    // Require visible, positive-width anchors and enough space before spawning floaters.
+    const MIN_GAP = 200;
+    if (coversRect?.width > 0 && feedRect?.width > 0 && (feedRect.left - coversRect.right) >= MIN_GAP) {
+      const centerX = coversRect.right + ((feedRect.left - coversRect.right) / 2);
+      left = `${Math.round(centerX)}px`;
+    }
   }
+  Object.assign(layer.style, { bottom: '1rem', left, transform: 'translateX(-50%)' });
 }
 
 let _appRewardFloaterQueue  = [];
 let _appRewardFloaterActive = false;
+let _appRewardFloaterTimer = null;
+
+window.addEventListener('reward-layer-layout', () => {
+  const layer=document.getElementById('app-reward-float-layer');
+  if (layer) _positionAppRewardLayer(layer);
+});
 
 function _drainAppRewardFloaterQueue() {
+  if (!floatiesEnabled()) { _appRewardFloaterQueue = []; return; }
   if (_appRewardFloaterActive) return;
+  if (waitForCameraIdle(_drainAppRewardFloaterQueue)) return;
   const next = _appRewardFloaterQueue.shift();
   if (!next) return;
   const layer = document.getElementById('app-reward-float-layer');
   if (!layer) return;
   _appRewardFloaterActive = true;
-  _positionAppRewardLayer(layer);
   const chip = document.createElement('div');
   chip.className = `app-reward-float app-reward-float--${next.type}`;
   chip.innerHTML = next.html;
   layer.appendChild(chip);
-  setTimeout(() => { chip.remove(); _appRewardFloaterActive = false; _drainAppRewardFloaterQueue(); }, 5000);
+  _appRewardFloaterTimer = setTimeout(() => { chip.remove(); _appRewardFloaterTimer = null; _appRewardFloaterActive = false; _drainAppRewardFloaterQueue(); }, 5000);
 }
 
 function _spawnAppRewardFloater(type, html) {
+  if (!floatiesEnabled()) return;
   _appRewardFloaterQueue.push({ type, html });
   _drainAppRewardFloaterQueue();
 }
@@ -312,7 +321,18 @@ function _spawnAppRewardFloater(type, html) {
 const _appRewardAccum       = new Map(); // username -> { xp, coins }
 const _appRewardFlushTimers = new Map(); // username -> timer id
 
+window.addEventListener('floaties-change', () => {
+  if (floatiesEnabled()) return;
+  _appRewardFloaterQueue = [];
+  _appRewardAccum.clear();
+  for (const timer of _appRewardFlushTimers.values()) clearTimeout(timer);
+  _appRewardFlushTimers.clear();
+  clearTimeout(_appRewardFloaterTimer); _appRewardFloaterTimer = null;
+  _appRewardFloaterActive = false;
+});
+
 export function handleAppXpEvent(payload) {
+  if (!floatiesEnabled()) return;
   if (!payload || !_hooks.getIsAdmin?.() || !(_isBooksScreenVisible() || _isMainScreenVisible())) return;
   const rawUsername = String(payload.username || '?');
   const username = escapeHtml(rawUsername);

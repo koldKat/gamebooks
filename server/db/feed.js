@@ -820,9 +820,30 @@ function getFeed() {
       completedAt: row.published_at * 1000, updatedAt: row.updated_at });
   }
 
-  // Merge party run entries by party, book, and run index.
+  // Collection milestones inherit the party only from a matching book milestone.
+  // Keep independent completions separate, even when they concern the same collection.
+  const collectionMilestones = new Map([
+    ['discover_all_series', 'all_discovered'], ['discover_all_anthology', 'all_discovered'],
+    ['visit_all_series', 'all_visited'], ['visit_all_anthology', 'all_visited'],
+  ]);
+  const partyMilestones = entries.filter(e => e.partyId && ['all_discovered', 'all_visited'].includes(e.type));
+  for (const e of entries) {
+    const bookType = collectionMilestones.get(e.type);
+    if (!bookType) continue;
+    const source = partyMilestones.find(book => book.type === bookType && book.username === e.username
+      && Math.abs(book.completedAt - e.completedAt) <= 60_000
+      && (e.seriesId ? book.seriesId === e.seriesId : book.parentBookId === e.bookId));
+    if (!source) continue;
+    const anchor = Math.min(...partyMilestones.filter(book => book.type === bookType
+      && book.partyId === source.partyId && book.bookId === source.bookId
+      && Math.abs(book.completedAt - source.completedAt) <= 60_000).map(book => book.completedAt));
+    e.partyId = source.partyId;
+    e.partyMilestoneIdentity = `${source.bookId}:${anchor}`;
+  }
+
+  // Merge party run entries by party, target, and run index.
   const firstOutcomeTypes = new Set(['first_win', 'first_loss', 'first_battle_death']);
-  const mergeTypes = new Set(['run_started', 'run_completed', 'all_visited', 'all_discovered', ...firstOutcomeTypes]);
+  const mergeTypes = new Set(['run_started', 'run_completed', 'all_visited', 'all_discovered', ...firstOutcomeTypes, ...collectionMilestones.keys()]);
   const partyGroups = new Map(); // key → first entry
   const partyExtra  = new Map(); // key → additional { username, avatarUrl, userPublicProfile }[]
   const toRemove    = new Set();
@@ -830,7 +851,8 @@ function getFeed() {
   for (const e of entries) {
     if (!e.partyId || !mergeTypes.has(e.type)) continue;
     const runIdentity = firstOutcomeTypes.has(e.type) ? `:${e.runStartedAt ?? e.completedAt}` : '';
-    const key = `${e.partyId}:${e.bookId}:${e.runIndex ?? ''}:${e.type}${runIdentity}`;
+    const target = e.bookId ?? `series-${e.seriesId}`;
+    const key = `${e.partyId}:${target}:${e.runIndex ?? ''}:${e.type}${runIdentity}:${e.partyMilestoneIdentity ?? ''}`;
     if (!partyGroups.has(key)) {
       partyGroups.set(key, e);
       partyExtra.set(key, []);
@@ -907,7 +929,8 @@ function getFeedVersion() {
      WHERE event IN ('rate_book','rate_series','level_up','visit_all','discover_all',
                      'first_win','first_loss','first_battle_death',
                      'death_run','battle_run','win_run','share_run','run_depth',
-                     'won_all_series','won_all_anthology','party_formed')`
+                     'won_all_series','won_all_anthology','party_formed',
+                     'discover_all_series','discover_all_anthology','visit_all_series','visit_all_anthology')`
   ).get();
   const jobs = db.prepare('SELECT COUNT(*) AS n, COALESCE(MAX(created_at),0) AS m FROM job_level_events').get();
   const us = db.prepare(
@@ -936,7 +959,8 @@ function getFeedVersion() {
   return [
     jobs.n, jobs.m, xe.n, xe.m, us.n, us.m, us.p, sr.n, sr.s, sr.c,
     ub.n, ub.m, uu.n, uu.m, an.n, an.m, an.u, pin?.id ?? 0,
-    new Date().toISOString().slice(0, 10), _squireRevision,
+    // Invalidate cached feeds when this grouping format first becomes available.
+    new Date().toISOString().slice(0, 10), _squireRevision, 'party-collections-1',
   ].join(':');
 }
 

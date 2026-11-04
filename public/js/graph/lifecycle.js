@@ -3,8 +3,10 @@ import { network, visNodes, visEdges, setNetwork, setVisNodes, setVisEdges, grap
 import { clampViewportScale, enforceSnapZoomFloor, minSnapScale, GRID_SIZE } from './viewport.js';
 import { drawGrid, drawOverlays } from './overlays.js';
 import { _smoothOption } from './connectors.js';
+import { trackCameraMotion, stopTrackingCameraMotion } from './camera-motion.js';
 
 export function destroyNetwork() {
+  stopTrackingCameraMotion();
   graphRuntime._dragNodeIds.clear();
   if (network) { network.stopSimulation(); network.destroy(); setNetwork(null); }
   setVisNodes(null);
@@ -84,6 +86,7 @@ export function initGraph() {
     { nodes: visNodes, edges: visEdges },
     options
   ));
+  trackCameraMotion(network);
   // The floor-revert anchor is canvas coords for THIS graph only - a stale
   // position from a previous book would teleport the view.
   graphRuntime._lastAboveFloorViewPos = null;

@@ -143,6 +143,8 @@ The client persists graph viewport and node positions separately from temporary 
 
 `graph.js` is a compatibility facade. Modules under `graph/` own network lifecycle, viewport, appearance, overlays, layout, interactions, deletion, and outcome analysis.
 
+`graph/camera-motion.js` tracks animated camera moves and releases deferred reward feedback when the camera finishes or is interrupted. Reward layers measure their anchors on layout changes rather than when each floatie appears.
+
 - The effective start section comes from saved state, not a hardcoded node number.
 - Outcome analysis and appearance determine death, victory, visited, mapped, and current-node cues.
 - Custom node colors must preserve matching hover and selection colors.
@@ -243,7 +245,9 @@ Shared engines accept declarative rules rather than branching on book IDs. Panel
 
 The Shinté engine resolves separate CS-versus-DS attacks through database-backed combat charts. Encounter adapters supply initiative, modifiers and the recipient of damage. Undefined chart results wait for explicit manual resolution without advancing the turn.
 
-The Horror Classic engine resolves dice-based strikes, combat powers and explicitly completed rounds. Its presets and encounter exceptions come from the database. Effects with undefined timing require an explicit ruling; separate fatal-shot encounters do not invent ordinary combat stats. Flight and healing preserve distinct printed rule profiles without automating travel.
+The Horror Classic engine resolves dice-based strikes, combat powers and explicitly completed rounds. Its presets and encounter exceptions come from the database. Effects with undefined timing require an explicit ruling; separate fatal-shot encounters do not invent ordinary combat stats. Flight and healing preserve distinct printed rule profiles without automating travel. The same database rule profile supplies panel options and created combat allies.
+
+The Lost Jedi engine resolves one-hit combat through explicit turns and pending die rolls. Players confirm Jedi Point adjustments before a roll takes effect. Database presets supply allies, reinforcement timing and combat phase limits; a phase ending does not generate a victory. Pending rolls and spent resources persist with the current run.
 
 Saved fights retain their rule version, turn, participants, resources, pending decisions, and history. Rendering does not migrate or reset them. Each completed outcome is recorded once; canceled or incomplete encounters must not be reported as victories.
 

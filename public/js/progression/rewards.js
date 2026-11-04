@@ -11,6 +11,8 @@ import { readRewardCache, saveRewardCache, clearRewardCache } from './snapshot-c
 import { _broadcastLiveEvent } from '../core/livetab.js';
 import { _scheduleLiveUiRefresh } from '../community/notif.js';
 import { escapeHtml } from '../core/util.js';
+import { floatiesEnabled } from './floaties.js';
+import { waitForCameraIdle } from '../graph/camera-motion.js';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let _lastRewardXp        = null;
@@ -28,51 +30,88 @@ let _rewardFlushTimer    = null;
 let _rewardProfileTimer  = null;
 let _rewardFloaterQueue  = [];
 let _rewardFloaterActive = false;
+let _rewardFloaterTimer = null;
+let _pendingSummary = null;
+let _rewardLayoutObserver = null;
+let _rewardBodyObserver = null;
+
+function flushRewardSummary() {
+  if (!_pendingSummary) return;
+  const {data,opts}=_pendingSummary;_pendingSummary=null;
+  renderBooksXpSummary(data,opts);
+}
+
+function updateRewardSummary(data,opts={}) {
+  const fromXp=_pendingSummary?.opts.fromXp ?? opts.fromXp;
+  _pendingSummary={data,opts:{...opts,fromXp}};
+  if (!waitForCameraIdle(flushRewardSummary)) flushRewardSummary();
+}
+
+window.addEventListener('floaties-change', () => {
+  if (floatiesEnabled()) return;
+  _rewardFloaterQueue = [];
+  _rewardAccumXp = 0; _rewardAccumCoins = 0;
+  clearTimeout(_rewardFlushTimer); _rewardFlushTimer = null;
+  clearTimeout(_rewardFloaterTimer); _rewardFloaterTimer = null;
+  _rewardFloaterActive = false;
+});
 
 // ── Floater queue ─────────────────────────────────────────────────────────────
 function _drainRewardFloaterQueue() {
+  if (!floatiesEnabled()) { _rewardFloaterQueue = []; return; }
   if (_rewardFloaterActive) return;
+  if (waitForCameraIdle(_drainRewardFloaterQueue)) return;
   const next = _rewardFloaterQueue.shift();
   if (!next) return;
   const layer = document.getElementById('reward-float-layer');
   if (!layer) return;
   _rewardFloaterActive = true;
-  _positionRewardLayer();
   const chip = document.createElement('div');
   chip.className = `reward-float reward-float--${next.type}`;
   chip.innerHTML = next.html;
   layer.appendChild(chip);
-  setTimeout(() => { chip.remove(); _rewardFloaterActive = false; _drainRewardFloaterQueue(); }, 5000);
+  _rewardFloaterTimer = setTimeout(() => { chip.remove(); _rewardFloaterTimer = null; _rewardFloaterActive = false; _drainRewardFloaterQueue(); }, 5000);
 }
 
 export function _positionRewardLayer() {
+  if (waitForCameraIdle(_positionRewardLayer)) return;
   const layer = document.getElementById('reward-float-layer');
   if (!layer) return;
+  // Layout changes update the anchors; spawning a chip never measures the page.
+  if (!_rewardLayoutObserver && typeof ResizeObserver!=='undefined') {
+    _rewardLayoutObserver=new ResizeObserver(_positionRewardLayer);
+    for (const id of ['play-bottom-stack','play-btn-row','dice-roller-wrap','feed-panel','landing-right','graph-container']) {
+      const anchor=document.getElementById(id);if(anchor)_rewardLayoutObserver.observe(anchor);
+    }
+  }
+  if (!_rewardBodyObserver && typeof MutationObserver!=='undefined') {
+    _rewardBodyObserver=new MutationObserver(_positionRewardLayer);
+    _rewardBodyObserver.observe(document.body,{attributes:true,attributeFilter:['class']});
+  }
   const booksVisible = document.getElementById('books-screen')?.style.display !== 'none'
     && document.getElementById('landing-wrapper')?.style.display !== 'none';
   const mainVisible = document.getElementById('main-screen')?.style.display !== 'none';
-  layer.style.left = ''; layer.style.right = ''; layer.style.bottom = '1rem';
-  layer.style.transform = ''; layer.style.alignItems = 'flex-end';
+  // Read panel geometry before changing styles so a reward arriving during a
+  // camera animation does not force layout between our own writes and reads.
+  let left = '', right = '', transform = '', alignItems = 'flex-end';
   const landingFullyCollapsed =
     document.body.classList.contains('covers-collapsed') &&
     document.body.classList.contains('right-collapsed') &&
     document.body.classList.contains('feed-collapsed');
   if (booksVisible && landingFullyCollapsed) {
-    layer.style.left = '50%'; layer.style.right = 'auto';
-    layer.style.transform = 'translateX(-50%)'; layer.style.alignItems = 'center'; return;
-  }
-  if (booksVisible) {
+    left = '50%'; right = 'auto'; transform = 'translateX(-50%)'; alignItems = 'center';
+  } else if (booksVisible) {
     const feed = document.getElementById('feed-panel');
-    const right = document.getElementById('landing-right');
+    const rightPanel = document.getElementById('landing-right');
     const feedRect = feed?.getBoundingClientRect();
-    const rightRect = right?.getBoundingClientRect();
+    const rightRect = rightPanel?.getBoundingClientRect();
     if (feedRect && rightRect && rightRect.left > feedRect.right) {
       const centerX = feedRect.right + ((rightRect.left - feedRect.right) / 2);
-      layer.style.left = `${Math.round(centerX)}px`; layer.style.right = 'auto';
-      layer.style.transform = 'translateX(-50%)'; layer.style.alignItems = 'center'; return;
+      left = `${Math.round(centerX)}px`; right = 'auto';
+      transform = 'translateX(-50%)'; alignItems = 'center';
     }
   }
-  if (mainVisible) {
+  if (mainVisible && !left) {
     // Measure the actual row containers, not wrapped or reversed child buttons.
     const playStack = document.getElementById('play-bottom-stack');
     const btnRow    = document.getElementById('play-btn-row');
@@ -80,18 +119,22 @@ export function _positionRewardLayer() {
     const rowRect   = btnRow?.getBoundingClientRect();
     if (stackRect && rowRect && rowRect.left > stackRect.right) {
       const centerX = stackRect.right + ((rowRect.left - stackRect.right) / 2);
-      layer.style.left = `${Math.round(centerX)}px`; layer.style.right = 'auto';
-      layer.style.transform = 'translateX(-50%)'; layer.style.alignItems = 'center'; return;
+      left = `${Math.round(centerX)}px`; right = 'auto';
+      transform = 'translateX(-50%)'; alignItems = 'center';
     }
   }
+  window.dispatchEvent(new Event('reward-layer-layout'));
+  Object.assign(layer.style, { left, right, bottom: '1rem', transform, alignItems });
 }
 
 function _spawnRewardFloater(type, html) {
+  if (!floatiesEnabled()) return;
   _rewardFloaterQueue.push({ type, html });
   _drainRewardFloaterQueue();
 }
 
 function _queueRewardFloater(xpDelta = 0, coinDelta = 0) {
+  if (!floatiesEnabled()) return;
   if (xpDelta > 0) _rewardAccumXp += xpDelta;
   if (coinDelta > 0) _rewardAccumCoins += coinDelta;
   if (_rewardFlushTimer) return;
@@ -105,6 +148,7 @@ function _queueRewardFloater(xpDelta = 0, coinDelta = 0) {
 
 // ── Snapshot processing ───────────────────────────────────────────────────────
 export function _resetRewardSnapshotState() {
+  _pendingSummary = null;
   clearRewardCache();
   closeBlackMarket();
   updateRubiesDisplay(null);
@@ -134,7 +178,7 @@ export function _processRewardSnapshot(data, opts = {}) {
   const xp    = Number(data.xp); const coins = Number(data.coinsBalance);
   const level = Number(data.level); const title = data.title || '';
   const rewardUserKey = String(data.userId ?? getUsername() ?? '');
-  if (!Number.isFinite(xp) || !Number.isFinite(coins) || !Number.isFinite(level)) { renderBooksXpSummary(data); return null; }
+  if (!Number.isFinite(xp) || !Number.isFinite(coins) || !Number.isFinite(level)) { updateRewardSummary(data); return null; }
   if (_lastRewardUserKey !== null && rewardUserKey && _lastRewardUserKey !== rewardUserKey) {
     _resetRewardSnapshotState();
   }
@@ -163,14 +207,14 @@ export function _processRewardSnapshot(data, opts = {}) {
   if (_lastRewardXp === null || _lastRewardCoins === null || _lastRewardLevel === null) {
     _lastRewardUserKey = rewardUserKey; _lastRewardXp = xp; _lastRewardCoins = coins;
     _lastRewardLevel = level;
-    renderBooksXpSummary(data);
+    updateRewardSummary(data);
     if (broadcast) _broadcastLiveEvent('reward_snapshot', data); return null;
   }
   const xpDelta    = xp    - _lastRewardXp;
   const coinDelta  = coins - _lastRewardCoins;
   const levelDelta = level - _lastRewardLevel;
   _lastRewardUserKey = rewardUserKey; _lastRewardXp = xp; _lastRewardCoins = coins; _lastRewardLevel = level;
-  renderBooksXpSummary(data, { fromXp: prevXp });
+  updateRewardSummary(data, { fromXp: prevXp });
   if (broadcast) _broadcastLiveEvent('reward_snapshot', data);
   if (xpDelta > 0 || coinsGained > silentGold) _queueRewardFloater(Math.max(0, xpDelta), Math.max(0, coinsGained - silentGold));
   if (rubyDelta > 0) _spawnRewardFloater('rubies', `${RUBY_SVG}<span>+${rubyDelta.toLocaleString()}</span>`);

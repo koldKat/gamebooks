@@ -44,5 +44,6 @@ Do not load the enormous historical memory files wholesale. Search history only 
 - Current batch evidence: `/media/koldKat/MediaDrive/.tmp/reading-imports-2026-10-11`.
 - Pending manifest: `/home/koldKat/Downloads/_audits/pending-imports-manifest.json`.
 - One heavy worker at a time, nice 15. Check host available RAM before starting; defer heavy work below 1.5 GiB. Python address-space limit 768 MiB; Node heap 256 MiB. Target worker RSS at most 512 MiB, or 768 MiB for a complete browser-test process tree; record peak RSS with `/usr/bin/time -v`. Stop our worker or reduce the batch if it exceeds that target. Limit new scan-preview batches to ten pages and release images/PDF cache between pages. Verify worker/browser cleanup. Do not clear system caches/swap or stop unrelated applications.
+- For large combined scans, select the relevant book and shared rules before extracting layouts. Save and reuse small layout chunks; stream their final assembly instead of holding the whole document in memory. Defer image hashing to the artwork actually selected for preservation. A guard stop does not invalidate completed text extraction or saved chunks.
 - Node: `/home/koldKat/.config/nvm/versions/node/v22.23.1/bin/node`.
 - Current project rules and explicit user instructions override older memory. Never author em dashes; preserve original book punctuation.

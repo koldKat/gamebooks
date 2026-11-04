@@ -287,6 +287,13 @@
   color: #f5a623;
 }
 
+#note-modal .cs-vis-toggle {
+  gap: 0.35rem;
+  color: #9ca3af;
+  font-size: 0.78rem;
+  line-height: 1.2;
+}
+
 #edit-modal-overlay {
   display: none;
   position: fixed;

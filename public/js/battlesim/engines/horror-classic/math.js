@@ -26,7 +26,8 @@ export function rollDice(count, die = () => Math.floor(Math.random() * 6) + 1, m
 
 export function fighter(input, {player = false} = {}) {
   const result = {...structuredClone(input), name: String(input.name || (player ? 'Player' : 'Opponent')).slice(0, 200)};
-  for (const key of ATTRIBUTES) result[key] = number(input[key]);
+  for (const key of ATTRIBUTES) result[key] = !player && key === 'psi' && input.rules?.unavailableStats?.includes(key)
+    ? null : number(input[key]);
   result.lifePoints = number(input.lifePoints, 0.000001, player ? 100 : 10000);
   result.maxLife = player ? 100 : number(input.maxLife ?? input.lifePoints, input.lifePoints);
   result.rules = structuredClone(input.rules || {});
@@ -34,18 +35,23 @@ export function fighter(input, {player = false} = {}) {
   return result;
 }
 
-export function effectiveStats(combatant, {weapon = 'none', bat = false, garlicOil = false} = {}) {
+export function effectiveStats(combatant, {weapon = 'none', bat = false, garlicOil = false,
+  strengthMultiplier = 1, speedMultiplier = 1, speedOverride, statOverrides = {}} = {}) {
   const values = Object.fromEntries(ATTRIBUTES.map(key => [key, combatant[key] * (garlicOil ? 0.5 : 1)]));
+  for (const key of ATTRIBUTES) if (statOverrides[key] != null) values[key] = number(statOverrides[key]);
+  values.strength *= number(strengthMultiplier, 0, 10000);
+  values.speed *= number(speedMultiplier, 0, 10000);
+  if (speedOverride != null) values.speed = number(speedOverride);
   if (weapon === 'dagger') values.skill = 0;
   if (weapon === 'mace') values.speed = values.skill = 0;
   if (bat) values.strength = 1;
   return values;
 }
 
-export function initiative(player, enemy, {playerOptions = {}, modifier = 0, playerRoll, enemyRoll} = {}, die) {
+export function initiative(player, enemy, {playerOptions = {}, modifier = 0, playerBonus = 0, playerRoll, enemyRoll} = {}, die) {
   const p = rollDice(1, die, playerRoll), e = rollDice(1, die, enemyRoll);
   const stats = effectiveStats(player, playerOptions);
-  const playerScore = p.total + stats.speed + stats.courage + modifier;
+  const playerScore = p.total + stats.speed + stats.courage + modifier + number(playerBonus,0,2);
   const enemyScore = e.total + enemy.speed + enemy.courage - modifier;
   return {playerRoll: p, enemyRoll: e, playerScore, enemyScore,
     first: playerScore === enemyScore ? null : playerScore > enemyScore ? 'player' : 'enemy'};
@@ -54,10 +60,11 @@ export function initiative(player, enemy, {playerOptions = {}, modifier = 0, pla
 export function strikeDamage(attacker, defender, score, {
   weapon = 'none', bat = false, garlicOil = false, blessed = false, sanctuary = false,
   partyCard = false, hitThreshold = 6, damageBonus = 0, doubleDamage = false, doubleDice = false, noDamage = false,
+  strengthMultiplier = 1, speedMultiplier = 1, speedOverride, statOverrides,
 } = {}) {
   if (score < hitThreshold || noDamage) return 0;
-  const stats = effectiveStats(attacker, {weapon, bat, garlicOil});
-  const weapons = {none: 0, dagger: 5, mace: 10, flintlock: 20};
+  const stats = effectiveStats(attacker, {weapon, bat, garlicOil, strengthMultiplier, speedMultiplier, speedOverride, statOverrides});
+  const weapons = {none: 0, dagger: 5, mace: 10, flintlock: 20, 'fang-knife': 5, sword: 3};
   if (!Object.hasOwn(weapons, weapon)) throw new RangeError('Choose an available weapon.');
   let damage = score * (doubleDice ? 2 : 1) + stats.strength + stats.skill + weapons[weapon] + damageBonus + (blessed ? 5 : 0);
   if (doubleDamage) damage *= 2;
@@ -65,14 +72,15 @@ export function strikeDamage(attacker, defender, score, {
     - (sanctuary ? 5 : 0) - (partyCard && attacker.rules?.vampire ? 2 : 0));
 }
 
-export function naturalHealing(player, {role, score, rules} = {}, die) {
-  if (role !== 'harker' || !['detailed', 'synopsis'].includes(rules)) {
-    throw new RangeError('Choose Harker and a printed healing rule.');
+export function naturalHealing(player, {role, score, rules, bonus = 0} = {}, die) {
+  if (!['harker', 'monster', 'doctor'].includes(role) || !['detailed', 'synopsis'].includes(rules)) {
+    throw new RangeError('Choose a character with natural healing and a printed healing rule.');
   }
   const next = structuredClone(player);
   next.lifePoints = number(next.lifePoints, 0.000001, 100);
   const roll = rollDice(2, die, score);
-  const heals = rules === 'detailed' ? roll.total > 6 : roll.total >= 6;
-  next.lifePoints = Math.min(100, next.lifePoints + (heals ? roll.total : -roll.total));
-  return {player: next, roll, heals};
+  const effectiveScore = roll.total + number(bonus,0,2);
+  const heals = rules === 'detailed' ? effectiveScore > 6 : effectiveScore >= 6;
+  next.lifePoints = Math.min(100, next.lifePoints + (heals ? effectiveScore : -effectiveScore));
+  return {player: next, roll, effectiveScore, heals};
 }

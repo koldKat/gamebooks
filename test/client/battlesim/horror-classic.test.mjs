@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {rollDice, effectiveStats, strikeDamage, naturalHealing} from '../../../public/js/battlesim/engines/horror-classic/math.js';
 import {startFight, rollInitiative, strike, resolveStrike, advanceRound, stopFight} from '../../../public/js/battlesim/engines/horror-classic/core.js';
-import {playerPower, combatItem, enemyPower, resolveManually, endCalmedFight, allyMindCloud} from '../../../public/js/battlesim/engines/horror-classic/powers.js';
+import {playerPower, combatItem, enemyPower, resolveManually, endCalmedFight, allyMindCloud, resolveMadScience} from '../../../public/js/battlesim/engines/horror-classic/powers.js';
 import {attemptFlight, startArchery, archeryCheck, resolveArchery} from '../../../public/js/battlesim/engines/horror-classic/special.js';
 import {createState} from '../../../public/js/battlesim/books/1575/state.js';
 
@@ -285,4 +285,105 @@ test('Igor clouds the chosen enemy for two rounds on 11/12 or by explicit order'
   f=throwAt(f,'enemy',12);assert.equal(f.player.lifePoints,hp);
   f=advanceRound(f);f=throwAt(f,'enemy',12);assert.equal(f.player.lifePoints,hp);
   f=advanceRound(f);f=throwAt(f,'enemy',12);assert.equal(f.player.lifePoints,hp-19);
+});
+
+test('Monster Terror Strike consumes exactly the next opponent strike; Blood Lust consumes the next player strike', () => {
+  const original=fight({role:'monster'}),before=structuredClone(original);
+  const terror=playerPower(original,{power:'terror-strike',payment:'psi'});
+  assert.equal(terror.player.psi,2);
+  assert.throws(()=>playerPower(terror,{power:'terror-strike',payment:'psi'}));
+  const missed=throwAt(terror,'enemy',12);
+  assert.equal(missed.player.lifePoints,100);
+  assert.equal(throwAt(missed,'enemy',6).player.lifePoints,87);
+  const lust=playerPower(original,{power:'blood-lust',payment:'psi'});
+  assert.equal(throwAt(lust,'player',6).enemies[0].lifePoints,74);
+  const failed=throwAt(lust,'player',5);
+  assert.equal(failed.player.status.doubleNext,false);
+  assert.equal(throwAt(failed,'player',6).enemies[0].lifePoints,87);
+  assert.deepEqual(original,before);
+});
+
+test('Love Affair has the printed chance, records victory and respects explicit immunity', () => {
+  const original=fight({role:'monster'});
+  assert.equal(playerPower(original,{power:'love-affair',payment:'psi',total:3}).outcome,null);
+  const befriended=playerPower(original,{power:'love-affair',payment:'psi',total:4});
+  assert.equal(befriended.outcome,'win');
+  assert.equal(befriended.enemies[0].lifePoints,100);
+  const immune=fight({role:'monster',enemies:[person({rules:{friendshipImmune:true}})]});
+  assert.throws(()=>playerPower(immune,{power:'love-affair',payment:'psi',total:6}));
+  assert.equal(immune.player.psi,3);
+  assert.throws(()=>playerPower(original,{power:'mad-science',payment:'psi',total:4}));
+});
+
+test('Mad Science doubles combat strength, causes direct electrical damage, and resolves sleep without fabricated attacks', () => {
+  const original=fight({role:'doctor'});
+  const strong=playerPower(original,{power:'mad-science',payment:'psi',total:1});
+  assert.equal(throwAt(strong,'player',6).enemies[0].lifePoints,83);
+  assert.equal(strong.player.strength,4);
+  assert.equal(playerPower(original,{power:'mad-science',payment:'psi',total:2}).enemies[0].lifePoints,75);
+  const sleeping=playerPower(original,{power:'mad-science',payment:'psi',total:4});
+  assert.equal(sleeping.outcome,'win');
+  assert.equal(sleeping.enemies[0].lifePoints,100);
+  assert.equal(playerPower(original,{power:'mad-science',payment:'psi',total:5}).outcome,'loss');
+});
+
+test('Mad Science cackling retains zero SPEED and two opposing strikes for each player strike', () => {
+  let f=playerPower(fight({role:'doctor'}),{power:'mad-science',payment:'psi',total:3});
+  assert.equal(effectiveStats(f.player,f.options).speed,0);
+  f=throwAt(f,'player',6);
+  assert.equal(f.enemies[0].lifePoints,87);
+  f=throwAt(f,'enemy',5);
+  assert.throws(()=>advanceRound(f));
+  assert.throws(()=>throwAt(f,'player',6));
+  f=throwAt(f,'enemy',5);
+  f=throwAt(f,'player',6);
+  assert.equal(f.enemies[0].lifePoints,74);
+  assert.throws(()=>throwAt(f,'player',6));
+  f=throwAt(throwAt(f,'enemy',5),'enemy',5);
+  assert.equal(throwAt(f,'player',6).enemies[0].lifePoints,61);
+});
+
+test('Mad Science explosion requires its second die and does not charge PSI twice', () => {
+  const original=fight({role:'doctor'});
+  const pending=playerPower(original,{power:'mad-science',payment:'psi',total:6});
+  assert.equal(pending.pending.kind,'mad-science-explosion');
+  assert.equal(pending.player.psi,2);
+  assert.throws(()=>throwAt(pending,'player',6));
+  assert.throws(()=>resolveMadScience(pending,{total:7}));
+  const won=resolveMadScience(pending,{total:4});
+  assert.equal(won.outcome,'win');assert.equal(won.player.psi,2);
+  assert.equal(resolveMadScience(pending,{total:5}).outcome,'loss');
+  assert.throws(()=>resolveMadScience(won,{total:1}));
+  assert.equal(original.player.psi,3);
+});
+
+test('Monster Making adds a combat ally and Body Armour preserves exact fractional damage', () => {
+  const createdAlly={name:'Test ally',lifePoints:17,speed:2,courage:2,strength:2,skill:2,psi:2};
+  const original=fight({role:'doctor',options:{createdAlly}});
+  const summoned=playerPower(original,{power:'monster-making',payment:'psi'});
+  assert.equal(summoned.allies.length,1);
+  assert.equal(summoned.allies[0].lifePoints,17);
+  assert.equal(summoned.allies[0].strength,2);
+  assert.equal(strike(summoned,{actor:'ally',total:6}).enemies[0].lifePoints,90);
+  const armored=playerPower(original,{power:'body-armour',payment:'psi'});
+  assert.equal(throwAt(armored,'enemy',6).player.lifePoints,93.5);
+  assert.throws(()=>playerPower(armored,{power:'body-armour',payment:'psi'}));
+  assert.equal(original.options.bodyArmour,undefined);
+  const poisoned=structuredClone(armored);
+  poisoned.player.status.poison=5;
+  assert.equal(advanceRound(throwAt(poisoned,'enemy',6)).player.lifePoints,91);
+  const dying=playerPower(fight({role:'doctor',player:person({psi:0,lifePoints:20}),options:{createdAlly}}),
+    {power:'monster-making',payment:'life'});
+  assert.equal(dying.outcome,'loss');assert.equal(dying.allies.length,0);
+});
+
+test('new equipment and natural healing profiles do not alter Dracula equipment or healing eligibility', () => {
+  assert.equal(strikeDamage(person(),person(),6,{weapon:'fang-knife'}),18);
+  assert.equal(strikeDamage(person(),person(),6,{weapon:'sword'}),16);
+  assert.equal(strikeDamage(person(),person(),6,{weapon:'dagger'}),15);
+  for(const role of ['monster','doctor']) {
+    assert.equal(naturalHealing(person({lifePoints:50}),{role,score:6,rules:'detailed'}).player.lifePoints,44);
+    assert.equal(naturalHealing(person({lifePoints:50}),{role,score:6,rules:'synopsis'}).player.lifePoints,56);
+  }
+  assert.throws(()=>naturalHealing(person(),{role:'dracula',score:6,rules:'detailed'}));
 });

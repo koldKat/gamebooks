@@ -209,11 +209,11 @@
     <button id="mobile-addbook-close-btn" style="display:none">‹<span data-i18n="mobile.back_to_feed">Back to feed</span></button>
     <div id="covers-header">
       <span id="covers-header-label"><span id="covers-count"></span><span id="covers-sort" tabindex="0" role="button" aria-haspopup="listbox"><span id="covers-sort-label">Latest</span><ul id="covers-sort-menu" role="listbox"><li role="option" data-value="alpha">A–Z</li><li role="option" data-value="za">Z–A</li><li role="option" data-value="latest">Latest</li><li role="option" data-value="oldest">Oldest</li><li role="option" data-value="random">Random</li><li role="option" data-value="popular">Popular</li><li role="option" data-value="longest">Longest</li><li role="option" data-value="shortest">Shortest</li></ul></span> <span id="covers-kind" tabindex="0" role="button" aria-haspopup="listbox"><span id="covers-kind-label">All</span><ul id="covers-kind-menu" role="listbox"><li role="option" data-value="all">All</li><li role="option" data-value="books">Books</li><li role="option" data-value="anthologies">Anthologies</li><li role="option" data-value="series">Series</li><li role="option" data-value="favorites">Favorites</li></ul></span><span id="covers-total"></span></span>
-      <div class="covers-search-wrap">
-        <button id="covers-search-icon" aria-label="Search books"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4"/><line x1="9.7" y1="9.7" x2="13.5" y2="13.5"/></svg></button>
-        <input type="text" inputmode="text" id="covers-search" placeholder="Search…" autocomplete="off" spellcheck="false" data-i18n-placeholder="ph.search">
-        <button id="covers-search-clear" aria-label="Clear search">✕</button>
-      </div>
+      <form id="covers-search-form" class="covers-search-wrap" role="search" autocomplete="off">
+        <button type="button" id="covers-search-icon" aria-label="Search books"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4"/><line x1="9.7" y1="9.7" x2="13.5" y2="13.5"/></svg></button>
+        <input type="search" inputmode="search" id="covers-search" name="book-search" aria-label="Search books" placeholder="Search…" autocomplete="off" spellcheck="false" data-i18n-placeholder="ph.search" data-lpignore="true" data-1p-ignore>
+        <button type="button" id="covers-search-clear" aria-label="Clear search">✕</button>
+      </form>
     </div>
     <div id="covers-filter-row">
       <button type="button" id="covers-filter-battlesim" class="covers-filter-chip covers-filter-chip--battlesim" aria-pressed="false" data-i18n="covers.battle_sim_only">Battle sim only</button>
@@ -1206,6 +1206,10 @@
         <div id="cover-rotation-settings-preview">All public covers</div>
       </div>
       <div class="cover-tooltip-settings-title">Performance</div>
+      <label class="cover-tooltip-settings-row">
+        <input type="checkbox" id="disable-floaties-cb">
+        <span data-i18n="settings.disable_floaties">Disable floaties</span>
+      </label>
       <label class="cover-tooltip-settings-row">
         <input type="checkbox" id="seasonal-events-cb">
         <span data-i18n="settings.seasonal_events">Disable seasonal sprites</span>

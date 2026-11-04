@@ -85,7 +85,9 @@ export function nodeLabel(secId) {
   return secId === startSec ? `${label}\nSTART` : label;
 }
 
-export function nodeTitle(secId, portals) {
+const titleText = new WeakMap();
+
+export function nodeTitle(secId, portals, previousTitle) {
   const data = state.graph[secId];
   const lines = [];
   if (!data) {
@@ -112,7 +114,10 @@ export function nodeTitle(secId, portals) {
       lines.push(p.label || `⇒ ${bookName} ${p.targetSection}`);
     });
   }
+  const textKey = JSON.stringify(lines);
+  if (previousTitle && titleText.get(previousTitle) === textKey) return previousTitle;
   const el = document.createElement('div');
+  titleText.set(el, textKey);
   lines.forEach((line, i) => {
     if (i > 0) el.appendChild(document.createElement('br'));
     el.appendChild(document.createTextNode(line));

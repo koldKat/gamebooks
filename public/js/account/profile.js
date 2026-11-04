@@ -6,6 +6,7 @@ import { updateCoinsDisplay } from '../progression/shop.js';
 import { updateRubiesDisplay } from '../progression/rubies.js';
 import { updateDiamondsDisplay } from '../progression/diamonds.js';
 import { escapeHtml, compressToBlob } from '../core/util.js';
+import { waitForCameraIdle } from '../graph/camera-motion.js';
 
 let _hooks = {};
 let _profileModalGeneration = 0;
@@ -60,7 +61,7 @@ function _xpRenderPrefix(prefix, xp, data) {
   if (!el) return;
   if (prefix === 'profile') { el.textContent = short; return; }
   // Use the same XP label in the books and play summaries.
-  el.innerHTML = fullHtml;
+  if (el.innerHTML !== fullHtml) el.innerHTML = fullHtml;
 }
 
 function _xpBoostHtml(xpBoostPct, xpFromBoostWhole) {
@@ -73,7 +74,8 @@ function _renderBoostAmount(prefix, data, boostXp) {
   const boostEl = document.getElementById(`${prefix}-xp-boost`);
   if (!boostEl) return;
   const xpBoostPct = Number(data?.xpBoostPct) || 0;
-  boostEl.innerHTML = _xpBoostHtml(xpBoostPct, Math.round(Math.max(0, boostXp)));
+  const html = _xpBoostHtml(xpBoostPct, Math.round(Math.max(0, boostXp)));
+  if (boostEl.innerHTML !== html) boostEl.innerHTML = html;
 }
 
 let _displayedXp      = null; // last value rendered into books/play bars (may be mid-animation)
@@ -109,8 +111,10 @@ function _runAnimQueue(gen) {
     return;
   }
   const start = performance.now();
+  const resume=()=>requestAnimationFrame(step);
   function step(now) {
     if (gen !== _animGen) { _animRunning = false; return; } // invalidated by a hard reset
+    if (waitForCameraIdle(resume)) return;
     const t      = Math.min(1, (now - start) / durationMs);
     const current      = fromXp      + (toXp      - fromXp)      * t;
     const currentBoost = fromBoostXp + (toBoostXp - fromBoostXp) * t;
@@ -215,8 +219,10 @@ function _animateJobXp() {
   const level = Math.floor((-1 + Math.sqrt(1 + 8 * to / 1000)) / 2);
   const duration = Math.max(1, level) * XP_ANIM_MS_PER_LEVEL;
   const start = performance.now(), generation = _jobAnimationGeneration;
+  const resume=()=>{_jobFrame=requestAnimationFrame(step);};
   function step(now) {
     if (generation !== _jobAnimationGeneration) return;
+    if (waitForCameraIdle(resume)) return;
     _jobFrame = null;
     if (getToken() !== _jobToken) { renderJobXpSummary(null); return; }
     const progress = Math.min(1, Math.max(0, (now - start) / duration));
@@ -295,7 +301,10 @@ function _renderJobXpSummary(data, displayedXp, visible, displayedRubyEvents) {
     const titleEl = document.getElementById(`${prefix}-job-xp-title`);
     if (titleEl) titleEl.textContent = visible ? t('job.title.' + Math.min(level, 20)) : '';
     const label = document.getElementById(`${prefix}-job-xp-label`);
-    if (label) label.innerHTML = visible ? `<span class="job-xp-val">${xp.toLocaleString()} EV</span> · ${(nextLevelXp - xp).toLocaleString()} to next LVL` : '';
+    if (label) {
+      const html = visible ? `<span class="job-xp-val">${xp.toLocaleString()} EV</span> · ${(nextLevelXp - xp).toLocaleString()} to next LVL` : '';
+      if (label.innerHTML !== html) label.innerHTML = html;
+    }
     wrap.setAttribute('aria-label', visible ? `Job events: level ${level}, ${xp} of ${nextLevelXp}` : 'Job events');
   }
 }

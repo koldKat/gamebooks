@@ -1,4 +1,20 @@
 /* Shared personal reward feedback, including standalone mobile dialogs. */
+.disable-floaties .reward-float,
+.disable-floaties .app-reward-float {
+  display: none;
+}
+
+#reward-float-layer,
+#app-reward-float-layer {
+  contain: layout style;
+}
+
+.reward-float,
+.app-reward-float {
+  /* These short-lived chips own their compositor layer, not the graph canvas. */
+  will-change: transform, opacity;
+}
+
 .reward-float {
   display: inline-flex;
   align-items: center;

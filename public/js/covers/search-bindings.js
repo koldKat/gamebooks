@@ -11,6 +11,7 @@ export function _initCoverSearch() {
   const coversSearchEl  = document.getElementById('covers-search');
   const coversClearBtn  = document.getElementById('covers-search-clear');
   const coversSearchIcon = document.getElementById('covers-search-icon');
+  document.getElementById('covers-search-form').addEventListener('submit', e => e.preventDefault());
 
   function _closeCoversSearch() {
     coversSearchEl.value = '';

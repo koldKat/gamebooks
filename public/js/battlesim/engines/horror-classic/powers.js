@@ -1,6 +1,6 @@
 // Apply explicitly selected Horror Classic combat powers without campaign progression.
 import {ready, finish} from './core.js';
-import {number, rollDice} from './math.js';
+import {number, rollDice, fighter} from './math.js';
 
 function record(fight, event) {
   fight.events.push(event);
@@ -32,16 +32,27 @@ function pay(fight, payment) {
   return !fight.outcome;
 }
 
-export function playerPower(input, {power, payment, enemyIndex = 0, enemyIndices} = {}) {
+export const ROLE_POWERS = Object.freeze({
+  harker: ['beatification', 'sanctuary', 'stake'],
+  dracula: ['transform', 'calm', 'recruit'],
+  monster: ['terror-strike', 'blood-lust', 'love-affair'],
+  doctor: ['mad-science', 'monster-making', 'body-armour'],
+});
+
+export function playerPower(input, {power, payment, enemyIndex = 0, enemyIndices, total} = {}, die) {
   ready(input);
   const fight = structuredClone(input);
-  const harker = ['beatification', 'sanctuary', 'stake'];
-  const dracula = ['transform', 'calm', 'recruit'];
-  if (!(fight.role === 'harker' ? harker : dracula).includes(power)) {
+  if (!ROLE_POWERS[fight.role]?.includes(power)) {
     throw new RangeError('That power is unavailable to this character.');
   }
   if (power === 'beatification' && fight.options.blessed || power === 'sanctuary' && fight.options.sanctuary
-      || power === 'stake' && fight.stakeArmed) throw new RangeError('That power is already active.');
+      || power === 'stake' && fight.stakeArmed || power === 'body-armour' && fight.options.bodyArmour
+      || power === 'blood-lust' && fight.player.status.doubleNext) throw new RangeError('That power is already active.');
+  const victim = ['terror-strike','love-affair','mad-science'].includes(power) ? target(fight, enemyIndex) : null;
+  if (power === 'terror-strike' && victim.status.missNext > 0) throw new RangeError('That power is already active.');
+  if (power === 'love-affair' && victim.rules.friendshipImmune) throw new RangeError('This opponent is immune to Love Affair.');
+  if (power === 'monster-making' && fight.allies.length >= 24) throw new RangeError('Choose up to 24 combat allies.');
+  const createdAlly = power === 'monster-making' ? fighter(fight.options.createdAlly ?? {}) : null;
   let animals;
   if (power === 'calm' || power === 'recruit') {
     const indices = enemyIndices ?? [enemyIndex];
@@ -59,6 +70,31 @@ export function playerPower(input, {power, payment, enemyIndex = 0, enemyIndices
     });
   }
   if (!pay(fight, payment)) return fight;
+  if (power === 'terror-strike') victim.status.missNext = (victim.status.missNext ?? 0) + 1;
+  if (power === 'blood-lust') fight.player.status.doubleNext = true;
+  if (power === 'body-armour') fight.options.bodyArmour = true;
+  if (createdAlly) fight.allies.push(createdAlly);
+  let roll;
+  if (power === 'love-affair') {
+    roll = rollDice(1, die, total);
+    if (roll.total + number(fight.options.luckBonus ?? 0,0,2) >= 4) victim.withdrawn = victim.defeatedByPower = true;
+  }
+  if (power === 'mad-science') {
+    roll = rollDice(1, die, total);
+    const score = roll.total + number(fight.options.luckBonus ?? 0,0,2);
+    if (score === 1) fight.options.strengthMultiplier = (fight.options.strengthMultiplier ?? 1) * 2;
+    if (score === 2) victim.lifePoints -= 25;
+    if (score === 3) {
+      fight.options.speedOverride = 0;
+      fight.options.enemyAttacksPerPlayer = 2;
+      // Keep initiative explicit; the source specifies a ratio, not an opening ambush.
+      fight.enemyStrikesOwed = 0;
+    }
+    if (score === 4) victim.withdrawn = victim.defeatedByPower = true;
+    if (score === 5) fight.player.lifePoints = 0;
+    if (score === 6) fight.pending = {kind:'mad-science-explosion',enemyIndex};
+    if (score > 6) fight.pending = {kind:'source-roll',enemyIndex,roll,score};
+  }
   if (power === 'beatification') fight.options.blessed = true;
   if (power === 'sanctuary') fight.options.sanctuary = true;
   if (power === 'stake') fight.stakeArmed = true;
@@ -67,16 +103,31 @@ export function playerPower(input, {power, payment, enemyIndex = 0, enemyIndices
     if (power === 'calm') enemy.withdrawn = enemy.calmed = true;
     else enemy.recruited = true;
   }
-  record(fight, {kind: 'player-power', power, enemies: animals?.map(enemy => enemy.name), bat: fight.options.bat});
+  record(fight, {kind: 'player-power', power, roll, enemies: animals?.map(enemy => enemy.name), bat: fight.options.bat});
   // A calmed encounter remains open until the player finishes or recruits an animal.
-  return fight;
+  return ['monster','doctor'].includes(fight.role) ? finish(fight) : fight;
+}
+
+export function resolveMadScience(input, {total} = {}, die) {
+  if (input?.outcome || input?.pending?.kind !== 'mad-science-explosion') {
+    throw new RangeError('Resolve a pending Mad Science explosion.');
+  }
+  const fight = structuredClone(input), enemy = fight.enemies[fight.pending.enemyIndex];
+  const roll = rollDice(1, die, total);
+  const score = roll.total + number(fight.options.luckBonus ?? 0,0,2);
+  if (score <= 4) enemy.withdrawn = enemy.defeatedByPower = true;
+  else if (score <= 6) fight.player.lifePoints = 0;
+  if (score > 6) fight.pending = {kind:'source-roll',enemyIndex:fight.pending.enemyIndex,roll,score};
+  else fight.pending = null;
+  record(fight, {kind:'player-power',power:'mad-science-explosion',roll});
+  return finish(fight);
 }
 
 export function combatItem(input, {item, enemyIndex = 0} = {}) {
   ready(input);
   const fight = structuredClone(input), enemy = target(fight, enemyIndex);
   fight.itemsUsed ??= [];
-  if (!['hand', 'paralyser', 'antidote'].includes(item) || fight.itemsUsed.includes(item)) {
+  if (!['hand', 'paralyser', 'antidote', 'triple-dose'].includes(item) || fight.itemsUsed.includes(item)) {
     throw new RangeError('Choose an unused combat item.');
   }
   if (item === 'paralyser' && !enemy.rules.vampire) throw new RangeError('The paralyser affects vampires only.');
@@ -89,6 +140,10 @@ export function combatItem(input, {item, enemyIndex = 0} = {}) {
     fight.freePlayerAttacks += 2;
   }
   if (item === 'antidote') fight.player.status.poison = 0;
+  if (item === 'triple-dose') {
+    fight.player.status.poison = 0;
+    delete fight.player.status.combatPoison;
+  }
   fight.itemsUsed.push(item);
   record(fight, {kind: 'combat-item', item, enemy: enemy.name});
   return finish(fight);
@@ -140,6 +195,10 @@ export function enemyPower(input, {power, enemyIndex = 0, total} = {}, die) {
 }
 
 export function resolveManually(input, {playerLife, playerPsi, enemyLife, enemyIndex = 0, note} = {}) {
+  if (input?.pending?.kind === 'source-roll') {
+    input = structuredClone(input);
+    input.pending = null;
+  }
   ready(input);
   if (typeof note !== 'string' || !note.trim()) throw new RangeError('Describe the source ruling.');
   const fight = structuredClone(input), enemy = target(fight, enemyIndex);

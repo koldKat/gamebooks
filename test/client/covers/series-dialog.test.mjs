@@ -19,7 +19,7 @@ function render({ moderator = true, admin = false, isPublic = true, loggedIn = t
   runInNewContext(source + '\nrenderSeriesActivity(data);', {
     data: { id: 12, name: 'Series', description: 'Blurb', isPublic, isOpenWorld: true, books: [] },
     document: { getElementById: id => id === 'pub-modal-body' ? body : { style: {} } },
-    getToken: () => loggedIn ? 'token' : null, escapeHtml: String, t: key => key,
+    getToken: () => loggedIn ? 'token' : null, escapeHtml: String, t: key => key, publicEntryLinks: () => '',
     openSeriesActivity: (...values) => refreshes.push(values),
     coversState: { _hooks: { getIsModerator: () => moderator, getIsAdmin: () => admin,
       getCachedAllSeries: () => [], openEditSeriesModal: (...values) => { args = values; } } },

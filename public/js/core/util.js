@@ -48,7 +48,7 @@ ALL_PANEL_OVERLAY_IDS.push('sim1534-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim1535-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim1536-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim1537-overlay');
-ALL_PANEL_OVERLAY_IDS.push('sim1539-overlay', 'sim1540-overlay', 'sim1541-overlay', 'sim1542-overlay', 'sim1543-overlay', 'sim1544-overlay', 'sim1555-overlay', 'sim1566-overlay', 'sim1575-overlay');
+ALL_PANEL_OVERLAY_IDS.push('sim1539-overlay', 'sim1540-overlay', 'sim1541-overlay', 'sim1542-overlay', 'sim1543-overlay', 'sim1544-overlay', 'sim1555-overlay', 'sim1566-overlay', 'sim1575-overlay', 'sim1576-overlay', 'sim1577-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim1473-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim1449-overlay', 'sim1453-overlay', 'sim1454-overlay', 'sim1455-overlay', 'sim1456-overlay', 'sim1457-overlay', 'sim1467-overlay', 'sim1468-overlay', 'sim1469-overlay', 'sim1470-overlay', 'sim1471-overlay', 'sim1472-overlay');
 ALL_PANEL_OVERLAY_IDS.push('party-modal-overlay', 'guide-modal-overlay', 'notebook-modal-overlay');

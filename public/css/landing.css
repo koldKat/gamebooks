@@ -148,6 +148,7 @@ body.covers-collapsed #covers-panel {
   transition: border-color 0.15s;
 }
 #covers-search::placeholder { color: #4b5563; }
+#covers-search::-webkit-search-cancel-button { display: none; }
 #covers-search:focus { border-bottom-color: #f5a623; }
 
 #covers-header.covers-search-open #covers-header-label { display: none; }

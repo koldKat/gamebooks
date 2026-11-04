@@ -27,11 +27,13 @@ export function renderSeriesActivity(data) {
   let html = coverCount ? '<div class="series-modal-covers">' + coverBooks.slice(0, coverCount).map(book =>
     `<img class="book-modal-cover" src="${escapeHtml(book.coverUrl)}" alt="${escapeHtml(book.name)}" decoding="async">`
   ).join('') + '</div>' : '';
-  html += '<div class="book-modal-header"><div class="book-modal-meta">';
+  html += '<div class="book-modal-header series-modal-header"><div class="book-modal-meta">';
   if (data.description) html += `<div class="book-modal-description">${escapeHtml(data.description)}</div>`;
   html += `<div class="book-modal-sections">${data.books.length} ${data.books.length === 1 ? 'book' : 'books'} in series</div>`;
   html += `<div class="star-rating" id="series-star-widget" data-series-id="${data.id}">`;
-  html += coversState._hooks.starsHtml?.(data.avgRating ?? null) ?? '';
+  if (!userLoggedIn || userHasSeries) {
+    html += coversState._hooks.starsHtml?.(userLoggedIn ? null : (data.avgRating ?? null)) ?? '';
+  }
   html += `<span class="star-label">${coversState._hooks.starLabelHtml?.(data.avgRating ?? null, data.voteCount ?? 0, 'series') ?? ''}</span>`;
   html += `</div>`;
   if (data.isPublic && userLoggedIn && !userHasSeries) {
@@ -146,7 +148,7 @@ export function renderSeriesActivity(data) {
     const seriesId    = data.id;
 
     const updateStars = (hoverVal) => {
-      const displayVal = hoverVal !== null ? hoverVal : avgRating;
+      const displayVal = hoverVal !== null ? hoverVal : (userLoggedIn ? currentRating : avgRating);
       ssw.querySelectorAll('.star').forEach(s => {
         const p = +s.dataset.pos;
         s.className = (displayVal !== null && displayVal >= p) ? 'star on'
@@ -178,6 +180,7 @@ export function renderSeriesActivity(data) {
 
       ssw.querySelectorAll('.star').forEach(star => {
         star.addEventListener('mousemove', e => {
+          if (!canRate) return;
           const left = e.offsetX < star.offsetWidth / 2;
           updateStars(+star.dataset.pos - (left ? 0.5 : 0));
         });

@@ -1,6 +1,6 @@
 // Resolve pre-combat flight and the source's separate fatal archery encounter.
 import {ready} from './core.js';
-import {fighter, effectiveStats, rollDice} from './math.js';
+import {fighter, effectiveStats, rollDice, number} from './math.js';
 
 function record(fight, event) {
   fight.events.push(event);
@@ -15,7 +15,7 @@ export function attemptFlight(input, {total, enemyIndex = 0, failedRule} = {}, d
   if (!['detailed','synopsis'].includes(failedRule)) throw new RangeError('Choose the printed failed-flight damage rule.');
   const fight = structuredClone(input), enemy = fight.enemies[enemyIndex];
   if (!enemy || enemy.withdrawn || enemy.lifePoints <= (enemy.rules.defeatAt ?? 0)) throw new RangeError('Choose an active opponent.');
-  const roll = rollDice(2,die,total), score = roll.total + (fight.options.cursed ? 1 : 0);
+  const roll = rollDice(2,die,total), score = roll.total + (fight.options.cursed ? 1 : 0) + number(fight.options.luckBonus ?? 0,0,2);
   fight.flightAttempted = true;
   if (score >= 9) fight.outcome = 'escaped';
   else {

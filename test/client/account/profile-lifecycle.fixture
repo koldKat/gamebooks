@@ -27,6 +27,7 @@ const stubs = {
   '../progression/shop.js': { updateCoinsDisplay() {} },
   '../progression/rubies.js': { updateRubiesDisplay() {} },
   '../progression/diamonds.js': { updateDiamondsDisplay() {} },
+  '../graph/camera-motion.js': { waitForCameraIdle: () => false },
   '../core/util.js': { escapeHtml: value => String(value), compressToBlob() {} },
 };
 const mod = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), { context });

@@ -1,0 +1,66 @@
+<!doctype html><meta charset="utf-8">
+<form id="login-form">
+  <input id="login-username" autocomplete="username">
+  <input id="login-password" type="password" autocomplete="current-password">
+</form>
+<form id="m-login-form">
+  <input id="m-login-user" autocomplete="username">
+  <input id="m-login-pass" type="password" autocomplete="current-password">
+</form>
+<input id="profile-email-input" type="email" autocomplete="email">
+<input id="profile-new-password" type="password" autocomplete="new-password">
+<input id="add-node-input" inputmode="numeric" autocomplete="off">
+<input id="find-node-input" autocomplete="off">
+<input id="book-name" autocomplete="off"><ul id="custom-suggestions"><li>Custom suggestion</li></ul>
+<form id="reader-form"><input id="reader-marker" name="marker" required type="number" min="1" max="619"></form>
+<form id="covers-search-form" role="search"><input id="covers-search" type="search"></form>
+<script type="module">
+try {
+  await import('AUTOCOMPLETE_MODULE');
+  const el = id => document.getElementById(id);
+  let checks = 0;
+  function check(value, message) { if (!value) throw Error(message); checks++; }
+  for (const [id, owner, autocomplete] of [
+    ['login-username', 'login-form', 'username'], ['login-password', 'login-form', 'current-password'],
+    ['m-login-user', 'm-login-form', 'username'], ['m-login-pass', 'm-login-form', 'current-password'],
+  ]) {
+    check(el(id).form.id === owner, 'login ownership preserved: ' + id);
+    check(el(id).autocomplete === autocomplete, 'login autofill preserved: ' + id);
+  }
+  for (const id of ['add-node-input', 'find-node-input', 'book-name']) {
+    check(el(id).form.id === 'app-ordinary-fields', 'ordinary field isolated: ' + id);
+    check(el(id).autocomplete === 'off', 'history disabled: ' + id);
+  }
+  check(el('profile-email-input').form.id === 'app-account-fields', 'email separated from section/search fields');
+  check(el('profile-new-password').form.id === 'app-account-fields', 'password separated from section/search fields');
+  check(el('profile-new-password').autocomplete === 'new-password', 'new password semantics preserved');
+  check(el('profile-email-input').autocomplete === 'off', 'account email history disabled');
+  check(![...el('add-node-input').form.elements].some(field => ['email', 'password'].includes(field.type)), 'section form has no account fields');
+  check(el('reader-marker').form.id === 'reader-form', 'reader form preserved');
+  check(el('reader-marker').required && el('reader-marker').max === '619', 'reader validation preserved');
+  check(!el('reader-marker').checkValidity(), 'empty required paragraph remains invalid');
+  check(el('covers-search').form.id === 'covers-search-form', 'search form preserved');
+  check(el('covers-search-form').autocomplete === 'off', 'existing form history disabled');
+  let typed = '';
+  el('book-name').addEventListener('input', event => { typed = event.target.value; });
+  el('book-name').value = 'A book';
+  el('book-name').dispatchEvent(new Event('input', { bubbles: true }));
+  check(typed === 'A book' && el('custom-suggestions').children.length === 1, 'custom suggestions and input handlers preserved');
+  for (let i = 0; i < 10; i++) {
+    const field = document.createElement(i % 2 ? 'textarea' : 'input');
+    field.id = 'dynamic-' + i;
+    document.body.append(field);
+    await new Promise(resolve => setTimeout(resolve, 0));
+    check(field.form.id === 'app-ordinary-fields' && field.autocomplete === 'off', 'dynamic field isolated');
+    field.remove();
+  }
+  check(document.querySelectorAll('form[id^="app-"]').length === 2, 'dynamic fields do not accumulate isolation forms');
+  const changing = document.createElement('input');
+  document.body.append(changing);
+  await new Promise(resolve => setTimeout(resolve, 0));
+  changing.type = 'email'; changing.focus();
+  check(changing.form.id === 'app-account-fields', 'focus rechecks changed field type');
+  check(el('app-ordinary-fields').dispatchEvent(new Event('submit', { cancelable: true })) === false, 'ordinary fields cannot submit or navigate');
+  document.body.dataset.test = JSON.stringify({ checks, loginAutofillPreserved: true, dynamicFieldsCovered: true });
+} catch (error) { document.body.dataset.failure = error.stack || error.message; }
+</script>
