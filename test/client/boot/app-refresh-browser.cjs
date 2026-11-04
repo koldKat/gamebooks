@@ -16,10 +16,12 @@ import {canRefreshMainPage} from '/boot/refresh-safety.js';
 import {setCurrentBookId} from '/core/state.js';
 const check=(ok,label)=>{if(!ok)throw Error(label);},delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 if(window.name.startsWith('expected-update:')){
- document.body.dataset.test=window.name.slice('expected-update:'.length);
+ check(localStorage.getItem('gamebook_auth_token')==='existing-session-token','actual reload preserves the existing login token');
  check(location.hash==='#books','reload preserves the main page URL');
+ document.body.dataset.test=window.name.slice('expected-update:'.length);
 }else{
  check(window.name!=='checking-update','no premature reload');window.name='checking-update';
+ localStorage.setItem('gamebook_auth_token','existing-session-token');
  let time=Date.now(),visibility='visible',latest={version:'1.3.1.0'},requests=0,pending;
  Date.now=()=>time;
  Object.defineProperty(document,'visibilityState',{configurable:true,get:()=>visibility});
@@ -44,7 +46,7 @@ if(window.name.startsWith('expected-update:')){
  const editor=document.getElementById('edit-overlay');editor.classList.add('active');editor.style.display='block';await returning();check(requests===checksAfterRace,'open editor blocks request');editor.classList.remove('active');editor.style.display='none';
  pending={};hide();show();await delay(10);field.value='new typing';field.dispatchEvent(new Event('input',{bubbles:true}));pending.resolve({ok:true,json:async()=>latest});pending=null;await delay(30);field.value='';
  check(canRefreshMainPage(),'clean main page eligible again');
- window.name='expected-update:'+JSON.stringify({onlyNewVersion:true,noIdleRefresh:true,noCanvasRefresh:true,navigationRaceSafe:true,typingRaceSafe:true,draftsProtected:true,dialogsProtected:true,savesProtected:true,actualReload:true});
+ window.name='expected-update:'+JSON.stringify({onlyNewVersion:true,noIdleRefresh:true,noCanvasRefresh:true,navigationRaceSafe:true,typingRaceSafe:true,draftsProtected:true,dialogsProtected:true,savesProtected:true,actualReload:true,existingSessionTokenPreserved:true});
  hide();show();
  await delay(2000);throw Error('new version did not reload');
 }

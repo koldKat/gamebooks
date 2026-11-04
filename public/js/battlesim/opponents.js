@@ -17,7 +17,7 @@ export function validateOpponents(rows, fields, isStatUnavailable) {
       const value = Number(raw);
       if (raw === '' || raw == null || !Number.isFinite(value)
           || value < (field.min ?? 0) || value > (field.max ?? 1000000)
-          || Math.abs(value / (field.step ?? 1) - Math.round(value / (field.step ?? 1))) > 1e-8) {
+          || field.step !== 'any' && Math.abs(value / (field.step ?? 1) - Math.round(value / (field.step ?? 1))) > 1e-8) {
         throw new RangeError('Invalid opponent ' + field.key);
       }
       result[field.key] = value;
@@ -46,7 +46,7 @@ export function createOpponentEditor({document, id, t, fields, presets = [], lan
     row.innerHTML = `<label class="inv-edit-row"><span>${escape(label('name'))}</span><div class="autocomplete-wrap bsim-enemy-ac"><input class="inv-edit-input" id="${inputId}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="${inputId}-list"><ul class="autocomplete-dropdown" id="${inputId}-list" role="listbox"></ul></div></label>`
       + fields.map(field => `<label class="inv-edit-row"><span>${escape(field.label)}</span>${field.options
         ? `<select class="inv-edit-input" data-stat="${escape(field.key)}">${field.options.map(option => `<option value="${escape(option.value ?? option)}">${escape(option.label ?? option)}</option>`).join('')}</select>`
-        : `<input class="inv-edit-input" type="number" min="${field.min ?? 0}" max="${field.max ?? 1000000}" step="${field.step ?? 1}" data-stat="${escape(field.key)}" required>`}</label>`).join('')
+        : `<input class="inv-edit-input" type="number" min="${field.min ?? 0}" max="${field.max ?? 1000000}" step="${field.step ?? 1}" data-stat="${escape(field.key)}" autocomplete="off" required>`}</label>`).join('')
       + `<button type="button" class="bsim-action-btn">${escape(label('remove'))}</button>`;
     const name = row.querySelector('[role="combobox"]');
     const list = row.querySelector('[role="listbox"]');

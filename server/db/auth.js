@@ -8,6 +8,7 @@ const scrypt = util.promisify(crypto.scrypt);
 
 const { db, _foldForSearch, _naturalCompare } = require('./connection');
 const { tryBookkeepingWrite } = require('./bookkeeping');
+const { normalizeEmail, emailTaken, isDuplicateEmail } = require('./email-identity');
 
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 
@@ -137,8 +138,9 @@ function setUserPrefs(userId, prefs) {
 }
 
 async function createUser(username, password, email) {
+  const emailVal = normalizeEmail(email);
+  if (emailTaken(db, emailVal)) throw new Error('That email address is already in use by another account.');
   const { hash, salt } = await hashPassword(password);
-  const emailVal = email ? email.trim().toLowerCase() : null;
   const tmplIds = db.prepare(`SELECT id FROM join_templates WHERE active = 1`).all().map(r => r.id);
   const tmplId  = tmplIds.length ? tmplIds[Math.floor(Math.random() * tmplIds.length)] : null;
   try {
@@ -147,18 +149,21 @@ async function createUser(username, password, email) {
     ).run(username, hash, salt, emailVal, tmplId);
     return { id: result.lastInsertRowid, username };
   } catch (e) {
+    if (isDuplicateEmail(e)) throw new Error('That email address is already in use by another account.');
     if (e.message.includes('UNIQUE')) throw new Error('Username already taken');
     throw e;
   }
 }
 
 function setUserEmail(userId, email) {
-  const val = email ? email.trim().toLowerCase() : null;
-  if (val) {
-    const existing = db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(val, userId);
-    if (existing) return { error: 'email_taken' };
+  const val = normalizeEmail(email);
+  if (emailTaken(db, val, userId)) return { error: 'email_taken' };
+  try {
+    db.prepare('UPDATE users SET email = ? WHERE id = ?').run(val, userId);
+  } catch (error) {
+    if (isDuplicateEmail(error)) return { error: 'email_taken' };
+    throw error;
   }
-  db.prepare('UPDATE users SET email = ? WHERE id = ?').run(val, userId);
   return { ok: true };
 }
 

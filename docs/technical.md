@@ -243,6 +243,8 @@ Shared engines accept declarative rules rather than branching on book IDs. Panel
 
 The Shinté engine resolves separate CS-versus-DS attacks through database-backed combat charts. Encounter adapters supply initiative, modifiers and the recipient of damage. Undefined chart results wait for explicit manual resolution without advancing the turn.
 
+The Horror Classic engine resolves dice-based strikes, combat powers and explicitly completed rounds. Its presets and encounter exceptions come from the database. Effects with undefined timing require an explicit ruling; separate fatal-shot encounters do not invent ordinary combat stats. Flight and healing preserve distinct printed rule profiles without automating travel.
+
 Saved fights retain their rule version, turn, participants, resources, pending decisions, and history. Rendering does not migrate or reset them. Each completed outcome is recorded once; canceled or incomplete encounters must not be reported as victories.
 
 Custom encounters use the common opponent editor. Missing or derived source attributes remain explicitly unavailable until the appropriate engine resolves them; setup must not invent substitute values. Ordinary custom fights do not require a preset.

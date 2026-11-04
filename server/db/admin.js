@@ -619,7 +619,7 @@ function adminGetUser(userId) {
            u.bonus_diamond_dig_purchased, u.bonus_diamond_exchange_purchased,
            COUNT(DISTINCT s.token) AS session_count
     FROM users u
-    LEFT JOIN sessions s ON s.user_id = u.id
+    LEFT JOIN sessions s ON s.user_id = u.id AND s.is_impersonation = 0 AND s.expires_at > strftime('%s','now')
     WHERE u.id = ?
     GROUP BY u.id
   `).get(userId);
@@ -1071,7 +1071,8 @@ function adminGetUsers() {
     LEFT JOIN user_heartbeat_coins h ON h.user_id=u.id
     LEFT JOIN user_diamonds d ON d.user_id=u.id
     LEFT JOIN user_rubies r ON r.user_id=u.id
-    LEFT JOIN (SELECT user_id, COUNT(DISTINCT token) AS session_count FROM sessions GROUP BY user_id) s ON s.user_id=u.id
+    LEFT JOIN (SELECT user_id, COUNT(DISTINCT token) AS session_count FROM sessions
+      WHERE is_impersonation = 0 AND expires_at > strftime('%s','now') GROUP BY user_id) s ON s.user_id=u.id
     ORDER BY last_active DESC, u.created_at DESC
   `).all();
   // Active runs have no permanent event; count them from current state.
@@ -1190,7 +1191,12 @@ function adminDeleteUser(userId) {
 }
 
 function adminClearUserSessions(userId) {
-  return db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId).changes;
+  return db.transaction(() => {
+    const visible = db.prepare(`SELECT COUNT(*) AS n FROM sessions
+      WHERE user_id = ? AND is_impersonation = 0 AND expires_at > strftime('%s','now')`).get(userId).n;
+    db.prepare('DELETE FROM sessions WHERE user_id = ?').run(userId);
+    return visible;
+  })();
 }
 
 function adminGetBooks() {

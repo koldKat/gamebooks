@@ -2,6 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {validateOpponents} from '../../../public/js/battlesim/opponents.js';
 
+test('explicit arbitrary fractions remain exact while integer fields stay restricted', () => {
+  const fraction=100/Math.pow(2,20);
+  assert.equal(validateOpponents([{life:fraction}],[{key:'life',min:0,step:'any'}])[0].life,fraction);
+  assert.throws(()=>validateOpponents([{life:fraction}],[{key:'life',min:0}]),RangeError);
+});
+
 const fields = [{key: 'skill'}, {key: 'stamina', min: 1}, {key: 'damage', step: 0.5}];
 test('freeform opponent values are validated without mutating presets or saved objects', () => {
   const preset = {name: 'source-key', displayName: 'My opponent', skill: '7', stamina: '12', damage: '1.5', special: true};

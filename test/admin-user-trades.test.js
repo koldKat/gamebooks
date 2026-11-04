@@ -13,7 +13,7 @@ test('account trade histories stay private, newest first, bounded and read-only'
   const fn = source.slice(source.indexOf('function adminGetUser('), source.indexOf('function adminGetUserBooks('));
   const columns = [...new Set([...fn.matchAll(/u\.([a-z_]+)/g)].map(match => match[1]))];
   db.exec(`CREATE TABLE users (${columns.map(name => `${name} ${name === 'id' ? 'INTEGER PRIMARY KEY' : 'TEXT'}`).join(',')});
-    CREATE TABLE sessions (user_id INTEGER, token TEXT);
+    CREATE TABLE sessions (user_id INTEGER, token TEXT, expires_at INTEGER, is_impersonation INTEGER);
     CREATE TABLE books (id INTEGER, name TEXT);
     CREATE TABLE ruby_rewards (user_id INTEGER, book_id INTEGER, kind TEXT, created_at INTEGER);
     CREATE TABLE notifications (id INTEGER PRIMARY KEY,user_id INTEGER,type TEXT,payload TEXT,created_at INTEGER);

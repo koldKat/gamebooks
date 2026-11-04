@@ -25,7 +25,8 @@ function setup(t) {
     return context.module.exports;
   }
   const bookkeeping = load('../server/db/bookkeeping', { './connection': { db } });
-  const auth = load('../server/db/auth', { './connection': { db }, './bookkeeping': bookkeeping });
+  const auth = load('../server/db/auth', { './connection': { db }, './bookkeeping': bookkeeping,
+    './email-identity': require('../server/db/email-identity') });
   const helpers = load('../server/request-helpers', {
     './db': { ...auth,
       updateUserLastActive: id => db.prepare('UPDATE users SET active = active + 1 WHERE id = ?').run(id),
@@ -70,6 +71,17 @@ test('recent session renewal avoids another write and due renewal retries after 
   h.locker.exec('ROLLBACK');
   h.auth.refreshSession('due');
   assert.equal(h.db.prepare('SELECT active FROM users').get().active, 1);
+});
+
+test('repeated authenticated page requests reuse the same session token', async t => {
+  const h=setup(t);h.insert('returning-player');
+  const tokens=()=>h.db.prepare('SELECT token,user_id,is_impersonation FROM sessions ORDER BY token').all();
+  const before=tokens();
+  for(let n=0;n<3;n++) {
+    assert.equal(await h.helpers.authenticate(h.request('returning-player'),{}),1);
+    assert.equal(h.helpers.authenticateOptional(h.request('returning-player')),1);
+  }
+  assert.deepEqual(tokens(),before);
 });
 
 test('expired and revoked sessions remain unauthorized and cannot be renewed', async t => {

@@ -202,6 +202,7 @@ try { db.exec(`ALTER TABLE users ADD COLUMN locked_until INTEGER DEFAULT NULL`);
 try { db.exec(`ALTER TABLE users ADD COLUMN is_protected INTEGER DEFAULT 0`); } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0`); } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN email TEXT DEFAULT NULL`); } catch (_) {}
+require('./db/email-identity').initializeEmailIdentity(db);
 
 db.exec(`CREATE TABLE IF NOT EXISTS password_reset_tokens (
   token      TEXT    PRIMARY KEY,
