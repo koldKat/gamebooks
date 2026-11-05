@@ -1,4 +1,5 @@
 // Resolve optional Super Endless Quest encounters without advancing the story.
+import {validateStagedQuestFight} from './steps.js';
 const copy = value => structuredClone(value);
 const integer = (value, min, max) => {
   if (!Number.isSafeInteger(value) || value < min || value > max) throw new RangeError('Invalid combat value');
@@ -100,6 +101,7 @@ function applyExit(fight, action) {
 
 // Validate saved rolls by replaying them without generating dice or changing the run.
 export function validateQuestFight(fight) {
+  if (fight?.rulesVersion === 2) return validateStagedQuestFight(fight);
   if (fight?.rulesVersion !== 1 || !Array.isArray(fight.events) || fight.events.length > 100001) {
     throw new RangeError('Invalid saved encounter');
   }

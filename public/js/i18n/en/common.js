@@ -1,7 +1,7 @@
 // English translations: common.
 export default {
     'app.title':   'Gamebook Tracker',
-    'app.tagline': 'Map every branch across all your playthroughs',
+    'app.tagline': 'Map every path. Track every run.',
 
     'btn.save':     'Save',
     'btn.cancel':   'Cancel',

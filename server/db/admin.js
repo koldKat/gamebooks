@@ -254,7 +254,7 @@ if (db.prepare('SELECT COUNT(*) AS n FROM taglines').get().n === 0) {
     'Every path through every book, tracked.',
     'Chart every gamebook. Track every run.',
     'Map your paths. Track your victories.',
-    'Every playthrough mapped. Every ending found.',
+    'Map every run. Find each ending.',
     'From section 1 to the end, fully mapped.',
     'Track the branches. Map the adventure.',
     'Every gamebook. Every run. Fully mapped.',

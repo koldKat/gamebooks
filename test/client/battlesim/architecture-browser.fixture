@@ -31,7 +31,7 @@ for(const id of BOOK_IDS){
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
-  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817||id===832||id===833||id===838||id===1578||id===1587){
+  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817||id===832||id===833||id===838||id===1578||id===1587||id===1589||id===1591){
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
     check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
   }
@@ -129,6 +129,93 @@ for(const id of BOOK_IDS){
     el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();
     check(JSON.stringify(data())===before,'Pax stale confirmation cannot update another book');app.setCurrentBookId(id);
     check(JSON.stringify([run.inventory,run.sim1578,run.path])===unrelated,'Pax inventory, other fight and story path preserved');
+  }
+  if(id===1591){
+    const run=app.currentPlaythrough(),data=()=>run.sim1591,el=key=>document.getElementById('sim1591-'+key);
+    const {ENCOUNTERS}=await import('REPO/public/js/battlesim/books/1591/definition.js');
+    check(ENCOUNTERS.length===3&&requestedRosters.has(id),'Ninja installed combat catalog');
+    run.inventory=[{name:'Unrelated equipment'}];run.sim1589={preserved:true};
+    const unrelated=JSON.stringify([run.inventory,run.sim1589,run.path]);
+    const hero=()=>{for(const [key,value]of Object.entries({maxHp:100,hp:90,prowess:30,perception:30,kenjutsu:30,experience:10}))el(key).value=value;};
+    const complete=()=>{
+      let actions=0;
+      while(data().fight.status==='fighting'){
+        check(++actions<60,'Ninja encounter terminates');const fight=data().fight,history=data().history.length;
+        if(fight.phase==='damage'){
+          if(el('damage'))el('damage').click();
+          else{el('die').value=1;el('spent').value=0;el('roll').click();}
+        }else if(fight.phase==='check'){el('die').value=1;el('spent').value=0;el('roll').click();}
+        else if(fight.phase==='continue')el('continue').click();
+        else if(fight.phase==='finish')el('finish').click();
+        else overlay.querySelector('[id^="sim1591-choice-"]').click();
+        if(data().fight.status==='fighting')check(data().history.length===history,'Ninja intermediate actions award no battle outcome');
+      }
+      check(data().fight.status==='win','Ninja explicit victory reached');
+    };
+    hero();el('procedure').value='25';overlay.querySelector('[role="combobox"]').value='Custom training opponent';el('start').click();
+    check(data().fight.opponent.name==='Custom training opponent','Ninja custom fight needs no roster selection');
+    check(el('hp').disabled&&el('procedure').disabled&&el('acknowledged').disabled,'Ninja setup locked');complete();
+    for(const entry of ENCOUNTERS){
+      const name=overlay.querySelector('[role="combobox"]');name.value=entry.name;name.dispatchEvent(new FocusEvent('focus'));
+      const option=[...overlay.querySelectorAll('[role="option"]')].find(node=>node.textContent.startsWith(entry.name));
+      check(option,'Ninja optional preset');option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));
+      check(el('procedure').value===entry.section,'Ninja preset selects combat procedure');hero();el('start').click();complete();
+    }
+    hero();el('procedure').value='8';el('acknowledged').checked=true;el('start').click();
+    check(data().player.hp===90&&data().fight.phase==='check','Ninja opening damage acknowledgment');
+    const before=JSON.stringify(data());module.render();check(JSON.stringify(data())===before,'Ninja render preserves combat');
+    el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();
+    check(JSON.stringify(data())===before,'Ninja stale confirmation preserves another book');app.setCurrentBookId(id);
+    check(JSON.stringify([run.inventory,run.sim1589,run.path])===unrelated,'Ninja preserves inventory other fight and story path');
+  }
+  if(id===1589){
+    const run=app.currentPlaythrough(),data=()=>run.sim1589,el=key=>document.getElementById('sim1589-'+key);
+    const {ENCOUNTERS}=await import('REPO/public/js/battlesim/books/1589/definition.js');
+    check(ENCOUNTERS.length===43&&requestedRosters.has(id),'Quarras complete installed combat catalog');
+    run.inventory=[{name:'Unrelated equipment'}];run.sim1587={preserved:true};
+    const unrelated=JSON.stringify([run.inventory,run.sim1587,run.path]);
+    const hero=(overrides={})=>{
+      for(const [key,value]of Object.entries({maxHp:100,hp:90,fighting:20,agility:20,experience:10,...overrides}))el(key).value=value;
+      for(const key of ['sword','cloak','gem','damageAcknowledged'])el(key).checked=false;
+    };
+    const choose=section=>{
+      const name=overlay.querySelector('[role="combobox"]');name.value='('+section+')';name.dispatchEvent(new FocusEvent('focus'));
+      const option=[...overlay.querySelectorAll('[role="option"]')].find(node=>node.textContent.includes('('+section+')'));
+      check(option,'Quarras installed preset '+section);option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));
+    };
+    const roll=(a=6,b=6,spent=0)=>{el('die1').value=a;if(el('die2'))el('die2').value=b;el('spent').value=spent;el('attack').click();};
+    const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    hero({fighting:3});overlay.querySelector('[role="combobox"]').value='Custom opponent';
+    for(const field of overlay.querySelectorAll('[data-stat]'))field.value=field.dataset.stat==='target'?12:4;
+    el('start').click();check(data().fight.rulesVersion===1,'Quarras ordinary custom encounter needs no preset');
+    roll(4,4,1);check(data().fight.status==='win','Quarras ordinary custom fight resolves');
+    for(const entry of ENCOUNTERS){
+      choose(entry.section);hero();el('start').click();check(data().fight.rulesVersion===2,'Quarras staged preset '+entry.section);
+      check(el('hp').disabled&&el('sword').disabled&&el('custom').disabled,'Quarras setup locked');
+      let actions=0;
+      while(data().fight.status==='fighting'){
+        check(++actions<30,'Quarras combat terminates '+entry.section);const history=data().history.length;
+        if(data().fight.phase==='attack')roll();
+        else if(data().fight.phase==='continue')el('continue').click();
+        else el('choice-126').click();
+        if(data().fight.status==='fighting')check(data().history.length===history,'Quarras intermediate checks award no battle outcome');
+      }
+      check(data().fight.status===(entry.section==='105'?'fled':'win'),'Quarras printed terminal outcome '+entry.section);
+    }
+    choose('11');hero({fighting:1});el('start').click();check(!el('die2'),'Quarras original one-die check');roll(6,6,4);
+    check(data().fight.status==='win'&&data().fight.destination==='201','Quarras declared experience one-die victory');
+    choose('117');hero({fighting:1});el('start').click();const hp=data().player.hp;roll(1,1);el('continue').click();
+    check(data().player.hp===hp&&data().fight.status==='fighting','Quarras zero printed damage remains zero');cancel();
+    choose('17');hero({fighting:1});el('gem').checked=true;el('damageAcknowledged').checked=true;el('start').click();
+    check(data().player.hp===90,'Quarras opening damage acknowledgment');roll(1,1);el('continue').click();
+    check(data().player.hp===87,'Quarras repeated damage applies gem once');cancel();
+    choose('22');hero({hp:1});el('damageAcknowledged').checked=true;el('start').click();roll();
+    check(data().fight.status==='loss'&&data().player.hp===0,'Quarras terminal contact damage cannot award false victory');
+    choose('50');hero();el('start').click();const before=JSON.stringify(data());module.render();
+    check(JSON.stringify(data())===before,'Quarras rendering preserves active combat');
+    el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();
+    check(JSON.stringify(data())===before,'Quarras stale confirmation preserves another book');app.setCurrentBookId(id);
+    check(JSON.stringify([run.inventory,run.sim1587,run.path])===unrelated,'Quarras preserves inventory other simulator and story path');
   }
   if(id===1578){
     const el=key=>document.getElementById('sim1578-'+key),run=app.currentPlaythrough(),data=()=>run.sim1578;

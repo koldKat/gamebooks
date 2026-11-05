@@ -794,6 +794,7 @@ body.feed-collapsed #feed-panel {
 #app-banner-text {
   display: flex;
   flex-direction: column;
+  flex: 1 0 auto;
   gap: 0.2rem;
 }
 
@@ -859,6 +860,8 @@ body.feed-collapsed #feed-panel {
 
 #app-banner-right {
   display: flex;
+  min-width: 0;
+  flex: 0 1 auto;
   flex-direction: column;
   align-items: flex-end;
   gap: 0.4rem;

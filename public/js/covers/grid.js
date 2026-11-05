@@ -5,6 +5,7 @@ import { _landingCoverPool, _startLandingCoverRotation } from './background.js';
 import { coversState } from './state.js';
 
 const _LAZY_BATCH = 20;
+let _randomItems = null;
 
 export function _syncCoverLibraryMembership() {
   if (!coversState._coversNotMineOnly) return;
@@ -13,6 +14,7 @@ export function _syncCoverLibraryMembership() {
   const key = item => item.isSeries ? `series:${item.entityId}` : `book:${item.id}`;
   const owned = new Set([...coversState._allBooks, ...coversState._allSeriesCovers]
     .filter(item => !_isNotInMyBooks(item)).map(key));
+  if (_randomItems) _randomItems = _randomItems.filter(item => !owned.has(key(item)));
   if (coversState._lazyItems) {
     const loaded = coversState._lazyItems.slice(0, coversState._lazyOffset);
     coversState._lazyOffset = loaded.filter(item => !owned.has(key(item))).length;
@@ -34,6 +36,11 @@ export function _removeFavoriteThumbInPlace(favBtn) {
   if (!thumb) return;
   const grid = document.getElementById('covers-grid');
   const panel = document.getElementById('covers-panel');
+  if (_randomItems) {
+    _randomItems = _randomItems.filter(item => favBtn.dataset.favType === 'series'
+      ? !(item.isSeries && Number(item.entityId) === Number(favBtn.dataset.favId))
+      : !(!item.isSeries && Number(item.id) === Number(favBtn.dataset.favId)));
+  }
   if (coversState._lazyItems) {
     const favType = favBtn.dataset.favType;
     const favId = Number(favBtn.dataset.favId);
@@ -76,6 +83,7 @@ export function _updateCoversCount() {
 }
 
 export function _stopLazy() {
+  _randomItems = null;
   const panel = document.getElementById('covers-panel');
   if (panel && coversState._lazyScrollFn) panel.removeEventListener('scroll', coversState._lazyScrollFn);
   coversState._lazyItems    = null;
@@ -155,21 +163,20 @@ export function _renderCovers(covers) {
   _stopLazy();
   const panel = document.getElementById('covers-panel');
   const grid  = document.getElementById('covers-grid');
-  if (!grid) return;
+  if (!grid || !panel) return;
   panel.classList.remove('covers-lazy');
-  grid.innerHTML = covers.map(c => _makeCoverThumbHTML(c)).join('');
-  covers.forEach((c, i) => {
-    if (!c.coverUrl) return;
-    const thumb = grid.querySelectorAll('.cover-thumb')[i];
-    if (thumb) _enqueueCoverLoad(c.coverUrl, thumb.querySelector('img'), thumb.querySelector('.cover-load-bar'));
-  });
+  _randomItems = covers;
+  // Measure one row before building or fetching any of the remaining cards.
+  grid.innerHTML = covers.slice(0, 4).map(c => _makeCoverThumbHTML(c)).join('');
 }
 
 export function _trimCoversToFit() {
   const panel  = document.getElementById('covers-panel');
   const grid   = document.getElementById('covers-grid');
   const header = document.getElementById('covers-header');
+  const generation = coversState._coversPanelGen;
   requestAnimationFrame(() => {
+    if (!panel || !grid || generation !== coversState._coversPanelGen) return;
     const style    = getComputedStyle(panel);
     const padTop   = parseFloat(style.paddingTop);
     const padBot   = parseFloat(style.paddingBottom);
@@ -178,16 +185,38 @@ export function _trimCoversToFit() {
     const cellGap  = parseFloat(getComputedStyle(grid).gap) || 8;
     const available = panel.clientHeight - padTop - padBot - headerH - panelGap;
     const thumbs    = grid.querySelectorAll('.cover-thumb');
-    if (!thumbs.length) return;
+    if (!thumbs.length) {
+      const countEl = document.getElementById('covers-count');
+      const totalEl = document.getElementById('covers-total');
+      if (countEl) countEl.textContent = '0 ';
+      if (totalEl) totalEl.textContent = ` (${(_randomItems || _visibleCoverItems()).length} total)`;
+      return;
+    }
     const cellH = thumbs[0].getBoundingClientRect().height;
     if (!cellH) return;
     const rows    = Math.max(1, Math.floor((available + cellGap) / (cellH + cellGap)));
-    const visible = Math.min(thumbs.length, rows * 4);
-    thumbs.forEach((t, i) => { t.style.display = i < visible ? '' : 'none'; });
+    const visible = Math.min(_randomItems?.length ?? thumbs.length, rows * 4);
+    if (_randomItems) {
+      for (let i = thumbs.length; i < visible; i++) {
+        grid.insertAdjacentHTML('beforeend', _makeCoverThumbHTML(_randomItems[i]));
+      }
+      // Never retain hidden cards or queue their images in random mode.
+      const displayed = grid.querySelectorAll('.cover-thumb');
+      displayed.forEach((thumb, i) => {
+        if (i >= visible) { thumb.remove(); return; }
+        const item = _randomItems[i];
+        const img = thumb.querySelector('img');
+        if (item.coverUrl && img && !img._coverLoadVersion) {
+          _enqueueCoverLoad(item.coverUrl, img, thumb.querySelector('.cover-load-bar'));
+        }
+      });
+    } else {
+      thumbs.forEach((t, i) => { t.style.display = i < visible ? '' : 'none'; });
+    }
     const countEl = document.getElementById('covers-count');
     const totalEl = document.getElementById('covers-total');
     if (countEl) countEl.textContent = `${visible} `;
-    if (totalEl) totalEl.textContent = ` (${_visibleCoverItems().length} total)`;
+    if (totalEl) totalEl.textContent = ` (${(_randomItems || _visibleCoverItems()).length} total)`;
   });
 }
 

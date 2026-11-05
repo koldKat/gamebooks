@@ -2,13 +2,15 @@
 import {createOpponentEditor} from '../../opponents.js';
 import {startQuestFight, questRoll, exitQuestFight} from './core.js';
 import {createQuestState} from './state.js';
+import {startStagedQuestFight, stagedQuestAction} from './steps.js';
 
 export function createQuestPanel({document, definition, t, getRoster, getRun, getBookId,
   saveState, getButtonRow, showAlert, showConfirm, registerShortcut = () => {}}) {
   const id = definition.stateKey, tr = (key, values) => t('battlesim.superEndless.' + key, values);
   const store = createQuestState(() => ({run:getRun(), bookId:getBookId(), definition, saveState}));
   let overlay, launch, left, right, editor, start, cancel, custom, controls, shownToken, mountedRun, mountedState;
-  const fields = {};
+  const fields = {}, modifiers = {}, staged = definition.combatMode === 'staged';
+  let damageAcknowledged;
   const busy = state => state.fight?.status === 'fighting';
   const close = () => overlay?.classList.remove('active');
   function number(holder, key, min, max, value = '') {
@@ -25,6 +27,11 @@ export function createQuestPanel({document, definition, t, getRoster, getRun, ge
     }
     return value;
   }
+  function checkbox(holder, key) {
+    const row = document.createElement('label'), input = document.createElement('input'), label = document.createElement('span');
+    row.className = 'inv-edit-row'; input.type = 'checkbox'; input.id = id + '-' + key;
+    label.textContent = tr(key); row.append(label, input); holder.append(row); return input;
+  }
   function button(holder, key, action) {
     const node = document.createElement('button'); node.type = 'button'; node.className = 'bsim-action-btn';
     node.id = id + '-' + key; node.textContent = tr(key); node.addEventListener('click', action); holder.append(node); return node;
@@ -36,20 +43,57 @@ export function createQuestPanel({document, definition, t, getRoster, getRun, ge
     if (busy(state)) return;
     const opponents = editor.read();
     if (opponents.length !== 1) throw new RangeError('One aggregate encounter is required');
-    state.fight = startQuestFight(Object.fromEntries(Object.entries(fields).map(([key, input]) => [key, numeric(input)])), opponents[0]);
+    const player = Object.fromEntries(Object.entries(fields).map(([key, input]) => [key, numeric(input)]));
+    if (staged && opponents[0].steps) {
+      const opponent = structuredClone(opponents[0]);
+      opponent.steps.find(step => step.section === opponent.section).target = opponent.target;
+      for (const [key, input] of Object.entries(modifiers)) player[key] = input.checked;
+      state.fight = startStagedQuestFight(player, opponent, damageAcknowledged.checked);
+    } else state.fight = startQuestFight(player, opponents[0]);
     return state;
   }
   function stop() {
     const token = shownToken;
     if (!token || !busy(token.state)) return;
     showConfirm(tr('cancelConfirm'), () => change(state => {
-      state.fight = exitQuestFight(state.fight, 'cancelled', token.state.fight.events.length); return state;
+      state.fight = state.fight.rulesVersion === 2
+        ? stagedQuestAction(state.fight, {kind:'cancel', expectedEvent:token.state.fight.events.length})
+        : exitQuestFight(state.fight, 'cancelled', token.state.fight.events.length); return state;
     }, token));
+  }
+  function stagedControls(fight, token) {
+    const count = fight.events.length;
+    const act = action => change(next => {
+      next.fight = stagedQuestAction(next.fight, {expectedEvent:count, ...action}); return next;
+    }, token);
+    if (fight.phase === 'continue') {
+      const node = button(controls, 'continue', () => act({kind:'continue', destination:fight.pending}));
+      node.textContent = tr('continueAt', {section:fight.pending}); return;
+    }
+    const step = fight.opponent.steps.find(step => step.section === fight.step);
+    if (fight.phase === 'choice') {
+      for (const target of step.choices) {
+        const node = button(controls, 'choice-' + target.destination, () => act({kind:'choice', destination:target.destination}));
+        node.textContent = tr(target.outcome === 'fled' ? 'leaveAt' : 'continueAt', {section:target.destination});
+      }
+      return;
+    }
+    const note = document.createElement('p');
+    note.textContent = tr('checkNote', {section:step.section, dice:step.dice, skill:tr(step.skill), target:step.target}); controls.append(note);
+    const spent = number(controls, 'spent', 0, fight.player.experience, 0);
+    const dice = Array.from({length:step.dice}, (_, index) => number(controls, 'die' + (index + 1), 1, 6));
+    for (const input of dice) input.placeholder = tr('automatic');
+    button(controls, 'attack', () => {
+      try {
+        act({kind:'roll', spent:numeric(spent), ...(dice.some(input => input.value.trim()) ? {dice:dice.map(numeric)} : {})});
+      } catch { showAlert(tr('invalid')); }
+    });
   }
   function actionControls(state, token) {
     controls.replaceChildren();
     if (!busy(state)) return;
     const fight = state.fight, count = fight.events.length, save = fight.phase === 'save';
+    if (fight.rulesVersion === 2) { stagedControls(fight, token); return; }
     const note = document.createElement('p'); note.textContent = tr(save ? 'saveNote' : 'attackNote'); controls.append(note);
     const spent = number(controls, 'spent', 0, fight.player.experience, 0);
     const d1 = number(controls, 'die1', 1, 6), d2 = number(controls, 'die2', 1, 6);
@@ -90,6 +134,8 @@ export function createQuestPanel({document, definition, t, getRoster, getRun, ge
     const log = document.createElement('div'); log.className = 'bsim-log'; right.append(log);
     for (const event of (fight?.events ?? []).slice(-100).reverse()) {
       if (event.kind === 'exit') add(log, tr('status.' + event.action));
+      else if (event.kind === 'cancel') add(log, tr('status.cancelled'));
+      else if (event.kind === 'continue' || event.kind === 'choice') add(log, tr('continueAt', {section:event.destination}));
       else add(log, tr('rollLog', {kind:tr(event.kind), dice:event.dice.join(' + '), spent:event.spent,
         total:event.total, target:event.target, result:tr(event.success ? 'hit' : 'miss'), hp:event.hp}));
     }
@@ -102,11 +148,15 @@ export function createQuestPanel({document, definition, t, getRoster, getRun, ge
     if (!token) { shownToken = null; mountedRun = mountedState = null; close(); return; }
     const state = token.state, locked = busy(state);
     if (mountedRun !== token.run || mountedState !== token.original) {
-      for (const [key, input] of Object.entries(fields)) input.value = state.player?.[key] ?? '';
+      for (const [key, input] of Object.entries(fields)) input.value = state.player?.[key] ?? (staged && key === 'agility' ? 1 : '');
+      for (const [key, input] of Object.entries(modifiers)) input.checked = state.player?.[key] ?? false;
+      if (damageAcknowledged) damageAcknowledged.checked = false;
       editor.set([state.opponent ?? {}]); mountedRun = token.run; mountedState = token.original;
     }
     shownToken = token;
     for (const input of Object.values(fields)) input.disabled = locked;
+    for (const input of Object.values(modifiers)) input.disabled = locked;
+    if (damageAcknowledged) damageAcknowledged.disabled = locked;
     editor.lock(locked); start.disabled = custom.disabled = locked; cancel.disabled = !locked;
     actionControls(state, token); report(state);
   }
@@ -121,11 +171,17 @@ export function createQuestPanel({document, definition, t, getRoster, getRun, ge
     overlay.querySelector('.inv-modal-title').textContent = t(definition.i18nPrefix + '.title');
     const closer = overlay.querySelector('.inv-close-btn'); closer.setAttribute('aria-label', t('btn.close')); closer.addEventListener('click', close);
     left = overlay.querySelector('.bsim-col-left'); right = overlay.querySelector('.bsim-col-right');
-    const note = document.createElement('p'); note.textContent = tr('rules'); left.append(note);
+    const note = document.createElement('p'); note.textContent = tr(staged ? 'stagedRules' : 'rules'); left.append(note);
     for (const key of ['maxHp', 'hp', 'fighting', 'experience']) fields[key] = number(left, key, key === 'experience' ? 0 : 1, 1000000);
+    if (staged) {
+      fields.agility = number(left, 'agility', 1, 1000000, 1);
+      for (const key of ['sword','cloak','gem']) modifiers[key] = checkbox(left, key);
+      damageAcknowledged = checkbox(left, 'damageAcknowledged');
+    }
     editor = createOpponentEditor({document, id, t,
       fields:[{key:'target', label:tr('target'), min:2}, {key:'damageOnMiss', label:tr('damageOnMiss'), min:1}],
-      presets:getRoster().map(entry => ({...entry, displayName:entry.name + ' (' + entry.section + ')'}))});
+      presets:getRoster().map(entry => ({...entry, displayName:entry.name + ' (' + entry.section + ')'})),
+      ...(staged ? {isStatUnavailable:(key, row) => key === 'damageOnMiss' && Boolean(row.steps)} : {})});
     editor.fixCount(true); left.append(editor.element);
     custom = button(left, 'custom', () => { if (!busy(shownToken?.state ?? {})) editor.set([{}]); });
     start = button(left, 'start', () => change(begin));

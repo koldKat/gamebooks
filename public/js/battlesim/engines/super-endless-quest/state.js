@@ -3,9 +3,9 @@ import {validateQuestFight} from './core.js';
 
 export const emptyQuestState = () => ({rulesVersion:1, player:null, opponent:null, fight:null, history:[]});
 
-export function rememberQuestFight(state, now = Date.now()) {
+export function rememberQuestFight(state, now = Date.now(), validateFight = validateQuestFight) {
   if (!state.fight) return state;
-  const fight = validateQuestFight(state.fight);
+  const fight = validateFight(state.fight);
   state.player = structuredClone(fight.player);
   state.opponent = structuredClone(fight.opponent);
   if (fight.status !== 'fighting' && !fight.recorded) {
@@ -18,7 +18,7 @@ export function rememberQuestFight(state, now = Date.now()) {
   return state;
 }
 
-export function createQuestState(getContext) {
+export function createQuestState(getContext, {validateFight = validateQuestFight} = {}) {
   const context = () => {
     const ctx = getContext();
     return ctx?.run && Number(ctx.bookId) === ctx.definition.id ? ctx : null;
@@ -34,7 +34,7 @@ export function createQuestState(getContext) {
     const next = change(structuredClone(token.state));
     if (!next) return false;
     if (next.rulesVersion !== 1 || !Array.isArray(next.history)) throw new RangeError('Invalid saved encounter state');
-    rememberQuestFight(next);
+    rememberQuestFight(next, Date.now(), validateFight);
     ctx = context();
     if (!ctx || ctx.run !== token.run || ctx.run[ctx.definition.stateKey] !== token.original) return false;
     ctx.run[ctx.definition.stateKey] = next;

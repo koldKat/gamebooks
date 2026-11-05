@@ -5,8 +5,8 @@
 const { db } = require('./connection');
 
 function getRandomTagline() {
-  return db.prepare('SELECT text FROM taglines WHERE active = 1 ORDER BY RANDOM() LIMIT 1').get()?.text
-    || 'Map every branch across all your playthroughs';
+  return db.prepare('SELECT text FROM taglines WHERE active = 1 AND length(text) <= 32 ORDER BY RANDOM() LIMIT 1').get()?.text
+    || 'Map every path. Track every run.';
 }
 
 function getRandomLevelUpTemplate() {
