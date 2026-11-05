@@ -14,3 +14,18 @@ test('every active simulator has exactly one outcome XP history registration', (
     if (match) assert.equal(keys.filter(key => key === 'sim' + match[1]).length, 1, file);
   }
 });
+
+for (const key of ['sim1592', 'sim1596']) test(key + ' rewards only new wins and losses', () => {
+  const source = readFileSync(new URL('../../../server/db/xp.js', import.meta.url), 'utf8');
+  const registration = source.slice(source.indexOf('const SIM_HISTORY_KEYS ='), source.indexOf('const RETIRED_SIM_HISTORY_KEYS ='));
+  const start = source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
+  const end = source.indexOf('\n  }\n\n  // Award every', start);
+  assert.ok(start > 0 && end > start);
+  const calls = [], context = vm.createContext({awardXp:(...args) => calls.push(args)});
+  vm.runInContext(registration + '\nfunction sync(newPt,oldPt){const userId=1;' + source.slice(start,end) + '\n}', context);
+  const current = {[key]:{history:['win','loss','ended','fled','cancelled'].map((outcome, index) => ({outcome, ts:index + 1}))}};
+  context.sync(current, {});
+  assert.deepEqual(calls, [[1,'battlesim_win',key+':1'],[1,'battlesim_loss',key+':2']]);
+  context.sync(current, current);
+  assert.equal(calls.length, 2);
+});

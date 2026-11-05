@@ -31,7 +31,7 @@ for(const id of BOOK_IDS){
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
-  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817||id===832||id===833||id===838||id===1578||id===1587||id===1589||id===1591){
+  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817||id===832||id===833||id===838||id===1578||id===1587||id===1589||id===1591||id===1592||id===1596){
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
     check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
   }
@@ -129,6 +129,81 @@ for(const id of BOOK_IDS){
     el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();
     check(JSON.stringify(data())===before,'Pax stale confirmation cannot update another book');app.setCurrentBookId(id);
     check(JSON.stringify([run.inventory,run.sim1578,run.path])===unrelated,'Pax inventory, other fight and story path preserved');
+  }
+  if(id===1596){
+    const run=app.currentPlaythrough(),data=()=>run.sim1596,el=key=>document.getElementById('sim1596-'+key);
+    const {ENCOUNTERS}=await import('REPO/public/js/battlesim/books/1596/definition.js');
+    check(ENCOUNTERS.length===15&&requestedRosters.has(id),'Lords of Doom installed catalog');
+    run.inventory=[{name:'Unrelated equipment'}];run.sim1592={preserved:true};
+    const unrelated=JSON.stringify([run.inventory,run.sim1592,run.path]);
+    const hero=()=>{for(const [key,value]of Object.entries({hp:100,maxHp:100,fighting:20,experience:3,spells:2}))el(key).value=value;};
+    const editor=()=>overlay.querySelector('.bsim-opponent-editor:not([hidden])');
+    check(el('procedure').value==='custom','Lords of Doom custom fight needs no preset');hero();
+    const row=editor().querySelector('.bsim-opponent-row');
+    row.querySelector('[role="combobox"]').value='Custom opponent';
+    row.querySelector('[data-stat="target"]').value=20;
+    row.querySelector('[data-stat="damageDice"]').value='1';
+    row.querySelector('[data-stat="damageBonus"]').value=4;
+    el('start').click();check(data().fight.opponent.custom,'Lords of Doom custom fight starts');
+    el('die-0').value=6;el('spent').value=0;el('roll').click();el('continue').click();el('finish').click();
+    check(data().fight.status==='win'&&data().history.length===1,'Lords of Doom custom victory');
+    for(const entry of ENCOUNTERS){
+      el('procedure').value=entry.key;el('procedure').dispatchEvent(new Event('change',{bubbles:true}));hero();
+      check(editor().querySelector('[role="combobox"]').value===entry.displayName,'Lords of Doom preset name');
+      el('start').click();check(data().fight.opponent.entry===entry.entry,'Lords of Doom preset starts '+entry.key);
+      check(el('hp').disabled&&el('procedure').disabled,'Lords of Doom setup locked');
+      const before=JSON.stringify(data());module.render();check(JSON.stringify(data())===before,'Lords of Doom render preserves fight');
+      el('cancel').click();document.getElementById('confirm-ok').click();
+    }
+    check(JSON.stringify([run.inventory,run.sim1592,run.path])===unrelated,'Lords of Doom unrelated player state preserved');
+  }
+  if(id===1592){
+    const run=app.currentPlaythrough(),data=()=>run.sim1592,el=key=>document.getElementById('sim1592-'+key);
+    const {ENCOUNTERS}=await import('REPO/public/js/battlesim/books/1592/definition.js');
+    check(ENCOUNTERS.length===20&&requestedRosters.has(id),'Ravenloft installed combat catalog');
+    run.inventory=[{name:'Unrelated equipment'}];run.sim1591={preserved:true};
+    const unrelated=JSON.stringify([run.inventory,run.sim1591,run.path]);
+    const hero=()=>{
+      for(const [key,value]of Object.entries({maxHp:80,hp:80,fighting:12,dexterity:10,wisdom:10,level:15,experience:1,strahdHp:60,charges:2}))if(el(key))el(key).value=value;
+    };
+    const activeEditor=()=>overlay.querySelector('.bsim-opponent-editor:not([hidden])');
+    check(el('procedure').value==='custom','Ravenloft custom fight needs no preset');hero();
+    const customRows=()=>[...activeEditor().querySelectorAll('.bsim-opponent-row')];
+    const custom=(row,name)=>{
+      row.querySelector('[role="combobox"]').value=name;
+      row.querySelector('[data-stat="target"]').value=20;
+      row.querySelector('[data-stat="damageDice"]').value='0';
+      row.querySelector('[data-stat="damageBonus"]').value=2;
+    };
+    custom(customRows()[0],'Custom first');activeEditor().querySelector(':scope > button').click();custom(customRows()[1],'Custom second');
+    el('start').click();check(data().fight.opponent.custom,'Ravenloft custom group started');
+    check(el('spent').type==='number','Ravenloft one-XP control remains numeric');
+    let actions=0;
+    while(data().fight.status==='fighting'){
+      check(++actions<20,'Ravenloft custom group terminates');const fight=data().fight;
+      if(fight.phase==='roll'){el('die-0').value=6;if(el('die-1'))el('die-1').value=6;el('spent').value=0;el('roll').click();}
+      else if(fight.phase==='continue')el('continue').click();
+      else if(fight.phase==='effect')el('apply').click();
+      else el('finish').click();
+      if(data().fight.status==='fighting')check(data().history.length===0,'Ravenloft intermediate custom opponent awards no outcome');
+    }
+    check(data().fight.status==='win'&&data().history.length===1,'Ravenloft custom group wins once');
+    for(const entry of ENCOUNTERS){
+      el('procedure').value=entry.key;el('procedure').dispatchEvent(new Event('change',{bubbles:true}));hero();
+      check(activeEditor().querySelector('[role="combobox"]').value===entry.displayName,'Ravenloft printed preset name');
+      el('start').click();check(data().fight.status==='fighting'&&data().fight.opponent.entry===entry.entry,'Ravenloft printed preset starts '+entry.key);
+      check(el('hp').disabled&&el('procedure').disabled,'Ravenloft setup locked');
+      el('cancel').click();document.getElementById('confirm-ok').click();
+    }
+    el('procedure').value='gargoyles';el('procedure').dispatchEvent(new Event('change',{bubbles:true}));
+    const name=activeEditor().querySelector('[role="combobox"]');name.value='Gargoyles';name.dispatchEvent(new FocusEvent('focus'));
+    const option=[...activeEditor().querySelectorAll('[role="option"]')].find(node=>node.textContent.startsWith('Gargoyles'));
+    check(option,'Ravenloft optional autocomplete');option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));hero();el('openingDamageApplied').checked=true;
+    el('start').click();el('apply').click();check(data().player.hp===80,'Ravenloft acknowledged opening damage is not deducted twice');
+    el('continue').click();el('die-0').value=4;const typed=el('die-0');module.render();check(el('die-0')===typed&&typed.value==='4','Ravenloft unchanged render retains manual dice');
+    const before=JSON.stringify(data());module.setVisible(false);for(let i=0;i<20;i++)module.render();check(JSON.stringify(data())===before,'Ravenloft hidden render preserves state');module.setVisible(true);button.click();
+    el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(data())===before,'Ravenloft stale confirmation preserves another book');app.setCurrentBookId(id);
+    check(JSON.stringify([run.inventory,run.sim1591,run.path])===unrelated,'Ravenloft inventory, other fight and story path preserved');
   }
   if(id===1591){
     const run=app.currentPlaythrough(),data=()=>run.sim1591,el=key=>document.getElementById('sim1591-'+key);
