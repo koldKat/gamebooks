@@ -23,6 +23,7 @@ import { renderReadingMatter } from '../../js/reading/content.js';
 import { bindReadingMapEntry, isReadingMapSection, readingChoices } from '../../js/reading/map-entry.js';
 import { bindReadingPreviousEntry } from '../../js/reading/previous-entry.js';
 import { bindReadingSourceFlipbooks } from '../../js/reading/source-flipbook.js';
+import { mountReadingSourceSheets } from '../../js/reading/source-sheet.js';
 
 // Debounce reward checks by 750ms to allow deferred server awards to land.
 // Merge nearby toast deltas instead of overwriting feedback.
@@ -402,6 +403,7 @@ async function _showSection(sec) {
   }
 
   top.innerHTML = data.html;
+  mountReadingSourceSheets(top, currentBookId);
   _readingViewReadOnly = false;
   top.scrollTop = 0;
   if (isReadingMapSection(data)) (state.graph[sec] ||= { choices: [] }).manualNavigation = true;
@@ -530,6 +532,7 @@ async function _showExtra(key, readOnly = false) {
   const data = await res.json();
   if (token !== _showToken || bookId !== currentBookId || authToken !== getToken()) return;
   top.innerHTML = `${data.html}<p class="m-back-link"><a href="#" id="m-extra-back">${t('mobile.back')}</a></p>`;
+  mountReadingSourceSheets(top, currentBookId);
   _readingViewReadOnly = readOnly;
   top.scrollTop = 0;
   _bindReadingNavigation(top, token, readOnly);
@@ -706,10 +709,17 @@ function _showMatter(which) {
   back.append(link);
   top.replaceChildren(content, back);
   top.scrollTop = 0;
-  content.querySelectorAll('a[href^="#section-"]').forEach(a => {
+  content.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', e => {
       e.preventDefault();
       if (token !== _showToken || bookId !== currentBookId || authToken !== getToken()) return;
+      const href = a.getAttribute('href');
+      if (/^#map\d{1,6}$/.test(href)) {
+        if (run !== currentPlaythrough() || sec !== currentSection()) return;
+        _showExtra(href.slice(1), readOnly);
+        return;
+      }
+      if (!href.startsWith('#section-')) return;
       const dest = parseSecId(a.getAttribute('href').slice('#section-'.length));
       if (dest === null) return;
       if (readOnly) {

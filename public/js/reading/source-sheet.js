@@ -1,4 +1,11 @@
 // Preserve separate PDF artwork and text layers in a responsive, inert original sheet.
+export function mountReadingSourceSheets(container, bookId) {
+  const imagePath = new RegExp(`^/api/books/${Number(bookId)}/reading-images/[a-f0-9]{64}\\.png$`);
+  for (const sheet of container.querySelectorAll('figure.reading-source-sheet')) {
+    sheet.replaceWith(copySourceSheet(sheet, container.ownerDocument, imagePath));
+  }
+}
+
 export function copySourceSheet(node, document, imagePath) {
   const attributes = (element, required, optional = []) => {
     if (required.some(name => element.getAttribute(name) === null)
@@ -31,7 +38,15 @@ export function copySourceSheet(node, document, imagePath) {
       if (!imagePath.test(src) || child.childNodes.length) throw new Error('Invalid source sheet image');
       layer = document.createElement('img');
       layer.src = src; layer.alt = child.getAttribute('alt') || ''; layer.loading = 'lazy';
-      layer.setAttribute('style', `position:absolute;left:${100 * x / width}%;top:${100 * y / height}%;width:${100 * (right - x) / width}%;height:${100 * (bottom - y) / height}%;max-width:none;margin:0`);
+      // Fractional responsive sizes can leave a white rasterization seam between
+      // adjoining native strips. Extend only shared edges; terminal edges stay exact.
+      const continues = children.some(next => {
+        if (next === child || next.tagName !== 'IMG') return false;
+        const [nx, ny, nr] = next.getAttribute('data-source-box').split(',').map(Number);
+        return nx === x && ny === bottom && nr === right;
+      });
+      const imageHeight = `${100 * (bottom - y) / height}%`;
+      layer.setAttribute('style', `position:absolute;left:${100 * x / width}%;top:${100 * y / height}%;width:${100 * (right - x) / width}%;height:${continues ? `calc(${imageHeight} + .5px)` : imageHeight};max-width:none;margin:0`);
     } else {
       const font = number(child.getAttribute('data-source-font'));
       const baseline = number(child.getAttribute('data-source-baseline'));

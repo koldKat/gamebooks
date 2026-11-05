@@ -179,7 +179,9 @@ async function handleDeleteSeries(req, res, seriesId) {
   if (!series) return send(res, 404, { error: 'not found' });
   const cascade = new URL(req.url, 'http://x').searchParams.get('cascade') !== '0';
   if (cascade) {
-    db.removeSeriesFromLibrary(userId, seriesId); // removes series + cascade books
+    db.removeSeriesFromLibrary(userId, seriesId, {
+      onPartyChanged: partyId => ssePush(partyId, userId, { type: 'party_changed' }),
+    }); // removes series + cascade books
   } else {
     // Remove only the user_series row - leave all books in library as standalones
     db.removeSeriesEntryOnly(userId, seriesId);
@@ -238,7 +240,7 @@ async function handleGetPublicSeriesInfo(req, res, seriesId) {
   const userId = authenticateOptional(req);
   const user = userId ? db.getUserById(userId) : null;
   const hasPdfAccess = !!user && (!!user.pdf_access || !!user.is_admin);
-  const data = db.getPublicSeriesInfo(seriesId, hasPdfAccess);
+  const data = db.getPublicSeriesInfo(seriesId, hasPdfAccess, userId);
   if (!data) return send(res, 404, { error: 'not found' });
   send(res, 200, data);
 }
@@ -504,7 +506,9 @@ async function handleDeleteBook(req, res, bookId) {
   if (userId === null) return;
   const old = db.getBookIdentifiers(userId, bookId);
   const cascade = new URL(req.url, 'http://x').searchParams.get('cascade') !== '0';
-  if (!db.deleteBook(userId, bookId, cascade)) return send(res, 404, { error: 'Not found' });
+  if (!db.deleteBook(userId, bookId, cascade, {
+    onPartyChanged: partyId => ssePush(partyId, userId, { type: 'party_changed' }),
+  })) return send(res, 404, { error: 'Not found' });
   send(res, 200, { ok: true });
   if (old?.is_public) publicCatalogPush({ type: 'public_catalog_changed', entity: 'book', id: bookId, action: 'delete' });
   feedPush({ type: 'feed_changed', entity: 'book', action: 'delete', id: bookId });

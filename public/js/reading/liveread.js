@@ -13,6 +13,7 @@ import { renderReadingMatter } from './content.js';
 import { bindReadingMapEntry, isReadingMapSection, readingChoices } from './map-entry.js';
 import { bindReadingPreviousEntry } from './previous-entry.js';
 import { bindReadingSourceFlipbooks } from './source-flipbook.js';
+import { mountReadingSourceSheets } from './source-sheet.js';
 
 // Shares the activity feed's loading indicator and feed.css, loaded on index.html.
 const _loadingHtml = () => `<div class="liveread-loading">
@@ -120,6 +121,7 @@ async function _showSection(sec) {
   }
   const data = result.data;
   body.innerHTML = data.html;
+  mountReadingSourceSheets(body, currentBookId);
   body.scrollTop = 0;
   if (isReadingMapSection(data)) (state.graph[sec] ||= { choices: [] }).manualNavigation = true;
   if (data.choices?.length) commitChoices(sec, readingChoices(data, state.graph[sec]?.choices, state.graph[sec]?.manualNavigation));
@@ -151,6 +153,7 @@ async function _showExtra(key) {
   if (!result.ok) return;
   const data = result.data;
   body.innerHTML = `${data.html}<p class="liveread-back"><a href="#" id="liveread-back-link">${t('btn.back')}</a></p>`;
+  mountReadingSourceSheets(body, currentBookId);
   body.scrollTop = 0;
   _bindReadingNavigation(body, token);
   document.getElementById('liveread-back-link')?.addEventListener('click', e => {
@@ -327,6 +330,7 @@ export async function previewSection(sec) {
   _previewSec = sec;
   _updateHeading(sec);
   body.innerHTML = `<p class="liveread-preview-banner">${t('mobile.preview_banner', { sec: sectionLabel(sec, currentBookId) })}</p>${data.html}<p class="liveread-back"><a href="#" id="liveread-preview-return">${t('mobile.preview_return')}</a></p>`;
+  mountReadingSourceSheets(body, currentBookId);
   bindReadingSourceFlipbooks(body, currentBookId);
   bindReadingMapEntry(body, { canNavigate: () => false, onNavigate() {} });
   bindReadingPreviousEntry(body, { canNavigate: () => false });

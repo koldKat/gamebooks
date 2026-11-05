@@ -573,11 +573,11 @@ body {
   background: #111827;
   border: 1px solid #374151;
   border-radius: 8px;
-  padding: 0.52rem 0.75rem;
-  margin: -0.7rem -0.5rem -0.85rem -0.5rem;
+  padding: 0.26rem 0.6rem;
+  margin: -0.9rem -0.5rem -0.9rem -0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.22rem;
+  gap: 0.15rem;
 }
 
 .stats-row {
@@ -593,7 +593,7 @@ body {
 
 .stats-row--playthroughs {
   border-top: 1px solid #374151;
-  padding-top: 0.22rem;
+  padding-top: 0.15rem;
 }
 
 .missing-label {
@@ -626,7 +626,7 @@ body {
   background: #1f2937;
   border-radius: 2px;
   overflow: hidden;
-  margin: 3px 0 5px;
+  margin: 2px 0 3px;
 }
 .stat-bar-wrap--split { display: flex; }
 .stat-bar {
@@ -661,7 +661,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  padding: 0.35rem 0 0.1rem;
+  padding: 0.175rem 0 0.1rem;
 }
 
 .section-display {

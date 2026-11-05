@@ -25,7 +25,7 @@ for (const [mode, file] of [
     const context = vm.createContext({ state, currentBookId: 1501, getToken: () => auth,
       currentPlaythrough: () => run, currentSection: () => run?.path.at(-1),
       _showToken: 1, _previewSec: null, _accessPending: false, _accessLocked: false,
-      bindReadingMapEntry() {}, bindReadingPreviousEntry,
+      bindReadingMapEntry() {}, bindReadingSourceFlipbooks() {}, bindReadingPreviousEntry,
       navigate, _navigate: navigate, commitChoices, _commitChoices: commitChoices,
       suppressAutoNav() {}, _showSection() {} });
     vm.runInContext(binding, context);

@@ -58,6 +58,7 @@ export default {
 
     'appxp.hb_rate':    '+{rate} heartbeat XP/min',
     'appxp.level':      'App Lvl {n}',
+    'appxp.player_level': 'Player Lvl {n}',
     'appxp.next_ruby':  '{n} EV to next ruby',
     'appxp.average_ruby_cost': 'Avg {n} EV / ruby',
     'appxp.job_level':  'App Job Lvl {n}',

@@ -3,6 +3,7 @@ import {integer,rollDie,previewStrike} from './math.js';
 import {living,distance,targetCategory,targetMap,legalTargets,attackProfile} from './targeting.js';
 import {expandActors,queueRound,advanceTurn,finish} from './rounds.js';
 import {prepareEncounter,applyPrintedStrike,printedAction} from './encounter-rules.js';
+import {continueFight,setParticipation} from './combat-phases.js';
 
 const copy = value=>structuredClone(value);
 function active(fight) {
@@ -14,9 +15,13 @@ function active(fight) {
 const log = (fight,event)=>{fight.events.push(event);fight.events=fight.events.slice(-160);};
 
 export function startFight({encounter,player,range,initiative,woundedFett=false,woundedProfile,variant,opponents,
-  oneFewerImperial=false,extraRebels=false,extraRebelSkill}={}) {
+  oneFewerImperial=false,extraRebels=false,extraRebelSkill,participation='observe',previousFight,
+  survivingGuards,survivingRebels}={}) {
   if (!encounter || encounter.rules.modifierOnly || encounter.rules.reinforcements===true) throw new RangeError('Choose a complete encounter.');
-  encounter=prepareEncounter(encounter,{variant,oneFewerImperial,extraRebels,extraRebelSkill});
+  if (encounter.rules.continuationOf && previousFight?.section===encounter.rules.continuationOf) {
+    return continueFight(previousFight,encounter);
+  }
+  encounter=prepareEncounter(encounter,{variant,oneFewerImperial,extraRebels,extraRebelSkill,survivingGuards,survivingRebels});
   const rules=copy(encounter.rules);
   if (variant) {
     const selected=rules.storyVariants?.find(item=>item.section===String(variant));
@@ -55,6 +60,7 @@ export function startFight({encounter,player,range,initiative,woundedFett=false,
   const fight={rulesVersion:1,section:encounter.section,name:encounter.name,rules,player:stats,
     jediPoints:points,maxJediPoints:maxPoints,range:initialRange,actors,round:1,actions:0,
     pending:null,selectedTargetId:null,outcome:null,events:[]};
+  if (rules.chooseParticipation) setParticipation(fight,participation);
   queueRound(fight);return fight;
 }
 
@@ -78,7 +84,7 @@ export function confirmTarget(original,adjustment=0,targetId) {
   const number=integer(pending.die+change,1,6,'Target die');
   const category=Object.keys(pending.map).find(key=>pending.map[key].includes(number));
   const actor=fight.actors.find(item=>item.id===pending.actorId),all=legalTargets(fight,actor);
-  const matching=all.filter(item=>targetCategory(item)===category);
+  const matching=all.filter(item=>targetCategory(item)===category || item.id===category);
   const targets=matching.length ? matching : all;
   const selected=targets.find(item=>item.id===targetId) ?? (targets.length===1 ? targets[0] : null);
   if (!selected) throw new RangeError('Choose a surviving combatant from the rolled target group.');

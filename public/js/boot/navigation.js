@@ -3,6 +3,8 @@ import { bootState } from './state.js';
 export function _pushNav(hash, stateObj) {
   if (bootState._suppressHistory) return;
   const full = '#' + hash;
+  if (location.hash === full && history.state?.dialogLayer)
+    stateObj = { ...stateObj, dialogOpen: true, dialogLayer: history.state.dialogLayer };
   // Startup occupies the launch entry; it must not add an invisible page behind home.
   const initial = !history.state?.view && !history.state?.mobilePanel;
   if (stateObj.view === 'books') {

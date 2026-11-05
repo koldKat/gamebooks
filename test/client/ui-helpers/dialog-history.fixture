@@ -1,0 +1,88 @@
+<!doctype html><meta charset="utf-8">
+<style>.modal-overlay{display:none;position:fixed;inset:0;z-index:100;background:#222}.modal-overlay.active{display:block}#child-overlay{z-index:200}</style>
+<div id="base-overlay" class="modal-overlay"><input id="draft" value="Keep this draft"><button id="base-close">Close</button></div>
+<div id="child-overlay" class="modal-overlay"><button id="child-close">Close</button></div>
+<dialog id="native-dialog">Native dialog</dialog>
+<div id="public-modal-overlay" class="modal-overlay"><button id="pub-close-btn">Close</button></div>
+<script type="module">
+addEventListener('error',e=>document.body.dataset.failure=e.message);
+addEventListener('unhandledrejection',e=>document.body.dataset.failure=String(e.reason?.stack||e.reason));
+try {
+  const el=id=>document.getElementById(id), active=node=>node.classList.contains('active');
+  const wait=async predicate=>{for(let i=0;i<150;i++){if(predicate())return;await new Promise(r=>setTimeout(r,20));}throw Error('Timed out: '+predicate);};
+  const settle=()=>new Promise(r=>setTimeout(r,60));
+  let checks=0,background=0,closed=0;
+  const check=(ok,label)=>{checks++;document.body.dataset.progress=JSON.stringify({checks,label,state:history.state,name:window.name});if(!ok)throw Error(label);};
+  const reloaded=['dialog-reload','legacy-dialog-reload'].includes(window.name);
+  if(!reloaded)history.replaceState({view:'books',mobilePanel:'books'},'','#home');
+  document.body.classList.add('mobile-books-open');
+  el('base-close').onclick=()=>{closed++;el('base-overlay').classList.remove('active');};
+  el('child-close').onclick=()=>el('child-overlay').classList.remove('active');
+  el('pub-close-btn').onclick=()=>{el('public-modal-overlay').classList.remove('active');history.replaceState(history.state,'','/');};
+  const {installDialogHistory}=await import('/ui-helpers/dialog-history.js');
+  installDialogHistory();
+  // Boot installs dialog history before its screen and mobile-panel listeners.
+  addEventListener('popstate',()=>{background++;document.body.classList.remove('mobile-books-open');});
+  const {_pushNav}=await import('/boot/navigation.js');
+  if(reloaded){
+    await wait(()=>!history.state?.dialogLayer);
+    check(background===0,'reload consumes obsolete dialog entry without background navigation');
+    check(!active(el('base-overlay')),'reload does not reopen dialog');
+    if(window.name==='dialog-reload'){
+      history.pushState({...history.state,dialogOpen:true},'');
+      window.name='legacy-dialog-reload';location.reload();
+    }else{window.name='dialog-exit';history.back();}
+  } else {
+    const originalLength=history.length;
+    for(let i=0;i<3;i++){
+      el('base-overlay').classList.add('active');await wait(()=>history.state?.dialogLayer);
+      const layer=history.state.dialogLayer;
+      _pushNav('home',{view:'books'});
+      check(history.state.dialogLayer===layer,'same-screen refresh retains dialog guard');
+      history.back();await wait(()=>!active(el('base-overlay'))&&!history.state?.dialogLayer);
+      check(background===0,'Back does not navigate underlying app');
+      check(document.body.classList.contains('mobile-books-open'),'Back keeps underlying panel open');
+      check(history.length<=originalLength+1,'repeat dialogs do not accumulate Back entries');
+    }
+    el('base-overlay').classList.add('active');await wait(()=>history.state?.dialogLayer);
+    const baseMarker=history.state.dialogLayer;
+    el('child-overlay').classList.add('active');await wait(()=>history.state?.dialogLayer!==baseMarker);
+    history.back();await wait(()=>!active(el('child-overlay')));
+    check(active(el('base-overlay')),'nested Back closes only top dialog');
+    check(el('draft').value==='Keep this draft','underlying draft retained');
+    history.forward();await settle();await wait(()=>history.state?.dialogLayer===baseMarker);
+    check(active(el('base-overlay'))&&!active(el('child-overlay')),'Forward skips dismissed child without closing parent');
+    el('base-close').click();await wait(()=>!history.state?.dialogLayer);
+    check(background===0,'manual close consumes its history entry without navigating');
+    history.forward();await settle();await wait(()=>!history.state?.dialogLayer);
+    check(background===0,'Forward skips closed dialog without navigating');
+    el('base-overlay').classList.add('active');el('base-close').disabled=true;await wait(()=>history.state?.dialogLayer);
+    history.back();await settle();
+    check(active(el('base-overlay'))&&!!history.state?.dialogLayer,'busy close guard restores dialog history');
+    check(background===0,'busy Back leaves app untouched');
+    el('base-close').disabled=false;history.back();await wait(()=>!active(el('base-overlay'))&&!history.state?.dialogLayer);
+    const native=el('native-dialog');let reject=true,cancelled=0,disposed=0;
+    native.addEventListener('cancel',e=>{cancelled++;if(reject)e.preventDefault();});
+    native.addEventListener('close',()=>disposed++);
+    native.showModal();await wait(()=>history.state?.dialogLayer);
+    history.back();await settle();check(native.open&&cancelled===1,'native cancel guard honored');
+    reject=false;history.back();await wait(()=>!native.open&&!history.state?.dialogLayer);await settle();
+    check(disposed===1,'native close cleanup runs once');
+    const late=document.createElement('div');late.className='modal-overlay active';late.id='late-overlay';
+    late.innerHTML='<button id="late-close">Close</button>';document.body.append(late);
+    el('late-close').onclick=()=>late.remove();await wait(()=>history.state?.dialogLayer);
+    history.back();await wait(()=>!late.isConnected&&!history.state?.dialogLayer);
+    check(background===0,'dynamic dialog closes without background navigation');
+    for(const manual of [false,true]){
+      history.replaceState(history.state,'','/book/42');el('public-modal-overlay').classList.add('active');await wait(()=>history.state?.dialogLayer);
+      if(manual)el('pub-close-btn').click();else history.back();
+      await wait(()=>!active(el('public-modal-overlay'))&&!history.state?.dialogLayer);
+      check(location.pathname==='/','public deep-link close retains root URL');
+      check(background===0,'public close does not run background router');
+    }
+    // Finally reload with an open overlay. Its obsolete entry must not make exit need two Backs.
+    history.replaceState({view:'books'},'','/');el('base-overlay').classList.add('active');await wait(()=>history.state?.dialogLayer);
+    window.name='dialog-reload';location.reload();
+  }
+}catch(error){document.body.dataset.failure=error.stack;}
+</script>

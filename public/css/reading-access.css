@@ -43,6 +43,21 @@
 }
 .reading-illustrated-prose p,
 .reading-frontmatter--structured .reading-illustrated-prose p { text-align: left; }
+.reading-map-lookup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  margin: 1em 0;
+}
+.reading-map-lookup > figure.reading-art-stack {
+  flex: 0 0 2.25rem;
+  margin: 0;
+}
+.reading-map-lookup > figcaption {
+  min-width: 0;
+  font-weight: 700;
+}
 @media (max-width: 340px) {
   .m-top p.reading-verse-line { font-size: .8em; }
 }

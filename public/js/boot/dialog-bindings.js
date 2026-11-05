@@ -48,27 +48,6 @@ export function initDialogBindings(openForumModal) {
     _toggleCoverTooltipSettings();
   });
 
-  // Track modal visibility centrally for history only when it overlays a mobile panel.
-  let _dialogHistoryPushed = false;
-  new MutationObserver(() => {
-    const isActive = document.getElementById('public-modal-overlay').classList.contains('active');
-    const panelOpen = document.body.classList.contains('mobile-books-open') ||
-                       document.body.classList.contains('mobile-addbook-open');
-    if (isActive && panelOpen && !_dialogHistoryPushed && !history.state?.dialogOpen) {
-      _dialogHistoryPushed = true;
-      history.pushState({ ...history.state, dialogOpen: true }, '');
-    } else if (!isActive && _dialogHistoryPushed) {
-      _dialogHistoryPushed = false;
-      // Consume dialog history entries on explicit dismissal to avoid stale Back states.
-      if (history.state?.dialogOpen) history.back();
-    }
-  }).observe(document.getElementById('public-modal-overlay'), { attributes: true, attributeFilter: ['class'] });
-  window.addEventListener('popstate', e => {
-    if (!e.state?.dialogOpen && document.getElementById('public-modal-overlay').classList.contains('active')) {
-      _dialogHistoryPushed = false;
-      closePublicModal();
-    }
-  });
   document.getElementById('pub-close-btn').addEventListener('click', closePublicModal);
   document.getElementById('public-modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('public-modal-overlay') && bootState._mousedownOnOverlay === e.currentTarget) closePublicModal();

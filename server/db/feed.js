@@ -1336,7 +1336,7 @@ function getBookActivity(bookId, userId = null) {
   if (!visible) return null;
   const book = db.prepare(
     `SELECT b.id, b.name, b.total_sections, b.max_section_number, b.isbn, b.issn, b.asin, b.cover_path,
-            b.pages, b.authors, b.description, b.is_public, b.is_container, b.book_order,
+            b.pages, b.authors, b.description, b.is_public, b.is_container, b.book_order, b.created_by,
             b.has_battle_sim, b.has_live_reading,
             COALESCE(b.series_number, p.series_number) AS series_number,
             p.id AS parentId, p.name AS parentName, p.cover_path AS parentCoverPath,
@@ -1438,6 +1438,7 @@ function getBookActivity(bookId, userId = null) {
       authors:       book.authors     || null,
       description:   book.description || null,
       isPublic:      book.is_public === 1,
+      isOwner:       !!userId && (book.created_by == null || book.created_by === userId),
       isContainer,
       hasBattleSim:  !!book.has_battle_sim || !!book.child_has_battle_sim,
       hasLiveReading: !!book.has_live_reading || children.some(c => c.hasLiveReading),

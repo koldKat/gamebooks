@@ -3,6 +3,7 @@ import { _hasValidPos, naturalCompareIds } from './helpers.js';
 import { GRID_SIZE } from './viewport.js';
 import { _GRID_LAYER_GAP } from './layout-constants.js';
 import { _getPositionedNeighbors, _firstFreeColumnSlot } from './layout-helpers.js';
+import { _chooseOpenPosition } from './layout-placement.js';
 
 // Initial layout uses a BFS-depth grid; desktop grows rightward, mobile downward.
 
@@ -30,6 +31,7 @@ function _bfsDepth(startSec, allSections) {
 export function _assignGridPositions(allSections, startSec) {
   const missing = [...allSections].filter(sec => !_hasValidPos(state.positions[sec]));
   if (!missing.length) return false;
+  const hasSavedPositions = Object.values(state.positions).some(_hasValidPos);
   const depth = _bfsDepth(startSec, allSections);
   const maxDepth = depth.size ? Math.max(...depth.values()) : 0;
   // Process shallow BFS depths first so children can anchor to newly positioned parents.
@@ -48,7 +50,11 @@ export function _assignGridPositions(allSections, startSec) {
       x = (depth.has(sec) ? depth.get(sec) : maxDepth + 1) * _GRID_LAYER_GAP;
       yStart = 0;
     }
-    let y = _firstFreeColumnSlot(x, yStart);
+    const open = hasSavedPositions && anchors.length
+      ? _chooseOpenPosition(sec, state.positions, neighbors, { x, y: yStart })
+      : null;
+    if (open) x = open.x;
+    let y = open ? open.y : _firstFreeColumnSlot(x, yStart);
     // Snap new placements when enabled; grid spacing is not necessarily a multiple of GRID_SIZE.
     if (state.snapToGrid) {
       x = Math.round(x / GRID_SIZE) * GRID_SIZE;

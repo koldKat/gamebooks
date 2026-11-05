@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {startFight,currentTurn,beginAttack,confirmAttack,spendTurn} from '../../../public/js/battlesim/engines/lost-jedi/core.js';
+import {startFight,currentTurn,beginAttack,confirmAttack,spendTurn,beginTargetRoll,confirmTarget} from '../../../public/js/battlesim/engines/lost-jedi/core.js';
+import {continueFight,beginWeaponGrab,confirmWeaponGrab,joinFight} from '../../../public/js/battlesim/engines/lost-jedi/combat-phases.js';
 import {attackProfile} from '../../../public/js/battlesim/engines/lost-jedi/targeting.js';
 import {weaponAttack} from '../../../public/js/battlesim/engines/lost-jedi/math.js';
 
@@ -79,4 +80,52 @@ test('drawing the officer weapon costs a turn even Up Close',()=>{
   let f=start({range:'close',enemyFirst:true},[guard(1,{skipFirstTurn:true})]);
   assert.throws(()=>beginAttack(f,'havet',6),/spend this turn/);
   f=spendTurn(f,'wait');assert.equal(currentTurn(f).actor.id,'havet');
+});
+
+test('the jail counterattack retains casualties, current Jedi Points and surviving Rebels',()=>{
+  let f=start({roundLimit:1,allies:[guard(1,{name:'Rebel'})]},[guard(2)]);
+  f.section='524';f=hit(f,enemy(f).id,4);f=hit(f,'havet');
+  f=hit(f,enemy(f).id,1);
+  assert.equal(f.outcome,'phase');
+  const next={section:'534',name:'Counterattack',actors:[guard(6,{rangedSkill:2,closeSkill:2})],
+    rules:{range:'range',continuationOf:'524',survivingEnemyProfile:{rangedSkill:2,closeSkill:2,target:7}}};
+  const continued=continueFight(f,next);
+  assert.equal(continued.round,2);assert.equal(continued.actors.length,10);
+  assert.equal(continued.actors.find(a=>a.id==='enemy-0-0').defeated,true);
+  assert.equal(continued.actors.find(a=>a.id==='enemy-0-1').rangedSkill,2);
+  assert.equal(continued.jediPoints,f.jediPoints);assert.equal(continued.outcome,null);
+  assert.equal(continued.rules.roundLimit,undefined);
+});
+
+test('directly entering the jail counterattack requires explicit survivor counts',()=>{
+  const rules={continuationOf:'524',continuationSurvivors:{guards:{...guard(),maxCount:6},rebels:{...guard(),maxCount:3}}};
+  assert.throws(()=>start(rules,[guard(6)]),/Surviving guards/);
+  const f=start(rules,[guard(6)],{survivingGuards:2,survivingRebels:1});
+  assert.equal(f.actors.length,10);assert.equal(f.actors.filter(a=>a.team==='rebels').length,2);
+});
+
+test('seizing the launcher spends only confirmed points and uses the exact comparison',()=>{
+  const rules={weaponGrabTest:true,weaponGrabDestinations:{equal:181,greater:199,less:210}};
+  const f=start(rules);
+  const pending=beginWeaponGrab(f,3,3);assert.equal(pending.jediPoints,10);
+  const equal=confirmWeaponGrab(pending);assert.equal(equal.readerSection,181);assert.equal(equal.jediPoints,7);
+  assert.equal(equal.player.weapon,'dart-launcher');assert.equal(equal.outcome,'phase');
+  assert.equal(confirmWeaponGrab(beginWeaponGrab(f,4,3)).readerSection,199);
+  assert.equal(confirmWeaponGrab(beginWeaponGrab(f,2,3)).readerSection,210);
+  const adjusted=confirmWeaponGrab(beginWeaponGrab(f,3,4),-1);
+  assert.equal(adjusted.readerSection,181);assert.equal(adjusted.jediPoints,6);
+  assert.equal(f.jediPoints,10);
+});
+
+test('observers influence NPC rolls, then explicitly join a side and draw their weapon',()=>{
+  let f=start({chooseParticipation:true,joinMustDraw:true,randomEnemyTargets:true,order:['pilliask','vain','havet']},
+    [guard(1,{name:'Pilliask',tag:'pilliask',team:'pilliask'}),guard(1,{name:'Vain',tag:'vain',team:'vain'})]);
+  assert.equal(f.rules.thirdPartyOnly,true);assert.ok(!f.queue.includes('havet'));
+  assert.ok(currentTurn(f).targets.every(a=>a.id!=='havet'));
+  f=joinFight(f,'vain');assert.equal(f.rules.thirdPartyOnly,false);assert.equal(f.player.ready,false);
+  assert.ok(f.queue.includes('havet'));assert.equal(f.actors.find(a=>a.tag==='vain').team,'rebels');
+  assert.equal(currentTurn(f).requiresTargetRoll,true);
+  f=beginTargetRoll(f,1);const target=currentTurn(f).targets[0].id;
+  f=confirmTarget(f,0,target);assert.equal(f.selectedTargetId,target);
+  f=hit(f,target,1);assert.equal(f.outcome,null);
 });

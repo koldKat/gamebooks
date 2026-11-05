@@ -2,6 +2,7 @@
 // Deep-link into a book; reuse the main app's library instead of duplicating it.
 
 import '../../js/ui-helpers/dialog-escape.js';
+import '../../js/ui-helpers/dialog-history.js';
 import '../../js/ui-helpers/browser-autocomplete.js';
 import { getToken, apiFetch, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../../js/core/state.js';
 import { renderLogin } from './auth.js';

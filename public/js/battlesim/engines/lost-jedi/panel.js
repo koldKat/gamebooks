@@ -5,6 +5,8 @@ import {expandActors} from './rounds.js';
 import {targetCategory} from './targeting.js';
 import {controls,escape,setupFields,eventText} from './view.js';
 import {createOpponentEditor} from '../../opponents.js';
+import {continueFight,confirmWeaponGrab,previewWeaponGrab} from './combat-phases.js';
+import {createEncounterControls} from './encounter-controls.js';
 
 export function createLostJediPanel({definition,document,t,store,getRun,getBookId,getEncounters,getRules,
   getButtonRow,showAlert,showConfirm,registerShortcut=()=>{}}) {
@@ -25,6 +27,7 @@ export function createLostJediPanel({definition,document,t,store,getRun,getBookI
     el('variant').value=selected;el('variant').closest('label').hidden=!options.length;
   }
   function restore(setup) {
+    el('section').value=setup.section ?? 'custom';printed.setup();
     for (const key of setupFields.filter(key=>key!=='variant')) {
       if (el(key).type==='checkbox') el(key).checked=Boolean(setup[key]);else el(key).value=setup[key] ?? '';
     }
@@ -43,6 +46,15 @@ export function createLostJediPanel({definition,document,t,store,getRun,getBookI
   }
   const act=action=>change(data=>updateFight(data,action(data.fight)));
   const die=()=>el('die').value==='' ? undefined : integer(el('die').value,1,6,'Die');
+  const printed=createEncounterControls({el,preset,store,act,die,tk,escape,onContinue:{
+    action:(fight,action)=>spendTurn(fight,action,{},getEncounters()),
+    phase:()=>change(data=>{
+      const next=getEncounters().find(e=>e.section===data.fight.rules.combatContinuation);
+      if(!next)throw new RangeError(tk('unavailable'));
+      updateFight(data,continueFight(data.fight,next));data.setup.section=next.section;
+      data.setup.opponents=data.fight.actors.filter(a=>a.team!=='rebels'&&!a.defeated);editor=null;
+    }),
+  }});
   function forcedAction(fight) {
     const actor=currentTurn(fight)?.actor;
     if (!actor || actor.id==='havet') return null;
@@ -66,11 +78,14 @@ export function createLostJediPanel({definition,document,t,store,getRun,getBookI
         const result=previewStrike(p,adjustment,fight.jediPoints);
         el('preview').textContent=tk('preview',{die:p.die,adjustment,total:result.total,target:result.target,
           result:tk(result.hit?'hit':'miss'),cost:result.cost,remaining:result.remainingPoints});
+      } else if(p.kind==='grab') {
+        const result=previewWeaponGrab(p,adjustment,fight.jediPoints);
+        el('preview').textContent=tk('grabPreview',{die:result.die,points:p.points,cost:result.cost,result:tk(result.result)});
       } else {
         const number=integer(p.die+adjustment,1,6,'Target die');
         if (Math.abs(adjustment)>fight.jediPoints) throw new RangeError(tk('insufficientPoints'));
         const category=Object.keys(p.map).find(key=>p.map[key].includes(number));
-        const targets=currentTurn(fight).targets,matching=targets.filter(actor=>targetCategory(actor)===category);
+        const targets=currentTurn(fight).targets,matching=targets.filter(actor=>targetCategory(actor)===category||actor.id===category);
         targetOptions(matching.length?matching:targets);
         el('preview').textContent=tk('targetPreview',{die:p.die,adjustment,cost:Math.abs(adjustment)});
       }
@@ -110,10 +125,12 @@ export function createLostJediPanel({definition,document,t,store,getRun,getBookI
     el('move').disabled=!!fight?.rules.rangeLocked;
     el('status').textContent=fight ? fight.outcome ? tk(fight.outcome) : tk('round',{round:fight.round}) : tk('notStarted');
     el('totals').textContent=fight ? tk('points',{current:fight.jediPoints,max:fight.maxJediPoints}) : '';
-    el('actor').textContent=active ? tk('turn',{name:turn.actor.name}) : fight?.outcome==='phase' ? tk('phaseNote') : '';
+    el('actor').textContent=active ? tk('turn',{name:turn.actor.name}) : fight?.outcome==='phase'
+      ? fight.readerSection ? tk('readerDestination',{section:fight.readerSection}) : tk('phaseNote') : '';
     el('opponents').innerHTML=fight ? fight.actors.map(actor=>`<p>${escape(actor.name)}: ${escape(tk(actor.defeated?'defeated':'standing'))}</p>`).join('') : '';
     el('log').innerHTML=fight ? fight.events.map(event=>`<div>${escape(eventText(event,fight,tk))}</div>`).join('') : '';
     el('history').innerHTML=data.history.slice().reverse().map(row=>`<div>${escape(row.enemy)}: ${escape(tk(row.outcome))}</div>`).join('');
+    printed.render(fight,active,turn);
     if (!active) for (const key of ['jediPoints','weapon','ready','ammo']) {
       if (el(key).type==='checkbox') el(key).checked=Boolean(data.setup[key]);else el(key).value=data.setup[key] ?? '';
     }
@@ -137,7 +154,7 @@ export function createLostJediPanel({definition,document,t,store,getRun,getBookI
       if (busy()) return;
       const selected=preset();variants();
       if (selected?.rules.range) el('range').value=selected.rules.range;
-      editor.set(selected?expandActors(selected.actors).map(actor=>({...actor,count:1})):[{}]);editor.fixCount(!!selected);saveSetup();
+      printed.setup();editor.set(selected?expandActors(selected.actors).map(actor=>({...actor,count:1})):[{}]);editor.fixCount(!!selected);saveSetup();
     });
     el('start').addEventListener('click',()=>change(data=>{
       if (busy()) return;
@@ -146,7 +163,9 @@ export function createLostJediPanel({definition,document,t,store,getRun,getBookI
       const encounter=selected ? {...selected,actors} : {section:'custom',name:actors.map(actor=>actor.name).join(', '),actors,rules:{chooseRange:true}};
       updateFight(data,startFight({encounter,player:data.setup,range:data.setup.range,initiative:data.setup.initiative,
         woundedFett:data.setup.woundedFett,woundedProfile:getEncounters().find(row=>row.rules.modifierOnly)?.rules,
-        variant:data.setup.variant,opponents:actors}));
+        variant:data.setup.variant,opponents:actors,oneFewerImperial:data.setup.oneFewerImperial,
+        extraRebels:data.setup.extraRebels,extraRebelSkill:data.setup.extraRebelSkill,participation:data.setup.participation,
+        previousFight:data.fight,survivingGuards:data.setup.survivingGuards,survivingRebels:data.setup.survivingRebels}));
     }));
     el('advance').addEventListener('click',()=>{
       act(f=>{const forced=forcedAction(f);return forced?spendTurn(f,forced,{},getEncounters()):currentTurn(f).requiresTargetRoll
@@ -154,7 +173,8 @@ export function createLostJediPanel({definition,document,t,store,getRun,getBookI
     });
     el('adjustment').value='0';el('adjustment').addEventListener('input',preview);
     el('confirm').addEventListener('click',()=>act(f=>f.pending.kind==='target'
-      ?confirmTarget(f,el('adjustment').value,el('target').value):confirmAttack(f,el('adjustment').value,getEncounters())));
+      ?confirmTarget(f,el('adjustment').value,el('target').value):f.pending.kind==='grab'
+      ?confirmWeaponGrab(f,el('adjustment').value):confirmAttack(f,el('adjustment').value,getEncounters())));
     for (const action of ['draw','move','wait','escape']) el(action).addEventListener('click',()=>act(f=>spendTurn(f,action,
       {range:el('combatRange').value,weapon:el('combatWeapon').value,ready:el('combatReady').checked,targetId:el('target').value},getEncounters())));
     el('cancel').addEventListener('click',()=>{
@@ -163,6 +183,7 @@ export function createLostJediPanel({definition,document,t,store,getRun,getBookI
       });
     });
     registerShortcut({button:trigger,overlay,open,close});
+    printed.bind();
   }
   return {init,render,open,close,setVisible(visible){if(el('btn'))el('btn').style.display=visible?'':'none';if(!visible)close();}};
 }

@@ -3,6 +3,13 @@ import {integer} from './math.js';
 
 export function prepareEncounter(encounter, options) {
   const next=structuredClone(encounter),rules=next.rules;
+  if (rules.continuationSurvivors) {
+    const {guards,rebels}=rules.continuationSurvivors;
+    const guardCount=integer(options.survivingGuards,0,guards.maxCount,'Surviving guards');
+    const rebelCount=integer(options.survivingRebels,0,rebels.maxCount,'Surviving Rebels');
+    if (guardCount) next.actors.push({...guards,count:guardCount});
+    rules.allies=rebelCount ? [{...rebels,count:rebelCount}] : [];
+  }
   if (rules.requireVariant && !options.variant) throw new RangeError('Choose the current encounter variant.');
   if (options.oneFewerImperial && rules.oneFewerImperialOption) {
     const group=next.actors[0];

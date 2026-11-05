@@ -7,6 +7,7 @@ const {
   awardXp, awardCoins, reportGemReward, _discoveredSet, _visitedSet, _mappedSet, _permanentVisitedCount, _checkGroupMilestone,
 } = require('./xp');
 const { awardRatingVote } = require('./vote-gems');
+const { leaveParty } = require('./parties');
 
 // Live reading is account-unrestricted; retain one gate for any future access policy.
 function _canLiveRead(_userId) {
@@ -669,8 +670,9 @@ function removeSeriesEntryOnly(userId, seriesId) {
   })();
 }
 
-function removeSeriesFromLibrary(userId, seriesId) {
+function removeSeriesFromLibrary(userId, seriesId, { onPartyChanged } = {}) {
   const deletedBooks = [];
+  const changedParties = new Set();
   // Remove user_series row and remove series books from the user's library,
   // but preserve anthology children when their anthology parent remains in the library.
   db.transaction(() => {
@@ -707,12 +709,13 @@ function removeSeriesFromLibrary(userId, seriesId) {
       }
       const extraParent = extraParentStmt.get(userId, row.id, seriesId);
       if (extraParent) continue;
-      if (_removeBookLibraryEntry(userId, row.id)) {
+      if (_removeBookLibraryEntry(userId, row.id, changedParties)) {
         const deleted = _pruneUntrackedBook(row.id, userId);
         if (deleted) deletedBooks.push(deleted);
       }
     }
   })();
+  for (const partyId of changedParties) onPartyChanged?.(partyId);
   for (const book of deletedBooks) _removeUnreferencedBookFiles(book);
 }
 
@@ -736,8 +739,8 @@ function createSeries(name, description, userId, isPublic = false) {
   return { id, name: trimmed, existed: false };
 }
 
-function getPublicSeriesInfo(seriesId, hasPdfAccess = false) {
-  const series = db.prepare('SELECT id, name, description, is_public, is_open_world FROM series WHERE id = ? AND is_public = 1').get(seriesId);
+function getPublicSeriesInfo(seriesId, hasPdfAccess = false, userId = null) {
+  const series = db.prepare('SELECT id, name, description, is_public, is_open_world, created_by FROM series WHERE id = ? AND is_public = 1').get(seriesId);
   if (!series) return null;
   // Top-level books/anthologies in this series only (no anthology children)
   const books = db.prepare(
@@ -774,6 +777,7 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false) {
     name:        series.name,
     description: series.description || null,
     isPublic:    series.is_public === 1,
+    isOwner:     !!userId && series.created_by === userId,
     isOpenWorld: !!series.is_open_world,
     avgRating:   agg.avgRating,
     voteCount:   agg.voteCount,
@@ -1113,7 +1117,12 @@ function _removeUnreferencedBookFiles(book) {
   }
 }
 
-function _removeBookLibraryEntry(userId, bookId) {
+function _removeBookLibraryEntry(userId, bookId, changedParties) {
+  const membership = db.prepare('SELECT party_id FROM user_books WHERE user_id = ? AND book_id = ?').get(userId, bookId);
+  if (membership?.party_id) {
+    leaveParty(userId, bookId);
+    changedParties.add(membership.party_id);
+  }
   const removed = db.prepare('DELETE FROM user_books WHERE user_id = ? AND book_id = ?').run(userId, bookId).changes;
   if (removed) {
     db.prepare('DELETE FROM stash_books WHERE user_id = ? AND book_id = ?').run(userId, bookId);
@@ -1122,8 +1131,9 @@ function _removeBookLibraryEntry(userId, bookId) {
   return removed;
 }
 
-function deleteBook(userId, bookId, cascade = true) {
+function deleteBook(userId, bookId, cascade = true, { onPartyChanged } = {}) {
   const deletedBooks = [];
+  const changedParties = new Set();
   const removed = db.transaction(() => {
     if (!db.prepare('SELECT 1 FROM user_books WHERE user_id = ? AND book_id = ?').get(userId, bookId)) return false;
     const isContainer = db.prepare('SELECT is_container FROM books WHERE id = ?').get(bookId)?.is_container;
@@ -1132,19 +1142,20 @@ function deleteBook(userId, bookId, cascade = true) {
       const childIds = db.prepare(`SELECT id FROM books WHERE parent_book_id = ?
         UNION SELECT book_id AS id FROM book_anthology_memberships WHERE anthology_id = ?`).all(bookId, bookId).map(r => r.id);
       for (const cid of childIds) {
-        if (_removeBookLibraryEntry(userId, cid)) {
+        if (_removeBookLibraryEntry(userId, cid, changedParties)) {
           const deleted = _pruneUntrackedBook(cid, userId);
           if (deleted) deletedBooks.push(deleted);
         }
       }
     }
     // Without cascading, keep children as standalone library entries.
-    _removeBookLibraryEntry(userId, bookId);
+    _removeBookLibraryEntry(userId, bookId, changedParties);
 
     const deleted = _pruneUntrackedBook(bookId, userId);
     if (deleted) deletedBooks.push(deleted);
     return true;
   })();
+  for (const partyId of changedParties) onPartyChanged?.(partyId);
   for (const book of deletedBooks) _removeUnreferencedBookFiles(book);
   return removed;
 }

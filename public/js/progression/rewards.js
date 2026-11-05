@@ -34,6 +34,11 @@ let _rewardFloaterTimer = null;
 let _pendingSummary = null;
 let _rewardLayoutObserver = null;
 let _rewardBodyObserver = null;
+const REWARD_LAYOUT_ANCHORS = ['play-bottom-stack','play-btn-row','dice-roller-wrap','feed-panel','landing-right','graph-container','covers-panel','landing-wrapper','books-screen','main-screen'];
+
+function rewardAnchorTransition(event) {
+  if (REWARD_LAYOUT_ANCHORS.includes(event.target?.id)) _positionRewardLayer();
+}
 
 function flushRewardSummary() {
   if (!_pendingSummary) return;
@@ -48,7 +53,10 @@ function updateRewardSummary(data,opts={}) {
 }
 
 window.addEventListener('floaties-change', () => {
-  if (floatiesEnabled()) return;
+  if (floatiesEnabled()) { _positionRewardLayer(); return; }
+  _rewardLayoutObserver?.disconnect(); _rewardLayoutObserver = null;
+  _rewardBodyObserver?.disconnect(); _rewardBodyObserver = null;
+  document.removeEventListener('transitionend', rewardAnchorTransition);
   _rewardFloaterQueue = [];
   _rewardAccumXp = 0; _rewardAccumCoins = 0;
   clearTimeout(_rewardFlushTimer); _rewardFlushTimer = null;
@@ -74,19 +82,25 @@ function _drainRewardFloaterQueue() {
 }
 
 export function _positionRewardLayer() {
+  if (!floatiesEnabled()) return;
   if (waitForCameraIdle(_positionRewardLayer)) return;
   const layer = document.getElementById('reward-float-layer');
   if (!layer) return;
   // Layout changes update the anchors; spawning a chip never measures the page.
   if (!_rewardLayoutObserver && typeof ResizeObserver!=='undefined') {
     _rewardLayoutObserver=new ResizeObserver(_positionRewardLayer);
-    for (const id of ['play-bottom-stack','play-btn-row','dice-roller-wrap','feed-panel','landing-right','graph-container']) {
+    for (const id of REWARD_LAYOUT_ANCHORS) {
       const anchor=document.getElementById(id);if(anchor)_rewardLayoutObserver.observe(anchor);
     }
   }
   if (!_rewardBodyObserver && typeof MutationObserver!=='undefined') {
     _rewardBodyObserver=new MutationObserver(_positionRewardLayer);
     _rewardBodyObserver.observe(document.body,{attributes:true,attributeFilter:['class']});
+    for (const id of REWARD_LAYOUT_ANCHORS) {
+      const anchor=document.getElementById(id);
+      if (anchor) _rewardBodyObserver.observe(anchor,{attributes:true,attributeFilter:['class','style']});
+    }
+    document.addEventListener('transitionend', rewardAnchorTransition);
   }
   const booksVisible = document.getElementById('books-screen')?.style.display !== 'none'
     && document.getElementById('landing-wrapper')?.style.display !== 'none';
@@ -125,6 +139,15 @@ export function _positionRewardLayer() {
   }
   window.dispatchEvent(new Event('reward-layer-layout'));
   Object.assign(layer.style, { left, right, bottom: '1rem', transform, alignItems });
+  // Dialog top layers inherit these anchors without measuring layout when a chip spawns.
+  const rootStyle = document.documentElement?.style;
+  if (rootStyle) {
+    for (const [name, value] of [['--personal-reward-left', left], ['--personal-reward-transform', transform]]) {
+      if (rootStyle.getPropertyValue(name) === value) continue;
+      if (value) rootStyle.setProperty(name, value);
+      else rootStyle.removeProperty(name);
+    }
+  }
 }
 
 function _spawnRewardFloater(type, html) {
@@ -216,10 +239,11 @@ export function _processRewardSnapshot(data, opts = {}) {
   _lastRewardUserKey = rewardUserKey; _lastRewardXp = xp; _lastRewardCoins = coins; _lastRewardLevel = level;
   updateRewardSummary(data, { fromXp: prevXp });
   if (broadcast) _broadcastLiveEvent('reward_snapshot', data);
+  if (coinDelta > 0 || levelDelta > 0) _scheduleLiveUiRefresh({ notif: true }, 60);
+  if (!floatiesEnabled()) return { xpDelta, coinDelta, levelDelta };
   if (xpDelta > 0 || coinsGained > silentGold) _queueRewardFloater(Math.max(0, xpDelta), Math.max(0, coinsGained - silentGold));
   if (rubyDelta > 0) _spawnRewardFloater('rubies', `${RUBY_SVG}<span>+${rubyDelta.toLocaleString()}</span>`);
   if (diamondDelta > 0) _spawnRewardFloater('diamonds', `${DIAMOND_SVG}<span>+${diamondDelta.toLocaleString()}</span>`);
-  if (coinDelta > 0 || levelDelta > 0) _scheduleLiveUiRefresh({ notif: true }, 60);
   if (levelDelta > 0) {
     for (let i = 0; i < levelDelta; i++) {
       const reachedLevel = level - levelDelta + i + 1;
@@ -232,5 +256,12 @@ export function _processRewardSnapshot(data, opts = {}) {
 export function _scheduleRewardProfileRefresh(delay = 750) {
   if (!getToken()) return;
   if (_rewardProfileTimer) clearTimeout(_rewardProfileTimer);
-  _rewardProfileTimer = setTimeout(() => { _rewardProfileTimer = null; refreshCoinsDisplay(); }, delay);
+  _rewardProfileTimer = setTimeout(() => {
+    _rewardProfileTimer = null;
+    if (!waitForCameraIdle(refreshRewardProfile)) refreshRewardProfile();
+  }, delay);
+}
+
+function refreshRewardProfile() {
+  if (getToken()) refreshCoinsDisplay();
 }

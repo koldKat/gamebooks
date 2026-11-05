@@ -3,6 +3,39 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
+test('disabled personal floaties skip preparation and geometry while reward balances keep updating',()=>{
+ let coins=0,summary=0;
+ const forbidden=()=>{throw Error('Disabled floatie preparation ran');};
+ const noop=()=>{};
+ const context=vm.createContext({window:{addEventListener:noop},floatiesEnabled:()=>false,
+  document:{getElementById:forbidden},waitForCameraIdle:()=>false,getUsername:()=> 'player',
+  updateCoinsDisplay:value=>{coins=value;},updateHeartbeatCoinsDisplay:noop,renderBooksXpSummary:()=>summary++,
+  saveRewardCache:noop,_broadcastLiveEvent:noop,_scheduleLiveUiRefresh:noop});
+ vm.runInContext(fs.readFileSync('public/js/progression/rewards.js','utf8').replace(/^import .*;\n/gm,'').replace(/^export /gm,''),context);
+ context._spawnRewardFloater=forbidden;context._queueRewardFloater=forbidden;
+ context._positionRewardLayer();
+ context._processRewardSnapshot({xp:100,coinsBalance:1,level:1,rubiesEarned:0,diamondsEarned:0});
+ const delta=context._processRewardSnapshot({xp:200,coinsBalance:2,level:100000,rubiesEarned:5,diamondsEarned:5,
+  title:{toString:forbidden}});
+ assert.equal(delta.xpDelta,100);assert.equal(coins,2);assert.equal(summary,2);
+});
+
+test('disabled collection feedback creates no layer or timer and disabling clears existing feedback',()=>{
+ const listeners=new Map();let enabled=false,created=0,timers=0,cleared=0;
+ const element=()=>({setAttribute(){},append(){},remove(){}});
+ const context=vm.createContext({floatiesEnabled:()=>enabled,RUBY_SVG:'gem',
+  window:{addEventListener:(name,fn)=>listeners.set(name,fn),removeEventListener:name=>listeners.delete(name)},
+  document:{createElement:()=>{created++;return element();}},
+  setTimeout:()=>++timers,clearTimeout:()=>cleared++});
+ vm.runInContext(fs.readFileSync('public/js/seasonal-events/collectible-feedback.js','utf8').replace(/^import .*;\n/gm,'').replace(/^export /gm,''),context);
+ const feedback=context.createCollectibleFeedback(element());feedback.show();
+ assert.equal(created,0);assert.equal(timers,0);
+ enabled=true;feedback.show();assert.equal(created,2);assert.equal(timers,1);
+ enabled=false;listeners.get('floaties-change')();assert.equal(cleared,1);
+ feedback.dispose();assert.equal(listeners.size,0);
+ enabled=true;feedback.show();assert.equal(created,2,'disposed feedback cannot recreate DOM');
+});
+
 test('collection snapshots suppress duplicate generic reward floaters',()=>{
  const noop=()=>{},floaters=[];
  const context=vm.createContext({window:{addEventListener:noop},waitForCameraIdle:()=>false,floatiesEnabled:()=>true,getUsername:()=> 'player',getToken:()=> 'token',

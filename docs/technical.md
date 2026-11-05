@@ -143,7 +143,7 @@ The client persists graph viewport and node positions separately from temporary 
 
 `graph.js` is a compatibility facade. Modules under `graph/` own network lifecycle, viewport, appearance, overlays, layout, interactions, deletion, and outcome analysis.
 
-`graph/camera-motion.js` tracks animated camera moves and releases deferred reward feedback when the camera finishes or is interrupted. Reward layers measure their anchors on layout changes rather than when each floatie appears.
+`graph/camera-motion.js` tracks animated camera moves and releases deferred reward feedback after camera position and zoom settle, including interrupted or overlapping moves. Saved-move library and reward refreshes also wait for the camera to settle; hidden landing covers are not refreshed by those moves. Reward layers measure their anchors on layout changes rather than when each floatie appears. Disabling floaties skips their markup, queues, timers and layout observers while preserving balance and XP updates.
 
 - The effective start section comes from saved state, not a hardcoded node number.
 - Outcome analysis and appearance determine death, victory, visited, mapped, and current-node cues.
@@ -247,7 +247,9 @@ The Shinté engine resolves separate CS-versus-DS attacks through database-backe
 
 The Horror Classic engine resolves dice-based strikes, combat powers and explicitly completed rounds. Its presets and encounter exceptions come from the database. Effects with undefined timing require an explicit ruling; separate fatal-shot encounters do not invent ordinary combat stats. Flight and healing preserve distinct printed rule profiles without automating travel. The same database rule profile supplies panel options and created combat allies.
 
-The Lost Jedi engine resolves one-hit combat through explicit turns and pending die rolls. Players confirm Jedi Point adjustments before a roll takes effect. Database presets supply allies, reinforcement timing and combat phase limits; a phase ending does not generate a victory. Pending rolls and spent resources persist with the current run.
+The Lost Jedi engine resolves one-hit combat through explicit turns and pending die rolls. Players confirm Jedi Point adjustments before a roll takes effect. Database presets supply allies, reinforcement timing and combat phase limits; a phase ending does not generate a victory. Shared encounter controls expose printed combat actions and optional setup modifiers. Combat continuations preserve casualties and spent resources, while story destinations return to the reader. Pending rolls and spent resources persist with the current run.
+
+The Super Endless Quest engine resolves single-hit encounters, declared book experience and optional precombat saves. Database presets supply targets, miss damage, HP restrictions and printed exit options. Saved rolls are validated by replay without generating dice; destinations remain information for the reader to follow manually.
 
 Saved fights retain their rule version, turn, participants, resources, pending decisions, and history. Rendering does not migrate or reset them. Each completed outcome is recorded once; canceled or incomplete encounters must not be reported as victories.
 

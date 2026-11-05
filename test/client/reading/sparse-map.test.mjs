@@ -25,7 +25,7 @@ for (const [name, path] of [
       currentPlaythrough: () => run, currentSection: () => run.path.at(-1),
       _showToken: 1, _previewSec: null, _accessPending: false, _accessLocked: false,
       bindReadingMapEntry: (_container, options) => { handlers = options; },
-      bindReadingPreviousEntry() {},
+      bindReadingPreviousEntry() {}, bindReadingSourceFlipbooks() {},
       navigate, _navigate: navigate, commitChoices, _commitChoices: commitChoices,
       suppressAutoNav() {}, _showSection() {},
     });

@@ -337,9 +337,11 @@
   }
 }
 
+body { --personal-reward-default-left: calc(75vw + var(--sidebar-w) / 4); }
+body.sidebar-collapsed { --personal-reward-default-left: 75vw; }
 #reward-float-layer {
   position: fixed;
-  left: calc(75vw + var(--sidebar-w) / 4);
+  left: var(--personal-reward-left, var(--personal-reward-default-left, 50%));
   bottom: 1rem;
   transform: translateX(-50%);
   display: flex;
@@ -348,9 +350,6 @@
   gap: 0.45rem;
   pointer-events: none;
   z-index: 3200;
-}
-body.sidebar-collapsed #reward-float-layer {
-  left: 75vw;
 }
 
 .reward-float--xp {

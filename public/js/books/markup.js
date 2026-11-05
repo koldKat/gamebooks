@@ -102,7 +102,8 @@ export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrSta
   const fullyVisited = effectiveSections > 0 && effectiveVisited >= effectiveSections;
   const barColor    = fullyVisited ? 'rgba(34,197,94,0.25)' : 'rgba(107,114,128,0.28)';
   const bg          = pct > 0 ? `background: linear-gradient(to right, ${barColor} ${pct}%, transparent ${pct}%);` : `background: transparent;`;
-  const isCreator   = b.created_by === null || b.created_by === booksState._currentUserId;
+  const isCreator   = b.created_by == null || b.created_by === booksState._currentUserId;
+  const editRole = !isCreator && (isAdmin ? 'Gamemaster' : isModerator && b.is_public ? 'Lorekeeper' : '');
   const inParty     = !!b.party_id;
   const extraClass  = (b.is_container ? ' book-item--container' : (isChild ? ' book-item--child' : '')) + (inParty ? ' book-item--party' : '');
   const experimentalCoverCards = true;
@@ -186,7 +187,7 @@ export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrSta
           ? `<span data-tooltip="Only the book creator can edit metadata" style="display:inline-flex">` +
               `<button class="book-edit-btn" disabled${commonAttrs}>✎</button>` +
             `</span>`
-          : `<button class="book-edit-btn${!isCreator && isAdmin ? ' book-edit-btn--admin' : ''}"${commonAttrs}${!isCreator && isAdmin ? ' data-tooltip="Gamemaster edit"' : ''}>✎</button>`
+          : `<button class="book-edit-btn${editRole ? ' book-edit-btn--admin' : ''}"${commonAttrs}${editRole ? ` data-tooltip="${editRole} edit"` : ''}>✎</button>`
         ) +
         `<button class="book-del-btn" data-id="${b.id}" data-name="${escapeHtml(b.name)}" data-container="${b.is_container ? '1' : '0'}">✕</button>` +
       `</div>` +

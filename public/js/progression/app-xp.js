@@ -185,7 +185,7 @@ function _renderAvgLevel(data) {
   if (!data) { wrap.hidden = true; return; }
   const { users = 0, avgLevel = 0, avgLevelTitle = '', avgLevelFraction = 0,
           sumLevels = 0, levelsNeededForNextAvg = 0, minLevel = 0, maxLevel = 0 } = data;
-  document.getElementById('avg-lvl-level').textContent = t('feed.hover_level', { n: avgLevel });
+  document.getElementById('avg-lvl-level').textContent = t('appxp.player_level', { n: avgLevel });
   document.getElementById('avg-lvl-title').textContent  = avgLevelTitle || '';
   document.getElementById('avg-lvl-users').textContent  = t('appxp.users', { n: users.toLocaleString(), s: users === 1 ? '' : 's' });
   const pct = Math.max(0, Math.min(100, avgLevelFraction * 100));
@@ -260,6 +260,7 @@ function _isMainScreenVisible() {
 
 // Place app reward floaters opposite personal rewards, in the available panel gap.
 function _positionAppRewardLayer(layer) {
+  if (!floatiesEnabled()) return;
   // Measure before writing, as the graph camera may be animating underneath.
   let left = '50%';
   if (_isMainScreenVisible() && !_isBooksScreenVisible()) {
@@ -355,7 +356,7 @@ export function handleAppXpEvent(payload) {
     const { xp, coins, diamonds, rubies } = _appRewardAccum.get(rawUsername) || { xp: 0, coins: 0, diamonds: 0, rubies: 0 };
     _appRewardAccum.delete(rawUsername);
     // Recheck visibility and permissions when the delayed floater spawns.
-    if (!_hooks.getIsAdmin?.() || !(_isBooksScreenVisible() || _isMainScreenVisible())) return;
+    if (!floatiesEnabled() || !_hooks.getIsAdmin?.() || !(_isBooksScreenVisible() || _isMainScreenVisible())) return;
     if (xp > 0) {
       _spawnAppRewardFloater('xp', `<span>+${xp.toLocaleString()} XP</span><span class="app-reward-float-sep">-</span><span class="app-reward-float-user">${username}</span>`);
     }

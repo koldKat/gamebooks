@@ -85,7 +85,12 @@ export function advanceTurn(fight, catalog = []) {
   for (const [index,wave] of (fight.rules.lateCombatants ?? []).entries()) {
     fight.completedLateGroups ??= [];
     if (wave.afterRound!==fight.round || fight.completedLateGroups.includes(index)) continue;
-    fight.actors.push(...expandActors(wave.actors,{team:'imperial'},'late-'+index));
+    const late=expandActors(wave.actors,{team:'imperial'},'late-'+index);
+    for (const actor of late) {
+      actor.faction=actor.team;
+      if (fight.participation===actor.faction) actor.team='rebels';
+    }
+    fight.actors.push(...late);
     fight.completedLateGroups.push(index);
     fight.events.push({kind:'reinforcements',round:fight.round+1});
   }

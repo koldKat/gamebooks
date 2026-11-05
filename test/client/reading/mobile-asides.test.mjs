@@ -6,7 +6,7 @@ import vm from 'node:vm';
 const source = readFileSync(new URL('../../../public/mobile/js/reader.js', import.meta.url), 'utf8')
   .replace(/^import[\s\S]*?;$/gm, '').replace(/^export /gm, '');
 
-function setup() {
+function setup(matterHrefs = ['#section-100', '#section-81']) {
   let links = [], run = { path: [94] }, auth = 'one', deferred;
   const requests = [], navigated = [], previewed = [];
   const makeLink = href => ({ id: '', getAttribute: () => href,
@@ -27,9 +27,9 @@ function setup() {
     currentBookId: 650, getToken: () => auth, currentPlaythrough: () => run,
     currentSection: () => run?.path.at(-1), parseSecId: raw => Number(raw),
     isSectionMapped: sec => sec === 100, navigated, previewed,
-    bindReadingMapEntry() {},
+    bindReadingMapEntry() {}, mountReadingSourceSheets() {}, bindReadingSourceFlipbooks() {},
     bindReadingPreviousEntry() {},
-    renderReadingMatter(mount) { mount.links = ['#section-100', '#section-81'].map(makeLink); return true; },
+    renderReadingMatter(mount) { mount.links = matterHrefs.map(makeLink); return true; },
     apiFetch: async url => {
       requests.push(url);
       if (deferred) await deferred;
@@ -110,4 +110,29 @@ test('matter opened from a preview or nested read-only aside stays read-only', a
   s.links[0].click(); s.links[1].click();
   assert.deepEqual(s.previewed, [100]);
   assert.deepEqual(s.navigated, []);
+});
+
+test('matter maps open reference asides without navigation and keep preview restrictions', async () => {
+  for (const readOnly of [false, true]) {
+    const s = setup(['#map0']);
+    if (readOnly) await s.show(true);
+    s.matter('front');
+    s.links[0].click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.ok(s.requests.at(-1).endsWith('/sections/map0'));
+    assert.deepEqual(s.navigated, []);
+    s.links[0].click();
+    assert.deepEqual(s.navigated, readOnly ? [] : [100]);
+    assert.deepEqual(s.previewed, readOnly ? [100] : []);
+  }
+  const s = setup(['#map0']);
+  s.matter('front');
+  const old = s.links[0];
+  s.run = { path: [94] };
+  old.click();
+  assert.deepEqual(s.requests, []);
+  s.matter('front');
+  s.auth = 'two';
+  s.links[0].click();
+  assert.deepEqual(s.requests, []);
 });

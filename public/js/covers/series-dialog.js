@@ -39,8 +39,11 @@ export function renderSeriesActivity(data) {
   if (data.isPublic && userLoggedIn && !userHasSeries) {
     html += `<button class="add-to-library-btn" id="add-series-to-lib-btn" data-series-id="${data.id}">${t('covers.add_to_library')}</button>`;
   }
-  if (userLoggedIn && (coversState._hooks.getIsAdmin?.() || (data.isPublic && coversState._hooks.getIsModerator?.()))) {
-    html += `<button class="add-to-library-btn" id="edit-public-series-btn">✎ ${t('covers.edit_series')}</button>`;
+  const isOwner = userLoggedIn && !!data.isOwner;
+  const editRole = !isOwner && (coversState._hooks.getIsAdmin?.() ? 'Gamemaster' : data.isPublic && coversState._hooks.getIsModerator?.() ? 'Lorekeeper' : '');
+  if (userLoggedIn && (isOwner || editRole)) {
+    const editLabel = editRole ? `${editRole} Edit` : t('covers.edit_series');
+    html += `<button class="add-to-library-btn" id="edit-public-series-btn"${editRole ? ' style="color:#f5a623;border-color:#92400e"' : ''}>✎ ${escapeHtml(editLabel)}</button>`;
   }
   html += '</div></div>';
 

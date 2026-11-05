@@ -78,8 +78,9 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
   }
   const editBookBtn = document.getElementById('edit-book-btn');
   editBookBtn.style.display = (bootState._isAdmin || isCreator || (resolveIsModerator() && isPublic)) ? '' : 'none';
-  editBookBtn.classList.toggle('admin-override', !isCreator && bootState._isAdmin);
-  if (!isCreator && bootState._isAdmin) editBookBtn.dataset.tooltip = 'Gamemaster edit';
+  const editRole = !isCreator && (bootState._isAdmin ? 'Gamemaster' : resolveIsModerator() && isPublic ? 'Lorekeeper' : '');
+  editBookBtn.classList.toggle('admin-override', !!editRole);
+  if (editRole) editBookBtn.dataset.tooltip = `${editRole} edit`;
   else delete editBookBtn.dataset.tooltip;
   const pdfDlBtn = document.getElementById('pdf-download-btn');
   if (pdfDlBtn) {

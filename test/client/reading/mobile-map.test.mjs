@@ -26,7 +26,7 @@ function setup() {
   let run = { path: [1], completed: false }, auth = 'one';
   const context = vm.createContext({
     document: { getElementById: id => id === 'm-top' ? top : { style: {}, addEventListener() {} } },
-    console, state, sectionLabel, bindReadingPreviousEntry, currentBookId: 570, currentPlaythrough: () => run,
+    console, state, sectionLabel, bindReadingPreviousEntry, mountReadingSourceSheets() {}, bindReadingSourceFlipbooks() {}, currentBookId: 570, currentPlaythrough: () => run,
     currentSection: () => run.path.at(-1), getToken: () => auth,
     isValidSecId: value => Number.isInteger(value) && value > 0 && value <= 150,
     isTerminal: value => value === 0 || value === -1, parseSecId: Number,

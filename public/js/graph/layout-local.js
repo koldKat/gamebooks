@@ -2,8 +2,9 @@ import { state, parseSecId } from '../core/state.js';
 import { _hasValidPos, naturalCompareIds } from './helpers.js';
 import { GRID_SIZE } from './viewport.js';
 import { _LOCAL_PLACE_RADII, _LOCAL_PLACE_ANGLES, _GRID_LAYER_GAP } from './layout-constants.js';
-import { _getPositionedNeighbors, _avgPoint, _firstFreeColumnSlot } from './layout-helpers.js';
+import { _getPositionedNeighbors, _avgPoint } from './layout-helpers.js';
 import { _buildPlacedEdges, _scoreLocalCandidate } from './layout-geometry.js';
+import { _chooseOpenPosition } from './layout-placement.js';
 
 function _chooseLocalPosition(sec, posMap) {
   const { incoming, all } = _getPositionedNeighbors(sec, posMap);
@@ -48,15 +49,15 @@ function _chooseLocalPosition(sec, posMap) {
   return best ? { x: best.x, y: best.y } : null;
 }
 
-// Place reading options right of positioned parents; parentless gaps use radial scoring.
+// Prefer the right of a parent when clear; search around it when crowded.
 function _chooseDirectionalPosition(sec) {
-  const { incoming } = _getPositionedNeighbors(sec, state.positions);
+  const neighbors = _getPositionedNeighbors(sec, state.positions);
+  const { incoming } = neighbors;
   if (!incoming.length) return null;
   const parentId  = incoming.reduce((a, b) => (state.positions[a].x >= state.positions[b].x ? a : b));
   const parentPos = state.positions[parentId];
   const colX = parentPos.x + _GRID_LAYER_GAP;
-  // Place the first sibling at parent height, then use local free slots below it.
-  return { x: colX, y: _firstFreeColumnSlot(colX, parentPos.y) };
+  return _chooseOpenPosition(sec, state.positions, neighbors, { x: colX, y: parentPos.y });
 }
 
 export function _assignLocalPositions(allSections) {

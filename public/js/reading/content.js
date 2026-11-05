@@ -91,6 +91,7 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
     for (const attr of node.attributes) {
       if (node.tagName === 'IMG' && ['src', 'alt', 'loading'].includes(attr.name)) continue;
       if (node.tagName === 'A' && attr.name === 'href' && (attr.value === '#reading-previous-entry'
+          || /^#map\d{1,6}$/.test(attr.value)
           || /^#section-(?:[1-9]\d{0,5}[a-zA-Z]?|[a-zA-Z][a-zA-Z0-9_-]{0,63})$/.test(attr.value))) {
         if (sectionLinks) target.setAttribute('href', attr.value);
         continue;
@@ -108,7 +109,7 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
         target.setAttribute('class', attr.value);
         continue;
       }
-      if (node.tagName === 'FIGURE' && attr.name === 'class' && ['reading-art-parts', 'reading-art-stack', 'reading-table-scroll', 'reading-illustrated-prose'].includes(attr.value)) {
+      if (node.tagName === 'FIGURE' && attr.name === 'class' && ['reading-art-parts', 'reading-art-stack', 'reading-table-scroll', 'reading-illustrated-prose', 'reading-map-lookup'].includes(attr.value)) {
         target.setAttribute('class', attr.value);
         continue;
       }

@@ -1,0 +1,60 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve, dirname } from 'node:path';
+import { createContext, SourceTextModule, SyntheticModule } from 'node:vm';
+const root = process.argv[1], state = { graph: {}, positions: {}, snapToGrid: false };
+const parseSecId = value => /^-?\d+$/.test(String(value)) ? Number(value) : value;
+const context = createContext({ console }), modules = new Map();
+const exports = { state, parseSecId, isTerminal: id => id === 0 || id === -1, isValidSecId: id => id != null };
+modules.set(resolve(root, 'core/state.js'), new SyntheticModule(Object.keys(exports), function () {
+  for (const [key, value] of Object.entries(exports)) this.setExport(key, value);
+}, { context }));
+modules.set(resolve(root, 'graph/viewport.js'), new SyntheticModule(['GRID_SIZE'], function () { this.setExport('GRID_SIZE', 40); }, { context }));
+function load(path) {
+  if (!modules.has(path)) modules.set(path, new SourceTextModule(readFileSync(path, 'utf8'), { context, identifier: path }));
+  return modules.get(path);
+}
+const entry = new SourceTextModule("export {_assignGridPositions} from './layout-grid.js'; export {_assignLocalPositions} from './layout-local.js';", { context, identifier: resolve(root, 'graph/test-entry.js') });
+await entry.link((specifier, parent) => load(resolve(dirname(parent.identifier), specifier)));
+await entry.evaluate();
+function reset(positions, extra = {}, snap = false) {
+  state.positions = positions; state.graph = { 1: { choices: ['2'] }, 2: { choices: [] }, ...extra }; state.snapToGrid = snap;
+}
+function place(local = false) {
+  const before = JSON.stringify(state.positions);
+  const saved = JSON.parse(before);
+  const ids = new Set(Object.keys(state.graph).map(parseSecId));
+  (local ? entry.namespace._assignLocalPositions : entry.namespace._assignGridPositions)(ids, 1);
+  for (const [id, point] of Object.entries(saved)) assert.deepEqual(state.positions[id], point, 'saved node moved');
+  for (const point of Object.values(saved)) assert.ok(Math.hypot(point.x - state.positions[2].x, point.y - state.positions[2].y) >= 40, 'new node overlaps saved node');
+  return state.positions[2];
+}
+for (const local of [false, true]) {
+  reset({ 1: { x: 0, y: 0 } });
+  assert.deepEqual(JSON.parse(JSON.stringify(place(local))), { x: 130, y: 0 }, 'clear rightward placement stays familiar');
+  const positions = { 1: { x: 0, y: 0 } }, graph = {};
+  for (let i = 3; i < 50; i++) { positions[i] = { x: 65 + (i % 2) * 65, y: (Math.floor((i - 3) / 2) - 11) * 70 }; graph[i] = { choices: [] }; }
+  reset(positions, graph);
+  const open = place(local);
+  assert.ok(open.x < 0, 'crowded right-hand columns should use open space to the left');
+  assert.ok(Math.hypot(open.x, open.y) < 400, 'must not fall far down a crowded column');
+  reset({ 1: { x: 0, y: 0 }, 3: { x: 130, y: -100 }, 4: { x: 130, y: 100 } }, { 3: { choices: ['4'] }, 4: { choices: [] } });
+  assert.ok(Math.abs(place(local).x - 130) >= 18, 'avoid an existing connector even when its midpoint has no node');
+  reset({ 1: { x: 0, y: 0 }, 3: { x: 65, y: -1000 }, 4: { x: 65, y: 1000 } }, { 3: { choices: ['4'] }, 4: { choices: [] } });
+  const crossing = place(local);
+  assert.ok(crossing.x < 65 || Math.abs(crossing.y * 65 / crossing.x) >= 1000, 'avoid crossing long connectors whose endpoints are far away');
+  reset({ 1: { x: 0, y: 0 }, 3: { x: 50, y: 0 } }, { 3: { choices: [] } });
+  const routed = place(local);
+  assert.ok(routed.x <= 0 || Math.abs(routed.y) > 40, 'avoid routing a new connector through an existing node');
+  reset({ 1: { x: 0, y: 0 }, 3: { x: 120, y: 0 } }, { 3: { choices: [] }, 2: { choices: ['3'] } }, true);
+  const snapped = place(local);
+  assert.equal(snapped.x % 40, 0); assert.equal(snapped.y % 40, 0);
+}
+reset({});
+entry.namespace._assignGridPositions(new Set([1, 2]), 1);
+assert.deepEqual(JSON.parse(JSON.stringify(state.positions)), { 1: { x: 0, y: 0 }, 2: { x: 130, y: 0 } });
+const positions = { 1: { x: 0, y: 0 } }, graph = {};
+for (let i = 3; i < 603; i++) { positions[i] = { x: 130 + ((i - 3) % 20) * 70, y: Math.floor((i - 3) / 20) * 70 }; graph[i] = { choices: [] }; }
+reset(positions, graph);
+const start = performance.now(); place();
+console.log(JSON.stringify({ cases: 14, denseNodes: 602, densePlacementMs: Math.round((performance.now() - start) * 100) / 100 }));

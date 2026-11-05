@@ -12,6 +12,13 @@ export function targetCategory(actor) {
 }
 
 export function targetMap(fight, actor) {
+  if (fight.rules.randomEnemyTargets && actor.id!=='havet') {
+    const targets=legalTargets(fight,actor);
+    if (targets.length<=1) return null;
+    if (6%targets.length) throw new RangeError('The printed target die cannot evenly select these combatants.');
+    const group=6/targets.length;
+    return Object.fromEntries(targets.map((a,i)=>[a.id,Array.from({length:group},(_,j)=>i*group+j+1)]));
+  }
   if (actor.tag === 'fett') return fight.rules.fettTargetDie ?? null;
   if (actor.team === 'rebels' && actor.id !== 'havet') return fight.rules.allyTargetDie ?? null;
   if (actor.team === 'imperial') return fight.rules.enemyTargetDie ?? null;

@@ -4,11 +4,11 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import * as groups from '../../../public/js/books/groups.js';
 
-function setup({ moderator = false, expanded = false } = {}) {
+function setup({ moderator = false, admin = false, expanded = false } = {}) {
   const list = { innerHTML: '' };
   const context = {
     ...groups,
-    booksState: { _currentUserId: 2, _cachedBooks: [], _activeSeriesRuns: [], _hooks: { getIsModerator: () => moderator } },
+    booksState: { _currentUserId: 2, _cachedBooks: [], _activeSeriesRuns: [], _hooks: { getIsModerator: () => moderator, getIsAdmin: () => admin } },
     lazyState: { builders: new Map(), sequence: 0 },
     updateBooksList: (root, blocks) => { root.innerHTML = blocks.map(block => block.html).join(''); return [root]; },
     document: { getElementById: () => list },
@@ -26,6 +26,21 @@ function setup({ moderator = false, expanded = false } = {}) {
   }
   return { context, list };
 }
+
+test('library role edit labels exclude owned books, anthologies and series', () => {
+  for (const admin of [false, true]) {
+    const { context, list } = setup({ admin, moderator: !admin });
+    const label = admin ? 'Gamemaster edit' : 'Lorekeeper edit';
+    for (const is_container of [0, 1]) for (const created_by of [1, 2, null]) {
+      const html = context._bookItemHtml({ id: 9, name: 'Item', total_sections: 10, is_public: 1, is_container, created_by }, false, false, 0, null, admin);
+      assert.equal(html.includes(`data-tooltip="${label}"`), created_by === 1);
+    }
+    for (const is_owner of [true, false]) {
+      context.renderBooksList([], [{ id: 9, name: 'Series', is_public: 1, is_owner }]);
+      assert.equal(list.innerHTML.includes(`data-tooltip="${label}"`), !is_owner);
+    }
+  }
+});
 
 for (const expanded of [true, false]) {
   for (const anthology of [false, true]) {

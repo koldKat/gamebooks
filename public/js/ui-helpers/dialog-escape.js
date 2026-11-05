@@ -3,18 +3,41 @@ const overlays = 'dialog[open], [id$="-overlay"].active, [id$="-dialog"].active,
 const closeButtons = 'button[data-dialog-close], .modal-close-btn, .inv-close-btn, .pub-close-btn, .admin-editor-close, button[id$="-close"], button[id$="-close-btn"], button[id$="-close-x"]';
 const cancelButtons = 'button[id$="-cancel"], button[id$="-cancel-btn"], #inv-edit-done, #eq-edit-done';
 
-export function installEscapeHandling(win = window) {
-  const doc = win.document;
-  if (installed.get(win) === doc) return;
-  installed.set(win, doc);
+function topmostLayer(elements, win) {
   const visible = element => element.getClientRects().length > 0
     && win.getComputedStyle(element).visibility !== 'hidden';
-  const topmost = elements => [...elements].filter(visible).reduce((top, element) => {
+  return [...elements].filter(visible).reduce((top, element) => {
     if (!top) return element;
     if (top.matches('dialog[open]') !== element.matches('dialog[open]')) return element.matches('dialog[open]') ? element : top;
     const z = node => Number.parseInt(win.getComputedStyle(node).zIndex, 10) || 0;
     return z(element) >= z(top) ? element : top;
   }, null);
+}
+
+export function getTopDialog(win = window) {
+  return topmostLayer(win.document.querySelectorAll(overlays), win);
+}
+
+export function dismissDialog(overlay, win = window) {
+  if (overlay.getAttribute('aria-busy') === 'true') return;
+  if (overlay.classList.contains('inv-ctx-menu')) {
+    overlay.dispatchEvent(new win.Event('escape-dismiss'));
+  } else if (overlay.matches('dialog[open]')) {
+    const cancel = new win.Event('cancel', { cancelable: true });
+    if (overlay.dispatchEvent(cancel)) overlay.close();
+  } else {
+    const button = overlay.querySelector(closeButtons) || overlay.querySelector(cancelButtons);
+    if (button) {
+      if (!button.disabled) button.click();
+    } else if (overlay.classList.contains('img-lightbox')) overlay.click();
+  }
+}
+
+export function installEscapeHandling(win = window) {
+  const doc = win.document;
+  if (installed.get(win) === doc) return;
+  installed.set(win, doc);
+  const topmost = elements => topmostLayer(elements, win);
 
   // Window capture runs before legacy input/document handlers can dismiss several layers.
   win.addEventListener('keydown', event => {
@@ -44,23 +67,8 @@ export function installEscapeHandling(win = window) {
       dropdown.dispatchEvent(new win.Event('autocomplete-dismiss'));
       return;
     }
-    if (overlay.getAttribute('aria-busy') === 'true') return;
-    if (overlay.classList.contains('inv-ctx-menu')) {
-      overlay.dispatchEvent(new win.Event('escape-dismiss'));
-      return;
-    }
-    if (overlay.matches('dialog[open]')) {
-      const cancel = new win.Event('cancel', { cancelable: true });
-      if (overlay.dispatchEvent(cancel)) overlay.close();
-      return;
-    }
-    const button = overlay.querySelector(closeButtons) || overlay.querySelector(cancelButtons);
-    // Reuse close callbacks and their busy/upload guards, never strip overlay classes here.
-    if (button) {
-      if (!button.disabled) button.click();
-    } else if (overlay.classList.contains('img-lightbox')) {
-      overlay.click();
-    }
+    // Reuse close callbacks and their busy/upload guards.
+    dismissDialog(overlay, win);
   }, true);
 
   win.addEventListener('keydown', event => {

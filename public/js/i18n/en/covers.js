@@ -8,6 +8,8 @@ export default {
     'covers.opening':     'Opening…',
     'covers.loading':      'Loading…',
     'covers.edit_series': 'Edit series',
+    'covers.edit_book': 'Edit book',
+    'covers.edit_anthology': 'Edit anthology',
     'covers.series_label': '(Series)',
     'covers.add_to_library': '+ Add to my library',
     'covers.login_to_add_book': 'Log in or sign up to add book',

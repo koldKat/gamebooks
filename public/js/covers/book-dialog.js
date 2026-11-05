@@ -94,8 +94,11 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
   if (bookMeta?.isPublic && !userLoggedIn) {
     headerHtml += `<button class="add-to-library-btn login-to-add-book-btn">${t('covers.login_to_add_book')}</button>`;
   }
-  if (coversState._hooks.getIsAdmin?.() || (bookMeta?.isPublic && coversState._hooks.getIsModerator?.())) {
-    headerHtml += `<button class="add-to-library-btn catalog-admin-edit-btn" data-book-id="${bookId}" style="color:#f5a623;border-color:#92400e">${coversState._hooks.getIsAdmin?.() ? '✎ Gamemaster Edit' : '✎ Lorekeeper Edit'}</button>`;
+  const isOwner = userLoggedIn && !!bookMeta?.isOwner;
+  const editRole = !isOwner && (coversState._hooks.getIsAdmin?.() ? 'Gamemaster' : bookMeta?.isPublic && coversState._hooks.getIsModerator?.() ? 'Lorekeeper' : '');
+  if (userLoggedIn && (isOwner || editRole)) {
+    const editLabel = editRole ? `${editRole} Edit` : t(bookMeta?.isContainer ? 'covers.edit_anthology' : 'covers.edit_book');
+    headerHtml += `<button class="add-to-library-btn catalog-admin-edit-btn" data-book-id="${bookId}"${editRole ? ' style="color:#f5a623;border-color:#92400e"' : ''}>✎ ${escapeHtml(editLabel)}</button>`;
   }
   headerHtml += '</div></div>';
 

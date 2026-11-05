@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { renderReadingMatter } from '../../../public/js/reading/content.js';
+import { mountReadingSourceSheets } from '../../../public/js/reading/source-sheet.js';
 
 const textNode = textContent => ({ nodeType: 3, textContent });
 const source = (tagName, children = [], attrs = {}) => ({ nodeType: 1, tagName,
@@ -50,6 +51,23 @@ test('named section links remain inert fragments and can be disabled in access p
   }
 });
 
+test('frontmatter map references allow only bounded local map IDs and become inert in previews', () => {
+  for (const href of ['#map0', '#map1', '#map999999']) {
+    for (const sectionLinks of [true, false]) {
+      const { mount, document } = setup([source('P', [source('A', [textNode('Map')], { href })])]);
+      assert.equal(renderReadingMatter(mount, 1585, '<p>Map</p>', document, { sectionLinks }), true);
+      const link = mount.children[0].children[0];
+      assert.equal(link.tag, sectionLinks ? 'a' : 'span');
+      assert.equal(link.attrs.href, sectionLinks ? href : undefined);
+    }
+  }
+  for (const href of ['#map', '#map-1', '#map1000000', '#map1/extra', '#map1 extra', 'https://example.com/#map1']) {
+    const { mount, document } = setup([source('P', [source('A', [], { href })])]);
+    assert.equal(renderReadingMatter(mount, 1585, '<p></p>', document), false, href);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
 test('printed previous-entry instructions retain only the exact local fragment and become inert in previews', () => {
   for (const sectionLinks of [true, false]) {
     const { mount, document } = setup([source('P', [source('A', [textNode('Go back and try again!')], { href: '#reading-previous-entry' })])]);
@@ -92,6 +110,21 @@ test('left-aligned native illustration bands retain only their canonical bounded
     const { mount, document } = setup([source('FIGURE', [image], { ...attrs, style })]);
     assert.equal(renderReadingMatter(mount, 1496, '<figure>Original tail</figure>', document), false);
     assert.equal(mount.children.length, 0);
+  }
+});
+
+test('map lookups retain protected artwork and navigation with a bounded layout class', () => {
+  const content = [source('FIGURE', [source('IMG', [], { src: `/api/books/1579/reading-images/${'a'.repeat(64)}.png` })]),
+    source('FIGCAPTION', [source('A', [textNode('TO CHECK MAP, SEE PAGE 17.')], { href: '#section-17' })])];
+  const attrs = { class: 'reading-map-lookup' };
+  const { mount, document } = setup([source('FIGURE', content, attrs)]);
+  assert.equal(renderReadingMatter(mount, 1579, '<figure></figure>', document), true);
+  assert.deepEqual(mount.children[0].attrs, attrs);
+  assert.equal(mount.children[0].children[1].children[0].attrs.href, '#section-17');
+  for (const invalid of [{ class: 'reading-map-lookup hidden' }, { style: 'position:fixed' }, { onclick: 'bad()' }]) {
+    const fixture = setup([source('FIGURE', content, { ...attrs, ...invalid })]);
+    assert.equal(renderReadingMatter(fixture.mount, 1579, '<figure></figure>', fixture.document), false);
+    assert.equal(fixture.mount.children.length, 0);
   }
 });
 
@@ -501,6 +534,22 @@ function originalSheet(overrides = {}, imageOverrides = {}, textOverrides = {}, 
   { class: 'reading-source-sheet', 'data-source-width': '800', 'data-source-height': '1400', ...overrides });
 }
 
+test('story passages lay out source sheets once without replacing unrelated story markup', () => {
+  const { document } = setup([]);
+  let pending = true, replacement;
+  const sheet = originalSheet();
+  sheet.replaceWith = value => { replacement = value; pending = false; };
+  const container = { ownerDocument: document, querySelectorAll: () => pending ? [sheet] : [] };
+  mountReadingSourceSheets(container, 1497);
+  assert.match(replacement.attrs.style, /position:relative/);
+  assert.match(replacement.children[0].attrs.style, /position:absolute/);
+  const first = replacement;
+  mountReadingSourceSheets(container, 1497);
+  assert.equal(replacement, first);
+  pending = true;
+  assert.throws(() => mountReadingSourceSheets(container, 1496), /Invalid source sheet image/);
+});
+
 test('original sheets preserve independent protected artwork and native text labels responsively', () => {
   const { mount, document } = setup([originalSheet()]);
   assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), true);
@@ -510,6 +559,18 @@ test('original sheets preserve independent protected artwork and native text lab
   assert.match(sheet.children[0].attrs.style, /left:2.5%;/);
   assert.equal(sheet.children[1].children[0].textContent, 'Fighting');
   assert.match(sheet.children[1].attrs.style, /font-size:3.75cqw/);
+});
+
+test('adjoining native strips cover fractional seams without extending terminal edges', () => {
+  const sheet = originalSheet();
+  sheet.childNodes = [
+    source('IMG', [], { src: '/api/books/1497/reading-images/' + 'a'.repeat(64) + '.png', 'data-source-box': '0,0,800,700' }),
+    source('IMG', [], { src: '/api/books/1497/reading-images/' + 'b'.repeat(64) + '.png', 'data-source-box': '0,700,800,1400' }),
+  ];
+  const { mount, document } = setup([sheet]);
+  assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), true);
+  assert.match(mount.children[0].children[0].attrs.style, /height:calc\(50% \+ \.5px\)/);
+  assert.match(mount.children[0].children[1].attrs.style, /height:50%;/);
 });
 
 test('original sheet layers reject unsafe content, invalid geometry and cross-book assets atomically', () => {

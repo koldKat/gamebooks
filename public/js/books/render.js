@@ -207,16 +207,15 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     const barColor  = fullyDone ? 'rgba(34,197,94,0.6)' : 'rgba(245,166,35,0.5)';
     const countLabel  = activeBooks.length === 1 ? '1 book' : `${activeBooks.length} books`;
     const sectLabel   = aggrS > 0 ? ` · ${aggrS} sections` : '';
+    const editRole = !s.is_owner && (isAdmin ? 'Gamemaster' : isModerator && s.is_public ? 'Lorekeeper' : '');
     out.push(
       `<div class="series-header-row" data-series-id="${s.id}" data-expanded="${expanded ? '1' : '0'}" data-stash-id="${stashId ?? ''}" data-open-world="${s.is_open_world ? '1' : '0'}">` +
         `<span class="series-header-chevron">▶</span>` +
         `<span class="series-header-name" data-tooltip="${escapeHtml(s.name)}">${escapeHtml(s.name)}${s.is_open_world ? ` <span class="series-open-world-badge" data-tooltip="${escapeHtml(t('covers.open_world_series'))}"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>` : ''}</span>` +
         `<span class="series-header-count">${activeBooks.length ? countLabel + sectLabel : 'no books yet'}</span>` +
-        (s.is_owner || (isModerator && s.is_public)
-          ? `<button class="series-edit-btn" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-desc="${escapeHtml(s.description || '')}" data-series-public="${s.is_public ? '1' : '0'}" data-series-open-world="${s.is_open_world ? '1' : '0'}">✎</button>`
-          : isAdmin
-            ? `<button class="series-edit-btn series-edit-btn--admin" data-tooltip="Gamemaster edit" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-desc="${escapeHtml(s.description || '')}" data-series-public="${s.is_public ? '1' : '0'}" data-series-open-world="${s.is_open_world ? '1' : '0'}">✎</button>`
-            : `<span data-tooltip="${t('books.only_creator_can_edit')}" style="display:inline-flex"><button class="series-edit-btn" disabled>✎</button></span>`
+        (s.is_owner || editRole
+          ? `<button class="series-edit-btn${editRole ? ' series-edit-btn--admin' : ''}"${editRole ? ` data-tooltip="${editRole} edit"` : ''} data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-desc="${escapeHtml(s.description || '')}" data-series-public="${s.is_public ? '1' : '0'}" data-series-open-world="${s.is_open_world ? '1' : '0'}">✎</button>`
+          : `<span data-tooltip="${t('books.only_creator_can_edit')}" style="display:inline-flex"><button class="series-edit-btn" disabled>✎</button></span>`
         ) +
         `<button class="series-del-btn" data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-owner="${s.is_owner ? '1' : '0'}" data-tooltip="${s.is_owner ? t('books.delete_series') : t('books.remove_from_library')}">✕</button>` +
         `<div class="series-header-bar" style="width:${pct}%;background:${barColor}"></div>` +

@@ -31,7 +31,7 @@ for(const id of BOOK_IDS){
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
-  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817||id===832||id===833||id===838){
+  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817||id===832||id===833||id===838||id===1578||id===1587){
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
     check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
   }
@@ -90,6 +90,82 @@ for(const id of BOOK_IDS){
     check(requestedRosters.has(id), 'legacy roster requested actual API data ' + id);
     const options = [...overlay.querySelectorAll('[role="option"]')];
     check(options.some(option => option.textContent.includes(rosterSeeds[id][0].name)), 'legacy roster displays installed opponent ' + id);
+  }
+  if(id===1587){
+    const run=app.currentPlaythrough(),data=()=>run.sim1587,el=key=>document.getElementById('sim1587-'+key);
+    run.inventory=[{name:'Unrelated item'}];run.sim1578={preserved:true};
+    const unrelated=JSON.stringify([run.inventory,run.sim1578,run.path]);
+    const hero=(hp=30)=>{for(const [key,value]of Object.entries({maxHp:36,hp,fighting:3,experience:4}))el(key).value=value;};
+    const choose=section=>{
+      const name=overlay.querySelector('[role="combobox"]');name.value='';name.dispatchEvent(new FocusEvent('focus'));
+      const option=[...overlay.querySelectorAll('[role="option"]')].find(node=>node.textContent.includes('('+section+')'));
+      check(option,'Pax Tharkas installed preset '+section);option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));
+    };
+    const roll=(a,b,spent=0)=>{el('die1').value=a;el('die2').value=b;el('spent').value=spent;el(data().fight.phase==='save'?'save':'attack').click();};
+    hero();const name=overlay.querySelector('[role="combobox"]');name.value='Custom encounter';
+    for(const field of overlay.querySelectorAll('[data-stat]'))field.value=field.dataset.stat==='target'?12:4;
+    el('start').click();check(data().fight.opponent.section===undefined,'Pax custom combat requires no preset');
+    check(el('hp').disabled&&el('custom').disabled,'Pax setup locked during combat');
+    roll(4,4,1);check(data().fight.status==='win'&&data().player.experience===3&&data().history.length===1,'Pax declared experience victory');
+    const {ENCOUNTERS}=await import('REPO/public/js/battlesim/books/1587/definition.js');
+    check(ENCOUNTERS.length===15,'Pax complete installed combat roster');
+    for(const entry of ENCOUNTERS){
+      choose(entry.section);hero();el('start').click();
+      if(data().fight.phase==='save')roll(4,4);
+      roll(6,6);check(data().fight.status==='win'&&data().fight.round===1&&data().fight.destination===entry.winSection,'Pax one aggregate printed hit '+entry.section);
+    }
+    choose('11');hero();el('start').click();roll(1,1);roll(1,1);
+    check(data().player.hp===22&&el('fled').disabled,'Pax current HP flee threshold');el('loss').click();
+    check(data().fight.status==='loss'&&data().fight.destination==='53'&&data().player.hp===22,'Pax voluntary loss does not invent damage');
+    choose('75');hero(19);el('start').click();check(el('attack').disabled&&el('fled').disabled,'Pax weak character cannot fight or flee');
+    el('surrendered').click();check(data().fight.destination==='117','Pax printed forced surrender');
+    choose('163');hero();el('start').click();roll(1,1);
+    check(data().fight.status==='loss'&&data().player.hp===30&&data().fight.destination==='190','Pax breath-save failure has no invented damage');
+    choose('120');hero();el('start').click();roll(6,6);
+    check(data().fight.status==='win'&&data().fight.destination==='126','Pax later fatal narrative stays in reader');
+    choose('60');hero();el('start').click();el('fled').click();check(data().fight.destination==='12','Pax original shared flee/win destination');
+    choose('28');hero();el('start').click();check(!el('surrendered'),'Pax forbidden surrender absent');
+    const before=JSON.stringify(data());module.render();check(JSON.stringify(data())===before,'Pax render preserves active encounter');
+    el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();
+    check(JSON.stringify(data())===before,'Pax stale confirmation cannot update another book');app.setCurrentBookId(id);
+    check(JSON.stringify([run.inventory,run.sim1578,run.path])===unrelated,'Pax inventory, other fight and story path preserved');
+  }
+  if(id===1578){
+    const el=key=>document.getElementById('sim1578-'+key),run=app.currentPlaythrough(),data=()=>run.sim1578;
+    const {ENCOUNTERS}=await import('REPO/public/js/battlesim/books/1578/definition.js');
+    check(ENCOUNTERS.length===51&&requestedRosters.has(id),'Bounty Hunter database combat catalog');
+    run.inventory={keep:['item']};run.sim1577={keep:'other fight'};
+    const preserved=JSON.stringify([run.inventory,run.sim1577]);
+    const set=(key,value)=>{el(key).value=String(value);el(key).dispatchEvent(new Event('change',{bubbles:true}));};
+    const choose=section=>set('section',section);
+    const strike=(die,adjustment=0)=>{el('die').value=String(die);el('advance').click();el('adjustment').value=String(adjustment);el('adjustment').dispatchEvent(new Event('input'));el('confirm').click();};
+    const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    for(const [key,value]of Object.entries({blaster:3,lightsabre:3,technical:3,jediPoints:6,maxJediPoints:6}))set(key,value);
+    const name=el('editor').querySelector('[role="combobox"]');name.value='Synthetic opponent';
+    for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=input.dataset.stat==='target'?'7':'1';
+    el('start').click();check(data().fight?.section==='custom','custom Bounty Hunter fight needs no preset');
+    strike(3,1);check(data().history.length===1&&data().fight.jediPoints===5,'confirmed custom victory recorded once');
+    choose('531');el('start').click();check(!el('eweb').hidden,'printed E-Web action visible');
+    el('eweb').click();check(data().fight.player.weapon==='eweb'&&data().fight.queue[0]!=='havet','E-Web acquisition spends a turn');cancel();
+    choose('567');set('variant','572');el('extraRebels').checked=true;el('extraRebels').dispatchEvent(new Event('change',{bubbles:true}));
+    check(!el('extraRebelSkill').closest('label').hidden,'optional Rebel skill exposed');
+    set('extraRebelSkill',2);el('start').click();
+    check(data().fight.actors.length===10&&data().fight.rules.reinforcementWaves.length===2,'optional Rebel and wave controls reach combat');cancel();
+    choose('108');set('participation','observe');el('start').click();
+    check(!el('joinControls').hidden,'observing a duel permits explicit participation');
+    el('joinCombat').click();check(!data().fight.rules.thirdPartyOnly,'join action enters selected faction');cancel();
+    choose('579');el('start').click();set('grabPoints',4);el('die').value='4';el('grabWeapon').click();
+    check(data().fight.pending?.kind==='grab','weapon grab waits for explicit confirmation');
+    el('confirm').click();check(data().fight.outcome==='phase'&&data().fight.readerSection===181,'weapon grab reports printed reader destination');
+    check(data().history.length===1,'phase and stopped combat award no victory');
+    choose('534');check(!el('survivingGuards').closest('label').hidden,'direct counterattack asks for survivors');
+    set('survivingGuards',2);set('survivingRebels',1);el('start').click();
+    check(data().fight.actors.length===10,'survivor controls reach direct counterattack');cancel();
+    choose('601');set('weapon','blaster');el('start').click();strike(4);
+    check(data().fight.outcome==='phase'&&el('actor').textContent.includes('295'),'partial score returns to reader without combat reward');
+    check(JSON.stringify([run.inventory,run.sim1577])===preserved,'Bounty Hunter preserves inventory and other fights');
+    choose('631');el('start').click();el('die').value='2';el('advance').click();
+    check(data().fight.pending?.kind==='strike','Bounty Hunter pending roll retained for save/load');
   }
   if(id===1577){
     const el=key=>document.getElementById('sim1577-'+key),run=app.currentPlaythrough(),data=()=>run.sim1577;

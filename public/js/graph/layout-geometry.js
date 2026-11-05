@@ -9,8 +9,9 @@ export function _buildPlacedEdges(posMap, excludeNode = null) {
     const from = parseSecId(fromKey);
     if (excludeNode !== null && from === excludeNode) continue;
     if (!_hasValidPos(posMap[from])) continue;
-    for (const to of (data.choices || [])) {
-      if (isTerminal(to) || !_hasValidPos(posMap[to])) continue;
+    for (const raw of (data.choices || [])) {
+      const to = parseSecId(raw);
+      if (to === null || isTerminal(to) || !_hasValidPos(posMap[to])) continue;
       if (excludeNode !== null && to === excludeNode) continue;
       edges.push({
         from,
@@ -48,10 +49,16 @@ function _pointToSegmentDistance(p, a, b) {
 }
 
 export function _scoreLocalCandidate(candidate, anchors, neighbors, posMap, placedEdges) {
-  let score = 0;
+  return _evaluateLocalCandidate(candidate, anchors, neighbors, posMap, placedEdges).score;
+}
 
-  for (const [id, pos] of Object.entries(posMap)) {
-    if (neighbors.includes(parseSecId(id))) continue;
+export function _evaluateLocalCandidate(candidate, anchors, neighbors, posMap, placedEdges, placedNodes = Object.entries(posMap)) {
+  let score = 0;
+  let distanceCost = 0;
+
+  for (const [, pos] of placedNodes) {
+    if (!_hasValidPos(pos)) continue;
+    if (Math.abs(candidate.x - pos.x) >= _LOCAL_SOFT_NODE_GAP || Math.abs(candidate.y - pos.y) >= _LOCAL_SOFT_NODE_GAP) continue;
     const d = Math.hypot(candidate.x - pos.x, candidate.y - pos.y);
     if (d < _LOCAL_MIN_NODE_GAP) score += 100000 + (_LOCAL_MIN_NODE_GAP - d) * 2500;
     else if (d < _LOCAL_SOFT_NODE_GAP) score += (_LOCAL_SOFT_NODE_GAP - d) * 30;
@@ -64,7 +71,16 @@ export function _scoreLocalCandidate(candidate, anchors, neighbors, posMap, plac
     const segLen = Math.hypot(candidate.x - pos.x, candidate.y - pos.y);
     totalDist += segLen;
     if (segLen > _LOCAL_PLACE_RADII[_LOCAL_PLACE_RADII.length - 1]) {
-      score += (segLen - _LOCAL_PLACE_RADII[_LOCAL_PLACE_RADII.length - 1]) * 20;
+      distanceCost += (segLen - _LOCAL_PLACE_RADII[_LOCAL_PLACE_RADII.length - 1]) * 20;
+    }
+    // Keep a new connector away from other nodes along its whole route.
+    const pathGap = _LOCAL_MIN_NODE_GAP / 2;
+    const left = Math.min(candidate.x, pos.x) - pathGap, right = Math.max(candidate.x, pos.x) + pathGap;
+    const top = Math.min(candidate.y, pos.y) - pathGap, bottom = Math.max(candidate.y, pos.y) + pathGap;
+    for (const [key, point] of placedNodes) {
+      if (!_hasValidPos(point) || point.x < left || point.x > right || point.y < top || point.y > bottom || parseSecId(key) === id) continue;
+      const clearance = _pointToSegmentDistance(point, candidate, pos);
+      if (clearance < _LOCAL_MIN_NODE_GAP / 2) score += 2000 + (_LOCAL_MIN_NODE_GAP / 2 - clearance) * 300;
     }
     for (const edge of placedEdges) {
       if (edge.from === id || edge.to === id) continue;
@@ -73,10 +89,12 @@ export function _scoreLocalCandidate(candidate, anchors, neighbors, posMap, plac
   });
   if (neighbors.length) {
     const avgDist = totalDist / neighbors.length;
-    score += avgDist * 0.08;
+    distanceCost += avgDist * 0.08;
   }
 
   for (const edge of placedEdges) {
+    if (candidate.x < Math.min(edge.a.x, edge.b.x) - _LOCAL_EDGE_CLEARANCE || candidate.x > Math.max(edge.a.x, edge.b.x) + _LOCAL_EDGE_CLEARANCE
+        || candidate.y < Math.min(edge.a.y, edge.b.y) - _LOCAL_EDGE_CLEARANCE || candidate.y > Math.max(edge.a.y, edge.b.y) + _LOCAL_EDGE_CLEARANCE) continue;
     const clearance = _pointToSegmentDistance(candidate, edge.a, edge.b);
     if (clearance < _LOCAL_EDGE_CLEARANCE) score += (_LOCAL_EDGE_CLEARANCE - clearance) * 45;
   }
@@ -84,8 +102,8 @@ export function _scoreLocalCandidate(candidate, anchors, neighbors, posMap, plac
   if (anchors.length) {
     const centroid = _avgPoint(anchors, posMap);
     const centroidDist = Math.hypot(candidate.x - centroid.x, candidate.y - centroid.y);
-    score += centroidDist * 0.03;
+    distanceCost += centroidDist * 0.03;
   }
 
-  return score;
+  return { score: score + distanceCost, crowding: score };
 }

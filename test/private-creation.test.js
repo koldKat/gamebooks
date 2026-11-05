@@ -22,7 +22,9 @@ function setup() {
       is_container INTEGER DEFAULT 0, parent_book_id INTEGER, book_order INTEGER, is_public INTEGER DEFAULT 0,
       published_at INTEGER, created_at INTEGER DEFAULT 0, cover_path TEXT,
       pdf_path TEXT, epub_path TEXT, has_battle_sim INTEGER DEFAULT 0, has_live_reading INTEGER DEFAULT 0);
-    CREATE TABLE user_books (user_id INTEGER, book_id INTEGER, state_data TEXT, created_at INTEGER DEFAULT 0, updated_at INTEGER, rating REAL, UNIQUE(user_id,book_id));
+    CREATE TABLE book_parties (id INTEGER PRIMARY KEY, book_id INTEGER);
+    CREATE TABLE party_invites (id INTEGER PRIMARY KEY, party_id INTEGER REFERENCES book_parties(id) ON DELETE CASCADE);
+    CREATE TABLE user_books (user_id INTEGER, book_id INTEGER, state_data TEXT, party_id INTEGER, created_at INTEGER DEFAULT 0, updated_at INTEGER, rating REAL, UNIQUE(user_id,book_id));
     CREATE TABLE book_anthology_memberships (book_id INTEGER, anthology_id INTEGER, book_order INTEGER);
     CREATE TABLE user_stashes (id INTEGER PRIMARY KEY, user_id INTEGER, name TEXT, created_at INTEGER DEFAULT 0);
     CREATE TABLE stash_books (stash_id INTEGER REFERENCES user_stashes(id) ON DELETE CASCADE, user_id INTEGER, book_id INTEGER);
@@ -39,9 +41,12 @@ function setup() {
     vm.runInContext(source, context);
     return context.module.exports;
   }
+  const parties = load('parties', { './connection': connection, './xp': { awardXp() {} } });
   const books = load('books', { './connection': connection, './xp': { awardXp() {} },
+    './vote-gems': { awardRatingVote() {} }, './parties': parties,
     fs: { unlinkSync: filename => deletedFiles.push(filename) }, path: require('node:path') });
-  const feed = load('feed', { './connection': connection, './xp': {}, './job-xp': { getJobTitle() {} }, './content': {}, './books': books });
+  const feed = load('feed', { './connection': connection, './xp': {}, './job-xp': { getJobTitle() {} }, './content': {}, './books': books,
+    './rating-stats': { getPlayerRatingStats() {} } });
   return { db, books, feed, deletedFiles };
 }
 
@@ -60,6 +65,92 @@ test('series contents deletion prunes orphan books and attachments but preserves
     assert.equal(db.prepare('SELECT state_data FROM user_books WHERE user_id=2 AND book_id=2').get().state_data, 'preserve');
     assert.equal(db.prepare('SELECT count(*) AS n FROM user_books WHERE user_id=1').get().n, 0);
     assert.deepEqual(deletedFiles.map(p => require('node:path').basename(p)).sort(), ['one.epub', 'one.pdf', 'one.png']);
+  } finally { db.close(); }
+});
+
+for (const removal of ['book', 'anthology', 'series']) {
+  test(`${removal} removal dissolves a two-player party without changing the survivor's progress`, () => {
+    const { db, books } = setup();
+    try {
+      db.exec(`INSERT INTO series (id,name) VALUES (1,'Shared series');
+        INSERT INTO user_series (user_id,series_id) VALUES (1,1),(2,1);
+        INSERT INTO books (id,name,is_container) VALUES (10,'Collection',1);
+        INSERT INTO books (id,name,series_id,parent_book_id,is_public) VALUES (11,'Adventure',1,10,1);
+        INSERT INTO book_parties (id,book_id) VALUES (7,11);
+        INSERT INTO party_invites (id,party_id) VALUES (1,7);
+        INSERT INTO user_books (user_id,book_id,state_data,party_id,rating,updated_at) VALUES
+          (1,10,'container',NULL,NULL,123),(1,11,'departing progress',7,4,124),
+          (2,11,'surviving graph, runs and positions',7,5,125);`);
+      const before = db.prepare('SELECT * FROM user_books WHERE user_id=2').get();
+      const changes = [];
+      const options = { onPartyChanged: partyId => {
+        assert.equal(db.inTransaction, false, 'notify only after commit');
+        assert.equal(db.prepare('SELECT 1 FROM book_parties WHERE id=?').get(partyId), undefined);
+        changes.push(partyId);
+      } };
+      if (removal === 'series') {
+        db.exec('UPDATE books SET parent_book_id=NULL WHERE id=11');
+        books.removeSeriesFromLibrary(1, 1, options);
+      }
+      else assert.equal(books.deleteBook(1, removal === 'anthology' ? 10 : 11, true, options), true);
+      assert.deepEqual(db.prepare('SELECT * FROM user_books WHERE user_id=2').get(), { ...before, party_id: null });
+      assert.equal(db.prepare('SELECT count(*) AS n FROM party_invites').get().n, 0);
+      assert.equal(db.prepare('SELECT 1 FROM user_books WHERE user_id=1 AND book_id=11').get(), undefined);
+      assert.deepEqual(changes, [7]);
+    } finally { db.close(); }
+  });
+}
+
+test('book removal retains a party with two remaining members and ignores repeated removal', () => {
+  const { db, books } = setup();
+  try {
+    db.exec(`INSERT INTO users (id,username) VALUES (3,'Third');
+      INSERT INTO books (id,name,is_public) VALUES (11,'Adventure',1);
+      INSERT INTO book_parties (id,book_id) VALUES (7,11);
+      INSERT INTO user_books (user_id,book_id,state_data,party_id) VALUES
+        (1,11,'one',7),(2,11,'two',7),(3,11,'three',7);`);
+    const survivors = db.prepare('SELECT * FROM user_books WHERE user_id<>1 ORDER BY user_id').all();
+    const changes = [], options = { onPartyChanged: id => changes.push(id) };
+    assert.equal(books.deleteBook(1, 11, true, options), true);
+    assert.deepEqual(db.prepare('SELECT * FROM user_books ORDER BY user_id').all(), survivors);
+    assert.ok(db.prepare('SELECT 1 FROM book_parties WHERE id=7').get());
+    assert.equal(books.deleteBook(1, 11, true, options), false);
+    assert.deepEqual(changes, [7]);
+  } finally { db.close(); }
+});
+
+test('failed book removal rolls back party cleanup and sends no membership notification', () => {
+  const { db, books } = setup();
+  try {
+    db.exec(`INSERT INTO books (id,name,is_public) VALUES (11,'Adventure',1);
+      INSERT INTO book_parties (id,book_id) VALUES (7,11);
+      INSERT INTO user_books (user_id,book_id,state_data,party_id) VALUES (1,11,'one',7),(2,11,'two',7);
+      CREATE TRIGGER reject_removal BEFORE DELETE ON user_books BEGIN SELECT RAISE(ABORT,'blocked removal'); END;`);
+    const changes = [], before = db.prepare('SELECT * FROM user_books ORDER BY user_id').all();
+    assert.throws(() => books.deleteBook(1, 11, true, { onPartyChanged: id => changes.push(id) }), /blocked removal/);
+    assert.deepEqual(db.prepare('SELECT * FROM user_books ORDER BY user_id').all(), before);
+    assert.ok(db.prepare('SELECT 1 FROM book_parties WHERE id=7').get());
+    assert.deepEqual(changes, []);
+  } finally { db.close(); }
+});
+
+test('public edit ownership follows books and anthologies transferred to the remaining reader', () => {
+  const { db, books, feed } = setup();
+  try {
+    db.exec(`INSERT INTO books (id,name,is_public,is_container,created_by) VALUES
+      (11,'Adventure',1,0,1),(12,'Collection',1,1,1);
+      INSERT INTO user_books (user_id,book_id,state_data) VALUES
+        (1,11,'{}'),(2,11,'{}'),(1,12,'{}'),(2,12,'{}');`);
+    for (const id of [11, 12]) {
+      assert.equal(feed.getBookActivity(id, 2).book.isOwner, false, 'tracking alone does not confer ownership');
+      assert.equal(books.deleteBook(1, id), true);
+      assert.equal(feed.getBookActivity(id, 2).book.isOwner, true);
+      assert.equal(feed.getBookActivity(id, 1).book.isOwner, false);
+    }
+    db.exec("INSERT INTO series (id,name,is_public,created_by) VALUES (9,'Series',1,1)");
+    books.transferSeriesOwnership(9, 2);
+    assert.equal(books.getPublicSeriesInfo(9, false, 2).isOwner, true);
+    assert.equal(books.getPublicSeriesInfo(9, false, 1).isOwner, false);
   } finally { db.close(); }
 });
 
@@ -182,6 +273,11 @@ test('public catalogs and anthology metadata exclude private groups and private 
     assert.equal(catalog.find(b => b.id === 7).seriesName, null);
     assert.equal(catalog.find(b => b.id === 7).seriesId, null);
     assert.equal(feed.getBookActivity(7).book.maxSectionNumber, 10, 'catalog edit metadata exposes the default maximum');
+    for (const id of [3, 7]) {
+      assert.equal(feed.getBookActivity(id, 1).book.isOwner, true);
+      assert.equal(feed.getBookActivity(id, 2).book.isOwner, false);
+      assert.equal(feed.getBookActivity(id).book.isOwner, false);
+    }
     assert.equal(feed.getBookActivity(7).book.secondaryAnthologies.length, 0, 'private secondary anthology names stay hidden');
     assert.equal(feed.getPublicBookMeta(4), null, 'public parent does not publish a private child');
     assert.equal(feed.getPublicBookMeta(1), null);
@@ -192,6 +288,9 @@ test('public catalogs and anthology metadata exclude private groups and private 
     assert.equal(feed.getPublicBookMeta(2).parentName, null, 'private parent name is hidden');
     assert.deepEqual(Array.from(feed.getPublicBookMeta(3).children, b => b.id), [5]);
     assert.deepEqual(Array.from(books.getPublicSeriesInfo(2).books, b => b.id), [3]);
+    assert.equal(books.getPublicSeriesInfo(2, false, 1).isOwner, true);
+    assert.equal(books.getPublicSeriesInfo(2, false, 2).isOwner, false);
+    assert.equal(books.getPublicSeriesInfo(2).isOwner, false);
     assert.equal(feed.getAllPublicAnthologies()[0].childCount, 1);
     assert.equal(books.addBookToLibrary(2, 1).reason, 'not_public');
     const newBook = books.createBook(2, 'Private book', 10, null, null, null, null, null, null, null, null, false, null, null, true);
@@ -276,7 +375,7 @@ test('author suffixes stay attached to their name before alphabetical sorting', 
 test('metadata save returns the saved book and only its owned destination series', async () => {
   const { db, books } = setup();
   try {
-    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER)');
+    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER, start_section_id TEXT)');
     const bid = books.createBook(1, 'Original', 100).id;
     const target = books.getOrCreateSeries('Destination', 1, true);
     books.getOrCreateSeries('Unrelated', 1, true);
@@ -328,7 +427,7 @@ test('admin edits keep an unchanged private series link instead of creating anot
 test('sparse section numbering round-trips through creation, shared state, library additions and edits', async () => {
   const { db, books, feed } = setup();
   try {
-    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER)');
+    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER, start_section_id TEXT)');
     const book = books.createBook(1, 'Sparse book', 420, null, null, null, null, null, null, null, null, false, null, null, true, 1003);
     assert.equal(book.total_sections, 420);
     assert.equal(book.max_section_number, 1003);
@@ -379,7 +478,7 @@ test('database facade exposes the numbering helper used by book updates', () => 
 test('prefixed imported passages preserve their independent numeric maximum on edit', async () => {
   const { db, books } = setup();
   try {
-    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER); CREATE TABLE book_sections (book_id INTEGER, section_id TEXT)');
+    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER, start_section_id TEXT); CREATE TABLE book_sections (book_id INTEGER, section_id TEXT)');
     const book = books.createBook(1, 'Lettered book', 7, null, null, null, null, null, null, null, null, false, null, null, true, 5);
     db.prepare('UPDATE books SET has_live_reading=1 WHERE id=?').run(book.id);
     const add = db.prepare('INSERT INTO book_sections VALUES(?,?)');
@@ -401,7 +500,7 @@ test('prefixed imported passages preserve their independent numeric maximum on e
 test('suffixed map locations preserve the printed numeric maximum when editing metadata', async () => {
   const { db, books } = setup();
   try {
-    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER); CREATE TABLE book_sections (book_id INTEGER, section_id TEXT)');
+    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER, start_section_id TEXT); CREATE TABLE book_sections (book_id INTEGER, section_id TEXT)');
     const book = books.createBook(1, 'Map locations', 571, null, null, null, null, null, null, null, null, false, null, null, true, 454);
     db.prepare('UPDATE books SET has_live_reading=1 WHERE id=?').run(book.id);
     const add = db.prepare('INSERT INTO book_sections VALUES(?,?)');
@@ -478,7 +577,7 @@ test('create route accepts a separate maximum and rejects invalid values before 
 test('moderators can edit their own private books, and moderate only other public books', async () => {
   const { db, books } = setup();
   try {
-    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER)');
+    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER, start_section_id TEXT)');
     db.exec(`INSERT INTO books (id,name,created_by,is_public) VALUES (1,'Public',1,1),(2,'Private',1,0),(3,'Orphan public',1,1),(4,'Own private',2,0);
       INSERT INTO user_books (user_id,book_id,state_data) VALUES (1,1,'{"graph":{"9":{"choices":[10]}}}'),(1,2,'{}'),(2,4,'{}');`);
     const original = db.prepare('SELECT state_data FROM user_books WHERE user_id=1 AND book_id=1').get().state_data;
@@ -524,7 +623,7 @@ test('library removal permits moderators and admins without metadata edit checks
 test('book and anthology metadata permissions cover role, creator and visibility combinations', async () => {
   const { db, books } = setup();
   try {
-    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER)');
+    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER, start_section_id TEXT)');
     let id = 100;
     for (const role of ['player', 'moderator', 'admin']) {
       for (const owner of [1, 2]) for (const isPublic of [false, true]) for (const isContainer of [false, true]) {

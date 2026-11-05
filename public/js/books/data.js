@@ -1,7 +1,8 @@
 import { booksState, _BOOKS_LS_KEY } from './state.js';
 import { _captureExpandedPrefsFromDom } from './prefs.js';
 import { getToken, apiFetch } from '../core/state.js';
-import { loadCovers } from '../covers.js';
+import { loadCovers, _isLandingBooksViewVisible } from '../covers.js';
+import { waitForCameraIdle } from '../graph/camera-motion.js';
 import { naturalCompareByName } from '../core/sort.js';
 
 let _booksStateRefreshTimer = null;
@@ -155,7 +156,12 @@ export function _scheduleBooksListRefresh(delay = 350) {
   if (_booksStateRefreshTimer) clearTimeout(_booksStateRefreshTimer);
   _booksStateRefreshTimer = setTimeout(() => {
     _booksStateRefreshTimer = null;
-    _refreshBooksListOnly();
-    loadCovers({ force: true });
+    if (!waitForCameraIdle(refreshAfterNavigation)) refreshAfterNavigation();
   }, delay);
+}
+
+function refreshAfterNavigation() {
+  if (!getToken()) return;
+  _refreshBooksListOnly();
+  if (_isLandingBooksViewVisible()) loadCovers({ force: true });
 }

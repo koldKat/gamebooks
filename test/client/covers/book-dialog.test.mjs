@@ -6,7 +6,7 @@ import { runInNewContext } from 'node:vm';
 const source = readFileSync(new URL('../../../public/js/covers/book-dialog.js', import.meta.url), 'utf8')
   .replace(/^import .*;\n/gm, '').replace('export function ', 'function ');
 
-function dialog({ loggedIn = false, owned = false, mobile = true, admin = false, ok = true, meta = {} } = {}) {
+function dialog({ loggedIn = false, owned = false, mobile = true, admin = false, moderator = false, ok = true, meta = {} } = {}) {
   let editOptions;
   const events = [], requests = [], panels = new Set(['mobile-addbook-open']);
   const buttons = new Map();
@@ -45,6 +45,7 @@ function dialog({ loggedIn = false, owned = false, mobile = true, admin = false,
     _seriesRowBadges: book => book.hasLiveReading ? '<span class="reading-badge">Reading</span>' : '',
     coversState: { _hooks: {
       getIsAdmin: () => admin,
+      getIsModerator: () => moderator,
       refreshBooksListOnly: async options => { if (options) assert.equal(options.afterMutation, true); events.push('library'); },
       applySavedBookResponse: async response => { assert.ok(response.ok); events.push('library'); },
       openEditBookModal: options => { editOptions = options; },
@@ -62,6 +63,19 @@ function dialog({ loggedIn = false, owned = false, mobile = true, admin = false,
   });
   return { body, buttons, events, requests, panels, window, get editOptions() { return editOptions; } };
 }
+
+test('books and anthologies distinguish creator edits from role overrides, not library membership', () => {
+  for (const isContainer of [false, true]) for (const role of ['admin', 'moderator']) {
+    const options = { loggedIn: true, owned: true, [role]: true };
+    const own = dialog({ ...options, meta: { isContainer, isOwner: true } });
+    assert.doesNotMatch(own.body.html, /Gamemaster Edit|Lorekeeper Edit|color:#f5a623/);
+    assert.equal(own.buttons.get('.catalog-admin-edit-btn').textContent, '✎ covers.edit_' + (isContainer ? 'anthology' : 'book'));
+    const other = dialog({ ...options, meta: { isContainer, isOwner: false } });
+    assert.equal(other.buttons.get('.catalog-admin-edit-btn').textContent, `✎ ${role === 'admin' ? 'Gamemaster' : 'Lorekeeper'} Edit`);
+    const creator = dialog({ loggedIn: true, meta: { isContainer, isOwner: true } });
+    assert.ok(creator.buttons.has('.catalog-admin-edit-btn'), 'creator edit is available without a role');
+  }
+});
 
 test('signed-out public book action opens authentication without adding a book', async () => {
   const d = dialog();

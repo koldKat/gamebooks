@@ -11,6 +11,7 @@ function setup() {
     renderBooksList: rows => { booksState._cachedBooks = rows; renders.push(rows); } };
   const context = {
     booksState, getToken: () => 'token', _captureExpandedPrefsFromDom() {},
+    waitForCameraIdle: () => false,
     naturalCompareByName: (a, b) => a.name.localeCompare(b.name),
     console: { error: (...args) => errors.push(args) },
     apiFetch: async url => {
@@ -28,6 +29,24 @@ function setup() {
   return { context, booksState, requests, renders, errors, release: () => release(),
     move: seriesId => { books = [{ ...books[0], series_id: seriesId, series_name: seriesId ? 'New series' : null }]; } };
 }
+
+test('saved moves defer library refresh until the camera settles and skip hidden cover work', async () => {
+  const app=setup(),timers=[],waiting=new Set();let cameraMoving=true,coverLoads=0;
+  Object.assign(app.context,{
+    setTimeout: fn=>{timers.push(fn);return fn;},clearTimeout() {},
+    waitForCameraIdle: callback=>{if(!cameraMoving)return false;waiting.add(callback);return true;},
+    loadCovers: ()=>coverLoads++, _isLandingBooksViewVisible: ()=>false,
+  });
+  app.context._scheduleBooksListRefresh();timers.shift()();
+  assert.equal(app.requests.length,0,'no background requests during camera movement');
+  assert.equal(waiting.size,1);
+  cameraMoving=false;for(const callback of waiting)callback();
+  const pending=app.context._refreshBooksListOnly();app.release();await pending;
+  assert.equal(app.requests.length,4);assert.equal(coverLoads,0);
+  app.context._isLandingBooksViewVisible=()=>true;
+  app.context._scheduleBooksListRefresh();timers.shift()();
+  await app.context._refreshBooksListOnly();assert.equal(coverLoads,1);
+});
 
 for (const seriesId of [2, null]) {
   test(`a save refresh waits for stale polling and fetches the saved series ${seriesId}`, async () => {

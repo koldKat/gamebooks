@@ -41,7 +41,7 @@ export function closePublicModal() {
     /^\/series\/\d+$/.test(location.pathname) ||
     /^\/user\/[^/]+$/.test(location.pathname)
   ) {
-    history.replaceState({}, '', '/');
+    history.replaceState(history.state, '', '/');
   }
 }
 
