@@ -10,7 +10,7 @@ function setup({ moderator = false, admin = false, expanded = false } = {}) {
     ...groups,
     booksState: { _currentUserId: 2, _cachedBooks: [], _activeSeriesRuns: [], _hooks: { getIsModerator: () => moderator, getIsAdmin: () => admin } },
     lazyState: { builders: new Map(), sequence: 0 },
-    updateBooksList: (root, blocks) => { root.innerHTML = blocks.map(block => block.html).join(''); return [root]; },
+    updateBooksList: (root, blocks) => { root.innerHTML = blocks.map(block => typeof block.html === 'function' ? block.html() : block.html).join(''); return [root]; },
     document: { getElementById: () => list },
     localStorage: { setItem() {} },
     _BOOKS_LS_KEY: 'books', _SERIES_LS_KEY: 'series', _STASHES_LS_KEY: 'stashes',

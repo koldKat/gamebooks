@@ -153,13 +153,13 @@ test('original price lists preserve their source rows with only the permitted ta
   assert.equal(renderReadingMatter(invalid.mount, 1495, '<table></table>', invalid.document), false);
 });
 
-test('source word lists preserve their columns without allowing arbitrary table attributes', () => {
+for (const className of ['reading-word-list', 'reading-spell-list']) test(`${className} preserves columns without allowing arbitrary table attributes`, () => {
   const row = source('TR', ['TWEETER', 'PARA-GOOMBA', 'PHANTO'].map(word => source('TD', [source('STRONG', [textNode(word)])])));
-  const { mount, document } = setup([source('TABLE', [source('TBODY', [row])], { class: 'reading-word-list' })]);
+  const { mount, document } = setup([source('TABLE', [source('TBODY', [row])], { class: className })]);
   assert.equal(renderReadingMatter(mount, 1501, '<table></table>', document), true);
-  assert.equal(mount.children[0].attrs.class, 'reading-word-list');
+  assert.equal(mount.children[0].attrs.class, className);
   assert.equal(mount.children[0].children[0].children[0].children.length, 3);
-  const rejected = setup([source('TABLE', [row], { class: 'reading-word-list hidden' })]);
+  const rejected = setup([source('TABLE', [row], { class: className + ' hidden' })]);
   assert.equal(renderReadingMatter(rejected.mount, 1501, '<table></table>', rejected.document), false);
 });
 
@@ -559,6 +559,17 @@ test('original sheets preserve independent protected artwork and native text lab
   assert.match(sheet.children[0].attrs.style, /left:2.5%;/);
   assert.equal(sheet.children[1].children[0].textContent, 'Fighting');
   assert.match(sheet.children[1].attrs.style, /font-size:3.75cqw/);
+  assert.match(sheet.attrs.style, /background:#fff;/);
+});
+
+test('native illustration cutouts can leave unoccupied areas transparent without altering image layers', () => {
+  const { mount, document } = setup([originalSheet({ 'data-source-background': 'transparent' })]);
+  assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), true);
+  assert.match(mount.children[0].attrs.style, /background:transparent;/);
+  assert.equal(mount.children[0].children[0].src, '/api/books/1497/reading-images/' + 'a'.repeat(64) + '.png');
+  const invalid = setup([originalSheet({ 'data-source-background': 'url(https://example.com)' })]);
+  assert.equal(renderReadingMatter(invalid.mount, 1497, '<figure></figure>', invalid.document), false);
+  assert.equal(invalid.mount.children.length, 0);
 });
 
 test('adjoining native strips cover fractional seams without extending terminal edges', () => {

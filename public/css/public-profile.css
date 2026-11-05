@@ -98,11 +98,38 @@ a.book-modal-parent-btn, a.book-modal-series-btn, a.book-modal-child-row { text-
   border: 1px solid rgba(55, 65, 81, 0.3);
   border-radius: 6px;
   padding: 0.35rem 0.55rem 0.4rem;
-  pointer-events: none;
+  pointer-events: auto;
+  display: block;
+  z-index: 5;
+}
+
+.pub-run-panel > summary {
+  cursor: pointer;
+  pointer-events: auto;
+  color: #9ca3af;
+  font-size: 0.67rem;
+  font-weight: 600;
+  list-style: none;
+  user-select: none;
+}
+.pub-run-panel > summary::-webkit-details-marker { display: none; }
+.pub-run-panel > summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 0.35rem;
+}
+.pub-run-panel[open] > summary::before { transform: rotate(90deg); }
+.pub-run-panel[open] > summary { margin-bottom: 0.25rem; }
+.pub-run-panel > summary:focus-visible { outline: 1px solid #6b7280; outline-offset: 2px; }
+.pub-run-panel-content {
+  max-height: min(32vh, 240px);
+  overflow-y: auto;
+}
+.pub-run-panel:not([open]) > .pub-run-panel-content { display: none; }
+.pub-run-legend .pub-run-panel-content {
   display: flex;
   flex-direction: column;
   gap: 0.18rem;
-  z-index: 5;
 }
 
 .pub-legend-item {
@@ -172,7 +199,8 @@ a.book-modal-parent-btn, a.book-modal-series-btn, a.book-modal-child-row { text-
 }
 
 @media (max-width: 768px) {
-  .pub-run-path, .pub-seg-path { display: none; }
+  .pub-run-path { max-width: calc(100% - 150px); }
+  .pub-run-legend { max-width: 135px; }
 }
 
 .pub-profile-header {

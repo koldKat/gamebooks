@@ -17,12 +17,14 @@ export function copySourceSheet(node, document, imagePath) {
     if (!/^(?:\d+(?:\.\d+)?|\.\d+)$/.test(value)) throw new Error('Invalid source sheet number');
     return Number(value);
   };
-  attributes(node, ['class', 'data-source-width', 'data-source-height']);
+  attributes(node, ['class', 'data-source-width', 'data-source-height'], ['data-source-background']);
+  const background = node.getAttribute('data-source-background');
+  if (background !== null && background !== 'transparent') throw new Error('Invalid source sheet background');
   const width = number(node.getAttribute('data-source-width'));
   const height = number(node.getAttribute('data-source-height'));
   if (width < 100 || width > 4000 || height < 100 || height > 4000) throw new Error('Invalid source sheet dimensions');
   const figure = document.createElement('figure');
-  figure.setAttribute('style', `position:relative;width:100%;max-width:${width}px;aspect-ratio:${width}/${height};container-type:inline-size;overflow:hidden;background:#fff;margin:1em auto`);
+  figure.setAttribute('style', `position:relative;width:100%;max-width:${width}px;aspect-ratio:${width}/${height};container-type:inline-size;overflow:hidden;background:${background || '#fff'};margin:1em auto`);
   const children = [...node.childNodes].filter(n => n.nodeType !== 3 || n.textContent.trim());
   if (!children.length || children.length > 200 || !children.some(n => n.tagName === 'IMG')) throw new Error('Invalid source sheet content');
   for (const child of children) {

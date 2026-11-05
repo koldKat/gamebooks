@@ -96,7 +96,7 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
         if (sectionLinks) target.setAttribute('href', attr.value);
         continue;
       }
-      if (node.tagName === 'TABLE' && attr.name === 'class' && ['reading-encounter-table', 'reading-reference-table', 'reading-wide-table', 'reading-source-prices', 'reading-word-list', 'reading-word-list reading-word-list-serif'].includes(attr.value)) {
+      if (node.tagName === 'TABLE' && attr.name === 'class' && ['reading-encounter-table', 'reading-reference-table', 'reading-wide-table', 'reading-source-prices', 'reading-word-list', 'reading-word-list reading-word-list-serif', 'reading-spell-list'].includes(attr.value)) {
         target.setAttribute('class', attr.value);
         continue;
       }

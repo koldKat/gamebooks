@@ -5,16 +5,20 @@ import { createContext, SourceTextModule, SyntheticModule } from 'node:vm';
 const root = process.argv[1], state = { graph: {}, positions: {}, snapToGrid: false };
 const parseSecId = value => /^-?\d+$/.test(String(value)) ? Number(value) : value;
 const context = createContext({ console }), modules = new Map();
-const exports = { state, parseSecId, isTerminal: id => id === 0 || id === -1, isValidSecId: id => id != null };
+const exports = { state, parseSecId, isTerminal: id => id === 0 || id === -1, isValidSecId: id => id != null,
+  currentBookId:1,currentPlaythrough:()=>null,viewingPt:null,allDiscoveredSections:()=>new Set(),saveState:()=>{} };
 modules.set(resolve(root, 'core/state.js'), new SyntheticModule(Object.keys(exports), function () {
   for (const [key, value] of Object.entries(exports)) this.setExport(key, value);
 }, { context }));
 modules.set(resolve(root, 'graph/viewport.js'), new SyntheticModule(['GRID_SIZE'], function () { this.setExport('GRID_SIZE', 40); }, { context }));
+for(const [path,key,value]of [['core/constants.js','COLORS',{}],['core/section-labels.js','sectionLabel',id=>String(id)],['i18n.js','t',key=>key]]){
+  modules.set(resolve(root,path),new SyntheticModule([key],function(){this.setExport(key,value);},{context}));
+}
 function load(path) {
-  if (!modules.has(path)) modules.set(path, new SourceTextModule(readFileSync(path, 'utf8'), { context, identifier: path }));
+  if (!modules.has(path)) modules.set(path, new SourceTextModule(readFileSync(path, 'utf8')+(path.endsWith('/mobile/js/graph-view.js')?'\nexport {_layout as _layoutMobile};':''), { context, identifier: path }));
   return modules.get(path);
 }
-const entry = new SourceTextModule("export {_assignGridPositions} from './layout-grid.js'; export {_assignLocalPositions} from './layout-local.js';", { context, identifier: resolve(root, 'graph/test-entry.js') });
+const entry = new SourceTextModule("export {_assignGridPositions} from './layout-grid.js'; export {_assignLocalPositions} from './layout-local.js'; export {_layoutMobile} from '../../mobile/js/graph-view.js';", { context, identifier: resolve(root, 'graph/test-entry.js') });
 await entry.link((specifier, parent) => load(resolve(dirname(parent.identifier), specifier)));
 await entry.evaluate();
 function reset(positions, extra = {}, snap = false) {
@@ -57,4 +61,30 @@ const positions = { 1: { x: 0, y: 0 } }, graph = {};
 for (let i = 3; i < 603; i++) { positions[i] = { x: 130 + ((i - 3) % 20) * 70, y: Math.floor((i - 3) / 20) * 70 }; graph[i] = { choices: [] }; }
 reset(positions, graph);
 const start = performance.now(); place();
-console.log(JSON.stringify({ cases: 14, denseNodes: 602, densePlacementMs: Math.round((performance.now() - start) * 100) / 100 }));
+const densePlacementMs=Math.round((performance.now()-start)*100)/100;
+function mobilePlace(ids=Object.keys(state.graph).map(parseSecId),startId=1){
+  const before=JSON.parse(JSON.stringify(state.positions));
+  entry.namespace._layoutMobile(ids,startId);
+  for(const[id,p]of Object.entries(before))assert.deepEqual(state.positions[id],p,'mobile moved saved node');
+  const p=state.positions[ids.includes('A2')?'A2':2];
+  assert.equal(Math.abs(p.x%40),0,'mobile X must snap before collision scoring');assert.equal(Math.abs(p.y%40),0,'mobile Y must snap before collision scoring');
+  for(const p2 of Object.values(before))assert.ok(Math.hypot(p.x-p2.x,p.y-p2.y)>=40,'mobile overlaps an existing node');
+  return p;
+}
+reset({1:{x:0,y:0}});
+assert.deepEqual(JSON.parse(JSON.stringify(mobilePlace())),{x:0,y:120},'mobile prefers a clear downward position');
+const crowded={1:{x:0,y:0}},crowdedGraph={};let next=3;
+for(let y=80;y<=480;y+=40)for(let x=-280;x<=280;x+=40){crowded[next]={x,y};crowdedGraph[next++]={choices:[]};}
+reset(crowded,crowdedGraph);const escaped=mobilePlace();assert.ok(escaped.y<=0&&Math.hypot(escaped.x,escaped.y)<400,'mobile searches nearby open space above a crowded lower map');
+reset({1:{x:0,y:0},3:{x:-1000,y:120},4:{x:1000,y:120}},{3:{choices:[4]},4:{choices:[]}});
+assert.ok(Math.abs(mobilePlace().y-120)>=18,'mobile avoids long existing connectors');
+reset({1:{x:0,y:0},3:{x:0,y:60}},{3:{choices:[]}});
+assert.ok(Math.abs(mobilePlace().x)>=40,'mobile routes new connectors around intervening nodes');
+reset({1:{x:13,y:17},3:{x:203,y:173}},{3:{choices:[]}});mobilePlace(['1','2','3']);
+reset({start:{x:0,y:0}});state.graph={start:{choices:['A2']},A2:{choices:[]}};
+assert.deepEqual(JSON.parse(JSON.stringify(mobilePlace(['start','A2'],'start'))),{x:0,y:120},'mobile handles alphanumeric section IDs');
+reset({1:{x:0,y:0},3:{x:-1000,y:120},4:{x:1000,y:120}},{1:{choices:[]},3:{choices:[4]},4:{choices:[]}});
+assert.ok(Math.abs(mobilePlace().y-120)>=18,'unanchored mobile nodes also avoid connectors');
+reset({},{2:{choices:[3]},3:{choices:[]}});mobilePlace();
+assert.deepEqual(JSON.parse(JSON.stringify(state.positions)),{1:{x:0,y:0},2:{x:0,y:120},3:{x:0,y:240}},'initial mobile layout still grows downward');
+console.log(JSON.stringify({ cases:22,mobileCases:8,denseNodes:602,densePlacementMs }));

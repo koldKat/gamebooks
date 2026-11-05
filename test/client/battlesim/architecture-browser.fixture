@@ -31,7 +31,7 @@ for(const id of BOOK_IDS){
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
-  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817||id===832||id===833||id===838||id===1578||id===1587||id===1589||id===1591||id===1592||id===1596){
+  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817||id===832||id===833||id===838||id===1578||id===1587||id===1589||id===1591||id===1592||id===1596||id===1597||id===1598||id===1607||id===1608){
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
     check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
   }
@@ -129,6 +129,141 @@ for(const id of BOOK_IDS){
     el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();
     check(JSON.stringify(data())===before,'Pax stale confirmation cannot update another book');app.setCurrentBookId(id);
     check(JSON.stringify([run.inventory,run.sim1578,run.path])===unrelated,'Pax inventory, other fight and story path preserved');
+  }
+  if(id===1608){
+    const run=app.currentPlaythrough(),data=()=>run.sim1608,el=key=>document.getElementById('sim1608-'+key);
+    const {ENCOUNTERS}=await import('REPO/public/js/battlesim/books/1608/definition.js');
+    check(ENCOUNTERS.length===19&&requestedRosters.has(id),'Egyptian installed combat roster');
+    run.inventory=[{name:'Unrelated equipment'}];run.sim1607={preserved:true};
+    const unrelated=JSON.stringify([run.inventory,run.path,run.sim1607]);
+    const hero=(extra={})=>{for(const[key,value]of Object.entries({hp:100,maxHp:100,experience:3,meleeBonus:0,rangedBonus:0,damageModifier:0,armour:0,ammo:0,magicUses:0,potionUses:0,fullHealUses:0,sleepUses:0,orbUses:0,heavyBonus:12,playerRollModifier:0,enemyRollModifier:0,...extra}))el(key).value=value;el('weapon').value='melee';};
+    const choose=section=>{el('preset').value=section;el('preset').dispatchEvent(new Event('change',{bubbles:true}));};
+    const roll=(a,b)=>{el('die1').value=a;if(el('die2'))el('die2').value=b??'';el('roll').click();};
+    const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    check(el('preset').value==='','Egyptian custom fight needs no preset');hero();
+    overlay.querySelector('[role="combobox"]').value='Custom rival';
+    const stats={hp:5,count:1,bonus:0,armour:0,ammo:0,human:1,type:'melee'};
+    for(const input of overlay.querySelectorAll('[data-stat]'))input.value=stats[input.dataset.stat];
+    el('start').click();check(data().fight.status==='fighting'&&el('hp').disabled,'Egyptian custom setup locks');
+    el('die1').value=4;module.render();check(el('die1').value==='4','Egyptian unrolled dice survive unchanged render');
+    roll(4);roll(2,3);check(data().fight.status==='win'&&data().history.length===1,'Egyptian custom victory records once');
+    for(const entry of ENCOUNTERS){
+      choose(entry.section);hero();
+      const rows=[...overlay.querySelectorAll('.bsim-opponent-row')];
+      entry.profiles.forEach((profile,index)=>{
+        const row=rows[index];
+        if(profile.hp==null&&!profile.singleHitDefeat)row.querySelector('[data-stat="hp"]').value=60;
+        if(profile.bonusRequired)row.querySelector('[data-stat="bonus"]').value=0;
+        if(profile.countRequired)row.querySelector('[data-stat="count"]').value=4;
+        check(row.querySelector('[data-stat="count"]').disabled===!profile.countRequired,'Egyptian source count availability '+entry.section);
+        if(profile.singleHitDefeat)check(row.querySelector('[data-stat="hp"]').disabled,'Egyptian one-hit mummy has no invented LP');
+      });
+      el('start').click();check(data().fight.status==='fighting','Egyptian preset starts '+entry.section);cancel();
+    }
+    choose('116');hero({magicUses:2});el('weapon').value='magic';el('weapon').dispatchEvent(new Event('change',{bubbles:true}));
+    check(overlay.querySelector('[data-stat="hp"]').disabled,'Egyptian charged-flail duel needs no scorpion LP');
+    el('start').click();roll(4);roll(2,3);check(data().fight.status==='win'&&data().player.magicUses===1,'Egyptian flail reaches actual panel');
+    choose('135');hero();el('weapon').value='heavy';el('weapon').dispatchEvent(new Event('change',{bubbles:true}));el('start').click();roll(4);roll(2,3);roll(1,1);
+    check(el('roll').disabled&&el('wait'),'Egyptian heavy club waits between uses');el('wait').click();roll(1,1);roll(2,3);check(data().fight.groups[0].currentHp===26,'Egyptian heavy club cooldown clears after waiting');cancel();
+    choose('122');hero();overlay.querySelector('[data-stat="bonus"]').value=0;el('start').click();
+    for(let i=0;i<3;i++){roll(1,1);roll(1,1);}check(data().fight.destination==='44','Egyptian three-round rescue reaches actual panel');
+    choose('22');hero();el('start').click();roll(1);check(el('enemyWeapon').disabled,'Egyptian source weapon sequence locks');roll(2,3);roll(1,1);check(el('enemyWeapon').value==='1','Egyptian exhausted firearm switches to sword');roll(2,3);check(data().player.hp===50,'Egyptian fixed firearm and sword damage');cancel();
+    choose('6');hero({meleeBonus:100});el('start').click();roll(4);roll(2,3);check(data().fight.groups.length===1&&data().fight.groups[0].remaining===4,'Egyptian reinforcements stay compact');
+    const inFlight=JSON.stringify(data());module.render();check(JSON.stringify(data())===inFlight,'Egyptian active render preserves state');
+    el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(data())===inFlight,'Egyptian stale confirmation preserves other book');
+    app.setCurrentBookId(id);button.click();const oldRun=app.currentPlaythrough();app.state.playthroughs=[{startedAt:2,path:[1]}];app.state.activePtIndex=0;
+    roll(4);check(app.currentPlaythrough().sim1608===undefined,'Egyptian stale combat controls cannot write another run');
+    app.state.playthroughs=[oldRun];app.state.activePtIndex=0;button.click();
+    check(JSON.stringify([run.inventory,run.path,run.sim1607])===unrelated,'Egyptian inventory, story and other fight preserved');
+  }
+  if(id===1607){
+    const run=app.currentPlaythrough(),data=()=>run.sim1607,el=key=>document.getElementById('sim1607-'+key);
+    const {ENCOUNTERS}=await import('REPO/public/js/battlesim/books/1607/definition.js');
+    check(ENCOUNTERS.length===20&&requestedRosters.has(id),'Aztec complete installed combat roster');
+    run.inventory=[{name:'Unrelated equipment'}];run.sim1598={preserved:true};
+    const unrelated=JSON.stringify([run.inventory,run.path,run.sim1598]);
+    const hero=(extra={})=>{for(const[key,value]of Object.entries({hp:100,maxHp:100,experience:3,meleeBonus:0,rangedBonus:5,damageModifier:0,armour:0,ammo:0,spells:0,prayers:0,antidotes:0,...extra}))el(key).value=value;el('weapon').value='melee';};
+    const choose=section=>{el('preset').value=section;el('preset').dispatchEvent(new Event('change',{bubbles:true}));};
+    const roll=(a,b)=>{el('die1').value=a;if(el('die2'))el('die2').value=b??'';el('roll').click();};
+    const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    check(el('preset').value==='','Aztec custom fight needs no preset');hero();
+    overlay.querySelector('[role="combobox"]').value='Custom rival';
+    const stats={hp:5,count:1,bonus:0,armour:0,ammo:0,human:1,type:'melee'};
+    for(const input of overlay.querySelectorAll('[data-stat]'))input.value=stats[input.dataset.stat];
+    el('start').click();check(data().fight.status==='fighting'&&el('hp').disabled&&el('preset').disabled,'Aztec setup locks during custom combat');
+    el('die1').value=4;module.render();check(el('die1').value==='4','Aztec unchanged render retains unrolled dice');
+    roll(4);roll(2,3);check(data().fight.status==='win'&&data().history.length===1&&data().player.experience===4,'Aztec custom victory records once');
+    for(const entry of ENCOUNTERS){
+      choose(entry.section);hero();
+      if(entry.section==='83')overlay.querySelector('[data-stat="hp"]').value=60;
+      check(overlay.querySelector('[data-stat="count"]').disabled,'Aztec source group size locked '+entry.section);
+      el('start').click();check(data().fight.status==='fighting','Aztec source preset starts '+entry.section);
+      if(entry.section==='110')check(data().fight.groups.length===1&&data().fight.groups[0].remaining===7002&&overlay.querySelectorAll('.bsim-opponent-row').length===1,'Aztec huge group remains compact');
+      cancel();
+    }
+    choose('156');hero({meleeBonus:100});el('context.read108').checked=true;el('start').click();
+    check(data().fight.phase==='enemy'&&el('context.read108').checked,'Aztec source surprise remains visible');
+    roll(1,1);roll(2,3);check(data().fight.groups[0].remaining===2&&data().fight.phase==='player','Aztec surprise applies to one priest only');cancel();
+    choose('9');hero({antidotes:1});el('start').click();roll(1);roll(3,3);
+    check(data().player.hp===79&&el('antidote'),'Aztec source poison reaches actual panel');el('antidote').click();check(data().fight.poisoned===0,'Aztec antidote applies through panel');
+    const inFlight=JSON.stringify(data());module.render();check(JSON.stringify(data())===inFlight,'Aztec active render preserves state');
+    el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(data())===inFlight,'Aztec stale confirmation cannot affect another book');
+    app.setCurrentBookId(id);button.click();const oldRun=app.currentPlaythrough();app.state.playthroughs=[{startedAt:2,path:[1]}];app.state.activePtIndex=0;
+    roll(1,1);check(app.currentPlaythrough().sim1607===undefined,'Aztec stale combat controls cannot write another run');
+    app.state.playthroughs=[oldRun];app.state.activePtIndex=0;button.click();
+    check(JSON.stringify([run.inventory,run.path,run.sim1598])===unrelated,'Aztec preserves equipment, story path and other simulators');
+  }
+  if(id===1598){
+    const run=app.currentPlaythrough(),data=()=>run.sim1598,el=key=>document.getElementById('sim1598-'+key);
+    const {ENCOUNTERS}=await import('REPO/public/js/battlesim/books/1598/definition.js');
+    check(ENCOUNTERS.length===33&&requestedRosters.has(id),'Werewolf installed combat roster');
+    const unrelated=JSON.stringify([run.inventory,run.path,run.sim1597]);
+    for(const [key,value]of Object.entries({hp:20,maxHp:20,experience:5,fighting:10}))el(key).value=value;
+    const row=overlay.querySelector('.bsim-opponent-editor:not([hidden]) .bsim-opponent-row');
+    row.querySelector('[role="combobox"]').value='Custom rival';
+    row.querySelector('[data-stat="target"]').value=23;
+    row.querySelector('[data-stat="damageDice"]').value='1';
+    el('start').click();
+    check(el('spent').max==='1','Werewolf printed one-point spending cap');
+    el('die-0').value=6;el('die-1').value=6;el('spent').value=1;el('roll').click();el('continue').click();el('finish').click();
+    check(data().fight.status==='win'&&data().fight.player.experience===4,'Werewolf custom fight and experience spend');
+    el('procedure').value='combat-2';el('procedure').dispatchEvent(new Event('change',{bubbles:true}));
+    for(const [key,value]of Object.entries({hp:20,maxHp:20,experience:5,fighting:10}))el(key).value=value;
+    el('start').click();
+    const advance=()=>{for(let i=0;i<20;i++){if(el('continue'))el('continue').click();else if(el('apply'))el('apply').click();else break;}};
+    advance();el('die-0').value=5;el('die-1').value=6;el('roll').click();advance();el('finish').click();
+    check(data().fight.status==='win'&&data().fight.destination==='55','Werewolf preset resolves the printed encounter');
+    check(JSON.stringify([run.inventory,run.path,run.sim1597])===unrelated,'Werewolf preserves unrelated player state');
+  }
+  if(id===1597){
+    const run=app.currentPlaythrough(),data=()=>run.sim1597,el=key=>document.getElementById('sim1597-'+key);
+    const {ENCOUNTERS}=await import('REPO/public/js/battlesim/books/1597/definition.js');
+    check(ENCOUNTERS.length===1&&requestedRosters.has(id),'Sorcerers installed independent duel');
+    run.inventory=[{name:'Unrelated equipment'}];run.sim1596={preserved:true};
+    const unrelated=JSON.stringify([run.inventory,run.sim1596,run.path]);
+    const hero=(hp=10,intelligence=22)=>{for(const [key,value]of Object.entries({hp,maxHp:14,intelligence}))el(key).value=value;};
+    check(el('procedure').value==='custom'&&!el('experience'),'Sorcerers custom setup without invented experience');hero();
+    const row=overlay.querySelector('.bsim-opponent-editor:not([hidden]) .bsim-opponent-row');
+    row.querySelector('[role="combobox"]').value='Custom magic rival';
+    row.querySelector('[data-stat="target"]').value=34;
+    row.querySelector('[data-stat="damageDice"]').value='1';
+    el('start').click();check(data().fight.opponent.custom&&!el('spent'),'Sorcerers custom combat has no experience control');
+    el('die-0').value=6;el('die-1').value=6;module.render();
+    check(el('die-0').value==='6'&&el('die-1').value==='6','Sorcerers unchanged render retains both dice');
+    el('roll').click();el('continue').click();el('finish').click();
+    check(data().fight.status==='win'&&data().history.length===1,'Sorcerers custom victory');
+    el('procedure').value=ENCOUNTERS[0].key;el('procedure').dispatchEvent(new Event('change',{bubbles:true}));hero();el('start').click();
+    check(el('hp').disabled&&el('procedure').disabled&&!el('spent'),'Sorcerers preset locks setup without experience');
+    el('die-0').value=6;el('die-1').value=5;el('roll').click();el('continue').click();el('apply').click();
+    check(data().fight.player.hp===9&&data().fight.status==='fighting','Sorcerers failed33costs1HP');
+    el('continue').click();el('die-0').value=6;el('die-1').value=6;el('roll').click();el('continue').click();el('finish').click();
+    check(data().fight.status==='win'&&data().fight.destination==='205'&&data().history.length===2,'Sorcerers exact34wins once without navigating');
+    hero(1,21);el('start').click();el('die-0').value=6;el('die-1').value=6;el('roll').click();el('continue').click();el('apply').click();
+    check(data().fight.status==='loss'&&data().fight.player.hp===0&&data().history.length===3,'Sorcerers HP0death recorded once');
+    hero();el('start').click();const before=JSON.stringify(data());el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();
+    check(JSON.stringify(data())===before,'Sorcerers stale confirmation preserves fight');app.setCurrentBookId(id);
+    el('cancel').click();document.getElementById('confirm-ok').click();
+    check(JSON.stringify([run.inventory,run.sim1596,run.path])===unrelated,'Sorcerers inventory, other fight and story path preserved');
   }
   if(id===1596){
     const run=app.currentPlaythrough(),data=()=>run.sim1596,el=key=>document.getElementById('sim1596-'+key);

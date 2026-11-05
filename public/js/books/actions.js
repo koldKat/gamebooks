@@ -79,8 +79,8 @@ export function _wireRenderedContent(list) {
       const group    = row.nextElementSibling?.classList.contains('stash-items-group') ? row.nextElementSibling : null;
       const nowExpanded = row.dataset.expanded !== '1';
       row.dataset.expanded = nowExpanded ? '1' : '0';
-      if (nowExpanded && group) _materializeLazyGroup(group);
       if (group) group.style.display = nowExpanded ? '' : 'none';
+      if (nowExpanded && group) _materializeLazyGroup(group);
       if (!nowExpanded && group) _maybeReclaimLazyGroup(group);
       _saveExpandedPref('stash', String(sid), `stash_expanded_${sid}`, nowExpanded);
       if (nowExpanded && group) _queueBookCovers(group, { reset: false });
@@ -98,8 +98,8 @@ export function _wireRenderedContent(list) {
       const group   = row.nextElementSibling?.classList.contains('series-books-group') ? row.nextElementSibling : null;
       const nowExpanded = row.dataset.expanded !== '1';
       row.dataset.expanded = nowExpanded ? '1' : '0';
-      if (nowExpanded && group) _materializeLazyGroup(group);
       if (group) group.style.display = nowExpanded ? '' : 'none';
+      if (nowExpanded && group) _materializeLazyGroup(group);
       if (!nowExpanded && group) _maybeReclaimLazyGroup(group);
       _saveExpandedPref('series', `${stashId || 'main'}:${sid}`, `${stashId ? `stash_${stashId}_sr_` : 'sr_'}expanded_${sid}`, nowExpanded);
       if (nowExpanded && group) _queueBookCovers(group, { reset: false });
@@ -117,8 +117,8 @@ export function _wireRenderedContent(list) {
       const group = row.nextElementSibling?.classList.contains('book-children-group') ? row.nextElementSibling : null;
       const nowExpanded = row.dataset.expanded !== '1';
       row.dataset.expanded = nowExpanded ? '1' : '0';
-      if (nowExpanded && group) _materializeLazyGroup(group);
       if (group) group.style.display = nowExpanded ? '' : 'none';
+      if (nowExpanded && group) _materializeLazyGroup(group);
       if (!nowExpanded && group) _maybeReclaimLazyGroup(group);
       _saveExpandedPref('book', String(bid), `bk_expanded_${bid}`, nowExpanded);
       if (nowExpanded && group) _queueBookCovers(group, { reset: false });

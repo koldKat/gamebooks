@@ -52,6 +52,18 @@ test('invalid experience and invalid modifiers are rejected before randomness or
   assert.equal(random.player.experience, 4); assert.deepEqual(original, before);
 });
 
+test('a printed experience limit rejects excess spending before drawing dice', () => {
+  const fight = startProcedure(player, procedure([roll('attack', {experienceLimit:1}), outcome('end')]));
+  let calls = 0;
+  assert.throws(() => act(fight, {kind:'roll', spent:2}, () => {calls++; return 0;}), RangeError);
+  assert.equal(calls, 0);
+  assert.equal(fight.player.experience, 6);
+  const rolled = act(fight, {kind:'roll', dice:[3,4], spent:1});
+  assert.equal(rolled.lastRoll.total, 20);
+  assert.equal(rolled.player.experience, 5);
+  assert.deepEqual(validateProcedureFight(rolled), rolled);
+});
+
 test('an explicit remaining-experience bonus counts the balance after a declared spend', () => {
   const preset = procedure([roll('charges', {dice:1, bonus:v('experience'), bonusAfterSpending:true,
     effects:[fx('charges', clamp(minus(v('total'), 3)))]}), outcome('end')]);

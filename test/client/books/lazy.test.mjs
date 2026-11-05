@@ -16,8 +16,8 @@ test('lazy chunks finish for search and cannot repopulate reclaimed or detached 
   const flush = () => { while (frames.length) frames.shift()(); };
   const group = () => ({
     dataset: { lazyGroup: 'test' }, children: [], isConnected: true,
-    set innerHTML(html) { this.children = html.match(/<card>/g) || []; },
-    insertAdjacentHTML(_, html) { this.children.push(...(html.match(/<card>/g) || [])); },
+    set innerHTML(html) { this.children = (html.match(/<card>/g) || []).map(() => ({ querySelectorAll: () => [] })); },
+    insertAdjacentHTML(_, html) { this.children.push(...(html.match(/<card>/g) || []).map(() => ({ querySelectorAll: () => [] }))); },
     querySelectorAll(selector) { return selector.includes('.book-item') ? this.children : []; },
     replaceChildren() { this.children = []; },
   });
@@ -37,7 +37,7 @@ test('lazy chunks finish for search and cannot repopulate reclaimed or detached 
     _materializeLazyGroup(pending);
     assert.equal(pending.children.length, 0);
     frames.shift()();
-    assert.equal(pending.children.length, 100);
+    assert.equal(pending.children.length, 12);
     _materializeLazyGroup(pending, { immediate: true });
     assert.equal(pending.children.length, 251);
     assert.equal(pending.dataset.materializingGroup, undefined);

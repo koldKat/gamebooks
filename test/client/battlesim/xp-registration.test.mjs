@@ -15,7 +15,7 @@ test('every active simulator has exactly one outcome XP history registration', (
   }
 });
 
-for (const key of ['sim1592', 'sim1596']) test(key + ' rewards only new wins and losses', () => {
+for (const key of ['sim1592', 'sim1596', 'sim1597', 'sim1598', 'sim1607', 'sim1608']) test(key + ' rewards only new wins and losses', () => {
   const source = readFileSync(new URL('../../../server/db/xp.js', import.meta.url), 'utf8');
   const registration = source.slice(source.indexOf('const SIM_HISTORY_KEYS ='), source.indexOf('const RETIRED_SIM_HISTORY_KEYS ='));
   const start = source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');

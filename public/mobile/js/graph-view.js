@@ -7,9 +7,10 @@ import {
 import { sectionLabel } from '../../js/core/section-labels.js';
 import { COLORS } from '../../js/core/constants.js';
 import { t } from '../../js/i18n.js';
+import { _getPositionedNeighbors } from '../../js/graph/layout-helpers.js';
+import { _chooseOpenPosition } from '../../js/graph/layout-placement.js';
 
 const LAYER_GAP  = 120; // vertical spacing between BFS depth layers
-const COL_GAP    = 90;  // horizontal spacing between siblings at the same layer
 const GRID_SIZE  = 40;  // matches graph.js's own GRID_SIZE - shared state.positions data
 
 // Use a fixed zoom rather than fitting the growing map.
@@ -126,35 +127,8 @@ function _bfsDepth(startSec) {
   return depth;
 }
 
-// Find positioned choice neighbors in either direction without importing the desktop graph.
-function _positionedNeighbors(sec) {
-  // Normalize both IDs to strings before comparing choice targets.
-  const secStr = String(sec);
-  const out = [];
-  for (const [srcKey, data] of Object.entries(state.graph)) {
-    if (srcKey === secStr) {
-      for (const dest of (data.choices || [])) {
-        if (!isTerminal(dest) && _hasPos(state.positions[dest])) out.push(dest);
-      }
-      continue;
-    }
-    if ((data.choices || []).some(c => String(c) === secStr) && _hasPos(state.positions[srcKey])) out.push(srcKey);
-  }
-  return out;
-}
-
 // Preserve saved positions; place missing nodes near positioned neighbors.
-// Use depth-grid fallback only without an anchor, and search free slots locally.
-function _firstFreeRowSlot(rowY, startX) {
-  let x = startX;
-  for (;;) {
-    const taken = Object.values(state.positions).some(p => p &&
-      Math.abs(p.y - rowY) < LAYER_GAP / 2 && Math.abs(p.x - x) < COL_GAP / 2);
-    if (!taken) return x;
-    x += COL_GAP;
-  }
-}
-
+// Prefer downward growth, then search around crowded nodes and connectors.
 function _layout(sections, startSec) {
   const missing = sections.filter(id => !_hasPos(state.positions[id]));
   if (!missing.length) return;
@@ -165,22 +139,21 @@ function _layout(sections, startSec) {
   missing.sort((a, b) => (depth[a] ?? maxDepth + 1) - (depth[b] ?? maxDepth + 1) ||
     String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' }));
   for (const id of missing) {
-    const neighbors = _positionedNeighbors(id);
+    const sec = parseSecId(id);
+    const neighbors = _getPositionedNeighbors(sec, state.positions);
     let y, xStart;
-    if (neighbors.length) {
-      // Anchor both axes on one neighbor; stack siblings rightward into local free slots.
-      const anchorId = neighbors.reduce((a, b) => (state.positions[a].y >= state.positions[b].y ? a : b));
+    if (neighbors.all.length) {
+      const anchors = neighbors.incoming.length ? neighbors.incoming : neighbors.all;
+      const anchorId = anchors.reduce((a, b) => (state.positions[a].y >= state.positions[b].y ? a : b));
       y = state.positions[anchorId].y + LAYER_GAP;
       xStart = state.positions[anchorId].x;
     } else {
       y = (id in depth ? depth[id] : maxDepth + 1) * LAYER_GAP;
       xStart = 0;
     }
-    let x = _firstFreeRowSlot(y, xStart);
-    // Snap automatic placements too: layer gaps are not exact grid multiples.
-    x = Math.round(x / GRID_SIZE) * GRID_SIZE;
-    y = Math.round(y / GRID_SIZE) * GRID_SIZE;
-    state.positions[id] = { x, y };
+    const position = _chooseOpenPosition(sec, state.positions, neighbors, { x:xStart, y },
+      { snapToGrid:true, allowUnanchored:true, directionWeight:0.1 });
+    if (position) state.positions[id] = position;
   }
 }
 

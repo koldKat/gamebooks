@@ -358,16 +358,16 @@ export function handleAppXpEvent(payload) {
     // Recheck visibility and permissions when the delayed floater spawns.
     if (!floatiesEnabled() || !_hooks.getIsAdmin?.() || !(_isBooksScreenVisible() || _isMainScreenVisible())) return;
     if (xp > 0) {
-      _spawnAppRewardFloater('xp', `<span>+${xp.toLocaleString()} XP</span><span class="app-reward-float-sep">-</span><span class="app-reward-float-user">${username}</span>`);
+      _spawnAppRewardFloater('xp', `<span>+${xp.toLocaleString()} XP</span><span class="app-reward-float-user">${username}</span>`);
     }
     if (coins > 0) {
-      _spawnAppRewardFloater('coins', `${COIN_SVG}<span>+${coins.toLocaleString()}</span><span class="app-reward-float-sep">-</span><span class="app-reward-float-user">${username}</span>`);
+      _spawnAppRewardFloater('coins', `${COIN_SVG}<span>+${coins.toLocaleString()}</span><span class="app-reward-float-user">${username}</span>`);
     }
     if (rubies > 0) {
-      _spawnAppRewardFloater('rubies', `${RUBY_SVG}<span>+${rubies.toLocaleString()}</span><span class="app-reward-float-sep">-</span><span class="app-reward-float-user">${username}</span>`);
+      _spawnAppRewardFloater('rubies', `${RUBY_SVG}<span>+${rubies.toLocaleString()}</span><span class="app-reward-float-user">${username}</span>`);
     }
     if (diamonds > 0) {
-      _spawnAppRewardFloater('diamonds', `${DIAMOND_SVG}<span>+${diamonds.toLocaleString()}</span><span class="app-reward-float-sep">-</span><span class="app-reward-float-user">${username}</span>`);
+      _spawnAppRewardFloater('diamonds', `${DIAMOND_SVG}<span>+${diamonds.toLocaleString()}</span><span class="app-reward-float-user">${username}</span>`);
     }
   }, 750));
 }

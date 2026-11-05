@@ -147,7 +147,9 @@ export function _queueBookCovers(container, { reset = true } = {}) {
   if (!container) return;
   const observer = _getBookCoverObserver();
   if (reset) observer.disconnect();
-  container.querySelectorAll('[data-pending-cover]').forEach(el => {
+  const targets = [...container.querySelectorAll('[data-pending-cover]')];
+  if (container.matches?.('[data-pending-cover]')) targets.unshift(container);
+  targets.forEach(el => {
     const url = el.dataset.pendingCover;
     if (_bookCoverLoadedUrls.has(url)) {
       el.style.setProperty('--bci', `url('${url}')`);

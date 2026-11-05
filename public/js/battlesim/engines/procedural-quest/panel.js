@@ -107,8 +107,9 @@ export function createProcedurePanel({document, definition, t, getRoster, getRul
     } else if (fight.phase === 'effect') {
       button(controls, 'apply', () => act({kind:'effect'}));
     } else if (fight.phase === 'roll') {
-      const spent = input(controls, 'spent', tr('spent'), 0, step.experience ? fight.player.experience : 0, 0);
-      if (!step.experience) spent.disabled = true;
+      const spent = getRules().experienceEnabled === false ? null
+        : input(controls, 'spent', tr('spent'), 0, step.experience ? Math.min(fight.player.experience, step.experienceLimit ?? fight.player.experience) : 0, 0);
+      if (spent && !step.experience) spent.disabled = true;
       const dice = Array.from({length:step.dice}, (_, i) => {
         const control = input(controls, 'die-' + i, tr('die', {number:i + 1}), 1, 6);
         control.placeholder = tr('automatic'); return control;
@@ -117,7 +118,7 @@ export function createProcedurePanel({document, definition, t, getRoster, getRul
         try {
           const entered = dice.filter(control => control.value.trim());
           if (entered.length && entered.length !== dice.length) throw new RangeError(tr('invalid'));
-          act({kind:'roll', spent:numeric(spent), ...(entered.length ? {dice:dice.map(numeric)} : {})});
+          act({kind:'roll', spent:spent ? numeric(spent) : 0, ...(entered.length ? {dice:dice.map(numeric)} : {})});
         } catch { showAlert(tr('invalid')); }
       });
     }
@@ -128,7 +129,8 @@ export function createProcedurePanel({document, definition, t, getRoster, getRul
     text(right, tr(fight ? 'status.' + fight.status : 'ready'), 'h4').className = 'bsim-side-title';
     if (fight) {
       text(right, fight.opponent.name);
-      text(right, tr('totals', {hp:fight.player.hp, maxHp:fight.player.maxHp, experience:fight.player.experience}));
+      text(right, tr(getRules().experienceEnabled === false ? 'totalsNoExperience' : 'totals',
+        {hp:fight.player.hp, maxHp:fight.player.maxHp, experience:fight.player.experience}));
       for (const key of getRules().reportFields ?? []) {
         const field = fight.opponent.variables.find(row => row.key === key);
         if (field) text(right, field.label + ': ' + fight.player[key]);
@@ -142,7 +144,7 @@ export function createProcedurePanel({document, definition, t, getRoster, getRul
     for (const event of (fight?.events ?? []).slice(-100).reverse()) {
       const step = steps.get(event.step);
       let line = step?.label ?? '';
-      if (event.kind === 'roll') line += ' ' + tr('rollLog', {dice:event.dice.join(' + '), spent:event.spent, total:event.total});
+      if (event.kind === 'roll') line += ' ' + tr(getRules().experienceEnabled === false ? 'rollLogNoExperience' : 'rollLog', {dice:event.dice.join(' + '), spent:event.spent, total:event.total});
       else if (event.kind === 'choice') line += ' ' + (step?.choices.find(row => row.id === event.choice)?.label ?? '');
       line += ' ' + tr('hp', {hp:event.hp}); text(log, line);
     }
@@ -185,7 +187,7 @@ export function createProcedurePanel({document, definition, t, getRoster, getRul
     overlay.querySelector('.inv-modal-title').textContent = t(definition.i18nPrefix + '.title');
     const closer = overlay.querySelector('.inv-close-btn'); closer.setAttribute('aria-label', t('btn.close')); closer.addEventListener('click', close);
     left = overlay.querySelector('.bsim-col-left'); right = overlay.querySelector('.bsim-col-right');
-    text(left, tr('rules'));
+    text(left, tr(getRules().experienceEnabled === false ? 'rulesNoExperience' : 'rules'));
     const row = document.createElement('label'); row.className = 'inv-edit-row'; text(row, tr('procedure'), 'span');
     selector = document.createElement('select'); selector.className = 'inv-edit-input'; selector.id = id + '-procedure';
     for (const item of [{key:'custom', displayName:tr('custom')}, ...getRoster()]) {

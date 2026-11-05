@@ -59,13 +59,23 @@ await until(async()=> (await api()).items.includes('pumpkin'));
 await until(()=>document.querySelector('.seasonal-mummy'));
 await until(async()=> (await api()).items.includes('mummy'));
 stop();check(!document.querySelector('.seasonal-cursor-particles'),'transition removes particle canvas');
+await until(()=>document.querySelector('[data-open-collectibles]').classList.contains('collectibles-btn--new'));
+check(getComputedStyle(document.querySelector('[data-open-collectibles]')).animationDuration==='4s','new collection pulses at the shared button rate');
 document.querySelector('[data-open-collectibles]').click();await until(()=>document.querySelectorAll('.collectible-item').length===2);
+check(!document.querySelector('[data-open-collectibles]').classList.contains('collectibles-btn--new'),'opening stops the pulse');
+check(document.querySelectorAll('.collectible-item--new').length===2,'new items have pulsing borders throughout this opening');
+check(getComputedStyle(document.querySelector('.collectible-item--new')).animationDuration==='4s','new companion borders pulse at the shared button rate');
+document.querySelector('[data-dialog-close]').click();
+await openCollectibles();
+check(!document.querySelector('.collectible-item--new'),'opening and closing clears border pulses without clicking items');
+await recordSeenCompanion('pumpkin');
+check(!document.querySelector('[data-open-collectibles]').classList.contains('collectibles-btn--new')&&!document.querySelector('.collectible-item--new'),'an existing companion does not become new again');
 check(document.querySelector('dialog').open,'gift opens dialog');
 check(!document.querySelector('dialog').textContent.match(/diamond|claim|reward|year/i),'no reward hints');
 check(getComputedStyle(document.querySelector('.collectible-item')).cursor==='default','no click cursor hint');
 const tile=document.querySelector('.collectible-item');
 check(!tile.title&&tile.dataset.tooltip.includes('Halloween')&&tile.dataset.tooltip.includes('2026'),'hover gives event and collection date without browser title');
-tile.dispatchEvent(new MouseEvent('mouseover',{bubbles:true}));tile.dispatchEvent(new MouseEvent('mousemove',{bubbles:true,clientX:160,clientY:200}));
+await delay(2);tile.dispatchEvent(new MouseEvent('mousemove',{bubbles:true,clientX:160,clientY:200}));tile.dispatchEvent(new MouseEvent('mouseover',{bubbles:true}));
 const tip=document.getElementById('app-tooltip');check(tip.closest('dialog')&&getComputedStyle(tip).display==='block'&&getComputedStyle(tip).backgroundColor==='rgb(31, 41, 55)','themed tooltip appears in dialog top layer');
 await until(()=>document.querySelectorAll('.season-cursor-preview > *').length===2);
 document.querySelector('.collectible-item').click();document.querySelector('.collectible-item').click();
@@ -83,11 +93,11 @@ check(empty?.textContent==='You have no collectibles yet.'&&empty.getBoundingCli
 check(!document.querySelector('dialog .season-cursor-gallery')&&activePreviewObservers===0,'empty collection creates no preview work');
 clearToken();check(!document.querySelector('dialog').open,'logout closes collection');
 setToken('one');await fetch('/seed',{method:'POST'});await openCollectibles();await until(()=>document.querySelectorAll('.season-cursor-preview > *').length>=6);
-check(document.querySelectorAll('.collectible-item').length===12,'all twelve items can be collected');
+check(document.querySelectorAll('.collectible-item').length===${Object.keys(items).length},'all registered items can be collected');
 const collection=await api();
 const displayed=[...document.querySelectorAll('.collectible-item [data-cursor-preview]')].map(node=>node.dataset.cursorPreview);
 check(displayed.every((id,i)=>!i||collection.collectedAt[displayed[i-1]]>=collection.collectedAt[id]),'newest collection date first');
-check(new Set(displayed.map(id=>collection.collectedAt[id])).size===12,'ordering checked against distinct dates');
+check(new Set(displayed.map(id=>collection.collectedAt[id])).size===${Object.keys(items).length},'ordering checked against distinct dates');
 document.body.classList.add('reduce-motion');await delay(25);
 const collectiblePumpkin=document.querySelector('dialog .seasonal-pumpkin');
 collectiblePumpkin.classList.add('is-clacking');
@@ -100,7 +110,7 @@ document.querySelector('.collectible-item:nth-child(3)').click();await until(()=
 document.querySelector('[data-dialog-close]').click();check(!document.querySelector('.collectible-item,.season-cursor-preview > *')&&activePreviewObservers===0&&scheduledTimers.size===0,'close immediately unloads every item, timer and observer');
 await openCollectibles();await until(()=>document.querySelectorAll('.season-cursor-preview > *').length>=6);
 document.querySelector('.collectible-item:nth-child(4)').click();await until(()=>document.querySelector('dialog .reward-float--rubies'));await delay(250);
-document.body.dataset.test=JSON.stringify({hiddenNotCollected:true,mouseDiscovery:true,reformationDiscovery:true,privateAccounts:true,rollingClaims:true,animatedCollection:true,cleanup:true,noHints:true,items:12,width:innerWidth});
+document.body.dataset.test=JSON.stringify({hiddenNotCollected:true,mouseDiscovery:true,reformationDiscovery:true,privateAccounts:true,rollingClaims:true,animatedCollection:true,cleanup:true,noHints:true,newBadges:true,items:${Object.keys(items).length},width:innerWidth});
 </script>`;
 const server=http.createServer(async(req,res)=>{
  try{

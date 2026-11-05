@@ -112,6 +112,7 @@ export function normalizeProcedure(input) {
       step.dice = integer(source.dice, 1, 2);
       if (typeof source.experience !== 'boolean') throw new RangeError('Missing experience rule');
       step.experience = source.experience;
+      if (source.experienceLimit != null) step.experienceLimit = integer(source.experienceLimit, 0);
       step.bonus = expression(source.bonus ?? 0, names);
       if (source.bonusAfterSpending != null) {
         if (typeof source.bonusAfterSpending !== 'boolean') throw new RangeError('Invalid combat bonus timing');
@@ -219,7 +220,7 @@ function apply(fight, action) {
   const step = current(fight), event = {kind:action.kind, step:step.id, section:step.section};
   if (action.kind === 'roll') {
     if (fight.phase !== 'roll') throw new RangeError('No combat roll available');
-    const spent = integer(action.spent, 0, step.experience ? fight.player.experience : 0);
+    const spent = integer(action.spent, 0, step.experience ? Math.min(fight.player.experience, step.experienceLimit ?? fight.player.experience) : 0);
     const values = dice(action.dice, step.dice);
     const bonus = rollBonus(fight, step, spent);
     fight.player.experience -= spent;
@@ -280,7 +281,7 @@ export function procedureAction(fight, action, random = Math.random) {
   if (input.kind === 'roll') {
     const step = current(fight);
     if (fight.phase !== 'roll') throw new RangeError('No combat roll available');
-    const spent = integer(input.spent ?? 0, 0, step.experience ? fight.player.experience : 0);
+    const spent = integer(input.spent ?? 0, 0, step.experience ? Math.min(fight.player.experience, step.experienceLimit ?? fight.player.experience) : 0);
     // Validate the modifier before drawing any dice, too.
     rollBonus(fight, step, spent);
     input.spent ??= 0; input.dice = dice(input.dice, step.dice, random);

@@ -22,12 +22,16 @@ module.exports = async function checkBrowser({ file, url, profile, root, width, 
   exited.catch(() => {});
   try {
     const endpoint = profile + '/DevToolsActivePort';
-    for (let index = 0; index < 200 && !fs.existsSync(endpoint); index++) {
+    let port, route;
+    for (let index = 0; index < 200; index++) {
       if (child.exitCode !== null) throw Error('Browser exited: ' + diagnostic);
+      if (fs.existsSync(endpoint)) {
+        [port, route] = fs.readFileSync(endpoint, 'utf8').trim().split('\n');
+        if (/^\d+$/.test(port) && route?.startsWith('/devtools/browser/')) break;
+      }
       await delay(25);
     }
-    if (!fs.existsSync(endpoint)) throw Error('Browser did not start: ' + diagnostic);
-    const [port, route] = fs.readFileSync(endpoint, 'utf8').trim().split('\n');
+    if (!/^\d+$/.test(port) || !route?.startsWith('/devtools/browser/')) throw Error('Browser did not start: ' + diagnostic);
     socket = new WebSocket('ws://127.0.0.1:' + port + route);
     await new Promise((resolve, reject) => {
       socket.addEventListener('open', resolve, { once: true });

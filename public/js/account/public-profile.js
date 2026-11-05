@@ -235,7 +235,11 @@ function _pubLegendHtml(isOpenWorld) {
     row(dot('#c2410c', '#9a3412'),           t('pub.legend.battle_ended')),
     ...(isOpenWorld ? [row(dia('#0e7490', '#2dd4bf'), t('pub.legend.portal'))] : []),
   ];
-  return `<div class="pub-run-legend">${items.join('')}</div>`;
+  return `<details class="pub-run-legend pub-run-panel" open><summary>${t('pub.legend_title')}</summary><div class="pub-run-panel-content">${items.join('')}</div></details>`;
+}
+
+function _pubRunPathHtml(pathNodes, className) {
+  return pathNodes ? `<details class="${className} pub-run-panel" open><summary>${t('pub.run_path_title')}</summary><div class="pub-run-panel-content"><div class="trail">${pathNodes}</div></div></details>` : '';
 }
 
 function _wirePathHover(trailEl, net) {
@@ -286,7 +290,7 @@ function renderPublicRun(data) {
       return `<div class="pub-journey-segment">
         <div class="pub-journey-book">${escapeHtml(seg.bookName)}</div>
         <div class="pub-graph-seg" id="pub-seg-${si}"></div>
-        ${pathNodes ? `<div class="pub-seg-path"><div class="trail">${pathNodes}</div></div>` : ''}
+        ${_pubRunPathHtml(pathNodes, 'pub-seg-path')}
         ${portalEl}
       </div>`;
     }).join('');
@@ -311,7 +315,7 @@ function renderPublicRun(data) {
   body.style.padding  = '0';
   body.style.overflow = 'hidden';
   const pathNodes = _pubRunPathNodes(data.run.path, data.run.result);
-  body.innerHTML = `<div id="pub-graph-container"></div>${_pubLegendHtml(false)}${pathNodes ? `<div class="pub-run-path"><div class="trail">${pathNodes}</div></div>` : ''}`;
+  body.innerHTML = `<div id="pub-graph-container"></div>${_pubLegendHtml(false)}${_pubRunPathHtml(pathNodes, 'pub-run-path')}`;
 
   _pubNetwork = _buildPubSegNetwork(
     document.getElementById('pub-graph-container'),

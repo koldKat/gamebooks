@@ -30,7 +30,7 @@ export function updateBooksList(root, blocks) {
     let nodes = old?.nodes;
     if (!old || old.fingerprint !== fingerprint || expansionChanged(nodes, block.expansion)) {
       const template = document.createElement('template');
-      template.innerHTML = block.html;
+      template.innerHTML = typeof block.html === 'function' ? block.html() : block.html;
       nodes = [...template.content.children];
       for (const node of old?.nodes || []) {
         if (node === cursor) cursor = node.nextElementSibling;

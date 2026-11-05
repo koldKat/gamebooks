@@ -42,6 +42,8 @@ export default {
     'pub.result.lost':    '† Lost',
     'pub.portal_to':      'Portal to',
     'pub.run_title':      '{name} - Run {n}',
+    'pub.run_path_title': 'Run Path',
+    'pub.legend_title':   'Legend',
     'pub.journey_result.victory': '★ Victory',
     'pub.journey_result.battle':  'Battle Death',
     'pub.journey_result.loss':    '✝ Loss',

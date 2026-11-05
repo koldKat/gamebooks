@@ -436,11 +436,6 @@ body.sidebar-collapsed { --personal-reward-default-left: 75vw; }
   box-shadow: 0 10px 24px rgba(0,0,0,0.38), 0 0 18px rgba(244, 114, 182, 0.22);
 }
 
-.app-reward-float-sep {
-  opacity: 0.55;
-  font-weight: 500;
-}
-
 .app-reward-float-user {
   color: #f0abfc;
   font-weight: 800;

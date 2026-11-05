@@ -4,6 +4,8 @@ These rules are non-negotiable and apply every session without exception.
 
 Use American English for app copy, announcements and communication. Preserve the published spelling in original book text.
 
+Each new fixes-and-improvements announcement item increments the app version by 0.0.0.1. Synchronize VERSION, the admin setting and the announcement title. This release rule is separate from static asset caching.
+
 ## Git commits and pushes
 
 Commit and push accumulated changes automatically during ongoing work, no more than three times per Europe/Sofia calendar day and at least 7 hours after the last successful commit and push. Check the saved timestamps before doing so. Do not make empty commits or commit each small change. The user authorized this standing cadence on 2026-11-03; it replaces the earlier instruction to wait for an explicit request every time.
