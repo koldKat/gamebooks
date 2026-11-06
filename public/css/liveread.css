@@ -92,6 +92,7 @@
 .liveread-body p {
   margin: 0 0 0.75rem;
   text-align: justify;
+  overflow-wrap: anywhere;
   hyphens: auto;
   -webkit-hyphens: auto;
 }

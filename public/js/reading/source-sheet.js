@@ -28,7 +28,7 @@ export function copySourceSheet(node, document, imagePath) {
   const children = [...node.childNodes].filter(n => n.nodeType !== 3 || n.textContent.trim());
   if (!children.length || children.length > 200 || !children.some(n => n.tagName === 'IMG')) throw new Error('Invalid source sheet content');
   for (const child of children) {
-    if (child.tagName === 'IMG') attributes(child, ['src', 'data-source-box'], ['alt', 'loading']);
+    if (child.tagName === 'IMG') attributes(child, ['src', 'data-source-box'], ['alt', 'loading', 'data-source-mask', 'data-source-affine']);
     else if (child.tagName === 'P') attributes(child, ['data-source-box', 'data-source-font', 'data-source-baseline', 'data-source-weight']);
     else throw new Error('Invalid source sheet layer');
     const box = child.getAttribute('data-source-box').split(',').map(number);
@@ -49,6 +49,23 @@ export function copySourceSheet(node, document, imagePath) {
       });
       const imageHeight = `${100 * (bottom - y) / height}%`;
       layer.setAttribute('style', `position:absolute;left:${100 * x / width}%;top:${100 * y / height}%;width:${100 * (right - x) / width}%;height:${continues ? `calc(${imageHeight} + .5px)` : imageHeight};max-width:none;margin:0`);
+      const mask = child.getAttribute('data-source-mask');
+      if (mask !== null) {
+        if (!imagePath.test(mask)) throw new Error('Invalid source sheet mask');
+        layer.setAttribute('style', layer.getAttribute('style') + `;mask-image:url("${mask}");mask-mode:luminance;mask-size:100% 100%;mask-repeat:no-repeat`);
+      }
+      const affine = child.getAttribute('data-source-affine');
+      if (affine !== null) {
+        const values = affine.split(',');
+        if (values.length !== 6 || values.some(v => !/^-?(?:\d+(?:\.\d+)?|\.\d+)$/.test(v) || Math.abs(Number(v)) > 2)) throw new Error('Invalid source sheet transform');
+        const [a, b, c, d, e, f] = values.map(Number);
+        if (Math.abs(a * d - b * c) < 1e-8 || [[0, 0], [1, 0], [0, 1], [1, 1]].some(([u, v]) => {
+          const px = a * u + c * v + e, py = b * u + d * v + f;
+          return px < -1e-6 || px > 1.000001 || py < -1e-6 || py > 1.000001;
+        })) throw new Error('Invalid source sheet transform');
+        const ratio = (bottom - y) / (right - x);
+        layer.setAttribute('style', layer.getAttribute('style') + `;transform-origin:0 0;transform:translate(${100 * e}%,${100 * f}%) matrix(${a},${b * ratio},${c / ratio},${d},0,0)`);
+      }
     } else {
       const font = number(child.getAttribute('data-source-font'));
       const baseline = number(child.getAttribute('data-source-baseline'));

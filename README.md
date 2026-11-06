@@ -1,105 +1,137 @@
 # Gamebook Tracker
 
-Track every branch, choice, and playthrough in your favourite gamebooks - Fighting Fantasy,
-Choose Your Own Adventure, Lone Wolf, and anything else built on numbered sections. Map your
-route as an interactive graph, level up, earn Gold Coins, and share your progress with an
-activity feed, forums, and public profiles.
+Map your choices. Keep your characters. See where the next run takes you.
 
-## Features
+Gamebook Tracker is a browser app for branching adventures such as Fighting Fantasy,
+Choose Your Own Adventure, Lone Wolf, and other gamebooks. Build an interactive map as
+you play, organize your library, and share discoveries with other players.
 
-- **Interactive graph** - every section you visit is plotted as a node; choices become edges,
-  colour-coded by line/dot, with fast travel, zoom/pan, right-click actions, section notes, an
-  optional grid overlay with snap-to-grid and fog-of-grid, and manually-added nodes for sections
-  reachable outside your recorded path
-- **Character sheet & inventory** - custom fields, equipment slots, item templates, and a
-  compact overlay for quick reference mid-playthrough
-- **Runs & progress** - start/undo/end runs, reset a book, and keep a running history of every
-  attempt
-- **Levels & Gold Coins** - earn XP and coins for exploring, discovering sections, and completing
-  runs; spend coins in the shop; a public "Stats for Nerds" panel shows live server/app internals
-- **Open World series** - portal sections link books together into one connected world, with a
-  cross-book journey viewer
-- **Series & anthologies** - group books by reading order or under a shared anthology/magazine
-  entry, with per-anthology cover art and a book allowed to belong to more than one
-- **Battle Simulators** - dice-driven combat simulators for select books
-- **Live reading** - read a book's actual prose section-by-section in-app, with clickable
-  in-text choices that build your graph as you go, for select books
-- **Social features** - a public activity feed, forums, Play Together (live shared party runs),
-  public profiles, ratings, and a feedback/inbox system
-- **Export** - download your data per-book or for your whole account
-- **Multi-platform tracking** - the same account works across every domain this app is deployed
-  on; the admin panel records which domain each user last signed in from
+[Open the app](https://pathmap.net) · [Player guide](docs/user-guide.md)
 
-See [`docs/user-guide.md`](docs/user-guide.md) for the full walkthrough of every feature above.
+To start playing, open the app, create an account, and add a book to your library.
+The setup instructions below are for running your own installation.
 
-## Tech stack
+## What you can do
 
-- **Server**: plain Node.js (no framework), `server.js` + `server/`
-- **Database**: SQLite via `better-sqlite3`
-- **Frontend**: vanilla ES modules under `public/js/`, served with `Cache-Control: no-cache` (no version query strings)
-- **Email**: Nodemailer (optional - only needed for password reset / notification emails)
-- **Geolocation**: `geoip-lite`, with an optional MaxMind GeoLite2 database for better accuracy
+- **Map your adventures:** track visited sections, choices, endings, and alternate routes
+  on an interactive graph with notes, zoom, fast travel, and optional grid controls.
+- **Keep every run:** revisit previous attempts, compare progress, and view shared runs.
+  Open World series connect books through portals and cross-book journeys.
+- **Organize your library:** browse covers, search and filter books, arrange stashes,
+  and manage series, anthologies, ratings, and reading progress.
+- **Bring your character along:** use customizable character sheets, inventory,
+  equipment, item templates, and a notebook.
+- **Read and roll:** supported books offer section-by-section reading with linked
+  choices and original artwork. Optional battle simulators handle encounters while
+  you make the story decisions.
+- **Play together:** join shared party runs, follow the live activity feed, visit
+  public profiles, and talk in the forums. Library and progress updates sync live
+  across connected tabs and devices.
+- **Earn rewards:** gain player and job levels, collect currencies, and buy upgrades.
+  Seasonal events bring animated mouse companions and event-specific XP bonuses.
+- **Make it yours:** adjust the main-page panels, cover wall, graph display,
+  animations, seasonal sprites, and reward floaties. Use the mobile interface or
+  install the app from a supported browser.
+- **Take your data with you:** export an individual book or your whole account.
 
-## Requirements
+For controls, shortcuts, and detailed behavior, see the [player guide](docs/user-guide.md).
 
-- Node.js v22 (see `.nvmrc` - `better-sqlite3` is built against this version)
+## Run locally
 
-## Setup
+Requirements:
+
+- Node.js 22 and npm.
+- The `zip` command for automatic database backups.
+- A browser with JavaScript enabled.
 
 ```bash
 git clone https://github.com/koldKat/gamebooks.git
 cd gamebooks
-npm install
+npm ci
+npm start
 ```
 
-Create a `.env` file in the project root for optional integrations:
+Open `http://localhost:3000`. The app creates its SQLite database and upload directories
+on first startup. A fresh checkout starts with a fresh database; the deployed catalog,
+reading artwork, and uploaded files are stored separately from the repository.
 
-```bash
-# Optional: improves geoip-lite's accuracy with a MaxMind GeoLite2 download.
-# Leave unset to fall back to the bundled free database.
-MAXMIND_LICENSE_KEY=
-MAXMIND_ACCOUNT_ID=
+The operator panel is at `http://localhost:3000/admin` on the server machine. It accepts
+real localhost connections only and has no separate panel login. See the
+[admin guide](docs/admin.md) for configuration and account management.
 
-# Optional: enables outgoing email (password reset, notifications).
-# Leave unset to run without email support.
+### Optional configuration
+
+Create `.env` in the project root as needed:
+
+```dotenv
+PORT=3000
+
+# Outgoing email for password resets and feedback replies.
 SMTP_HOST=
-SMTP_PORT=
-SMTP_SECURE=
+SMTP_PORT=465
+SMTP_SECURE=true
 SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=
 
-# Optional: HTTP port (defaults to 3000)
-PORT=
+# Optional credentials for geographic database updates.
+MAXMIND_LICENSE_KEY=
+MAXMIND_ACCOUNT_ID=
 ```
 
-Start the server:
+SMTP settings saved in the admin panel take precedence over environment defaults.
+Without SMTP, the app runs but cannot send password-reset emails. Set the trusted
+public app URL in admin settings when deploying so account links use the correct address.
 
-```bash
-npm start
-```
+### Data and backups
 
-The SQLite database (`database.sqlite`) is created automatically on first run.
+The app stores its database in `database.sqlite`, uploaded files under `public/`, and
+protected reading artwork in `reading-images/`. These files are excluded from Git.
 
-## Scripts
+Database snapshots are compressed into `backups/` at midnight in the server's local
+time zone, with 30 days of retention. The server also checks for a missing daily backup
+at startup. Database archives do not
+include uploaded files or reading artwork; preserve those directories separately when
+moving or backing up an installation.
 
-| Command                 | Description                                  |
-|--------------------------|-----------------------------------------------|
-| `npm start`              | Start the server                              |
-| `npm test`                | Run recursive `*.test.*` tests (Node 22, two workers) |
-| `npm run docs:build`      | Regenerate the HTML docs from `docs/*.md`     |
-| `npm run docs:check`      | Fail if the HTML docs are stale relative to their markdown source |
+## Development
 
-Book-specific roster tests and browser checks read the installed catalog in read-only mode. Set `GAMEBOOKS_TEST_DATABASE` to use a separate catalog database; the default is `database.sqlite`. Simulator roster data lives in the database, with no duplicate JSON catalog in the repository.
+The server uses Node's HTTP APIs and SQLite through `better-sqlite3`. The frontend uses
+vanilla JavaScript ES modules, shared CSS, and vis-network for graphs. Live updates use
+Server-Sent Events. There is no frontend build step.
+
+| Command | Purpose |
+|---------|---------|
+| `npm start` | Start the server |
+| `npm test` | Run the Node test suite with two workers |
+| `npm run docs:build` | Generate the HTML guides from `docs/*.md` |
+| `npm run docs:check` | Check that generated guides match their Markdown sources |
+
+Some simulator tests require an installed roster catalog, which is stored in the
+database rather than bundled with the source. They read it without modifying it;
+set `GAMEBOOKS_TEST_DATABASE` to select a separate database. Browser checks also need
+a compatible Chromium executable and their documented test environment.
+
+The release version is recorded in `VERSION` and the app's admin settings. Static assets
+use cache revalidation, so frontend edits do not require version query strings.
+
+## Project layout
+
+| Path | Contents |
+|------|----------|
+| `server.js`, `server/` | HTTP routes, database modules, live updates, and background jobs |
+| `public/js/`, `public/css/` | Main app, reader, graph, and shared UI |
+| `public/mobile/` | Mobile play interface |
+| `public/js/battlesim/` | Book-specific simulator modules and shared combat engines |
+| `admin/` | Local operator interface |
+| `test/` | Server, client, and browser checks |
+| `docs/` | Player, admin, and technical documentation sources |
 
 ## Documentation
 
-Full docs live in [`docs/`](docs/) as the single source of truth - each is
-regenerated into a styled HTML page (sticky table of contents, scroll-spy,
-anchor links) by `npm run docs:build` (see `scripts/generate-docs.js`).
-Never hand-edit the generated `.html` files; edit the `.md` source and
-rebuild.
+- [Player guide](docs/user-guide.md): features, controls, and playing a book.
+- [Admin guide](docs/admin.md): catalog, accounts, events, announcements, and operations.
+- [Technical reference](docs/technical.md): architecture, storage, APIs, and testing.
 
-- [`docs/user-guide.md`](docs/user-guide.md) → `public/guide.html` - how to use the app
-- [`docs/admin.md`](docs/admin.md) → `admin/admin-guide.html` - admin panel reference
-- [`docs/technical.md`](docs/technical.md) → `admin/technical.html` - project structure, architecture, and implementation notes
+Edit the Markdown sources and run `npm run docs:build` to update `public/guide.html`,
+`admin/admin-guide.html`, and `admin/technical.html`.

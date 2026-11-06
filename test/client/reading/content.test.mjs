@@ -572,6 +572,30 @@ test('native illustration cutouts can leave unoccupied areas transparent without
   assert.equal(invalid.mount.children.length, 0);
 });
 
+test('source sheets preserve independent native masks and bounded PDF image transforms', () => {
+  const mask = '/api/books/1497/reading-images/' + 'b'.repeat(64) + '.png';
+  const { mount, document } = setup([originalSheet({}, {
+    'data-source-mask': mask, 'data-source-affine': '.6,.6,-.4,.4,.4,0',
+  })]);
+  assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), true);
+  const style = mount.children[0].children[0].attrs.style;
+  assert.ok(style.includes(`mask-image:url("${mask}")`));
+  assert.match(style, /mask-mode:luminance;mask-size:100% 100%/);
+  assert.match(style, /transform-origin:0 0;transform:translate\(40%,0%\) matrix\(0.6,/);
+});
+
+test('source sheets reject external masks and transforms that escape their image bounds', () => {
+  for (const attrs of [
+    { 'data-source-mask': 'https://example.com/mask.png' },
+    { 'data-source-mask': '/api/books/1496/reading-images/' + 'b'.repeat(64) + '.png' },
+    ...['1,0,0,1,1,0', '0,0,0,0,0,0', '1,0,0,1,0,0;position:fixed', 'NaN,0,0,1,0,0', '1,0,0,1,0'].map(value => ({ 'data-source-affine': value })),
+  ]) {
+    const { mount, document } = setup([originalSheet({}, attrs)]);
+    assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
 test('adjoining native strips cover fractional seams without extending terminal edges', () => {
   const sheet = originalSheet();
   sheet.childNodes = [

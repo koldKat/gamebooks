@@ -27,6 +27,12 @@ public/attachments/
 .claude/settings.local.json
 memory/
 
+# Local assistant instructions and one-off extraction helper
+AGENTS.md
+CLAUDE.md
+BOOK_IMPORTS.md
+/dump.js
+
 # OS/editor cruft
 .DS_Store
 *.log
