@@ -1,7 +1,7 @@
 // rewards.js - XP/coin floater queue and reward snapshot processing
 
 import { getToken, getUsername } from '../core/state.js';
-import { updateCoinsDisplay, refreshCoinsDisplay, COIN_SVG } from './shop.js';
+import { updateCoinsDisplay, refreshCoinsDisplay, updateShopSnapshot, COIN_SVG } from './shop.js';
 import { renderBooksXpSummary } from '../account/profile.js';
 import { updateDiamondsDisplay, DIAMOND_SVG } from './diamonds.js';
 import { updateRubiesDisplay, RUBY_SVG } from './rubies.js';
@@ -172,6 +172,7 @@ function _queueRewardFloater(xpDelta = 0, coinDelta = 0) {
 // ── Snapshot processing ───────────────────────────────────────────────────────
 export function _resetRewardSnapshotState() {
   _pendingSummary = null;
+  updateShopSnapshot(null);
   clearRewardCache();
   closeBlackMarket();
   updateRubiesDisplay(null);
@@ -205,6 +206,7 @@ export function _processRewardSnapshot(data, opts = {}) {
   if (_lastRewardUserKey !== null && rewardUserKey && _lastRewardUserKey !== rewardUserKey) {
     _resetRewardSnapshotState();
   }
+  updateShopSnapshot(data);
   updateCoinsDisplay(coins);
   updateHeartbeatCoinsDisplay(data);
   const heartbeatGold = Number(data.heartbeatGoldEarned) || 0;

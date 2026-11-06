@@ -47,21 +47,19 @@ export function _saveExpandedPref(kind, key, localKey, expanded) {
 
 export function _captureExpandedPrefsFromDom(root = document.getElementById('books-list')) {
   if (!root) return;
-  let nextBook   = booksState._bookExpandedPrefs;
-  let nextSeries = booksState._seriesExpandedPrefs;
-  let nextStash  = booksState._stashExpandedPrefs;
-  let bookChanged = false, seriesChanged = false, stashChanged = false;
+  // A retained or hidden DOM can predate a preference received from another tab.
+  // Only explicit toggles save account preferences; a refresh must not undo them.
+  const remember = (kind, key, localKey, row) => {
+    const map = _getExpandMap(kind);
+    const val = getToken() && Object.prototype.hasOwnProperty.call(map, key)
+      ? (map[key] === '0' ? '0' : '1') : (row.dataset.expanded === '1' ? '1' : '0');
+    localStorage.setItem(localKey, val);
+  };
 
   root.querySelectorAll('.book-item--container[data-container-id][data-expanded]').forEach(row => {
     const key = String(row.dataset.containerId || '');
     if (!key) return;
-    const val = row.dataset.expanded === '1' ? '1' : '0';
-    localStorage.setItem(`bk_expanded_${key}`, val);
-    if (getToken() && Object.prototype.hasOwnProperty.call(nextBook, key) && nextBook[key] !== val) {
-      if (!bookChanged) nextBook = { ...nextBook };
-      nextBook[key] = val;
-      bookChanged = true;
-    }
+    remember('book', key, `bk_expanded_${key}`, row);
   });
 
   root.querySelectorAll('.series-header-row[data-series-id][data-expanded]').forEach(row => {
@@ -70,37 +68,14 @@ export function _captureExpandedPrefsFromDom(root = document.getElementById('boo
     const stashId = row.dataset.stashId || '';
     const mapKey  = `${stashId || 'main'}:${sid}`;
     const localKey = `${stashId ? `stash_${stashId}_sr_` : 'sr_'}expanded_${sid}`;
-    const val = row.dataset.expanded === '1' ? '1' : '0';
-    localStorage.setItem(localKey, val);
-    if (getToken() && Object.prototype.hasOwnProperty.call(nextSeries, mapKey) && nextSeries[mapKey] !== val) {
-      if (!seriesChanged) nextSeries = { ...nextSeries };
-      nextSeries[mapKey] = val;
-      seriesChanged = true;
-    }
+    remember('series', mapKey, localKey, row);
   });
 
   root.querySelectorAll('.stash-header-row[data-stash-id][data-expanded]').forEach(row => {
     const key = String(row.dataset.stashId || '');
     if (!key) return;
-    const val = row.dataset.expanded === '1' ? '1' : '0';
-    localStorage.setItem(`stash_expanded_${key}`, val);
-    if (getToken() && Object.prototype.hasOwnProperty.call(nextStash, key) && nextStash[key] !== val) {
-      if (!stashChanged) nextStash = { ...nextStash };
-      nextStash[key] = val;
-      stashChanged = true;
-    }
+    remember('stash', key, `stash_expanded_${key}`, row);
   });
-
-  if (getToken() && (bookChanged || seriesChanged || stashChanged)) {
-    booksState._bookExpandedPrefs   = nextBook;
-    booksState._seriesExpandedPrefs = nextSeries;
-    booksState._stashExpandedPrefs  = nextStash;
-    const payload = {};
-    if (bookChanged)   payload.bookExpanded   = nextBook;
-    if (seriesChanged) payload.seriesExpanded = nextSeries;
-    if (stashChanged)  payload.stashExpanded  = nextStash;
-    booksState._hooks.savePrefs?.(payload);
-  }
 }
 
 // A series keeps its current state when its library location changes. Existing
@@ -137,6 +112,6 @@ export function _syncMovedSeriesPrefs(stashes) {
   }
   if (getToken()) {
     booksState._seriesExpandedPrefs = map;
-    booksState._hooks.savePrefs?.({ seriesExpanded: map });
+    booksState._hooks.savePrefs?.({ seriesExpanded: Object.fromEntries(updates.map(([key, , val]) => [key, val])) });
   }
 }

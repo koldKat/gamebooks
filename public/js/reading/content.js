@@ -85,7 +85,7 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
     if (node.nodeType === 3) return document.createTextNode(node.textContent);
     if (node.nodeType !== 1 || !ELEMENTS.has(node.tagName)) throw new Error('Unsupported reading markup');
     if (node.tagName === 'FIGURE' && node.getAttribute('class') === 'reading-source-frame') return copySourceFrame(node);
-    if (node.tagName === 'FIGURE' && node.getAttribute('class') === 'reading-source-sheet') return copySourceSheet(node, document, imagePath);
+    if (node.tagName === 'FIGURE' && node.getAttribute('class') === 'reading-source-sheet') return copySourceSheet(node, document, imagePath, { sectionLinks });
     if (node.tagName === 'FIGURE' && node.getAttribute('class') === 'reading-source-flipbook') return copySourceFlipbook(node, document, bookId);
     const target = document.createElement(node.tagName === 'A' && !sectionLinks ? 'span' : node.tagName.toLowerCase());
     for (const attr of node.attributes) {

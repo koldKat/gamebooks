@@ -62,3 +62,27 @@ test('an existing copy in another stash keeps its own state', () => {
   h.move([{ id: 7, seriesIds: [1] }, { id: 8, seriesIds: [1] }, { id: 9, seriesIds: [1] }]);
   assert.equal(h.get('7'), false); assert.equal(h.get('8'), true); assert.equal(h.get('9'), false);
 });
+
+test('a refresh cannot save stale expanded DOM over newer collapsed preferences', () => {
+  const h = setup(true);
+  h.context.setExpandedPrefs({ 2: '0' }, { '7:1': '0' }, { 7: '0' });
+  const root = { querySelectorAll(selector) {
+    return selector.startsWith('.book-item') ? [{ dataset: { containerId: '2', expanded: '1' } }]
+      : selector.startsWith('.series-header') ? [{ dataset: { seriesId: '1', stashId: '7', expanded: '1' } }]
+      : [{ dataset: { stashId: '7', expanded: '1' } }];
+  } };
+  h.context._captureExpandedPrefsFromDom(root);
+  assert.equal(h.get('7'), false);
+  assert.equal(h.booksState._bookExpandedPrefs[2], '0');
+  assert.equal(h.booksState._stashExpandedPrefs[7], '0');
+  assert.equal(h.storage.get('stash_7_sr_expanded_1'), '0');
+  assert.equal(h.saved.length, 0, 'rendered snapshots must not write account preferences');
+});
+
+test('moving a series saves only its destination key, leaving other series untouched', () => {
+  const h = setup(true);
+  h.context.setExpandedPrefs({}, { 'main:1': '0', '7:2': '1' }, {});
+  h.move([{ id: 7, seriesIds: [1] }]);
+  assert.deepEqual(JSON.parse(JSON.stringify(h.saved)), [{ seriesExpanded: { '7:1': '0' } }]);
+  assert.equal(h.booksState._seriesExpandedPrefs['7:2'], '1');
+});

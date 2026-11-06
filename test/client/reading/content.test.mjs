@@ -550,6 +550,43 @@ test('story passages lay out source sheets once without replacing unrelated stor
   assert.throws(() => mountReadingSourceSheets(container, 1496), /Invalid source sheet image/);
 });
 
+test('native choice boxes keep accessible local links and disable them in previews', () => {
+  for (const sectionLinks of [true, false]) {
+    const sheet = originalSheet();
+    sheet.childNodes.push(source('A', [], { href: '#section-77', 'data-source-box': '40,900,760,1100',
+      'aria-label': 'Visit Figg’s Cafe: go to page 77.' }));
+    const { mount, document } = setup([sheet]);
+    assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document, { sectionLinks }), true);
+    const link = mount.children[0].children.at(-1);
+    assert.equal(link.tag, sectionLinks ? 'a' : 'span');
+    assert.equal(link.attrs.href, sectionLinks ? '#section-77' : undefined);
+    assert.equal(link.attrs['aria-label'], 'Visit Figg’s Cafe: go to page 77.');
+    assert.match(link.attrs.style, /left:5%;/);
+  }
+});
+
+test('native choice regions reject unsafe links, invalid geometry and extra markup', () => {
+  for (const attrs of [
+    { href: 'javascript:alert(1)' }, { href: 'https://example.com/#section-77' }, { href: '#section-0' },
+    { 'data-source-box': '40,900,801,1100' }, { 'data-source-box': '40,900,40,1100' },
+    { 'aria-label': '' }, { onclick: 'alert(1)' },
+  ]) {
+    const sheet = originalSheet();
+    sheet.childNodes.push(source('A', [], { href: '#section-77', 'data-source-box': '40,900,760,1100',
+      'aria-label': 'Visit Figg.', ...attrs }));
+    const { mount, document } = setup([sheet]);
+    assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+  const sheet = originalSheet();
+  sheet.childNodes.push(source('A', [source('SCRIPT', [textNode('alert(1)')])], {
+    href: '#section-77', 'data-source-box': '40,900,760,1100', 'aria-label': 'Visit Figg.',
+  }));
+  const { mount, document } = setup([sheet]);
+  assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), false);
+  assert.equal(mount.children.length, 0);
+});
+
 test('original sheets preserve independent protected artwork and native text labels responsively', () => {
   const { mount, document } = setup([originalSheet()]);
   assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), true);

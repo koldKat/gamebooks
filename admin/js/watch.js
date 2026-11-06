@@ -1,4 +1,5 @@
 // Read-only admin viewer; polls saved graph and HUD state.
+import { mountReadingSourceSheets } from '/js/reading/source-sheet.js';
 
 const POLL_MS = 1000;
 
@@ -501,6 +502,7 @@ function renderSectionText(section, currentSec) {
     return;
   }
   el.innerHTML = `<div class="watch-text-sec">Section ${escapeHtml(String(currentSec))}</div>` + section.html;
+  mountReadingSourceSheets(el, currentBookId || requestedBookId);
   el.classList.add('visible');
 }
 

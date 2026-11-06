@@ -9,7 +9,7 @@ test('disabled personal floaties skip preparation and geometry while reward bala
  const noop=()=>{};
  const context=vm.createContext({window:{addEventListener:noop},floatiesEnabled:()=>false,
   document:{getElementById:forbidden},waitForCameraIdle:()=>false,getUsername:()=> 'player',
-  updateCoinsDisplay:value=>{coins=value;},updateHeartbeatCoinsDisplay:noop,renderBooksXpSummary:()=>summary++,
+  updateShopSnapshot:noop,updateCoinsDisplay:value=>{coins=value;},updateHeartbeatCoinsDisplay:noop,renderBooksXpSummary:()=>summary++,
   saveRewardCache:noop,_broadcastLiveEvent:noop,_scheduleLiveUiRefresh:noop});
  vm.runInContext(fs.readFileSync('public/js/progression/rewards.js','utf8').replace(/^import .*;\n/gm,'').replace(/^export /gm,''),context);
  context._spawnRewardFloater=forbidden;context._queueRewardFloater=forbidden;
@@ -39,7 +39,7 @@ test('disabled collection feedback creates no layer or timer and disabling clear
 test('collection snapshots suppress duplicate generic reward floaters',()=>{
  const noop=()=>{},floaters=[];
  const context=vm.createContext({window:{addEventListener:noop},waitForCameraIdle:()=>false,floatiesEnabled:()=>true,getUsername:()=> 'player',getToken:()=> 'token',
-  updateCoinsDisplay:noop,updateHeartbeatCoinsDisplay:noop,renderBooksXpSummary:noop,saveRewardCache:noop,
+  updateShopSnapshot:noop,updateCoinsDisplay:noop,updateHeartbeatCoinsDisplay:noop,renderBooksXpSummary:noop,saveRewardCache:noop,
   _broadcastLiveEvent:noop,_scheduleLiveUiRefresh:noop,RUBY_SVG:'diamond',DIAMOND_SVG:'ruby',
   clearRewardCache:noop,closeBlackMarket:noop,updateRubiesDisplay:noop,updateDiamondsDisplay:noop});
  vm.runInContext(fs.readFileSync('public/js/progression/rewards.js','utf8').replace(/^import .*;\n/gm,'').replace(/^export /gm,''),context);
@@ -60,7 +60,7 @@ test('collection snapshots suppress duplicate generic reward floaters',()=>{
 test('mint gains produce coin feedback even when the purchase reduces the balance',()=>{
  const noop=()=>{},gains=[];
  const context=vm.createContext({window:{addEventListener:noop},waitForCameraIdle:()=>false,floatiesEnabled:()=>true,getUsername:()=> 'player',getToken:()=> 'token',
-  updateCoinsDisplay:noop,updateHeartbeatCoinsDisplay:noop,renderBooksXpSummary:noop,saveRewardCache:noop,
+  updateShopSnapshot:noop,updateCoinsDisplay:noop,updateHeartbeatCoinsDisplay:noop,renderBooksXpSummary:noop,saveRewardCache:noop,
   _broadcastLiveEvent:noop,_scheduleLiveUiRefresh:noop,RUBY_SVG:'diamond',DIAMOND_SVG:'ruby'});
  vm.runInContext(fs.readFileSync('public/js/progression/rewards.js','utf8').replace(/^import .*;\n/gm,'').replace(/^export /gm,''),context);
  context._queueRewardFloater=(xp,coins)=>gains.push({xp,coins});

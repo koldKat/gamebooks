@@ -97,6 +97,29 @@ const SHOP_ITEMS = [
 ];
 
 let _shopData = null;
+let _shopToken = null;
+let _shopSnapshotRevision = 0;
+
+// Reuse the account's existing reward snapshot when opening the shop.
+export function updateShopSnapshot(data) {
+  if (!data) {
+    ++_shopSnapshotRevision;
+    _shopData = null; _shopToken = null;
+    const list = document.getElementById('shop-items');
+    if (list) list.innerHTML = '';
+    return;
+  }
+  if (_shopData === data && _shopToken === getToken()) return;
+  if (!['level', 'coinsBalance', 'xpBoostPurchased', 'bonusHeartbeatXp',
+    'bonusGcChancePurchased', 'bonusGcMintPurchased', 'bonusUndos', 'bonusFastTravels']
+    .every(key => Number.isFinite(data[key]))) return;
+  _shopData = data;
+  _shopToken = getToken();
+  ++_shopSnapshotRevision;
+  updateSpentDisplay(data.coinsSpent || 0);
+  updateBonusGcIndicator(data.pendingBonusGc);
+  if (document.getElementById('shop-modal-overlay')?.classList.contains('active')) renderShopItems();
+}
 let _rewardProfileFetchPromise = null;
 let _rewardProfileDebounceTimer = null;
 let _rewardProfilePendingResolvers = [];
@@ -160,7 +183,7 @@ async function _claimBonusGc() {
     const res  = await apiFetch('/api/shop/claim-gc', { method: 'POST' });
     if (!res.ok) return;
     const data = await res.json();
-    _shopData = data;
+    updateShopSnapshot(data);
     _hooks.onRewardSnapshot?.(data);
     updateCoinsDisplay(data.coinsBalance || 0);
   } catch (_) {}
@@ -182,16 +205,16 @@ export function refreshCoinsDisplay() {
       const resolvers = _rewardProfilePendingResolvers;
       _rewardProfilePendingResolvers = [];
       _rewardProfileFetchPromise = (async () => {
+        const snapshotRevision = _shopSnapshotRevision;
         try {
           const res = await apiFetch('/api/profile');
           if (!res.ok) return;
           const data = await res.json();
-          if (getToken() !== sessionToken) return;
+          if (getToken() !== sessionToken || snapshotRevision !== _shopSnapshotRevision) return;
           _hooks.onRewardSnapshot?.(data);
-          _shopData = data;
+          updateShopSnapshot(data);
           updateCoinsDisplay(data.coinsBalance || 0);
           updateBonusGcIndicator(data.pendingBonusGc);
-          if (document.getElementById('shop-modal-overlay')?.classList.contains('active')) renderShopItems();
         } catch {}
         finally {
           _rewardProfileFetchPromise = null;
@@ -239,14 +262,13 @@ function renderShopItems() {
           if (data.error?.includes('cap') || res.status === 403) { renderShopItems(); return; }
           btn.disabled = false; btn.textContent = t('shop.btn.buy'); showShopError(data.error || t('msg.error')); return;
         }
-        _shopData = data;
+        updateShopSnapshot(data);
         _hooks.onRewardSnapshot?.(data);
         _hooks.onSetBonusUndos?.(data.bonusUndos || 0);
         _hooks.onSetBonusFastTravels?.(data.bonusFastTravels || 0);
         updateCoinsDisplay(data.coinsBalance || 0);
         updateSpentDisplay(data.coinsSpent || 0);
         updateBonusGcIndicator(data.pendingBonusGc);
-        renderShopItems();
       } catch (_) { btn.disabled = false; btn.textContent = t('shop.btn.buy'); showShopError(t('shop.request_failed')); }
     });
   });
@@ -263,29 +285,37 @@ export async function openShopModal() {
   const sessionToken = getToken();
   document.getElementById('shop-modal-overlay').classList.add('active');
   document.getElementById('shop-error').textContent = '';
+  if (_shopData && _shopToken === sessionToken) {
+    updateCoinsDisplay(_shopData.coinsBalance || 0);
+    updateSpentDisplay(_shopData.coinsSpent || 0);
+    renderShopItems();
+    // Other tabs may have spent coins; refresh without blanking the usable shop.
+    return refreshCoinsDisplay();
+  }
+  updateShopSnapshot(null);
   document.getElementById('shop-items').innerHTML = `<div class="shop-loading">${t('shop.loading')}</div>`;
   try {
     const res = await apiFetch('/api/profile');
     if (!res.ok) throw new Error();
     const data = await res.json();
     if (getToken() !== sessionToken) return;
-    _shopData = data;
+    updateShopSnapshot(data);
     _hooks.onRewardSnapshot?.(_shopData);
     updateCoinsDisplay(_shopData.coinsBalance || 0);
     updateSpentDisplay(_shopData.coinsSpent || 0);
     updateBonusGcIndicator(_shopData.pendingBonusGc);
-    renderShopItems();
-  } catch (_) { document.getElementById('shop-items').innerHTML = `<div class="shop-loading">${t('shop.load_failed')}</div>`; }
+  } catch (_) {
+    if (getToken() === sessionToken) document.getElementById('shop-items').innerHTML = `<div class="shop-loading">${t('shop.load_failed')}</div>`;
+  }
 }
 
 export function initShop() {
   initBlackMarket({
     onRewardSnapshot: data => {
-      _shopData = data;
+      updateShopSnapshot(data);
       _hooks.onRewardSnapshot?.(data);
       updateCoinsDisplay(data.coinsBalance || 0);
       updateSpentDisplay(data.coinsSpent || 0);
-      if (document.getElementById('shop-modal-overlay')?.classList.contains('active')) renderShopItems();
     },
     getMousedownOverlay: () => _hooks.getMousedownOverlay?.(),
   });

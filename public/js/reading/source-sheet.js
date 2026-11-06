@@ -6,7 +6,7 @@ export function mountReadingSourceSheets(container, bookId) {
   }
 }
 
-export function copySourceSheet(node, document, imagePath) {
+export function copySourceSheet(node, document, imagePath, { sectionLinks = true } = {}) {
   const attributes = (element, required, optional = []) => {
     if (required.some(name => element.getAttribute(name) === null)
         || [...element.attributes].some(a => !required.includes(a.name) && !optional.includes(a.name))) {
@@ -30,6 +30,7 @@ export function copySourceSheet(node, document, imagePath) {
   for (const child of children) {
     if (child.tagName === 'IMG') attributes(child, ['src', 'data-source-box'], ['alt', 'loading', 'data-source-mask', 'data-source-affine']);
     else if (child.tagName === 'P') attributes(child, ['data-source-box', 'data-source-font', 'data-source-baseline', 'data-source-weight']);
+    else if (child.tagName === 'A') attributes(child, ['href', 'data-source-box', 'aria-label']);
     else throw new Error('Invalid source sheet layer');
     const box = child.getAttribute('data-source-box').split(',').map(number);
     const [x, y, right, bottom] = box;
@@ -68,6 +69,14 @@ export function copySourceSheet(node, document, imagePath) {
         const ratio = (bottom - y) / (right - x);
         layer.setAttribute('style', layer.getAttribute('style') + `;transform-origin:0 0;transform:translate(${100 * e}%,${100 * f}%) matrix(${a},${b * ratio},${c / ratio},${d},0,0)`);
       }
+    } else if (child.tagName === 'A') {
+      const href = child.getAttribute('href'), label = child.getAttribute('aria-label');
+      if (!/^#section-(?:[1-9]\d{0,5}[a-zA-Z]?|[a-zA-Z][a-zA-Z0-9_-]{0,63})$/.test(href)
+          || !label.trim() || label.length > 2000 || child.childNodes.length) throw new Error('Invalid source sheet choice');
+      layer = document.createElement(sectionLinks ? 'a' : 'span');
+      if (sectionLinks) layer.setAttribute('href', href);
+      layer.setAttribute('aria-label', label);
+      layer.setAttribute('style', `position:absolute;left:${100 * x / width}%;top:${100 * y / height}%;width:${100 * (right - x) / width}%;height:${100 * (bottom - y) / height}%;display:block;background:transparent;z-index:1`);
     } else {
       const font = number(child.getAttribute('data-source-font'));
       const baseline = number(child.getAttribute('data-source-baseline'));

@@ -34,8 +34,10 @@ function setup() {
   const source = readFileSync(new URL('../../../public/js/progression/shop.js', import.meta.url), 'utf8');
   runInContext(source.replace(/^import .*;$/gm, '').replace(/^export \{.*\};$/gm, '').replace(/^export /gm, ''), context);
   context.setShopHooks({ onRewardSnapshot: data => snapshots.push(data) });
-  const render = data => { context.data = data; runInContext('_shopData=data;renderShopItems()', context); return get('shop-items').innerHTML; };
-  return { context, get, requests, snapshots, render, switchAccount() { token = 'other'; } };
+  const snapshot = data => ({ xpBoostPurchased: 0, bonusHeartbeatXp: 0, bonusGcChancePurchased: 0,
+    bonusGcMintPurchased: 0, bonusUndos: 0, bonusFastTravels: 0, ...data });
+  const render = data => { context.data = snapshot(data); get('shop-modal-overlay').classList.add('active'); runInContext('updateShopSnapshot(data);renderShopItems()', context); return get('shop-items').innerHTML; };
+  return { context, get, requests, snapshots, render, snapshot, switchAccount() { token = 'other'; } };
 }
 
 test('private diamond upgrades sit after Coin Mint and before Extra Undo with escalating costs and current rates', () => {
@@ -65,9 +67,9 @@ test('buying a diamond upgrade refreshes the shop and its next price from the se
   assert.deepEqual(JSON.parse(h.requests[0].options.body), { item: 'diamond_dig' });
   const updated = { level: 10, jobLevel: 2, coinsBalance: 45, coinsSpent: 10, diamondsBalance: 1,
     diamondDigPurchased: 1, diamondDigPct: 1.1, diamondEventsPerDiamond: 1000 / 1.011, diamondExchangeRate: 10 };
-  h.requests.shift().resolve({ ok: true, json: async () => updated });
+  h.requests.shift().resolve({ ok: true, json: async () => h.snapshot(updated) });
   await buying;
-  assert.equal(h.snapshots.at(-1), updated);
+  assert.deepEqual(h.snapshots.at(-1), h.snapshot(updated));
   assert.equal(runInContext('SHOP_ITEMS.find(x=>x.id===\'diamond_dig\').costFn(_shopData)', h.context), 20);
   assert.match(h.get('shop-items').innerHTML, /1.1% digging speed/);
 });
@@ -80,4 +82,52 @@ test('a late shop response from another account cannot display private upgrade d
   await opening;
   assert.equal(h.snapshots.length, 0);
   assert.doesNotMatch(h.get('shop-items').innerHTML, /Diamond/);
+});
+
+test('shop opens synchronously from the current reward snapshot and keeps it during a failed refresh', async () => {
+  const h = setup();
+  h.render({ level: 10, coinsBalance: 25, xpBoostPurchased: 3, coinsSpent: 9 });
+  h.get('shop-items').innerHTML = '';
+  const opening = h.context.openShopModal();
+  assert.match(h.get('shop-items').innerHTML, /data-item="xp_boost"/);
+  assert.doesNotMatch(h.get('shop-items').innerHTML, /shop-loading/);
+  assert.match(h.get('shop-spent').textContent, /9/);
+  // Refresh stays shared and debounced, never blocking the first paint.
+  h.context.refreshCoinsDisplay();
+  await new Promise(resolve => setTimeout(resolve, 330));
+  assert.equal(h.requests.length, 1);
+  h.requests.shift().resolve({ ok: false });
+  await opening;
+  assert.match(h.get('shop-items').innerHTML, /data-item="xp_boost"/);
+});
+
+test('cached shop upgrades cannot leak across accounts', async () => {
+  const h = setup();
+  h.render({ level: 10, coinsBalance: 100, diamondsBalance: 36 });
+  h.switchAccount();
+  const opening = h.context.openShopModal();
+  assert.doesNotMatch(h.get('shop-items').innerHTML, /data-item=/);
+  h.requests.shift().resolve({ ok: true, json: async () => h.snapshot({ level: 2, coinsBalance: 1 }) });
+  await opening;
+  assert.match(h.get('shop-items').innerHTML, /data-item="xp_boost"/);
+  assert.doesNotMatch(h.get('shop-items').innerHTML, /data-item="diamond_dig"/);
+  h.context.updateShopSnapshot(null);
+  assert.equal(h.get('shop-items').innerHTML, '', 'logout clears rendered upgrade data too');
+});
+
+test('a background profile reply cannot undo a newer shop purchase', async () => {
+  const h = setup();
+  const before = h.snapshot({ level: 10, coinsBalance: 25 });
+  h.render(before);
+  const opening = h.context.openShopModal();
+  await new Promise(resolve => setTimeout(resolve, 330));
+  const refresh = h.requests.shift();
+  const buying = h.get('buy-xp_boost').handlers.click();
+  const after = h.snapshot({ level: 10, coinsBalance: 24, xpBoostPurchased: 1 });
+  h.requests.shift().resolve({ ok: true, json: async () => after });
+  await buying;
+  refresh.resolve({ ok: true, json: async () => before });
+  await opening;
+  assert.equal(runInContext('_shopData.xpBoostPurchased', h.context), 1);
+  assert.equal(runInContext('_shopData.coinsBalance', h.context), 24);
 });

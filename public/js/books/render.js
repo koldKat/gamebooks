@@ -351,14 +351,14 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
   lazyState.wireContent = _wireRenderedContent;
   for (const root of updateBooksList(list, blocks)) {
     _wireRenderedContent(root);
-    const groups = [...(root.querySelectorAll?.('[data-lazy-group]') || [])];
-    if (root.matches?.('[data-lazy-group]')) groups.unshift(root);
-    for (const group of groups) {
-      if (!group.closest('[style*="display:none"], [style*="display: none"]')) _materializeLazyGroup(group);
-    }
   }
 
   _applyBooksSearchFilter();
+  // A background refresh can leave expanded groups deferred while playing.
+  // Returning Home must also resume placeholders in retained, unchanged blocks.
+  for (const group of list.querySelectorAll?.('[data-lazy-group]') || []) {
+    if (!group.closest('[style*="display:none"], [style*="display: none"]')) _materializeLazyGroup(group);
+  }
   _scheduleAnthologyCardCoverFlows(list);
   _queueBookCovers(list);
 }

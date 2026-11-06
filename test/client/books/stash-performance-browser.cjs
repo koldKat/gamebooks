@@ -49,6 +49,15 @@ try {
  header(2).click();
  _materializeLazyGroup(group(2),{immediate:true});
  check(group(2).querySelectorAll('.book-item').length===189,'search can complete nested materialization');
+ // A play-screen refresh defers changed expanded stashes. Home reuses the
+ // unchanged placeholder but must resume its children without another click.
+ const list=document.getElementById('books-list');list.style.display='none';
+ rows[10]={...rows[10],visited:99};render();
+ check(group(1).dataset.lazyGroup,'hidden refresh leaves an expanded placeholder');
+ check(group(1).children.length===0,'hidden stash remains deferred');
+ const returningHeader=header(1);list.style.display='';render();
+ check(header(1)===returningHeader,'Home retains unchanged expanded stash header');
+ await wait(()=>group(1).querySelectorAll('.book-item').length===171,'Home restores expanded stash children without collapse');
  tracking=false;
  document.body.dataset.test=JSON.stringify({books:rows.length,series:series.length,stashes:stashes.length,renderMs:timings.map(n=>Math.round(n)),clickMs:Math.round(clickMs),maxFrameGapMs:Math.round(Math.max(...frames))});
 }catch(error){document.body.dataset.failure=error.stack;}

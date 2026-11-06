@@ -5,6 +5,7 @@ let tokenForDigest = null, digestPromise = null;
 const fields = new Set(['id', 'username', 'xp', 'eventXp', 'jobXp', 'jobLevel', 'jobLevelCap', 'level', 'title', 'levelXp', 'nextLevelXp',
   'coinsBalance', 'coinsSpent', 'coinsEarned', 'coinXpUntilNext', 'xpBoostPct', 'xpBoostPurchased', 'xpFromBoost',
   'bonusHeartbeatXp', 'bonusHeartbeatXpFree', 'bonusUndos', 'bonusFastTravels',
+  'bonusGcChancePurchased', 'bonusGcMintPurchased', 'bonusGcClaimed', 'pendingBonusGc',
   'bronzeBalance', 'silverBalance', 'heartbeatGoldEarned']);
 
 function digest(token) {
