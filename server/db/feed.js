@@ -160,6 +160,7 @@ function getFeed() {
             u.is_author, u.is_contributor, u.is_moderator, u.is_squire, u.display_name
      FROM series_runs sr
      JOIN series s ON s.id = sr.series_id
+     JOIN user_series us ON us.series_id = sr.series_id AND us.user_id = sr.user_id
      JOIN users  u ON u.id = sr.user_id
      WHERE s.is_open_world = 1 AND s.is_public = 1`
   ).all();
@@ -183,7 +184,7 @@ function getFeed() {
     const startMs = (sr.started_at || 0) * 1000;
     if (startMs >= cutoffMs) {
       const startBook = _seriesRunBook(sr.seriesId, sr.userId, sr.run_index, false);
-      entries.push({ ...base, type: 'series_run_started', completedAt: startMs,
+      if (startBook) entries.push({ ...base, type: 'series_run_started', completedAt: startMs,
         bookId: startBook?.id ?? null, bookName: startBook?.name ?? null,
         bookIsPublic: !!startBook?.isPublic, coverUrl: startBook?.coverUrl ?? null });
     }
@@ -192,7 +193,7 @@ function getFeed() {
       if (endMs >= cutoffMs) {
         // Completed runs clear last_book_id/last_section; the tooltip falls back to the date.
         const endBook = _seriesRunBook(sr.seriesId, sr.userId, sr.run_index, true);
-        entries.push({ ...base, type: 'series_run_completed', result: sr.result,
+        if (endBook) entries.push({ ...base, type: 'series_run_completed', result: sr.result,
           runIsPublic: !!sr.is_public, completedAt: endMs,
           bookId: endBook?.id ?? null, bookName: endBook?.name ?? null,
           bookIsPublic: !!endBook?.isPublic, coverUrl: endBook?.coverUrl ?? null });

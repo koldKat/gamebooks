@@ -2,6 +2,7 @@
 import {ABILITIES} from './core.js';
 import {DAMAGE_TYPES} from './damage.js';
 import {createD20ResultForm} from './result-form.js';
+import {renderSourceSpellControls} from './source-spell-controls.js';
 
 export function renderD20Actions(parent, ui, fight, {send, memory, onError}) {
   parent.replaceChildren(); if (fight.status !== 'fighting') return;
@@ -19,7 +20,15 @@ export function renderD20Actions(parent, ui, fight, {send, memory, onError}) {
       ui.button(row.root, 'remove', () => { effects.splice(effects.indexOf(row),1); row.root.remove(); });
     }));
     const note = ui.field(parent, 'spellNote', {value:spell.spell});
-    ui.button(parent, 'resolveSpell', safely(() => send({kind:'resolveCast',actor:key,note:note.value,results:effects.map(row => row.read())})));
+    const hasReflector = actors.some(([id,value])=>id!==key && value.hp && value.features?.reflectSpell);
+    const attackSpell = hasReflector ? ui.checkbox(parent,'attackSpell') : null;
+    const spellBonus = hasReflector ? ui.field(parent,'spellAttackBonus',{type:'number',min:-1000,max:1000,value:actor.spellcasting?.attackBonus ?? 0}) : null;
+    if (spellBonus) {
+      spellBonus.closest('label').hidden = true;
+      attackSpell.addEventListener('change',()=>{spellBonus.closest('label').hidden=!attackSpell.checked;});
+    }
+    ui.button(parent, 'resolveSpell', safely(() => send({kind:'resolveCast',actor:key,note:note.value,results:effects.map(row => row.read()),
+      attackSpell:attackSpell?.checked ?? false,spellAttackBonus:attackSpell?.checked ? ui.number(spellBonus) : undefined})));
     ui.button(parent, 'cancelSpell', safely(() => send({kind:'cancelCast',actor:key,note:ui.tr('cancelSpell'),results:[]})));
     return;
   }
@@ -100,6 +109,7 @@ export function renderD20Actions(parent, ui, fight, {send, memory, onError}) {
     const update=()=>{level.value=Object.entries(actor.spellcasting.spells).find(([,names])=>names.includes(spell.value))?.[0]??0;}; spell.addEventListener('change',update); update();
     ui.button(group,'cast',safely(() => act('cast',{spell:spell.value,level:ui.number(level)})));
   }
+  renderSourceSpellControls(parent,ui,{actor,act,manual,safely});
   const checks=ui.group(parent,'combatChecks'), ability=ui.field(checks,'ability',{entries:ABILITIES.map(key=>[key,key.toUpperCase()])});
   const dc=ui.field(checks,'dc',{type:'number',max:1000}), magical=ui.checkbox(checks,'magical');
   for (const kind of ['save','check']) ui.button(checks,kind,safely(()=>act(kind,{ability:ability.value,dc:ui.number(dc),dice:manual(),magical:magical.checked,advantage:advantage.checked,disadvantage:disadvantage.checked})));

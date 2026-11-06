@@ -608,6 +608,21 @@ test('adjoining native strips cover fractional seams without extending terminal 
   assert.match(mount.children[0].children[1].attrs.style, /height:50%;/);
 });
 
+test('flipped native strips cover transformed seams while retaining exact terminal bounds', () => {
+  const sheet = originalSheet();
+  sheet.childNodes = [
+    source('IMG', [], { src: '/api/books/1497/reading-images/' + 'a'.repeat(64) + '.png',
+      'data-source-box': '0,700,800,1400', 'data-source-affine': '1,0,0,-1,0,1' }),
+    source('IMG', [], { src: '/api/books/1497/reading-images/' + 'b'.repeat(64) + '.png',
+      'data-source-box': '0,0,800,700', 'data-source-affine': '1,0,0,-1,0,1' }),
+  ];
+  const { mount, document } = setup([sheet]);
+  assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), true);
+  assert.match(mount.children[0].children[0].attrs.style, /height:50%;/);
+  assert.match(mount.children[0].children[1].attrs.style, /height:calc\(50% \+ 1px\)/);
+  assert.match(mount.children[0].children[1].attrs.style, /matrix\(1,0,0,-1,0,0\)/);
+});
+
 test('original sheet layers reject unsafe content, invalid geometry and cross-book assets atomically', () => {
   const rejected = [originalSheet({ onclick: 'bad()' }), originalSheet({ 'data-source-width': '9000' }),
     originalSheet({}, { src: '/api/books/1496/reading-images/' + 'a'.repeat(64) + '.png' }),

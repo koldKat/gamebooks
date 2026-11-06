@@ -170,6 +170,7 @@ async function handleDeleteSeriesRun(req, res, seriesId, runIndex) {
   db.deleteSeriesRun(userId, seriesId, runIndex);
   db.patchSeriesRunDeletion(userId, seriesId, runIndex);
   send(res, 200, { ok: true });
+  if (series.is_public) feedPush({ type: 'feed_changed', entity: 'series', action: 'run_deleted', id: seriesId });
 }
 
 async function handleDeleteSeries(req, res, seriesId) {

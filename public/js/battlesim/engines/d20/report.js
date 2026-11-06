@@ -45,9 +45,12 @@ export function renderD20Report(parent, ui, state) {
     if(event.selection)value+=' · '+actors.find(([key])=>key===event.actor)?.[1].attacks[event.selection.attackIndex].name;
     if(event.order)value+=' · '+event.order.map(item=>name(item.key)+' '+item.check.total).join(', ');
     if(event.roll!=null)value+=' · '+event.roll;
+    if(event.movement)value+=' · '+ui.tr('movementFeet')+' '+event.movement;
+    if(event.droppedWeapon)value+=' · '+ui.tr('droppedWeaponHelp');
     ui.text(log,value);
     for(const effect of event.effects??[]){
       let detail=ui.tr('event.'+effect.kind);if(effect.condition)detail+=' · '+ui.tr('condition.'+effect.condition);
+      if(effect.actor)detail+=' · '+name(effect.actor);if(effect.target)detail+=' → '+name(effect.target);
       if(effect.amount!=null)detail+=' · '+effect.amount;if(effect.current!=null)detail+=' → '+effect.current;
       if(effect.roll!=null)detail+=' · '+(typeof effect.roll==='number'?effect.roll:effect.roll.rolls?.join(', '));
       if(effect.check)detail+=' · '+check(effect.check);ui.text(log,detail);

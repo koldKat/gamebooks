@@ -10,6 +10,7 @@ import {prepareD20Encounter, encounterHazard, consumeLife} from './encounters.js
 import {sourceAttackContext} from './attack-context.js';
 import {SOURCE_ACTIONS, sourceTurnEffects, sourceAttackEffects, sourceDamageTransitions, sourceEnvironmentalAction} from './source-effects.js';
 import {sourceEscape} from './source-escape.js';
+import {SOURCE_SPELL_ACTIONS, sourceSpellAction, reflectResolvedCast} from './source-spells.js';
 
 export const ABILITIES = Object.freeze(['str', 'dex', 'con', 'int', 'wis', 'cha']);
 const statuses = new Set(['fighting', 'win', 'loss', 'fled', 'cancelled']);
@@ -88,8 +89,8 @@ function replaceActor(fight, key, value) {
   Object.assign(original, value);
 }
 function terminal(fight) {
-  if (fight.groups.every(actor => actor.hp === 0)) fight.status = 'win';
-  else if (party(fight).every(actor => actor.hp === 0)) fight.status = 'loss';
+  if (party(fight).every(actor => actor.hp === 0)) fight.status = 'loss';
+  else if (fight.groups.every(actor => actor.hp === 0)) fight.status = 'win';
   if (fight.status !== 'fighting') fight.phase = 'complete';
 }
 
@@ -230,7 +231,13 @@ export function d20Action(source, action, random = Math.random) {
     if (!Array.isArray(action.results) || action.results.length > 100 || cancelled && action.results.length) throw new RangeError('Invalid spell results');
     const result = finishCast(actor, {cancel:cancelled, note:action.note});
     replaceActor(fight, action.actor, result.actor);
+    const reflectors = action.attackSpell && !cancelled ? action.results.flatMap(part => {
+      const target = actorAt(fight,part.target);
+      return target.features?.reflectSpell && part.target !== action.actor ? [[part.target,structuredClone(target)]] : [];
+    }) : [];
+    const beforeReflections = new Map(reflectors);
     const effects = action.results.map(part => applyCombatAdjustment(adjustments, part, random));
+    if (!cancelled) effects.push(...reflectResolvedCast(fight,action.actor,beforeReflections,effects,action,adjustments,random));
     if (!cancelled && fight.openingAttacks[0] === action.actor) fight.openingAttacks.shift();
     Object.assign(event, result.event, {actor:action.actor, effects});
   } else if (action.kind === 'startTurn') {
@@ -239,6 +246,8 @@ export function d20Action(source, action, random = Math.random) {
     replaceActor(fight, action.actor, printed.actor); event.actor = action.actor; event.effects = [...result.events, ...printed.events];
   } else if (SOURCE_ACTIONS.includes(action.kind)) {
     Object.assign(event, {actor:action.actor, target:action.target}, sourceEnvironmentalAction(fight, action, adjustments, random));
+  } else if (SOURCE_SPELL_ACTIONS.includes(action.kind)) {
+    Object.assign(event, {actor:action.actor, target:action.target}, sourceSpellAction(fight, action, adjustments, random));
   } else if (action.kind === 'selectAttack') {
     const actor = actorAt(fight, action.actor), target = actorAt(fight, action.target);
     event.selection = selectActorAttack(actor, target, {distance:action.distance, roll:action.roll, rayRoll:action.rayRoll, random});

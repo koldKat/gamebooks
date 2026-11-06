@@ -11,7 +11,8 @@ export function createD20Forms(document, id, tr) {
     input.id = id+'-'+key+'-'+serial++; input.autocomplete = 'off'; input.dataset.field = key;
     if (entries) for (const [value, caption] of entries) { const option = document.createElement('option'); option.value = value; option.textContent = caption; input.append(option); }
     else { input.type = type; if (type === 'number') { input.min = min; input.max = max; input.step = '1'; } }
-    input.value = value; input.required = !optional; label.append(input); parent.append(label); return input;
+    input.value = entries && value === '' ? (entries[0]?.[0] ?? '') : value;
+    input.required = !optional; label.append(input); parent.append(label); return input;
   }
   function checkbox(parent, key, checked = false) {
     const label = document.createElement('label'); label.className = 'inv-edit-row';

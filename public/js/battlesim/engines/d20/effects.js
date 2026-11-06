@@ -5,7 +5,7 @@ import {applyDamage, reduceMaximumHp, DAMAGE_TYPES} from './damage.js';
 const abilities = new Set(['str', 'dex', 'con', 'int', 'wis', 'cha']);
 const conditions = new Set(['blinded', 'charmed', 'deafened', 'exhaustion', 'frightened', 'grappled',
   'incapacitated', 'invisible', 'paralyzed', 'petrified', 'poisoned', 'prone', 'restrained',
-  'stunned', 'unconscious', 'confused', 'blurred', 'quicksand', 'shielded', 'burning']);
+  'stunned', 'unconscious', 'confused', 'blurred', 'quicksand', 'shielded', 'burning', 'displaced']);
 const disabling = ['incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious'];
 const automaticFailure = ['paralyzed', 'petrified', 'stunned', 'unconscious'];
 
@@ -24,6 +24,7 @@ export function validateCondition(source) {
   if (value.concentrationMinimum != null) combatNumber(value.concentrationMinimum, 0, 1000);
   if (value.acBonus != null) combatNumber(value.acBonus, -100, 100);
   if (value.expiresAtStart != null && typeof value.expiresAtStart !== 'boolean') throw new RangeError('Invalid condition timing');
+  for (const key of ['endsOnDamage','endsIfIncapacitated']) if (value[key] != null && typeof value[key] !== 'boolean') throw new RangeError('Invalid condition ending');
   if (value.startTurnDamage) {
     damageExpression(value.startTurnDamage.formula);
     if (!DAMAGE_TYPES.includes(value.startTurnDamage.type)) throw new RangeError('Invalid ongoing damage type');
@@ -60,7 +61,8 @@ export function attackConditions(attacker, target, {distance, ignoreInvisibility
       || hasCondition(target, 'prone') && near,
     disadvantage:['blinded', 'poisoned', 'prone', 'restrained', 'confused', 'quicksand'].some(key => hasCondition(attacker, key))
       || !ignoreInvisibility && hasCondition(target, 'invisible') || !ignoreBlur && hasCondition(target, 'blurred')
-      || hasCondition(target, 'prone') && !near,
+      || hasCondition(target, 'prone') && !near
+      || hasCondition(target, 'displaced') && !cannotAct(target) && target.currentSpeed !== 0,
     criticalOnHit:near && (hasCondition(target, 'paralyzed') || hasCondition(target, 'unconscious')),
   };
 }
@@ -81,7 +83,9 @@ export function addCondition(actor, source) {
   if (actor.conditionImmunities?.includes(condition.name)) return {actor, immune:true};
   // Independently applied effects retain independent durations and saves.
   if ((actor.conditions?.length ?? 0) >= 30) throw new RangeError('Too many active conditions');
-  return {actor:{...actor, conditions:[...(actor.conditions ?? []), condition]}, immune:false};
+  const updated = {...actor, conditions:[...(actor.conditions ?? []), condition]};
+  if (cannotAct(updated)) updated.conditions = updated.conditions.filter(c=>!c.endsIfIncapacitated && c.concentrationMinimum == null);
+  return {actor:updated, immune:false};
 }
 
 export function resolveDamageFeatures(before, amount, {critical = false, radiant = false, dice = {}, random = Math.random} = {}) {
@@ -97,6 +101,7 @@ export function resolveDamageFeatures(before, amount, {critical = false, radiant
   if (amount > 0) {
     const retained = [];
     for (const [index, condition] of (actor.conditions ?? []).entries()) {
+      if (condition.endsOnDamage) continue;
       if (condition.concentrationMinimum == null) { retained.push(condition); continue; }
       const dc = Math.max(condition.concentrationMinimum, Math.floor(amount / 2));
       const check = actorSave(actor, 'con', dc, {dice:dice.concentration?.[index], random});

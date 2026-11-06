@@ -49,6 +49,9 @@ export function finishCast(source, {cancel = false, note} = {}) {
   const actor = structuredClone(source), pending = actor.pendingCast;
   // Cancellation is available only before any result has been committed.
   if (cancel && pending.level) actor.spellSlots[pending.level]++;
+  const displacement = actor.features?.displacement;
+  if (!cancel && displacement && pending.level >= displacement.rechargesAfterIllusionSpellMinimumLevel
+      && displacement.illusionSpells.includes(pending.spell)) actor.sourceDisplacementReady = true;
   delete actor.pendingCast;
   return {actor, event:{kind:cancel ? 'cancelCast' : 'resolveCast', ...pending, note:note.trim()}};
 }

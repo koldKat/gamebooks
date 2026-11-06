@@ -48,13 +48,15 @@ export function copySourceSheet(node, document, imagePath) {
         return nx === x && ny === bottom && nr === right;
       });
       const imageHeight = `${100 * (bottom - y) / height}%`;
-      layer.setAttribute('style', `position:absolute;left:${100 * x / width}%;top:${100 * y / height}%;width:${100 * (right - x) / width}%;height:${continues ? `calc(${imageHeight} + .5px)` : imageHeight};max-width:none;margin:0`);
+      const affine = child.getAttribute('data-source-affine');
+      // Transformed strips need a full pixel to cover antialiased shared edges.
+      const overlap = affine === null ? '.5' : '1';
+      layer.setAttribute('style', `position:absolute;left:${100 * x / width}%;top:${100 * y / height}%;width:${100 * (right - x) / width}%;height:${continues ? `calc(${imageHeight} + ${overlap}px)` : imageHeight};max-width:none;margin:0`);
       const mask = child.getAttribute('data-source-mask');
       if (mask !== null) {
         if (!imagePath.test(mask)) throw new Error('Invalid source sheet mask');
         layer.setAttribute('style', layer.getAttribute('style') + `;mask-image:url("${mask}");mask-mode:luminance;mask-size:100% 100%;mask-repeat:no-repeat`);
       }
-      const affine = child.getAttribute('data-source-affine');
       if (affine !== null) {
         const values = affine.split(',');
         if (values.length !== 6 || values.some(v => !/^-?(?:\d+(?:\.\d+)?|\.\d+)$/.test(v) || Math.abs(Number(v)) > 2)) throw new Error('Invalid source sheet transform');
