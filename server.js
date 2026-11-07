@@ -80,7 +80,7 @@ const {
 const {
   handleRegister, handleLogin, handleLogout, handleForgotPassword, handleResetPassword,
 } = require('./server/routes/auth');
-const { handleImportComplete } = require('./server/routes/import-completion');
+const { handleImportComplete, handleReadingMatterUpdated } = require('./server/routes/import-completion');
 
 const {
   handleAcceptPartyInvite,
@@ -529,6 +529,7 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET'  && urlPath === '/api/admin/users')  return await handleAdminGetUsers(req, res);
     if (method === 'GET'  && urlPath === '/api/admin/books')  return await handleAdminGetBooks(req, res);
     if (method === 'POST' && (m = urlPath.match(/^\/api\/admin\/books\/(\d+)\/import-complete$/))) return handleImportComplete(req, res, +m[1]);
+    if (method === 'POST' && (m = urlPath.match(/^\/api\/admin\/books\/(\d+)\/reading-matter-updated$/))) return handleReadingMatterUpdated(req, res, +m[1]);
     if (method === 'GET'  && urlPath === '/api/admin/series') return await handleGetSeries(req, res);
     if ((m = urlPath.match(adminWatchStateRe)) && method === 'GET') return await handleWatchState(req, res, +m[1], +m[2]);
     if ((m = urlPath.match(adminUserSessRe))        && method === 'POST') return await handleAdminClearSessions(req, res, +m[1]);

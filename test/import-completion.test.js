@@ -27,6 +27,7 @@ function fixture() {
   } };
   vm.runInNewContext(fs.readFileSync(require.resolve('../server/routes/import-completion'), 'utf8'), context);
   return { call: (local = true) => context.module.exports.handleImportComplete({ local }, {}, 1073),
+    matter: (local = true) => context.module.exports.handleReadingMatterUpdated({ local }, {}, 1073),
     set: value => { row = value; }, current: () => row, events, replies, queries: () => queries };
 }
 
@@ -59,4 +60,30 @@ test('completion notifier refuses unfinished audits before contacting the server
   const { notifyImportComplete } = require('../server/notify-import-complete');
   await assert.rejects(notifyImportComplete(1074, 'book-1074.md'), /completed _fixed/);
   await assert.rejects(notifyImportComplete(0, 'book-0_fixed.md'), /book ID/);
+});
+
+test('matter corrections notify readers without completing legacy story checks', () => {
+  const f = fixture();
+  f.set({ ...f.current(), enemy_roster_reported: 0, prose_full_read: 0, intro_text: '<p>Restored preface</p>' });
+  f.matter();
+  assert.equal(f.replies[0].status, 200);
+  assert.deepEqual(f.events, [{ type: 'public_catalog_changed', entity: 'book', id: 1073, action: 'matter_updated' }]);
+  assert.equal(f.current().enemy_roster_reported, 0);
+  assert.equal(f.current().prose_full_read, 0);
+  f.call();
+  assert.equal(f.replies[1].status, 409);
+  assert.equal(f.queries(), 2);
+});
+
+test('matter notifications require a local request and an existing prepared reader', () => {
+  const f = fixture(); f.matter(false);
+  assert.equal(f.queries(), 0);
+  f.set(null); f.matter();
+  assert.equal(f.replies[0].status, 404);
+  for (const changes of [{ has_live_reading: 0 }, { has_sections: 0 }, { is_container: 1 },
+    { frontmatter_done: 0 }, { intro_text: ' ', rules_text: null }]) {
+    const g = fixture(); g.set({ ...g.current(), intro_text: '<p>Preface</p>', ...changes }); g.matter();
+    assert.equal(g.replies[0].status, 409);
+    assert.equal(g.events.length, 0);
+  }
 });
