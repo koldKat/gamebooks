@@ -1,4 +1,5 @@
 import { copySourceSheet } from './source-sheet.js';
+import { bindReadingImageZoom } from './image-zoom.js';
 import { copySourceFlipbook } from './source-flipbook.js';
 
 const ELEMENTS = new Set(['P', 'H2', 'H3', 'H4', 'OL', 'UL', 'LI', 'STRONG', 'EM', 'U', 'BR', 'HR', 'FIGURE', 'FIGCAPTION', 'IMG',
@@ -188,6 +189,7 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
     const nodes = [...template.content.childNodes].map(copy);
     mount.append(...nodes);
     mount.className += ' reading-frontmatter--structured';
+    if (mount.addEventListener) bindReadingImageZoom(mount);
     return true;
   } catch {
     return false;

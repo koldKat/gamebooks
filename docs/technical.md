@@ -243,6 +243,8 @@ Desktop and mobile load simulator modules and translations lazily. Launcher regi
 
 Shared engines accept declarative rules rather than branching on book IDs. Panels own DOM and lifecycle; state and combat modules receive live application context through callbacks. Pending actions must reject stale account, book, or run contexts.
 
+The percentile solo-combat engine tracks explicit attacks, opposed defenses, wounds, and combat conditions using database encounter profiles. It preserves the shared units die for advantage and disadvantage, supports optional coin checks, and keeps simultaneous wounds separate until the round ends. Combat phases retain casualties and current stats. Unprinted defensive values remain unavailable; abstract defeat thresholds do not appear as invented hit points. Travel, campaign clocks, narrative choices, and scripted outcomes remain in the reader.
+
 The Shinté engine resolves separate CS-versus-DS attacks through database-backed combat charts. Encounter adapters supply initiative, modifiers and the recipient of damage. Undefined chart results wait for explicit manual resolution without advancing the turn.
 
 The Horror Classic engine resolves dice-based strikes, combat powers and explicitly completed rounds. Its presets and encounter exceptions come from the database. Effects with undefined timing require an explicit ruling; separate fatal-shot encounters do not invent ordinary combat stats. Flight and healing preserve distinct printed rule profiles without automating travel. The same database rule profile supplies panel options and created combat allies.

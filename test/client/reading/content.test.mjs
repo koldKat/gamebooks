@@ -539,7 +539,7 @@ test('story passages lay out source sheets once without replacing unrelated stor
   let pending = true, replacement;
   const sheet = originalSheet();
   sheet.replaceWith = value => { replacement = value; pending = false; };
-  const container = { ownerDocument: document, querySelectorAll: () => pending ? [sheet] : [] };
+  const container = { ownerDocument: document, addEventListener() {}, querySelectorAll: () => pending ? [sheet] : [] };
   mountReadingSourceSheets(container, 1497);
   assert.match(replacement.attrs.style, /position:relative/);
   assert.match(replacement.children[0].attrs.style, /position:absolute/);
@@ -676,6 +676,19 @@ test('a bounded original image group retains its mask and opacity beneath page l
   assert.match(result.children[1].children[0].attrs.style, /opacity:0\.5;mask-image:/);
 });
 
+test('original artwork sheets may consist entirely of bounded native image groups', () => {
+  const sheet = originalSheet();
+  const group = originalSheet({ 'data-source-box': '0,0,800,1400' });
+  sheet.childNodes.splice(0, sheet.childNodes.length, group);
+  const { mount, document } = setup([sheet]);
+  assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), true);
+  assert.equal(mount.children[0].children[0].tag, 'figure');
+  assert.equal(mount.children[0].children[0].children[0].tag, 'img');
+  group.childNodes.splice(0, group.childNodes.length);
+  const empty = setup([sheet]);
+  assert.equal(renderReadingMatter(empty.mount, 1497, '<figure></figure>', empty.document), false);
+});
+
 test('story mounting handles nested original image groups only through their parent sheet', () => {
   const sheet = originalSheet();
   const group = originalSheet({ 'data-source-box': '0,0,800,1400', 'data-source-opacity': '.5' });
@@ -685,7 +698,7 @@ test('story mounting handles nested original image groups only through their par
   let result;
   sheet.replaceWith = replacement => { result = replacement; };
   const { document } = setup([]);
-  mountReadingSourceSheets({ ownerDocument: document, querySelectorAll: () => [sheet, group] }, 1497);
+  mountReadingSourceSheets({ ownerDocument: document, addEventListener() {}, querySelectorAll: () => [sheet, group] }, 1497);
   assert.equal(result.children[2].tag, 'figure');
   assert.match(result.children[2].children[0].attrs.style, /opacity:0\.5/);
 });
@@ -710,6 +723,26 @@ test('original image groups reject escaping bounds, unsafe attributes and deeper
   const { mount, document } = setup([sheet]);
   assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), false);
   assert.equal(mount.children.length, 0);
+});
+
+test('original document-page references remain non-story asides and are inert in previews', () => {
+  for (const sectionLinks of [true, false]) {
+    const sheet = originalSheet();
+    sheet.childNodes.push(source('A', [], { href: '#map6', 'data-source-box': '100,200,200,240', 'aria-label': 'Timekeeping' }));
+    const { mount, document } = setup([sheet]);
+    assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document, { sectionLinks }), true);
+    const link = mount.children[0].children[2];
+    assert.equal(link.tag, sectionLinks ? 'a' : 'span');
+    assert.equal(link.attrs.href, sectionLinks ? '#map6' : undefined);
+    assert.equal(link.attrs['aria-label'], 'Timekeeping');
+  }
+  for (const href of ['#map-1', '#map1000000', '#map6 extra', 'https://example.com/#map6']) {
+    const sheet = originalSheet();
+    sheet.childNodes.push(source('A', [], { href, 'data-source-box': '100,200,200,240', 'aria-label': 'Timekeeping' }));
+    const { mount, document } = setup([sheet]);
+    assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
 });
 
 test('source sheets reject external masks and transforms that escape their image bounds', () => {
