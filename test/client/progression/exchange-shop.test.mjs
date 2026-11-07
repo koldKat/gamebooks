@@ -13,6 +13,7 @@ function setup() {
   };
   const context=createContext({document:{getElementById:get,addEventListener(){}},getToken:()=>token,
     COIN_SVG:'<svg class="coin-icon"></svg>',DIAMOND_SVG:'<svg class="diamond-icon"></svg>',RUBY_SVG:'<svg class="ruby-icon"></svg>',
+    loadingHtml: label => '<div class="app-loading">'+(label || 'Loading…')+'</div>',
     crypto:{randomUUID:()=>`exchange-request-${++sequence}`},
     showConfirm(message,confirm,options){const dialog={message,confirm,options,closed:false};confirmations.push(dialog);return()=>{dialog.closed=true;};},
     apiFetch(url,options){return new Promise((resolve,reject)=>requests.push({url,options,resolve,reject}));},
@@ -22,6 +23,34 @@ function setup() {
   return{context,requests,snapshots,confirmations,use(side){direction=side;},get:name=>get('exchange-shop-'+(name==='panel'?'form':['amount','max','dec','inc','submit','rate','receive','form'].includes(name)?direction+'-'+name:name)),getNode:get,switchAccount(){token='other';}};
 }
 const profile={diamondsBalance:5,diamondsExchanged:2,diamondsBought:1,coinsBalance:60,diamondExchangeRate:13,diamondBuyRate:20,diamondPurchaseStock:5};
+test('cached Black Market opens immediately and its refresh preserves entered quantities', async () => {
+  const h=setup(); h.context.updateBlackMarketSnapshot(profile);
+  const pending=h.context.openDiamondExchangeShop();
+  assert.equal(h.get('submit').disabled,false);
+  assert.match(h.get('balance').innerHTML,/60/);
+  assert.doesNotMatch(h.get('message').innerHTML,/Loading/);
+  h.get('amount').value='3'; h.get('amount').handlers.input();
+  h.requests.shift().resolve({ok:true,json:async()=>({...profile,coinsBalance:70})});
+  await pending;
+  assert.equal(h.get('amount').value,'3');
+  assert.match(h.get('balance').innerHTML,/70/);
+});
+test('Black Market never reuses another account snapshot', async () => {
+  const h=setup(); h.context.updateBlackMarketSnapshot(profile); h.switchAccount();
+  const pending=h.context.openDiamondExchangeShop();
+  assert.equal(h.get('submit').disabled,true);
+  assert.match(h.get('message').innerHTML,/app-loading/);
+  assert.doesNotMatch(h.get('balance').innerHTML,/60/);
+  h.requests.shift().resolve({ok:true,json:async()=>({...profile,coinsBalance:10})});
+  await pending; assert.match(h.get('balance').innerHTML,/10/);
+});
+test('late Black Market refresh cannot overwrite a newer reward snapshot', async () => {
+  const h=setup(); h.context.updateBlackMarketSnapshot(profile);
+  const pending=h.context.openDiamondExchangeShop();
+  h.context.updateBlackMarketSnapshot({...profile,coinsBalance:99});
+  h.requests.shift().resolve({ok:true,json:async()=>profile});
+  await pending; assert.match(h.get('balance').innerHTML,/99/);
+});
 async function open(h,data=profile){const p=h.context.openDiamondExchangeShop();h.requests.shift().resolve({ok:true,json:async()=>data});await p;}
 const submit=h=>{
   const event={preventDefault(){}};

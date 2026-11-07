@@ -1,3 +1,4 @@
+import { loadingHtml } from '/js/ui-helpers/loading.js';
 // Anthology management. Deletion unlinks children via ON DELETE SET NULL.
 
 import {
@@ -34,7 +35,7 @@ export function renderAnthologiesTable(anthologies) {
 
 export async function loadAdminAnthologies() {
   const tbody = document.getElementById('anthologies-body');
-  tbody.innerHTML = '<tr><td colspan="7" style="color:#6b7280;padding:1rem">Loading…</td></tr>';
+  tbody.innerHTML = `<tr><td colspan="7">${loadingHtml()}</td></tr>`;
   try {
     const anthologies = await api('GET', '/api/admin/anthologies');
     document.getElementById('anthologies-meta').textContent = `${anthologies.length} ${anthologies.length === 1 ? 'anthology' : 'anthologies'}`;

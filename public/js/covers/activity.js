@@ -1,3 +1,4 @@
+import { loadingHtml } from '../ui-helpers/loading.js';
 import { coversState } from './state.js';
 import { getToken, apiFetch } from '../core/state.js';
 import { openPublicModal } from '../account/public-profile.js';
@@ -11,28 +12,25 @@ export async function openCoverActivity(bookId, bookName) {
   const body = document.getElementById('pub-modal-body');
   const serverRendered = body.dataset.serverEntry === `book:${bookId}`;
   if (!serverRendered) document.getElementById('pub-modal-title').textContent = bookName;
-  if (!serverRendered) body.innerHTML = `<p class="pub-loading">${t('covers.loading')}</p>`;
+  if (!serverRendered) body.innerHTML = loadingHtml(t('covers.loading'), 'pub-loading');
   try {
-    const res = getToken()
-      ? await apiFetch(`/api/public/book/${bookId}/activity`)
-      : await publicFetch(`/api/public/book/${bookId}/activity`);
+    const userLoggedIn = !!getToken();
+    // These requests are independent; do not add a second round trip before rendering.
+    const [res, ratingData] = await Promise.all([
+      userLoggedIn ? apiFetch(`/api/public/book/${bookId}/activity`) : publicFetch(`/api/public/book/${bookId}/activity`),
+      userLoggedIn ? apiFetch(`/api/books/${bookId}/rating`)
+        .then(r => r.ok ? r.json() : null).catch(() => null) : null,
+    ]);
     if (!res.ok) throw new Error();
     const data = await res.json();
 
     let userRating;
     let userCanRate = true;
-    const userLoggedIn = !!getToken();
     let userOwnsBook   = false;
-    if (userLoggedIn) {
-      try {
-        const rRes = await apiFetch(`/api/books/${bookId}/rating`);
-        if (rRes.ok) {
-          const rData = await rRes.json();
-          userOwnsBook = true;
-          userRating   = rData.rating;
-          userCanRate  = rData.canRate ?? true;
-        }
-      } catch {}
+    if (ratingData) {
+      userOwnsBook = true;
+      userRating = ratingData.rating;
+      userCanRate = ratingData.canRate ?? true;
     }
 
     coversState.renderCoverActivity(bookId, data.book?.name ?? bookName, data.entries ?? [], userRating, data.book, userLoggedIn, userOwnsBook, userCanRate);
@@ -49,7 +47,7 @@ export async function openSeriesActivity(seriesId, seriesName) {
   const body = document.getElementById('pub-modal-body');
   const serverRendered = body.dataset.serverEntry === `series:${seriesId}`;
   if (!serverRendered) document.getElementById('pub-modal-title').textContent = seriesName;
-  if (!serverRendered) body.innerHTML = `<p class="pub-loading">${t('covers.loading')}</p>`;
+  if (!serverRendered) body.innerHTML = loadingHtml(t('covers.loading'), 'pub-loading');
   try {
     // Include optional auth so the server can filter per-user PDF metadata.
     const token = getToken();

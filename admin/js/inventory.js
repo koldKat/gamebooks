@@ -1,3 +1,4 @@
+import { loadingHtml } from '/js/ui-helpers/loading.js';
 // Inventory catalog, responsive row-based pagination, and item editing.
 
 import { api, el, mkBtn, mkEditBtn, _esc, showConfirm, showAlert, matchesQuery, renderPaged, _pageState } from './core.js';
@@ -97,7 +98,7 @@ function renderInventoryGrid(items) {
 
 export async function loadInventory() {
   const grid = document.getElementById('inv-grid');
-  grid.innerHTML = '<div style="color:#6b7280;font-size:0.85rem;grid-column:1/-1">Loading…</div>';
+  grid.innerHTML = loadingHtml();
   try {
     _allItems = await api('GET', '/api/admin/items');
     _renderInventory(false);

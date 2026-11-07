@@ -22,7 +22,7 @@ test('progression imports retain their original dependency identities', () => {
   const expected = {
     'app-xp': ['core/state.js', 'progression/shop.js', 'progression/rubies.js', 'progression/diamonds.js', 'core/util.js', 'i18n.js', 'progression/floaties.js', 'graph/camera-motion.js'],
     rewards: ['core/state.js', 'progression/shop.js', 'account/profile.js', 'progression/diamonds.js', 'progression/rubies.js', 'progression/exchange-shop.js', 'progression/heartbeat-coins.js', 'progression/snapshot-cache.js', 'core/livetab.js', 'community/notif.js', 'core/util.js', 'progression/floaties.js', 'graph/camera-motion.js'],
-    shop: ['core/state.js', 'core/util.js', 'i18n.js', 'ui-helpers/coin-icon.js', 'progression/diamonds.js', 'progression/exchange-shop.js'],
+    shop: ['ui-helpers/loading.js', 'core/state.js', 'core/util.js', 'i18n.js', 'ui-helpers/coin-icon.js', 'progression/diamonds.js', 'progression/exchange-shop.js'],
   };
   for (const [name, dependencies] of Object.entries(expected)) {
     const moduleUrl = new URL('progression/' + name + '.js', dir);

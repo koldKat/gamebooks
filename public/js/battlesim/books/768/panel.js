@@ -7,6 +7,7 @@ import {getPlayBtnRow} from '../../../play/charsheet.js';
 import {showAlert, showConfirm} from '../../../ui-helpers/confirm.js';
 import {registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS} from '../../../core/util.js';
 import {t} from '../../../i18n.js';
+import {loadingHtml} from '../../../ui-helpers/loading.js';
 
 const ID = definition.stateKey;
 const escape = value => String(value).replace(/[&<>"']/g, char => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[char]));
@@ -31,7 +32,7 @@ export function createDragonRoadPanel({document, t, getRun, getBookId, saveState
   async function loadTables() {
     if (!el('tables').open || tableRequest || shownRun !== getRun() || Number(getBookId()) !== definition.id) return;
     const run = getRun();
-    tableRequest = true; el('table-status').textContent = tk('loadingTables');
+    tableRequest = true; el('table-status').innerHTML = loadingHtml(tk('loadingTables'));
     try {
       const response = await requestReadingAccess();
       if (!response.ok) throw new Error('Reading access unavailable');

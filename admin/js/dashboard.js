@@ -1,3 +1,4 @@
+import { loadingHtml } from '/js/ui-helpers/loading.js';
 // Dashboard statistics, tools, and live resource monitoring.
 
 import { api, fmtBytes, fmtDuration, esc, showAlert, showConfirm, flashSaved } from './core.js';
@@ -245,7 +246,7 @@ async function loadBackups() {
   const totalEl = document.getElementById('backups-total');
   listEl.innerHTML  = '';
   emptyEl.style.display = '';
-  emptyEl.textContent   = 'Loading…';
+  emptyEl.innerHTML     = loadingHtml();
   totalEl.textContent   = '';
   document.getElementById('backups-delete-btn').disabled = true;
   document.getElementById('backups-select-all').textContent = 'Select all';

@@ -1,3 +1,4 @@
+import { loadingHtml } from '../ui-helpers/loading.js';
 import { _isMobile, publicEntryLinks, handlePublicEntryClick } from './helpers.js';
 import { _syncCoverLibraryMembership } from './grid.js';
 import { openCoverActivity, openSeriesActivity } from './activity.js';
@@ -355,7 +356,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
     btn.addEventListener('click', async () => {
       const username = btn.dataset.username;
       document.getElementById('pub-modal-title').innerHTML = escapeHtml(publicName(coversState._hooks.displayFor?.(username) ?? username)) + (coversState._hooks.adminBadge?.(username) ?? '') + (coversState._hooks.authorBadge?.(username) ?? '') + (coversState._hooks.contributorBadge?.(username) ?? '') + (coversState._hooks.moderatorBadge?.(username) ?? '') + (coversState._hooks.squireBadge?.(username) ?? '');
-      document.getElementById('pub-modal-body').innerHTML  = `<p class="pub-loading">${t('covers.loading')}</p>`;
+      document.getElementById('pub-modal-body').innerHTML  = loadingHtml(t('covers.loading'), 'pub-loading');
       backBtn.style.display = '';
       backBtn.onclick = () => renderCoverActivity(bookId, bookName, entries, currentMyRating, { ...bookMeta, avgRating: currentAvg, voteCount: currentCount }, userLoggedIn, userOwnsBook, bookCanRate);
       try {

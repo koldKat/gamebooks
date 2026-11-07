@@ -17,7 +17,7 @@ function setup() {
     document: { getElementById: get },
     window: { dispatchEvent() {} }, CustomEvent: class {}, getToken: () => 'token',
     t: key => key, COIN_SVG: '<svg></svg>', DIAMOND_SVG: '<svg></svg>',
-    initBlackMarket() {},
+    initBlackMarket() {}, updateBlackMarketSnapshot() {}, loadingHtml: label => '<div class="app-loading">'+label+'</div>',
     apiFetch(url, options) { return new Promise(resolve => requests.push({ url, options, resolve })); },
   });
   const source = readFileSync(new URL('../../../public/js/progression/shop.js', import.meta.url), 'utf8')
@@ -42,7 +42,9 @@ test('normal coin button claims a pending lucky coin once and returns to its ina
   assert.equal(h.requests.length, 1, 'repeated clicks cannot duplicate a claim');
   assert.equal(h.requests[0].url, '/api/shop/claim-gc');
   assert.equal(h.requests[0].options.method, 'POST');
-  h.requests[0].resolve({ ok: true, json: async () => ({ pendingBonusGc: false, coinsBalance: 1 }) });
+  h.requests[0].resolve({ ok: true, json: async () => ({ pendingBonusGc: false, coinsBalance: 1,
+    level: 1, xpBoostPurchased: 0, bonusHeartbeatXp: 0, bonusGcChancePurchased: 0,
+    bonusGcMintPurchased: 0, bonusUndos: 0, bonusFastTravels: 0 }) });
   await claim;
   assert.equal(button.disabled, true);
   assert.equal(button.classList.contains('bonus-gc-btn--ready'), false);

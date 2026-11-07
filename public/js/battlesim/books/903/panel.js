@@ -7,6 +7,7 @@ import {getPlayBtnRow} from '../../../play/charsheet.js';
 import {showAlert} from '../../../ui-helpers/confirm.js';
 import {registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS} from '../../../core/util.js';
 import {t} from '../../../i18n.js';
+import {loadingHtml} from '../../../ui-helpers/loading.js';
 
 const ID = definition.stateKey;
 const escape = value => String(value).replace(/[&<>"']/g, char =>
@@ -43,7 +44,7 @@ export function createShadowsPanel({document, t, getRun, getBookId, saveState, s
   async function loadImages() {
     const generation = ++imageGeneration, run = getRun();
     if (!current()) return;
-    el('image-status').textContent = tk('loading');
+    el('image-status').innerHTML = loadingHtml(tk('loading'));
     try {
       const response = await requestReadingAccess();
       if (!response.ok) throw new Error('Reading access unavailable');

@@ -1,3 +1,4 @@
+import { loadingHtml } from '../ui-helpers/loading.js';
 // inbox.js - Inbox thread list, conversation view, and reply UI
 
 import { apiFetch, getUsername } from '../core/state.js';
@@ -108,7 +109,7 @@ export function initInbox(mousedownOnOverlayRef) {
     const controller = new AbortController();
     loadController = controller;
     _showThreadList();
-    list.innerHTML = `<p class="inbox-empty" role="status">${escapeHtml(t('inbox.loading'))}</p>`;
+    list.innerHTML = loadingHtml(t('inbox.loading'), 'inbox-empty');
     overlay.classList.add('active');
     const timeout = setTimeout(() => controller.abort(), 15000);
     try {

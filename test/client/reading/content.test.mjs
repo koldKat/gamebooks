@@ -621,6 +621,97 @@ test('source sheets preserve independent native masks and bounded PDF image tran
   assert.match(style, /transform-origin:0 0;transform:translate\(40%,0%\) matrix\(0.6,/);
 });
 
+test('original PDF opacity and a separate mask apply once across adjoining native bands', () => {
+  const mask = '/api/books/1497/reading-images/' + 'b'.repeat(64) + '.png';
+  const sheet = originalSheet({ 'data-source-background': 'transparent', 'data-source-opacity': '.417', 'data-source-mask': mask });
+  sheet.childNodes.push(source('IMG', [], {
+    src: '/api/books/1497/reading-images/' + 'c'.repeat(64) + '.png', 'data-source-box': '20,1200,650,1400',
+  }));
+  const { mount, document } = setup([sheet]);
+  assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), true);
+  const sheetResult = mount.children[0];
+  assert.doesNotMatch(sheetResult.attrs.style, /opacity:|mask-image:/);
+  const result = sheetResult.children[0];
+  assert.match(result.attrs.style, /opacity:0\.417/);
+  assert.ok(result.attrs.style.includes(`mask-image:url("${mask}")`));
+  assert.match(result.attrs.style, /mask-mode:luminance;mask-size:100% 100%/);
+  for (const child of result.children.filter(n => n.tag === 'img')) {
+    assert.doesNotMatch(child.attrs.style, /opacity:|mask-image:/);
+  }
+  assert.equal(result.children[0].src, sheet.childNodes[0].getAttribute('src'));
+  assert.equal(result.children[2].src, sheet.childNodes[2].getAttribute('src'));
+});
+
+test('sheet transparency rejects invalid opacity and masks outside this book', () => {
+  for (const attrs of [
+    ...['-0.1', '1.01', 'Infinity', 'NaN', '.5;position:fixed', ''].map(value => ({ 'data-source-opacity': value })),
+    { 'data-source-mask': 'https://example.com/mask.png' },
+    { 'data-source-mask': '/api/books/1496/reading-images/' + 'b'.repeat(64) + '.png' },
+    { 'data-source-mask': '/api/books/1497/reading-images/' + 'b'.repeat(64) + '.png?extra=1' },
+  ]) {
+    const { mount, document } = setup([originalSheet(attrs)]);
+    assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+  for (const value of ['0', '1']) {
+    const { mount, document } = setup([originalSheet({ 'data-source-opacity': value })]);
+    assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), true);
+    assert.match(mount.children[0].attrs.style, /background:#fff/);
+    assert.doesNotMatch(mount.children[0].attrs.style, /opacity:/);
+    assert.ok(mount.children[0].children[0].attrs.style.includes(`opacity:${value}`));
+  }
+});
+
+test('a bounded original image group retains its mask and opacity beneath page lettering', () => {
+  const mask = '/api/books/1497/reading-images/' + 'b'.repeat(64) + '.png';
+  const group = originalSheet({ 'data-source-box': '100,200,700,1200', 'data-source-opacity': '.5', 'data-source-mask': mask });
+  const sheet = originalSheet();
+  sheet.childNodes.splice(1, 0, group);
+  const { mount, document } = setup([sheet]);
+  assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), true);
+  const result = mount.children[0];
+  assert.deepEqual(result.children.map(n => n.tag), ['img', 'figure', 'p']);
+  assert.match(result.children[1].attrs.style, /position:absolute;left:12\.5%;top:14\.2857/);
+  assert.match(result.children[1].attrs.style, /width:75%;/);
+  assert.match(result.children[1].children[0].attrs.style, /opacity:0\.5;mask-image:/);
+});
+
+test('story mounting handles nested original image groups only through their parent sheet', () => {
+  const sheet = originalSheet();
+  const group = originalSheet({ 'data-source-box': '0,0,800,1400', 'data-source-opacity': '.5' });
+  sheet.childNodes.push(group);
+  group.parentElement = { closest: () => sheet };
+  group.replaceWith = () => { throw new Error('Nested group mounted twice'); };
+  let result;
+  sheet.replaceWith = replacement => { result = replacement; };
+  const { document } = setup([]);
+  mountReadingSourceSheets({ ownerDocument: document, querySelectorAll: () => [sheet, group] }, 1497);
+  assert.equal(result.children[2].tag, 'figure');
+  assert.match(result.children[2].children[0].attrs.style, /opacity:0\.5/);
+});
+
+test('original image groups reject escaping bounds, unsafe attributes and deeper nesting', () => {
+  for (const attrs of [
+    { 'data-source-box': '0,0,801,1400' },
+    { 'data-source-box': '0,0,800,1400', onclick: 'bad()' },
+    { 'data-source-box': '0,0,800,1400', style: 'position:fixed' },
+    { 'data-source-box': '0,0,800,1400', 'data-source-mask': 'https://example.com/mask.png' },
+  ]) {
+    const sheet = originalSheet();
+    sheet.childNodes.push(originalSheet(attrs));
+    const { mount, document } = setup([sheet]);
+    assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+  const sheet = originalSheet();
+  const group = originalSheet({ 'data-source-box': '0,0,800,1400' });
+  group.childNodes.push(originalSheet({ 'data-source-box': '0,0,800,1400' }));
+  sheet.childNodes.push(group);
+  const { mount, document } = setup([sheet]);
+  assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), false);
+  assert.equal(mount.children.length, 0);
+});
+
 test('source sheets reject external masks and transforms that escape their image bounds', () => {
   for (const attrs of [
     { 'data-source-mask': 'https://example.com/mask.png' },

@@ -1,3 +1,4 @@
+import { loadingHtml } from '../ui-helpers/loading.js';
 // Record visible companions and present the account's animated collection.
 import {apiFetch,getToken} from '../core/state.js';
 import {cursorDesigns} from './cursor-designs.js';
@@ -86,7 +87,7 @@ export async function openCollectibles(){
  for(const id of fresh)displayedNew.add(id);
  fresh.clear();saveFresh();
  const sequence=++request,body=dialog.querySelector('.collectibles-body');
- stopPreviews?.();stopPreviews=null;body.textContent='Loading…';
+ stopPreviews?.();stopPreviews=null;body.innerHTML=loadingHtml();
  try{
   const response=await apiFetch('/api/collectibles');if(!response.ok)throw Error();
   const data=await response.json();

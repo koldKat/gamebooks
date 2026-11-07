@@ -13,6 +13,7 @@ function setup() {
   };
   const context=createContext({document:{getElementById:get,addEventListener(){}},getToken:()=>token,
     COIN_SVG:'<svg class="coin-icon"></svg>',RUBY_SVG:'<svg class="ruby-icon"></svg>',DIAMOND_SVG:'<svg class="diamond-icon"></svg>',
+    loadingHtml: label => '<div class="app-loading">'+(label || 'Loading…')+'</div>',
     crypto:{randomUUID:()=>`exchange-request-${++sequence}`},
     showConfirm(message,confirm,options){const dialog={message,confirm,options,closed:false};confirmations.push(dialog);return()=>{dialog.closed=true;};},
     apiFetch(url,options){return new Promise((resolve,reject)=>requests.push({url,options,resolve,reject}));},

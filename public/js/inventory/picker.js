@@ -1,3 +1,4 @@
+import { loadingHtml } from '../ui-helpers/loading.js';
 // picker.js - Internal inventory module; use ../inventory.js externally.
 
 import { inventoryRuntime } from './runtime.js';
@@ -46,7 +47,7 @@ export async function _openPicker() {
   const search  = document.getElementById('inv-search');
   const grid    = document.getElementById('inv-picker-grid');
   if (search) search.value = '';
-  if (grid) grid.innerHTML = `<div class="inv-picker-empty">${t('inv.picker_loading')}</div>`;
+  if (grid) grid.innerHTML = loadingHtml(t('inv.picker_loading'), 'inv-picker-empty');
   overlay.classList.add('active');
   search?.focus();
   try {

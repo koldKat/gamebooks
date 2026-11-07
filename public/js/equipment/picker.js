@@ -1,3 +1,4 @@
+import { loadingHtml } from '../ui-helpers/loading.js';
 // picker.js - Internal equipment module; use ../equipment.js externally.
 
 import { getInventorySlots } from '../inventory.js';
@@ -25,7 +26,7 @@ export async function _openPicker(slotKey) {
   const grid    = document.getElementById('eq-picker-grid');
   document.getElementById('eq-picker-title').textContent = t('eq.picker_title', { slot: slot.label() });
   if (search) search.value = '';
-  if (grid) grid.innerHTML = `<div class="inv-picker-empty">${t('inv.picker_loading')}</div>`;
+  if (grid) grid.innerHTML = loadingHtml(t('inv.picker_loading'), 'inv-picker-empty');
   overlay.classList.add('active');
   search?.focus();
 

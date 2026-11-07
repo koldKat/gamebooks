@@ -1,3 +1,4 @@
+import { loadingHtml } from '../ui-helpers/loading.js';
 import { ensureGraphLibrary } from '../core/graph-library.js';
 // Public profiles, runs, and series journeys.
 
@@ -49,7 +50,7 @@ export async function openPublicProfile(username) {
   openPublicModal();
   document.getElementById('pub-modal-title').innerHTML = escapeHtml(publicName(_hooks.displayFor?.(username) ?? username)) + (_hooks.adminBadge?.(username) ?? '') + (_hooks.authorBadge?.(username) ?? '') + (_hooks.contributorBadge?.(username) ?? '') + (_hooks.moderatorBadge?.(username) ?? '') + (_hooks.squireBadge?.(username) ?? '');
   document.getElementById('pub-back-btn').style.display = 'none';
-  document.getElementById('pub-modal-body').innerHTML = `<p class="pub-loading">${t('pub.loading')}</p>`;
+  document.getElementById('pub-modal-body').innerHTML = loadingHtml(t('pub.loading'), 'pub-loading');
   try {
     const res = await _hooks.publicFetch(`/api/public/user/${encodeURIComponent(username)}`);
     if (!res.ok) throw new Error();
@@ -178,12 +179,14 @@ export async function openPublicRun(bookId, userId, runIndex, fromProfile) {
   const body = document.getElementById('pub-modal-body');
   body.style.padding  = '';
   body.style.overflow = '';
-  body.innerHTML = `<p class="pub-loading">${t('pub.loading')}</p>`;
+  body.innerHTML = loadingHtml(t('pub.loading'), 'pub-loading');
   try {
-    const res = await _hooks.publicFetch(`/api/public/book/${bookId}/user/${userId}/run/${runIndex}`);
+    const [res] = await Promise.all([
+      _hooks.publicFetch(`/api/public/book/${bookId}/user/${userId}/run/${runIndex}`),
+      ensureGraphLibrary(),
+    ]);
     if (!res.ok) throw new Error();
     const data = await res.json();
-    await ensureGraphLibrary();
     renderPublicRun(data);
   } catch {
     body.innerHTML = `<p class="pub-error">${t('pub.run_unavailable')}</p>`;
@@ -205,12 +208,14 @@ export async function openPublicSeriesRun(seriesId, userId, runIndex, fromProfil
   const body = document.getElementById('pub-modal-body');
   body.style.padding  = '';
   body.style.overflow = '';
-  body.innerHTML = `<p class="pub-loading">${t('pub.loading')}</p>`;
+  body.innerHTML = loadingHtml(t('pub.loading'), 'pub-loading');
   try {
-    const res = await _hooks.publicFetch(`/api/public/series/${seriesId}/user/${userId}/run/${runIndex}`);
+    const [res] = await Promise.all([
+      _hooks.publicFetch(`/api/public/series/${seriesId}/user/${userId}/run/${runIndex}`),
+      ensureGraphLibrary(),
+    ]);
     if (!res.ok) throw new Error();
     const data = await res.json();
-    await ensureGraphLibrary();
     renderPublicRun(data);
   } catch {
     body.innerHTML = `<p class="pub-error">${t('pub.run_unavailable')}</p>`;

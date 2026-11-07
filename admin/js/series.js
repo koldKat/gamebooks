@@ -1,3 +1,4 @@
+import { loadingHtml } from '/js/ui-helpers/loading.js';
 // Series editing and deletion; deletion unlinks books.
 
 import {
@@ -41,7 +42,7 @@ export function renderSeriesTable(series) {
 
 export async function loadAdminSeries() {
   const tbody = document.getElementById('series-body');
-  tbody.innerHTML = '<tr><td colspan="7" style="color:#6b7280;padding:1rem">Loading…</td></tr>';
+  tbody.innerHTML = `<tr><td colspan="7">${loadingHtml()}</td></tr>`;
   try {
     const series = await api('GET', '/api/admin/series/all');
     document.getElementById('series-meta').textContent = `${series.length} series`;

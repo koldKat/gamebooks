@@ -1,3 +1,4 @@
+import { loadingHtml } from '../ui-helpers/loading.js';
 // Gold shop purchases and coin display.
 
 import { apiFetch, getToken } from '../core/state.js';
@@ -5,7 +6,7 @@ import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 import { COIN_SVG } from '../ui-helpers/coin-icon.js';
 import { DIAMOND_SVG } from './diamonds.js';
-import { initBlackMarket } from './exchange-shop.js';
+import { initBlackMarket, updateBlackMarketSnapshot } from './exchange-shop.js';
 export { COIN_SVG };
 
 // Callbacks wired in by main.js at boot
@@ -102,6 +103,7 @@ let _shopSnapshotRevision = 0;
 
 // Reuse the account's existing reward snapshot when opening the shop.
 export function updateShopSnapshot(data) {
+  updateBlackMarketSnapshot(data);
   if (!data) {
     ++_shopSnapshotRevision;
     _shopData = null; _shopToken = null;
@@ -293,7 +295,7 @@ export async function openShopModal() {
     return refreshCoinsDisplay();
   }
   updateShopSnapshot(null);
-  document.getElementById('shop-items').innerHTML = `<div class="shop-loading">${t('shop.loading')}</div>`;
+  document.getElementById('shop-items').innerHTML = loadingHtml(t('shop.loading'), 'shop-loading');
   try {
     const res = await apiFetch('/api/profile');
     if (!res.ok) throw new Error();

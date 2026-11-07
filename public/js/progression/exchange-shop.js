@@ -3,6 +3,7 @@ import { COIN_SVG } from '../ui-helpers/coin-icon.js';
 import { DIAMOND_SVG } from './diamonds.js';
 import { RUBY_SVG } from './rubies.js';
 import { showConfirm } from '../ui-helpers/confirm.js';
+import { loadingHtml } from '../ui-helpers/loading.js';
 
 const currencies = {
   diamond: { plural: 'diamonds', label: 'Rubies', icon: DIAMOND_SVG, balance: 'diamondsBalance', sold: 'diamondsExchanged', bought: 'diamondsBought' },
@@ -10,6 +11,13 @@ const currencies = {
 };
 const directions = ['sell', 'buy'];
 let _profile = null, _generation = 0, _confirmation = 0, _busy = false, _hooks = {}, _currency = 'diamond', _closeConfirmation = null;
+let _snapshot = null, _snapshotToken = null, _snapshotRevision = 0;
+
+export function updateBlackMarketSnapshot(data) {
+  _snapshot = data;
+  _snapshotToken = data ? getToken() : null;
+  ++_snapshotRevision;
+}
 // Keep each interrupted trade's request ID across direction and currency changes.
 const _pending = new Map();
 const el = name => document.getElementById('exchange-shop-' + name);
@@ -89,19 +97,32 @@ export async function openBlackMarket(currency = 'diamond') {
   if (!token || _busy || !currencies[currency]) return;
   const generation = ++_generation;
   closeConfirmation();
-  _currency = currency; _profile = null; _pending.clear();
+  _currency = currency;
+  _profile = _snapshotToken === token && Number.isSafeInteger(_snapshot?.[current().balance]) ? _snapshot : null;
+  _pending.clear();
   el('modal-overlay').classList.add('active');
-  resetAmounts(); message('Loading…'); render();
+  resetAmounts(); message(''); render();
+  if (!_profile) el('message').innerHTML = loadingHtml();
+  const revision = _snapshotRevision;
   try {
     const response = await apiFetch('/api/profile');
     if (!response.ok) throw Error('Unable to load Black Market.');
-    const data = await response.json();
+    const responseData = await response.json();
     if (getToken() !== token || generation !== _generation) return;
+    if (_busy) return;
+    const data = revision === _snapshotRevision ? responseData : (_snapshotToken === token ? _snapshot : null);
+    if (!data) return;
     if (!Number.isSafeInteger(data[current().balance])) { closeBlackMarket(); return; }
-    _profile = data; _hooks.onRewardSnapshot?.(data);
-    resetAmounts(); message(''); render();
+    const wasReady = !!_profile;
+    const unavailable = directions.filter(direction => maximumFor(direction) < 1 && !field(direction, 'amount').value);
+    _profile = data; updateBlackMarketSnapshot(data); _hooks.onRewardSnapshot?.(data);
+    if (!wasReady) resetAmounts();
+    else for (const direction of unavailable) {
+      if (maximumFor(direction) > 0) field(direction, 'amount').value = '1';
+    }
+    message(''); render();
     const focus = maximumFor('sell') > 0 ? 'sell' : maximumFor('buy') > 0 ? 'buy' : null;
-    if (focus) field(focus, 'amount').focus();
+    if (!wasReady && focus) field(focus, 'amount').focus();
   } catch (_) {
     if (getToken() === token && generation === _generation) message('Unable to load Black Market.', true);
   }
