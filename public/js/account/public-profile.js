@@ -240,11 +240,11 @@ function _pubLegendHtml(isOpenWorld) {
     row(dot('#c2410c', '#9a3412'),           t('pub.legend.battle_ended')),
     ...(isOpenWorld ? [row(dia('#0e7490', '#2dd4bf'), t('pub.legend.portal'))] : []),
   ];
-  return `<details class="pub-run-legend pub-run-panel" open><summary>${t('pub.legend_title')}</summary><div class="pub-run-panel-content">${items.join('')}</div></details>`;
+  return `<details class="pub-run-legend pub-run-panel"><summary>${t('pub.legend_title')}</summary><div class="pub-run-panel-content">${items.join('')}</div></details>`;
 }
 
 function _pubRunPathHtml(pathNodes, className) {
-  return pathNodes ? `<details class="${className} pub-run-panel" open><summary>${t('pub.run_path_title')}</summary><div class="pub-run-panel-content"><div class="trail">${pathNodes}</div></div></details>` : '';
+  return pathNodes ? `<details class="${className} pub-run-panel"><summary>${t('pub.run_path_title')}</summary><div class="pub-run-panel-content"><div class="trail">${pathNodes}</div></div></details>` : '';
 }
 
 function _wirePathHover(trailEl, net) {
