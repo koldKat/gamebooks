@@ -97,8 +97,13 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
         if (sectionLinks) target.setAttribute('href', attr.value);
         continue;
       }
-      if (node.tagName === 'TABLE' && attr.name === 'class' && ['reading-encounter-table', 'reading-reference-table', 'reading-wide-table', 'reading-source-prices', 'reading-word-list', 'reading-word-list reading-word-list-serif', 'reading-spell-list'].includes(attr.value)) {
+      if (node.tagName === 'TABLE' && attr.name === 'class' && ['reading-encounter-table', 'reading-reference-table', 'reading-wide-table', 'reading-source-prices', 'reading-word-list', 'reading-word-list reading-word-list-serif', 'reading-spell-list', 'reading-time-sheet'].includes(attr.value)) {
         target.setAttribute('class', attr.value);
+        continue;
+      }
+      if (node.tagName === 'TD' && ((attr.name === 'colspan' && /^[1-8]$/.test(attr.value))
+          || (attr.name === 'class' && attr.value === 'reading-time-gap'))) {
+        target.setAttribute(attr.name, attr.value);
         continue;
       }
       if (node.tagName === 'IMG' && attr.name === 'class'

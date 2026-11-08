@@ -177,7 +177,7 @@ export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrSta
     `<div class="book-actions">` +
       (!b.is_container
         ? (_isMobile() && !b.hasLiveReading
-            ? `<span data-tooltip="${escapeHtml(t('mobile.no_reading_tooltip'))}" style="display:inline-flex">` +
+            ? `<span class="book-open-disabled" data-tooltip="${escapeHtml(t('mobile.no_reading_tooltip'))}">` +
                 `<button class="book-open-btn primary-btn" disabled${commonAttrs} data-creator="${isCreator ? '1' : '0'}">${t('books.open')}</button>` +
               `</span>`
             : `<button class="book-open-btn primary-btn"${commonAttrs} data-creator="${isCreator ? '1' : '0'}">${t('books.open')}</button>`)

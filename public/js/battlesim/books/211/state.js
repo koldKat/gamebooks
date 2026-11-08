@@ -14,6 +14,7 @@ function _data() {
       missileDamage: DEFAULT_MISSILE_DAMAGE,
       roundsPerson: 0,
       roundsShip: 0,
+      shipCombatRulesVersion: 2,
       enemy: { name: '', skill: 0, stamina: 0, staminaMax: 0 },
       enemyShip: { name: '', weaponsStrength: 0, shields: 0, shieldsMax: 0 },
       rolled: false,

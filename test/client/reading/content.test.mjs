@@ -36,6 +36,29 @@ test('plain text retains legacy rendering without heading or sentence guessing',
   }
 });
 
+test('printed time sheets preserve bounded empty spacers and manual checkpoint links', () => {
+  const nodes = [source('TABLE', [source('TBODY', [source('TR', [
+    source('TD', [], { class: 'reading-time-gap', colspan: '3' }),
+    source('TD', [source('A', [textNode('326')], { href: '#section-326' })]),
+  ])])], { class: 'reading-time-sheet' })];
+  const { mount, document } = setup(nodes);
+  assert.equal(renderReadingMatter(mount, 228, '<table></table>', document), true);
+  const row = mount.children[0].children[0].children[0];
+  assert.deepEqual(row.children[0].attrs, { class: 'reading-time-gap', colspan: '3' });
+  assert.equal(row.children[1].children[0].attrs.href, '#section-326');
+});
+
+test('time-sheet cell attributes reject invalid spans and arbitrary markup', () => {
+  for (const attrs of [{ colspan: '0' }, { colspan: '9' }, { colspan: '-1' },
+    { colspan: '2.5' }, { colspan: '2 extra' }, { class: 'hidden' },
+    { class: 'reading-time-gap', onclick: 'bad()' }, { style: 'display:none' }]) {
+    const { mount, document } = setup([source('TABLE', [source('TR', [source('TD', [], attrs)])],
+      { class: 'reading-time-sheet' })]);
+    assert.equal(renderReadingMatter(mount, 228, '<table></table>', document), false);
+    assert.equal(mount.children.length, 0);
+  }
+});
+
 test('named section links remain inert fragments and can be disabled in access previews', () => {
   for (const sectionLinks of [true, false]) {
     const { mount, document } = setup([source('P', [source('A', [textNode('Prologue')], { href: '#section-prologue' })])]);

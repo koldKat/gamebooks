@@ -15,6 +15,18 @@
   will-change: transform, opacity;
 }
 
+@media (max-width: 768px) {
+  #reward-float-layer,
+  #app-reward-float-layer,
+  .collectibles-reward-layer {
+    left: max(0.75rem, env(safe-area-inset-left)) !important;
+    right: auto !important;
+    transform: none !important;
+    align-items: flex-start !important;
+  }
+  #app-reward-float-layer { bottom: 6rem !important; }
+}
+
 .reward-float {
   display: inline-flex;
   align-items: center;

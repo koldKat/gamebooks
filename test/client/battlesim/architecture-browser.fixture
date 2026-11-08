@@ -2455,6 +2455,7 @@ for(const id of BOOK_IDS){
     Object.assign(game.ship,{weaponsStrength:8,weaponsStrengthInitial:12,shields:3,shieldsInitial:6,smartMissiles:1,extension:{kept:true}});
     Object.assign(game.enemy,{name:'Saved rival',skill:8,stamina:6,staminaMax:10,extension:{kept:true}});
     Object.assign(game.enemyShip,{name:'Saved ship',weaponsStrength:9,shields:6,shieldsMax:6,extension:{kept:true}});
+    delete game.shipCombatRulesVersion;delete game.ship.destroyed;delete game.enemyShip.destroyed;
     const saved=JSON.stringify(game);module.render();module.render();check(JSON.stringify(game)===saved,'Kether saved person and ship pools, limited missiles and money render unchanged');
     const random=Math.random;let rolls=0;Math.random=()=>{rolls++;return 0;};
     const mode=value=>{el('mode').value=value;el('mode').dispatchEvent(new Event('change',{bubbles:true}));};
@@ -2473,6 +2474,19 @@ for(const id of BOOK_IDS){
       el('reset').click();check(game.ship.shields===6&&game.enemyShip.shields===6&&game.roundsShip===0&&game.ship.smartMissiles===0&&game.player.stamina===23&&game.roundsPerson===7&&game.player.energyTabletsLeft===0,'Kether ship reset uses initial shields rather than initial weapon strength and preserves consumed supplies');
       mode('handtohand');check(el('round').disabled,'Kether ship reset does not revive defeated person opponent');el('reset').click();module.render();module.render();
       check(game.player.stamina===24&&game.enemy.stamina===10&&game.roundsPerson===0&&game.ship.shields===6&&game.ship.smartMissiles===0&&game.missileDamage===2&&game.player.money===321&&game.player.energyTabletsLeft===0&&game.player.luck===7&&game.history.length===1&&game.extension.kept&&game.player.extension.kept&&game.enemy.extension.kept&&game.ship.extension.kept&&game.enemyShip.extension.kept,'Kether explicit person reset preserves ship pool, missile exception, history and all actor extensions');
+      mode('ship');el('reset').click();
+      Object.assign(game.ship,{weaponsStrength:10,shields:3});Object.assign(game.enemyShip,{weaponsStrength:9,shields:1});module.render();rolls=0;
+      el('round').click();
+      check(game.shipCombatRulesVersion===2&&game.enemyShip.shields===0&&!game.enemyShip.destroyed&&game.ship.shields===2&&game.history.length===1&&!el('round').disabled,'Kether new fight survives zero shields and returns fire');
+      el('round').click();
+      check(game.enemyShip.destroyed&&game.ship.shields===2&&game.history.length===2&&rolls===6&&el('round').disabled,'Kether next hit destroys enemy without retaliation');
+      el('reset').click();game.ship.shields=0;game.ship.weaponsStrength=2;game.enemyShip.shields=2;module.render();
+      check(!el('round').disabled,'Kether player may continue fighting without shields');el('round').click();
+      check(game.ship.destroyed&&game.ship.shields===0&&el('round').disabled&&game.history.length===3,'Kether successful hit destroys unshielded player');
+      el('reset').click();game.enemyShip.shields=game.enemyShip.shieldsMax=1000;game.ship.smartMissiles=1;game.missileDamage=99;module.render();el('missile').click();
+      check(game.enemyShip.destroyed&&game.enemyShip.shields===0&&game.ship.smartMissiles===0&&game.history.length===4,'Kether ordinary Smart Missile destroys any shield strength');
+      el('reset').click();game.enemyShip.shields=game.enemyShip.shieldsMax=0;game.ship.smartMissiles=1;module.render();
+      check(el('round').disabled&&el('missile').disabled,'Kether empty enemy setup cannot start combat');
     }finally{Math.random=random;}
   }
   if(id===212){

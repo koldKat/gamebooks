@@ -125,6 +125,10 @@ a.book-modal-parent-btn, a.book-modal-series-btn, a.book-modal-child-row { text-
   max-height: min(32vh, 240px);
   overflow-y: auto;
 }
+.pub-run-path > .pub-run-panel-content,
+.pub-seg-path > .pub-run-panel-content {
+  max-height: 50vh;
+}
 .pub-run-panel:not([open]) > .pub-run-panel-content { display: none; }
 .pub-run-legend .pub-run-panel-content {
   display: flex;

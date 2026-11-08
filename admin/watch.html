@@ -34,6 +34,10 @@
     font-size: 0.75rem; color: #e5e7eb; line-height: 1.65; text-align: right;
     text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.6);
   }
+  #watch-cs-display {
+    max-width: min(var(--play-btn-row-w, 220px), calc(100vw - 2rem));
+    overflow-wrap: anywhere;
+  }
   .cs-line  { display: block; }
   .cs-label { color: #9ca3af; }
   .inv-line { display: flex; align-items: center; justify-content: flex-end; gap: 0.3rem; }

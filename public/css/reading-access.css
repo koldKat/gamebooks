@@ -132,6 +132,18 @@
 .reading-reference-table :is(th, td):nth-child(2) { width: 50%; }
 .reading-reference-table :is(th, td):nth-child(3) { width: 25%; }
 .reading-reference-table :is(th, td):nth-child(4) { width: 10%; }
+.liveread-body table.reading-time-sheet,
+.m-top table.reading-time-sheet,
+.reading-frontmatter--structured table.reading-time-sheet {
+  width: 100%; max-width: 22rem; min-width: 0; margin: 1em auto;
+  table-layout: fixed; border-collapse: collapse; background: transparent;
+}
+.reading-time-sheet td {
+  height: 2.25em; padding: 0; border: 1px solid currentColor;
+  text-align: center; vertical-align: middle; background: transparent;
+}
+.reading-time-sheet tr:first-child td { width: 12.5%; }
+.reading-time-sheet td.reading-time-gap { border: 0; }
 .liveread-body table.reading-wide-table,
 .m-top table.reading-wide-table {
   min-width: 40rem;

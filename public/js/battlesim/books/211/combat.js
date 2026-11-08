@@ -19,6 +19,23 @@ function _selfMaxHp(d, side) {
   return d.mode === 'ship' ? d.ship.shieldsInitial : d.player.staminaInitial;
 }
 
+function _isDefeated(d, actor, hp) {
+  return d.mode === 'ship' && d.shipCombatRulesVersion === 2
+    ? actor.destroyed === true : actor[hp] <= 0;
+}
+
+function _startShipFight(d) {
+  d.shipCombatRulesVersion = 2;
+  d.ship.destroyed = false;
+  d.enemyShip.destroyed = false;
+  d.roundsShip = 0;
+}
+
+function _damageShip(d, ship, damage, instant = false) {
+  if (d.shipCombatRulesVersion === 2 && (instant || ship.shields <= 0)) ship.destroyed = true;
+  ship.shields = Math.max(0, ship.shields - damage);
+}
+
 function _foeName(d) {
   const { t } = getContext();
 
@@ -36,7 +53,8 @@ function _runRound() {
   const d = _data();
   if (!d || _notReady(d)) return;
   const side = _activeSide(d);
-  if (side.self[side.selfHp] <= 0 || side.foe[side.foeHp] <= 0) return;
+  if (d.mode === 'ship' && side.foe.shieldsMax <= 0) return;
+  if (_isDefeated(d, side.self, side.selfHp) || _isDefeated(d, side.foe, side.foeHp)) return;
   d[side.roundsKey]++;
 
   if (d.mode === 'handtohand') {
@@ -59,15 +77,17 @@ function _runRound() {
     const atkLabel = side.selfAtk === 'weaponsStrength' ? t('battlesim211.ui.weapons_strength') : t('battlesim211.ui.skill');
     const selfRoll = _roll2d6();
     if (selfRoll < side.self[side.selfAtk]) {
-      side.foe[side.foeHp] = Math.max(0, side.foe[side.foeHp] - side.dmg);
+      if (d.mode === 'ship') _damageShip(d, side.foe, side.dmg);
+      else side.foe[side.foeHp] = Math.max(0, side.foe[side.foeHp] - side.dmg);
       _appendLog(d, t('battlesim211.log.self_roll_hit', { round: d[side.roundsKey], roll: selfRoll, atkLabel, atk: side.self[side.selfAtk], enemy: _foeNameSafe(d), label, hp: side.foe[side.foeHp], hpMax: side.foe[side.foeHpMax] }));
     } else {
       _appendLog(d, t('battlesim211.log.self_roll_miss', { round: d[side.roundsKey], roll: selfRoll, atkLabel, atk: side.self[side.selfAtk] }));
     }
-    if (side.foe[side.foeHp] > 0) {
+    if (!_isDefeated(d, side.foe, side.foeHp)) {
       const foeRoll = _roll2d6();
       if (foeRoll < side.foe[side.foeAtk]) {
-        side.self[side.selfHp] = Math.max(0, side.self[side.selfHp] - side.dmg);
+        if (d.mode === 'ship') _damageShip(d, side.self, side.dmg);
+        else side.self[side.selfHp] = Math.max(0, side.self[side.selfHp] - side.dmg);
         _appendLog(d, t('battlesim211.log.foe_roll_hit', { enemy: _foeNameSafe(d), roll: foeRoll, atkLabel, atk: side.foe[side.foeAtk], label, hp: side.self[side.selfHp], hpMax: _selfMaxHp(d, side) }));
       } else {
         _appendLog(d, t('battlesim211.log.foe_roll_miss', { enemy: _foeNameSafe(d), roll: foeRoll, atkLabel, atk: side.foe[side.foeAtk] }));
@@ -83,12 +103,12 @@ function _runRound() {
 function _checkOutcome(d, side) {
   const { SVG_SKULL, SVG_TROPHY, _appendLog, _foeNameSafe, _recordOutcome, t } = getContext();
 
-  if (side.foe[side.foeHp] <= 0) {
+  if (_isDefeated(d, side.foe, side.foeHp)) {
     _appendLog(d, d.mode === 'ship'
       ? t('battlesim211.log.defeated_destroyed', { trophy: SVG_TROPHY, enemy: _foeNameSafe(d) })
       : t('battlesim211.log.defeated_generic',   { trophy: SVG_TROPHY, enemy: _foeNameSafe(d) }));
     _recordOutcome(d, side, 'win');
-  } else if (side.self[side.selfHp] <= 0) {
+  } else if (_isDefeated(d, side.self, side.selfHp)) {
     _appendLog(d, d.mode === 'ship'
       ? t('battlesim211.log.dead_ship',   { skull: SVG_SKULL })
       : t('battlesim211.log.dead_person', { skull: SVG_SKULL }));
@@ -97,15 +117,17 @@ function _checkOutcome(d, side) {
 }
 
 function _fireMissile() {
-  const { _activeSide, _appendLog, _checkOutcome, _data, _foeNameSafe, _notReady, _renderAll, saveState, t } = getContext();
+  const { DEFAULT_MISSILE_DAMAGE, _activeSide, _appendLog, _checkOutcome, _data, _foeNameSafe, _notReady, _renderAll, saveState, t } = getContext();
 
   const d = _data();
   if (!d || _notReady(d) || d.mode !== 'ship' || d.ship.smartMissiles <= 0) return;
-  if (d.enemyShip.shields <= 0 || d.ship.shields <= 0) return;
+  if (d.enemyShip.shieldsMax <= 0) return;
+  if (_isDefeated(d, d.enemyShip, 'shields') || _isDefeated(d, d.ship, 'shields')) return;
   d.ship.smartMissiles--;
   d.roundsShip++;
   const dmg = Math.max(1, d.missileDamage);
-  d.enemyShip.shields = Math.max(0, d.enemyShip.shields - dmg);
+  _damageShip(d, d.enemyShip, dmg, dmg === DEFAULT_MISSILE_DAMAGE);
+  if (d.shipCombatRulesVersion === 2 && d.enemyShip.destroyed) d.enemyShip.shields = 0;
   _appendLog(d, t('battlesim211.log.missile', { dmg, enemy: _foeNameSafe(d), shields: d.enemyShip.shields, shieldsMax: d.enemyShip.shieldsMax, left: d.ship.smartMissiles }));
   _checkOutcome(d, _activeSide(d));
   saveState();
@@ -121,6 +143,7 @@ function _resetBattle() {
   side.foe[side.foeHp] = side.foe[side.foeHpMax];
   side.self[side.selfHp] = _selfMaxHp(d, side);
   d[side.roundsKey] = 0;
+  if (d.mode === 'ship') _startShipFight(d);
   if (d.log.length) _appendLog(d, t('battlesim211.log.reset_sep'));
   _appendLog(d, t('battlesim211.log.reset'));
   saveState();
@@ -128,5 +151,5 @@ function _resetBattle() {
 }
 
 // END EXTRACTED RULES
-  return { _roll2d6, _roll1d6, _activeSide, _selfMaxHp, _foeName, _foeNameSafe, _runRound, _checkOutcome, _fireMissile, _resetBattle };
+  return { _roll2d6, _roll1d6, _activeSide, _selfMaxHp, _isDefeated, _startShipFight, _foeName, _foeNameSafe, _runRound, _checkOutcome, _fireMissile, _resetBattle };
 }

@@ -6,7 +6,7 @@ import { createEffects } from './effects.js';
 // BEGIN SIMULATOR WIRING
 const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, DEFAULT_MISSILE_DAMAGE, ENERGY_TABLET_RESTORE, MAX_ENERGY_TABLETS, MAX_SMART_MISSILES, MODES, SVG_SKULL, SVG_TROPHY, _activeSide, _appendLog, _checkOutcome, _data, _enemyList, _fireMissile, _foeName, _foeNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _roll1d6, _roll2d6, _runRound, _selfMaxHp, _setupEnemyAutocomplete, _useEnergyTablet, apiFetch, closeSim211, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim211, openSim211, registerPanelShortcut, renderSim211, saveState, setSim211Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
-const { _roll2d6, _roll1d6, _activeSide, _selfMaxHp, _foeName, _foeNameSafe, _runRound, _checkOutcome, _fireMissile, _resetBattle } = createCombat(simulatorContext);
+const { _roll2d6, _roll1d6, _activeSide, _selfMaxHp, _isDefeated, _startShipFight, _foeName, _foeNameSafe, _runRound, _checkOutcome, _fireMissile, _resetBattle } = createCombat(simulatorContext);
 const { _useEnergyTablet } = createEffects(simulatorContext);
 // END SIMULATOR WIRING
 // Battle Simulator (The Rings of Kether, book 211)
@@ -46,11 +46,13 @@ function _renderStatus() {
   const notReady = _notReady(d);
   const side = _activeSide(d);
   const hasFoe = side.foe[side.foeHpMax] > 0;
+  const selfDefeated = _isDefeated(d, side.self, side.selfHp);
+  const foeDefeated = hasFoe && _isDefeated(d, side.foe, side.foeHp);
   if (notReady)                                el.innerHTML = t('battlesim211.status.not_ready');
-  else if (side.self[side.selfHp] <= 0)         el.innerHTML = t('battlesim211.status.fallen', { skull: SVG_SKULL });
-  else if (hasFoe && side.foe[side.foeHp] <= 0) el.innerHTML = t('battlesim211.status.victory', { trophy: SVG_TROPHY });
+  else if (selfDefeated)                       el.innerHTML = t('battlesim211.status.fallen', { skull: SVG_SKULL });
+  else if (foeDefeated)                        el.innerHTML = t('battlesim211.status.victory', { trophy: SVG_TROPHY });
   else                                          el.innerHTML = '';
-  const over = notReady || side.self[side.selfHp] <= 0 || (hasFoe && side.foe[side.foeHp] <= 0);
+  const over = notReady || selfDefeated || foeDefeated || (d.mode === 'ship' && !hasFoe);
   document.getElementById('sim211-round').disabled = over;
   document.getElementById('sim211-missile').disabled = notReady || d.mode !== 'ship' || d.ship.smartMissiles <= 0 || over;
   document.getElementById('sim211-missile-row').style.display = d.mode === 'ship' ? '' : 'none';
@@ -379,6 +381,7 @@ export function initSim211() {
     d.ship.shieldsInitial         = _roll1d6();
     d.ship.weaponsStrength = d.ship.weaponsStrengthInitial;
     d.ship.shields         = d.ship.shieldsInitial;
+    _startShipFight(d);
     d.rolled = true;
     _appendLog(d, t('battlesim211.log.rolled', { skill: d.player.skillInitial, stamina: d.player.staminaInitial, luck: d.player.luckInitial, ws: d.ship.weaponsStrengthInitial, shields: d.ship.shieldsInitial }));
     saveState();
@@ -478,7 +481,7 @@ export function initSim211() {
     d.enemyShip.name = enemy.name;
     if (enemy.attack != null) d.enemyShip.weaponsStrength = enemy.attack;
     if (enemy.hp != null) { d.enemyShip.shields = enemy.hp; d.enemyShip.shieldsMax = enemy.hp; }
-    d.roundsShip = 0;
+    _startShipFight(d);
     saveState();
     _renderAll();
   });
