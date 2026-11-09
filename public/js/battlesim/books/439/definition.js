@@ -6,7 +6,9 @@ export const definition = Object.freeze({
   "title": "Магьосникът Сива звезда",
   "family": "lone-wolf",
   "stateKey": "sim439",
-  "i18nPrefix": "battlesim439"
+  "i18nPrefix": "battlesim439",
+  "shortSkillLabel": "БУ",
+  "shortEnduranceLabel": "ТИ"
 });
 
 export const HEALING_POTION_HEAL = 4;

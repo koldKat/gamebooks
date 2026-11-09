@@ -1,5 +1,6 @@
 // Combat rules and resolution; UI and persistence callbacks are injected.
 export function createCombat(getContext) {
+  const key = suffix => getContext().definition.i18nPrefix + suffix;
 // BEGIN EXTRACTED RULES
 function _ratioCol(ratio) {
 
@@ -38,15 +39,18 @@ function _rulesFor(section) {
 }
 
 function _captureFightEffects(d) {
-  const { _effectiveSkill, _rulesFor } = getContext();
+  const { _effectiveSkill, _rulesFor, definition } = getContext();
 
   const section = Number(d.enemy.name.match(/§(\d+)/)?.[1]) || 0;
+  const rules = _rulesFor(section);
   d.printedRules = 1;
   d.combatEffects = {
-    section, weapon: ['staff','other','none'].includes(d.nextWeapon) ? d.nextWeapon : 'staff',
+    section, weapon: rules.forceWeapon || (['staff','other','none'].includes(d.nextWeapon) ? d.nextWeapon : 'staff'),
     dagger: d.nextDagger === true, spareWeapon: d.nextSpareWeapon === true,
+    daggerBonus: definition.daggerBonus ?? 1, companion: d.nextCompanion === true,
     shield: d.nextShield === true, willSpend: Math.max(1, Math.floor(Number(d.nextWillSpend) || 1)),
     mentalSkill: (Number(d.willpower) || 0) + d.endurance,
+    perRoundStaffSpend: definition.roundWillpowerChoice === true,
     initialEnemy: { ...d.enemy },
   };
   const sequence = _rulesFor(section).sequence;
@@ -62,10 +66,13 @@ function _effectiveSkill(d) {
   if (!effects) return skill;
   const rules = _rulesFor(effects.section);
   if (rules.mentalCombat) return effects.mentalSkill + (d.attackModifier || 0);
-  if (effects.weapon === 'none') skill -= 8;
+  if (effects.weapon !== 'staff' && effects.dagger && rules.daggerPenalty != null) skill -= rules.daggerPenalty;
+  else if (effects.weapon !== 'staff' && rules.noStaffPenalty != null) skill -= rules.noStaffPenalty;
+  else if (effects.weapon === 'none') skill -= 8;
   else if (effects.weapon !== 'staff' || !(d.willpower >= 1)) skill -= 6;
-  if (effects.dagger && effects.weapon !== 'none') skill++;
+  if (effects.dagger && effects.weapon !== 'none' && rules.daggerPenalty == null) skill += effects.daggerBonus ?? 1;
   skill += rules.skillBonus || 0;
+  if (effects.companion) skill += rules.companionBonus || 0;
   if (effects.spareWeapon) skill += rules.spareWeaponBonus || 0;
   if (rules.openingBonus && d.roundsThisBattle < rules.openingBonus.rounds) skill += rules.openingBonus.amount;
   return skill;
@@ -76,7 +83,17 @@ function _stopFight(d, routes) {
 
   d.combatEffects.finished = true;
   d.combatEffects.routes = routes;
-  _appendLog(d, t('battlesim439.log.continue', { sections: routes.join(' / ') }));
+  if (routes.length) _appendLog(d, t(key('.log.continue'), { sections: routes.join(' / ') }));
+}
+
+function _willRoutes(d, rules) {
+  const { _appendLog, t } = getContext();
+  const outcome = rules.willOutcome;
+  if (outcome.strict && d.willpower === outcome.threshold) {
+    _appendLog(d, t(key('.log.source_gap')));
+    return [];
+  }
+  return [d.willpower >= outcome.threshold ? outcome.atLeast : outcome.below];
 }
 
 function _escapeRoute(d) {
@@ -85,6 +102,25 @@ function _escapeRoute(d) {
   if (!effects || effects.finished) return null;
   const escape = _rulesFor(effects.section).escape;
   return escape && d.roundsThisBattle >= escape.afterRounds ? escape.route : null;
+}
+
+function _ceaseRoute(d) {
+  const { _rulesFor } = getContext();
+  if (!d?.rolled || !d.combatEffects || d.combatEffects.finished || d.endurance <= 0 || d.enemy.endurance <= 0) return null;
+  const rules = _rulesFor(d.combatEffects.section);
+  if (rules.stopRoute) return rules.stopRoute;
+  const stop = rules.conditionalStop;
+  return stop && d.roundsThisBattle >= stop.afterRounds
+    && (!stop.playerEnduranceGreaterThanEnemy || d.endurance > d.enemy.endurance) ? stop.route : null;
+}
+
+function _ceaseFight() {
+  const { _data, _stopFight, saveState, _renderAll } = getContext();
+  const d = _data(), route = _ceaseRoute(d);
+  if (!route) return;
+  _stopFight(d, [route]);
+  saveState();
+  _renderAll();
 }
 
 function _runRound(escape = false) {
@@ -103,13 +139,15 @@ function _runRound(escape = false) {
 
   const pick = _pick10();
   const col = _ratioCol(d.ratio);
-  const [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
-  _appendLog(d, t('battlesim439.log.round', { round: d.roundsThisBattle, ratio: d.ratio, pick }));
+  const [enemyLoss, printedPlayerLoss] = COMBAT_TABLE[_pickRow(pick)][col];
+  const lwLoss = rules.playerImmune || d.roundsThisBattle <= (rules.ignorePlayerLossRounds || 0) ? 0 : printedPlayerLoss;
+  _appendLog(d, t(key('.log.round'), { round: d.roundsThisBattle, ratio: d.ratio, pick }));
   let spent = 0;
   if (effects && !rules.mentalCombat && effects.weapon === 'staff' && d.willpower > 0) {
-    spent = Math.min(effects.willSpend, Math.floor(d.willpower));
+    const requested = effects.perRoundStaffSpend ? Math.max(1, Math.floor(Number(d.nextWillSpend) || 1)) : effects.willSpend;
+    spent = Math.min(requested, Math.floor(d.willpower));
     d.willpower -= spent;
-    _appendLog(d, t('battlesim439.log.will', { spent, will: d.willpower }));
+    _appendLog(d, t(key('.log.will'), { spent, will: d.willpower }));
   }
   const damage = enemyLoss === 'K' ? enemyLoss : enemyLoss * Math.max(1, spent);
   if (!escape) {
@@ -122,14 +160,14 @@ function _runRound(escape = false) {
     const loss = effects.shield ? rules.drain.withShield : rules.drain.withoutShield;
     d.willpower = (Number(d.willpower) || 0) - rules.drain.will;
     d.endurance = Math.max(0, d.endurance - loss);
-    _appendLog(d, t('battlesim439.log.soul', { loss, will: d.willpower }));
+    _appendLog(d, t(key('.log.soul'), { loss, will: d.willpower }));
   }
 
-  _appendLog(d, t('battlesim439.log.result', {
+  _appendLog(d, t(key('.log.result'), {
     enemy: _enemyNameSafe(d),
-    enemyLoss: escape ? 0 : damage === 'K' ? t('battlesim439.log.k_word') : damage,
+    enemyLoss: escape ? 0 : damage === 'K' ? t(key('.log.k_word')) : damage,
     enemyEndurance: d.enemy.endurance, enemyEnduranceMax: d.enemy.enduranceMax,
-    lwLoss: lwLoss === 'K' ? t('battlesim439.log.k_word') : lwLoss,
+    lwLoss: lwLoss === 'K' ? t(key('.log.k_word')) : lwLoss,
     endurance: d.endurance, enduranceMax: d.enduranceInitial,
   }));
 
@@ -137,7 +175,7 @@ function _runRound(escape = false) {
   else _checkBattleEnd(d);
   if (effects && !effects.finished) {
     const deadline = DEADLINES[effects.section];
-    if (deadline && d.roundsThisBattle >= deadline[0]) _stopFight(d, [deadline[1] || (d.willpower >= rules.willOutcome.threshold ? rules.willOutcome.atLeast : rules.willOutcome.below)]);
+    if (deadline && d.roundsThisBattle >= deadline[0]) _stopFight(d, deadline[1] ? [deadline[1]] : _willRoutes(d, rules));
   }
   saveState();
   _renderAll();
@@ -148,8 +186,10 @@ function _checkBattleEnd(d) {
 
   if (d.combatEffects && d.endurance <= 0) {
     d.combatEffects.finished = true;
-    _appendLog(d, t('battlesim439.log.fallen', { skull: SVG_SKULL }));
+    _appendLog(d, t(key('.log.fallen'), { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
+    const routes = _rulesFor(d.combatEffects.section).deathRoutes;
+    if (routes?.length) _stopFight(d, routes);
     return;
   }
   if (d.enemy.endurance <= 0) {
@@ -159,18 +199,18 @@ function _checkBattleEnd(d) {
       effects.sequence++;
       const [skill, endurance] = rules.sequence.profiles[effects.sequence];
       d.enemy = { name: t(rules.sequence.nameKey, { n: effects.sequence + 1 }), skill, endurance, enduranceMax: endurance };
-      _appendLog(d, t('battlesim439.log.next', { enemy: _enemyNameSafe(d) }));
+      _appendLog(d, t(key('.log.next'), { enemy: _enemyNameSafe(d) }));
       return;
     }
     if (rules.willOutcome) {
-      _stopFight(d, [d.willpower >= rules.willOutcome.threshold ? rules.willOutcome.atLeast : rules.willOutcome.below]);
+      _stopFight(d, _willRoutes(d, rules));
       return;
     }
-    _appendLog(d, t('battlesim439.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
+    _appendLog(d, t(key('.log.defeated'), { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
     if (effects) _stopFight(d, rules.victoryRoutes || []);
   } else if (d.endurance <= 0) {
-    _appendLog(d, t('battlesim439.log.fallen', { skull: SVG_SKULL }));
+    _appendLog(d, t(key('.log.fallen'), { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');
   }
 }
@@ -185,12 +225,12 @@ function _resetBattle() {
   d.roundsThisBattle = 0;
   d.enemy.endurance = d.enemy.enduranceMax;
   _captureFightEffects(d);
-  if (d.log.length) _appendLog(d, t('battlesim439.log.reset_sep'));
-  _appendLog(d, t('battlesim439.log.reset_future', { enemy: _enemyNameSafe(d) }));
+  if (d.log.length) _appendLog(d, t(key('.log.reset_sep')));
+  _appendLog(d, t(key('.log.reset_future'), { enemy: _enemyNameSafe(d) }));
   saveState();
   _renderAll();
 }
 
 // END EXTRACTED RULES
-  return { _rulesFor, _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _effectiveSkill, _stopFight, _escapeRoute, _runRound, _checkBattleEnd, _resetBattle };
+  return { _rulesFor, _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _effectiveSkill, _stopFight, _escapeRoute, _ceaseRoute, _ceaseFight, _runRound, _checkBattleEnd, _resetBattle };
 }

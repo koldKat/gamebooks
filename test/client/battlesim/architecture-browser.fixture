@@ -1822,6 +1822,112 @@ for(const id of BOOK_IDS){
       check(state().combatEffects.routes[0]===30&&state().enemy.endurance===before,'Forbidden City escape skips enemy damage');
     }finally{Math.random=random;}
   }
+  if(id===283){
+    const el=key=>document.getElementById('sim283-'+key), state=()=>app.currentPlaythrough().sim283;
+    const {getRules}=await import('REPO/public/js/battlesim/books/283/definition.js');
+    check(Object.keys(getRules().ENCOUNTER_RULES).length===14,'Nightmare Gate English full database rules');
+    const select=async(row,patch={})=>{
+      Object.assign(state(),{rolled:true,combatSkill:20,combatSkillInitial:20,endurance:100,enduranceInitial:100,
+        willpower:30,willpowerInitial:30,nextWeapon:'staff',nextWillSpend:1,nextDagger:false,nextCompanion:false,roundsThisBattle:0,combatEffects:null},patch);
+      module.render();const name=el('enemy-pick');name.value=row.name;name.dispatchEvent(new FocusEvent('focus'));name.dispatchEvent(new Event('input',{bubbles:true}));
+      let option;
+      for(let attempt=0;attempt<50;attempt++){
+        option=[...overlay.querySelectorAll('[role="option"]')].find(option=>option.textContent.startsWith(row.name));
+        if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
+      }
+      check(option,'Nightmare Gate English installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
+      check(state().enemy.skill===row.attack&&state().enemy.endurance===row.hp,'Nightmare Gate English original opponent stats');
+      check(state().ratio===20-row.attack-(row.stats.entry.section===57?8:0),'Nightmare Gate English printed weapon penalty');
+    };
+    for(const row of rosterSeeds[id])await select(row);
+    const rowFor=section=>rosterSeeds[id].find(row=>row.stats.entry.section===section),random=Math.random;
+    Math.random=()=>.2;
+    try{
+      await select(rowFor(57));check(el('weapon').disabled&&el('weapon').value==='none','Nightmare Gate English forced unarmed setup');
+      el('dagger').checked=true;el('dagger').dispatchEvent(new Event('change'));check(state().ratio===2,'Nightmare Gate English dagger alternative');
+      el('round').click();check(state().willpower===30,'Nightmare Gate English no staff cost while wrestling');
+      await select(rowFor(97));el('round').click();check(state().endurance===100,'Nightmare Gate English harmless door');
+      const round=state().roundsThisBattle,will=state().willpower;el('cease').click();
+      check(state().combatEffects.routes[0]===61&&state().roundsThisBattle===round&&state().willpower===will,'Nightmare Gate English stop without extra round');
+      await select(rowFor(322));state().roundsThisBattle=3;state().endurance=51;state().enemy.endurance=50;module.render();
+      check(!el('cease').hidden,'Nightmare Gate English conditional stop');el('cease').click();check(state().combatEffects.routes[0]===99,'Nightmare Gate English conditional route');
+      await select(rowFor(188));el('companion').checked=true;el('companion').dispatchEvent(new Event('change'));
+      check(state().ratio===-4,'Nightmare Gate English optional Tanith bonus');
+      await select(rowFor(243),{endurance:1});el('round').click();
+      check(state().history.at(-1).outcome==='loss'&&state().combatEffects.routes[0]===350,'Nightmare Gate English defeat remains a loss');
+    }finally{Math.random=random;}
+  }
+  if(id===282){
+    const el=key=>document.getElementById('sim282-'+key), state=()=>app.currentPlaythrough().sim282;
+    const {getRules}=await import('REPO/public/js/battlesim/books/282/definition.js');
+    check(Object.keys(getRules().ENCOUNTER_RULES).length===18,'Forbidden City full database rules');
+    check(getRules().COMBAT_TABLE[3][2][1]===6,'Forbidden City original chart');
+    check(el('dagger').closest('label').hidden&&el('spare-weapon').closest('label').hidden&&el('shield').closest('label').hidden,'Forbidden City excludes other-book items');
+    const select=async row=>{
+      Object.assign(state(),{rolled:true,combatSkill:20,combatSkillInitial:20,endurance:100,enduranceInitial:100,
+        willpower:30,willpowerInitial:30,nextWeapon:'staff',nextWillSpend:1,roundsThisBattle:0,combatEffects:null});
+      module.render();const name=el('enemy-pick');name.value=row.name;name.dispatchEvent(new FocusEvent('focus'));name.dispatchEvent(new Event('input',{bubbles:true}));
+      let option;
+      for(let attempt=0;attempt<50;attempt++){
+        option=[...overlay.querySelectorAll('[role="option"]')].find(option=>option.textContent.startsWith(row.name));
+        if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
+      }
+      check(option,'Forbidden City installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
+      check(state().enemy.skill===row.attack&&state().enemy.endurance===row.hp,'Forbidden City original opponent stats');
+      check(state().ratio===20+(row.stats.entry.rules.skillBonus??0)-row.attack,'Forbidden City printed skill modifier');
+    };
+    for(const row of rosterSeeds[id])await select(row);
+    const rowFor=section=>rosterSeeds[id].find(row=>row.stats.entry.section===section),random=Math.random;
+    Math.random=()=>.2;
+    try{
+      await select(rowFor(99));state().enemy.endurance=100;el('round').click();
+      check(state().endurance===100,'Forbidden City first-round protection');el('round').click();
+      check(state().endurance<100,'Forbidden City protection expires');
+      await select(rowFor(134));state().enemy.endurance=100;el('round').click();el('round').click();el('round').click();
+      check(state().combatEffects.routes[0]===153,'Forbidden City survivor deadline');
+      check(overlay.textContent.includes('Karmo (§45)')&&overlay.textContent.includes('before or after halving'),'Forbidden City player-controlled potion timing');
+    }finally{Math.random=random;}
+  }
+  if(id===281){
+    const el=key=>document.getElementById('sim281-'+key), state=()=>app.currentPlaythrough().sim281;
+    const {getRules}=await import('REPO/public/js/battlesim/books/281/definition.js');
+    check(Object.keys(getRules().ENCOUNTER_RULES).length===26&&getRules().NEIJJIN.length===9,'English Grey Star full database rules');
+    check(getRules().COMBAT_TABLE[3][2][1]===6,'English Grey Star original chart cell');
+    const select=async(row,patch={})=>{
+      Object.assign(state(),{rolled:true,combatSkill:20,combatSkillInitial:20,endurance:100,enduranceInitial:100,
+        willpower:30,willpowerInitial:30,nextWeapon:'staff',nextWillSpend:1,roundsThisBattle:0,combatEffects:null},patch);
+      module.render();const name=el('enemy-pick');name.value=row.name;name.dispatchEvent(new FocusEvent('focus'));name.dispatchEvent(new Event('input',{bubbles:true}));
+      let option;
+      for(let attempt=0;attempt<50;attempt++){
+        option=[...overlay.querySelectorAll('[role="option"]')].find(option=>option.textContent.startsWith(row.name));
+        if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
+      }
+      check(option,'English Grey Star installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
+      check(state().enemy.skill===row.attack&&state().enemy.endurance===row.hp,'English Grey Star original opponent stats');
+    };
+    for(const row of rosterSeeds[id])await select(row);
+    const rowFor=section=>rosterSeeds[id].find(row=>row.stats.entry.section===section),random=Math.random;
+    Math.random=()=>.99;
+    try{
+      await select(rowFor(101),{combatSkill:100});el('round').click();
+      check(state().combatEffects.sequence===1&&state().enemy.skill===9,'English Grey Star sequential Najin');
+      await select(rowFor(259));el('round').click();check(state().willpower===30,'English Grey Star mental combat without staff');
+      for(const willpower of[9,10,11]){
+        await select(rowFor(281),{nextWeapon:'none',willpower});el('round').click();
+        const routes=state().combatEffects.routes;check(willpower===10?routes.length===0:routes[0]===(willpower>10?331:32),'English Grey Star printed willpower branch');
+      }
+      Math.random=()=>.2;await select(rowFor(99));el('round').click();
+      check(el('cs').disabled&&el('enemy-pick').disabled&&!el('will-spend').disabled,'English Grey Star setup locks but round spending remains editable');
+      const before=state().willpower;el('will-spend').value='2';el('will-spend').dispatchEvent(new Event('change'));el('round').click();
+      check(state().willpower===before-2,'English Grey Star per-round staff choice');
+      el('reset').click();check(!el('enemy-pick').disabled,'English Grey Star reset unlocks setup');
+      el('enemy-pick').value='Custom opponent';el('enemy-pick').dispatchEvent(new Event('input',{bubbles:true}));
+      check(state().combatEffects.section===0,'English Grey Star custom opponent clears preset effects');
+      await select(rowFor(133));state().enemy.endurance=100;module.render();el('round').click();el('round').click();
+      const hp=state().enemy.endurance;el('escape').click();
+      check(state().combatEffects.routes[0]===27&&state().enemy.endurance===hp,'English Grey Star delayed evasion');
+    }finally{Math.random=random;}
+  }
   if(id===439){
     const el=key=>document.getElementById('sim439-'+key), name=el('enemy-pick'), state=()=>app.currentPlaythrough().sim439;
     const {ENCOUNTER_RULES,NEIJJIN}=await import('REPO/public/js/battlesim/books/439/definition.js');
@@ -6154,6 +6260,34 @@ for(const id of BOOK_IDS){
       check(JSON.stringify([run.inventory,run.equipment,run.sim260])===preserved,'Peril shared inventory and unrelated simulator preserved');
       const saved=JSON.stringify(data());el('newCharacter').click();app.setCurrentBookId(9999);document.getElementById('confirm-ok').click();
       check(JSON.stringify(data())===saved,'Peril stale reset ignored');app.setCurrentBookId(261);button.click();
+    }finally{Math.random=random;}
+  }
+  if(id===262){
+    const el=key=>document.getElementById('sim262-'+key),data=()=>app.currentPlaythrough().sim262;
+    const {getRoster}=await import('REPO/public/js/battlesim/books/262/definition.js');
+    const run=app.currentPlaythrough(),random=Math.random;run.inventory={sentinel:['item']};run.equipment={sentinel:'slot'};
+    const preserved=JSON.stringify([run.inventory,run.equipment]);
+    const choose=n=>{el('encounter').value=String(n);el('encounter').dispatchEvent(new Event('change'));};
+    const cancel=()=>{if(data().fight?.status==='active'){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    const scores=()=>{for(const [k,v]of Object.entries({skill:12,skillInitial:12,stamina:24,staminaInitial:24,luck:12,luckInitial:12,poisonBattlesLeft:2,deathstoneUses:3}))el(k).value=v;el('weapon').value='khopesh';};
+    try{
+      Math.random=()=>.999;check(getRoster().length===25,'Gates25 database encounters');
+      check(el('potionRow').hidden&&el('drink').hidden,'Gates no invented starting potion');
+      choose('custom');scores();el('editor').querySelector('[role="combobox"]').value='Custom foe';
+      el('editor').querySelector('[data-stat="skill"]').value='1';el('editor').querySelector('[data-stat="stamina"]').value='2';
+      el('start').click();el('round').click();el('acceptWound').click();check(data().fight.status==='win','Gates editable custom fight');
+      for(const entry of getRoster()){
+        choose(entry.section);scores();el('start').click();check(data().fight.status==='active'&&data().fight.enemies.length===entry.enemies.length,'Gates preset starts '+entry.section);
+        check(el('encounter').disabled&&el('weapon').disabled,'Gates setup locked');cancel();
+      }
+      choose('426');scores();el('weapon').value='cleaver';el('start').click();el('round').click();
+      check(data().fight.pending.immune&&el('pending').textContent.includes('Accept 0 damage'),'Gates spirit immunity reaches actual UI');cancel();
+      choose('169');scores();el('weapon').value='stiletto';el('start').click();check(data().character.poisonBattlesLeft===1,'Gates stiletto battle charge');
+      el('round').click();el('acceptWound').click();check(data().fight.enemies[0].stamina===6,'Gates stiletto wound and poison');
+      const saved=JSON.stringify(data().fight);el('close').click();button.click();check(JSON.stringify(data().fight)===saved,'Gates reopen preserves fight');cancel();
+      choose('72');scores();el('start').click();el('round').click();check(data().fight.roundSequence.length===1,'Gates two-at-a-time UI');cancel();
+      choose('169');scores();el('item-deathstone').checked=true;el('start').click();el('projectile').click();check(data().character.deathstoneUses===2&&data().fight.enemies[0].stamina===4,'Gates Deathstone charge and damage');cancel();
+      check(JSON.stringify([run.inventory,run.equipment])===preserved,'Gates shared inventory preserved');
     }finally{Math.random=random;}
   }
   if(id===1362){

@@ -2,12 +2,13 @@
 export function createState(getContext) {
 // BEGIN EXTRACTED RULES
 function _data() {
-  const { currentPlaythrough } = getContext();
+  const { currentPlaythrough, definition, currentBookId } = getContext();
+  if (definition.requireBookContext && Number(currentBookId) !== definition.id) return null;
 
   const pt = currentPlaythrough();
   if (!pt) return null;
-  if (!pt.sim439) {
-    pt.sim439 = {
+  if (!pt[definition.stateKey]) {
+    pt[definition.stateKey] = {
       combatSkill: 0, combatSkillInitial: 0,
       endurance: 0, enduranceInitial: 0,
       attackModifier: 0,
@@ -22,7 +23,7 @@ function _data() {
       history: [],
     };
   }
-  const d = pt.sim439;
+  const d = pt[definition.stateKey];
   if (d.combatSkill === undefined) d.combatSkill = 0;
   if (d.combatSkillInitial === undefined) d.combatSkillInitial = 0;
   if (d.endurance === undefined) d.endurance = 0;

@@ -3,14 +3,15 @@ import {createOpponentEditor} from '../../opponents.js';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const active = fight => fight?.status === 'active';
-const fields = ['skill','skillInitial','stamina','staminaInitial','luck','luckInitial','gold','provisions','potionUses','attackModifier','nextFightPenalty'];
+const baseFields = ['skill','skillInitial','stamina','staminaInitial','luck','luckInitial','gold','provisions','potionUses','attackModifier','nextFightPenalty'];
 
 export function createFantasyPanel({document,definition,state,getRoster,getSettings,t,getRun,getBookId,
   getButtonRow,showAlert,showConfirm,registerShortcut = () => {}}) {
+  let fields = baseFields;
   const ID = definition.stateKey, el = key => document.getElementById(ID+'-'+key);
   const tk = (key,params) => t(definition.i18nPrefix+'.'+key,params);
   const button = key => `<button type="button" class="bsim-action-btn" id="${ID}-${key}">${escape(tk(key))}</button>`;
-  const field = key => `<label class="inv-edit-row"><span>${escape(tk(key))}</span><input class="inv-edit-input" id="${ID}-${key}" type="number" min="${key==='attackModifier'||key==='nextFightPenalty'?-1000:key.endsWith('Initial')?1:0}" max="${key==='potionUses'?1:key==='nextFightPenalty'?0:key==='attackModifier'?1000:10000}" step="1" required></label>`;
+  const field = key => `<label class="inv-edit-row"><span>${escape(tk(key))}</span><input class="inv-edit-input" id="${ID}-${key}" type="number" min="${key==='attackModifier'||key==='nextFightPenalty'?-1000:key.endsWith('Initial')?1:0}" max="${getSettings().fieldMaximums?.[key]??(key==='potionUses'?1:key==='nextFightPenalty'?0:key==='attackModifier'?1000:10000)}" step="1" required></label>`;
   let editor, shownRun, editorRun, rendered;
   const preset = () => getRoster().find(entry => entry.section === el('encounter').value);
   const items = () => getSettings().items;
@@ -84,7 +85,9 @@ export function createFantasyPanel({document,definition,state,getRoster,getSetti
     el('drink').disabled=locked||!hero?.stamina||!hero?.potionUses;
     el('testLuck').disabled=locked||!hero?.stamina;
     const projectile=items().find(item=>item.damage);
-    el('projectile').hidden=!projectile;el('projectile').disabled=!locked||Boolean(fight?.pending)||!hero?.items[projectile?.key];
+    el('projectile').hidden=!projectile;el('projectile').disabled=!locked||Boolean(fight?.pending)||!hero?.items[projectile?.key]||Boolean(projectile?.usesStat&&!hero?.[projectile.usesStat]);
+    el('drink').hidden=Boolean(getSettings().hideStandardPotion);
+    el('potionRow').hidden=Boolean(getSettings().hideStandardPotion);
     el('status').textContent=tk('status.'+(fight?.status??'ready'))+(fight?' · '+tk('roundNumber',{n:fight.round}):'');
     el('pending').textContent=fight?.pending?tk('pending.'+fight.pending.direction,combat.pendingWoundValues(fight)):'';
     el('destination').textContent=fight?.destination?tk('destination',{n:fight.destination}):'';
@@ -101,9 +104,10 @@ export function createFantasyPanel({document,definition,state,getRoster,getSetti
   }
   function init(){
     if(el('overlay'))return;
+    fields = [...baseFields.filter(key => key !== 'potionUses' || !getSettings().hideStandardPotion), ...(getSettings().extraFields ?? [])];
     const overlay=document.createElement('div');overlay.id=ID+'-overlay';overlay.className='inv-overlay';
     overlay.innerHTML=`<div class="inv-modal bsim-modal bsim-compact-form" role="dialog" aria-modal="true" aria-labelledby="${ID}-heading"><div class="inv-modal-hdr"><span class="inv-modal-title" id="${ID}-heading">${escape(definition.title)}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">×</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left">
-      <details open><summary>${escape(tk('character'))}</summary>${fields.map(field).join('')}<label class="inv-edit-row"><span>${escape(tk('potion'))}</span><select class="inv-edit-input" id="${ID}-potion">${['skill','strength','fortune'].map(key=>`<option value="${key}">${escape(tk('potion.'+key))}</option>`).join('')}</select></label>
+      <details open><summary>${escape(tk('character'))}</summary>${fields.map(field).join('')}<label class="inv-edit-row" id="${ID}-potionRow"><span>${escape(tk('potion'))}</span><select class="inv-edit-input" id="${ID}-potion">${['skill','strength','fortune'].map(key=>`<option value="${key}">${escape(tk('potion.'+key))}</option>`).join('')}</select></label>
       <label class="inv-edit-row"><span>${escape(tk('weapon'))}</span><select class="inv-edit-input" id="${ID}-weapon"><option value="none">${escape(tk('ordinarySword'))}</option>${items().filter(item=>item.slot==='weapon').map(item=>`<option value="${escape(item.key)}">${escape(item.label)}</option>`).join('')}</select></label>
       ${items().filter(item=>item.slot!=='weapon').map(item=>`<label class="bsim-checkbox"><input type="checkbox" id="${ID}-item-${escape(item.key)}">${escape(item.label)}</label>`).join('')}<p class="bsim-note">${escape(tk('itemNote'))}</p><div class="bsim-btn-row">${button('saveCharacter')}${button('newCharacter')}</div></details>
       <label class="inv-edit-row"><span>${escape(tk('encounter'))}</span><select class="inv-edit-input" id="${ID}-encounter"><option value="custom">${escape(tk('custom'))}</option>${getRoster().map(entry=>`<option value="${entry.section}">${escape(entry.label)}</option>`).join('')}</select></label><div id="${ID}-editor"></div>
@@ -122,7 +126,7 @@ export function createFantasyPanel({document,definition,state,getRoster,getSetti
     el('applyEntry').addEventListener('change',saveSetup);
     el('saveCharacter').addEventListener('click',()=>change(data=>{if(active(data.fight))return;data.character=readCharacter();data.fight=null;}));
     el('newCharacter').addEventListener('click',()=>confirm('resetConfirm',data=>{if(active(data.fight))return;data.character=combat.newCharacter(getSettings().defaults);data.fight=null;}));
-    el('start').addEventListener('click',()=>change(data=>{if(active(data.fight))return;data.setup=setup();report(data,combat.startFight(readCharacter(),preset(),{applyEntry:el('applyEntry').checked,opponents:editor.read()}));}));
+    el('start').addEventListener('click',()=>change(data=>{if(active(data.fight))return;data.setup=setup();report(data,combat.startFight(readCharacter(),preset(),{applyEntry:el('applyEntry').checked,opponents:editor.read(),items:items(),combatRules:getSettings().combatRules}));}));
     el('bypass').addEventListener('click',()=>confirm('bypassConfirm',data=>{if(active(data.fight)||!preset()?.bypass)return;data.setup=setup();report(data,combat.bypassFight(combat.startFight(readCharacter(),preset(),{applyEntry:false,opponents:editor.read()})));}));
     el('round').addEventListener('click',()=>change(data=>report(data,combat.roundFight(data.fight,items()))));
     el('acceptWound').addEventListener('click',()=>change(data=>report(data,combat.resolveWound(data.fight))));

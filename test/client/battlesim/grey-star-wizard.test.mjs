@@ -1,18 +1,13 @@
 import { readRosterDocument } from '../../helpers/roster-db.cjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from './simulator-source.mjs';
-import vm from 'node:vm';
+import {definition, COMBAT_TABLE} from '../../../public/js/battlesim/books/439/definition.js';
+import {greyStarFixture} from './grey-star-fixture.mjs';
 
 const rosterEntries = [...new Map(readRosterDocument(439).enemies.map(row => [row.stats.entryIndex, row.stats.entry])).values()];
 
 function fixture(saved) {
-  const pt = saved ? { sim439: structuredClone(saved) } : {};
-  const source = readFileSync(new URL('../../../public/js/battlesim/battlesim439.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
-  const math = Object.create(Math); math.random = () => .2;
-  const context = vm.createContext({ createRosterLoader: (_id, _dataset, install) => { install(structuredClone(rosterEntries)); return async () => {}; }, Math: math, currentPlaythrough: () => pt, saveState() {}, showAlert() {}, escapeHtml: value => value, t: (key, values) => key === 'battlesim439.ui.neijjin' ? `Нейджин ${values.n} §101` : key });
-  vm.runInContext(source + '\n_renderAll = () => {}; globalThis.sim = { data: _data, capture: _captureFightEffects, skill: _effectiveSkill, round: _runRound, reset: _resetBattle, potion: _usePotion, escapeRoute: _escapeRoute };', context);
-  return { sim: context.sim, data: context.sim.data(), math };
+  return greyStarFixture(definition, rosterEntries, COMBAT_TABLE, saved);
 }
 
 function combat(section = 0) {

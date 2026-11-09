@@ -18,13 +18,16 @@ export function validateCharacter(character, alive = false) {
   integer(character.potionUses, 0, 1);
   if (!['skill', 'strength', 'fortune'].includes(character.potion)) throw new RangeError('Invalid potion');
   if (!character.items || typeof character.items !== 'object' || Object.values(character.items).some(value => typeof value !== 'boolean')) throw new RangeError('Invalid item selection');
+  if (character.poisonBattlesLeft !== undefined) integer(character.poisonBattlesLeft, 0, 2);
+  if (character.deathstoneUses !== undefined) integer(character.deathstoneUses, 0, 3);
   return character;
 }
 export function newCharacter(defaults, roll) {
   const skill = die(roll) + 6, stamina = rollDice(roll) + 12, luck = die(roll) + 6;
   return {skill, skillInitial:skill, stamina, staminaInitial:stamina, luck, luckInitial:luck,
     gold:defaults.gold, provisions:defaults.provisions, potion:'skill', potionUses:1,
-    attackModifier:0, nextFightPenalty:0, items:{}};
+    attackModifier:0, nextFightPenalty:0, items:{}, ...(defaults.extraStats ?? {}),
+    ...(defaults.noStartingPotion ? {potionUses:0} : {})};
 }
 function requireFight(fight) {
   if (!fight || fight.rulesVersion !== 1 || fight.status !== 'active') throw new RangeError('No active fight');
@@ -36,8 +39,11 @@ function finish(fight, status, destination = null) {
 }
 function settle(fight) {
   if (fight.pending) return;
-  if (!fight.character.stamina) { finish(fight, 'loss'); return; }
+  if (!fight.character.stamina) { finish(fight, 'loss', fight.config.loss ?? null); return; }
   const rule = fight.config;
+  if (rule.stopAtEnemyStamina !== undefined && fight.enemies[fight.target]?.stamina <= rule.stopAtEnemyStamina) {
+    finish(fight, 'win', rule.win); return;
+  }
   if (rule.consecutiveLoss && fight.consecutiveLost >= rule.consecutiveLoss.count) {
     finish(fight, 'routed', rule.consecutiveLoss.destination); return;
   }
@@ -50,10 +56,13 @@ function settle(fight) {
     finish(fight, 'win', destination);
   }
 }
-export function startFight(character, entry, {applyEntry = true, opponents} = {}, roll) {
+export function startFight(character, entry, {applyEntry = true, opponents, items = [], combatRules} = {}, roll) {
   validateCharacter(character, true);
   if (typeof applyEntry !== 'boolean') throw new RangeError('Invalid entry setting');
   const config = copy(entry ?? {section:'0', label:'Custom fight', win:null});
+  if (combatRules) {
+    config.weaponProfile = copy(items.find(item => item.slot === 'weapon' && character.items[item.key]) ?? combatRules.unarmed);
+  }
   const enemies = validateOpponents(opponents ?? entry?.enemies,
     [{key:'skill',max:10000},{key:'stamina',min:1,max:10000}]).map(enemy => ({...enemy, initialStamina:enemy.stamina}));
   if (entry && enemies.length !== entry.enemies.length) throw new RangeError('Invalid preset group size');
@@ -61,6 +70,10 @@ export function startFight(character, entry, {applyEntry = true, opponents} = {}
     roundsLost:0, consecutiveLost:0, lastRoundWon:false, pending:null, events:[], status:'active', destination:null,
     nextFightPenalty:character.nextFightPenalty};
   fight.character.nextFightPenalty = 0;
+  if (config.weaponProfile?.poisonPerRound && fight.character.poisonBattlesLeft > 0) {
+    fight.poisonPerRound = config.weaponProfile.poisonPerRound;
+    fight.character.poisonBattlesLeft--;
+  }
   if (applyEntry && config.consumeItem) {
     if (!fight.character.items[config.consumeItem]) throw new RangeError('Required potion is unavailable');
     fight.character.items[config.consumeItem] = false;
@@ -89,6 +102,11 @@ export function attackModifier(fight, items) {
   if (weaponBonuses.length > 1) throw new RangeError('Choose one weapon');
   modifier += weaponBonuses.length ? Math.max(...weaponBonuses) : 0;
   modifier += selected.filter(item => item.slot !== 'weapon').reduce((sum,item) => sum + (item.attackModifier ?? 0), 0);
+  if (config.weaponProfile) {
+    const profile = config.weaponProfile;
+    modifier -= weaponBonuses.length ? Math.max(...weaponBonuses) : 0;
+    modifier += fight.enemies[fight.target]?.demon ? profile.demonAttackModifier ?? profile.attackModifier ?? 0 : profile.attackModifier ?? 0;
+  }
   for (const rule of config.itemModifiers ?? []) {
     if (character.items[rule.key]) modifier += rule.openingRounds && round <= rule.openingRounds ? rule.opening : rule.modifier;
   }
@@ -99,6 +117,13 @@ function finishRound(fight, roll) {
   if (fight.roundSequence?.length) {
     settle(fight);
     return;
+  }
+  for (const enemy of fight.enemies) {
+    if (enemy.poisoned && enemy.stamina && fight.poisonPerRound) {
+      const damage = Math.min(enemy.stamina, fight.poisonPerRound);
+      enemy.stamina -= damage;
+      fight.events.push({kind:'damage', target:enemy.displayName || enemy.name, damage});
+    }
   }
   if (fight.config.roundDamageDice) {
     const damage = die(roll);
@@ -115,10 +140,13 @@ export function roundFight(previous, items, roll) {
     fight.round++;
     fight.roundPrimaryTarget = fight.target;
     fight.roundSequence = fight.config.simultaneous
-      ? fight.enemies.flatMap((enemy,index) => enemy.stamina ? [index] : [])
+      ? fight.enemies.flatMap((enemy,index) => enemy.stamina ? [index] : []).slice(0, fight.config.activeOpponents ?? fight.enemies.length)
       : Array(integer(fight.config.attacksPerRound ?? 1, 1, 2)).fill(fight.target);
-    fight.roundPlayerAttack = fight.config.simultaneous
-      ? fight.character.skill + attackModifier(fight, items) + rollDice(roll) : null;
+    if (fight.config.simultaneous) {
+      const first = die(roll), second = die(roll);
+      fight.roundPlayerDouble = first === second;
+      fight.roundPlayerAttack = fight.character.skill + attackModifier(fight, items) + first + second;
+    } else fight.roundPlayerAttack = null;
   }
   const targetIndex = fight.roundSequence.shift(), enemy = fight.enemies[targetIndex];
   if (fight.round === 1 && fight.config.firstRoundOutcome) {
@@ -131,7 +159,12 @@ export function roundFight(previous, items, roll) {
     return fight;
   }
   const enemyAttack = enemy.skill + rollDice(roll);
-  const playerAttack = fight.roundPlayerAttack ?? fight.character.skill + attackModifier(fight, items) + rollDice(roll);
+  let playerAttack = fight.roundPlayerAttack;
+  if (playerAttack === null) {
+    const first = die(roll), second = die(roll);
+    fight.roundPlayerDouble = first === second;
+    playerAttack = fight.character.skill + attackModifier(fight, items) + first + second;
+  }
   fight.lastRoundWon = playerAttack > enemyAttack;
   const direction = playerAttack > enemyAttack ? 'outgoing' : playerAttack < enemyAttack ? 'incoming' : null;
   fight.consecutiveLost = direction === 'incoming' ? fight.consecutiveLost + 1 : 0;
@@ -140,7 +173,14 @@ export function roundFight(previous, items, roll) {
   // In simultaneous combat, only the chosen target can be wounded. Other
   // opponents still attack against the same player Attack Strength.
   if (direction && !(direction === 'outgoing' && fight.config.simultaneous && targetIndex !== fight.roundPrimaryTarget)) {
-    fight.pending = {direction, enemy:targetIndex};
+    const profile = fight.config.weaponProfile;
+    let damage = fight.config.outgoingDamage ?? 2;
+    if (profile) {
+      damage = enemy.stone ? profile.stoneDamage ?? profile.woundDamage : enemy.demon ? profile.demonDamage ?? profile.woundDamage : profile.woundDamage;
+      if (fight.roundPlayerDouble && profile.doubleDamage !== undefined) damage = profile.doubleDamage;
+    }
+    const immune = direction === 'outgoing' && enemy.requiresMagic && !profile?.magical;
+    fight.pending = {direction, enemy:targetIndex, damage:direction === 'outgoing' ? damage : 2, immune};
   }
   else finishRound(fight, roll);
   return fight;
@@ -157,9 +197,10 @@ export function resolveWound(previous, useLuck = false, roll) {
     fight.character.luck = Math.max(0, fight.character.luck - 1);
     fight.events.push({kind:'luck', total, lucky});
   }
-  const damage = damageWithLuck(direction, direction === 'outgoing' ? fight.config.outgoingDamage ?? 2 : 2, lucky);
+  const damage = fight.pending.immune ? 0 : damageWithLuck(direction, fight.pending.damage ?? (direction === 'outgoing' ? fight.config.outgoingDamage ?? 2 : 2), lucky);
   const target = direction === 'outgoing' ? fight.enemies[enemy] : fight.character;
   target.stamina = Math.max(0, target.stamina - damage);
+  if (direction === 'outgoing' && damage > 0 && fight.poisonPerRound) target.poisoned = true;
   fight.events.push({kind:'damage', target:direction === 'outgoing' ? target.displayName || target.name : 'player', damage});
   fight.pending = null;
   if (direction === 'incoming' && fight.config.loseOnLostRound) {
@@ -172,7 +213,8 @@ export function resolveWound(previous, useLuck = false, roll) {
 export function pendingWoundValues(fight) {
   if (!fight?.pending) return {};
   const direction = fight.pending.direction;
-  const damage = direction === 'outgoing' ? fight.config.outgoingDamage ?? 2 : 2;
+  if (fight.pending.immune) return {damage:0,lucky:0,unlucky:0};
+  const damage = fight.pending.damage ?? (direction === 'outgoing' ? fight.config.outgoingDamage ?? 2 : 2);
   return {damage, lucky:damageWithLuck(direction, damage, true), unlucky:damageWithLuck(direction, damage, false)};
 }
 export function canEscape(fight) {
@@ -202,9 +244,11 @@ export function bypassFight(previous) {
 }
 export function useProjectile(previous, item) {
   requireFight(previous);
-  if (previous.pending || !item || !Number.isSafeInteger(item.damage) || item.damage < 1 || !previous.character.items[item.key]) throw new RangeError('Projectile is unavailable');
+  if (previous.pending || !item || !Number.isSafeInteger(item.damage) || item.damage < 1 || !previous.character.items[item.key]
+    || item.usesStat && !previous.character[item.usesStat]) throw new RangeError('Projectile is unavailable');
   const fight = copy(previous); fight.events = [];
-  fight.character.items[item.key] = false;
+  if (item.usesStat) fight.character[item.usesStat]--;
+  else fight.character.items[item.key] = false;
   const enemy = fight.enemies[fight.target]; enemy.stamina = Math.max(0, enemy.stamina - item.damage);
   fight.events.push({kind:'damage', target:enemy.displayName || enemy.name, damage:item.damage});
   settle(fight); return fight;
