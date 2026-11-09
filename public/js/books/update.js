@@ -1,5 +1,40 @@
 // Replace only changed top-level library groups, preserving other DOM and bindings.
+import { afterLazyGroupsSettled } from './lazy.js';
+
 const snapshots = new WeakMap();
+const scrollHolds = new WeakMap();
+
+function retainScroll(root) {
+  const height = root.getBoundingClientRect().height;
+  if (!height) return () => {};
+  const previous = scrollHolds.get(root);
+  const hold = { minHeight: previous?.minHeight ?? root.style.minHeight,
+    anchors: previous?.anchors ?? new Map() };
+  scrollHolds.set(root, hold);
+  const positions = [];
+  for (let node = root.parentElement; node; node = node.parentElement) {
+    if (node.scrollTop) {
+      positions.push([node, node.scrollTop]);
+      if (!hold.anchors.has(node)) hold.anchors.set(node, node.style.overflowAnchor);
+      node.style.overflowAnchor = 'none';
+    }
+  }
+  // A changed expanded stash briefly becomes an empty lazy placeholder.
+  // Keep the list's height until its replacement children have been built.
+  root.style.minHeight = `${height}px`;
+  return () => {
+    for (const [node, top] of positions) node.scrollTop = top;
+    requestAnimationFrame(() => afterLazyGroupsSettled(() => {
+      if (scrollHolds.get(root) !== hold) return;
+      const current = positions.map(([node]) => [node, node.scrollTop]);
+      root.style.minHeight = hold.minHeight;
+      scrollHolds.delete(root);
+      // Preserve scrolling performed by the user while chunks were loading.
+      for (const [node, top] of current) node.scrollTop = top;
+      for (const [node, anchor] of hold.anchors) node.style.overflowAnchor = anchor;
+    }));
+  };
+}
 
 function expansionChanged(nodes, prefs) {
   if (!prefs) return false;
@@ -19,6 +54,7 @@ function expansionChanged(nodes, prefs) {
 }
 
 export function updateBooksList(root, blocks) {
+  const restoreScroll = retainScroll(root);
   let previous = snapshots.get(root) || new Map();
   if ([...previous.values()].some(record => record.nodes.some(node => node.parentNode !== root))) previous = new Map();
   if (!previous.size) root.replaceChildren();
@@ -46,5 +82,6 @@ export function updateBooksList(root, blocks) {
   }
   for (const [key, old] of previous) if (!next.has(key)) for (const node of old.nodes) node.remove();
   snapshots.set(root, next);
+  restoreScroll();
   return changedRoots;
 }

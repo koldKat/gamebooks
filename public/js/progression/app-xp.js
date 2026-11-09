@@ -16,6 +16,7 @@ export function setAppXpHooks(h) { _hooks = h || {}; }
 
 function _hbRateText(ratePerMin) {
   const rate = Math.round(ratePerMin * 10) / 10;
+  if (!(rate > 0)) return '';
   return t('appxp.hb_rate', { rate: rate % 1 === 0 ? rate : rate.toFixed(1) });
 }
 

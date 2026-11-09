@@ -128,8 +128,10 @@ export function restoreCachedPrefs() {
   if (!getToken()) return;
   try {
     const prefs = JSON.parse(localStorage.getItem(`ui_prefs_v1:${getUsername()}`) || 'null');
-    if (prefs && typeof prefs === 'object' && !Array.isArray(prefs)) applyPrefs(prefs, { renderBooks: false });
-  } catch {}
+    if (prefs && typeof prefs === 'object' && !Array.isArray(prefs)) {
+      applyPrefs({ reduceMotion: '0', ...prefs }, { renderBooks: false });
+    } else setCoversPrefsState({ reduceMotion: '0' });
+  } catch { setCoversPrefsState({ reduceMotion: '0' }); }
 }
 
 export async function syncPrefs(options) {
@@ -148,7 +150,7 @@ export async function syncPrefs(options) {
     const serverPrefs = await r.json();
     if (getToken() !== sessionToken) return;
     // Protect clicks made during this GET, even if their PATCH already finished.
-    const prefs = sync.patches.reduce(mergePrefs, serverPrefs);
+    const prefs = sync.patches.reduce(mergePrefs, { reduceMotion: '0', ...serverPrefs });
     applyPrefs(prefs, options);
     try { localStorage.setItem(`ui_prefs_v1:${username}`, JSON.stringify(prefs)); } catch {}
   } catch {} finally {

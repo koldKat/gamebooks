@@ -3,7 +3,7 @@ export function createEffects(getContext) {
   const key = suffix => getContext().definition.i18nPrefix + suffix;
 // BEGIN EXTRACTED RULES
 function _usePotion() {
-  const { HEALING_POTION_HEAL, _appendLog, _data, _renderAll, saveState, showAlert, t } = getContext();
+  const { HEALING_POTION_HEAL, definition, _appendLog, _data, _renderAll, saveState, showAlert, t } = getContext();
 
   const d = _data();
   if (!d || !d.rolled || !d.hasHealingPotion || d.healingPotionUsed || (d.printedRules === 1 && d.endurance <= 0)) return;
@@ -12,6 +12,7 @@ function _usePotion() {
     return;
   }
   d.healingPotionUsed = true;
+  if (definition.refillablePotions) d.hasHealingPotion = false;
   const before = d.endurance;
   d.endurance = Math.min(d.enduranceInitial, d.endurance + HEALING_POTION_HEAL);
   _appendLog(d, t(key('.log.potion'), { before, endurance: d.endurance, enduranceMax: d.enduranceInitial }));

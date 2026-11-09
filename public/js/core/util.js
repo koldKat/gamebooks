@@ -64,6 +64,7 @@ ALL_PANEL_OVERLAY_IDS.push('sim262-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim281-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim282-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim283-overlay');
+ALL_PANEL_OVERLAY_IDS.push('sim284-overlay');
 
 export function registerPanelShortcut(keyCode, { getButton, getOverlay, otherOverlayIds, open, close, extraGuard, capture = false }) {
   document.addEventListener('keydown', e => {

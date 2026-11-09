@@ -71,6 +71,10 @@ function createRubyCompletionChecker(db) {
     for (const run of [...runs, ...archived]) {
       for (const id of Array.isArray(run?.path) ? run.path : []) visited.add(String(id));
     }
+    // Match the graph and XP completion rule, including unreachable manual nodes.
+    for (const [id, node] of Object.entries(saved?.graph || {})) {
+      if (!node?.discovered || (node.choices || []).length || (node.portals || []).length) visited.add(String(id));
+    }
     if (canonical.length) return { count: total, complete: canonical.every(id => visited.has(id)) };
     // Without imported prose the catalog's ordinary numbered sections are authoritative.
     // A sparse numbering scheme needs imported IDs before it can be certified.
@@ -132,6 +136,10 @@ function backfillRubies(db) {
     if (!db.prepare("SELECT 1 FROM ruby_migrations WHERE name='player-completion-50-v1'").get()) {
       for (const { id } of db.prepare('SELECT id FROM users WHERE is_squire=0').all()) backfillRubiesForUser(db,id);
       db.prepare("INSERT INTO ruby_migrations(name) VALUES('player-completion-50-v1')").run();
+    }
+    if (!db.prepare("SELECT 1 FROM ruby_migrations WHERE name='mapped-completion-v1'").get()) {
+      for (const { id } of db.prepare('SELECT DISTINCT user_id AS id FROM user_books').all()) backfillRubiesForUser(db,id);
+      db.prepare("INSERT INTO ruby_migrations(name) VALUES('mapped-completion-v1')").run();
     }
   }).immediate();
 }

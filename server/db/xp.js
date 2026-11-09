@@ -991,8 +991,11 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
   }
   // Retry certification on a complete path too, including a previously failed award
   // or a catalog correction. Already granted rewards are cheap ledger lookups.
+  const oldMapped = _mappedSet(oldGraph, excluded);
+  const newMapped = _mappedSet(newGraph, excluded);
   const rubyCandidate = [...newVis].some(section => !oldVis.has(section))
-    || (bookRow?.total_sections > 0 && newVis.size >= bookRow.total_sections);
+    || [...newMapped].some(section => !oldMapped.has(section))
+    || (bookRow?.total_sections > 0 && new Set([...newVis, ...newMapped]).size >= bookRow.total_sections);
   if (rubyCandidate && !isImpersonatingContext()) {
     _rubyCompletionChecker ||= createRubyCompletionChecker(db);
     const rubyDelta = _rubyCompletionChecker(userId, bookId);

@@ -1822,6 +1822,48 @@ for(const id of BOOK_IDS){
       check(state().combatEffects.routes[0]===30&&state().enemy.endurance===before,'Forbidden City escape skips enemy damage');
     }finally{Math.random=random;}
   }
+  if(id===284){
+    const el=key=>document.getElementById('sim284-'+key),state=()=>app.currentPlaythrough().sim284;
+    const {getRules}=await import('REPO/public/js/battlesim/books/284/definition.js');
+    check(Object.keys(getRules().ENCOUNTER_RULES).length===36,'War Wizards full database encounter rules');
+    const random=Math.random;let picks=0;Math.random=()=>{picks++;return .2;};
+    try{
+      el('roll').click();
+      check(state().combatSkill===12&&state().willpower===50&&state().endurance===30&&picks===1,'War Wizards fixed fresh scores use one random pick');
+      const select=async(row,patch={})=>{
+        Object.assign(state(),{rolled:true,combatSkill:20,combatSkillInitial:20,endurance:100,enduranceInitial:100,
+          willpower:50,willpowerInitial:50,nextWeapon:'staff',nextWillSpend:1,nextInvulnerable:false,
+          hasHealingPotion:false,healingPotionUsed:false,roundsThisBattle:0,combatEffects:null},patch);
+        module.render();const name=el('enemy-pick');name.value=row.name;name.dispatchEvent(new FocusEvent('focus'));name.dispatchEvent(new Event('input',{bubbles:true}));
+        let option;
+        for(let attempt=0;attempt<50;attempt++){
+          option=[...overlay.querySelectorAll('[role="option"]')].find(option=>option.textContent.startsWith(row.name));
+          if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
+        }
+        check(option,'War Wizards installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
+        check(state().enemy.skill===row.attack&&state().enemy.endurance===row.hp,'War Wizards original opponent stats');
+        check(state().ratio===20+(row.stats.entry.rules.skillBonus??0)-row.attack,'War Wizards printed combat modifier');
+      };
+      for(const row of rosterSeeds[id])await select(row);
+      const rowFor=section=>rosterSeeds[id].find(row=>row.stats.entry.section===section);
+      await select(rowFor(233));el('invulnerable').checked=true;el('invulnerable').dispatchEvent(new Event('change'));
+      el('round').click();check(state().endurance===100,'War Wizards optional protection');
+      check(el('invulnerable').disabled&&el('enemy-pick').disabled&&!el('will-spend').disabled,'War Wizards setup locks but per-round spending stays editable');
+      await select(rowFor(111),{nextWillSpend:3});state().enemy.endurance=100;el('round').click();
+      check(state().endurance===100&&state().willpower===47&&state().combatEffects.routes[0]===306,'War Wizards passing damage and one-round continuation');
+      await select(rowFor(123));state().enemy.endurance=100;el('round').click();check(!el('escape').disabled,'War Wizards second-round evasion opens');
+      el('round').click();check(el('escape').disabled,'War Wizards missed evasion window closes');
+      await select(rowFor(265));state().roundsThisBattle=2;state().enemy.endurance=1;module.render();
+      const history=state().history.length;el('round').click();check(state().combatEffects.routes[0]===206&&state().history.length===history,'War Wizards terminal round wins no false victory');
+      await select(rowFor(33),{endurance:80,hasHealingPotion:true});el('use-potion').click();
+      check(state().endurance===86&&!state().hasHealingPotion,'War Wizards six-point dose consumed');
+      el('has-potion').checked=true;el('has-potion').dispatchEvent(new Event('change'));el('use-potion').click();
+      check(state().endurance===92&&!state().hasHealingPotion,'War Wizards another explicitly selected dose works');
+      await select(rowFor(33));el('enemy-pick').value='Custom opponent';el('enemy-pick').dispatchEvent(new Event('input',{bubbles:true}));
+      el('enemy-skill').value=20;el('enemy-skill').dispatchEvent(new Event('change'));
+      el('round').click();check(state().roundsThisBattle===1&&state().combatEffects.section===0,'War Wizards ordinary custom fight needs no preset');
+    }finally{Math.random=random;}
+  }
   if(id===283){
     const el=key=>document.getElementById('sim283-'+key), state=()=>app.currentPlaythrough().sim283;
     const {getRules}=await import('REPO/public/js/battlesim/books/283/definition.js');

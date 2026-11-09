@@ -3,6 +3,7 @@
 import { state, saveState, currentPlaythrough, viewingPt } from '../core/state.js';
 import { t } from '../i18n.js';
 import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
+import { showConfirm } from '../ui-helpers/confirm.js';
 
 // Working copy - populated when modal opens, discarded on cancel
 let _draft = null;
@@ -257,8 +258,14 @@ function wireRow(row, field) {
 
   // Delete
   row.querySelector('.cs-del-btn').addEventListener('click', () => {
-    _draft.fields = _draft.fields.filter(f => f.id !== field.id);
-    renderModal();
+    if (!_draft || _readOnly) return;
+    const draft = _draft;
+    const name = String(field.name ?? '').trim();
+    showConfirm(t(name ? 'cs.confirm_delete_field' : 'cs.confirm_delete_unnamed_field', { name }), () => {
+      if (_draft !== draft || _readOnly) return;
+      draft.fields = draft.fields.filter(f => f.id !== field.id);
+      renderModal();
+    });
   });
 
   // Drag to reorder - only initiated from the handle
@@ -373,6 +380,7 @@ export function initCharSheet() {
   document.getElementById('cs-modal-close').addEventListener('click', closeModal);
   modalOv.addEventListener('click', e => { if (e.target === modalOv) closeModal(); });
   document.addEventListener('keydown', e => {
+    if (document.getElementById('confirm-overlay')?.classList.contains('active')) return;
     if (e.key === 'Escape' && modalOv.classList.contains('active')) closeModal();
   }, true); // capture phase - fires before vis.js canvas can stopPropagation
   registerPanelShortcut('KeyC', {

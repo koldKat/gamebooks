@@ -119,6 +119,7 @@ function _renderInputs(skipEnemyPick) {
   _setVal(field('-weapon'), _rulesFor(d.combatEffects?.section).forceWeapon ?? d.nextWeapon ?? 'staff');
   for (const [id, key] of [['dagger','nextDagger'], ['spare-weapon','nextSpareWeapon'], ['shield','nextShield'], ['has-potion','hasHealingPotion']]) document.getElementById(field('-') + id).checked = d[key] === true;
   document.getElementById(field('-companion')).checked = d.nextCompanion === true;
+  document.getElementById(field('-invulnerable')).checked = d.nextInvulnerable === true;
   _setVal(field('-enemy-skill'), d.enemy.skill);
   _setVal(field('-enemy-en'), d.enemy.endurance);
   _setVal(field('-enemy-enmax'), d.enemy.enduranceMax);
@@ -154,7 +155,7 @@ function _renderInputs(skipEnemyPick) {
   cease.disabled = cease.hidden;
   if (definition.lockCombatSetup) {
     const locked = d.roundsThisBattle > 0 && d.endurance > 0 && d.enemy.endurance > 0 && !d.combatEffects?.finished;
-    for (const name of ['cs','csmax','en','enmax','atkmod','will','willmax','weapon','dagger','spare-weapon','shield','companion','has-potion','enemy-pick','enemy-skill','enemy-en','enemy-enmax']) {
+    for (const name of ['cs','csmax','en','enmax','atkmod','will','willmax','weapon','dagger','spare-weapon','shield','companion','invulnerable','has-potion','enemy-pick','enemy-skill','enemy-en','enemy-enmax']) {
       const input = document.getElementById(field('-' + name));
       input.disabled = locked || (name === 'weapon' && !!_rulesFor(d.combatEffects?.section).forceWeapon);
       for (const button of input.closest('.inv-edit-row')?.querySelectorAll('.inv-qty-btn') || []) button.disabled = locked;
@@ -254,6 +255,7 @@ function init() {
               ${_numField(t((definition.i18nPrefix + '.ui.will_spend')), field('-will-spend'))}
               ${['dagger','spare-weapon','shield'].map(id => `<label class="inv-edit-row"${definition.itemModifiers && !definition.itemModifiers.includes(id) ? ' hidden' : ''}><span class="inv-edit-label bsim-stat-label">${t((definition.i18nPrefix + '.ui.') + id)}</span><input type="checkbox" id="${prefix}-${id}"></label>`).join('')}
               <label class="inv-edit-row"${definition.companionOption ? '' : ' hidden'}><span class="inv-edit-label bsim-stat-label">${definition.companionOption ? t(definition.i18nPrefix + '.ui.companion') : ''}</span><input type="checkbox" id="${prefix}-companion"></label>
+              <label class="inv-edit-row"${definition.invulnerabilityOption ? '' : ' hidden'}><span class="inv-edit-label bsim-stat-label">${definition.invulnerabilityOption ? t(definition.i18nPrefix + '.ui.invulnerable') : ''}</span><input type="checkbox" id="${prefix}-invulnerable"></label>
               <p class="bsim-history-empty">${t((definition.i18nPrefix + '.ui.effects_note'))}</p>
               <p class="bsim-history-empty">${t((definition.i18nPrefix + '.ui.mental_note'))}</p>
             </details>
@@ -322,10 +324,10 @@ function init() {
   document.getElementById(field('-use-potion')).addEventListener('click', _usePotion);
   document.getElementById(field('-escape')).addEventListener('click', () => _runRound(true));
   document.getElementById(field('-cease')).addEventListener('click', _ceaseFight);
-  document.getElementById(field('-companion')).addEventListener('change', e => {
+  for (const [id, key] of [['companion','nextCompanion'], ['invulnerable','nextInvulnerable']]) document.getElementById(field('-' + id)).addEventListener('change', e => {
     if (e.target.disabled) return;
     const d = _data(); if (!d) return;
-    d.nextCompanion = e.target.checked;
+    d[key] = e.target.checked;
     if (d.roundsThisBattle === 0) _captureFightEffects(d);
     saveState(); _renderInputs(true);
   });
@@ -340,6 +342,7 @@ function init() {
     if (e.target.disabled) return;
     const d = _data(); if (!d) return;
     d[key] = e.target.checked;
+    if (key === 'hasHealingPotion' && e.target.checked && definition.refillablePotions) d.healingPotionUsed = false;
     if (definition.lockCombatSetup && d.roundsThisBattle === 0) _captureFightEffects(d);
     saveState(); _renderInputs(true);
   });
@@ -349,10 +352,10 @@ function init() {
     if (!d || d.rolled) return;
     d.combatSkillInitial = _pick10() + 10;
     if (d.printedRules === 1) {
-      d.willpowerInitial = _pick10() + 20;
+      d.willpowerInitial = definition.initialWillpower ?? _pick10() + 20;
       d.willpower = d.willpowerInitial;
     }
-    d.enduranceInitial   = _pick10() + 20;
+    d.enduranceInitial   = definition.initialEndurance ?? _pick10() + 20;
     d.combatSkill = d.combatSkillInitial;
     d.endurance   = d.enduranceInitial;
     d.rolled = true;

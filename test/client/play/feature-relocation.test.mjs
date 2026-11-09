@@ -9,7 +9,7 @@ test('play-area feature relocation preserves implementations and removes root mo
   const digests = {
     "dice": "fd6b7d336ddfd227e995f60446adf91ec142f4c4748531ea5f26a8bf9b9e4f6e",
     "notes": "5559eecce9e5ae9d869fe269264274f6a57e29c264f8b578f5085bbf797ea13a",
-    "charsheet": "904243f994aee0d22635d5b3aeaca4d00f1834551eac3ccdfbacc80be0fe1219",
+    "charsheet": "f5bb27b383f2a01bef10dabc093bc7f0fcf56415ed86d0311b0daf2acee27c9b",
     "open-world": "383d0110865c38f8a46329e33aef695093423be06025ae4e424925a826f89bea",
     // Party sync now catches up on reconnect and refreshes the viewed run reference.
     "party": "fd0fd3faeabdf6b3d187ef3e69935148bfd0f00f4bf69833572e455eb1305d63",
@@ -28,7 +28,7 @@ test('relocated play features retain their original dependency identities and or
   const expected = {
     dice: ['core/state.js', 'ui-helpers/prefs.js', 'play.js'],
     notes: ['core/state.js', 'play.js', 'i18n.js'],
-    charsheet: ['core/state.js', 'i18n.js', 'core/util.js'],
+    charsheet: ['core/state.js', 'i18n.js', 'core/util.js', 'ui-helpers/confirm.js'],
     'open-world': ['core/state.js', 'graph.js', 'play.js', 'i18n.js', 'play/charsheet.js', 'equipment.js', 'books.js',
       'play/traveler.js', 'battlesim/travel-character.js', 'battlesim/loader.js'],
     party: ['core/state.js', 'core/event-stream.js', 'graph.js', 'graph/runtime.js', 'play.js', 'core/util.js', 'i18n.js'],

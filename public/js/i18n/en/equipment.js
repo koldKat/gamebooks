@@ -11,6 +11,8 @@ export default {
     'cs.no_options':      '(no options)',
     'cs.toggle_visible':  'Toggle display visibility',
     'cs.delete_field':    'Delete field',
+    'cs.confirm_delete_field': 'Delete "{name}" from your character sheet?',
+    'cs.confirm_delete_unnamed_field': 'Delete this item from your character sheet?',
     'cs.cancel':          'Cancel',
     'cs.save':            'Save',
     'cs.save_template':   'Save as template',

@@ -5,6 +5,11 @@ export const lazyState = { builders: new Map(), wireContent: null, sequence: 0 }
 const _materializingGroups = new WeakMap();
 const pendingSteps = [];
 let pendingFrame = null;
+const settledCallbacks = new Set();
+export function afterLazyGroupsSettled(callback) {
+  if (pendingFrame == null && !pendingSteps.length) callback();
+  else settledCallbacks.add(callback);
+}
 function scheduleStep(step) {
   pendingSteps.push(step);
   scheduleNextFrame();
@@ -21,6 +26,11 @@ function scheduleNextFrame() {
     }
     pendingFrame = null;
     scheduleNextFrame();
+    if (pendingFrame == null && !pendingSteps.length) {
+      const callbacks = [...settledCallbacks];
+      settledCallbacks.clear();
+      for (const callback of callbacks) callback();
+    }
   });
 }
 function materializeExpandedDescendants(root, immediate) {

@@ -58,6 +58,27 @@ try {
  const returningHeader=header(1);list.style.display='';render();
  check(header(1)===returningHeader,'Home retains unchanged expanded stash header');
  await wait(()=>group(1).querySelectorAll('.book-item').length===171,'Home restores expanded stash children without collapse');
+ // Editing a book rebuilds its large expanded stash asynchronously. Keep the
+ // user's place throughout replacement, including after the last lazy chunk.
+ const viewport=document.getElementById('books-viewport');
+ group(1).querySelector('.book-open-btn[data-id="100"]').scrollIntoView({block:'center'});
+ const beforeEdit=viewport.scrollTop;
+ check(beforeEdit>100,'editing starts below the top of My Books');
+ rows[99]={...rows[99],name:rows[99].name+' revised'};
+ render();
+ check(Math.abs(viewport.scrollTop-beforeEdit)<2,'edit retains scroll while stash is rebuilt');
+ await wait(()=>group(1).querySelectorAll('.book-item').length===171&&!group(1).dataset.materializingGroup,'edited stash settles');
+ await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+ check(Math.abs(viewport.scrollTop-beforeEdit)<2,'edit retains scroll after lazy rebuilding');
+ check(!list.style.minHeight,'temporary height reservation is released');
+ series[11]={...series[11],name:series[11].name+' revised'};
+ render();
+ viewport.scrollTop=beforeEdit-70;
+ const manuallyScrolled=viewport.scrollTop;
+ await wait(()=>group(1).querySelectorAll('.book-item').length===171&&!group(1).dataset.materializingGroup,'edited series settles');
+ await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+ check(Math.abs(viewport.scrollTop-manuallyScrolled)<2,'series save respects scrolling during rebuilding');
+ check(!list.style.minHeight,'series save releases its height reservation');
  tracking=false;
  document.body.dataset.test=JSON.stringify({books:rows.length,series:series.length,stashes:stashes.length,renderMs:timings.map(n=>Math.round(n)),clickMs:Math.round(clickMs),maxFrameGapMs:Math.round(Math.max(...frames))});
 }catch(error){document.body.dataset.failure=error.stack;}
@@ -65,7 +86,7 @@ try {
 (async()=>{
  try {
   const file=path.join(scratch,'stashes.html');
-  fs.writeFileSync(file,'<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="file://'+repo+'/public/css/style.css"><body><div id="books-list" style="width:400px;height:800px;overflow:auto"></div><script type="module">'+script+'</script>');
+  fs.writeFileSync(file,'<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="file://'+repo+'/public/css/style.css"><body><div id="books-viewport" style="width:360px;height:800px;overflow:auto"><div id="books-list"></div></div><script type="module">'+script+'</script>');
   for(const width of [1100,390]) console.log(JSON.stringify(await browser({file,root,width,profile:path.join(scratch,'profile-'+width),chromium:process.env.CHROMIUM,timeoutMs:30000})));
  }finally{fs.rmSync(scratch,{recursive:true,force:true});}
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -164,7 +164,8 @@ function _xpApply(xp, data, fromXp = null) {
 }
 
 function _hbRateText(bonusHeartbeatXp, bonusHeartbeatXpFree) {
-  const rate = (bonusHeartbeatXp + bonusHeartbeatXpFree) * 0.1;
+  const rate = ((Number(bonusHeartbeatXp) || 0) + (Number(bonusHeartbeatXpFree) || 0)) * 0.1;
+  if (!(rate > 0)) return '';
   return `+${rate % 1 === 0 ? rate : rate.toFixed(1)} heartbeat XP/min`;
 }
 

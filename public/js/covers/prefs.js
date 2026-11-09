@@ -133,8 +133,11 @@ export function _toggleCoverTooltipSettings(open) {
 export function resetFeedDisplayPrefsForLogout() {
   coversState._feedDayCovers = true;
   coversState._feedGlassCards = true;
+  coversState._reduceMotion = false;
   localStorage.setItem('feed-day-covers', '1');
   localStorage.setItem('feed-glass-cards', '1');
+  localStorage.setItem('reduce-motion', '0');
+  _applyReduceMotionPref();
   _applyFeedDayCoversPref();
   _applyFeedGlassCardsPref();
 }

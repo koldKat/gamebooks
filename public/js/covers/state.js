@@ -26,9 +26,7 @@ export const coversState = {
   _coverTooltipTitlePct: Math.max(100, Math.min(148, parseInt(localStorage.getItem('cover-tooltip-title-pct') || '100', 10) || 100)),
   _coverTooltipTitleBold: localStorage.getItem('cover-tooltip-title-bold') === '1',
   _hideCyrillicCovers: localStorage.getItem('hide-cyrillic-covers') === '1',
-  _reduceMotion: localStorage.getItem('reduce-motion') === null
-    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    : localStorage.getItem('reduce-motion') === '1',
+  _reduceMotion: localStorage.getItem('reduce-motion') === '1',
   _feedDayCovers: localStorage.getItem('feed-day-covers') !== '0',
   _feedGlassCards: localStorage.getItem('feed-glass-cards') !== '0',
   _landingCoverSource: localStorage.getItem('landing-cover-source') === 'mine' ? 'mine' : 'public',

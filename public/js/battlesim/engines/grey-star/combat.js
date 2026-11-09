@@ -48,6 +48,7 @@ function _captureFightEffects(d) {
     section, weapon: rules.forceWeapon || (['staff','other','none'].includes(d.nextWeapon) ? d.nextWeapon : 'staff'),
     dagger: d.nextDagger === true, spareWeapon: d.nextSpareWeapon === true,
     daggerBonus: definition.daggerBonus ?? 1, companion: d.nextCompanion === true,
+    invulnerable: d.nextInvulnerable === true,
     shield: d.nextShield === true, willSpend: Math.max(1, Math.floor(Number(d.nextWillSpend) || 1)),
     mentalSkill: (Number(d.willpower) || 0) + d.endurance,
     perRoundStaffSpend: definition.roundWillpowerChoice === true,
@@ -101,7 +102,14 @@ function _escapeRoute(d) {
   const effects = d.combatEffects;
   if (!effects || effects.finished) return null;
   const escape = _rulesFor(effects.section).escape;
-  return escape && d.roundsThisBattle >= escape.afterRounds ? escape.route : null;
+  if (!escape || d.roundsThisBattle < escape.afterRounds
+      || (escape.beforeRounds != null && d.roundsThisBattle >= escape.beforeRounds)) return null;
+  if (escape.firstRoundPlayerLossLessThanEnemy) {
+    const losses = effects.firstRoundLosses;
+    if (!losses || !((losses.player === 'K' ? Infinity : losses.player)
+        < (losses.enemy === 'K' ? Infinity : losses.enemy))) return null;
+  }
+  return escape.route;
 }
 
 function _ceaseRoute(d) {
@@ -140,7 +148,8 @@ function _runRound(escape = false) {
   const pick = _pick10();
   const col = _ratioCol(d.ratio);
   const [enemyLoss, printedPlayerLoss] = COMBAT_TABLE[_pickRow(pick)][col];
-  const lwLoss = rules.playerImmune || d.roundsThisBattle <= (rules.ignorePlayerLossRounds || 0) ? 0 : printedPlayerLoss;
+  let lwLoss = rules.playerImmune || (rules.allowInvulnerability && effects?.invulnerable)
+    || d.roundsThisBattle <= (rules.ignorePlayerLossRounds || 0) ? 0 : printedPlayerLoss;
   _appendLog(d, t(key('.log.round'), { round: d.roundsThisBattle, ratio: d.ratio, pick }));
   let spent = 0;
   if (effects && !rules.mentalCombat && effects.weapon === 'staff' && d.willpower > 0) {
@@ -150,6 +159,9 @@ function _runRound(escape = false) {
     _appendLog(d, t(key('.log.will'), { spent, will: d.willpower }));
   }
   const damage = enemyLoss === 'K' ? enemyLoss : enemyLoss * Math.max(1, spent);
+  if (!escape && rules.ignorePlayerLossWhenEnemyLosesMore
+      && (damage === 'K' ? Infinity : damage) > (lwLoss === 'K' ? Infinity : lwLoss)) lwLoss = 0;
+  if (effects && d.roundsThisBattle === 1) effects.firstRoundLosses = {player: lwLoss, enemy: escape ? 0 : damage};
   if (!escape) {
     if (damage === 'K') d.enemy.endurance = 0;
     else d.enemy.endurance = Math.max(0, d.enemy.endurance - damage);
@@ -171,10 +183,13 @@ function _runRound(escape = false) {
     endurance: d.endurance, enduranceMax: d.enduranceInitial,
   }));
 
+  const deadline = effects ? DEADLINES[effects.section] : null;
   if (escape && d.endurance > 0) _stopFight(d, [route]);
+  else if (rules.deadlineBeforeVictory && deadline && d.roundsThisBattle >= deadline[0] && d.endurance > 0) {
+    _stopFight(d, [deadline[1]]);
+  }
   else _checkBattleEnd(d);
   if (effects && !effects.finished) {
-    const deadline = DEADLINES[effects.section];
     if (deadline && d.roundsThisBattle >= deadline[0]) _stopFight(d, deadline[1] ? [deadline[1]] : _willRoutes(d, rules));
   }
   saveState();
@@ -208,7 +223,10 @@ function _checkBattleEnd(d) {
     }
     _appendLog(d, t(key('.log.defeated'), { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
     _recordOutcome(d, 'win');
-    if (effects) _stopFight(d, rules.victoryRoutes || []);
+    const byRound = rules.victoryByRound;
+    if (effects) _stopFight(d, byRound
+      ? [d.roundsThisBattle <= byRound.through ? byRound.within : byRound.after]
+      : rules.victoryRoutes || []);
   } else if (d.endurance <= 0) {
     _appendLog(d, t(key('.log.fallen'), { skull: SVG_SKULL }));
     _recordOutcome(d, 'loss');

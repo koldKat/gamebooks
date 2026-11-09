@@ -208,11 +208,11 @@ test('a public child book can earn independently inside a private anthology',t=>
   assert.equal(f.check(2,21),1);assert.equal(f.wallet(2).rubies_earned,2);
 });
 
-test('rewards require every visited section, combine runs, ignore mapped-only nodes, and never repeat after reset',t=>{
+test('rewards combine visited and mapped manual sections, exclude discovery-only nodes, and never repeat after reset',t=>{
   const f=fixture(t);f.addBook(10);
-  f.save(2,10,[range(1,50),range(52,100)],{graph:Object.fromEntries(range(1,100).map(id=>[id,{}]))});
+  f.save(2,10,[range(1,50),range(52,100)],{graph:{51:{discovered:true,choices:[]}}});
   assert.equal(f.check(2,10),0);
-  f.save(2,10,[range(1,50),range(51,100)]);
+  f.save(2,10,[range(1,50),range(52,100)],{graph:{51:{manual:true,choices:[]}}});
   assert.equal(f.check(2,10),1);assert.equal(f.check(2,10),0);
   f.save(2,10,[]);assert.equal(f.check(2,10),0);assert.equal(f.wallet(2).rubies_earned,1);
   assert.equal(ruby.rubyInfoForUser(f.db,2).rubiesBalance,1);
