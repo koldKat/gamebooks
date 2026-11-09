@@ -41,7 +41,7 @@ function settle(fight) {
   if (rule.consecutiveLoss && fight.consecutiveLost >= rule.consecutiveLoss.count) {
     finish(fight, 'routed', rule.consecutiveLoss.destination); return;
   }
-  if (rule.surviveRounds && fight.round >= rule.surviveRounds) {
+  if (rule.surviveRounds && !fight.roundSequence?.length && fight.round >= rule.surviveRounds) {
     finish(fight, 'win', rule.win); return;
   }
   while (fight.target < fight.enemies.length && !fight.enemies[fight.target].stamina) fight.target++;
@@ -66,10 +66,13 @@ export function startFight(character, entry, {applyEntry = true, opponents} = {}
     fight.character.items[config.consumeItem] = false;
   }
   if (applyEntry && config.entry) {
+    const previousSkill = fight.character.skill;
     const damage = (config.entry.stamina ?? 0) + (config.entry.dice ? die(roll) : 0);
     fight.character.stamina = Math.max(0, fight.character.stamina - damage);
     fight.character.luck = Math.max(0, fight.character.luck - (config.entry.luck ?? 0));
-    fight.events.push({kind:'entry', damage, luck:config.entry.luck ?? 0});
+    fight.character.skill = Math.max(0, Math.min(fight.character.skillInitial,
+      fight.character.skill + (config.entry.skillChange ?? 0)));
+    fight.events.push({kind:'entry', damage, luck:config.entry.luck ?? 0,skillChange:fight.character.skill-previousSkill});
   }
   settle(fight);
   return fight;
@@ -92,6 +95,11 @@ export function attackModifier(fight, items) {
   return modifier;
 }
 function finishRound(fight, roll) {
+  if (fight.roundSequence) fight.roundSequence = fight.roundSequence.filter(index => fight.enemies[index].stamina > 0);
+  if (fight.roundSequence?.length) {
+    settle(fight);
+    return;
+  }
   if (fight.config.roundDamageDice) {
     const damage = die(roll);
     fight.character.stamina = Math.max(0, fight.character.stamina - damage);
@@ -102,16 +110,38 @@ function finishRound(fight, roll) {
 export function roundFight(previous, items, roll) {
   requireFight(previous);
   if (previous.pending) throw new RangeError('Resolve the wound first');
-  const fight = copy(previous); fight.events = []; fight.round++;
-  const enemy = fight.enemies[fight.target];
+  const fight = copy(previous); fight.events = [];
+  if (!fight.roundSequence?.length) {
+    fight.round++;
+    fight.roundPrimaryTarget = fight.target;
+    fight.roundSequence = fight.config.simultaneous
+      ? fight.enemies.flatMap((enemy,index) => enemy.stamina ? [index] : [])
+      : Array(integer(fight.config.attacksPerRound ?? 1, 1, 2)).fill(fight.target);
+    fight.roundPlayerAttack = fight.config.simultaneous
+      ? fight.character.skill + attackModifier(fight, items) + rollDice(roll) : null;
+  }
+  const targetIndex = fight.roundSequence.shift(), enemy = fight.enemies[targetIndex];
+  if (fight.round === 1 && fight.config.firstRoundOutcome) {
+    const direction = fight.config.firstRoundOutcome;
+    if (!['incoming','outgoing'].includes(direction)) throw new RangeError('Invalid opening round');
+    fight.lastRoundWon = direction === 'outgoing';
+    if (direction === 'incoming') { fight.roundsLost++; fight.consecutiveLost++; }
+    fight.events.push({kind:'automaticRound',direction});
+    fight.pending = {direction,enemy:targetIndex};
+    return fight;
+  }
   const enemyAttack = enemy.skill + rollDice(roll);
-  const playerAttack = fight.character.skill + attackModifier(fight, items) + rollDice(roll);
+  const playerAttack = fight.roundPlayerAttack ?? fight.character.skill + attackModifier(fight, items) + rollDice(roll);
   fight.lastRoundWon = playerAttack > enemyAttack;
   const direction = playerAttack > enemyAttack ? 'outgoing' : playerAttack < enemyAttack ? 'incoming' : null;
   fight.consecutiveLost = direction === 'incoming' ? fight.consecutiveLost + 1 : 0;
   if (direction === 'incoming') fight.roundsLost++;
   fight.events.push({kind:'attack', enemy:enemy.displayName || enemy.name, playerAttack, enemyAttack});
-  if (direction) fight.pending = {direction, enemy:fight.target};
+  // In simultaneous combat, only the chosen target can be wounded. Other
+  // opponents still attack against the same player Attack Strength.
+  if (direction && !(direction === 'outgoing' && fight.config.simultaneous && targetIndex !== fight.roundPrimaryTarget)) {
+    fight.pending = {direction, enemy:targetIndex};
+  }
   else finishRound(fight, roll);
   return fight;
 }
@@ -122,28 +152,41 @@ export function resolveWound(previous, useLuck = false, roll) {
   const {direction, enemy} = fight.pending;
   let lucky = null;
   if (useLuck) {
+    if (!fight.character.luck) throw new RangeError('No Luck remaining');
     const total = rollDice(roll); lucky = total <= fight.character.luck;
     fight.character.luck = Math.max(0, fight.character.luck - 1);
     fight.events.push({kind:'luck', total, lucky});
   }
-  const damage = damageWithLuck(direction, 2, lucky);
+  const damage = damageWithLuck(direction, direction === 'outgoing' ? fight.config.outgoingDamage ?? 2 : 2, lucky);
   const target = direction === 'outgoing' ? fight.enemies[enemy] : fight.character;
   target.stamina = Math.max(0, target.stamina - damage);
   fight.events.push({kind:'damage', target:direction === 'outgoing' ? target.displayName || target.name : 'player', damage});
   fight.pending = null;
+  if (direction === 'incoming' && fight.config.loseOnLostRound) {
+    finish(fight, 'loss');
+    return fight;
+  }
   finishRound(fight, roll);
   return fight;
+}
+export function pendingWoundValues(fight) {
+  if (!fight?.pending) return {};
+  const direction = fight.pending.direction;
+  const damage = direction === 'outgoing' ? fight.config.outgoingDamage ?? 2 : 2;
+  return {damage, lucky:damageWithLuck(direction, damage, true), unlucky:damageWithLuck(direction, damage, false)};
 }
 export function canEscape(fight) {
   const rule = fight?.config.escape;
   return Boolean(fight?.status === 'active' && !fight.pending && rule && fight.round >= (rule.afterRounds ?? 0)
-    && fight.target >= (rule.afterEnemies ?? 0) && (!rule.afterWinningRound || fight.lastRoundWon));
+    && fight.target >= (rule.afterEnemies ?? 0) && fight.character.gold >= (rule.gold ?? 0)
+    && (!rule.afterWinningRound || fight.lastRoundWon));
 }
 export function escapeFight(previous) {
   requireFight(previous);
   if (!canEscape(previous)) throw new RangeError('Cannot escape');
   const fight = copy(previous); fight.events = [];
   const damage = fight.config.escape.damage;
+  fight.character.gold -= fight.config.escape.gold ?? 0;
   fight.character.stamina = Math.max(0, fight.character.stamina - damage);
   fight.events.push({kind:'damage', target:'player', damage});
   finish(fight, fight.character.stamina ? 'escaped' : 'loss', fight.character.stamina ? fight.config.escape.destination : null);

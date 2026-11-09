@@ -59,6 +59,8 @@ ALL_PANEL_OVERLAY_IDS.push('party-modal-overlay', 'guide-modal-overlay', 'notebo
 
 // Use physical key codes across keyboard layouts.
 // Capture before the graph canvas can stop propagation.
+ALL_PANEL_OVERLAY_IDS.push('sim261-overlay');
+
 export function registerPanelShortcut(keyCode, { getButton, getOverlay, otherOverlayIds, open, close, extraGuard, capture = false }) {
   document.addEventListener('keydown', e => {
     const tag = e.target.tagName;

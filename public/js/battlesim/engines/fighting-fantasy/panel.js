@@ -51,10 +51,11 @@ export function createFantasyPanel({document,definition,state,getRoster,getSetti
     data.fight=fight;
     for(const event of fight.events){
       if(event.kind==='attack')data.log.push(tk('attack',event));
+      if(event.kind==='automaticRound')data.log.push(tk('automatic.'+event.direction));
       if(event.kind==='luck')data.log.push(tk('luckResult',{n:event.total,result:tk(event.lucky?'lucky':'unlucky')}));
       if(event.kind==='damage')data.log.push(tk('damage',{name:event.target==='player'?tk('you'):event.target,n:event.damage}));
       if(event.kind==='extraDamage')data.log.push(tk('extraDamage',{n:event.damage}));
-      if(event.kind==='entry')data.log.push(tk('entryResult',{n:event.damage,luck:event.luck}));
+      if(event.kind==='entry')data.log.push(tk('entryResult',{n:event.damage,luck:event.luck,skillChange:event.skillChange??0}));
       if(event.kind==='outcome')data.log.push(tk('status.'+event.status)+(event.destination?' '+tk('destination',{n:event.destination}):''));
     }
   }
@@ -76,6 +77,7 @@ export function createFantasyPanel({document,definition,state,getRoster,getSetti
     el('start').disabled=locked||!hero?.stamina;
     el('round').disabled=!locked||Boolean(fight?.pending);
     for(const key of ['acceptWound','useLuck'])el(key).disabled=!locked||!fight?.pending;
+    if(!hero?.luck)el('useLuck').disabled=true;
     el('escape').disabled=!combat.canEscape(fight);
     el('cancel').disabled=!locked;
     el('eat').disabled=locked||!hero?.stamina||!hero?.provisions;
@@ -84,7 +86,7 @@ export function createFantasyPanel({document,definition,state,getRoster,getSetti
     const projectile=items().find(item=>item.damage);
     el('projectile').hidden=!projectile;el('projectile').disabled=!locked||Boolean(fight?.pending)||!hero?.items[projectile?.key];
     el('status').textContent=tk('status.'+(fight?.status??'ready'))+(fight?' · '+tk('roundNumber',{n:fight.round}):'');
-    el('pending').textContent=fight?.pending?tk('pending.'+fight.pending.direction):'';
+    el('pending').textContent=fight?.pending?tk('pending.'+fight.pending.direction,combat.pendingWoundValues(fight)):'';
     el('destination').textContent=fight?.destination?tk('destination',{n:fight.destination}):'';
     el('opponents').innerHTML=(fight?.enemies??[]).map((enemy,index)=>'<div>'+escape((index===fight.target&&locked?'› ':'')+tk('enemyStamina',{name:enemy.displayName||enemy.name,n:enemy.stamina,max:enemy.initialStamina}))+'</div>').join('');
     el('log').innerHTML=data.log.slice(-80).map(line=>'<div>'+escape(line)+'</div>').join('');

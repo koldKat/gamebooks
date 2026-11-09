@@ -497,7 +497,7 @@
 /* Compact, independently saved app and player progression panels. */
 .books-xp-panel {
   min-width: 0;
-  padding: 0.3rem 0.6rem 0.35rem;
+  padding: 0.2rem 0.6rem;
   border: 1px solid #374151;
   border-radius: 8px;
   background: rgba(31, 41, 55, 0.4);
@@ -518,7 +518,12 @@
   font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
 }
 .books-xp-arrow { flex-shrink: 0; margin-left: auto; font-size: 0.85rem; line-height: 1; transition: transform 0.15s; }
-.books-xp-body { display: flex; flex-direction: column; gap: 0.18rem; margin-top: 0.15rem; min-width: 0; }
+.books-xp-body { display: flex; flex-direction: column; gap: 0; margin-top: 0; min-width: 0; }
+.books-xp-body > #avg-lvl-summary,
+.books-xp-body > #app-xp-summary,
+.books-xp-body > .job-xp-summary { gap: 0; }
+.books-xp-body :is(#books-xp-level-row, #app-xp-level-row, #avg-lvl-level-row, .job-xp-level-row) { line-height: 1.15; }
+.books-xp-body > #books-job-xp { margin-top: 0; }
 .books-xp-body > #avg-lvl-summary,
 .books-xp-body > #app-xp-summary,
 .books-xp-body > #app-job-xp-summary { margin: 0; }

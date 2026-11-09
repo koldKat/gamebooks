@@ -24,7 +24,8 @@
     transform: none !important;
     align-items: flex-start !important;
   }
-  #app-reward-float-layer { bottom: 6rem !important; }
+  #reward-float-layer,
+  #app-reward-float-layer { bottom: 1rem !important; }
 }
 
 .reward-float {

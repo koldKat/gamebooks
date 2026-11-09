@@ -8,6 +8,7 @@ import { DIAMOND_SVG } from './diamonds.js';
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 import { floatiesEnabled } from './floaties.js';
+import { enqueueRewardFloater } from './floater-queue.js';
 import { waitForCameraIdle } from '../graph/camera-motion.js';
 
 let _hooks = {};
@@ -287,35 +288,14 @@ function _positionAppRewardLayer(layer) {
   Object.assign(layer.style, { bottom: '1rem', left, transform: 'translateX(-50%)' });
 }
 
-let _appRewardFloaterQueue  = [];
-let _appRewardFloaterActive = false;
-let _appRewardFloaterTimer = null;
-
 window.addEventListener('reward-layer-layout', () => {
   const layer=document.getElementById('app-reward-float-layer');
   if (layer) _positionAppRewardLayer(layer);
 });
 
-function _drainAppRewardFloaterQueue() {
-  if (!floatiesEnabled()) { _appRewardFloaterQueue = []; return; }
-  if (_appRewardFloaterActive) return;
-  if (waitForCameraIdle(_drainAppRewardFloaterQueue)) return;
-  const next = _appRewardFloaterQueue.shift();
-  if (!next) return;
-  const layer = document.getElementById('app-reward-float-layer');
-  if (!layer) return;
-  _appRewardFloaterActive = true;
-  const chip = document.createElement('div');
-  chip.className = `app-reward-float app-reward-float--${next.type}`;
-  chip.innerHTML = next.html;
-  layer.appendChild(chip);
-  _appRewardFloaterTimer = setTimeout(() => { chip.remove(); _appRewardFloaterTimer = null; _appRewardFloaterActive = false; _drainAppRewardFloaterQueue(); }, 5000);
-}
-
 function _spawnAppRewardFloater(type, html) {
   if (!floatiesEnabled()) return;
-  _appRewardFloaterQueue.push({ type, html });
-  _drainAppRewardFloaterQueue();
+  enqueueRewardFloater('admin', type, html);
 }
 
 // Coalesce rewards for the same player within 750ms; never combine different players.
@@ -324,12 +304,9 @@ const _appRewardFlushTimers = new Map(); // username -> timer id
 
 window.addEventListener('floaties-change', () => {
   if (floatiesEnabled()) return;
-  _appRewardFloaterQueue = [];
   _appRewardAccum.clear();
   for (const timer of _appRewardFlushTimers.values()) clearTimeout(timer);
   _appRewardFlushTimers.clear();
-  clearTimeout(_appRewardFloaterTimer); _appRewardFloaterTimer = null;
-  _appRewardFloaterActive = false;
 });
 
 export function handleAppXpEvent(payload) {

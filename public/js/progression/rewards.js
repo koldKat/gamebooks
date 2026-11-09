@@ -12,6 +12,7 @@ import { _broadcastLiveEvent } from '../core/livetab.js';
 import { _scheduleLiveUiRefresh } from '../community/notif.js';
 import { escapeHtml } from '../core/util.js';
 import { floatiesEnabled } from './floaties.js';
+import { enqueueRewardFloater, clearRewardFloaters } from './floater-queue.js';
 import { waitForCameraIdle } from '../graph/camera-motion.js';
 
 // ── State ─────────────────────────────────────────────────────────────────────
@@ -28,9 +29,6 @@ let _rewardAccumXp       = 0;
 let _rewardAccumCoins    = 0;
 let _rewardFlushTimer    = null;
 let _rewardProfileTimer  = null;
-let _rewardFloaterQueue  = [];
-let _rewardFloaterActive = false;
-let _rewardFloaterTimer = null;
 let _pendingSummary = null;
 let _rewardLayoutObserver = null;
 let _rewardBodyObserver = null;
@@ -57,30 +55,12 @@ window.addEventListener('floaties-change', () => {
   _rewardLayoutObserver?.disconnect(); _rewardLayoutObserver = null;
   _rewardBodyObserver?.disconnect(); _rewardBodyObserver = null;
   document.removeEventListener('transitionend', rewardAnchorTransition);
-  _rewardFloaterQueue = [];
+  clearRewardFloaters('personal');
   _rewardAccumXp = 0; _rewardAccumCoins = 0;
   clearTimeout(_rewardFlushTimer); _rewardFlushTimer = null;
-  clearTimeout(_rewardFloaterTimer); _rewardFloaterTimer = null;
-  _rewardFloaterActive = false;
 });
 
 // ── Floater queue ─────────────────────────────────────────────────────────────
-function _drainRewardFloaterQueue() {
-  if (!floatiesEnabled()) { _rewardFloaterQueue = []; return; }
-  if (_rewardFloaterActive) return;
-  if (waitForCameraIdle(_drainRewardFloaterQueue)) return;
-  const next = _rewardFloaterQueue.shift();
-  if (!next) return;
-  const layer = document.getElementById('reward-float-layer');
-  if (!layer) return;
-  _rewardFloaterActive = true;
-  const chip = document.createElement('div');
-  chip.className = `reward-float reward-float--${next.type}`;
-  chip.innerHTML = next.html;
-  layer.appendChild(chip);
-  _rewardFloaterTimer = setTimeout(() => { chip.remove(); _rewardFloaterTimer = null; _rewardFloaterActive = false; _drainRewardFloaterQueue(); }, 5000);
-}
-
 export function _positionRewardLayer() {
   if (!floatiesEnabled()) return;
   if (waitForCameraIdle(_positionRewardLayer)) return;
@@ -152,8 +132,7 @@ export function _positionRewardLayer() {
 
 function _spawnRewardFloater(type, html) {
   if (!floatiesEnabled()) return;
-  _rewardFloaterQueue.push({ type, html });
-  _drainRewardFloaterQueue();
+  enqueueRewardFloater('personal', type, html);
 }
 
 function _queueRewardFloater(xpDelta = 0, coinDelta = 0) {
@@ -186,7 +165,7 @@ export function _resetRewardSnapshotState() {
   _lastCoinsEarned = null;
   _lastRewardUserKey = null; _rewardAccumXp = 0; _rewardAccumCoins = 0;
   if (_rewardFlushTimer) { clearTimeout(_rewardFlushTimer); _rewardFlushTimer = null; }
-  _rewardFloaterQueue = []; _rewardFloaterActive = false;
+  clearRewardFloaters('personal');
 }
 
 // Return XP, coin, and level deltas; the first snapshot establishes a baseline.

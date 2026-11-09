@@ -23,7 +23,9 @@ test('admin floats follow cover-panel reveal and transitions without measuring d
     setTimeout:fn=>{timers.push(fn);return timers.length;},clearTimeout(){}};
   const rewards=readFileSync(new URL('../../../public/js/progression/rewards.js',import.meta.url),'utf8');
   const app=readFileSync(new URL('../../../public/js/progression/app-xp.js',import.meta.url),'utf8');
-  runInNewContext(rewards.replace(/^import .*;\n/gm,'').replace(/^export /gm,'')+'\n'+
+  const queue=readFileSync(new URL('../../../public/js/progression/floater-queue.js',import.meta.url),'utf8');
+  runInNewContext(queue.replace(/^import .*;\n/gm,'').replace(/^export /gm,'')+'\n'+
+    rewards.replace(/^import .*;\n/gm,'').replace(/^export /gm,'')+'\n'+
     app.slice(app.indexOf('// ── "Someone else')).replace(/^export /gm,''),context);
   context._positionRewardLayer();
   assert.equal(variables.get('--personal-reward-left'),'1550px','dialog rewards inherit the personal feed/books gap');
