@@ -127,7 +127,7 @@ export function currentSection() {
 
 // Parameterized progress helpers also support books outside the active state singleton.
 export function allDiscoveredSections() {
-  return discoveredSectionsFor(state.graph, state.playthroughs, state.startSection);
+  return discoveredSectionsFor(state.graph, state.playthroughs, state.startSection, state.uncountedSections);
 }
 
 export function discoveredSectionsFor(graph, playthroughs, startSection, excluded = []) {
@@ -159,15 +159,21 @@ export function mappedCountFor(graph, excluded = []) {
   return Object.keys(graph || {})
     .map(parseSecId)
     // Portal-only sections are mapped even without ordinary choices.
-    .filter(s => !ignored.has(s) && isValidSecId(s) && (!graph[s]?.discovered || graph[s].choices.length > 0 || graph[s].portals?.length > 0))
+    .filter(s => !ignored.has(s) && isValidSecId(s) && isMappedGraphNode(graph[s]))
     .length;
+}
+
+function isMappedGraphNode(node) {
+  return !!node && (!node.discovered
+    || (node.choices || []).some(choice => Number(choice) !== 0 && Number(choice) !== -1)
+    || (node.portals || []).length > 0);
 }
 
 // Only mapped sections may be previewed; knowing a destination must not reveal unread text.
 // Share this predicate across desktop and mobile.
 export function isSectionMapped(secId) {
   const node = state.graph[secId];
-  return !!node && (!node.discovered || (node.choices || []).length > 0 || (node.portals || []).length > 0);
+  return isMappedGraphNode(node);
 }
 
 // Serialize saves so an older response cannot overwrite newer state.

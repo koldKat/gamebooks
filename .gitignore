@@ -26,6 +26,7 @@ public/attachments/
 # Claude Code local settings / memory notes
 .claude/settings.local.json
 memory/
+info/
 
 # Local assistant instructions and one-off extraction helper
 AGENTS.md

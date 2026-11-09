@@ -7,9 +7,12 @@ module.exports = async function checkBrowser({ file, url, profile, root, width, 
   const env = { ...process.env, TMPDIR: root };
   delete env.DISPLAY;
   delete env.WAYLAND_DISPLAY;
-  const child = spawn('nice', ['-n', '15', chromium, '--headless=new', '--no-sandbox', '--disable-gpu',
+  const browserArgs = ['--headless=new', '--no-sandbox', '--disable-gpu',
     '--allow-file-access-from-files', '--remote-debugging-port=0', '--user-data-dir=' + profile,
-    '--window-size=' + width + ',900', 'about:blank'],
+    '--window-size=' + width + ',900', 'about:blank'];
+  const priority = require('node:os').getPriority();
+  const child = spawn(priority >= 15 ? chromium : 'nice',
+    priority >= 15 ? browserArgs : ['-n', String(15 - priority), chromium, ...browserArgs],
   { env, stdio: ['ignore', 'ignore', 'pipe'], detached: true });
   const signalGroup = signal => {
     if (!child.pid) return;

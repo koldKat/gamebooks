@@ -566,9 +566,10 @@ You earn **1 Gold Coin (GC) for every 1,000 XP**. You can also earn bonus coins:
 |-----------|--------|
 | Visit every section of a book | 1 GC |
 | 24 tracked play hours | 1 GC |
-| Every 100 completed runs (across all books) | 1 GC |
 | Visit every section of every book in a series | 1 GC per book in the series |
 | Visit every section of every book in an anthology | 1 GC per book in the anthology |
+
+Completed book runs earn alternating gems across all books: **1 ruby at 50, 150, 250…** and **1 diamond at 100, 200, 300…**. Wins, losses, and battle deaths count once per run; standalone simulator fights do not count.
 
 Click **GC** in the books screen header to open the shop.
 

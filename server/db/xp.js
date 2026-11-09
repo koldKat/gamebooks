@@ -13,6 +13,7 @@ const { getJobTitle } = require('./job-xp');
 const { advanceHeartbeatCoins } = require('./heartbeat-coins');
 const { seasonalXpMultiplier } = require('../seasonal-events');
 const { recordSeasonParticipation } = require('./season-participation');
+const { uncountedReadingSections, supplementalSectionSql, isMappedGraphNode } = require('./reading-section-counts');
 
 // ── Impersonation tokens ──────────────────────────────────────────────────────
 
@@ -425,8 +426,9 @@ function awardXp(userId, event, ref, amountOverride = null) {
   // awarded during a heartbeat. Job events themselves never award XP or coins.
   const snapshot = () => db.prepare(`SELECT
     COALESCE((SELECT diamonds_earned FROM user_diamonds WHERE user_id=?),0) AS earned,
+    COALESCE((SELECT rubies_earned FROM user_rubies WHERE user_id=?),0) AS completionEarned,
     COALESCE((SELECT xp FROM user_job_xp WHERE user_id=?),0) AS jobXp,
-    COALESCE((SELECT xp FROM users WHERE id=?),0) AS normalXp`).get(userId, userId, userId);
+    COALESCE((SELECT xp FROM users WHERE id=?),0) AS normalXp`).get(userId, userId, userId, userId);
   const before = (_xpFeedHook || (_appXpHook && event !== 'idle_heartbeat')) ? snapshot() : null;
   const awarded = _awardXpTx(userId, event, String(ref), amount);
   if (awarded && before) {
@@ -436,6 +438,9 @@ function awardXp(userId, event, ref, amountOverride = null) {
     }
     if (after.earned > before.earned) {
       try { _appXpHook?.({ userId, diamondDelta: after.earned - before.earned }); } catch (_) {}
+    }
+    if (after.completionEarned > before.completionEarned) {
+      try { _appXpHook?.({ userId, rubyDelta: after.completionEarned - before.completionEarned }); } catch (_) {}
     }
     if (computeLevel(after.jobXp) > computeLevel(before.jobXp)) {
       try { _xpFeedHook?.({ type: 'feed_changed', entity: 'profile', action: 'job_level_up', id: userId }); } catch (_) {}
@@ -602,7 +607,7 @@ function _discoveredSet(graph, excluded = []) {
 function _mappedSet(graph, excluded = []) {
   const s = new Set();
   for (const [sec, data] of Object.entries(graph)) {
-    if (!data?.discovered || (data.choices || []).length > 0 || (data.portals || []).length > 0) {
+    if (isMappedGraphNode(data)) {
       const id = _normSec(sec);
       if (id !== null) s.add(id);
     }
@@ -627,7 +632,8 @@ function _visitedSet(playthroughs, excluded = []) {
 function _permanentVisitedCount(userId, bookId) {
   return db.prepare(`SELECT COUNT(*) AS n FROM xp_events x WHERE user_id = ? AND event = 'visit_node' AND ref LIKE ?
     AND NOT EXISTS (SELECT 1 FROM book_reading_entries e WHERE e.book_id = ? AND e.counts_as_section = 0
-      AND x.ref = e.book_id || ':' || e.section_id)`)
+      AND x.ref = e.book_id || ':' || e.section_id)
+    AND NOT ${supplementalSectionSql("substr(x.ref,instr(x.ref,':')+1)")}`)
     .get(userId, `${bookId}:%`, bookId).n;
 }
 
@@ -760,6 +766,7 @@ SIM_HISTORY_KEYS.push('sim1473');
 SIM_HISTORY_KEYS.push('sim1621');
 SIM_HISTORY_KEYS.push('sim1622');
 SIM_HISTORY_KEYS.push('sim1649');
+SIM_HISTORY_KEYS.push('sim261', 'sim262', 'sim281', 'sim282', 'sim283', 'sim284', 'sim310', 'sim311', 'sim312');
 const RETIRED_SIM_HISTORY_KEYS = ['sim758', 'sim2116'];
 
 function processStateXp(userId, bookId, oldState, newState, totalSections) {
@@ -767,7 +774,7 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
   const bookRow = db.prepare(`SELECT b.total_sections, b.discoverable_sections, b.series_id, b.parent_book_id,
     CASE WHEN e.counts_as_section = 0 THEN e.section_id END AS uncounted_entry
     FROM books b LEFT JOIN book_reading_entries e ON e.book_id = b.id WHERE b.id = ?`).get(bookId);
-  const excluded = bookRow?.uncounted_entry == null ? [] : [bookRow.uncounted_entry];
+  const excluded = uncountedReadingSections(db, bookId, bookRow?.uncounted_entry);
   const effective = bookRow?.discoverable_sections ?? totalSections;
 
   // Series-scoped refs deduplicate rewards propagated across books.
@@ -949,17 +956,6 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
     }
   }
 
-  // 1 GC per 100 completed runs milestone - only check when a run just finished
-  if (_anyRunJustCompleted) {
-    const totalCompleted = db.prepare(
-      "SELECT COUNT(*) AS n FROM xp_events WHERE user_id = ? AND event IN ('win_run','death_run','battle_run')"
-    ).get(userId)?.n || 0;
-    const milestones = Math.floor(totalCompleted / 100);
-    for (let m = 1; m <= milestones; m++) {
-      awardCoins(userId, 'runs_milestone', String(m * 100), 1);
-    }
-  }
-
   // Inventory XP - diff across all playthroughs, batched in one transaction
   const _invItems = pts => new Set(
     pts.flatMap(pt => (pt.inventory ?? []).map(s => (typeof s === 'number' ? s : s?.itemId)).filter(id => id != null))
@@ -1038,7 +1034,7 @@ function migrateXpForUser(userId) {
       (s.charSheetTemplate?.fields ?? []).map(f => f?.id).filter(id => id != null)
     );
 
-    const excluded = book.uncounted_entry == null ? [] : [book.uncounted_entry];
+    const excluded = uncountedReadingSections(db, bid, book.uncounted_entry);
     const disc = _discoveredSet(graph, excluded);
     for (const sec of disc) awardXp(userId, 'discover_node', `${bid}:${sec}`);
     if (effective > 0 && disc.size >= effective) awardXp(userId, 'discover_all', bid);

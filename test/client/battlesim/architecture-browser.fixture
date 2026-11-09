@@ -7057,6 +7057,64 @@ for(const id of BOOK_IDS){
     const original=JSON.stringify(data());app.state.playthroughs=[{path:[1],startedAt:2}];app.state.activePtIndex=0;el('start').click();check(app.currentPlaythrough().sim1436===undefined,'Tolkien stale controls cannot write a new run');app.state.playthroughs=[run];app.state.activePtIndex=0;button.click();check(JSON.stringify(data())===original,'Tolkien old run retained');
     check(JSON.stringify([run.inventory,run.equipment,run.sim1303])===preserved,'Tolkien shared items and other sim preserved');
   }
+  if(id===310){
+    const el=key=>document.getElementById('sim310-'+key), run=app.currentPlaythrough();
+    check(requestedRosters.has(310),'Avenger database roster loaded');
+    for(const input of el('opponents').querySelectorAll('[data-stat]'))input.value=({endurance:10,defense:1,damageDice:1,damageBonus:0})[input.dataset.stat];
+    el('start').click();const custom=run.sim310.fight;check(custom&&custom.opponents.length===1,'Avenger custom fight starts');
+    check([...el('opponents').querySelectorAll('[data-stat]')].every(input=>input.disabled),'Avenger setup locks');
+    Math.random=()=>.2;el('attack').click();check(custom.opponents[0].endurance===8&&custom.pendingHits.length===1,'Avenger punch and counter');
+    el('take').click();check(custom.player.endurance===18,'Avenger incoming damage');el('finish').click();
+    const name=el('opponents').querySelector('[role=combobox]');name.value='GOROBEI';name.dispatchEvent(new Event('input',{bubbles:true}));
+    el('opponents').querySelector('[role=option]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));el('start').click();
+    const trial=run.sim310.fight;check(trial.nonlethal,'Avenger nonlethal trial');Math.random=()=>.9;el('attack').click();el('take').click();
+    check(trial.opponents[0].endurance===6,'Avenger printed kick damage');el('round-profile').value='35';el('round-profile').dispatchEvent(new Event('change'));
+    check(trial.opponents[0].endurance===6&&el('technique').value==='punch'&&el('attack-defense').value==='7','Avenger profile switching preserves Endurance');
+  }
+  if(id===311){
+    const el=key=>document.getElementById('sim311-'+key),run=app.currentPlaythrough();
+    check(requestedRosters.has(311),'Assassin database roster loaded');
+    for(const input of el('opponents').querySelectorAll('[data-stat]'))input.value=({endurance:10,defense:1,damageDice:1,damageBonus:0})[input.dataset.stat];
+    el('start').click();Math.random=()=>.2;el('attack').click();el('take').click();
+    check(run.sim311.fight.opponents[0].endurance===8&&run.sim311.fight.player.endurance===18,'Assassin custom encounter works');el('finish').click();
+    const choose=query=>{const name=el('opponents').querySelector('[role=combobox]');name.value=query;name.dispatchEvent(new Event('input',{bubbles:true}));el('opponents').querySelector('[role=option]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));};
+    choose('Goblin King');el('endurance').value='50';
+    const sword=el('opponents').querySelectorAll('fieldset')[1];
+    check([...sword.querySelectorAll('[data-stat="endurance"],[data-stat="defense"]')].every(input=>input.disabled&&input.value===''),'Assassin sword has no invented health');
+    el('start').click();const king=run.sim311.fight;
+    check(el('target').options[1].disabled,'Assassin sword is untargetable');Math.random=()=>.9;el('attack').click();
+    check(king.pendingHits.length===2&&king.pendingHits[0].defense===7&&king.pendingHits[1].defense===6,'Assassin distinct king and sword counters');
+    el('take').click();el('take').click();el('round-profile').value='306';el('round-profile').dispatchEvent(new Event('change'));
+    check(king.opponents[0].endurance===4&&el('technique').value==='kick','Assassin profile switch preserves damage');el('attack').click();
+    check(king.outcome==='win'&&run.sim311.history.length===1,'Assassin king victory ignores counter-only sword');
+    choose('Two Wardogs');el('start').click();const dogs=run.sim311.fight,health=dogs.player.endurance;
+    Math.random=()=>0;el('attack').click();el('attack').click();
+    check(dogs.player.endurance===health-2&&dogs.pendingHits.length===0,'Assassin second-round grip is automatic');
+    el('round-profile').value='284';el('round-profile').dispatchEvent(new Event('change'));
+    check(dogs.opponents[1].endurance===12,'Assassin alternate printed dog health does not reset ongoing fight');
+  }
+  if(id===312){
+    const el=key=>document.getElementById('sim312-'+key),run=app.currentPlaythrough();
+    check(requestedRosters.has(312),'Usurper database roster loaded');
+    const choose=query=>{const name=el('opponents').querySelector('[role=combobox]');name.value=query;name.dispatchEvent(new Event('input',{bubbles:true}));el('opponents').querySelector('[role=option]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));};
+    for(const input of el('opponents').querySelectorAll('[data-stat]'))input.value=({endurance:10,defense:1,damageDice:1,damageBonus:0})[input.dataset.stat];
+    el('start').click();Math.random=()=>.2;el('attack').click();el('take').click();
+    check(run.sim312.fight.opponents[0].endurance===8&&run.sim312.fight.player.endurance===18,'Usurper custom fight works');el('finish').click();
+    choose('Honoric');el('punch').value='10';el('start').click();el('nerve-strike').checked=true;Math.random=()=>0;
+    el('attack').click();check(run.sim312.fight.opponents[0].endurance===13,'Usurper nerve strike fixed damage');el('attack').click();
+    check(run.sim312.fight.outcome==='reader'&&run.sim312.history.length===0,'Usurper threshold does not award a false win');
+    choose('Fiend from the Pit');el('start').click();el('round-profile').value='156';el('round-profile').dispatchEvent(new Event('change'));
+    check(el('inner').checked&&el('inner').disabled,'Usurper required Inner Force is explicit');
+    el('attack').click();el('attack').click();el('attack').click();
+    check(run.sim312.fight.outcome==='win'&&run.sim312.fight.opponents[0].endurance===25&&run.sim312.history.length===1,'Usurper three unwounding blows win');
+    choose('Halvorc');el('endurance').value='50';el('kick').value='10';el('start').click();el('attack').click();
+    check(run.sim312.fight.opponents.length===4&&run.sim312.fight.pendingHits.length===1&&el('block').disabled,'Usurper halvorcs have one unblockable Fate wound');el('take').click();el('finish').click();
+    choose('Double');el('endurance').value='9';el('start').click();
+    check(run.sim312.fight.opponents[0].endurance===9,'Usurper double copies current Endurance');el('attack').click();
+    check(run.sim312.fight.opponents[0].endurance===9&&run.sim312.fight.pendingHits.length===1,'Usurper double blocks and mirrors the punch');el('take').click();
+    el('technique').value='kick';el('technique').dispatchEvent(new Event('change'));
+    check(el('attack-defense').value==='7'&&!el('mirror-controls').hidden,'Usurper mirror controls and defense remain valid');el('attack').click();
+  }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   for(const key of overlay.textContent.match(/battlesim(?:\d+)?\.[\w.]+/g)??[])missingTranslations.add(key);
   check(JSON.stringify(app.currentPlaythrough())===before,'repeat render preserves state '+id);

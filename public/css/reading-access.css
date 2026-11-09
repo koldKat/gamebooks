@@ -100,12 +100,15 @@
 .liveread-body table.reading-encounter-table,
 .m-top table.reading-encounter-table {
   width: 100%;
+  table-layout: auto;
   font-size: 1em;
 }
 .reading-encounter-table th,
 .reading-encounter-table td {
   padding: 0.25em 0.3em;
   text-align: center;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 .reading-encounter-table th:first-child {
   width: 32%;

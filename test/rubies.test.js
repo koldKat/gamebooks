@@ -212,11 +212,25 @@ test('rewards combine visited and mapped manual sections, exclude discovery-only
   const f=fixture(t);f.addBook(10);
   f.save(2,10,[range(1,50),range(52,100)],{graph:{51:{discovered:true,choices:[]}}});
   assert.equal(f.check(2,10),0);
+  for(const marker of [-1,0,'-1','0']) {
+    f.save(2,10,[range(1,50),range(52,100)],{graph:{51:{discovered:true,choices:[marker]}}});
+    assert.equal(f.check(2,10),0,'unvisited ending hint '+marker);
+  }
   f.save(2,10,[range(1,50),range(52,100)],{graph:{51:{manual:true,choices:[]}}});
   assert.equal(f.check(2,10),1);assert.equal(f.check(2,10),0);
   f.save(2,10,[]);assert.equal(f.check(2,10),0);assert.equal(f.wallet(2).rubies_earned,1);
   assert.equal(ruby.rubyInfoForUser(f.db,2).rubiesBalance,1);
   assert.equal(ruby.rubyInfoForUser(f.db,2,true).rubiesBalance,1);
+});
+
+test('earlier actual visits still satisfy completion when ending nodes are marked unvisited in the current chart',t=>{
+  const f=fixture(t);f.addBook(10);
+  const graph=Object.fromEntries(range(1,100).map(n=>[n,n<=88?{choices:[n+1]}:{discovered:true,choices:[-1]}]));
+  f.save(2,10,[range(1,88)],{graph});assert.equal(f.check(2,10),0);
+  const visit=f.db.prepare("INSERT INTO xp_events VALUES(2,'visit_node',?)");
+  for(const n of range(89,100))visit.run('10:'+n);
+  assert.equal(f.check(2,10),1);assert.equal(f.check(2,10),0);
+  assert.equal(JSON.parse(f.db.prepare('SELECT state_data FROM user_books WHERE user_id=2 AND book_id=10').get().state_data).graph[100].discovered,true);
 });
 
 test('sparse and prefixed imported IDs, uncounted entries and out-of-range paths cannot fake completion',t=>{
@@ -292,7 +306,7 @@ test('invalid, nonexistent-account, insufficient-funds and impersonated trades l
   assert.equal(f.db.prepare('SELECT COUNT(*) n FROM coin_events').get().n,0);
 });
 
-test('every registered account has access, and a shortened discoverable count cannot certify missing visits',t=>{
+test('every registered account has access and explicit discoverable limits permit unreachable print sections',t=>{
   const f=fixture(t);
   f.db.exec("UPDATE users SET username='Sashii-old' WHERE id=17; UPDATE users SET username='Sashii' WHERE id=2");
   assert.equal(ruby.hasRubyAccess(f.db,17),true);assert.equal(ruby.hasRubyAccess(f.db,2),true);
@@ -300,8 +314,63 @@ test('every registered account has access, and a shortened discoverable count ca
   assert.deepEqual(ruby.rubyInfoForUser(f.db,999),{});
   assert.equal(f.exchange(2,1,'ordinary-ruby-0001',3,'buy').error,'insufficient_stock');
   f.addBook(1);f.db.exec('UPDATE books SET discoverable_sections=99 WHERE id=1');
-  f.save(17,1,[range(1,99)]);assert.equal(f.check(17,1),0);
-  f.save(17,1,[range(1,100)]);assert.equal(f.check(17,1),1);
+  f.save(17,1,[range(1,98)]);assert.equal(f.check(17,1),0);
+  f.save(17,1,[range(1,99)]);assert.equal(f.check(17,1),1);
+  f.save(17,1,[range(1,100)]);assert.equal(f.check(17,1),0);
+});
+
+test('discoverable completion counts canonical IDs and ignores foreign graph IDs',t=>{
+  const f=fixture(t);f.addBook(1,60);
+  f.db.exec('UPDATE books SET discoverable_sections=50 WHERE id=1');
+  const add=f.db.prepare('INSERT INTO book_sections VALUES(1,?)');
+  for(const n of range(1,60))add.run(String(n*2));
+  f.save(2,1,[range(1,50)]);assert.equal(f.check(2,1),0);
+  f.save(2,1,[range(1,49).map(n=>n*2)],{graph:{extra:{discovered:false}}});
+  assert.equal(f.check(2,1),0);
+  f.save(2,1,[range(1,50).map(n=>n*2)]);assert.equal(f.check(2,1),1);
+});
+
+test('discoverable migration backfills once, preserves progress and excludes invalid IDs',t=>{
+  const f=fixture(t);f.addBook(1,354);
+  f.db.exec('UPDATE books SET discoverable_sections=322 WHERE id=1');
+  f.save(2,1,[range(1,300),range(323,344)]);
+  f.save(17,1,[range(1,321),[355,0,-1,'outside']]);
+  const before=f.db.prepare('SELECT * FROM user_books ORDER BY user_id').all();
+  ruby.backfillRubies(f.db);assert.equal(f.wallet(2).rubies_earned,1);
+  assert.equal(f.wallet(17),undefined);
+  ruby.backfillRubies(f.db);assert.equal(f.wallet(2).rubies_earned,1);
+  assert.deepEqual(f.db.prepare('SELECT * FROM user_books ORDER BY user_id').all(),before);
+});
+
+test('imported epilogues do not inflate canonical section counts or block retroactive diamonds',t=>{
+  const f=fixture(t);f.addBook(1,313);f.addBook(2,470);
+  const add=f.db.prepare('INSERT INTO book_sections VALUES(?,?)');
+  for(const n of range(1,313))add.run(1,String(n));add.run(1,'epilogue');
+  for(const n of range(1,470))add.run(2,String(n));add.run(2,'epilog');
+  f.db.exec('UPDATE books SET discoverable_sections=468 WHERE id=2');
+  f.save(2,1,[range(1,313)]);f.save(2,2,[range(1,470).filter(n=>n!==5&&n!==200)]);
+  const before=f.db.prepare('SELECT * FROM user_books').all();
+  ruby.backfillRubies(f.db);assert.equal(f.wallet(2).rubies_earned,2);
+  ruby.backfillRubies(f.db);assert.equal(f.wallet(2).rubies_earned,2);
+  assert.deepEqual(f.db.prepare('SELECT * FROM user_books').all(),before);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM book_sections').get().n,785);
+});
+
+test('introductory prose cannot replace missing numbered visits or require extra completion visits',t=>{
+  const f=fixture(t);f.addBook(1,50);
+  const add=f.db.prepare('INSERT INTO book_sections VALUES(1,?)');
+  for(const n of range(1,50))add.run(String(n));
+  for(const id of ['Intro','prologue','epilogue-won'])add.run(id);
+  f.save(2,1,[range(1,49),['Intro','prologue','epilogue-won']]);assert.equal(f.check(2,1),0);
+  f.save(2,1,[range(1,50)]);assert.equal(f.check(2,1),1);
+});
+
+test('an explicit reachable limit can certify a sparse import without requiring absent print sections',t=>{
+  const f=fixture(t);f.addBook(1,100);f.db.exec('UPDATE books SET discoverable_sections=80 WHERE id=1');
+  const add=f.db.prepare('INSERT INTO book_sections VALUES(1,?)');
+  for(const n of range(1,80))add.run(String(n));add.run('introduction');
+  f.save(2,1,[range(1,79),['introduction']]);assert.equal(f.check(2,1),0);
+  f.save(2,1,[range(1,80)]);assert.equal(f.check(2,1),1);
 });
 
 test('failed gold notification rolls back a sale and failed trade history rolls back a purchase',t=>{

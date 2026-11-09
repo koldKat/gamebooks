@@ -2,12 +2,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
+import sectionCounts from '../../server/db/reading-section-counts.js';
 
 const source = readFileSync(new URL('../../server/db/xp.js', import.meta.url), 'utf8');
 const helpers = source.slice(source.indexOf('function _normSec('), source.indexOf('// Fall back to the permanent visit ledger'));
 
 test('server progress excludes only configured entries, including references and normalized paths', () => {
-  const context = {};
+  const context = { isMappedGraphNode: sectionCounts.isMappedGraphNode };
   runInNewContext(helpers, context);
   const graph = { prologue: { choices: ['20', 140] }, 20: { choices: ['prologue'] } };
   assert.deepEqual([...context._discoveredSet(graph, ['prologue'])], [20, 140]);
@@ -20,6 +21,8 @@ test('server progress excludes only configured entries, including references and
 test('unnumbered entry cannot award node XP or trigger an early completion milestone', () => {
   const awards = [], coins = [];
   const context = {
+    isMappedGraphNode: sectionCounts.isMappedGraphNode,
+    uncountedReadingSections: (_db, _book, entry) => entry == null ? [] : [entry],
     db: { prepare: sql => ({ get: () => sql.includes('FROM books') ? { uncounted_entry: 'prologue' } : { n: 0 } }) },
     awardXp: (_user, event, ref) => awards.push([event, ref]),
     awardCoins: (_user, event, ref) => coins.push([event, ref]),

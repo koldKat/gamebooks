@@ -1035,3 +1035,4 @@ require('./db/gem-rebrand').retireExchangeUpgrade(db);
 require('./db/job-digging').migrateJobDigging(db, coinBalance);
 require('./db/rubies').backfillRubies(db);
 require('./db/job-level-rubies').initializeJobLevelRubies(db);
+require('./db/completed-run-gems').initializeCompletedRunGems(db);

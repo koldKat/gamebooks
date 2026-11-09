@@ -18,6 +18,8 @@ function fixture({ xp = 495999, purchased = 16, bonus = 393, spent = 899 } = {})
     CREATE TABLE coin_events (id INTEGER PRIMARY KEY, user_id INTEGER, event TEXT, ref TEXT, amount INTEGER,
       UNIQUE(user_id,event,ref));
     CREATE TABLE level_up_templates (id INTEGER PRIMARY KEY, active INTEGER);`);
+  db.exec(`CREATE TABLE user_rubies(user_id INTEGER PRIMARY KEY,rubies_earned INTEGER DEFAULT 0,
+    rubies_bought INTEGER DEFAULT 0,rubies_spent INTEGER DEFAULT 0);`);
   db.prepare('INSERT INTO users(id,xp,bonus_gc_mint_purchased,bonus_coins,coins_spent) VALUES(1,?,?,?,?)')
     .run(xp, purchased, bonus, spent);
   const math = Object.create(Math); math.random = () => 1;
@@ -140,4 +142,20 @@ test('admin hooks report committed mining and Job EV changes, never duplicate or
  assert.deepEqual(events.at(-1),{userId:1,jobXpDelta:0});
  f.db.exec("CREATE TRIGGER reject_xp BEFORE INSERT ON xp_events BEGIN SELECT RAISE(ABORT,'fail xp');END");
  assert.throws(()=>f.context.awardXp(1,'visit_node','diamond-fail',0),/fail xp/);assert.equal(events.length,3);
+});
+
+test('a new completed-run diamond reaches the normal reward hook exactly once',t=>{
+  const f=fixture();t.after(()=>f.db.close());
+  require('../server/db/diamonds').initializeDiamondBalances(f.db);
+  f.db.exec('CREATE TABLE user_job_xp(user_id INTEGER PRIMARY KEY,xp INTEGER);INSERT INTO user_job_xp VALUES(1,0)');
+  const insert=f.db.prepare("INSERT INTO xp_events(user_id,event,ref) VALUES(1,'win_run',?)");
+  for(let n=1;n<=99;n++)insert.run('book:'+n);
+  require('../server/db/completed-run-gems').initializeCompletedRunGems(f.db);
+  const events=[];f.context._appXpHook=event=>events.push(JSON.parse(JSON.stringify(event)));
+  const code=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');
+  vm.runInContext(code.slice(code.indexOf('function awardXp('),code.indexOf('function awardIdleHeartbeatXp(')),f.context);
+  assert.equal(f.context.awardXp(1,'win_run','book:100',0),true);
+  assert.deepEqual(events.filter(event=>event.rubyDelta),[{userId:1,rubyDelta:1}]);
+  const count=events.length;
+  assert.equal(f.context.awardXp(1,'win_run','book:100',0),false);assert.equal(events.length,count);
 });

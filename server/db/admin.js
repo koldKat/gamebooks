@@ -4,7 +4,7 @@
 const { getShopPurchaseTotals, getShopRefundRows } = require('./shop-purchases');
 
 const { db, _naturalCompareByName, _getPdfSize, _getEpubSize } = require('./connection');
-const { computeLevel, getTitleForLevel, getUserXpInfo, getAllUsersXpInfo, getXpAmount, awardXp, awardCoins, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS, RETIRED_SIM_HISTORY_KEYS = [] } = require('./xp');
+const { computeLevel, getTitleForLevel, getUserXpInfo, getAllUsersXpInfo, getXpAmount, awardXp, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS, RETIRED_SIM_HISTORY_KEYS = [] } = require('./xp');
 const { purgeExpiredSessions } = require('./auth');
 const { rubyInfoForUser } = require('./rubies');
 const { getJobTitle } = require('./job-xp');
@@ -1747,25 +1747,6 @@ function adminRefundShopItem(userId, item, all = false) {
       }
 
       db.prepare("INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('book_numbering_xp_backfilled', '1')").run();
-    })();
-  }
-}
-
-// One-time back-fill: grant 1 GC per 100 completed runs milestone
-{
-  const _bfDone = db.prepare("SELECT value FROM admin_settings WHERE key = 'runs_milestone_coin_backfilled'").get();
-  if (!_bfDone) {
-    db.transaction(() => {
-      const rows = db.prepare(
-        "SELECT user_id, COUNT(*) AS n FROM xp_events WHERE event IN ('win_run','death_run','battle_run') GROUP BY user_id"
-      ).all();
-      for (const { user_id, n } of rows) {
-        const milestones = Math.floor(n / 100);
-        for (let m = 1; m <= milestones; m++) {
-          awardCoins(user_id, 'runs_milestone', String(m * 100), 1);
-        }
-      }
-      db.prepare("INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('runs_milestone_coin_backfilled', '1')").run();
     })();
   }
 }

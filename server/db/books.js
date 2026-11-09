@@ -8,6 +8,7 @@ const {
 } = require('./xp');
 const { awardRatingVote } = require('./vote-gems');
 const { leaveParty } = require('./parties');
+const { uncountedReadingSections, supplementalSectionSql } = require('./reading-section-counts');
 
 // Live reading is account-unrestricted; retain one gate for any future access policy.
 function _canLiveRead(_userId) {
@@ -60,6 +61,7 @@ function getBooks(userId) {
       AND NOT EXISTS (SELECT 1 FROM book_reading_entries e
         WHERE e.book_id = CAST(substr(x.ref, 1, instr(x.ref, ':') - 1) AS INTEGER) AND e.counts_as_section = 0
         AND x.ref = e.book_id || ':' || e.section_id)
+      AND NOT ${supplementalSectionSql("substr(x.ref,instr(x.ref,':')+1)")}
     GROUP BY book_id
   `).all(userId).map(row => [row.book_id, row.n]));
   const ratings = new Map(db.prepare(`
@@ -69,6 +71,12 @@ function getBooks(userId) {
     GROUP BY book_id
   `).all(userId).map(row => [row.book_id, row]));
   const extraAnthologyIds = {};
+  const supplementalByBook = new Map();
+  for (const { book_id, section_id } of db.prepare(`SELECT book_id,section_id FROM book_sections
+    WHERE book_id IN (SELECT book_id FROM user_books WHERE user_id=?) AND ${supplementalSectionSql('section_id')}`).all(userId)) {
+    if (!supplementalByBook.has(book_id)) supplementalByBook.set(book_id, []);
+    supplementalByBook.get(book_id).push(section_id);
+  }
   const extraAnthologyOrders = {};
   for (const row of db.prepare(`SELECT book_id, anthology_id, book_order FROM book_anthology_memberships
     WHERE book_id IN (SELECT book_id FROM user_books WHERE user_id = ?)`).all(userId)) {
@@ -82,7 +90,7 @@ function getBooks(userId) {
       const s = JSON.parse(state_data || '{}');
       const pts = s.playthroughs || [];
       // Use normalized section sets so numeric/string IDs cannot inflate progress.
-      const excluded = uncounted_entry == null ? [] : [uncounted_entry];
+      const excluded = [...(supplementalByBook.get(b.id) || []), ...(uncounted_entry == null ? [] : [uncounted_entry])];
       const seen = new Set([..._visitedSet(pts, excluded), ..._mappedSet(s.graph || {}, excluded)]);
       for (const pt of pts) {
         const ts = pt.completedAt || pt.lastActionAt || pt.startedAt || null;
@@ -885,7 +893,7 @@ function getBookState(userId, bookId) {
     s.bookName      = book.name;
     s.totalSections = book.total_sections;
     s.maxSectionNumber = book.max_section_number ?? book.total_sections;
-    s.uncountedSections = book.uncounted_entry == null ? [] : [book.uncounted_entry];
+    s.uncountedSections = uncountedReadingSections(db, bookId, book.uncounted_entry);
     if (book.reading_start_section != null && (s.startSection == null || String(s.startSection) === '1')) {
       const start = book.reading_start_section;
       s.startSection = /^\d+$/.test(start) ? Number(start) : start;
@@ -1050,7 +1058,7 @@ function updateBook(userId, bookId, name, totalSections, isbn, issn, asin, pages
   // if discoverable_sections was just set or changed to a new value.
   if (discoverableSections != null && discoverableSections !== oldDs) {
     const entry = db.prepare('SELECT section_id FROM book_reading_entries WHERE book_id = ? AND counts_as_section = 0').get(bookId);
-    const excluded = entry ? [entry.section_id] : [];
+    const excluded = uncountedReadingSections(db, bookId, entry?.section_id);
     const userRows = db.prepare('SELECT user_id, state_data FROM user_books WHERE book_id = ?').all(bookId);
     for (const row of userRows) {
       let s = {}; try { s = JSON.parse(row.state_data || '{}'); } catch {}

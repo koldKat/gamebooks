@@ -1,6 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { discoveredSectionsFor, mappedCountFor } from '../../../public/js/core/state.js';
+import sectionCounts from '../../../server/db/reading-section-counts.js';
 
 describe('discoveredSectionsFor', () => {
   test('always includes the start section, even with an empty graph', () => {
@@ -80,6 +81,13 @@ describe('mappedCountFor', () => {
     assert.equal(mappedCountFor(graph), 0);
   });
 
+  test('unvisited ending hints do not count until the section is actually mapped', () => {
+    const graph={1:{discovered:true,choices:[-1]},2:{discovered:true,choices:['0']},3:{choices:[0]}};
+    assert.equal(mappedCountFor(graph),1);
+    graph[1].discovered=false;graph[2].discovered=false;
+    assert.equal(mappedCountFor(graph),3);
+  });
+
   test('counts a portal-only node as mapped even with zero choices', () => {
     const graph = { 1: { discovered: true, choices: [], portals: [{ to: 2 }] } };
     assert.equal(mappedCountFor(graph), 1);
@@ -94,5 +102,14 @@ describe('mappedCountFor', () => {
   test('empty graph counts as zero', () => {
     assert.equal(mappedCountFor({}), 0);
     assert.equal(mappedCountFor(null), 0);
+  });
+
+  test('server and client agree on visited nodes, ending hints, real links and portals', () => {
+    for(const discovered of [true,false,undefined]) for(const choices of [[],[0],[-1],['0','-1'],[2],['A1']]) {
+      for(const portals of [[],[{to:2}]]) {
+        const node={discovered,choices,portals};
+        assert.equal(mappedCountFor({1:node}),sectionCounts.isMappedGraphNode(node)?1:0);
+      }
+    }
   });
 });

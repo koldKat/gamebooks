@@ -11,13 +11,16 @@ test('book state supplies the imported opening without replacing alternate start
   db.exec(`CREATE TABLE user_books(user_id,book_id,state_data);
     CREATE TABLE books(id,name,total_sections,max_section_number);
     CREATE TABLE book_reading_entries(book_id,section_id,counts_as_section,start_section_id);
+    CREATE TABLE book_sections(book_id,section_id);
     INSERT INTO books VALUES(988,'Дугулите и вълшебното листо',34,34);
     INSERT INTO book_reading_entries VALUES(988,'opening',0,'opening');`);
   const original = JSON.stringify({ graph:{opening:{choices:['1']}},playthroughs:[{path:['opening','1']}],notebook:'keep' });
   db.prepare('INSERT INTO user_books VALUES(1,988,?)').run(original);
   const source = fs.readFileSync('server/db/books.js','utf8');
   const start = source.indexOf('function getBookState('), end = source.indexOf('// Portal-paused books',start);
-  const get = vm.runInNewContext(source.slice(start,end)+'\ngetBookState',{db});
+  const get = vm.runInNewContext(source.slice(start,end)+'\ngetBookState',{
+    db, ...require('../server/db/reading-section-counts'),
+  });
   const state = get(1,988);
   assert.equal(state.startSection,'opening');
   assert.deepEqual(Array.from(state.uncountedSections),['opening']);

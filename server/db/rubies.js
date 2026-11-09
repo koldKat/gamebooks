@@ -1,5 +1,7 @@
 'use strict';
 
+const { isSupplementalSection, supplementalSectionSql, isMappedGraphNode } = require('./reading-section-counts');
+
 // Completion rewards are permanent, independent of the mutable runs and catalog.
 function hasRubyAccess(db, userId) {
   return !!db.prepare('SELECT 1 FROM users WHERE id=?').get(userId);
@@ -59,10 +61,17 @@ function createRubyCompletionChecker(db) {
   function completion(userId, row) {
     const total = row.total_sections;
     if (!Number.isSafeInteger(total) || total < 1) return { count: 0, complete: false };
-    const canonical = sections.all(row.id).map(s => String(s.section_id)).filter(s => s !== row.uncounted_entry);
+    const target = Number.isSafeInteger(row.discoverable_sections) && row.discoverable_sections > 0
+      && row.discoverable_sections < total ? row.discoverable_sections : total;
+    // Importer-created epilogue destinations keep the ending readable, but are
+    // supplemental prose rather than additional numbered gamebook sections.
+    const canonical = sections.all(row.id).map(s => String(s.section_id))
+      .filter(s => s !== row.uncounted_entry && !isSupplementalSection(s));
     // Sparse/prefixed imports require their actual section IDs, never just a path length.
     // Incomplete imports cannot establish the complete set of required sections.
-    if (canonical.length && canonical.length !== total) return { count: total, complete: false };
+    if (canonical.length && canonical.length !== total && !(target < total && canonical.length >= target)) {
+      return { count: total, complete: false };
+    }
     const visited = new Set(visits.all(userId, `${row.id}:%`).map(v => v.ref.slice(String(row.id).length + 1)));
     let saved;
     try { saved = JSON.parse(state.get(userId, row.id)?.state_data || '{}'); } catch { saved = {}; }
@@ -73,9 +82,17 @@ function createRubyCompletionChecker(db) {
     }
     // Match the graph and XP completion rule, including unreachable manual nodes.
     for (const [id, node] of Object.entries(saved?.graph || {})) {
-      if (!node?.discovered || (node.choices || []).length || (node.portals || []).length) visited.add(String(id));
+      if (isMappedGraphNode(node)) visited.add(String(id));
     }
-    if (canonical.length) return { count: total, complete: canonical.every(id => visited.has(id)) };
+    if (canonical.length) return { count: total,
+      complete: canonical.filter(id => visited.has(id)).length >= target };
+    // An explicit reachable-section limit allows genuine print errors to leave
+    // gaps. Count actual numbered sections, not arbitrary extra graph nodes.
+    if (target < total) {
+      const maximum = row.max_section_number ?? total;
+      const covered = [...visited].filter(id => /^[1-9]\d*$/.test(id) && Number(id) <= maximum).length;
+      return { count: total, complete: covered >= target };
+    }
     // Without imported prose the catalog's ordinary numbered sections are authoritative.
     // A sparse numbering scheme needs imported IDs before it can be certified.
     if ((row.max_section_number ?? total) !== total) return { count: total, complete: false };
@@ -140,6 +157,37 @@ function backfillRubies(db) {
     if (!db.prepare("SELECT 1 FROM ruby_migrations WHERE name='mapped-completion-v1'").get()) {
       for (const { id } of db.prepare('SELECT DISTINCT user_id AS id FROM user_books').all()) backfillRubiesForUser(db,id);
       db.prepare("INSERT INTO ruby_migrations(name) VALUES('mapped-completion-v1')").run();
+    }
+    if (!db.prepare("SELECT 1 FROM ruby_migrations WHERE name='discoverable-completion-v1'").get()) {
+      const check = createRubyCompletionChecker(db);
+      const candidates = db.prepare(`SELECT user_id,book_id FROM user_books WHERE book_id IN
+        (SELECT id FROM books WHERE discoverable_sections>0 AND discoverable_sections<total_sections)
+        UNION SELECT user_id,b.id AS book_id FROM xp_events x JOIN books b
+        ON b.id=CAST(substr(x.ref,1,instr(x.ref,':')-1) AS INTEGER) WHERE x.event='visit_node'
+        AND b.discoverable_sections>0 AND b.discoverable_sections<b.total_sections`).all();
+      for (const {user_id,book_id} of candidates) check(user_id,book_id);
+      db.prepare("INSERT INTO ruby_migrations(name) VALUES('discoverable-completion-v1')").run();
+    }
+    if (!db.prepare("SELECT 1 FROM ruby_migrations WHERE name='supplemental-epilogue-completion-v1'").get()) {
+      const check = createRubyCompletionChecker(db);
+      const candidates = db.prepare(`SELECT DISTINCT ub.user_id,ub.book_id FROM user_books ub
+        JOIN book_sections s ON s.book_id=ub.book_id
+        WHERE lower(s.section_id) IN ('epilog','epilogue')
+        UNION SELECT DISTINCT x.user_id,s.book_id FROM xp_events x JOIN book_sections s
+        ON s.book_id=CAST(substr(x.ref,1,instr(x.ref,':')-1) AS INTEGER)
+        WHERE x.event='visit_node' AND lower(s.section_id) IN ('epilog','epilogue')`).all();
+      for (const {user_id,book_id} of candidates) check(user_id,book_id);
+      db.prepare("INSERT INTO ruby_migrations(name) VALUES('supplemental-epilogue-completion-v1')").run();
+    }
+    if (!db.prepare("SELECT 1 FROM ruby_migrations WHERE name='supplemental-matter-completion-v1'").get()) {
+      const check = createRubyCompletionChecker(db);
+      const candidates = db.prepare(`SELECT DISTINCT ub.user_id,ub.book_id FROM user_books ub
+        JOIN book_sections s ON s.book_id=ub.book_id WHERE ${supplementalSectionSql('s.section_id')}
+        UNION SELECT DISTINCT x.user_id,s.book_id FROM xp_events x JOIN book_sections s
+        ON s.book_id=CAST(substr(x.ref,1,instr(x.ref,':')-1) AS INTEGER)
+        WHERE x.event='visit_node' AND ${supplementalSectionSql('s.section_id')}`).all();
+      for (const {user_id,book_id} of candidates) check(user_id,book_id);
+      db.prepare("INSERT INTO ruby_migrations(name) VALUES('supplemental-matter-completion-v1')").run();
     }
   }).immediate();
 }
