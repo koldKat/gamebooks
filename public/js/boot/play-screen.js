@@ -22,7 +22,7 @@ import { _loadingGraphSvg, _refreshInvDisplay, setDiceRollerVisible, setGuideVis
 import { _pushNav, _lockView } from './navigation.js';
 import { showBooks } from './landing.js';
 
-export async function showMain(bookId, isbn = null, issn = null, asin = null, cover = null, pdfPath = null, pages = null, authors = null, description = null, discoverableSections = null, isPublic = false, isCreator = true, seriesName = null, seriesNumber = null, isContainer = false, parentBookId = null, bookOrder = null, epubPath = null) {
+export async function showMain(bookId, isbn = null, issn = null, asin = null, cover = null, pdfPath = null, pages = null, authors = null, description = null, discoverableSections = null, isPublic = false, isCreator = true, seriesName = null, seriesNumber = null, isContainer = false, parentBookId = null, bookOrder = null) {
   if (_isMobile()) { showBooks(); return false; }
   // Portals switch books directly, without hiding the play screen first.
   // Invalidate the old notebook even when the destination has notes unpinned.
@@ -57,7 +57,6 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
   const _bk = getCachedBooks()?.find(b => b.id === bookId);
   resetBgState(!!(_bk?.bgHidden), _bk?.bgPosY ?? 50);
   bootState._currentBook.pdfPath              = pdfPath;
-  bootState._currentBook.epubPath             = epubPath;
   bootState._currentBook.pages                = pages;
   bootState._currentBook.authors              = authors;
   bootState._currentBook.description          = description;

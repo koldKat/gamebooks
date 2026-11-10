@@ -2,7 +2,7 @@
 
 // Book, library, stash, series, run, enemy, and rating persistence.
 
-const { db, _foldForSearch, _naturalCompare, _naturalCompareByName, _getPdfSize, _getEpubSize } = require('./connection');
+const { db, _foldForSearch, _naturalCompare, _naturalCompareByName, _getPdfSize } = require('./connection');
 const {
   awardXp, awardCoins, reportGemReward, _discoveredSet, _visitedSet, _mappedSet, _permanentVisitedCount, _checkGroupMilestone,
 } = require('./xp');
@@ -40,7 +40,7 @@ function getBooks(userId) {
   const canLiveRead = _canLiveRead(userId);
   const rows = db.prepare(`
     SELECT b.id, b.name, b.total_sections, b.max_section_number, b.discoverable_sections,
-           b.isbn, b.issn, b.asin, b.cover_path, b.pdf_path, b.epub_path, b.created_at, b.created_by, b.is_public,
+           b.isbn, b.issn, b.asin, b.cover_path, b.pdf_path, b.created_at, b.created_by, b.is_public,
            b.pages, b.authors, b.description,
            b.series_id, b.series_number, b.is_container, b.parent_book_id, b.book_order, b.has_battle_sim, b.has_live_reading,
            s.name AS series_name,
@@ -114,7 +114,6 @@ function getBooks(userId) {
     return {
       ...b,
       pdf_size: _getPdfSize(b.pdf_path),
-      epub_size: _getEpubSize(b.epub_path),
       visited,
       last_run_at,
       userRating: user_rating ?? null,
@@ -239,14 +238,6 @@ function getBookBgPref(userId, bookId) {
   };
 }
 
-function awardPdfXp(bookId, uploaderId) {
-  if (uploaderId) {
-    awardXp(uploaderId, 'pdf_available', String(bookId));
-  } else {
-    const users = db.prepare('SELECT user_id FROM user_books WHERE book_id = ?').all(bookId);
-    for (const { user_id } of users) awardXp(user_id, 'pdf_available', String(bookId));
-  }
-}
 
 function setBookPdf(bookId, pdfPath) {
   const book = db.prepare('SELECT pdf_path FROM books WHERE id = ?').get(bookId);
@@ -257,23 +248,7 @@ function setBookPdf(bookId, pdfPath) {
   db.prepare('UPDATE books SET pdf_path = ? WHERE id = ?').run(pdfPath, bookId);
 }
 
-function awardEpubXp(bookId, uploaderId) {
-  if (uploaderId) {
-    awardXp(uploaderId, 'epub_available', String(bookId));
-  } else {
-    const users = db.prepare('SELECT user_id FROM user_books WHERE book_id = ?').all(bookId);
-    for (const { user_id } of users) awardXp(user_id, 'epub_available', String(bookId));
-  }
-}
 
-function setBookEpub(bookId, epubPath) {
-  const book = db.prepare('SELECT epub_path FROM books WHERE id = ?').get(bookId);
-  if (!book) return;
-  if (book.epub_path) {
-    try { require('fs').unlinkSync(require('path').join(__dirname, '..', '..', 'public', 'books', book.epub_path)); } catch (_) {}
-  }
-  db.prepare('UPDATE books SET epub_path = ? WHERE id = ?').run(epubPath, bookId);
-}
 
 function removeBookCover(bookId) {
   const book = db.prepare('SELECT cover_path FROM books WHERE id = ?').get(bookId);
@@ -289,12 +264,6 @@ function removeBookPdf(bookId) {
   db.prepare('UPDATE books SET pdf_path = NULL WHERE id = ?').run(bookId);
 }
 
-function removeBookEpub(bookId) {
-  const book = db.prepare('SELECT epub_path FROM books WHERE id = ?').get(bookId);
-  if (!book?.epub_path) return;
-  try { require('fs').unlinkSync(require('path').join(__dirname, '..', '..', 'public', 'books', book.epub_path)); } catch (_) {}
-  db.prepare('UPDATE books SET epub_path = NULL WHERE id = ?').run(bookId);
-}
 
 function setBookCover(userId, bookId, coverPath, isAdmin = false) {
   const book = db.prepare('SELECT cover_path, created_by FROM books WHERE id = ?').get(bookId);
@@ -753,7 +722,7 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false, userId = null) {
   // Top-level books/anthologies in this series only (no anthology children)
   const books = db.prepare(
     `SELECT b.id, b.name, b.total_sections, b.max_section_number, b.cover_path, b.is_container, b.series_number,
-            b.isbn, b.issn, b.pages, b.authors, b.has_battle_sim, b.has_live_reading, b.pdf_path, b.epub_path,
+            b.isbn, b.issn, b.pages, b.authors, b.has_battle_sim, b.has_live_reading, b.pdf_path,
             (SELECT COUNT(*) FROM books c WHERE c.parent_book_id = b.id AND c.is_public = 1) AS child_count,
             (SELECT MAX(c.has_battle_sim) FROM books c WHERE c.parent_book_id = b.id AND c.is_public = 1) AS child_has_battle_sim
      FROM books b
@@ -765,7 +734,7 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false, userId = null) {
               b.series_number`
   ).all(seriesId);
   const childrenStmt = db.prepare(
-    `SELECT id, name, total_sections, max_section_number, cover_path, isbn, issn, pages, authors, has_battle_sim, has_live_reading, pdf_path, epub_path
+    `SELECT id, name, total_sections, max_section_number, cover_path, isbn, issn, pages, authors, has_battle_sim, has_live_reading, pdf_path
      FROM books WHERE parent_book_id = ? AND is_public = 1
      ORDER BY COALESCE(book_order, id)`
   );
@@ -805,7 +774,6 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false, userId = null) {
             hasBattleSim:  !!c.has_battle_sim,
             hasLiveReading: !!c.has_live_reading,
             pdfPath:       hasPdfAccess ? (c.pdf_path || null) : null,
-            epubPath:      hasPdfAccess ? (c.epub_path || null) : null,
           }))
         : [];
       return {
@@ -824,7 +792,6 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false, userId = null) {
         hasBattleSim:  !!b.has_battle_sim || !!b.child_has_battle_sim,
         hasLiveReading: !!b.has_live_reading,
         pdfPath:       hasPdfAccess ? (b.pdf_path || null) : null,
-        epubPath:      hasPdfAccess ? (b.epub_path || null) : null,
         children,
       };
     }),
@@ -927,12 +894,12 @@ function getActiveBookInSeries(userId, seriesId) {
 
 function getBookById(bookId) {
   const book = db.prepare(`
-    SELECT id, name, total_sections, max_section_number, created_by, is_public, is_container, parent_book_id, cover_path, pdf_path, epub_path
+    SELECT id, name, total_sections, max_section_number, created_by, is_public, is_container, parent_book_id, cover_path, pdf_path
     FROM books
     WHERE id = ?
   `).get(bookId) ?? null;
   if (!book) return null;
-  return { ...book, pdf_size: _getPdfSize(book.pdf_path), epub_size: _getEpubSize(book.epub_path) };
+  return { ...book, pdf_size: _getPdfSize(book.pdf_path) };
 }
 
 // Impersonated saves preserve data but not activity timestamps.
@@ -1093,7 +1060,7 @@ function setNotebook(userId, bookId, text) {
 }
 
 function _pruneUntrackedBook(bookId, userId) {
-  const book = db.prepare('SELECT id, cover_path, pdf_path, epub_path, created_by FROM books WHERE id = ?').get(bookId);
+  const book = db.prepare('SELECT id, cover_path, pdf_path, created_by FROM books WHERE id = ?').get(bookId);
   if (!book) return null;
   // Removing a library entry must not prune another creator's catalog book.
   if (book.created_by != null && book.created_by !== userId) return null;
@@ -1109,11 +1076,11 @@ function _pruneUntrackedBook(bookId, userId) {
 
 function _removeUnreferencedBookFiles(book) {
   const fs = require('fs'), path = require('path');
-  for (const [column, directory] of [['cover_path', 'covers'], ['pdf_path', 'books'], ['epub_path', 'books']]) {
+  for (const [column, directory] of [['cover_path', 'covers'], ['pdf_path', 'books']]) {
     const filename = book[column];
     if (!filename) continue;
     const shared = directory === 'books'
-      ? db.prepare('SELECT 1 FROM books WHERE pdf_path = ? OR epub_path = ? LIMIT 1').get(filename, filename)
+      ? db.prepare('SELECT 1 FROM books WHERE pdf_path = ? LIMIT 1').get(filename)
       : db.prepare('SELECT 1 FROM books WHERE cover_path = ? LIMIT 1').get(filename);
     if (shared) continue;
     const root = path.resolve(__dirname, '..', '..', 'public', directory);
@@ -1348,8 +1315,7 @@ function setSeriesRating(userId, seriesId, rating) {
 
 module.exports = {
   getBooks, getStashes, createStash, updateStash, deleteStash,
-  setBookBgPref, getBookBgPref, awardPdfXp, setBookPdf, removeBookCover, removeBookPdf, setBookCover,
-  awardEpubXp, setBookEpub, removeBookEpub,
+  setBookBgPref, getBookBgPref, setBookPdf, removeBookCover, removeBookPdf, setBookCover,
   getBookContainerFields, getOrCreateSeries, getAllSeries, getSeriesAutocomplete, getBookEnemies, addSeriesToLibrary,
   addAnthologyMember, removeAnthologyMember, getAnthologyExtraMembers,
   _pruneRedundantAnthologyMembership,

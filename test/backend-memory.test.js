@@ -161,11 +161,11 @@ test('real HTTP uploads stream large files and return 413 for both declared and 
   assert.equal(fs.statSync(filename).size, 4 * 1024 * 1024);
 });
 
-test('PDF/EPUB routes preserve permissions and award rewards only after a successful first upload', async () => {
+test('PDF routes preserve permissions without awarding upload rewards', async () => {
   const vm = require('node:vm');
   const routePath = require.resolve('../server/routes/profile');
   const moduleRequire = require('node:module').createRequire(routePath);
-  for (const type of ['Pdf', 'Epub']) for (const scenario of ['forbidden', 'invalid', 'oversized', 'empty', 'aborted', 'first', 'replacement']) {
+  for (const type of ['Pdf']) for (const scenario of ['forbidden', 'invalid', 'oversized', 'empty', 'aborted', 'first', 'replacement']) {
     const calls = [];
     const errors = { invalid: 'INVALID_FILE', oversized: 'PAYLOAD_TOO_LARGE', empty: 'EMPTY_BODY', aborted: 'UPLOAD_ABORTED' };
     const deps = {
@@ -184,7 +184,7 @@ test('PDF/EPUB routes preserve permissions and award rewards only after a succes
     vm.runInContext(fs.readFileSync(routePath, 'utf8'), context);
     await context.module.exports['handleUpload' + type]({}, {}, 42);
     const expected = { forbidden: [403], invalid: ['upload', 415], oversized: ['upload', 413],
-      empty: ['upload', 400], aborted: ['upload'], first: ['upload', 'save', 'xp', 200], replacement: ['upload', 'save', 200] };
+      empty: ['upload', 400], aborted: ['upload'], first: ['upload', 'save', 200], replacement: ['upload', 'save', 200] };
     assert.deepEqual(calls, expected[scenario], type + ': ' + scenario);
   }
 });

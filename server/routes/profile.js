@@ -4,7 +4,6 @@
 
 const fs   = require('fs');
 const path = require('path');
-const { isEpubFile } = require('../epub-validation');
 const { receiveUpload, readFileHeader, isPdfFile } = require('../file-transfer');
 const db   = require('../db');
 const { AVATARS_DIR, COVERS_DIR, BOOKS_DIR, ATTACHMENTS_DIR } = require('../paths');
@@ -283,9 +282,7 @@ async function handleUploadPdf(req, res, bookId) {
     throw e;
   }
 
-  const isFirstPdf = !db.getBookById(bookId)?.pdf_path;
   db.setBookPdf(bookId, filename);
-  if (isFirstPdf) db.awardPdfXp(bookId, userId);
   send(res, 200, { pdfUrl: `/books/${filename}` });
 }
 
@@ -300,44 +297,6 @@ async function handleDeletePdf(req, res, bookId) {
   send(res, 200, { ok: true });
 }
 
-async function handleUploadEpub(req, res, bookId) {
-  let userId = null;
-  if (!isLocalhost(req)) {
-    userId = await authenticate(req, res);
-    if (userId === null) return;
-    const user = db.getUserById(userId);
-    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Gamemaster only' });
-  } else {
-    userId = authenticateOptional(req);
-  }
-
-  const filename = `epubs/${bookId}_${Date.now()}.epub`;
-  try { await receiveUpload(req, path.join(BOOKS_DIR, filename), { maxBytes: 256 * 1024 * 1024, validateFile: isEpubFile }); }
-  catch (e) {
-    if (e.code === 'PAYLOAD_TOO_LARGE') return send(res, 413, { error: 'File too large (max 256 MB)' });
-    if (e.code === 'EMPTY_BODY') return send(res, 400, { error: 'Empty body' });
-    if (e.code === 'INVALID_FILE') return send(res, 415, { error: 'File must be an EPUB' });
-    if (e.code === 'UPLOAD_ABORTED') return;
-    throw e;
-  }
-
-  const isFirstEpub = !db.getBookById(bookId)?.epub_path;
-  db.setBookEpub(bookId, filename);
-  if (isFirstEpub) db.awardEpubXp(bookId, userId);
-  send(res, 200, { epubUrl: `/books/${filename}` });
-}
-
-async function handleDeleteEpub(req, res, bookId) {
-  if (!isLocalhost(req)) {
-    const userId = await authenticate(req, res);
-    if (userId === null) return;
-    const user = db.getUserById(userId);
-    if (!user?.is_protected && !user?.is_admin) return send(res, 403, { error: 'Gamemaster only' });
-  }
-  db.removeBookEpub(bookId);
-  send(res, 200, { ok: true });
-}
-
 module.exports = {
   handleGetProfile,
   handleUpdateProfile,
@@ -348,6 +307,4 @@ module.exports = {
   handleUploadCover,
   handleUploadPdf,
   handleDeletePdf,
-  handleUploadEpub,
-  handleDeleteEpub,
 };

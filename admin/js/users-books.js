@@ -69,7 +69,7 @@ function openBookEditor() {
     title: `Edit ${_bookDetailData.is_container ? 'Anthology' : 'Book'}: ${_bookDetailData.name}`,
     content: document.getElementById('book-edit-form'),
     focus: '#bef-name',
-    onClose: () => { _pendingAdminPdf = null; _pendingAdminEpub = null; _pendingAdminCover = null; _bookEditor = null; },
+    onClose: () => { _pendingAdminPdf = null; _pendingAdminCover = null; _bookEditor = null; },
   });
   _bookEditor.bookId = _bookDetailData.id;
   _bookEditor.data = _bookDetailData;
@@ -984,7 +984,6 @@ export function renderPtsTable(data) {
 
 let _bookDetailData  = null;
 let _pendingAdminPdf = null;
-let _pendingAdminEpub = null;
 let _pendingAdminCover = null;
 
 function _populateBookEditForm(d) {
@@ -1006,12 +1005,9 @@ function _populateBookEditForm(d) {
   document.getElementById('bef-order').value          = d.book_order != null ? d.book_order : '';
   document.getElementById('bef-error').textContent    = '';
   document.getElementById('bef-pdf-file').value       = '';
-  document.getElementById('bef-epub-file').value      = '';
   document.getElementById('bef-cover-file').value     = '';
   document.getElementById('bef-pdf-name').textContent = '';
-  document.getElementById('bef-epub-name').textContent = '';
   _pendingAdminPdf   = null;
-  _pendingAdminEpub  = null;
   _pendingAdminCover = null;
 
   // Populate series datalist
@@ -1078,18 +1074,6 @@ function _populateBookEditForm(d) {
     pdfRemove.style.display = 'none';
   }
 
-  // EPUB
-  const epubLink   = document.getElementById('bef-epub-link');
-  const epubRemove = document.getElementById('bef-epub-remove');
-  if (d.epub_path) {
-    epubLink.href        = pdfUrl(d.epub_path);
-    epubLink.textContent = d.epub_size ? `EPUB (${fmtBytes(d.epub_size)})` : 'Current EPUB';
-    epubLink.style.display   = '';
-    epubRemove.style.display = '';
-  } else {
-    epubLink.style.display   = 'none';
-    epubRemove.style.display = 'none';
-  }
 }
 
 document.getElementById('book-edit-btn').addEventListener('click', () => {
@@ -1171,38 +1155,6 @@ document.getElementById('bef-pdf-remove').addEventListener('click', async () => 
   finally { editor.setBusy(false); }
 });
 
-// EPUB upload
-document.getElementById('bef-epub-btn').addEventListener('click', () => {
-  document.getElementById('bef-epub-file').value = '';
-  document.getElementById('bef-epub-file').click();
-});
-document.getElementById('bef-epub-file').addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  if (file.size > 256 * 1024 * 1024) {
-    document.getElementById('bef-error').textContent = 'EPUB is too large (maximum 256 MB).';
-    e.target.value = '';
-    return;
-  }
-  _pendingAdminEpub = file;
-  document.getElementById('bef-epub-name').textContent = file.name;
-});
-document.getElementById('bef-epub-remove').addEventListener('click', async () => {
-  if (!_currentBookId || !_bookEditor) return;
-  const editor = _bookEditor;
-  editor.setBusy(true);
-  try {
-    const response = await fetch(`/api/books/${editor.bookId}/epub`, { method: 'DELETE' });
-    if (!response.ok) throw new Error(`EPUB removal failed (${response.status}).`);
-    document.getElementById('bef-epub-link').style.display   = 'none';
-    document.getElementById('bef-epub-remove').style.display = 'none';
-    document.getElementById('bef-epub-name').textContent = '';
-    _pendingAdminEpub = null;
-    editor.data.epub_path = null;
-  } catch (error) { document.getElementById('bef-error').textContent = error.message; }
-  finally { editor.setBusy(false); }
-});
-
 document.getElementById('bef-save').addEventListener('click', async () => {
   if (!_bookEditor || _bookEditor.dialog.getAttribute('aria-busy') === 'true') return;
   const editor = _bookEditor;
@@ -1270,19 +1222,6 @@ document.getElementById('bef-save').addEventListener('click', async () => {
       }
     }
 
-    // Upload EPUB if pending
-    if (_pendingAdminEpub) {
-      const buf = await _pendingAdminEpub.arrayBuffer();
-      const er = await fetch(`/api/books/${editor.bookId}/epub`, {
-        method: 'POST', headers: { 'Content-Type': 'application/epub+zip' }, body: buf,
-      });
-      if (!er.ok) {
-        let msg = `EPUB upload failed (${er.status})`;
-        try { const j = await er.json(); if (j.error) msg += `: ${j.error}`; } catch {}
-        errEl.textContent = msg; return;
-      }
-    }
-
     editor.setBusy(false);
     editor.close();
     if (document.getElementById('view-book').style.display !== 'none') {
@@ -1310,7 +1249,6 @@ export async function loadBookDetail(bookId, backCtx, edit = false) {
   document.getElementById('book-edit-form').style.display  = 'none';
   document.getElementById('book-edit-btn').style.display   = '';
   document.getElementById('book-pdf-open-btn').style.display = 'none';
-  document.getElementById('book-epub-open-btn').style.display = 'none';
   document.getElementById('book-meta-bar').innerHTML        = '';
   document.getElementById('book-pts-meta').textContent     = '';
   document.getElementById('book-ratings-body').innerHTML   = '';
@@ -1361,13 +1299,6 @@ export async function loadBookDetail(bookId, backCtx, edit = false) {
       pdfOpenBtn.style.display = '';
     } else {
       pdfOpenBtn.style.display = 'none';
-    }
-    const epubOpenBtn = document.getElementById('book-epub-open-btn');
-    if (d.epub_path) {
-      epubOpenBtn.href = pdfUrl(d.epub_path);
-      epubOpenBtn.style.display = '';
-    } else {
-      epubOpenBtn.style.display = 'none';
     }
     if (d.description) addMetaItem(metaFields, 'Description', d.description);
     metaBar.appendChild(metaFields);

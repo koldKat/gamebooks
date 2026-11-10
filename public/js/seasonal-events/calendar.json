@@ -92,9 +92,7 @@
       "make_series_public",
       "series_open_world",
       "book_added_by_other",
-      "series_added_by_other",
-      "pdf_available",
-      "epub_available"
+      "series_added_by_other"
     ]
   },
   {

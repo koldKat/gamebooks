@@ -84,10 +84,10 @@ function getAdminGcSupply(appBirthAt) {
   const levelUps          = db.prepare("SELECT COALESCE(SUM(CAST((-1 + SQRT(1 + 8.0 * xp / 1000)) / 2 AS INTEGER)), 0) AS n FROM users WHERE xp > 0").get().n;
   const authors           = db.prepare("SELECT COUNT(DISTINCT authors) AS n FROM books WHERE authors IS NOT NULL AND authors != ''").get().n;
   const pdfs              = db.prepare("SELECT COUNT(*) AS n FROM books WHERE pdf_path IS NOT NULL").get().n;
-  const epubs             = db.prepare("SELECT COUNT(*) AS n FROM books WHERE epub_path IS NOT NULL").get().n;
   const days              = Math.floor((Math.floor(Date.now() / 1000) - appBirthAt) / 86400);
   const groupCompletes    = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM coin_events WHERE event IN ('visit_all_series', 'visit_all_anthology')").get().n;
-  const earned            = users + books + series + anthologies + visitAlls + levelUps + authors + pdfs + epubs + days + groupCompletes;
+  const crystals         = db.prepare('SELECT generated FROM admin_crystal_gold WHERE id=1').get()?.generated || 0;
+  const earned            = users + books + series + anthologies + visitAlls + levelUps + authors + pdfs + days + groupCompletes + crystals;
   const gifted      = parseInt(db.prepare("SELECT value FROM admin_settings WHERE key='admin_gc_gifted'").get()?.value || '0');
   return { earned, gifted, available: Math.max(0, earned - gifted) };
 }

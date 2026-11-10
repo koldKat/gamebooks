@@ -23,7 +23,7 @@ An author's rating shows its vote count beside the average. Both are derived fro
 - **Search** - searches titles, authors, series names, and child book names; type `anthology` or `series` to filter by type
 - **Favorites** - while logged in, hover a cover and click the ★ to save it as a favorite; your first favorite earns **5 XP**
 - The wall refreshes automatically whenever books are added or changed
-- For players with PDF/EPUB access, an anthology's file badges also show when one of its public stories has that file format.
+- For players with PDF access, an anthology's file badges also show when one of its public stories has that file format.
 
 Open the ⚙ settings button or press **Ctrl+Y** to adjust cover titles, background options, animation preferences, seasonal sprites, and feed appearance.
 
@@ -160,7 +160,7 @@ If a Gamemaster shared a book with you, **✎** is visible but grayed out - only
 
 ### Lorekeepers
 
-Lorekeepers have a purple diamond badge and can edit the metadata of any public book, anthology or series, plus covers for public books and anthologies, including titles outside their own library. Like every player, they can remove any book, anthology or series from their own library, regardless of its creator, and delete their own stashes. Removing a library entry preserves other players’ copies and progress. They retain creator permissions for their own private books, anthologies and series. They cannot delete other players' entries, edit other players’ private titles, or make another creator’s public title private. The role does not grant Gamemaster access or PDF/EPUB upload access. Lorekeepers can also adjust secondary anthology memberships when both the book and anthology are public. Stats for Nerds lists the number of Lorekeepers under Players.
+Lorekeepers have a purple diamond badge and can edit the metadata of any public book, anthology or series, plus covers for public books and anthologies, including titles outside their own library. Like every player, they can remove any book, anthology or series from their own library, regardless of its creator, and delete their own stashes. Removing a library entry preserves other players’ copies and progress. They retain creator permissions for their own private books, anthologies and series. They cannot delete other players' entries, edit other players’ private titles, or make another creator’s public title private. The role does not grant Gamemaster access or PDF upload access. Lorekeepers can also adjust secondary anthology memberships when both the book and anthology are public. Stats for Nerds lists the number of Lorekeepers under Players.
 
 ### Creating books
 

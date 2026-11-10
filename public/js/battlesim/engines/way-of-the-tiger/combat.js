@@ -36,7 +36,7 @@ function finishRound(fight) {
 // Counter profiles are selected from the current printed passage, not inferred from a route.
 function counters(fight, profiles, random, hit) {
   const rules = fight.rules || {};
-  if (rules.skipCounters || rules.fateWound || hit && rules.skipCountersOnHit) return;
+  if (rules.skipCounters || rules.fateWound || hit && rules.skipCountersOnHit || !hit && rules.skipCountersOnMiss) return;
   const survivors = fight.opponents.filter(enemy => !enemy.counterOnly && alive(enemy)).length;
   for (const profile of profiles) {
     const enemy = fight.opponents[profile.target];
@@ -46,14 +46,15 @@ function counters(fight, profiles, random, hit) {
       ?? (fight.gripActive && profile.target !== rules.grippingOpponent ? rules.grippedCounterDefense : undefined)
       ?? (hit ? rules.counterDefenseOnHit : undefined) ?? enemy.counterDefense ?? profile.defense;
     const roll = dice(2, random);
-    if (roll > defense) {
+    const modifier = rules.counterRollModifier || 0;
+    if (roll + modifier > defense) {
       fight.pendingHits.push({ target: profile.target, defense,
         damage: Math.max(0, dice(profile.damageDice, random) + (profile.damageBonus || 0)
           - (rules.holyProtection ? (fight.player.saintLocket ? 3 : 0) + (fight.player.rubyCirclet ? 4 : 0) : 0)),
         blockable: profile.blockable !== false && rules.unblockable !== true,
         chill: rules.counterChill, grips: profile.target === rules.grippingOpponent });
     }
-    fight.log.push({ type: 'counter', target: profile.target, roll, defense });
+    fight.log.push({ type: 'counter', target: profile.target, roll, modifier, defense });
   }
 }
 
@@ -71,6 +72,10 @@ export function attack(fight, action, random = Math.random) {
   if (rules.innerForceForbidden && action.innerForce || rules.innerForceRequired && !action.innerForce) return false;
   if (action.nerveStrike && (!rules.nerveStrikeDamage || action.innerForce)) return false;
   if (!Number.isFinite(action.defense)) return false;
+  if (rules.yubiJutsuReturnsToReader && fight.player.yubiJutsu) {
+    fight.outcome = 'reader';
+    return true;
+  }
   if (rules.mirrorPlayer) return attackMirror(fight, action, random);
   if (!followup) {
     fight.rounds++; fight.blocksThisRound = 0;
@@ -94,11 +99,13 @@ export function attack(fight, action, random = Math.random) {
   const roll = dice(2, random);
   const chill = fight.attackPenalty?.remaining > 0 ? fight.attackPenalty.penalty : 0;
   if (chill) fight.attackPenalty.remaining--;
-  const modifier = (technique === 'shuriken' ? 0 : (fight.player[technique] || 0) + (action.modifier || 0) + (followup?.modifier || 0) + penalty) - chill;
+  const modifier = (technique === 'shuriken' ? 0 : (fight.player[technique] || 0) + (action.modifier || 0) + (followup?.modifier || 0) + penalty + (rules.attackModifier || 0)) - chill;
   let defense = followup?.defense ?? action.defense;
   if (technique === 'throw') {
-    if (enemy.throwAttempts && rules.repeatThrowDefense != null) defense = rules.repeatThrowDefense;
-    enemy.throwAttempts = (enemy.throwAttempts || 0) + 1;
+    const attempt = (enemy.throwAttempts || 0) + 1;
+    if (rules.repeatThrowDefense != null && (rules.repeatThrowDefenseAtAttempt != null
+      ? attempt === rules.repeatThrowDefenseAtAttempt : attempt > 1)) defense = rules.repeatThrowDefense;
+    enemy.throwAttempts = attempt;
   }
   const hit = roll + modifier > defense;
   let damage = 0;
@@ -117,7 +124,9 @@ export function attack(fight, action, random = Math.random) {
   }
   else if (hit) {
     damage = action.nerveStrike ? rules.nerveStrikeDamage
-      : die(random) + (technique === 'kick' ? 2 : 0) + (followup ? followup.damageBonus ?? 2 : 0) + (rules.attackDamageBonus || 0);
+      : die(random) + (technique === 'kick' ? 2 : 0) + (followup ? followup.damageBonus ?? 2 : 0) + (rules.attackDamageBonus || 0)
+        + (fight.player.yubiJutsu && ['punch', 'kick'].includes(technique)
+          && !(action.innerForce && rules.yubiJutsuCannotCombineWithInnerForce) ? rules.yubiJutsuDamageBonus || 0 : 0);
     if (action.innerForce) damage *= 2;
     damage *= (rules.damageMultiplier ?? 1) * (followup?.damageMultiplier ?? 1);
     damage = Math.max(0, damage - (rules.damageReduction || 0));
@@ -127,6 +136,10 @@ export function attack(fight, action, random = Math.random) {
   }
   if (!hit && technique === 'throw') fight.player.endurance = Math.max(0, fight.player.endurance - (rules.failedThrowDamage || 0));
   fight.log.push({ type: 'attack', target: action.target, technique, roll, modifier, defense, hit, damage });
+  if (!hit && rules.missDamage) {
+    fight.player.endurance = Math.max(0, fight.player.endurance - rules.missDamage);
+    fight.log.push({ type: 'adjustment', change: -rules.missDamage });
+  }
   if (rules.fateWound && !fight.followup) {
     const fate = die(random) + (fight.player.fate || 0);
     fight.log.push({ type: 'fate', roll: fate });
@@ -188,6 +201,7 @@ export function resolveHit(fight, block, random = Math.random) {
   }
   fight.log.push({ type: 'hit', ...hit, block, roll, blocked });
   finish(fight);
+  if (!fight.outcome && !blocked && fight.rules.readerAfterCounterHit) fight.outcome = 'reader';
   if (fight.outcome) fight.pendingHits = [];
   finishRound(fight);
   return true;

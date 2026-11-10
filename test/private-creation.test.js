@@ -21,7 +21,7 @@ function setup() {
       series_id INTEGER REFERENCES series(id) ON DELETE SET NULL, series_number TEXT,
       is_container INTEGER DEFAULT 0, parent_book_id INTEGER, book_order INTEGER, is_public INTEGER DEFAULT 0,
       published_at INTEGER, created_at INTEGER DEFAULT 0, cover_path TEXT,
-      pdf_path TEXT, epub_path TEXT, has_battle_sim INTEGER DEFAULT 0, has_live_reading INTEGER DEFAULT 0);
+      pdf_path TEXT, has_battle_sim INTEGER DEFAULT 0, has_live_reading INTEGER DEFAULT 0);
     CREATE TABLE book_parties (id INTEGER PRIMARY KEY, book_id INTEGER);
     CREATE TABLE party_invites (id INTEGER PRIMARY KEY, party_id INTEGER REFERENCES book_parties(id) ON DELETE CASCADE);
     CREATE TABLE user_books (user_id INTEGER, book_id INTEGER, state_data TEXT, party_id INTEGER, created_at INTEGER DEFAULT 0, updated_at INTEGER, rating REAL, UNIQUE(user_id,book_id));
@@ -32,9 +32,10 @@ function setup() {
     CREATE TABLE stash_excluded_books (stash_id INTEGER REFERENCES user_stashes(id) ON DELETE CASCADE, user_id INTEGER, book_id INTEGER);`);
   const connection = { db, _foldForSearch: s => s.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase(),
     _naturalCompareByName: (a, b) => a.name.localeCompare(b.name), _naturalCompare: (a, b) => String(a).localeCompare(String(b)),
-    _getPdfSize: () => null, _getEpubSize: () => null };
+    _getPdfSize: () => null };
+  db.exec('CREATE TABLE IF NOT EXISTS book_sections(book_id INTEGER,section_id TEXT)');
   function load(name, deps) {
-    const context = vm.createContext({ module: { exports: {} }, require: name => deps[name], Date, console,
+    const context = vm.createContext({ module: { exports: {} }, require: name => name === './reading-section-counts' ? require('../server/db/reading-section-counts') : deps[name], Date, console,
       __dirname: require('node:path').resolve(__dirname, '../server/db') });
     let source = fs.readFileSync(require.resolve('../server/db/' + name), 'utf8');
     if (name === 'books') source = source.slice(0, source.indexOf('// One-time cleanup:')) + source.slice(source.indexOf('function getBookRating('));
@@ -55,16 +56,16 @@ test('series contents deletion prunes orphan books and attachments but preserves
   try {
     db.exec(`INSERT INTO series (id,name,created_by) VALUES (1,'Fantasy Trip',1);
       INSERT INTO user_series (user_id,series_id) VALUES (1,1);
-      INSERT INTO books (id,name,series_id,created_by,cover_path,pdf_path,epub_path) VALUES
-        (1,'Orphan',1,1,'one.png','one.pdf','one.epub'),
-        (2,'Shared',1,1,'two.png','two.pdf',NULL);
+      INSERT INTO books (id,name,series_id,created_by,cover_path,pdf_path) VALUES
+        (1,'Orphan',1,1,'one.png','one.pdf'),
+        (2,'Shared',1,1,'two.png','two.pdf');
       INSERT INTO user_books (user_id,book_id,state_data) VALUES (1,1,'owner'),(1,2,'owner'),(2,2,'preserve');`);
     books.removeSeriesFromLibrary(1, 1);
     assert.equal(db.prepare('SELECT 1 FROM books WHERE id=1').get(), undefined);
     assert.equal(db.prepare('SELECT created_by FROM books WHERE id=2').get().created_by, 2);
     assert.equal(db.prepare('SELECT state_data FROM user_books WHERE user_id=2 AND book_id=2').get().state_data, 'preserve');
     assert.equal(db.prepare('SELECT count(*) AS n FROM user_books WHERE user_id=1').get().n, 0);
-    assert.deepEqual(deletedFiles.map(p => require('node:path').basename(p)).sort(), ['one.epub', 'one.pdf', 'one.png']);
+    assert.deepEqual(deletedFiles.map(p => require('node:path').basename(p)).sort(), ['one.pdf', 'one.png']);
   } finally { db.close(); }
 });
 
@@ -187,16 +188,16 @@ test('anthology contents deletion removes orphan children and their attachments'
 test('container-only deletion preserves children and files still referenced by other books', () => {
   const { db, books, deletedFiles } = setup();
   try {
-    db.exec(`INSERT INTO books (id,name,is_container,parent_book_id,pdf_path,epub_path,cover_path) VALUES
-      (1,'Anthology',1,NULL,'shared.pdf',NULL,'shared.png'),(2,'Child',0,1,'shared.pdf',NULL,'shared.png'),
-      (3,'Standalone',0,NULL,'other.pdf','other.epub',NULL);
+    db.exec(`INSERT INTO books (id,name,is_container,parent_book_id,pdf_path,cover_path) VALUES
+      (1,'Anthology',1,NULL,'shared.pdf','shared.png'),(2,'Child',0,1,'shared.pdf','shared.png'),
+      (3,'Standalone',0,NULL,'other.pdf',NULL);
       INSERT INTO user_books (user_id,book_id) VALUES (1,1),(1,2),(1,3);`);
     assert.equal(books.deleteBook(1, 1, false), true);
     assert.equal(db.prepare('SELECT book_id FROM user_books WHERE book_id=2').get().book_id, 2);
     assert.equal(db.prepare('SELECT parent_book_id FROM books WHERE id=2').get().parent_book_id, null);
     assert.deepEqual(deletedFiles, []);
     assert.equal(books.deleteBook(1, 3), true);
-    assert.deepEqual(deletedFiles.map(p => require('node:path').basename(p)).sort(), ['other.epub', 'other.pdf']);
+    assert.deepEqual(deletedFiles.map(p => require('node:path').basename(p)).sort(), ['other.pdf']);
   } finally { db.close(); }
 });
 
@@ -478,7 +479,7 @@ test('database facade exposes the numbering helper used by book updates', () => 
 test('prefixed imported passages preserve their independent numeric maximum on edit', async () => {
   const { db, books } = setup();
   try {
-    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER, start_section_id TEXT); CREATE TABLE book_sections (book_id INTEGER, section_id TEXT)');
+    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER, start_section_id TEXT); CREATE TABLE IF NOT EXISTS book_sections (book_id INTEGER, section_id TEXT)');
     const book = books.createBook(1, 'Lettered book', 7, null, null, null, null, null, null, null, null, false, null, null, true, 5);
     db.prepare('UPDATE books SET has_live_reading=1 WHERE id=?').run(book.id);
     const add = db.prepare('INSERT INTO book_sections VALUES(?,?)');
@@ -500,7 +501,7 @@ test('prefixed imported passages preserve their independent numeric maximum on e
 test('suffixed map locations preserve the printed numeric maximum when editing metadata', async () => {
   const { db, books } = setup();
   try {
-    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER, start_section_id TEXT); CREATE TABLE book_sections (book_id INTEGER, section_id TEXT)');
+    db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER, start_section_id TEXT); CREATE TABLE IF NOT EXISTS book_sections (book_id INTEGER, section_id TEXT)');
     const book = books.createBook(1, 'Map locations', 571, null, null, null, null, null, null, null, null, false, null, null, true, 454);
     db.prepare('UPDATE books SET has_live_reading=1 WHERE id=?').run(book.id);
     const add = db.prepare('INSERT INTO book_sections VALUES(?,?)');

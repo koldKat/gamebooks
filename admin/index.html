@@ -667,7 +667,7 @@
           <div class="stat-metric"><dt>Standalone books</dt><dd><span id="s-books">-</span></dd></div>
           <div class="stat-metric" data-tooltip="Includes anthology children; excludes anthology containers."><dt>All playable books</dt><dd><span id="s-playable-books">-</span></dd></div>
           <div class="stat-metric"><dt>Anthologies / series</dt><dd class="stat-pair"><span id="s-anthologies">-</span><span id="s-series">-</span></dd></div>
-          <div class="stat-metric"><dt>PDFs / EPUBs</dt><dd class="stat-pair"><span class="val-blue" id="s-pdfs">-</span><span class="val-purple" id="s-epubs">-</span></dd></div>
+          <div class="stat-metric"><dt>PDFs</dt><dd class="stat-pair"><span class="val-blue" id="s-pdfs">-</span></dd></div>
           <div class="stat-metric"><dt>Live reading</dt><dd><span class="val-green" id="s-reading-books">-</span></dd></div>
           <div class="stat-metric"><dt>Catalog sections</dt><dd><span id="s-total-sections">-</span></dd></div>
           <div class="stat-metric"><dt>Battle simulators</dt><dd><span id="s-battle-sims">-</span></dd></div>
@@ -1255,7 +1255,6 @@
       <span class="breadcrumb" id="book-crumb"></span>
       <span id="book-edit-saved" class="tools-saved-msg" style="margin-left:auto">Saved</span>
       <a id="book-pdf-open-btn" href="" target="_blank" class="btn btn-info" style="display:none;text-decoration:none">Open PDF</a>
-      <a id="book-epub-open-btn" href="" target="_blank" class="btn btn-info" style="display:none;text-decoration:none">Open EPUB</a>
       <button id="book-edit-btn" class="btn btn-info admin-edit-btn">Edit</button>
     </div>
 
@@ -1329,16 +1328,6 @@
             <button type="button" id="bef-pdf-btn" class="btn btn-info">Upload PDF</button>
             <input type="file" id="bef-pdf-file" style="display:none" accept="application/pdf">
             <span id="bef-pdf-name" style="font-size:0.75rem;color:#9ca3af"></span>
-          </div>
-
-          <!-- EPUB row -->
-          <div style="background:#111827;border:1px solid #374151;border-radius:6px;padding:0.6rem 0.75rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
-            <span class="section-title" style="margin:0;flex-shrink:0">EPUB</span>
-            <a id="bef-epub-link" href="" target="_blank" style="color:#60a5fa;font-size:0.82rem;display:none">Current EPUB</a>
-            <button type="button" id="bef-epub-remove" class="btn btn-danger" style="display:none">Remove</button>
-            <button type="button" id="bef-epub-btn" class="btn btn-info">Upload EPUB</button>
-            <input type="file" id="bef-epub-file" style="display:none" accept="application/epub+zip,.epub">
-            <span id="bef-epub-name" style="font-size:0.75rem;color:#9ca3af"></span>
           </div>
 
           <!-- Public + anthology toggles -->

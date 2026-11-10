@@ -49,7 +49,7 @@ The Players tab shows identity, registration and activity dates, library and run
 | **Pathmaker** | Assign or remove contributor identity |
 | **Lorekeeper** | Assign or remove public-catalog moderation |
 | **Squire** | Assign or remove the independent badge and reward qualification |
-| **Grant/Revoke Book Access** | Control access to downloadable PDF and EPUB attachments |
+| **Grant/Revoke Book Access** | Control access to downloadable PDF attachments |
 | **Impersonate** | Create a one-time sign-in link for the player's account |
 | **Refund** | Refund the latest or all purchases of a selected shop upgrade |
 | **Delete** | Permanently remove the player and associated data; unavailable for protected accounts |
@@ -70,9 +70,9 @@ The admin series selector searches the global catalog. Selecting **Part of antho
 
 ### Attachments and covers
 
-- Upload or replace PDF and EPUB files up to 256 MB each.
+- Upload or replace PDF files up to 256 MB each.
 - The detail view shows the existing format, size, download link, and removal control.
-- First-upload XP is awarded separately for PDF and EPUB. Replacing a file does not award it again; removal does not revoke previously earned XP.
+- File uploads do not award XP.
 - Cover controls upload, replace, or remove the image.
 
 Book Access for downloads is separate from Live Reading availability. Reading-access policy is maintained in the server configuration; the panel does not provide a general unlock-policy editor.
@@ -154,6 +154,8 @@ Supported body markup:
 | `[label](https://url)` | Link |
 
 ## Gold pool and gifts
+
+Each ruby or diamond generated for a player or the app adds one gold coin to the admin pool, including recorded historical generation. Buying, selling and transferring crystals do not add another coin.
 
 **GC Earned** is the pool's lifetime supply generated from platform activity. **GC Available** is the amount currently available after gifts and event payouts. Replacing an attachment does not add another contribution; removing it removes that file's contribution.
 

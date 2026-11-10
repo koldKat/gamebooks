@@ -219,6 +219,28 @@ test('Knightmare duel outcomes award seasonal XP once and exclude active or canc
   }
 });
 
+test('Overlord and Warbringer reward real outcomes once and exclude reader returns', t => {
+  const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
+  const registration = source.slice(source.indexOf('const SIM_HISTORY_KEYS ='), source.indexOf('const RETIRED_SIM_HISTORY_KEYS ='));
+  const start = source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
+  const end = source.indexOf('\n  }\n\n  // Award every', start);
+  assert.ok(start > 0 && end > start);
+  for (const simKey of ['sim313', 'sim314']) for (const [date, winXp, lossXp] of [['2026-10-31T12:00:00Z', 10, 10], ['2026-11-08T12:00:00Z', 20, 5]]) {
+    const f = fixture(t); f.date(date);
+    vm.runInContext(registration + '\nfunction syncOverlord(newPt,oldPt){const userId=1;' + source.slice(start, end) + '\n}', f.context);
+    const run = { [simKey]: { history: [] } };
+    for (const [outcome, expected] of [['reader', 0], ['win', winXp], ['loss', lossXp]]) {
+      const previous = structuredClone(run), before = f.xp();
+      run[simKey].history.push({ ts: run[simKey].history.length + 1, outcome });
+      f.context.syncOverlord(run, previous);
+      assert.equal(f.xp() - before, expected);
+      f.context.syncOverlord(run, previous);
+      assert.equal(f.xp() - before, expected, 'Duplicate save');
+    }
+    assert.equal(f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n, 2);
+  }
+});
+
 test('Real Life saved outcomes award seasonal XP once and exclude unfinished bouts and voluntary exits', async t => {
   const {createRealLifeState} = await import('../public/js/battlesim/engines/real-life/state.js');
   const {startRealLifeFight, realLifeStep, endRealLifeFight} = await import('../public/js/battlesim/engines/real-life/core.js');
@@ -411,11 +433,11 @@ test('formation saved outcomes award seasonal XP once and include opening-shot l
 
 test('new festivals double only their agreed XP actions, including unlisted attachment rewards',()=>{
  const groups=[
-  ['2026-11-26T12:00:00Z',['share_run','rate_book','rate_series','create_party','join_party'],['win_run','pdf_available','visit_node']],
-  ['2026-12-06T12:00:00Z',['add_book','add_description','add_isbn','add_authors','upload_cover','make_book_public','create_series','make_series_public','pdf_available','epub_available'],['share_run','win_run','idle_heartbeat']],
-  ['2026-12-13T12:00:00Z',['discover_node','visit_node','discover_all','visit_all','discover_all_series','visit_all_series','discover_all_anthology','visit_all_anthology'],['win_run','share_run','pdf_available','idle_heartbeat']]
+  ['2026-11-26T12:00:00Z',['share_run','rate_book','rate_series','create_party','join_party'],['win_run','visit_node']],
+  ['2026-12-06T12:00:00Z',['add_book','add_description','add_isbn','add_authors','upload_cover','make_book_public','create_series','make_series_public'],['share_run','win_run','idle_heartbeat']],
+  ['2026-12-13T12:00:00Z',['discover_node','visit_node','discover_all','visit_all','discover_all_series','visit_all_series','discover_all_anthology','visit_all_anthology'],['win_run','share_run','idle_heartbeat']]
  ];
  for(const [stamp,yes,no] of groups){const date=new Date(stamp);for(const event of yes)assert.equal(seasonalXpMultiplier(event,date),2,event);for(const event of no)assert.equal(seasonalXpMultiplier(event,date),1,event);}
  const nicholas=require('../public/js/seasonal-events/calendar.json').find(e=>e.id==='st-nicholas');
- assert.doesNotMatch(nicholas.description,/pdf|epub|attachment/i);
+ assert.doesNotMatch(nicholas.description,/pdf|attachment/i);
 });

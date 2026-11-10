@@ -26,7 +26,6 @@ function applyStats(d) {
   document.getElementById('s-anthologies').textContent = fmtN(d.anthologies);
   document.getElementById('s-series').textContent      = fmtN(d.series);
   document.getElementById('s-pdfs').textContent        = fmtN(d.pdfCount);
-  document.getElementById('s-epubs').textContent       = fmtN(d.epubCount);
   document.getElementById('s-sessions').textContent   = fmtN(d.sessions);
   document.getElementById('s-mapped').textContent     = fmtN(d.mappedSections);
   document.getElementById('s-discovered').textContent = fmtN(d.discoveredSections);

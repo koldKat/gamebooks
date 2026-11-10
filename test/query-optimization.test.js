@@ -30,7 +30,7 @@ test('catalog aggregates do not multiply children or sections by the number of r
   t.after(() => db.close());
   db.exec(`CREATE TABLE books (id INTEGER PRIMARY KEY, name, cover_path, created_at, published_at, authors,
     is_container, total_sections, max_section_number, description, has_battle_sim, has_live_reading,
-    isbn, issn, asin, pages, pdf_path, epub_path, series_id, series_number, parent_book_id, is_public);
+    isbn, issn, asin, pages, pdf_path, series_id, series_number, parent_book_id, is_public);
     CREATE TABLE series (id INTEGER PRIMARY KEY, name, description, is_open_world, created_at, published_at, is_public);
     CREATE TABLE user_books (user_id, book_id, rating);
     CREATE TABLE user_series (user_id, series_id);

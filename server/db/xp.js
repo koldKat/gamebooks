@@ -47,7 +47,7 @@ const _xpDefaults = {
   create_series: 50, add_series_description: 10, make_series_public: 100,
   series_open_world: 150, book_added_by_other: 100, series_added_by_other: 100,
   join_party: 50, create_party: 75, upload_avatar: 25, public_profile: 75,
-  pdf_available: 150, epub_available: 150, export_book: 50, export_all: 200, idle_heartbeat: 1,
+  export_book: 50, export_all: 200, idle_heartbeat: 1,
   forum_thread: 25, forum_post: 5, party_formed: 0,
   inventory_started: 25, add_item: 5, add_charsheet_field: 5, rate_series: 25,
   equipment_started: 25, equip_item: 5,
@@ -766,7 +766,7 @@ SIM_HISTORY_KEYS.push('sim1473');
 SIM_HISTORY_KEYS.push('sim1621');
 SIM_HISTORY_KEYS.push('sim1622');
 SIM_HISTORY_KEYS.push('sim1649');
-SIM_HISTORY_KEYS.push('sim261', 'sim262', 'sim281', 'sim282', 'sim283', 'sim284', 'sim310', 'sim311', 'sim312');
+SIM_HISTORY_KEYS.push('sim261', 'sim262', 'sim281', 'sim282', 'sim283', 'sim284', 'sim310', 'sim311', 'sim312', 'sim313', 'sim314');
 const RETIRED_SIM_HISTORY_KEYS = ['sim758', 'sim2116'];
 
 function processStateXp(userId, bookId, oldState, newState, totalSections) {

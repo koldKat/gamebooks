@@ -17,7 +17,7 @@ function fixture(t) {
       bonus_diamond_exchange_purchased INTEGER DEFAULT 0, bonus_undos INTEGER DEFAULT 0,
       bonus_fast_travels INTEGER DEFAULT 0);
     CREATE TABLE books (id INTEGER PRIMARY KEY, parent_book_id INTEGER, is_container INTEGER DEFAULT 0,
-      total_sections INTEGER, pdf_path TEXT, epub_path TEXT, has_battle_sim INTEGER DEFAULT 0, has_live_reading INTEGER DEFAULT 0);
+      total_sections INTEGER, pdf_path TEXT, has_battle_sim INTEGER DEFAULT 0, has_live_reading INTEGER DEFAULT 0);
     CREATE TABLE user_books (book_id INTEGER, state_data TEXT);
     CREATE TABLE series (id INTEGER);
     CREATE TABLE sessions (token TEXT, expires_at INTEGER, is_impersonation INTEGER DEFAULT 0);
@@ -136,13 +136,13 @@ test('dashboard catalog and currency totals retain child books, rewards, trades 
   const { db, stats } = fixture(t);
   db.exec(`UPDATE books SET has_live_reading=1,has_battle_sim=1 WHERE id=3;
     UPDATE books SET pdf_path='book.pdf' WHERE id=1;
-    UPDATE books SET pdf_path='',epub_path='book.epub' WHERE id=3;
+    UPDATE books SET pdf_path='' WHERE id=3;
     INSERT INTO user_diamonds VALUES(1,12,3,8,2),(2,4,2,1,1);
     INSERT INTO user_heartbeat_coins VALUES(1,10123),(2,456);
     INSERT INTO diamond_market VALUES(1,7,9);`);
   const changes=db.prepare('SELECT total_changes() n').get().n,s=stats();
+  assert.equal(s.pdfCount,1);
   assert.equal(s.playableBooks,2);assert.equal(s.readingBooks,1);assert.equal(s.battleSims,1);
-  assert.equal(s.pdfCount,1);assert.equal(s.epubCount,1);
   assert.equal(s.diamondsEarned,16);assert.equal(s.diamondsAvailable,12);
   assert.equal(s.diamondsSold,9);assert.equal(s.diamondsBought,5);assert.equal(s.luckyDiamondsEarned,3);
   assert.equal(s.bronzeAvailable,79);assert.equal(s.silverAvailable,5);

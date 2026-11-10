@@ -7,7 +7,7 @@ const Database = require('better-sqlite3');
 
 function library() {
   const raw = new Database(':memory:');
-  const columns = 'id name total_sections max_section_number discoverable_sections isbn issn asin cover_path pdf_path epub_path created_at created_by is_public pages authors description series_id series_number is_container parent_book_id book_order has_battle_sim has_live_reading'.split(' ');
+  const columns = 'id name total_sections max_section_number discoverable_sections isbn issn asin cover_path pdf_path created_at created_by is_public pages authors description series_id series_number is_container parent_book_id book_order has_battle_sim has_live_reading'.split(' ');
   raw.exec(`CREATE TABLE books (${columns.map(name => name + (name === 'id' ? ' INTEGER PRIMARY KEY' : '')).join(',')});
     CREATE TABLE series (id INTEGER, name TEXT);
     CREATE TABLE user_books (user_id INTEGER, book_id INTEGER, state_data TEXT, created_at INTEGER, updated_at INTEGER, rating REAL, party_id INTEGER, bg_hidden INTEGER, bg_pos_y INTEGER);
@@ -18,7 +18,7 @@ function library() {
   let queries = 0;
   const db = { prepare(sql) { queries++; return raw.prepare(sql); } };
   const context = vm.createContext({ module: { exports: {} }, require(name) {
-    if (name === './connection') return { db, _getPdfSize: () => null, _getEpubSize: () => null };
+    if (name === './connection') return { db, _getPdfSize: () => null };
     if (name === './reading-section-counts') return require('../server/db/reading-section-counts');
     if (name === './vote-gems' || name === './parties') return {};
     if (name === './xp') return {

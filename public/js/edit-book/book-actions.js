@@ -2,7 +2,7 @@ import { editState } from './state.js';
 import { apiFetch } from '../core/state.js';
 import { t } from '../i18n.js';
 import { pauseCoversAutoRefresh, resumeCoversAutoRefresh } from '../covers.js';
-import { _setButtonsDisabled, _uploadPdfWithProgress, _uploadEpubWithProgress } from './uploads.js';
+import { _setButtonsDisabled, _uploadPdfWithProgress } from './uploads.js';
 import { validateIsbn, validateIssn, validateAsin } from './validators.js';
 
 export function bindBookActions({ pubTypeEl, minSections, minMaxSectionNumber, showDiscoverableSections, discoverableHint, initialSections, initialMaxSectionNumber = null, initialDiscoverableSections, onSave, closeEditBookModal }) {
@@ -64,7 +64,6 @@ export function bindBookActions({ pubTypeEl, minSections, minMaxSectionNumber, s
 
     const cover = editState._pendingCoverBlob;
     const pdf = editState._pendingPdfFile;
-    const epub = editState._pendingEpubFile;
     if (cover && bookId) {
       try {
         const coverRes  = await apiFetch(`/api/books/${bookId}/cover`, {
@@ -102,21 +101,6 @@ export function bindBookActions({ pubTypeEl, minSections, minMaxSectionNumber, s
     }
 
     if (!isCurrent()) { resumeCoversAutoRefresh(); return; }
-
-    if (epub && bookId) {
-      _setButtonsDisabled(['edit-book-save', 'edit-book-cancel'], true);
-      try {
-        const epubData = await _uploadEpubWithProgress(`/api/books/${bookId}/epub`, epub, 'edit-book', isCurrent);
-        editState._hooks.scheduleRewardProfileRefresh?.();
-        editState._hooks.onEpubChanged?.(bookId, epubData?.epubUrl ? epubData.epubUrl.split('/').pop() : null, epub.size);
-      } catch (e) {
-        resumeCoversAutoRefresh();
-        if (isCurrent()) errEl.textContent = e?.message || t('editbook.epub_upload_failed');
-        return;
-      } finally {
-        if (isCurrent()) _setButtonsDisabled(['edit-book-save', 'edit-book-cancel'], false);
-      }
-    }
 
     resumeCoversAutoRefresh();
     if (!isCurrent()) return;

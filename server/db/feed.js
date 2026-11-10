@@ -1211,22 +1211,20 @@ function getAllPublicBooks(hasPdfAccess = false) {
        SELECT parent_book_id, GROUP_CONCAT(name, '|||') AS child_names,
               GROUP_CONCAT(id) AS child_ids, SUM(total_sections) AS total_sections,
               MAX(has_battle_sim) AS has_battle_sim, MAX(has_live_reading) AS has_live_reading,
-              MAX(CASE WHEN pdf_path IS NOT NULL AND pdf_path != '' THEN 1 ELSE 0 END) AS has_pdf,
-              MAX(CASE WHEN epub_path IS NOT NULL AND epub_path != '' THEN 1 ELSE 0 END) AS has_epub
+              MAX(CASE WHEN pdf_path IS NOT NULL AND pdf_path != '' THEN 1 ELSE 0 END) AS has_pdf
        FROM books WHERE is_public = 1 AND parent_book_id IS NOT NULL GROUP BY parent_book_id
      ), library_stats AS (
        SELECT book_id, COUNT(DISTINCT user_id) AS library_count FROM user_books GROUP BY book_id
      )
      SELECT b.id, b.name, b.cover_path, b.created_at, b.published_at, b.authors,
             b.is_container, b.total_sections, b.max_section_number, b.description, b.has_battle_sim, b.has_live_reading,
-            b.isbn, b.issn, b.asin, b.pages, b.pdf_path, b.epub_path,
+            b.isbn, b.issn, b.asin, b.pages, b.pdf_path,
             s.id AS series_id, CASE WHEN s.id IS NOT NULL THEN b.series_number END AS series_number, s.name AS series_name,
             c.child_names, c.child_ids,
             COALESCE(c.total_sections, 0) AS children_total_sections,
             COALESCE(c.has_battle_sim, 0) AS child_has_battle_sim,
             COALESCE(c.has_live_reading, 0) AS child_has_live_reading,
             COALESCE(c.has_pdf, 0) AS child_has_pdf,
-            COALESCE(c.has_epub, 0) AS child_has_epub,
             COALESCE(ub.library_count, 0) AS library_count
      FROM books b
      LEFT JOIN child_stats c ON c.parent_book_id = b.id
@@ -1259,9 +1257,7 @@ function getAllPublicBooks(hasPdfAccess = false) {
     // PDF availability is per-user metadata - only present for admins and
     // pdf_access holders (same gating as getPublicSeriesInfo's pdfPath).
     pdfPath: hasPdfAccess ? (r.pdf_path || null) : null,
-    epubPath: hasPdfAccess ? (r.epub_path || null) : null,
     hasPdf: hasPdfAccess && !!(r.pdf_path || r.child_has_pdf),
-    hasEpub: hasPdfAccess && !!(r.epub_path || r.child_has_epub),
   }));
 }
 

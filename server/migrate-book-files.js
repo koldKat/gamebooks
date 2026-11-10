@@ -22,11 +22,11 @@ function sameFile(a, b) {
 
 function migrateBookFiles(db, directory, { cleanup = false } = {}) {
   const files = fs.readdirSync(directory, { withFileTypes: true })
-    .filter(entry => entry.isFile() && /\.(pdf|epub)$/i.test(entry.name))
+    .filter(entry => entry.isFile() && /\.(pdf)$/i.test(entry.name))
     .map(entry => ({ name: entry.name, relative: path.extname(entry.name).slice(1).toLowerCase() + 's/' + entry.name }));
   const changes = [];
-  for (const row of db.prepare('SELECT id,pdf_path,epub_path FROM books ORDER BY id').all()) {
-    for (const [column, folder, extension] of [['pdf_path', 'pdfs', '.pdf'], ['epub_path', 'epubs', '.epub']]) {
+  for (const row of db.prepare('SELECT id,pdf_path FROM books ORDER BY id').all()) {
+    for (const [column, folder, extension] of [['pdf_path', 'pdfs', '.pdf']]) {
       const value = row[column];
       if (!value) continue;
       const nested = value.startsWith(folder + '/');
@@ -40,7 +40,7 @@ function migrateBookFiles(db, directory, { cleanup = false } = {}) {
     }
   }
   // Stage identical hard links first. Old server instances and links remain usable.
-  for (const folder of ['pdfs', 'epubs']) fs.mkdirSync(path.join(directory, folder), { recursive: true });
+  for (const folder of ['pdfs']) fs.mkdirSync(path.join(directory, folder), { recursive: true });
   for (const file of files) {
     const source = path.join(directory, file.name), target = path.join(directory, file.relative);
     if (!fs.existsSync(target)) fs.linkSync(source, target);
@@ -60,9 +60,9 @@ function migrateBookFiles(db, directory, { cleanup = false } = {}) {
   let removed = 0;
   if (cleanup) {
     db.transaction(() => {
-      const referenced = db.prepare('SELECT 1 FROM books WHERE pdf_path=? OR epub_path=? LIMIT 1');
+      const referenced = db.prepare('SELECT 1 FROM books WHERE pdf_path=? LIMIT 1');
       for (const file of files) {
-        if (referenced.get(file.name, file.name)) throw Error(`Flat file still referenced: ${file.name}`);
+        if (referenced.get(file.name)) throw Error(`Flat file still referenced: ${file.name}`);
         if (!sameFile(path.join(directory, file.name), path.join(directory, file.relative)))
           throw Error(`Destination changed: ${file.relative}`);
       }

@@ -31,9 +31,9 @@ test('moderator cover uploads preserve creator access while rejecting other priv
   let publicChildren = [], catalogPushes = 0;
   const routes = load('../server/routes/profile', {
     fs: { writeFileSync() { writes++; } },
+    '../paths': { COVERS_DIR: '/tmp' }, '../runtime-state': {},
     '../db': { isUserAdmin: () => admin, isUserModerator: () => moderator, getBookById: () => book,
       getBookState: () => null, getPublicBookMeta: () => ({children: publicChildren}), setBookCover: (...args) => { saved = args; }, awardXp() {} },
-    '../paths': { COVERS_DIR: '/tmp' }, '../epub-validation': {}, '../runtime-state': {},
     '../sse': { publicCatalogPush() { catalogPushes++; } },
     '../request-helpers': { isLocalhost: () => false, authenticate: async () => 2,
       readRawBody: async () => { reads++; return Buffer.from('image'); }, isAllowedImage: () => true,
@@ -97,7 +97,7 @@ test('library book and anthology removal is authenticated and independent of cre
     '../db': {
       isUserAdmin: () => admin, isUserModerator: () => moderator,
       getBookById: () => book, getBookIdentifiers: () => book,
-      deleteBook: (...args) => { deleted.push(args); return !!book; },
+      deleteBook: (...args) => { deleted.push(args.slice(0, 3)); return !!book; },
     },
     '../export': {},
     '../request-helpers': { authenticate: async () => userId, send: (_res, code) => { status = code; } },
@@ -140,8 +140,8 @@ test('moderator series deletion preserves cascade options and transfers shared o
     '../db': {
       isUserAdmin: () => false, isUserModerator: () => true,
       getSeriesById: () => series,
-      removeSeriesFromLibrary: (...args) => effects.push(['cascade', ...args]),
-      removeSeriesEntryOnly: (...args) => effects.push(['entry', ...args]),
+      removeSeriesFromLibrary: (...args) => effects.push(['cascade', ...args.slice(0, 2)]),
+      removeSeriesEntryOnly: (...args) => effects.push(['entry', ...args.slice(0, 2)]),
       getNextSeriesUser: () => next,
       transferSeriesOwnership: (...args) => effects.push(['transfer', ...args]),
       deleteSeries: id => effects.push(['delete', id]),

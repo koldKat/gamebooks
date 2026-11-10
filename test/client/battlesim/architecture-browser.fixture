@@ -7093,6 +7093,47 @@ for(const id of BOOK_IDS){
     el('round-profile').value='284';el('round-profile').dispatchEvent(new Event('change'));
     check(dogs.opponents[1].endurance===12,'Assassin alternate printed dog health does not reset ongoing fight');
   }
+  if(id===314){
+    const el=key=>document.getElementById('sim314-'+key),run=app.currentPlaythrough();
+    check(requestedRosters.has(314),'Warbringer database roster loaded');
+    for(const input of el('opponents').querySelectorAll('[data-stat]'))input.value=({endurance:10,defense:1,damageDice:1,damageBonus:0})[input.dataset.stat];
+    el('start').click();Math.random=()=>.2;el('attack').click();el('take').click();
+    check(run.sim314.fight.opponents[0].endurance===8&&run.sim314.fight.player.endurance===18,'Warbringer custom encounter works');el('finish').click();
+    const choose=query=>{const name=el('opponents').querySelector('[role=combobox]');name.value=query;name.dispatchEvent(new Event('input',{bubbles:true}));el('opponents').querySelector('[role=option]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));};
+    choose('Mounted Old One · Sceptre · 70');el('endurance').value='100';el('start').click();
+    check(el('inner').disabled&&el('technique').selectedOptions[0].textContent==='Sceptre','Warbringer Sceptre label and Inner Force restriction');
+    Math.random=()=>.9;el('attack').click();check(run.sim314.fight.opponents[0].endurance===13,'Warbringer Sceptre does one die plus three: '+JSON.stringify(run.sim314.fight));el('take').click();
+    check(run.sim314.fight.outcome==='reader'&&run.sim314.history.length===0,'Warbringer Old One injury returns to reader without false win');
+    choose('Spawn of the Rift · Cobra Strike · 263');el('yubiJutsu').checked=true;el('start').click();el('attack').click();
+    check(run.sim314.fight.outcome==='reader'&&run.sim314.fight.rounds===0,'Warbringer scripted nerve strike stays in reader');
+    choose('Spawn of the Rift · Forked Lightning · 213');el('start').click();el('attack').click();
+    check(el('block').disabled,'Warbringer Spawn counterattack cannot be blocked');el('take').click();el('finish').click();
+    choose('Honoric · Forked Lightning · 360');el('yubiJutsu').checked=true;el('start').click();el('inner').checked=true;el('attack').click();
+    check(run.sim314.fight.opponents[0].endurance===8,'Warbringer Inner Force excludes nerve-striking bonus');el('take').click();
+    el('round-profile').value='370';el('round-profile').dispatchEvent(new Event('change'));el('attack').click();
+    check(run.sim314.fight.outcome==='reader'&&run.sim314.history.length===0,'Warbringer Honoric threshold gives no false win');
+    const saved=JSON.stringify(run.sim314);module.render();check(JSON.stringify(run.sim314)===saved,'Warbringer render preserves saved fight');
+  }
+  if(id===313){
+    const el=key=>document.getElementById('sim313-'+key),run=app.currentPlaythrough();
+    check(requestedRosters.has(313),'Overlord database roster loaded');
+    check(el('yubiJutsu')&&!el('nerve-strike'),'Overlord uses its printed Yubi bonus, not fixed11 damage');
+    for(const input of el('opponents').querySelectorAll('[data-stat]'))input.value=({endurance:10,defense:1,damageDice:1,damageBonus:0})[input.dataset.stat];
+    el('start').click();Math.random=()=>.2;el('attack').click();el('take').click();
+    check(run.sim313.fight.opponents[0].endurance===8&&run.sim313.fight.player.endurance===18,'Overlord custom encounter works');el('finish').click();
+    const choose=query=>{const name=el('opponents').querySelector('[role=combobox]');name.value=query;name.dispatchEvent(new Event('input',{bubbles:true}));el('opponents').querySelector('[role=option]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));};
+    choose('Grandmaster of Shadows · 18');el('yubiJutsu').checked=true;el('endurance').value='100';el('start').click();Math.random=()=>.9;el('attack').click();
+    check(run.sim313.fight.opponents[0].endurance===8&&el('yubiJutsu').disabled,'Overlord Yubi bonus applies and setup locks');el('take').click();
+    el('round-profile').value='30';el('round-profile').dispatchEvent(new Event('change'));
+    check(run.sim313.fight.opponents[0].endurance===8&&el('technique').value==='kick','Overlord profile switch preserves damage');el('attack').click();
+    check(run.sim313.fight.outcome==='win'&&run.sim313.history.length===1,'Overlord true combat win recorded once');
+    choose('Devil-Beast · 338');el('endurance').value='100';el('start').click();el('attack').click();el('take').click();el('attack').click();
+    check(run.sim313.fight.outcome==='reader'&&run.sim313.history.length===1,'Overlord four-Endurance threshold gives no false win');
+    choose('Ninja with Kusarigama · 268');el('endurance').value='100';el('start').click();Math.random=()=>0;el('attack').click();
+    check(run.sim313.fight.player.endurance===96&&run.sim313.fight.pendingHits.length===0,'Overlord missed chain kick loses exactly four Endurance');
+    const saved=JSON.stringify(run.sim313);module.render();check(JSON.stringify(run.sim313)===saved,'Overlord render preserves ongoing fight');
+    el('finish').click();
+  }
   if(id===312){
     const el=key=>document.getElementById('sim312-'+key),run=app.currentPlaythrough();
     check(requestedRosters.has(312),'Usurper database roster loaded');

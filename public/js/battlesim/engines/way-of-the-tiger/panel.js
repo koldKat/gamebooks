@@ -49,6 +49,14 @@ export function createTigerPanel({ definition, getEncounters }) {
     }
   }
   function renderAttackOptions(rules) {
+    for (const option of el('technique').options) {
+      const value = option.value;
+      option.value = value;
+      option.textContent = rules.techniqueLabels?.[value] || value;
+    }
+    el('inner').nextSibling.textContent = rules.yubiJutsuCannotCombineWithInnerForce
+      ? ' Use Inner Force for this attack (without the Yubi-Jutsu bonus)'
+      : ' Use Inner Force for this attack';
     el('inner').disabled = rules.innerForceForbidden === true || rules.innerForceRequired === true;
     if (el('inner').disabled) el('inner').checked = rules.innerForceRequired === true;
     for (const key of ['attack-defense', 'player-defense']) {
@@ -76,7 +84,7 @@ export function createTigerPanel({ definition, getEncounters }) {
       el(key).disabled = locked;
       if (document.activeElement !== el(key)) el(key).value = (fight?.player || d.player)[key];
     }
-    for (const key of ['saintLocket', 'rubyCirclet']) if (el(key)) {
+    for (const key of ['saintLocket', 'rubyCirclet', 'yubiJutsu']) if (el(key)) {
       el(key).disabled = locked;
       el(key).checked = Boolean((fight?.player || d.player)[key]);
     }
@@ -128,6 +136,7 @@ export function createTigerPanel({ definition, getEncounters }) {
     const check = (key, label) => `<label class="inv-edit-check-label bsim-checkbox"><input type="checkbox" class="inv-edit-check" id="${id}-${key}"> ${label}</label>`;
     if (supports('holyProtection')) el('opponents').insertAdjacentHTML('beforebegin',
       check('saintLocket', 'Saint’s locket') + check('rubyCirclet', 'Ruby circlet'));
+    if (supports('yubiJutsu')) el('opponents').insertAdjacentHTML('beforebegin', check('yubiJutsu', 'Yubi-Jutsu (printed damage bonus)'));
     if (supports('nerveStrike')) el('inner').parentElement.insertAdjacentHTML('afterend', check('nerve-strike', 'Use Nerve-Striking (11 damage, no Inner Force)'));
     if (supports('mirror')) el('attack').insertAdjacentHTML('beforebegin',
       `<div id="${id}-mirror-controls" hidden><label class="inv-edit-row">Double’s throw follow-up<select class="inv-edit-input" id="${id}-mirror-followup"><option value="punch">Punch</option><option value="kick">Kick</option></select></label>${check('mirror-inner', 'Double uses Inner Force on its blow')}</div>`);
@@ -161,7 +170,7 @@ export function createTigerPanel({ definition, getEncounters }) {
     el('start').addEventListener('click', () => perform(() => {
       const d = data(); if (!d || active()) return;
       d.player = Object.fromEntries(playerFields.map(([key]) => [key, number(key)]));
-      for (const key of ['saintLocket', 'rubyCirclet']) if (el(key)) d.player[key] = el(key).checked;
+      for (const key of ['saintLocket', 'rubyCirclet', 'yubiJutsu']) if (el(key)) d.player[key] = el(key).checked;
       d.profileNote = selected?.note || '';
       d.roundSection = selected?.section || '';
       d.fight = createFight(d.player, editor.read(), { nonlethal: el('nonlethal').checked, blockLimit: 1, rules: selected?.rules });

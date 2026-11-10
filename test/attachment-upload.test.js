@@ -17,7 +17,6 @@ function harness({ filename = 'shot.png', magic = [0x89, 0x50, 0x4e, 0x47, 1, 2,
   const routes = load('../server/routes/profile', {
     fs: { promises: { rename: async () => {} }, existsSync: () => true, mkdirSync() {} },
     path: require('node:path'),
-    '../epub-validation': require('../server/epub-validation'),
     '../file-transfer': {
       readFileHeader: () => Buffer.from(magic),
       receiveUpload: async (_req, p, options) => {

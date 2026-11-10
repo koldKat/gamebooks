@@ -12,7 +12,7 @@ const BOOK_EVENTS = new Set([
   'add_book', 'add_isbn', 'add_issn', 'add_asin', 'add_pages', 'add_authors',
   'add_description', 'make_book_public', 'upload_cover', 'favorite_cover',
   'add_book_to_series', 'add_series_number', 'add_book_to_anthology', 'add_anthology_order',
-  'book_added_by_other', 'pdf_available', 'epub_available', 'export_book',
+  'book_added_by_other', 'export_book',
   'inventory_started', 'add_item', 'add_charsheet_field', 'equipment_started',
   'equip_item', 'undo', 'fast_travel',
 ]);
