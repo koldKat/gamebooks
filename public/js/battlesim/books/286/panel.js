@@ -386,7 +386,7 @@ export function initSim286() {
             <button id="sim286-dream3-roll" class="inv-edit-done" type="button">${t('battlesim286.dream3.continue')}</button>
             <button id="sim286-dream3-stop" class="inv-edit-done" type="button">${t('battlesim286.dream3.stop')}</button>
           </div>
-          <div class="inv-edit-row bsim-heal-row">
+          <div class="inv-edit-row bsim-heal-row bsim-recovery-row">
             <span class="inv-edit-label bsim-stat-label">${t('battlesim286.ui.heal')}</span>
             <div class="inv-qty-wrap">
               <button class="inv-qty-btn" data-id="sim286-heal-amount" data-delta="-1" data-min="1">−</button>

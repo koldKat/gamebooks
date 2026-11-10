@@ -60,6 +60,18 @@ export function trackCameraMotion(network) {
     if (typeof fn!=='function') continue;
     original.set(method,fn);
     network[method]=function(...args) {
+      // vis-network leaves the old redraw callback attached when a second focus
+      // starts before the first animation frame (easingTime is still zero).
+      // Detach that transition before replacing it, otherwise mouse redraws keep
+      // replaying it and the camera jumps between the old and new centers.
+      const view=network.view;
+      if (moving && !animationEnded && view?.viewFunction && network.body?.emitter) {
+        network.body.emitter.off('initRedraw',view.viewFunction);
+        view.viewFunction=undefined;
+        view.easingTime=0;
+        // Balance the renderer request belonging to the cancelled animation.
+        network.body.emitter.emit('_stopRendering');
+      }
       const animation=(method==='focus'?args[1]:args[0])?.animation;
       const animated=!!animation && (typeof animation!=='object' || animation.duration!==0);
       if (animated) {

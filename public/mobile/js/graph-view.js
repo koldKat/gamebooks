@@ -2,7 +2,7 @@
 // Use shared positions/colors, deterministic placement, and grid-snapped dragging; physics stays off.
 
 import {
-  state, currentBookId, currentPlaythrough, viewingPt, isTerminal, parseSecId, allDiscoveredSections, saveState,
+  state, currentBookId, currentPlaythrough, viewingPt, isTerminal, parseSecId, allDiscoveredSections, savePositions,
 } from '../../js/core/state.js';
 import { sectionLabel } from '../../js/core/section-labels.js';
 import { COLORS } from '../../js/core/constants.js';
@@ -24,6 +24,20 @@ let _onHold = null;
 let _onDragStart = null;
 let _lastSig = null;
 let _dragSaveTimer = null;
+const _dragging = new Set();
+let _pendingRefresh = false;
+
+export function applyRemotePositions(positions) {
+  for (const [id, pos] of Object.entries(positions)) {
+    if (_dragging.has(String(id)) || !pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) continue;
+    state.positions[id] = { x: pos.x, y: pos.y };
+    if (visNodes?.get(String(id))) {
+      visNodes.update({ id: String(id), x: pos.x, y: pos.y, physics: false });
+      network?.moveNode(String(id), pos.x, pos.y);
+    }
+  }
+  network?.redraw();
+}
 
 // Rebuild metadata markers on refresh using desktop glyph geometry and colors.
 let _overlayNodeIds = [];
@@ -214,6 +228,9 @@ export function initGraphView(container, onTap, onHold, onDragStart) {
   _onHold = onHold;
   _onDragStart = onDragStart;
   _lastSig = null;
+  _dragging.clear();
+  _pendingRefresh = false;
+  clearTimeout(_dragSaveTimer);
   if (network) { network.destroy(); network = null; }
   if (!window.vis?.DataSet || !window.vis?.Network) {
     container.innerHTML = `<div class="m-graph-error">${t('mobile.graph_load_error')}</div>`;
@@ -255,9 +272,11 @@ export function initGraphView(container, onTap, onHold, onDragStart) {
   });
   // Close the menu on drag and suppress its trailing click.
   network.on('dragStart', params => {
+    for (const id of params.nodes) _dragging.add(String(id));
     if (params.nodes.length) { _armClickSuppression(); _onDragStart?.(); }
   });
   network.on('dragEnd', params => {
+    _dragging.clear();
     if (!params.nodes.length) return;
     const positions = network.getPositions(params.nodes);
     for (const id of params.nodes) {
@@ -268,14 +287,15 @@ export function initGraphView(container, onTap, onHold, onDragStart) {
     Object.assign(state.positions, positions);
     // Keep the zoom-reset signature current - see _computeSig's own comment.
     if (_lastSig !== null) _lastSig = _computeSig([...allDiscoveredSections()]);
-    clearTimeout(_dragSaveTimer);
-    _dragSaveTimer = setTimeout(saveState, 1000);
+    savePositions(positions);
+    if (_pendingRefresh) { _pendingRefresh = false; refreshGraph(); }
   });
   network.on('afterDrawing', ctx => _drawOverlays(ctx));
 }
 
 export function refreshGraph(centerOnSec) {
   if (!network) return;
+  if (_dragging.size) { _pendingRefresh = true; return; }
   _rebuildOverlayNodes();
   // Use viewingPt after completion to retain the final path and node.
   const livePt    = currentPlaythrough();

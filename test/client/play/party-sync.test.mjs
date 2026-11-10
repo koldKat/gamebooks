@@ -10,7 +10,7 @@ const initial = () => ({ graph: { 1: { choices: [2, 3] } }, positions: {},
   playthroughs: [{ startedAt: 123, path: [1], completed: false }], activePtIndex: 0 });
 
 // Two independent state singletons and stream subscriptions share the saved party state.
-function setup() {
+function setup({ party = { members: [] } } = {}) {
   let saved = initial();
   const clients = [];
   function client() {
@@ -30,7 +30,7 @@ function setup() {
         close() { this.closed = true; }
       },
       fetch: async (path, options = {}) => {
-        if (path.endsWith('/party')) return { ok: true, json: async () => ({ party: { members: [] } }) };
+        if (path.endsWith('/party')) return { ok: true, json: async () => ({ party }) };
         if (options.method === 'PUT') {
           saved = JSON.parse(options.body);
           for (const other of clients) if (other.context !== context) other.emit();
@@ -62,6 +62,16 @@ function setup() {
   }
   return { client, set saved(value) { saved = value; } };
 }
+
+test('solo play subscribes and synchronizes other devices without a party', async () => {
+  const s = setup({ party: null }), a = s.client(), b = s.client();
+  await a.open(); await b.open();
+  assert.equal(a.streams.length, 1); assert.equal(b.streams.length, 1);
+  await a.run('state.playthroughs[0].path.push(2); saveState()'); await tick();
+  assert.equal(b.run('currentSection()'), 2);
+  await b.run('state.playthroughs[0].path.push(4); saveState()'); await tick();
+  assert.equal(a.run('currentSection()'), 4);
+});
 
 test('a move by either party client updates the other graph and run without navigating twice', async () => {
   const s = setup(), a = s.client(), b = s.client();

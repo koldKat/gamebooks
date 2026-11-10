@@ -10,7 +10,8 @@ import {
 import { canReach, findPathTo } from '../../js/graph.js';
 import { sectionLabel } from '../../js/core/section-labels.js';
 import { showAlert, showConfirm } from '../../js/ui-helpers/confirm.js';
-import { initGraphView, refreshGraph } from './graph-view.js';
+import { initGraphView, refreshGraph, applyRemotePositions } from './graph-view.js';
+import { connectRunSync } from './run-sync.js';
 import { openNotebook } from './notebook.js';
 import { hasSim, openSimForBook } from './battlesim-dispatch.js';
 import { showToast } from './toast.js';
@@ -24,6 +25,8 @@ import { bindReadingMapEntry, isReadingMapSection, readingChoices } from '../../
 import { bindReadingPreviousEntry } from '../../js/reading/previous-entry.js';
 import { bindReadingSourceFlipbooks } from '../../js/reading/source-flipbook.js';
 import { mountReadingSourceSheets } from '../../js/reading/source-sheet.js';
+
+let _stopRunSync = null;
 
 // Debounce reward checks by 750ms to allow deferred server awards to land.
 // Merge nearby toast deltas instead of overwriting feedback.
@@ -176,13 +179,15 @@ function _prefetchChoices(choices) {
 }
 
 export async function renderReader(mount, book, onBack, { startAtOne = false } = {}) {
+  _stopRunSync?.(); _stopRunSync = null;
   ++_showToken;
   const session = ++_readerSession;
   const authToken = getToken();
+  const leave = () => { _stopRunSync?.(); _stopRunSync = null; ++_readerSession; ++_showToken; onBack(); };
   mount.innerHTML = `<div class="m-topbar"><button type="button" id="m-access-back"></button></div><div class="m-top" id="m-access-body"></div>`;
   const back = mount.querySelector('#m-access-back');
   back.textContent = t('mobile.back_home');
-  back.addEventListener('click', () => { ++_readerSession; ++_showToken; onBack(); });
+  back.addEventListener('click', leave);
   const gateBody = mount.querySelector('#m-access-body');
   const isCurrent = () => authToken === getToken() && session === _readerSession && mount.isConnected;
   const resume = async () => {
@@ -197,7 +202,7 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
       mount.querySelector('#m-access-error').textContent = t('auth.network_error');
       const back = mount.querySelector('#m-access-back');
       back.textContent = t('mobile.back_home');
-      back.addEventListener('click', () => { ++_readerSession; ++_showToken; onBack(); });
+      back.addEventListener('click', leave);
       const retry = mount.querySelector('#m-access-retry');
       retry.textContent = t('covers.error_retry');
       retry.addEventListener('click', resume);
@@ -237,7 +242,7 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
         <div id="m-graph-loading" class="m-graph-loading">${_loadingHtml(t('mobile.loading_graph'))}</div>
       </div>
     </div>`;
-  document.getElementById('m-back-btn').addEventListener('click', () => { _closeReadingMenu(); ++_readerSession; ++_showToken; onBack(); });
+  document.getElementById('m-back-btn').addEventListener('click', () => { _closeReadingMenu(); leave(); });
   document.getElementById('m-reading-menu-btn').addEventListener('click', e => _openReadingMenu(e.currentTarget));
   _initReadingMenu(book.id, isCurrent);
   document.getElementById('m-notebook-btn').addEventListener('click', () => openNotebook(book.id));
@@ -301,6 +306,23 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
   }
   _updateRunControls();
   await _showSection(currentSection());
+  if (!isCurrent()) return;
+  _stopRunSync = connectRunSync(book.id, {
+    isCurrent,
+    onPositions: applyRemotePositions,
+    onState: async previous => {
+      const previousPt = viewingPt || previous.playthroughs[previous.activePtIndex];
+      const before = previousPt?.path?.at(-1);
+      const updated = previousPt?.startedAt == null ? null : state.playthroughs.find(pt => pt.startedAt === previousPt.startedAt);
+      setViewingPt(updated?.completed ? updated : null);
+      const sec = currentSection();
+      if (!currentPlaythrough() && updated?.completed) {
+        ++_showToken;
+        refreshGraph(); _updateRunControls(); _showEndScreen(updated.result);
+      } else if (sec !== before && sec != null) await _showSection(sec, { remote: true });
+      else { refreshGraph(); _updateRunControls(); }
+    },
+  });
 }
 
 // Match desktop's level-based limits without importing its UI dependencies.
@@ -367,7 +389,7 @@ function _doFastTravel(mode, id) {
   _showSection(id);
 }
 
-async function _showSection(sec) {
+async function _showSection(sec, { remote = false } = {}) {
   // Restore text for real navigation; leave text-only mode unchanged.
   if (_paneMode === 'graph') _setPaneMode('both');
   const top = document.getElementById('m-top');
@@ -409,13 +431,13 @@ async function _showSection(sec) {
   if (isReadingMapSection(data)) (state.graph[sec] ||= { choices: [] }).manualNavigation = true;
   // Prefetch choice targets while the current section is being read.
   _prefetchChoices(data.choices);
-  if (data.choices?.length) {
+  if (!remote && data.choices?.length) {
     _commitChoices(sec, readingChoices(data, state.graph[sec]?.choices, state.graph[sec]?.manualNavigation));
     // Save again after fetching choices: the earlier navigation save did not contain them.
     saveState();
   }
   // Check rewards for leaf visits too, not only sections with choices.
-  _checkXpReward();
+  if (!remote) _checkXpReward();
   refreshGraph(sec);
   _hideGraphLoading();
   _updateRunControls();

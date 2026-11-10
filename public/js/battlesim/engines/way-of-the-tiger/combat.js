@@ -13,6 +13,7 @@ export function createFight(player, opponents, options = {}) {
     rounds: 0, outcome: null, log: [],
   };
   if (fight.rules.mirrorPlayer) initializeMirror(fight);
+  openingCounter(fight, options.random || Math.random);
   return fight;
 }
 
@@ -22,6 +23,8 @@ const alive = enemy => enemy.counterOnly || enemy.endurance > 0;
 
 function finish(fight) {
   if (fight.player.endurance <= 0) fight.outcome = fight.nonlethal ? 'defeat' : 'loss';
+  else if (fight.rules.readerDefeatedCount && fight.opponents.filter(enemy => !enemy.counterOnly && !alive(enemy)).length >= fight.rules.readerDefeatedCount) fight.outcome = 'reader';
+  else if (fight.rules.readerSuccessfulHits && (fight.successfulHits || 0) >= fight.rules.readerSuccessfulHits) fight.outcome = 'reader';
   else if (fight.rules.readerEnemyThreshold != null
       && fight.opponents.some(enemy => !enemy.counterOnly && enemy.endurance <= fight.rules.readerEnemyThreshold)) fight.outcome = 'reader';
   else if (fight.rules.readerPlayerBelow && fight.player.endurance < fight.rules.readerPlayerBelow) fight.outcome = 'reader';
@@ -58,6 +61,10 @@ function counters(fight, profiles, random, hit) {
   }
 }
 
+function openingCounter(fight, random) {
+  if (fight.rules.openingCounter) counters(fight, [fight.rules.openingCounter], random, false);
+}
+
 export function attack(fight, action, random = Math.random) {
   if (fight.outcome || fight.pendingHits.length) return false;
   const enemy = fight.opponents[action.target];
@@ -72,6 +79,17 @@ export function attack(fight, action, random = Math.random) {
   if (rules.innerForceForbidden && action.innerForce || rules.innerForceRequired && !action.innerForce) return false;
   if (action.nerveStrike && (!rules.nerveStrikeDamage || action.innerForce)) return false;
   if (!Number.isFinite(action.defense)) return false;
+  if (rules.openingShuriken && technique === 'shuriken') {
+    if (followup || fight.rounds || fight.openingShurikenUsed || action.innerForce) return false;
+    fight.openingShurikenUsed = true;
+    fight.player.shurikens--;
+    const damage = die(random);
+    enemy.endurance = Math.max(0, enemy.endurance - damage);
+    fight.log.push({ type: 'attack', target: action.target, technique, roll: null,
+      automaticHit: true, modifier: 0, defense: action.defense, hit: true, damage });
+    finish(fight);
+    return true;
+  }
   if (rules.yubiJutsuReturnsToReader && fight.player.yubiJutsu) {
     fight.outcome = 'reader';
     return true;
@@ -110,7 +128,8 @@ export function attack(fight, action, random = Math.random) {
   const hit = roll + modifier > defense;
   let damage = 0;
   if (hit && technique === 'throw') {
-    if (rules.throwVictory) enemy.endurance = 0;
+    if (rules.readerOnSuccessfulThrow) fight.outcome = 'reader';
+    else if (rules.throwVictory) enemy.endurance = 0;
     else if (rules.throwNoFollowup) {
       damage = rules.throwDamage || 0;
       enemy.endurance = Math.max(0, enemy.endurance - damage);
@@ -131,6 +150,7 @@ export function attack(fight, action, random = Math.random) {
     damage *= (rules.damageMultiplier ?? 1) * (followup?.damageMultiplier ?? 1);
     damage = Math.max(0, damage - (rules.damageReduction || 0));
     enemy.endurance = Math.max(0, enemy.endurance - damage);
+    if (damage > 0 && rules.readerSuccessfulHits) fight.successfulHits = (fight.successfulHits || 0) + 1;
     fight.player.endurance = Math.max(0, fight.player.endurance
       - (fight.player.saintLocket && rules.contactDamageWithLocket != null ? rules.contactDamageWithLocket : rules.contactDamage || 0));
   }
@@ -171,7 +191,7 @@ export function attack(fight, action, random = Math.random) {
 }
 
 // Changing the printed attack profile retains combat progress and the thrown-target bonus.
-export function setRoundProfile(fight, profile) {
+export function setRoundProfile(fight, profile, random = Math.random) {
   if (fight.outcome || fight.pendingHits.length || profile.opponents.length !== fight.opponents.length
       || profile.opponents.some((enemy, i) => enemy.name !== fight.opponents[i].name)) return false;
   fight.rules = structuredClone(profile.rules || {});
@@ -179,6 +199,7 @@ export function setRoundProfile(fight, profile) {
     const source = profile.opponents[index];
     for (const key of ['defense', 'damageDice', 'damageBonus', 'manualCounter', 'counterDefense', 'counterOnly']) enemy[key] = source[key];
   }
+  openingCounter(fight, random);
   return true;
 }
 

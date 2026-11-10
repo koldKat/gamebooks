@@ -9,6 +9,7 @@ const {
 } = require('../request-helpers');
 const {
   sseRegister, sseUnregister, ssePush,
+  bookStreamRegister, bookStreamPush,
   publicCatalogRegister, publicCatalogUnregister, publicCatalogPush,
   feedRegister, feedUnregister, feedPush,
   appXpRegister, appXpUnregister,
@@ -715,6 +716,7 @@ async function handleSaveState(req, res, bookId) {
   }
   // Impersonated saves must not award the player's XP.
   if (oldState && !impersonating) db.processStateXp(userId, bookId, oldState, stateObj, stateObj.totalSections || 0);
+  bookStreamPush(userId, bookId, req.headers['x-book-client'], { type: 'state_updated', by: userId, bookId });
   // Fan out to party members and award them the same XP milestones
   const party = db.getPartyForBook(userId, bookId);
   if (party) {
@@ -756,6 +758,7 @@ async function handleSavePositions(req, res, bookId) {
   const result = patchBookPositions(userId, bookId, clean);
   if (!result) return send(res, 404, { error: 'Not in your library' });
   send(res, 200, { ok: true });
+  bookStreamPush(userId, bookId, req.headers['x-book-client'], { type: 'positions_updated', bookId, positions: clean });
   if (result.partyId) ssePush(result.partyId, userId, { type: 'positions_updated', bookId, positions: clean });
 }
 
@@ -766,6 +769,7 @@ async function handleResetBookProgress(req, res, bookId) {
   const stateObj = db.resetBookProgress(userId, bookId);
   if (!stateObj) return send(res, 404, { error: 'Not found' });
   send(res, 200, stateObj);
+  bookStreamPush(userId, bookId, req.headers['x-book-client'], { type: 'state_updated', by: userId, bookId });
 
   const party = db.getPartyForBook(userId, bookId);
   if (party) {
@@ -786,7 +790,7 @@ async function handleGetBookStream(req, res, bookId) {
   if (!session) return send(res, 401, { error: 'Unauthorized' });
   const userId = session.user_id;
   const party = db.getPartyForBook(userId, bookId);
-  if (!party) return send(res, 404, { error: 'Not in a party for this book' });
+  if (!db.getBookState(userId, bookId)) return send(res, 404, { error: 'Not in your library' });
 
   req.socket?.setNoDelay?.(true);
   res.writeHead(200, {
@@ -797,8 +801,13 @@ async function handleGetBookStream(req, res, bookId) {
   });
   res.write(': connected\n\n');
 
-  const entry = sseRegister(party.partyId, userId, res);
-  maintainStream(res, () => sseUnregister(party.partyId, entry), SSE_PING_MS);
+  const clientId = new URL(req.url, 'https://x').searchParams.get('client') || '';
+  const unregister = bookStreamRegister(userId, bookId, clientId, res);
+  const entry = party ? sseRegister(party.partyId, userId, res) : null;
+  maintainStream(res, () => {
+    unregister();
+    if (entry) sseUnregister(party.partyId, entry);
+  }, SSE_PING_MS);
 }
 
 async function handleCreateParty(req, res, bookId) {

@@ -2326,6 +2326,13 @@ for(const id of BOOK_IDS){
   }
   if(id===286){
     const el=key=>document.getElementById('sim286-'+key), state=()=>app.currentPlaythrough().sim286;
+    const healingRow=el('heal').closest('.bsim-heal-row');
+    const healingControls=[...healingRow.querySelectorAll('button,input,span')].map(node=>node.getBoundingClientRect());
+    check(el('heal-amount').getBoundingClientRect().width>=40,'Labyrinth healing amount remains readable');
+    for(let i=0;i<healingControls.length;i++)for(let j=i+1;j<healingControls.length;j++){
+      const a=healingControls[i],b=healingControls[j];
+      check(Math.min(a.right,b.right)-Math.max(a.left,b.left)<=1||Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)<=1,'Labyrinth healing controls do not overlap');
+    }
     const {DREAM_ENCOUNTERS}=await import('REPO/public/js/battlesim/books/286/definition.js');
     check(DREAM_ENCOUNTERS[6].opponent.hp===20&&DREAM_ENCOUNTERS[10].opponentCount===4&&requestedRosters.has(286),'Labyrinth loads fixed dream encounters');
     check([...overlay.querySelectorAll('.bsim-tech-btn')].every(button=>button.closest('.bsim-col-left')),'Labyrinth gadgets remain in controls column');
@@ -7092,6 +7099,104 @@ for(const id of BOOK_IDS){
     check(dogs.player.endurance===health-2&&dogs.pendingHits.length===0,'Assassin second-round grip is automatic');
     el('round-profile').value='284';el('round-profile').dispatchEvent(new Event('change'));
     check(dogs.opponents[1].endurance===12,'Assassin alternate printed dog health does not reset ongoing fight');
+  }
+  if(id===328){
+    const el=key=>document.getElementById('sim328-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    check(requestedRosters.has(328)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Jungle catalog and mutual exclusion registered');
+    check(!el('bowModifier')&&el('screen')&&el('curingPrimate')&&el('nexusPrimate')&&el('unarmedMastery'),'Jungle has only its printed controls');
+    const setup=(skill=20,endurance=100,rounds=0)=>{el('skill').value=skill;el('endurance').value=endurance;el('maximum').value=100;el('modifier').value=0;el('potions').value=0;el('priorRounds').value=rounds;};
+    const choose=(section,slot=0)=>{el('encounter').value='section:'+section+':slot:'+slot;el('encounter').dispatchEvent(new Event('change'));};
+    setup(21,99.5);el('screen').checked=true;el('screen').dispatchEvent(new Event('change'));
+    check(el('skill').value==='21'&&el('endurance').value==='99.5'&&el('endurance').step==='0.5','Jungle flags preserve unfinished setup and half-point Endurance');
+    for(const field of el('editor').querySelectorAll('[data-stat]'))field.value=({skill:1,stamina:10})[field.dataset.stat];
+    el('start').click();check(run.sim328.combatEffects.section===0&&run.sim328.endurance===99.5,'Jungle ordinary custom fight accepts half EP without a preset');
+    check(el('skill').disabled&&el('screen').disabled&&el('priorRounds').disabled&&[...el('editor').querySelectorAll('input')].every(input=>input.disabled),'Jungle locks combat setup and elapsed rounds');
+    Math.random=()=>.9;el('round').click();check(run.sim328.history.length===1,'Jungle custom victory recorded');
+    choose(13);setup(100);el('start').click();el('round').click();
+    check(run.sim328.enemy.skill===21&&run.sim328.enemy.endurance===26&&run.sim328.history.length===1,'Jungle pair continues without an early reward');
+    const saved=JSON.stringify(run.sim328);module.render();check(JSON.stringify(run.sim328)===saved,'Jungle rendering preserves follow-up opponent');
+    el('round').click();check(run.sim328.history.length===2&&run.sim328.combatEffects.route===79,'Jungle pair has one final victory');
+    choose(13,1);setup(20,100,6);el('start').click();el('round').click();
+    check(run.sim328.combatEffects.route===158&&run.sim328.roundsThisBattle===6&&run.sim328.history.length===2&&el('round').disabled,'Jungle second-slot prior rounds enforce the encounter deadline');
+    choose(199);check(el('priorRounds').value==='0','Changing encounters resets the elapsed-round setup');setup(20,99.5);el('start').click();
+    check(run.sim328.endurance===99.5,'Jungle fractional Endurance remains exact');
+    const before=JSON.stringify(run.sim328);el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();
+    check(JSON.stringify(run.sim328)===before,'Jungle stale confirmation preserves the original fight');app.setCurrentBookId(id);button.click();
+  }
+  if(id===327){
+    const el=key=>document.getElementById('sim327-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    check(requestedRosters.has(327)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Castle Death catalog and mutual exclusion registered');
+    check(!el('bowModifier')&&!el('animal')&&el('curing')&&el('invisibility'),'Castle Death has only its own printed controls');
+    const setup=(skill=20,endurance=100)=>{el('skill').value=skill;el('endurance').value=endurance;el('maximum').value=100;el('modifier').value=0;el('potions').value=0;};
+    const choose=(section,slot=0)=>{el('encounter').value='section:'+section+':slot:'+slot;el('encounter').dispatchEvent(new Event('change'));};
+    setup(21);el('curing').checked=true;el('curing').dispatchEvent(new Event('change'));
+    check(el('skill').value==='21','Castle Death flags preserve unfinished stats');
+    for(const field of el('editor').querySelectorAll('[data-stat]'))field.value=({skill:1,stamina:10})[field.dataset.stat];
+    el('start').click();check(run.sim327.combatEffects.section===0,'Castle Death custom fight needs no preset');
+    check(el('skill').disabled&&el('curing').disabled&&[...el('editor').querySelectorAll('input')].every(input=>input.disabled),'Castle Death locks setup and opponents');
+    Math.random=()=>.9;el('round').click();check(run.sim327.history.length===1,'Castle Death custom victory recorded');
+    choose(212);setup(100);el('start').click();el('round').click();
+    check(run.sim327.enemy.skill===16&&run.sim327.enemy.endurance===21&&run.sim327.history.length===1,'Castle Death first gaoler continues without a premature reward');
+    const saved=JSON.stringify(run.sim327);module.render();check(JSON.stringify(run.sim327)===saved,'Castle Death render preserves consecutive opponent');
+    el('round').click();check(run.sim327.history.length===2&&run.sim327.combatEffects.route===80,'Castle Death pair awards one victory');
+    choose(212,1);setup(100);el('start').click();el('round').click();
+    check(run.sim327.history.length===3&&!run.sim327.combatEffects.followupUsed,'Castle Death second slot starts with only the second gaoler');
+    choose(221);setup();el('invisibility').checked=true;el('invisibility').dispatchEvent(new Event('change'));el('start').click();el('escape').click();
+    check(run.sim327.roundsThisBattle===0&&run.sim327.endurance===100&&run.sim327.combatEffects.route===70&&run.sim327.history.length===3,'Castle Death safe invisibility has no round or reward');
+    choose(280);setup();el('start').click();run.sim327.enemy.endurance=run.sim327.enemy.enduranceMax=1000;Math.random=()=>.1;
+    for(let round=0;round<4;round++)el('round').click();
+    check(run.sim327.combatEffects.route===156&&run.sim327.history.length===3&&el('round').disabled,'Castle Death four-round limit has no false victory');
+    choose(8);setup();el('start').click();const before=JSON.stringify(run.sim327);
+    el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();
+    check(JSON.stringify(run.sim327)===before,'Castle Death stale confirmation preserves original fight');app.setCurrentBookId(id);button.click();
+  }
+  if(id===326){
+    const el=key=>document.getElementById('sim326-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    check(requestedRosters.has(326)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Magnakai catalog and mutual exclusion registered');
+    const setup=(skill=20,endurance=100,maximum=100)=>{el('skill').value=skill;el('endurance').value=endurance;el('maximum').value=maximum;el('modifier').value=0;el('potions').value=0;};
+    const choose=section=>{el('encounter').value=section;el('encounter').dispatchEvent(new Event('change'));};
+    setup(21);el('tracking').checked=true;el('tracking').dispatchEvent(new Event('change'));
+    check(el('skill').value==='21','Magnakai effect changes preserve unfinished character input');
+    for(const field of el('editor').querySelectorAll('[data-stat]'))field.value=({skill:1,stamina:10})[field.dataset.stat];
+    el('start').click();check(run.sim326.combatEffects.section===0&&el('archery').hidden,'Magnakai ordinary custom fight starts without unrelated archery controls');
+    check(el('skill').disabled&&[...el('editor').querySelectorAll('input')].every(input=>input.disabled),'Magnakai setup locks during combat');
+    Math.random=()=>.9;el('round').click();check(run.sim326.history.length===1&&run.sim326.history[0].outcome==='win','Magnakai real victory recorded once');
+    choose(26);check(!el('archery').hidden,'Magnakai tournament controls appear for the final');setup(20,17);el('mastery').checked=true;el('mastery').dispatchEvent(new Event('change'));el('start').click();Math.random=()=>.1;el('round').click();
+    check(run.sim326.endurance===17&&run.sim326.combatEffects.targetPoints<50,'Magnakai archery preserves physical Endurance');
+    el('cancel').click();document.getElementById('confirm-ok').click();
+    const name=el('editor').querySelector('[role=combobox]');name.value='ROARK';name.dispatchEvent(new Event('input',{bubbles:true}));
+    el('editor').querySelector('[role=option]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
+    check(el('encounter').value==='78','Magnakai autocomplete selects the printed profile');setup(100);el('start').click();Math.random=()=>.9;el('round').click();
+    check(run.sim326.combatEffects.route===180&&run.sim326.history.length===1,'Magnakai nonfatal stop has no false killing victory');
+    choose(344);setup(20);el('start').click();const before=JSON.stringify(run.sim326);
+    el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();
+    check(JSON.stringify(run.sim326)===before,'Magnakai stale cancel preserves a different book');app.setCurrentBookId(id);button.click();
+  }
+  if(id===315){
+    const el=key=>document.getElementById('sim315-'+key),run=app.currentPlaythrough();
+    check(requestedRosters.has(315),'Inferno database roster loaded');
+    for(const input of el('opponents').querySelectorAll('[data-stat]'))input.value=({endurance:10,defense:1,damageDice:1,damageBonus:0})[input.dataset.stat];
+    el('start').click();Math.random=()=>.2;el('attack').click();el('take').click();
+    check(run.sim315.fight.opponents[0].endurance===8&&run.sim315.fight.player.endurance===18,'Inferno custom encounter works');el('finish').click();
+    const choose=query=>{const name=el('opponents').querySelector('[role=combobox]');name.value=query;name.dispatchEvent(new Event('input',{bubbles:true}));el('opponents').querySelector('[role=option]').dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));};
+    choose('Lord Sile: Tiger Paw chop');el('endurance').value='100';Math.random=()=>.9;el('start').click();
+    check(run.sim315.fight.pendingHits[0].damage===4&&run.sim315.fight.rounds===0,'Inferno opening punch precedes first action');el('take').click();
+    el('attack').click();el('take').click();const injured=run.sim315.fight.opponents[0].endurance;
+    el('round-profile').value='12';el('round-profile').dispatchEvent(new Event('change'));
+    check(run.sim315.fight.opponents[0].endurance===injured&&el('technique').value==='kick','Inferno profile change preserves injury');el('finish').click();
+    choose('Orcs in the tunnel');el('start').click();
+    el('technique').value='shuriken';el('technique').dispatchEvent(new Event('change'));
+    check(el('inner').disabled,'Inferno opening Shuriken excludes Inner Force');el('attack').click();
+    check(run.sim315.fight.rounds===0&&run.sim315.fight.opponents[0].endurance===4&&run.sim315.fight.pendingHits.length===0,'Inferno automatic opening Shuriken');
+    check(el('technique').value==='punch'&&el('technique').querySelector('option[value=shuriken]').disabled,'Inferno returns to melee after one opening shot');el('finish').click();
+    choose('Cassandra: Whirlpool disarm');el('start').click();el('attack').click();
+    check(run.sim315.fight.outcome==='reader'&&run.sim315.history.length===0&&run.sim315.fight.followup===null,'Inferno disarm gives no false victory');
+    choose('Tyutchev: distracted');el('start').click();el('attack').click();el('take').click();el('attack').click();
+    check(run.sim315.fight.outcome==='reader'&&run.sim315.fight.successfulHits===2&&run.sim315.history.length===0,'Inferno two wounds return to reader');
+    const saved=JSON.stringify(run.sim315);module.render();check(JSON.stringify(run.sim315)===saved,'Inferno render preserves saved fight');
   }
   if(id===314){
     const el=key=>document.getElementById('sim314-'+key),run=app.currentPlaythrough();

@@ -400,7 +400,9 @@ export async function _handleNewSeriesRun() {
 // ── Focus node after cross-book navigation ────────────────────────────────────
 export function _focusNodeAfterLoad(sec) {
   if (!network || !sec) return;
+  const focusNetwork = network, focusBook = currentBookId;
   const doFocus = () => {
+    if (network !== focusNetwork || currentBookId !== focusBook) return;
     // Resolve the current section when the timer fires, after any auto-navigation chain.
     const liveSec = currentSection() ?? sec;
     if (visNodes?.get(liveSec) && !wouldAutoNav(liveSec, currentPlaythrough())) {
@@ -409,8 +411,8 @@ export function _focusNodeAfterLoad(sec) {
     }
   };
   if (Object.keys(state.positions).length === 0) {
-    const once = () => { network.off('stabilizationIterationsDone', once); doFocus(); };
-    network.on('stabilizationIterationsDone', once);
+    const once = () => { focusNetwork.off('stabilizationIterationsDone', once); doFocus(); };
+    focusNetwork.on('stabilizationIterationsDone', once);
   } else {
     setTimeout(doFocus, 50);
   }

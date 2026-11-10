@@ -56,12 +56,13 @@ test('failed party patches roll back all members', () => {
 });
 
 test('coordinate route validates input and broadcasts only sanitized coordinates', async () => {
-  const s=setup(); let body, response, event;
+  const s=setup(); let body, response, event, ownEvent;
   const routes=readFileSync(join(__dirname,'../server/routes/books.js'),'utf8');
   const handler=routes.slice(routes.indexOf('async function handleSavePositions('),routes.indexOf('async function handleResetBookProgress('));
   const context=vm.createContext({ authenticate:async()=>1,readBody:async()=>body,
     patchBookPositions:s.patch,send:(_res,status,value)=>{response={status,value}},
-    ssePush:(party,user,value)=>{event={party,user,value}} });
+    ssePush:(party,user,value)=>{event={party,user,value}},
+    bookStreamPush:(user,book,client,value)=>{ownEvent={user,book,client,value}} });
   vm.runInContext(handler,context);
   try {
     const before=s.rows();
@@ -69,9 +70,11 @@ test('coordinate route validates input and broadcasts only sanitized coordinates
       body={positions}; await context.handleSavePositions({}, {},868);
       assert.equal(response.status,400);assert.deepEqual(s.rows(),before);
     }
-    body={positions:{2:{x:75,y:85,playthroughs:[]}}};await context.handleSavePositions({}, {},868);
+    body={positions:{2:{x:75,y:85,playthroughs:[]}}};await context.handleSavePositions({headers:{'x-book-client':'mobile'}}, {},868);
     assert.equal(response.status,200);assert.equal(event.party,13);assert.equal(event.user,1);
     assert.equal(event.value.type,'positions_updated');
     assert.deepEqual(JSON.parse(JSON.stringify(event.value.positions)),{2:{x:75,y:85}});
+    assert.equal(ownEvent.user,1);assert.equal(ownEvent.book,868);assert.equal(ownEvent.client,'mobile');
+    assert.deepEqual(JSON.parse(JSON.stringify(ownEvent.value.positions)),{2:{x:75,y:85}});
   } finally {s.db.close()}
 });

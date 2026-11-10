@@ -10,6 +10,29 @@ const _sseClients = new Map();
 const _publicCatalogClients = new Set();
 const _feedClients = new Set();
 const _userBadgeClients = new Map();
+const _bookClients = new Map();
+
+function bookStreamRegister(userId, bookId, clientId, res) {
+  const key = `${userId}:${bookId}`;
+  if (!_bookClients.has(key)) _bookClients.set(key, new Set());
+  const entry = { clientId, res };
+  _bookClients.get(key).add(entry);
+  return () => {
+    const clients = _bookClients.get(key);
+    clients?.delete(entry);
+    if (!clients?.size) _bookClients.delete(key);
+  };
+}
+
+function bookStreamPush(userId, bookId, excludeClientId, payload) {
+  const clients = _bookClients.get(`${userId}:${bookId}`);
+  if (!clients) return;
+  const data = `data: ${JSON.stringify(payload)}\n\n`;
+  for (const entry of clients) {
+    if (excludeClientId && entry.clientId === excludeClientId) continue;
+    writeEvent(entry.res, data);
+  }
+}
 
 function sseRegister(partyId, userId, res) {
   if (!_sseClients.has(partyId)) _sseClients.set(partyId, new Set());
@@ -124,6 +147,7 @@ function userBadgePushAll(payload = { type: 'badge_state_changed' }) {
 }
 
 module.exports = {
+  bookStreamRegister, bookStreamPush,
   sseRegister, sseUnregister, ssePush,
   publicCatalogRegister, publicCatalogUnregister, publicCatalogPush,
   feedRegister, feedUnregister, feedPush,

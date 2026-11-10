@@ -683,6 +683,9 @@
 }
 .bsim-modal .inv-edit-row > :is(input.inv-edit-input, select.inv-edit-input) { flex: 1 1 0; width: 0; }
 .bsim-modal .inv-edit-row > input[type="number"] { text-align: center; }
+.bsim-modal .bsim-recovery-row { flex-wrap: wrap; }
+.bsim-modal .bsim-recovery-row > span:first-child { flex: 0 0 auto; width: auto; }
+.bsim-modal .bsim-recovery-row > .inv-qty-wrap { flex: 1 1 6rem; min-width: 6rem; }
 /* Give plain-text labels the same column as rows with a label span. */
 .bsim-modal label.inv-edit-row:has(> :is(input.inv-edit-input, select.inv-edit-input, textarea.inv-edit-input):only-child) {
   display: grid;

@@ -8,6 +8,7 @@ const handler = source.slice(source.indexOf('async function handleSaveState('), 
 const existing = { graph: { 1: { choices: [2] } }, playthroughs: [{ startedAt: 1, path: [1, 2] }], activePtIndex: 0 };
 async function save(oldState, incoming) {
   let response, writes = 0, fanouts = 0, saved;
+  const deviceEvents = [];
   const context = vm.createContext({
     authenticate: async () => 1, isRequestImpersonating: () => false,
     readBody: async () => incoming, send: (_res, status, body) => { response = { status, body }; },
@@ -18,11 +19,11 @@ async function save(oldState, incoming) {
       getPartyForBook: () => ({ partyId: 13 }), getPartyMemberIds: () => [],
       fanOutState: () => { fanouts++; return [17]; },
     },
-    ssePush() {}, feedPush() {},
+    ssePush() {}, feedPush() {}, bookStreamPush: (...args) => deviceEvents.push(args),
   });
   vm.runInContext(handler, context);
-  await context.handleSaveState({}, {}, 868);
-  return { response, writes, fanouts, saved };
+  await context.handleSaveState({ headers: { 'x-book-client': 'desktop' } }, {}, 868);
+  return { response, writes, fanouts, saved, deviceEvents };
 }
 
 test('failed-load empty saves cannot erase existing runs or fan out to a partner', async () => {
@@ -30,6 +31,7 @@ test('failed-load empty saves cannot erase existing runs or fan out to a partner
     const r = await save(existing, incoming);
     assert.equal(r.response.status, 409);
     assert.equal(r.writes, 0); assert.equal(r.fanouts, 0);
+    assert.equal(r.deviceEvents.length, 0);
   }
 });
 
@@ -42,6 +44,8 @@ test('ordinary moves and deleting the final run while keeping the map remain val
   for (const incoming of [existing, { ...existing, playthroughs: [], activePtIndex: null }]) {
     const r = await save(existing, incoming);
     assert.equal(r.response.status, 200); assert.equal(r.writes, 1); assert.equal(r.fanouts, 1);
+    assert.deepEqual(r.deviceEvents[0].slice(0, 3), [1, 868, 'desktop']);
+    assert.equal(r.deviceEvents[0][3].type, 'state_updated');
   }
 });
 

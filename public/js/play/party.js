@@ -1,6 +1,6 @@
-// Cooperative parties and live progress.
+// Cooperative parties and live book progress across players, tabs and devices.
 
-import { state, viewingPt, currentBookId, apiFetch, getToken, loadState, setViewingPt } from '../core/state.js';
+import { state, viewingPt, currentBookId, apiFetch, getToken, bookClientId, loadState, setViewingPt } from '../core/state.js';
 import { connectEventStream } from '../core/event-stream.js';
 import { network, visNodes } from '../graph.js';
 import { graphRuntime } from '../graph/runtime.js';
@@ -43,105 +43,102 @@ export async function connectPartySSE(bookId) {
     if (party) {
       btn?.classList.add('party-active');
       if (btn) btn.innerHTML = shortcutLabel(t('party.btn'));
-      _sseBookId = bookId;
-      const isCurrent = () => gen === _connectGen && currentBookId === bookId;
-      // Drain hints sequentially: a slow older GET must never replace a newer save.
-      let refreshing = false, refreshAgain = false, keepPositions = true, failures = 0;
-      const refreshState = async (preservePositions = true) => {
-        if (!isCurrent()) return;
-        clearTimeout(_stateRetryTimer);
-        _stateRetryTimer = null;
-        refreshAgain = true;
-        keepPositions = keepPositions && preservePositions;
-        if (refreshing) return;
-        refreshing = true;
-        try {
-          while (refreshAgain && isCurrent()) {
-            refreshAgain = false;
-            const preserve = keepPositions;
-            keepPositions = true;
-            const displayedRun = viewingPt || state.playthroughs[state.activePtIndex];
-            suppressAutoNav(true);
-            try {
-              await loadState(bookId, { strict: true, isCurrent, preservePositions: preserve, protectLocalChanges: true });
-              if (!isCurrent()) return;
-              // Receiving progress must not move a node out from under a local drag.
-              if (graphRuntime._dragNodeIds.size && network) {
-                Object.assign(state.positions, network.getPositions([...graphRuntime._dragNodeIds]));
-              }
-              // loadState replaces run objects, including the one a completed-run view holds.
-              const updatedRun = displayedRun?.startedAt == null ? null
-                : state.playthroughs.find(pt => pt.startedAt === displayedRun.startedAt);
-              setViewingPt(updatedRun?.completed ? updatedRun : null);
-              render();
-              network?.redraw();
-              failures = 0;
-              _hooks.scheduleRewardProfileRefresh?.();
-            } catch (error) {
-              keepPositions = keepPositions && preserve;
-              throw error;
-            } finally { suppressAutoNav(false); }
-          }
-        } catch (_) {
-          // A transient failed GET must recover even if this was the party's last move.
-          // Back off only while failing; healthy connections do not poll the state.
-          if (isCurrent()) {
-            const delay = Math.min(1000 * 2 ** Math.min(failures++, 5), 30000);
-            _stateRetryTimer = setTimeout(() => {
-              _stateRetryTimer = null;
-              refreshState(keepPositions);
-            }, delay);
-          }
-        } finally { refreshing = false; }
-      };
-      _sseSource = connectEventStream(() => `/api/books/${bookId}/stream?token=${encodeURIComponent(getToken())}`, {
-        enabled: isCurrent,
-        // Catch up after disconnection and close the initial GET/subscription gap.
-        onOpen: () => refreshState(false),
-        onMessage: async (e) => {
-          if (!isCurrent()) return;
+    }
+    _sseBookId = bookId;
+    const isCurrent = () => gen === _connectGen && currentBookId === bookId;
+    // Drain hints sequentially: a slow older GET must never replace a newer save.
+    let refreshing = false, refreshAgain = false, keepPositions = true, failures = 0;
+    const refreshState = async (preservePositions = true) => {
+      if (!isCurrent()) return;
+      clearTimeout(_stateRetryTimer);
+      _stateRetryTimer = null;
+      refreshAgain = true;
+      keepPositions = keepPositions && preservePositions;
+      if (refreshing) return;
+      refreshing = true;
+      try {
+        while (refreshAgain && isCurrent()) {
+          refreshAgain = false;
+          const preserve = keepPositions;
+          keepPositions = true;
+          const displayedRun = viewingPt || state.playthroughs[state.activePtIndex];
+          suppressAutoNav(true);
           try {
-            const data = JSON.parse(e.data);
-            if (data.type === 'positions_updated' && String(data.bookId) === String(bookId)) {
-              for (const [id, pos] of Object.entries(data.positions || {})) {
-                if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) continue;
-                state.positions[id] = { x: pos.x, y: pos.y };
-                const nodeId = /^\d+$/.test(id) ? Number(id) : id;
-                if (graphRuntime._dragNodeIds.has(nodeId)) continue;
-                if (visNodes?.get(nodeId)) {
-                  visNodes.update({ id: nodeId, x: pos.x, y: pos.y, physics: false });
-                  network?.moveNode(nodeId, pos.x, pos.y);
-                }
-              }
-              graphRuntime._overlayPosDirty = true;
-              graphRuntime._fogPosDirty = true;
-              network?.redraw();
-            } else if (data.type === 'state_updated' && String(data.bookId) === String(bookId)) {
-              await refreshState();
-            } else if (data.type === 'party_changed') {
-              // Someone else accepted an invite or left - refresh membership (and
-              // reconnect, since accepting/leaving may add/drop us from this party).
-              const wasOpen = document.getElementById('party-modal-overlay')?.classList.contains('active');
-              const refreshedBookId = _sseBookId;
-              const genBefore = _connectGen;
-              await connectPartySSE(refreshedBookId);
-              // Our disconnect increments the generation once; any additional change means navigation superseded us.
-              if (wasOpen && _connectGen === genBefore + 1) {
-                // Preserve whatever the user was mid-typing in the invite box - a live
-                // membership update shouldn't wipe out an in-progress invite.
-                const draftInvite = document.getElementById('party-invite-input')?.value || '';
-                _renderPartyModal(refreshedBookId, _currentParty);
-                const newInput = document.getElementById('party-invite-input');
-                if (newInput && draftInvite) newInput.value = draftInvite;
+            await loadState(bookId, { strict: true, isCurrent, preservePositions: preserve, protectLocalChanges: true });
+            if (!isCurrent()) return;
+            // Receiving progress must not move a node out from under a local drag.
+            if (graphRuntime._dragNodeIds.size && network) {
+              Object.assign(state.positions, network.getPositions([...graphRuntime._dragNodeIds]));
+            }
+            // loadState replaces run objects, including the one a completed-run view holds.
+            const updatedRun = displayedRun?.startedAt == null ? null
+              : state.playthroughs.find(pt => pt.startedAt === displayedRun.startedAt);
+            setViewingPt(updatedRun?.completed ? updatedRun : null);
+            render();
+            network?.redraw();
+            failures = 0;
+            _hooks.scheduleRewardProfileRefresh?.();
+          } catch (error) {
+            keepPositions = keepPositions && preserve;
+            throw error;
+          } finally { suppressAutoNav(false); }
+        }
+      } catch (_) {
+        // A transient failed GET must recover even if this was the party's last move.
+        // Back off only while failing; healthy connections do not poll the state.
+        if (isCurrent()) {
+          const delay = Math.min(1000 * 2 ** Math.min(failures++, 5), 30000);
+          _stateRetryTimer = setTimeout(() => {
+            _stateRetryTimer = null;
+            refreshState(keepPositions);
+          }, delay);
+        }
+      } finally { refreshing = false; }
+    };
+    _sseSource = connectEventStream(() => `/api/books/${bookId}/stream?token=${encodeURIComponent(getToken())}&client=${encodeURIComponent(bookClientId)}`, {
+      enabled: isCurrent,
+      // Catch up after disconnection and close the initial GET/subscription gap.
+      onOpen: () => refreshState(false),
+      onMessage: async (e) => {
+        if (!isCurrent()) return;
+        try {
+          const data = JSON.parse(e.data);
+          if (data.type === 'positions_updated' && String(data.bookId) === String(bookId)) {
+            for (const [id, pos] of Object.entries(data.positions || {})) {
+              if (!pos || !Number.isFinite(pos.x) || !Number.isFinite(pos.y)) continue;
+              state.positions[id] = { x: pos.x, y: pos.y };
+              const nodeId = /^\d+$/.test(id) ? Number(id) : id;
+              if (graphRuntime._dragNodeIds.has(nodeId)) continue;
+              if (visNodes?.get(nodeId)) {
+                visNodes.update({ id: nodeId, x: pos.x, y: pos.y, physics: false });
+                network?.moveNode(nodeId, pos.x, pos.y);
               }
             }
-          } catch (_) {}
-        },
-      });
-    } else if (btn) {
-      btn.classList.remove('party-active');
-      btn.innerHTML = shortcutLabel(t('party.btn'));
-    }
+            graphRuntime._overlayPosDirty = true;
+            graphRuntime._fogPosDirty = true;
+            network?.redraw();
+          } else if (data.type === 'state_updated' && String(data.bookId) === String(bookId)) {
+            await refreshState();
+          } else if (data.type === 'party_changed') {
+            // Someone else accepted an invite or left - refresh membership (and
+            // reconnect, since accepting/leaving may add/drop us from this party).
+            const wasOpen = document.getElementById('party-modal-overlay')?.classList.contains('active');
+            const refreshedBookId = _sseBookId;
+            const genBefore = _connectGen;
+            await connectPartySSE(refreshedBookId);
+            // Our disconnect increments the generation once; any additional change means navigation superseded us.
+            if (wasOpen && _connectGen === genBefore + 1) {
+              // Preserve whatever the user was mid-typing in the invite box - a live
+              // membership update shouldn't wipe out an in-progress invite.
+              const draftInvite = document.getElementById('party-invite-input')?.value || '';
+              _renderPartyModal(refreshedBookId, _currentParty);
+              const newInput = document.getElementById('party-invite-input');
+              if (newInput && draftInvite) newInput.value = draftInvite;
+            }
+          }
+        } catch (_) {}
+      },
+    });
   } catch (_) {}
 }
 

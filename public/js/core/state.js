@@ -59,6 +59,8 @@ export function resetState() {
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
 export function getToken()        { return localStorage.getItem('gamebook_auth_token'); }
+// Per page, rather than per account/session: other tabs and devices still receive our saves.
+export const bookClientId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 export function setToken(token)   { localStorage.setItem('gamebook_auth_token', token); window.dispatchEvent(new Event('auth-token-change')); }
 export function clearToken()      { localStorage.removeItem('gamebook_auth_token'); window.dispatchEvent(new Event('auth-token-change')); }
 export function getUsername()     { return localStorage.getItem('gamebook_username'); }
@@ -70,6 +72,7 @@ export async function apiFetch(urlPath, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
   if (token) headers['Authorization'] = `Bearer ${token}`;
   const method = String(options.method || 'GET').toUpperCase();
+  if (method !== 'GET' && /\/api\/books\/[^/]+\/(?:state|reset)$/.test(urlPath)) headers['X-Book-Client'] = bookClientId;
   const res = await fetch(urlPath, {
     ...options,
     headers,
@@ -289,6 +292,7 @@ export async function loadState(bookId, { strict = true, isCurrent = () => true,
     if (preservePositions && currentBookId === bookId) {
       loaded.positions = { ...(loaded.positions || {}), ...(state.positions || {}) };
     }
+    if (protectLocalChanges && currentBookId === bookId) loaded.viewport = state.viewport;
     setCurrentBookId(bookId);
     state = loaded;
   } catch (error) {

@@ -57,7 +57,8 @@ export function createTigerPanel({ definition, getEncounters }) {
     el('inner').nextSibling.textContent = rules.yubiJutsuCannotCombineWithInnerForce
       ? ' Use Inner Force for this attack (without the Yubi-Jutsu bonus)'
       : ' Use Inner Force for this attack';
-    el('inner').disabled = rules.innerForceForbidden === true || rules.innerForceRequired === true;
+    el('inner').disabled = rules.innerForceForbidden === true || rules.innerForceRequired === true
+      || rules.openingShuriken === true && el('technique').value === 'shuriken';
     if (el('inner').disabled) el('inner').checked = rules.innerForceRequired === true;
     for (const key of ['attack-defense', 'player-defense']) {
       el(key).disabled = rules.mirrorPlayer === true;
@@ -89,7 +90,13 @@ export function createTigerPanel({ definition, getEncounters }) {
       el(key).checked = Boolean((fight?.player || d.player)[key]);
     }
     const rules = (locked ? fight?.rules : selected?.rules) || {};
+    const openingShurikenSpent = rules.openingShuriken && (fight?.openingShurikenUsed || fight?.rounds > 0);
+    if (openingShurikenSpent && el('technique').value === 'shuriken') {
+      el('technique').value = selected?.technique || 'punch';
+      el('attack-defense').value = fight.opponents[Number(el('target').value) || 0].defense;
+    }
     renderAttackOptions(rules);
+    for (const option of el('technique').options) if (option.value === 'shuriken') option.disabled = Boolean(openingShurikenSpent);
     el('nonlethal').disabled = locked;
     el('profile-note').textContent = selected?.note || d.profileNote || '';
     el('start').disabled = locked;
@@ -104,11 +111,13 @@ export function createTigerPanel({ definition, getEncounters }) {
     el('finish').disabled = !locked;
     el('status').textContent = fight ? (fight.outcome || (pending ? `Incoming damage: ${pending.damage}` : fight.followup ? 'Throw succeeded. Choose a punch or kick follow-up.' : 'Ready for the selected attack.')) : 'Enter current values, then start an encounter.';
     if (fight?.rules.successfulHitsToWin) el('status').textContent += ` Successful blows: ${fight.successfulHits || 0}/${fight.rules.successfulHitsToWin}.`;
+    if (fight?.rules.readerSuccessfulHits) el('status').textContent += ` Wounds: ${fight.successfulHits || 0}/${fight.rules.readerSuccessfulHits}.`;
     if (fight?.rules.mirrorPlayer) el('status').textContent += ` Double Inner Force: ${fight.opponents[0].innerForce}.`;
     if (fight?.followup?.defense != null) el('attack-defense').value = fight.followup.defense;
     if (fight?.followup?.techniques?.length === 1) el('technique').value = fight.followup.techniques[0];
     el('log').textContent = (fight?.log || []).slice(-100).map(line => line.type === 'attack'
-      ? `${line.technique}: ${line.roll} + ${line.modifier} against ${line.defense}. ${line.hit ? `${line.damage} damage.` : 'Miss.'}`
+      ? line.automaticHit ? `${line.technique}: automatic hit. ${line.damage} damage.`
+        : `${line.technique}: ${line.roll} + ${line.modifier} against ${line.defense}. ${line.hit ? `${line.damage} damage.` : 'Miss.'}`
       : line.type === 'adjustment' ? `Endurance adjustment: ${line.change}.`
         : line.type === 'fate' ? `Fate wound roll: ${line.roll}.`
           : line.type === 'mirror-block' ? `Double blocks with ${line.roll}: ${line.blocked ? 'blocked' : 'failed'}.`
@@ -192,8 +201,15 @@ export function createTigerPanel({ definition, getEncounters }) {
       el('unblockable').checked = profile.rules?.unblockable === true;
     }));
     el('technique').addEventListener('change', () => {
+      const rules = data()?.fight?.rules || selected?.rules || {};
+      if (rules.openingShuriken && el('technique').value === 'shuriken') {
+        el('attack-defense').value = data()?.fight?.opponents[Number(el('target').value) || 0].defense ?? selected.opponents[0].defense;
+        renderAttackOptions(rules);
+        return;
+      }
       if (selected && !data()?.fight?.rules.mirrorPlayer && !selected.rules?.mirrorPlayer
           && el('technique').value !== selected.technique) el('attack-defense').value = '';
+      renderAttackOptions(rules);
     });
     el('nerve-strike')?.addEventListener('change', () => { if (el('nerve-strike').checked) el('inner').checked = false; });
     el('inner').addEventListener('change', () => { if (el('inner').checked && el('nerve-strike')) el('nerve-strike').checked = false; });
