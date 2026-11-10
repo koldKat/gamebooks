@@ -55,6 +55,19 @@ async function harness() {
 
 // Every partial visibility combination must restore exactly, not show all panels.
 const landing = ['covers-collapsed', 'right-collapsed', 'feed-collapsed'];
+const panelStartup = await harness();
+panelStartup.storage.set('covers-collapsed', '1');
+panelStartup.storage.set('right-collapsed', '1');
+panelStartup.storage.set('ui_prefs_v1:Player', JSON.stringify({ 'covers-collapsed': '0', 'right-collapsed': '0' }));
+panelStartup.api.restoreCachedPanelVisibility();
+assert.equal(panelStartup.body.classList.contains('covers-collapsed'), false, 'account state beats stale shared left-panel state');
+assert.equal(panelStartup.body.classList.contains('right-collapsed'), false, 'account state beats stale shared right-panel state');
+panelStartup.state.username = 'Other';
+panelStartup.api.restoreCachedPanelVisibility();
+assert.equal(panelStartup.body.classList.contains('covers-collapsed'), false, 'new account does not inherit another account panel state');
+panelStartup.storage.set('ui_prefs_v1:Other', JSON.stringify({ 'covers-collapsed': '1', 'right-collapsed': '0' }));
+panelStartup.api.restoreCachedPanelVisibility();
+assert.equal(panelStartup.body.classList.contains('covers-collapsed'), true, 'intentional account panel collapse remains saved');
 for (let mask = 0; mask < 7; mask++) {
   const h = await harness();
   landing.forEach((key, i) => h.body.classList.toggle(key, !!(mask & (1 << i))));

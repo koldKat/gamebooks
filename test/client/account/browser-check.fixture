@@ -46,6 +46,14 @@ try {
   el('login-btn').click(); await pause(40);
   assert(state.getToken() === 'isolated-test-token' && state.getUsername() === 'Tester' && authSuccess === 1, 'login session and success hook');
   el('register-btn').click(); assert(el('register-email').style.display === '', 'registration fields revealed');
+  const beforeBack = requests.length;
+  assert(el('register-back-btn').style.display !== 'none', 'registration offers back to login');
+  el('register-back-btn').click();
+  assert(el('login-btn').style.display !== 'none' && el('register-email').style.display === 'none'
+    && el('register-password-confirm').style.display === 'none' && requests.length === beforeBack,
+    'registration back returns to login without submitting credentials');
+  assert(el('login-username').value === ' Tester ' && el('login-password').value === 'test-password', 'back preserves entered login credentials');
+  el('register-btn').click();
   el('register-password-confirm').value = 'wrong'; el('register-btn').click(); await pause(30);
   assert(!requests.some(r => r.path === '/api/register'), 'registration password mismatch validation');
   el('register-password-confirm').value = 'test-password'; el('register-email').value = 'tester@example.test';

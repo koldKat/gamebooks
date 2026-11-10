@@ -16,7 +16,7 @@ const group = (star, n) => ({ count: n, average: star,
 test('stats renders all ten half-star bins for all categories in balanced column stacks', async () => {
   const body = { innerHTML: '' }, overlay = { classList: { add() {} } };
   const context = vm.createContext({ document: { getElementById: id => id === 'stats-modal-body' ? body : overlay },
-    escapeHtml, t: key => messages[key] || key,
+    escapeHtml, bindCountryTooltip() {}, t: key => messages[key] || key,
     fetchPublic: async () => ({ ok: true, json: async () => ({ ratingsTotal: 10, squires: 7,
       diamondsMined: 123, rubiesMined: 7, appJobLevel: 2, appJobTitle: '<Sifter>', totalJobXp: 9000,
       heartbeatMinutes: (365 + 2) * 1440 + 3 * 60 + 27,
@@ -27,6 +27,7 @@ test('stats renders all ten half-star bins for all categories in balanced column
   vm.runInContext(source, context);
   await context.openStatsModal();
   assert.ok(!body.innerHTML.includes('Failed to load'));
+  assert.match(body.innerHTML, /id="stats-registered-users" class="country-count-tooltip"/);
   assert.equal((body.innerHTML.match(/class="stats-column"/g) || []).length, 3);
   const columns = body.innerHTML.split('<div class="stats-column">').slice(1);
   assert.ok(columns[1].includes('stats-section--battle-sims'));
@@ -66,7 +67,7 @@ test('rating bars scale to each category peak, not its total votes', async () =>
   anthologies.distribution.find(row => row.star === 4).n = 1;
   const context = vm.createContext({
     document: {getElementById: id => id === 'stats-modal-body' ? body : overlay},
-    escapeHtml, t: key => messages[key] || key,
+    escapeHtml, bindCountryTooltip() {}, t: key => messages[key] || key,
     fetchPublic: async () => ({ok: true, json: async () => ({
       ratingBreakdown: {books, anthologies, series: group(5, 0)},
     })}),

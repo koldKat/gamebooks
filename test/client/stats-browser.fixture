@@ -17,16 +17,20 @@ const { getRatingStats } = require('../../server/db/rating-stats');
   const response = await fetch('http://127.0.0.1:3000/api/site-stats');
   assert.equal(response.status, 200);
   const stats = await response.json();
+  const imagePolicy = response.headers.get('content-security-policy')?.split(';').find(rule=>rule.trim().startsWith('img-src')) || '';
+  assert.ok(imagePolicy.includes('https://flagcdn.com'), 'live image policy permits the flag host');
   const db = new Database('database.sqlite', { readonly: true });
   Object.assign(stats, getRatingStats(db));
   db.close();
-  const css = ['style', 'feedback', 'mobile', 'feed'].map(name =>
+  const css = ['style', 'feedback', 'mobile', 'feed', 'tooltip'].map(name =>
     fs.readFileSync(`public/css/${name}.css`, 'utf8')).join('\n');
-  const html = `<!doctype html><meta charset="utf-8"><style>${css}</style>
+  const html = `<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${imagePolicy}"><style>${css}</style>
     <div id="stats-modal-overlay"><div id="stats-modal"><div id="stats-modal-header">
     <span id="stats-modal-title">Stats for Nerds</span><button id="stats-modal-close">X</button>
     </div><div id="stats-modal-body"></div></div></div>
     <script type="module">
+    import {bindCountryTooltip} from 'file://${path.resolve('public/js/ui-helpers/country-tooltip.js')}';
+    import {initTooltip} from 'file://${path.resolve('public/js/ui-helpers/tooltip.js')}';
     const messages = ${JSON.stringify(messages)}, stats = ${JSON.stringify(stats)};
     const t = key => messages[key] || key;
     const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g,
@@ -35,11 +39,26 @@ const { getRatingStats } = require('../../server/db/rating-stats');
     const check = (value,message) => { if (!value) throw Error(message); };
     ${source}
     try {
+      initTooltip();
       await openStatsModal();
       await document.fonts.ready;
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
       const body = document.getElementById('stats-modal-body');
       check(body.querySelectorAll('.stats-section').length === 13, 'all sections rendered');
+      const registered = body.querySelector('.stats-section--players #stats-registered-users');
+      check(registered && registered.textContent === String(stats.users), 'registered total has the country tooltip');
+      check(getComputedStyle(registered).borderBottomStyle === 'dotted', 'registered total has dotted underline');
+      registered.dispatchEvent(new MouseEvent('mouseover', {bubbles:true}));
+      const countryRows = [...document.querySelectorAll('#app-tooltip .tooltip-country-row')];
+      const countryNames = countryRows.map(row=>row.children[1].textContent);
+      check(countryNames.length > 0 && countryNames.join('|') === [...countryNames].sort((a,b)=>a.localeCompare(b,'en')).join('|'), 'countries alphabetical');
+      check(countryRows.reduce((sum,row)=>sum+Number(row.children[2].textContent.replaceAll(',','')),0) === stats.users, 'country totals add up');
+      check([...document.querySelectorAll('#app-tooltip img')].every(img=>img.src.startsWith('https://flagcdn.com/w20/') && img.src.endsWith('.png')), 'admin flag images');
+      await Promise.all([...document.querySelectorAll('#app-tooltip img')].map(img=>new Promise((resolve,reject)=>{
+        const timeout=setTimeout(()=>reject(Error('Flag load timed out: '+img.src)),10000);
+        const done=()=>{clearTimeout(timeout);img.naturalWidth>0?resolve():reject(Error('Flag missing: '+img.src));};
+        if(img.complete)done();else{img.onload=done;img.onerror=done;}
+      })));
       check(body.querySelectorAll('.stats-rating-table tbody tr').length === 12, 'all rating rows rendered');
       const cpu = body.querySelector('.stats-cpu-model');
       const cpuRange = document.createRange();

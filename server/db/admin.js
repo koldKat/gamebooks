@@ -773,6 +773,11 @@ function getSiteStats() {
   const base = adminGetStats(gameplayExtras);
 
   // User breakdown
+  const usersByCountry = db.prepare(`
+    SELECT UPPER(TRIM(COALESCE(NULLIF(TRIM(active_country), ''), last_country, ''))) AS country,
+           COUNT(*) AS count
+    FROM users GROUP BY 1
+  `).all();
   const admins         = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_admin = 1').get().n;
   const authors        = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_author = 1').get().n;
   const moderators = db.prepare('SELECT COUNT(*) AS n FROM users WHERE is_moderator = 1').get().n;
@@ -934,7 +939,7 @@ function getSiteStats() {
 
   return {
     // Users
-    users: base.users, admins, moderators, squires, authors, contributors, publicProfiles, avatarUsers, undosTotal, fastTravelsTotal,
+    users: base.users, usersByCountry, admins, moderators, squires, authors, contributors, publicProfiles, avatarUsers, undosTotal, fastTravelsTotal,
     // Books
     uniqueBooks, uniqueAuthors, totalUserBooks, publicBooks, privateBooks,
     uniqueSeries, totalUserSeries, publicSeries, privateSeries,

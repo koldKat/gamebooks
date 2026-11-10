@@ -33,21 +33,27 @@
 .liveread-body img:not(.reading-inline-symbol):not(.reading-inline-initial):not(.reading-inline-word),
 .m-top img:not(.reading-inline-symbol):not(.reading-inline-initial):not(.reading-inline-word) { cursor: zoom-in; }
 .reading-image-zoom {
-  box-sizing: border-box; width: min(96vw, 100rem); max-width: 96vw;
-  height: 94dvh; max-height: 94dvh; padding: .5rem;
+  position: fixed; inset: 0; margin: auto;
+  box-sizing: border-box; width: fit-content; max-width: 75vw;
+  height: fit-content; max-height: 85dvh; padding: .25rem;
   color: #e5e7eb; background: #111827; border: 1px solid #4b5563;
   border-radius: .5rem; overflow: hidden;
 }
 .reading-image-zoom::backdrop { background: #000b; }
-.reading-image-zoom-toolbar { display: flex; justify-content: flex-end; gap: .4rem; height: 2.25rem; margin-bottom: .5rem; }
+.reading-image-zoom-toolbar { display: flex; justify-content: flex-end; gap: .25rem; height: 1.5rem; margin: 0 0 2px; padding: 0; }
 .reading-image-zoom-toolbar button {
-  font: inherit; color: inherit; background: #1f2937; border: 1px solid #4b5563;
-  border-radius: .25rem; min-width: 2.5rem; padding: .15rem .5rem; cursor: pointer;
+  box-sizing: border-box; font-family: inherit; font-size: .75rem; line-height: 1;
+  color: #9ca3af; background: #1f2937; border: 1px solid #374151;
+  border-radius: .25rem; min-width: 1.5rem; height: 1.5rem; padding: .15rem .3rem; cursor: pointer;
 }
+.reading-image-zoom-toolbar button:hover:not(:disabled) { color: #e5e7eb; border-color: #6b7280; }
 .reading-image-zoom-toolbar button:disabled { opacity: .35; cursor: default; }
 .reading-image-zoom-toolbar button:focus-visible { outline: 2px solid #f5a623; }
-.reading-image-zoom-viewport { height: calc(100% - 2.75rem); overflow: auto; scrollbar-gutter: stable; overscroll-behavior: contain; touch-action: pan-x pan-y pinch-zoom; }
+.reading-image-zoom-viewport { margin: 0; padding: 0; overflow: hidden; overscroll-behavior: contain; touch-action: none; user-select: none; }
+.reading-image-zoom-viewport.can-pan { cursor: grab; }
+.reading-image-zoom-viewport.panning { cursor: grabbing; }
 .reading-image-zoom-canvas { margin: 0; padding: 0; }
+.reading-image-zoom-canvas > img { display: block; }
 .reading-image-zoom-canvas img { max-width: 100%; height: auto; }
 .reading-frontmatter--structured figure { margin: 0 0 1rem; }
 .reading-frontmatter--structured figure img { display: block; max-width: 100%; height: auto; margin: 0 auto; }

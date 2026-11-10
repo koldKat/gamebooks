@@ -29,7 +29,7 @@ function addSecurityHeaders(res) {
     "default-src 'none'; " +
     "script-src 'self'; " +
     "style-src 'self' 'unsafe-inline'; " +
-    "img-src 'self' data: blob:; " +
+    "img-src 'self' data: blob: https://flagcdn.com; " +
     "connect-src 'self'; " +
     "font-src 'self'; " +
     "manifest-src 'self'; " +

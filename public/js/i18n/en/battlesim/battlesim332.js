@@ -1,0 +1,25 @@
+// English copy for the optional Masters of Darkness encounter tool.
+import magnakai from './battlesim330.js';
+export default {
+  ...Object.fromEntries(Object.entries(magnakai).map(([key,value])=>[key.replace('battlesim330.','battlesim332.'),value])),
+  'battlesim332.title':'The Masters of Darkness',
+  'battlesim332.note':'Enter current stats and a separate weapon adjustment. Preset hints identify bonuses already included. Keep story injuries and inventory in the reader. Mark Archmaster Curing ready only if you have the skill and have not used it in the last 100 days.',
+  'battlesim332.modifier':'Weapon adjustment (see preset)',
+  'battlesim332.armorEndurance':'Equipment EP bonus included in initial ENDURANCE',
+  'battlesim332.openingModifier':'Opening weapon adjustment (section 75 only)',
+  'battlesim332.blast':'Mindblast (+2; Archmaster +3)',
+  'battlesim332.surge':'Psi-surge (+4 / costs 2 EP; Archmaster +6 / costs 1 EP)',
+  'battlesim332.divination':'Divination',
+  'battlesim332.screen':'Psi-screen',
+  'battlesim332.scion':'Weaponmastery at Scion-kai rank or higher',
+  'battlesim332.archmaster':'Archmaster rank',
+  'battlesim332.nexusArchmaster':'Nexus at Archmaster rank',
+  'battlesim332.longWeapon':'Broadsword, Spear or Quarterstaff (section 68)',
+  'battlesim332.dagger':'Dagger of Vashna during the opening three rounds (section 75)',
+  'battlesim332.helshezag':'Using Helshezag (permanent EP cost after round 1)',
+  'battlesim332.curingReady':'Archmaster Curing ready (once per 100 days)',
+  'battlesim332.lastingWounds':'Continuing section 268 with an existing eye injury',
+  'battlesim332.heal':'Use Archmaster Curing',
+  'battlesim332.log.permanent_loss':'Initial ENDURANCE permanently reduced by {n}.',
+  'battlesim332.log.combat_healed':'Archmaster Curing restored {restored} EP. Mark the use in the reader; unavailable for 100 days.',
+};

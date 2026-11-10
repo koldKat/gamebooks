@@ -1,6 +1,10 @@
 // tooltip.js - App-wide data-tooltip hover tooltip
 
 let initialized = false;
+const contentRenderers = new WeakMap();
+export function setTooltipContent(element, render) {
+  contentRenderers.set(element, render);
+}
 export function initTooltip() {
   if (initialized) return;
   initialized = true;
@@ -15,7 +19,9 @@ export function initTooltip() {
     if (el && lastMoveAt <= lastDismissAt) { tip.style.display = 'none'; return; }
     tip.style.display = el ? 'block' : 'none';
     if (el) {
-      tip.textContent = el.dataset.tooltip;
+      const render = contentRenderers.get(el);
+      if (render) { tip.replaceChildren(); render(tip); }
+      else tip.textContent = el.dataset.tooltip;
       tip.classList.toggle('tip-wrap', !!el.dataset.tooltipWrap);
     }
   });

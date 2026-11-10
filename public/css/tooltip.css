@@ -19,3 +19,8 @@
   max-width: 260px;
   line-height: 1.6;
 }
+.tooltip-country-list { display: grid; gap: .25rem; }
+.country-count-tooltip { border-bottom: 1px dotted currentColor; padding-bottom: 1px; }
+.tooltip-country-row { display: grid; grid-template-columns: 20px auto auto; align-items: center; column-gap: .5rem; }
+.tooltip-country-row img { border-radius: 2px; object-fit: cover; }
+.tooltip-country-row > :last-child { text-align: right; font-variant-numeric: tabular-nums; }

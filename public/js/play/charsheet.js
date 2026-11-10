@@ -65,11 +65,14 @@ export function renderCharSheetDisplay() {
   const activePt = currentPlaythrough();
   const displayPt = activePt || viewingPt;
 
-  // No run loaded - hide everything
+  // Keep the control in place until a run is available.
   if (!displayPt) {
     el.innerHTML        = '';
     el.style.display    = 'none';
-    if (btn) btn.style.display = 'none';
+    if (btn) {
+      btn.style.display = '';
+      btn.disabled = true;
+    }
     return;
   }
 

@@ -7100,6 +7100,259 @@ for(const id of BOOK_IDS){
     el('round-profile').value='284';el('round-profile').dispatchEvent(new Event('change'));
     check(dogs.opponents[1].endurance===12,'Assassin alternate printed dog health does not reset ongoing fight');
   }
+  if(id===341){
+    const el=key=>document.getElementById('sim341-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=(skill,modifier=0)=>{el('skill').value=skill;el('endurance').value=100;el('maximum').value=100;el('modifier').value=modifier;};
+    const psychic=mode=>{el('psychic').value=mode;el('psychic').dispatchEvent(new Event('change'));};
+    check(requestedRosters.has(341)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Moonstone catalog and overlay registered');
+    check(el('encounter').options.length===24&&el('psychic').options.length===3,'Moonstone printed encounters and psychic attacks');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();check(el('skill').value==='25'&&el('endurance').value==='30','Moonstone fresh New Order stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];el('start').click();el('round').click();check(run.sim341.history.length===1,'Moonstone custom fight works');
+    choose(5);setup(39,10);psychic('surge');el('start').click();
+    check(run.sim341.ratio===8&&!el('psychic').disabled&&el('skill').disabled,'Moonstone unarmed opening preserves Kai-surge and locks character');
+    Math.random=()=>.1;el('round').click();check(run.sim341.roundsThisBattle===1,'Moonstone opening round resolves');
+    psychic('blast');check(run.sim341.combatEffects.psychic==='blast','Moonstone psychic attack can change between rounds');
+    const saved=JSON.stringify(run.sim341);module.render();check(JSON.stringify(run.sim341)===saved,'Moonstone render preserves fight');
+    el('cancel').click();document.getElementById('confirm-ok').click();
+    choose(94);setup(38);psychic('surge');el('start').click();el('round').click();check(run.sim341.endurance===100,'Moonstone stunned opponent protects against all first-round EP loss');
+    el('cancel').click();document.getElementById('confirm-ok').click();
+    choose(50);setup(44);psychic('surge');el('start').click();const fighting=JSON.stringify(run.sim341);
+    el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim341)===fighting,'Moonstone stale confirmation preserves another book');app.setCurrentBookId(id);button.click();
+  }
+  if(id===340){
+    const el=key=>document.getElementById('sim340-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=skill=>{el('skill').value=skill;el('endurance').value=100;el('maximum').value=100;el('modifier').value=0;el('armorEndurance').value=0;el('priorRounds').value=0;};
+    const psychic=mode=>{el('psychic').value=mode;el('psychic').dispatchEvent(new Event('change'));};
+    check(requestedRosters.has(340)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Naar catalog and overlay registered');
+    check(el('encounter').options.length===27&&el('blueDiamond')&&el('skarnSka')&&el('animal')&&el('planeSword'),'Naar printed controls');
+    check(el('psychic').options.length===6,'Naar distinct psychic powers');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();check(el('skill').value==='25'&&el('endurance').value==='30','Naar fresh Grand Master stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];el('start').click();el('round').click();check(run.sim340.history.length===1,'Naar custom fight works');
+    choose(69);setup(40);psychic('kaiRay');Math.random=()=>.1;el('start').click();
+    check(!el('psychic').disabled&&el('skill').disabled,'Naar psychic attack alone can change during combat');
+    el('round').click();check(run.sim340.enemy.endurance===14&&run.sim340.endurance===91,'Naar fixed ray damage and cost');
+    const saved=JSON.stringify(run.sim340);module.render();check(JSON.stringify(run.sim340)===saved,'Naar rendering preserves consumed ray');
+    psychic('blast');el('round').click();check(run.sim340.enemy.endurance===9&&run.sim340.endurance===87,'Naar switch to Mindblast without combining powers');
+    psychic('kaiRay');el('round').click();check(run.sim340.enemy.endurance===6&&run.sim340.endurance===82,'Naar spent ray cannot repeat');
+    el('cancel').click();document.getElementById('confirm-ok').click();
+    choose(64);setup(56);psychic('kaiRay');el('start').click();run.sim340.enemy.endurance=21;el('round').click();
+    check(run.sim340.combatEffects.route===344&&run.sim340.history.length===1,'Naar Dragonlord threshold returns without false victory');
+    choose(93);setup(45);psychic('none');el('start').click();const fighting=JSON.stringify(run.sim340);
+    el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim340)===fighting,'Naar stale confirmation preserves another book');app.setCurrentBookId(id);button.click();
+  }
+  if(id===339){
+    const el=key=>document.getElementById('sim339-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=(skill,ep=100)=>{el('skill').value=skill;el('endurance').value=ep;el('maximum').value=100;el('modifier').value=0;el('armorEndurance').value=0;el('priorRounds').value=0;};
+    const toggle=(key,on)=>{el(key).checked=on;el(key).dispatchEvent(new Event('change'));};
+    check(requestedRosters.has(339)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Bane catalog and overlay registered');
+    check(el('encounter').options.length===34&&el('bronzeDisc')&&el('grandCrownUnarmed')&&el('planeSword'),'Bane printed controls');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();check(el('skill').value==='25'&&el('endurance').value==='30','Bane fresh Grand Master stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];el('start').click();el('round').click();check(run.sim339.history.length===1,'Bane custom fight works');
+    choose(304);setup(200,40);toggle('bronzeDisc',true);
+    for(const input of el('editor').querySelectorAll('[data-stat]'))check(input.disabled&&input.value==='','Bane duel has explicitly derived opponent fields');
+    el('start').click();check(run.sim339.ratio===-4&&run.sim339.enemy.endurance===36&&run.sim339.enemy.skill===null,'Bane duel fixed ratio and mirrored current EP');
+    el('round').click();check(run.sim339.enemy.endurance===26&&run.sim339.endurance===40,'Bane duel uses fixed ratio losses');
+    el('cancel').click();document.getElementById('confirm-ok').click();
+    choose(304);setup(20,14);el('start').click();check(run.sim339.combatEffects.route===151&&el('round').disabled&&run.sim339.history.length===1,'Bane Bronze Disc threshold continuation earns no victory');
+    const saved=JSON.stringify(run.sim339);module.render();check(JSON.stringify(run.sim339)===saved,'Bane render preserves resolved duel');
+    choose(283);setup(100);el('start').click();el('round').click();check(run.sim339.combatEffects.route===157&&run.sim339.history.length===1,'Bane portal challenge earns no battle reward');
+    choose(116);setup(49);el('start').click();Math.random=()=>.2;el('round').click();check(run.sim339.combatEffects.route===38&&run.sim339.history.length===1,'Bane single-round tie favors Lone Wolf');
+    choose(276);setup(20);toggle('grandCrownUnarmed',true);el('start').click();check(run.sim339.ratio===-17,'Bane source unarmed mastery applies');
+    const fighting=JSON.stringify(run.sim339);el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim339)===fighting,'Bane stale confirmation preserves another book');app.setCurrentBookId(id);button.click();
+  }
+  if(id===338){
+    const el=key=>document.getElementById('sim338-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=skill=>{el('skill').value=skill;el('endurance').value=100;el('maximum').value=100;el('modifier').value=0;el('armorEndurance').value=0;el('priorRounds').value=0;};
+    check(requestedRosters.has(338)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Dragons catalog and overlay registered');
+    check(el('encounter').options.length===35&&!el('helshezag')&&el('psychic').options.length===5,'Dragons roster and printed controls');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();check(el('skill').value==='25'&&el('endurance').value==='30','Dragons fresh Grand Master stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];el('start').click();el('round').click();check(run.sim338.history.length===1,'Dragons custom fight works');
+    choose(303);setup(45);el('start').click();Math.random=()=>.1;el('round').click();check(run.sim338.combatEffects.route===263&&el('round').disabled&&run.sim338.history.length===1,'Dragons single-round unfavorable continuation without false win');
+    const finished=JSON.stringify(run.sim338);module.render();check(JSON.stringify(run.sim338)===finished,'Dragons render preserves finished encounter');
+    choose(303);setup(45);el('start').click();Math.random=()=>.2;el('round').click();check(run.sim338.combatEffects.route===226&&run.sim338.history.length===1,'Dragons tied losses use printed continuation');
+    choose(98);setup(30);el('start').click();check(run.sim338.ratio===-22,'Dragons Plane of Darkness bonus applied once');
+    const saved=JSON.stringify(run.sim338);el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim338)===saved,'Dragons stale confirmation preserves another book');app.setCurrentBookId(id);button.click();
+  }
+  if(id===337){
+    const el=key=>document.getElementById('sim337-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=(skill,ep=100)=>{el('skill').value=skill;el('endurance').value=ep;el('maximum').value=100;el('modifier').value=0;el('armorEndurance').value=0;el('priorRounds').value=0;};
+    const toggle=(key,on)=>{el(key).checked=on;el(key).dispatchEvent(new Event('change'));};
+    check(requestedRosters.has(337)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Ixia catalog and overlay registered');
+    check(el('dessiStone')&&el('sunLord')&&el('enemyUndead')&&el('psychic').options.length===5,'Ixia printed combat controls');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();check(el('skill').value==='25'&&el('endurance').value==='30','Ixia fresh Grand Master stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];el('start').click();el('round').click();check(run.sim337.history.length===1,'Ixia custom fight works');
+    choose(23);setup(46);toggle('dessiStone',true);el('start').click();Math.random=()=>.1;el('round').click();check(run.sim337.enemy.endurance===49&&run.sim337.endurance===95,'Ixia Dessi Stone doubles undead weapon damage');
+    const active=JSON.stringify(run.sim337);module.render();check(JSON.stringify(run.sim337)===active,'Ixia render preserves fight');el('cancel').click();document.getElementById('confirm-ok').click();
+    choose(96);setup(48);toggle('sommerwerd',true);el('start').click();check(run.sim337.combatEffects.route===238&&el('round').disabled&&run.sim337.history.length===1,'Ixia forbidden sword continues in reader without fight or reward');
+    choose(74);setup(40);el('start').click();run.sim337.enemy.endurance=1;el('round').click();check(run.sim337.combatEffects.route===327&&run.sim337.history.length===1,'Ixia door fatigue awards no combat win');
+    choose(110);setup(0);el('psychic').value='kaiBlast';el('psychic').dispatchEvent(new Event('change'));el('start').click();el('round').click();check(run.sim337.endurance===100,'Ixia first-round protection includes table K and psychic cost');
+    const saved=JSON.stringify(run.sim337);el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim337)===saved,'Ixia stale confirmation preserves another book');app.setCurrentBookId(id);button.click();
+  }
+  if(id===336){
+    const el=key=>document.getElementById('sim336-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=(skill,ep=100)=>{el('skill').value=skill;el('endurance').value=ep;el('maximum').value=100;el('modifier').value=0;el('armorEndurance').value=0;el('priorRounds').value=0;el('ranksAboveGrandGuardian').value=0;};
+    const toggle=(key,on)=>{el(key).checked=on;el(key).dispatchEvent(new Event('change'));};
+    check(requestedRosters.has(336)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Vashna catalog and overlay registered');
+    check(el('flame')&&el('deathstaff')&&el('psychic').options.length===5,'Vashna printed combat controls');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();check(el('skill').value==='25'&&el('endurance').value==='30','Vashna fresh Grand Master stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];el('start').click();el('round').click();check(run.sim336.history.length===1,'Vashna custom fight works');
+    choose(334);setup(38);toggle('flame',true);el('psychic').value='kaiBlast';el('psychic').dispatchEvent(new Event('change'));el('start').click();Math.random=()=>.1;el('round').click();
+    check(run.sim336.enemy.endurance===54&&run.sim336.endurance===91&&el('flame').disabled,'Vashna flame and two-draw Kai-blast work through real controls');
+    const saved=JSON.stringify(run.sim336);module.render();check(JSON.stringify(run.sim336)===saved,'Vashna rendering preserves active fight');el('cancel').click();document.getElementById('confirm-ok').click();
+    choose(345);setup(100);toggle('flame',false);toggle('deathstaff',true);el('psychic').value='none';el('psychic').dispatchEvent(new Event('change'));el('start').click();run.sim336.enemy.endurance=1;el('round').click();
+    check(run.sim336.combatEffects.route===26&&run.sim336.history.length===2,'Vashna captured Deathstaff victory route');
+    choose(97);setup(37,99.5);el('start').click();check(run.sim336.endurance===99.5,'Vashna half-point ENDURANCE can be resumed');
+    const current=JSON.stringify(run.sim336);el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim336)===current,'Vashna stale confirmation preserves another book');app.setCurrentBookId(id);button.click();
+  }
+  if(id===335){
+    const el=key=>document.getElementById('sim335-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=(skill,ep=100)=>{el('skill').value=skill;el('endurance').value=ep;el('maximum').value=100;el('modifier').value=0;el('armorEndurance').value=0;el('priorRounds').value=0;};
+    check(requestedRosters.has(335)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Darke catalog and overlay registered');
+    check(el('strength')&&el('animal')&&el('pathsmanship')&&el('psychic').options.length===4,'Darke printed combat controls');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();check(el('skill').value==='25'&&el('endurance').value==='30','Darke fresh Grand Master stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];el('start').click();el('round').click();check(run.sim335.history.length===1,'Darke custom fight works');
+    choose(121);setup(20,8);el('strength').checked=true;el('strength').dispatchEvent(new Event('change'));el('start').click();check(run.sim335.endurance===13&&run.sim335.enduranceInitial===105&&el('strength').disabled,'Darke Strength applies once and setup locks');
+    const boosted=JSON.stringify(run.sim335);module.render();check(JSON.stringify(run.sim335)===boosted,'Darke render preserves boosted fight');el('cancel').click();document.getElementById('confirm-ok').click();check(run.sim335.endurance===8&&run.sim335.enduranceInitial===100&&run.sim335.history.length===1,'Darke manual finish removes temporary EP only');
+    choose(297);setup(100,1);el('start').click();run.sim335.enemy.endurance=1;el('round').click();check(run.sim335.endurance===1&&run.sim335.enduranceInitial===100&&run.sim335.history.length===2&&run.sim335.combatEffects.route===24,'Darke Strength victory keeps living one EP');
+    choose(198);setup(32);el('psychic').value='kai';el('psychic').dispatchEvent(new Event('change'));el('start').click();Math.random=()=>.1;el('round').click();check(run.sim335.endurance===100,'Darke first-round protection includes psychic cost');
+    const saved=JSON.stringify(run.sim335);el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim335)===saved,'Darke stale confirmation preserves another book');app.setCurrentBookId(id);button.click();
+  }
+  if(id===334){
+    const el=key=>document.getElementById('sim334-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=(skill,ep=100)=>{el('skill').value=skill;el('endurance').value=ep;el('maximum').value=100;};
+    check(requestedRosters.has(334)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Kaag catalog and overlay registered');
+    check(el('psychic').options.length===4&&el('guardianKai'),'Kaag psychic powers and rank control');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();check(el('skill').value==='25'&&el('endurance').value==='30','Kaag fresh Grand Master stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];
+    el('start').click();check(run.sim334.combatEffects.section===0&&el('psychic').disabled,'Kaag custom fight locks setup');el('round').click();check(run.sim334.history.length===1,'Kaag custom victory');
+    choose(128);setup(52,16);el('start').click();Math.random=()=>.1;el('round').click();
+    check(run.sim334.endurance===11&&run.sim334.combatEffects.route===105&&run.sim334.history.length===1,'Kaag threshold stops without a win');
+    choose(229);setup(38);el('psychic').value='kai';el('psychic').dispatchEvent(new Event('change'));el('start').click();el('round').click();
+    check(run.sim334.endurance===94,'Kaag half-strength Kai-surge with one EP cost');
+    const saved=JSON.stringify(run.sim334);module.render();check(JSON.stringify(run.sim334)===saved,'Kaag render preserves fight');
+    el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim334)===saved,'Kaag stale confirmation preserves another book');app.setCurrentBookId(id);button.click();
+  }
+  if(id===333){
+    const el=key=>document.getElementById('sim333-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    check(requestedRosters.has(333)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Ruel catalog and overlay registered');
+    check([...el('psychic').options].map(o=>o.value).join(',')==='none,blast,surge,kai','Ruel has three separate psychic powers');
+    const choose=section=>{el('encounter').value=section?'section:'+section+':slot:0':'0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=(skill=20,ep=100)=>{el('skill').value=skill;el('endurance').value=ep;el('maximum').value=100;el('modifier').value=0;el('potions').value=0;el('priorRounds').value=0;el('armorEndurance').value=0;};
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();check(el('skill').value==='25'&&el('endurance').value==='30','Ruel fresh Grand Master stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];
+    el('start').click();check(run.sim333.combatEffects.section===0&&el('psychic').disabled,'Ruel custom fight and setup lock');el('round').click();check(run.sim333.history.length===1,'Ruel custom victory');
+    choose(31);setup(30);el('psychic').value='kai';el('psychic').dispatchEvent(new Event('change'));el('start').click();Math.random=()=>.1;el('round').click();check(run.sim333.endurance===95,'Ruel Kai-surge applies bonus and cost against selective immunity');
+    el('cancel').click();document.getElementById('confirm-ok').click();
+    choose(38);setup(50);el('psychic').value='none';el('psychic').dispatchEvent(new Event('change'));el('start').click();check(el('escape').disabled,'Ruel Giganite escape initially unavailable');run.sim333.enemy.endurance=36;module.render();check(!el('escape').disabled,'Ruel Giganite escape becomes optional');el('escape').click();check(run.sim333.combatEffects.route===13&&run.sim333.history.length===1,'Ruel escape does not award a victory');
+    choose(27);setup(20,8);for(const key of['deliverance','curingReady']){el(key).checked=true;el(key).dispatchEvent(new Event('change'));}el('start').click();check(!el('heal').disabled,'Ruel Deliverance available');el('heal').click();check(run.sim333.endurance===28&&!run.sim333.nextCuringReady&&el('heal').disabled,'Ruel Deliverance consumes readiness');
+    const saved=JSON.stringify(run.sim333);module.render();check(JSON.stringify(run.sim333)===saved,'Ruel render preserves fight');el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim333)===saved,'Ruel stale confirmation preserves another book');app.setCurrentBookId(id);button.click();
+  }
+  if(id===332){
+    const el=key=>document.getElementById('sim332-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    check(requestedRosters.has(332)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Masters catalog and mutual exclusion registered');
+    check(el('heal')&&el('archmaster')&&el('armorEndurance')&&el('openingModifier')&&el('lastingWounds'),'Masters printed combat and resumed-injury controls');
+    const setup=(skill=20,ep=100)=>{el('skill').value=skill;el('endurance').value=ep;el('maximum').value=100;el('modifier').value=0;el('potions').value=0;el('priorRounds').value=0;el('armorEndurance').value=0;el('openingModifier').value=0;};
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    setup(21);el('archmaster').checked=true;el('archmaster').dispatchEvent(new Event('change'));check(el('skill').value==='21','Masters flag preserves unfinished setup');
+    for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];
+    el('start').click();check(run.sim332.combatEffects.section===0&&el('armorEndurance').disabled,'Masters custom fight and setup lock');Math.random=()=>.9;el('round').click();check(run.sim332.history.length===1,'Masters custom victory');
+    choose(75);setup(100);el('start').click();for(let n=0;n<3;n++)el('round').click();check(run.sim332.enemy.endurance===29&&run.sim332.history.length===1,'Masters ordinary opening weapons cannot kill Kraagenskul');el('round').click();check(run.sim332.combatEffects.route===240&&run.sim332.history.length===2,'Masters retrieved sword ends the fight');
+    choose(268);setup(22);el('start').click();Math.random=()=>.1;el('round').click();el('round').click();check(run.sim332.enduranceInitial===95&&el('maximum').value==='95','Masters permanent injury updates initial EP');
+    el('cancel').click();document.getElementById('confirm-ok').click();
+    choose(27);setup(20,6);el('curingReady').checked=true;el('curingReady').dispatchEvent(new Event('change'));el('start').click();check(!el('heal').disabled,'Masters combat healing ready');el('heal').click();check(run.sim332.endurance===26&&el('heal').disabled&&!run.sim332.nextCuringReady,'Masters healing consumes readiness once');
+    const saved=JSON.stringify(run.sim332);module.render();check(JSON.stringify(run.sim332)===saved,'Masters render preserves fight');el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim332)===saved,'Masters stale confirmation preserves another book');app.setCurrentBookId(id);button.click();
+  }
+  if(id===331){
+    const el=key=>document.getElementById('sim331-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    check(requestedRosters.has(331)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Prisoners catalog and mutual exclusion registered');
+    check(el('extraDisciplines').max==='7'&&el('scion')&&el('curingMentora')&&!el('bowModifier'),'Prisoners printed numeric and discipline controls');
+    const setup=(skill=20)=>{el('skill').value=skill;el('endurance').value=100;el('maximum').value=100;el('modifier').value=0;el('potions').value=0;el('priorRounds').value=0;el('extraDisciplines').value=0;};
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    setup(21);el('extraDisciplines').value=5;el('extraDisciplines').dispatchEvent(new Event('change'));check(el('skill').value==='21','Prisoners numeric control preserves unfinished setup');
+    for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];
+    el('start').click();check(run.sim331.combatEffects.section===0&&el('extraDisciplines').disabled,'Prisoners custom fight and setup lock');
+    Math.random=()=>.9;el('round').click();check(run.sim331.history.length===1,'Prisoners custom victory');
+    choose(22);setup(100);el('start').click();el('round').click();check(run.sim331.combatEffects.route===123&&run.sim331.history.length===2,'Prisoners automatic kill has its own continuation');
+    choose(22);setup(29);el('start').click();run.sim331.enemy.endurance=21;Math.random=()=>.1;el('round').click();check(run.sim331.combatEffects.route===306&&run.sim331.history.length===2,'Prisoners nonfatal threshold has no killing reward');
+    choose(270);setup();el('modifier').value=99;el('extraDisciplines').value=5;el('psychicRing').checked=true;el('psychicRing').dispatchEvent(new Event('change'));el('start').click();
+    check(run.sim331.ratio===3&&run.sim331.combatEffects.extraDisciplines===5,'Prisoners mind combat captures numeric disciplines and ignores weapon modifier');
+    const saved=JSON.stringify(run.sim331);module.render();check(JSON.stringify(run.sim331)===saved,'Prisoners render preserves fight');
+    el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim331)===saved,'Prisoners stale confirmation preserves another book');app.setCurrentBookId(id);button.click();
+  }
+  if(id===330){
+    const el=key=>document.getElementById('sim330-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    check(requestedRosters.has(330)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Torgar catalog and mutual exclusion registered');
+    check(el('spirit')&&el('weapon')&&el('unarmedMastery')&&!el('bowModifier'),'Torgar has its printed combat controls');
+    const setup=(skill=20,ep=100,rounds=0)=>{el('skill').value=skill;el('endurance').value=ep;el('maximum').value=100;el('modifier').value=0;el('potions').value=0;el('priorRounds').value=rounds;};
+    const choose=(section,slot=0)=>{el('encounter').value='section:'+section+':slot:'+slot;el('encounter').dispatchEvent(new Event('change'));};
+    setup(21,99.5);el('spirit').checked=true;el('spirit').dispatchEvent(new Event('change'));
+    check(el('skill').value==='21'&&el('endurance').value==='99.5'&&el('endurance').step==='0.5','Torgar flags preserve unfinished fractional setup');
+    for(const field of el('editor').querySelectorAll('[data-stat]'))field.value=({skill:1,stamina:10})[field.dataset.stat];
+    el('start').click();check(run.sim330.combatEffects.section===0,'Torgar ordinary custom fight needs no preset');
+    check(el('skill').disabled&&el('spirit').disabled&&el('priorRounds').disabled,'Torgar setup locks during combat');
+    Math.random=()=>.9;el('round').click();check(run.sim330.history.length===1,'Torgar custom victory');
+    choose(274);setup(100);el('start').click();el('round').click();
+    check(run.sim330.enemy.skill===17&&run.sim330.combatEffects.ruleKey==='section:274:slot:1'&&run.sim330.history.length===1,'Torgar first swordsman has no early reward');
+    const saved=JSON.stringify(run.sim330);module.render();check(JSON.stringify(run.sim330)===saved,'Torgar rendering preserves second opponent');
+    el('round').click();check(run.sim330.history.length===2&&run.sim330.combatEffects.route===68,'Torgar two swordsmen award once');
+    choose(274,1);setup(100);el('start').click();el('round').click();check(run.sim330.history.length===3&&run.sim330.roundsThisBattle===1,'Torgar direct second opponent does not repeat itself');
+    choose(286);setup(100);el('start').click();el('round').click();
+    check(run.sim330.combatEffects.route===20&&run.sim330.history.length===3&&el('round').disabled,'Torgar Tagazin threshold is not a killing victory');
+    choose(187);setup(100,100,4);el('start').click();el('round').click();
+    check(run.sim330.combatEffects.route===234&&run.sim330.roundsThisBattle===4&&run.sim330.history.length===3,'Torgar prior rounds prevent a fifth round');
+    choose(172);setup(29);el('start').click();Math.random=()=>.1;el('round').click();
+    check(run.sim330.endurance===97.5,'Torgar Gorodon keeps half-point damage');
+    const before=JSON.stringify(run.sim330);el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();
+    check(JSON.stringify(run.sim330)===before,'Torgar stale confirmation preserves the fight');app.setCurrentBookId(id);button.click();
+  }
+  if(id===329){
+    const el=key=>document.getElementById('sim329-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    check(requestedRosters.has(329)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Cauldron catalog and mutual exclusion registered');
+    check(el('divination')&&el('unarmedMastery')&&!el('screen')&&!el('bowModifier'),'Cauldron has its own discipline controls');
+    const setup=(skill=20,rounds=0)=>{el('skill').value=skill;el('endurance').value=100;el('maximum').value=100;el('modifier').value=0;el('potions').value=0;el('priorRounds').value=rounds;};
+    const choose=(section,slot=0)=>{el('encounter').value='section:'+section+':slot:'+slot;el('encounter').dispatchEvent(new Event('change'));};
+    setup(21);el('divination').checked=true;el('divination').dispatchEvent(new Event('change'));check(el('skill').value==='21','Cauldron flags preserve unfinished character input');
+    for(const field of el('editor').querySelectorAll('[data-stat]'))field.value=({skill:1,stamina:10})[field.dataset.stat];
+    el('start').click();check(run.sim329.combatEffects.section===0,'Cauldron custom fight starts without a preset');
+    check(el('skill').disabled&&el('divination').disabled&&el('priorRounds').disabled,'Cauldron setup locked during combat');
+    Math.random=()=>.9;el('round').click();check(run.sim329.history.length===1,'Cauldron real custom victory');
+    choose(238);setup(100);el('start').click();el('round').click();
+    check(run.sim329.enemy.skill===18&&run.sim329.combatEffects.ruleKey==='section:238:slot:1'&&run.sim329.history.length===1,'Cauldron first pair has no early reward');
+    const saved=JSON.stringify(run.sim329);module.render();check(JSON.stringify(run.sim329)===saved,'Cauldron rendering preserves the middle opponent');
+    el('round').click();check(run.sim329.enemy.skill===17&&run.sim329.history.length===1,'Cauldron second pair advances to the third');
+    el('round').click();check(run.sim329.history.length===2&&run.sim329.combatEffects.route===177,'Cauldron three pairs award one victory');
+    choose(309);setup(100);el('start').click();el('round').click();
+    check(run.sim329.combatEffects.ruleKey==='section:309:slot:1'&&el('totals').textContent.includes('84'),'Cauldron companion bonus starts after the first pair');
+    el('round').click();el('round').click();check(run.sim329.history.length===3,'Cauldron second group awards once');
+    choose(309,2);setup(100);el('start').click();el('round').click();check(run.sim329.history.length===4&&run.sim329.roundsThisBattle===1,'Cauldron direct last-slot preset fights only the last pair');
+    choose(82);setup(100,4);el('start').click();el('round').click();
+    check(run.sim329.combatEffects.route===151&&run.sim329.roundsThisBattle===4&&run.sim329.history.length===4&&el('round').disabled,'Cauldron elapsed rounds prevent a fifth round and false win');
+    choose(3);setup(100,2);el('start').click();el('round').click();
+    check(run.sim329.roundsThisBattle===3&&!run.sim329.combatEffects.route&&run.sim329.history.length===5,'Cauldron original three-round gap does not invent a continuation');
+    choose(10);setup();el('start').click();const before=JSON.stringify(run.sim329);el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();
+    check(JSON.stringify(run.sim329)===before,'Cauldron stale confirmation preserves the original fight');app.setCurrentBookId(id);button.click();
+  }
   if(id===328){
     const el=key=>document.getElementById('sim328-'+key),run=app.currentPlaythrough();
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');

@@ -1,7 +1,7 @@
 import { bootState } from './state.js';
 import { setToken, retryStateSaves, hasUnsavedStateSaves } from '../core/state.js';
 import { setTranslationOverride } from '../i18n.js';
-import { _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed, _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed, initBooksXpPanels } from '../ui-helpers/prefs.js';
+import { _setLandingPanelCollapsed, _toggleAllLandingPanelsCollapsed, _setPlayPanelCollapsed, _toggleAllPlayPanelsCollapsed, initBooksXpPanels, restoreCachedPanelVisibility } from '../ui-helpers/prefs.js';
 import { _toggleCoverTooltipSettings, initCoversPanel, _refillLazyIfShort } from '../covers.js';
 import { _setupCtxSubmenuFlip } from '../play/bg.js';
 import { setAdminUsername } from '../account/user.js';
@@ -64,14 +64,7 @@ export function initShell() {
   }).catch(() => {});
 
   // Panel collapse toggles - persist state across refreshes
-  if (localStorage.getItem('covers-collapsed') === '1') {
-    document.body.classList.add('covers-collapsed');
-    document.getElementById('covers-toggle').textContent = '›';
-  }
-  if (localStorage.getItem('right-collapsed') === '1') {
-    document.body.classList.add('right-collapsed');
-    document.getElementById('right-toggle').textContent = '‹';
-  }
+  restoreCachedPanelVisibility();
   localStorage.removeItem('feed-collapsed');
   document.body.classList.remove('feed-collapsed');
   document.getElementById('feed-toggle').textContent = '▴';

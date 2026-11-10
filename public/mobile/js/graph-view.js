@@ -143,7 +143,7 @@ function _bfsDepth(startSec) {
 
 // Preserve saved positions; place missing nodes near positioned neighbors.
 // Prefer downward growth, then search around crowded nodes and connectors.
-function _layout(sections, startSec) {
+function _layout(sections, startSec, runPath = []) {
   const missing = sections.filter(id => !_hasPos(state.positions[id]));
   if (!missing.length) return;
   const depth = _bfsDepth(startSec);
@@ -155,10 +155,16 @@ function _layout(sections, startSec) {
   for (const id of missing) {
     const sec = parseSecId(id);
     const neighbors = _getPositionedNeighbors(sec, state.positions);
-    let y, xStart;
+    let y, xStart, anchorIds;
     if (neighbors.all.length) {
       const anchors = neighbors.incoming.length ? neighbors.incoming : neighbors.all;
-      const anchorId = anchors.reduce((a, b) => (state.positions[a].y >= state.positions[b].y ? a : b));
+      let anchorId = anchors.reduce((a, b) => (state.positions[a].y >= state.positions[b].y ? a : b));
+      const connected = new Set(anchors.map(String));
+      for (let i = runPath.length - 1; i >= 0; i--) {
+        if (connected.has(String(runPath[i]))) { anchorId = runPath[i]; break; }
+      }
+      // Keep fallback rings beside this parent, even when older sections also link here.
+      anchorIds = [anchorId];
       y = state.positions[anchorId].y + LAYER_GAP;
       xStart = state.positions[anchorId].x;
     } else {
@@ -166,7 +172,7 @@ function _layout(sections, startSec) {
       xStart = 0;
     }
     const position = _chooseOpenPosition(sec, state.positions, neighbors, { x:xStart, y },
-      { snapToGrid:true, allowUnanchored:true, directionWeight:0.1 });
+      { snapToGrid:true, allowUnanchored:true, directionWeight:0.1, anchorIds });
     if (position) state.positions[id] = position;
   }
 }
@@ -302,7 +308,7 @@ export function refreshGraph(centerOnSec) {
   const displayPt = livePt || viewingPt;
   const startSec  = displayPt?.path?.[0] ?? state.startSection ?? 1;
   const sections  = [...allDiscoveredSections()];
-  _layout(sections, startSec);
+  _layout(sections, startSec, displayPt?.path);
 
   const curSec     = (livePt && livePt.path.length) ? livePt.path[livePt.path.length - 1] : null;
   const finalNode  = (displayPt?.completed && displayPt.path.length) ? displayPt.path[displayPt.path.length - 1] : null;

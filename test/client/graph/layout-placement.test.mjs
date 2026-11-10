@@ -11,8 +11,8 @@ test('desktop and mobile nodes search around crowding without moving saved nodes
   assert.ifError(result.error);
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const report = JSON.parse(result.stdout);
-  assert.equal(report.cases, 22);
-  assert.equal(report.mobileCases, 8);
+  assert.equal(report.cases, 26);
+  assert.equal(report.mobileCases, 12);
   assert.equal(report.denseNodes, 602);
   console.log(`Dense graph placement: ${report.densePlacementMs} ms`);
 });

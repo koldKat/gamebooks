@@ -55,6 +55,33 @@ export function trackCameraMotion(network) {
     if (!network.getViewPosition) {moving=false;if(waiting.size)requestAnimationFrame(flush);}
     else watch();
   };
+  // Internal fits call the view directly, bypassing Network.focus/moveTo/fit.
+  // Cancel at this shared boundary so an initial fit cannot leave a second
+  // redraw callback fighting the focus that restores the current section.
+  const view=network.view, animateView=view?.animateView;
+  let viewAnimating=false;
+  const viewFinished=()=>{viewAnimating=false;};
+  if (typeof animateView==='function') {
+    view.animateView=function(options) {
+      if (options===undefined) return animateView.call(this,options);
+      if (this.viewFunction) {
+        network.body.emitter.off('initRedraw',this.viewFunction);
+        this.viewFunction=undefined;
+        this.easingTime=0;
+        if (viewAnimating) network.body.emitter.emit('_stopRendering');
+      }
+      viewAnimating=options.animation.duration!==0;
+      if (viewAnimating) {
+        moving=true;animationEnded=false;lastView=null;stableFrames=0;
+        minimumStopAt=performance.now()+options.animation.duration;
+      }
+      const result=animateView.call(this,options);
+      if (!viewAnimating && moving) {minimumStopAt=0;finished();}
+      watch();
+      return result;
+    };
+    network.on('animationFinished',viewFinished);
+  }
   for (const method of ['focus','moveTo','fit']) {
     const fn=network[method];
     if (typeof fn!=='function') continue;
@@ -65,7 +92,7 @@ export function trackCameraMotion(network) {
       // Detach that transition before replacing it, otherwise mouse redraws keep
       // replaying it and the camera jumps between the old and new centers.
       const view=network.view;
-      if (moving && !animationEnded && view?.viewFunction && network.body?.emitter) {
+      if (!animateView && moving && !animationEnded && view?.viewFunction && network.body?.emitter) {
         network.body.emitter.off('initRedraw',view.viewFunction);
         view.viewFunction=undefined;
         view.easingTime=0;
@@ -91,6 +118,10 @@ export function trackCameraMotion(network) {
   const interrupted=()=>{minimumStopAt=0;finished();};
   network.on('dragStart',interrupted);
   release=()=>{
+    if (typeof animateView==='function') {
+      view.animateView=animateView;
+      network.off('animationFinished',viewFinished);
+    }
     network.off('animationFinished',finished);
     network.off('dragStart',interrupted);
     for (const [method,fn] of original) network[method]=fn;

@@ -6,7 +6,7 @@ import { _buildPlacedEdges, _evaluateLocalCandidate } from './layout-geometry.js
 import { _LOCAL_PLACE_RADII, _LOCAL_PLACE_ANGLES, _LOCAL_SOFT_NODE_GAP } from './layout-constants.js';
 
 export function _chooseOpenPosition(sec, posMap, neighbors, preferred, options = {}) {
-  const anchors = neighbors.incoming.length ? neighbors.incoming : neighbors.all;
+  const anchors = options.anchorIds ?? (neighbors.incoming.length ? neighbors.incoming : neighbors.all);
   const center = _avgPoint(anchors, posMap) ?? (options.allowUnanchored ? preferred : null);
   if (!center) return null;
   const snap = options.snapToGrid ?? state.snapToGrid;

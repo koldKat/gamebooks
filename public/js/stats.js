@@ -3,6 +3,7 @@
 import { escapeHtml, fetchPublic } from './core/util.js';
 import { t } from './i18n.js';
 import { formatStatCount } from './core/format-stat-count.js';
+import { bindCountryTooltip } from './ui-helpers/country-tooltip.js';
 
 export function closeStatsModal() {
   document.getElementById('stats-modal-overlay').classList.remove('active');
@@ -96,7 +97,7 @@ export async function openStatsModal() {
       {
         cls: 'players', label: t('stats.sec.players'),
         rows: [
-          [t('stats.registered'), fmt(s.users), 'players'],
+          [t('stats.registered'), `<span id="stats-registered-users" class="country-count-tooltip">${fmt(s.users)}</span>`, 'players'],
           [t('stats.admins'), fmt(s.admins)],
           [t('stats.moderators'), fmt(s.moderators)],
           [t('stats.squires'), fmt(s.squires)],
@@ -284,6 +285,7 @@ export async function openStatsModal() {
     ];
     body.innerHTML = `<div class="stats-layout">${columns.map(column => `<div class="stats-column">${column.map(cls =>
       renderSection(byClass.get(cls))).join('')}</div>`).join('')}</div>`;
+    bindCountryTooltip(document.getElementById('stats-registered-users'), s.usersByCountry);
   } catch {
     body.innerHTML = `<p class="stats-loading">${t('stats.load_failed')}</p>`;
   }

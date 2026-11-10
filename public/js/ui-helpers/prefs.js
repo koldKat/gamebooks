@@ -124,6 +124,24 @@ export function applyPrefs(p, { renderBooks = true } = {}) {
 }
 
 // Restore account-specific layout before rendering a cached library.
+export function restoreCachedPanelVisibility() {
+  let prefs = null;
+  if (getToken()) {
+    try { prefs = JSON.parse(localStorage.getItem(`ui_prefs_v1:${getUsername()}`) || '{}'); }
+    catch { prefs = {}; }
+    if (!prefs || typeof prefs !== 'object' || Array.isArray(prefs)) prefs = {};
+  }
+  for (const [key, button, collapsedText, expandedText] of [
+    ['covers-collapsed', 'covers-toggle', '›', '‹'],
+    ['right-collapsed', 'right-toggle', '‹', '›'],
+  ]) {
+    const collapsed = (prefs ? prefs[key] : localStorage.getItem(key)) === '1';
+    document.body.classList.toggle(key, collapsed);
+    const toggle = document.getElementById(button);
+    if (toggle) toggle.textContent = collapsed ? collapsedText : expandedText;
+  }
+}
+
 export function restoreCachedPrefs() {
   if (!getToken()) return;
   try {

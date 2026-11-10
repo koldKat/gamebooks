@@ -6,6 +6,7 @@ import { fetchPublic } from '../core/util.js';
 
 // Called after a successful login/register (main.js wires this to showBooks()).
 let _onAuthSuccess = null;
+let _registerEmailShown = false;
 export function setOnAuthSuccess(fn) { _onAuthSuccess = fn || null; }
 
 // Captured once at module load so showLogin() in main.js can detect a pending reset.
@@ -22,10 +23,24 @@ export function showResetPanel() {
 }
 
 export function showAuthForm() {
+  _resetRegistration();
   document.querySelector('.auth-form').style.display       = '';
   document.getElementById('forgot-pw-btn').style.display   = '';
   document.getElementById('forgot-pw-panel').style.display = 'none';
   document.getElementById('reset-pw-panel').style.display  = 'none';
+}
+
+function _resetRegistration() {
+  _registerEmailShown = false;
+  for (const id of ['register-password-confirm', 'register-email', 'register-email-hint', 'register-back-btn']) {
+    document.getElementById(id).style.display = 'none';
+  }
+  const registerBtn = document.getElementById('register-btn');
+  registerBtn.textContent = t('auth.register');
+  registerBtn.classList.remove('auth-confirm-btn');
+  registerBtn.classList.add('auth-alt-btn');
+  document.getElementById('login-btn').style.display = '';
+  document.getElementById('login-password').autocomplete = 'current-password';
 }
 
 async function doAuth(endpoint) {
@@ -106,9 +121,9 @@ function _initResetPasswordFlow() {
 }
 
 export function initAuth() {
-  let _registerEmailShown = false;
   const loginBtn      = document.getElementById('login-btn');
   const registerBtn   = document.getElementById('register-btn');
+  const registerBack  = document.getElementById('register-back-btn');
   const confirmInput  = document.getElementById('register-password-confirm');
   const emailInput    = document.getElementById('register-email');
   const emailHint     = document.getElementById('register-email-hint');
@@ -119,20 +134,15 @@ export function initAuth() {
   const forgotSuccess = document.getElementById('forgot-success');
   const forgotError   = document.getElementById('forgot-error');
 
-  function _resetRegisterBtn() {
-    registerBtn.textContent = t('auth.register');
-    registerBtn.classList.remove('auth-confirm-btn');
-    registerBtn.classList.add('auth-alt-btn');
-    loginBtn.style.display = '';
-  }
-
   loginBtn.addEventListener('click', () => {
-    _registerEmailShown = false;
-    confirmInput.style.display = 'none';
-    emailInput.style.display = 'none';
-    emailHint.style.display  = 'none';
-    _resetRegisterBtn();
+    _resetRegistration();
     doAuth('/api/login');
+  });
+
+  registerBack.addEventListener('click', () => {
+    _resetRegistration();
+    document.getElementById('login-error').textContent = '';
+    document.getElementById('login-password').focus();
   });
 
   registerBtn.addEventListener('click', () => {
@@ -145,6 +155,8 @@ export function initAuth() {
       registerBtn.classList.remove('auth-alt-btn');
       registerBtn.classList.add('auth-confirm-btn');
       loginBtn.style.display = 'none';
+      registerBack.style.display = '';
+      document.getElementById('login-password').autocomplete = 'new-password';
       confirmInput.focus();
       return;
     }
@@ -200,6 +212,10 @@ export function initAuth() {
     if (e.key === 'Enter') document.getElementById('login-password').focus();
   });
   document.getElementById('login-password').addEventListener('keydown', e => {
-    if (e.key === 'Enter') doAuth('/api/login');
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (_registerEmailShown) confirmInput.focus();
+      else doAuth('/api/login');
+    }
   });
 }

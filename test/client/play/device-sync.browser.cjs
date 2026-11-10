@@ -86,6 +86,8 @@ for(let id=0;id<2;id++){
  check(desktop.data.currentSection()===6,'Home/reopen catches current mobile position');
  // Same-frame replacements previously leaked vis-network redraw callbacks.
  desktop.graph.network.focus(1,{animation:{duration:250},scale:1.2});
+ // vis-network's initial layout fit bypasses the public Network methods.
+ desktop.graph.network.view.moveTo({position:{x:0,y:0},animation:{duration:250},scale:1.2});
  desktop.graph.network.focus(6,{animation:{duration:250},scale:1.2});
  // Offscreen iframe canvases are throttled by headless Chrome. Drive the same
  // redraw event used by vis-network so animation coverage is deterministic.
