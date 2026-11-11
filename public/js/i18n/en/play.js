@@ -5,7 +5,8 @@ export default {
     'reading_access.unlock': 'Unlock book · {cost}',
     'reading_access.unlocking': 'Unlocking book…',
     'reading_access.permanent': 'Unlock this book permanently for in-app reading?',
-    'reading_access.unlock_action': 'Unlock book ({cost}',
+    'reading_access.unlock_action': 'Unlock book',
+    'reading_access.coin_cost': '{cost} gold coins',
     'reading_access.insufficient': 'Not enough gold coins to unlock this book.',
 
     'runs.header':  'Runs',

@@ -59,7 +59,7 @@ function createReadingAccess(db) {
       JOIN books b ON b.id = ub.book_id JOIN users u ON u.id = ub.user_id
       JOIN json_each(CASE WHEN json_valid(ub.state_data) THEN ub.state_data ELSE '{}' END) runs
       JOIN json_each(CASE WHEN runs.type = 'array' THEN runs.value ELSE '[]' END) p
-      WHERE b.has_live_reading = 1 AND (u.is_admin != 0 OR EXISTS
+      WHERE b.has_live_reading = 1 AND (u.is_admin != 0 OR u.is_moderator != 0 OR EXISTS
         (SELECT 1 FROM reading_paid_testers t WHERE t.user_id = u.id)) = ?
         AND runs.key IN ('playthroughs', 'preSeriesRuns')
         AND json_array_length(CASE WHEN p.type = 'object' THEN p.value ELSE '{}' END, '$.path') > 0`).run(admins ? 1 : 0);
@@ -81,11 +81,12 @@ function createReadingAccess(db) {
   // Remember free-period ownership when a run starts, even if that run is deleted later.
   for (const operation of ['INSERT', 'UPDATE OF state_data']) {
     const suffix = operation === 'INSERT' ? 'insert' : 'update';
-    db.exec(`CREATE TRIGGER IF NOT EXISTS reading_free_run_${suffix}
+    db.exec(`DROP TRIGGER IF EXISTS reading_free_run_${suffix};
+      CREATE TRIGGER reading_free_run_${suffix}
       AFTER ${operation} ON user_books
       WHEN NOT EXISTS (SELECT 1 FROM reading_unlocks WHERE user_id = NEW.user_id AND book_id = NEW.book_id)
         AND EXISTS (SELECT 1 FROM books WHERE id = NEW.book_id AND has_live_reading = 1)
-        AND EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id AND is_admin = 0)
+        AND EXISTS (SELECT 1 FROM users WHERE id = NEW.user_id AND is_admin = 0 AND is_moderator = 0)
         AND NOT EXISTS (SELECT 1 FROM reading_paid_testers WHERE user_id = NEW.user_id)
         AND (SELECT COUNT(*) FROM users) < CAST((SELECT value FROM admin_settings WHERE key = '${READING_THRESHOLD_KEY}') AS INTEGER)
       BEGIN
@@ -110,7 +111,8 @@ function createReadingAccess(db) {
     const purchased = !!db.prepare('SELECT 1 FROM reading_unlocks WHERE user_id = ? AND book_id = ?').get(userId, bookId);
     const normalCost = Math.floor(Math.max(0, book.total_sections || 0) / 100);
     const tester = !!db.prepare('SELECT 1 FROM reading_paid_testers WHERE user_id = ?').get(userId);
-    const gated = normalCost > 0 && (active || tester || !!db.prepare('SELECT is_admin FROM users WHERE id = ?').get(userId)?.is_admin);
+    const role = db.prepare('SELECT is_admin, is_moderator FROM users WHERE id = ?').get(userId);
+    const gated = normalCost > 0 && (active || tester || !!role?.is_admin || !!role?.is_moderator);
     const locked = gated && !purchased;
     const user = includeFrontmatter ? db.prepare('SELECT xp, bonus_coins, coins_spent, bonus_gc_mint_purchased FROM users WHERE id = ?').get(userId) : null;
     const balance = user ? coinBalance(user) : null;

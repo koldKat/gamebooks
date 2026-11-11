@@ -1,6 +1,42 @@
 // Combat rules and resolution; UI and persistence callbacks are injected.
 export function createCombat(getContext) {
 // BEGIN EXTRACTED RULES
+function _playerDefeated(d) {
+  return d.player.life <= (d.enemy.encounter?.playerStopLife || 0);
+}
+
+function _selectEncounter(d, enemy) {
+  const { _startGroup } = getContext();
+  const rule = structuredClone(enemy.stats?.encounter || {});
+  d.enemy = { name: enemy.name, hp: enemy.hp, hpMax: enemy.hpMax ?? enemy.hp,
+    minHit: enemy.attack, fixedDamage: rule.fixedDamage || 0,
+    extraAttackers: Math.max(0, (rule.count || 1) - 1), encounter: rule };
+  d.player.enemyFirst = !!rule.enemyFirst;
+  d.battleStart = { playerLife: d.player.life, enemyHp: d.enemy.hp };
+  d.roundsThisBattle = 0;
+  d.healUsedThisBattle = false;
+  d.effects = { tempShield: false, doubleAttack: false, pendingBonus: 0, enemyStun: 0 };
+  _startGroup(d);
+}
+
+function _retreat() {
+  const { _data, _playerDefeated, _allEnemiesDefeated, _syncGroup, _advanceTarget, _appendLog, _renderAll, saveState, t } = getContext();
+  const d = _data();
+  if (!d?.enemy.encounter?.retreat || _playerDefeated(d) || _allEnemiesDefeated(d) || !d.roundsThisBattle) return;
+  _syncGroup(d);
+  d.group.hp = d.group.hp.map(hp => hp > 0 ? d.enemy.hpMax : 0);
+  d.enemy.hp = d.group.hp[d.group.target];
+  _advanceTarget(d);
+  d.roundsThisBattle = 0;
+  d.healUsedThisBattle = false;
+  d.effects = { tempShield: false, doubleAttack: false, pendingBonus: 0, enemyStun: 0 };
+  delete d.group.stun;
+  d.battleStart = { playerLife: d.player.life, enemyHp: d.enemy.hp, group: structuredClone(d.group) };
+  _appendLog(d, t('battlesim286.log.retreat'));
+  saveState();
+  _renderAll();
+}
+
 function _techName(key) {
   const { t } = getContext();
  return t(`battlesim286.tech.${key}.name`); }
@@ -48,7 +84,8 @@ function _syncGroup(d) {
 
 function _allEnemiesDefeated(d) {
 
-  return d.group ? d.group.hp.every((hp, i) => (i === d.group.target ? d.enemy.hp : hp) <= 0) : d.enemy.hp <= 0;
+  const end = d.enemy.encounter?.enemyStopLife || 0;
+  return d.group ? d.group.hp.every((hp, i) => (i === d.group.target ? d.enemy.hp : hp) <= end) : d.enemy.hp <= end;
 }
 
 function _advanceTarget(d) {
@@ -61,7 +98,7 @@ function _advanceTarget(d) {
 }
 
 function _enemyTurn(d) {
-  const { _enemyAttackOnce, _resolveExtraAttackers, _syncGroup, t } = getContext();
+  const { _enemyAttackOnce, _resolveExtraAttackers, _syncGroup, _playerDefeated, t } = getContext();
 
   if (!d.group) {
     _enemyAttackOnce(d);
@@ -69,8 +106,8 @@ function _enemyTurn(d) {
     return;
   }
   _syncGroup(d);
-  for (let i = 0; i < d.group.hp.length && d.player.life > 0; i++) {
-    if (d.group.hp[i] > 0) _enemyAttackOnce(d, t('battlesim286.ui.group_member', { n: i + 1 }));
+  for (let i = 0; i < d.group.hp.length && !_playerDefeated(d); i++) {
+    if (d.group.hp[i] > (d.enemy.encounter?.enemyStopLife || 0)) _enemyAttackOnce(d, t('battlesim286.ui.group_member', { n: i + 1 }), i);
   }
 }
 
@@ -95,6 +132,7 @@ function _shieldDef(d) {
 function _totalPlayerDef(d) {
   const { _shieldDef } = getContext();
 
+  if (d.enemy.encounter?.shieldOnly) return _shieldDef(d);
   return _shieldDef(d) + (d.effects.tempShield ? -4 : 0) - (d.player.extraDef || 0);
 }
 
@@ -102,10 +140,12 @@ function _playerAttackOnce(d) {
   const { _appendLog, _enemyNameSafe, _roll2d6, _syncGroup, _weaponIsGlove, _weaponMinHit, t } = getContext();
 
   const roll   = _roll2d6();
-  const minHit = _weaponIsGlove(d) ? 4 : _weaponMinHit(d);
+  const rule = d.enemy.encounter || {};
+  const glove = !rule.noGlove && !rule.playerMinHit && _weaponIsGlove(d);
+  const minHit = rule.playerMinHit ?? (glove ? 4 : (rule.noGlove && _weaponIsGlove(d) ? 8 : _weaponMinHit(d)));
   let dmg = Math.max(0, roll - minHit);
-  const hit = _weaponIsGlove(d) ? roll >= 4 : roll > minHit;
-  if (hit && _weaponIsGlove(d)) dmg += d.player.gloveBonus;
+  const hit = (glove || (rule.gloveMinHit && _weaponIsGlove(d))) ? roll >= minHit : roll > minHit;
+  if (hit && (glove || (rule.gloveMinHit && _weaponIsGlove(d)))) dmg += rule.gloveBonus ?? d.player.gloveBonus;
   if (hit && d.effects.pendingBonus > 0) {
     dmg += d.effects.pendingBonus;
     d.effects.pendingBonus = 0;
@@ -118,10 +158,15 @@ function _playerAttackOnce(d) {
     : t('battlesim286.log.player_miss', { roll, minHit }));
 }
 
-function _enemyAttackOnce(d, labelOverride = null) {
+function _enemyAttackOnce(d, labelOverride = null, groupIndex = null) {
   const { _appendLog, _enemyNameSafe, _roll2d6, _totalPlayerDef, t } = getContext();
 
   const label = labelOverride ?? _enemyNameSafe(d);
+  if (groupIndex != null && d.group?.stun?.[groupIndex] > 0) {
+    d.group.stun[groupIndex]--;
+    _appendLog(d, t('battlesim286.log.enemy_stunned', { label }));
+    return;
+  }
   if (d.effects.enemyStun > 0) {
     d.effects.enemyStun--;
     _appendLog(d, t('battlesim286.log.enemy_stunned', { label }));
@@ -132,7 +177,7 @@ function _enemyAttackOnce(d, labelOverride = null) {
   const hit  = roll > minHit;
   // Fixed-damage hits still receive normal shield/armour reduction.
   const raw  = hit ? (d.enemy.fixedDamage > 0 ? d.enemy.fixedDamage : (roll - minHit)) : 0;
-  const dmg  = Math.max(0, raw + _totalPlayerDef(d));
+  const dmg  = Math.max(0, raw + (d.enemy.encounter?.dreamLion ? -1 : _totalPlayerDef(d)));
   if (dmg > 0) {
     d.player.life = Math.max(0, d.player.life - dmg);
     _appendLog(d, t('battlesim286.log.enemy_hit', { label, roll, minHit, dmg, life: d.player.life, lifeMax: d.player.lifeMax }));
@@ -151,17 +196,37 @@ function _resolveExtraAttackers(d) {
 }
 
 function _runRound() {
-  const { SVG_SKULL, SVG_TROPHY, _advanceTarget, _allEnemiesDefeated, _appendLog, _data, _enemyNameSafe, _enemyTurn, _notReady, _playerAttackOnce, _recordOutcome, _renderAll, _startGroup, saveState, t } = getContext();
+  const { SVG_SKULL, SVG_TROPHY, _advanceTarget, _allEnemiesDefeated, _appendLog, _data, _enemyNameSafe, _enemyTurn, _notReady, _playerAttackOnce, _playerDefeated, _recordOutcome, _renderAll, _roll2d6, _startGroup, saveState, t } = getContext();
 
   const d = _data();
-  if (!d || _notReady(d) || d.player.life <= 0 || _allEnemiesDefeated(d) || d.dream3) return;
+  if (!d || _notReady(d) || _playerDefeated(d) || _allEnemiesDefeated(d) || d.dream3) return;
   if (d.groupRules && !d.group) _startGroup(d);
   _advanceTarget(d);
   d.roundsThisBattle = (d.roundsThisBattle || 0) + 1;
 
+  const rule = d.enemy.encounter || {};
+  if (rule.oneAttempt) {
+    const roll = _roll2d6();
+    const hit = roll >= rule.hitAt;
+    d.enemy.hp = 0;
+    if (!hit) d.player.life = Math.max(0, d.player.life - rule.missDamage);
+    _appendLog(d, t(hit ? 'battlesim286.log.shadow_hit' : 'battlesim286.log.shadow_miss', { roll, damage: rule.missDamage, life: d.player.life }));
+    _advanceTarget(d);
+    if (_playerDefeated(d)) { _appendLog(d, `${SVG_SKULL} ${t('battlesim286.log.player_fallen')}`); _recordOutcome(d, 'loss'); }
+    else if (_allEnemiesDefeated(d)) { _appendLog(d, `${SVG_TROPHY} ${t('battlesim286.log.enemy_defeated', { enemy: _enemyNameSafe(d) })}`); _recordOutcome(d, 'win'); }
+    saveState(); _renderAll(); return;
+  }
+  if (rule.dreamLion && d.roundsThisBattle === 1) {
+    const roll = _roll2d6();
+    _appendLog(d, t(roll >= 7 ? 'battlesim286.dream6.net_catch' : 'battlesim286.dream6.net_miss', { roll }));
+    if (roll >= 7) {
+      d.enemy.hp = 0; _advanceTarget(d); _recordOutcome(d, 'win'); saveState(); _renderAll(); return;
+    }
+  }
+
   if (d.player.enemyFirst) {
     _enemyTurn(d);
-    if (d.player.life <= 0) {
+    if (_playerDefeated(d)) {
       _appendLog(d, `${SVG_SKULL} ${t('battlesim286.log.player_fallen')}`);
       _recordOutcome(d, 'loss');
       saveState();
@@ -179,7 +244,7 @@ function _runRound() {
     _recordOutcome(d, 'win');
   } else if (!d.player.enemyFirst) {
     _enemyTurn(d);
-    if (d.player.life <= 0) {
+    if (_playerDefeated(d)) {
       _appendLog(d, `${SVG_SKULL} ${t('battlesim286.log.player_fallen')}`);
       _recordOutcome(d, 'loss');
     }
@@ -233,13 +298,14 @@ function _resetBattle() {
 }
 
 function _activateTech(key) {
-  const { SVG_SKULL, SVG_TROPHY, TECH_ATTEMPT_COST, TECH_ITEMS, _advanceTarget, _allEnemiesDefeated, _appendLog, _data, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll2d6, _startGroup, _techDesc, _techName, saveState, t } = getContext();
+  const { SVG_SKULL, SVG_TROPHY, TECH_ATTEMPT_COST, TECH_ITEMS, _advanceTarget, _allEnemiesDefeated, _appendLog, _data, _enemyNameSafe, _notReady, _playerDefeated, _recordOutcome, _renderAll, _roll2d6, _startGroup, _techDesc, _techName, saveState, t } = getContext();
 
   const d = _data();
   if (!d) return;
   const item  = TECH_ITEMS.find(i => i.key === key);
   const state = d.tech[key];
   if (!item || !state || _notReady(d) || d.dream3) return;
+  if (d.enemy.encounter?.noTech || d.enemy.encounter?.oneAttempt || d.enemy.encounter?.dreamLion) return;
 
   if (item.kind === 'revive') {
     if (d.dehronatorUsed || d.player.life <= 0) return;
@@ -260,7 +326,7 @@ function _activateTech(key) {
   }
 
   // Block actions after resolution to prevent duplicate outcome history.
-  if (d.player.life <= 0 || _allEnemiesDefeated(d)) return;
+  if (_playerDefeated(d) || _allEnemiesDefeated(d)) return;
   if (d.groupRules && !d.group) _startGroup(d);
   _advanceTarget(d);
 
@@ -268,6 +334,7 @@ function _activateTech(key) {
   if (item.charged && state.activated) {
     if (state.usesLeft <= 0) return;
     state.usesLeft--;
+    d.roundsThisBattle = (d.roundsThisBattle || 0) + 1;
     d.enemy.hp = Math.max(0, d.enemy.hp - item.damage);
     _appendLog(d, t('battlesim286.log.charged_shot', { name: _techName(item.key), dmg: item.damage, enemy: _enemyNameSafe(d), hp: d.enemy.hp, hpMax: d.enemy.hpMax, left: state.usesLeft }));
     _advanceTarget(d);
@@ -285,6 +352,10 @@ function _activateTech(key) {
 
   d.player.life = Math.max(0, d.player.life - TECH_ATTEMPT_COST);
   if (!item.charged) state.usesLeft--; // charged items: cost paid, but the attempt itself never spends a charge
+  if (_playerDefeated(d)) {
+    _appendLog(d, `${SVG_SKULL} ${t('battlesim286.log.player_fallen')}`);
+    _recordOutcome(d, 'loss'); saveState(); _renderAll(); return;
+  }
   const roll = _roll2d6();
   const ok   = roll >= 6;
   if (!ok) {
@@ -293,10 +364,14 @@ function _activateTech(key) {
     switch (item.kind) {
       case 'buff_shield': d.effects.tempShield   = true; break;
       case 'buff_next':   d.effects.pendingBonus = 10;   break;
-      case 'stun':        d.effects.enemyStun    = 3;    break;
+      case 'stun':
+        if (d.group) { d.group.stun ||= []; d.group.stun[d.group.target] = 3; }
+        else d.effects.enemyStun = 3;
+        break;
       case 'double':      d.effects.doubleAttack = true; break;
       case 'direct':
         if (item.charged) { state.activated = true; state.usesLeft--; } // first shot spends its own charge
+        d.roundsThisBattle = (d.roundsThisBattle || 0) + 1;
         d.enemy.hp = Math.max(0, d.enemy.hp - item.damage);
         break;
     }
@@ -495,5 +570,5 @@ function _dream3Stop() {
 }
 
 // END EXTRACTED RULES
-  return { _techName, _techDesc, _loadoutAE, _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _startGroup, _syncGroup, _allEnemiesDefeated, _advanceTarget, _enemyTurn, _weaponMinHit, _weaponIsGlove, _shieldDef, _totalPlayerDef, _playerAttackOnce, _enemyAttackOnce, _resolveExtraAttackers, _runRound, _heal, _resetBattle, _activateTech, _sleepAttempt, _resolveDream, _dream3Finish, _dream3Roll, _dream3Stop };
+  return { _playerDefeated, _selectEncounter, _retreat, _techName, _techDesc, _loadoutAE, _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _startGroup, _syncGroup, _allEnemiesDefeated, _advanceTarget, _enemyTurn, _weaponMinHit, _weaponIsGlove, _shieldDef, _totalPlayerDef, _playerAttackOnce, _enemyAttackOnce, _resolveExtraAttackers, _runRound, _heal, _resetBattle, _activateTech, _sleepAttempt, _resolveDream, _dream3Finish, _dream3Roll, _dream3Stop };
 }

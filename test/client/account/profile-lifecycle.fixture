@@ -44,7 +44,8 @@ const overlay = el('profile-modal-overlay');
 overlay.classList.add('active'); profile.closeProfileModal();
 assert.equal(overlay.classList.contains('active'), false);
 
-const data = { username: 'Tester', xp: 0, level: 0, ratingsGiven: 4, averageRating: 3.5 };
+const data = { username: 'Tester', xp: 0, level: 0, ratingsGiven: 4, averageRating: 3.5,
+  simBattlesFought: 12, simBattlesWon: 9, simBattlesLost: 3 };
 const normal = profile.openProfileModal(); pending.shift().resolve({ json: async () => data }); await normal;
 assert.equal(overlay.classList.contains('active'), true, 'valid profile still opens');
 assert.equal(snapshots, 1);
@@ -52,6 +53,9 @@ for (const prefix of ['books', 'play', 'profile']) {
   assert.equal(el(prefix + '-xp-hb-rate').textContent, '', 'zero heartbeat rate stays out of the new-account display');
 }
 assert.match(el('profile-own-stats').innerHTML, /profile.ratings_given.*>4<.*profile.average_rating.*>3\.50</);
+assert.match(el('profile-own-stats').innerHTML, />12<\/span> pub.stat.sim_battles/);
+assert.match(el('profile-own-stats').innerHTML, />9<\/span> pub.stat.sim_wins/);
+assert.match(el('profile-own-stats').innerHTML, />3<\/span> pub.stat.sim_losses/);
 profile.closeProfileModal();
 
 const late = profile.openProfileModal();

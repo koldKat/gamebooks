@@ -1,0 +1,56 @@
+// Verify the installed encounters and printed example through both real loaders.
+localStorage.setItem('gamebook_lang','LANGUAGE');
+const app=await import('REPO/public/js/core/state.js');
+const desktop=await import('REPO/public/js/battlesim/loader.js');
+const mobile=await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const seeds=ROSTER_SEEDS,check=(value,label)=>{if(!value)throw Error(label);};
+window.fetch=async url=>new Response(JSON.stringify(seeds[String(url).match(/\/api\/books\/(\d+)\/enemies$/)?.[1]]??{}),{headers:{'Content-Type':'application/json'}});
+console.warn=(message,error)=>{if(error instanceof Error)throw error;};
+const run={startedAt:1,path:[1],inventory:[{name:'Kept'}],sim286:{unchanged:true}};
+app.setCurrentBookId(8);app.state.playthroughs=[run];app.state.activePtIndex=0;
+if('MODE'==='mobile')await mobile.openSimForBook(8);else await desktop.showBattleSimForBook(8);
+const module=await import('REPO/public/js/battlesim/battlesim8.js');
+const trigger=document.getElementById('sim8-btn');if('MODE'!=='mobile')trigger.click();
+const overlay=document.getElementById('s8-overlay'),el=key=>document.getElementById('s8-'+key),data=()=>run.sim8;
+for(let i=0;i<100&&!overlay.querySelector('.bsim-opponent-row');i++)await new Promise(resolve=>setTimeout(resolve,20));
+check(overlay.querySelector('.bsim-opponent-row'),'setup loaded');
+check(el('encounter').options.length===42,'all 41 installed preset variants');
+const unrelated=JSON.stringify([run.path,run.inventory,run.sim286]);
+const select=section=>{const row=seeds[8].find(e=>e.stats?.encounter.section===section);el('encounter').value=row.id;el('encounter').dispatchEvent(new Event('change'));return row.stats.encounter;};
+for(const row of seeds[8].filter(e=>e.stats?.encounter)){
+  el('encounter').value=row.id;el('encounter').dispatchEvent(new Event('change'));
+  const fields=[...overlay.querySelectorAll('.bsim-opponent-row')];
+  check(fields.length===row.stats.encounter.opponents.length,'fixed preset count '+row.name);
+  fields.forEach((field,i)=>{const source=row.stats.encounter.opponents[i];check(Number(field.querySelector('[data-stat="skill"]').value)===source.skill&&Number(field.querySelector('[data-stat="lifeMax"]').value)===source.lifeMax,'printed stats '+row.name);});
+  check([...overlay.querySelectorAll('.bsim-opponent-row button')].every(button=>button.hidden),'preset cannot drop opponents');
+}
+el('encounter').value='';el('encounter').dispatchEvent(new Event('change'));
+let row=overlay.querySelector('.bsim-opponent-row');row.querySelector('[role="combobox"]').value='Soldier';row.querySelector('[data-stat="skill"]').value=3;row.querySelector('[data-stat="lifeMax"]').value=6;
+overlay.querySelector('.bsim-opponent-editor > button').click();
+row=overlay.querySelectorAll('.bsim-opponent-row')[1];row.querySelector('[role="combobox"]').value='Captain';row.querySelector('[data-stat="skill"]').value=4;row.querySelector('[data-stat="lifeMax"]').value=4;
+el('player-skill').value=4;el('player-skill').dispatchEvent(new Event('input'));el('player-life').value=12;el('player-life').dispatchEvent(new Event('input'));
+el('apply').click();check(data().group.remaining.length===1,'custom group starts without preset');
+el('opponent-choices').querySelector('button').click();check(data().enemy.name==='Captain','choose first opponent');
+const originalRandom=Math.random,rolls=[];Math.random=()=>{check(rolls.length,'unexpected random roll');return (rolls.shift()-.5)/6;};
+try{
+  rolls.push(1,4,4,6);el('round').click();
+  check(data().player.life===12&&data().history.length===0&&data().awaitingOpponent,'no retaliation or premature reward');
+  check(el('player-skill').disabled&&el('encounter').disabled,'setup locked between duels');
+  el('opponent-choices').querySelector('button').click();check(data().enemy.foeFirst,'later opponent attacks first');
+  rolls.push(3,2,4,3,4,4,5);el('round').click();check(data().player.life===11&&data().enemy.life===3,'printed example first soldier round');
+  rolls.push(1,4,6,2,4,6,6);el('round').click();check(data().player.life===8&&data().history.length===1,'printed example final outcome');
+  el('round').click();check(data().history.length===1,'outcome once');
+  select('25');el('apply').click();el('item-bow').checked=true;el('item-bow').dispatchEvent(new Event('change'));el('arrows').value=3;el('arrows').dispatchEvent(new Event('input'));
+  check(el('bow-fire').style.display==='none','forbidden bow hidden');
+  el('item-chainmail').checked=true;el('item-chainmail').dispatchEvent(new Event('change'));
+  rolls.push(1,1,1,1,4,5,6);el('round').click();check(data().pendingAttack&&el('round').disabled,'chainmail interrupts before damage');
+  const snapshot=JSON.stringify(data());module.render();check(JSON.stringify(data())===snapshot,'render does not resolve pending strike');
+  rolls.push(1);el('chainmail-choice').querySelector('[data-reroll="2"]').click();check(data().chainmailUsed&&!data().pendingAttack,'selected armor die resolves');
+  const before=JSON.stringify(data());module.render();check(JSON.stringify(data())===before,'active render does not reset fight');
+}finally{Math.random=originalRandom;}
+const legacy={player:{skill:3,life:9,lifeMax:23},enemy:{name:'Капитан',skill:5,life:2,lifeMax:5,foeFirst:true},round:20,log:[],history:[{outcome:'win',ts:1}],items:{bow:false,arrows:0,chainmail:true},bowFired:false,sixWins:false};
+run.sim8=structuredClone(legacy);module.render();check(JSON.stringify(run.sim8)===JSON.stringify(legacy),'legacy state retained exactly');
+check(JSON.stringify([run.path,run.inventory,run.sim286])===unrelated,'story and unrelated simulator retained');
+check(!/battlesim(?:8|\.editor)\./.test(overlay.textContent),'all Bulgarian labels resolved');
+check(overlay.querySelector('.inv-modal').scrollWidth<=overlay.querySelector('.inv-modal').clientWidth+2,'no dialog overflow');
+document.body.dataset.test=JSON.stringify({mode:'MODE',language:'LANGUAGE',width:innerWidth,presets:41,customGroup:true,printedExample:true,chainmail:true,legacyPreserved:true,productionWrites:0});

@@ -24,6 +24,7 @@ function collectDashboardStats(db, simHistoryKeys, extras) {
     wins: 0, deaths: 0, battleCount: 0, publicRuns: 0,
     battlesFought: 0, battlesWon: 0, battlesLost: 0 };
   const eligible = new Map();
+  const hasBattleLedger = !!db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='sim_battle_gem_battles'").get();
   const books = db.prepare('SELECT id, parent_book_id, total_sections, is_container FROM books').all();
   const containers = new Set(books.filter(b => b.parent_book_id == null && b.is_container).map(b => b.id));
   for (const book of books) {
@@ -63,6 +64,7 @@ function collectDashboardStats(db, simHistoryKeys, extras) {
       totals.battleCount += pts.filter(pt => pt.result === 'battle').length;
       totals.publicRuns += pts.filter(pt => pt.isPublic).length;
       for (const pt of pts) {
+        if (hasBattleLedger) break;
         for (const key of Object.keys(pt)) {
           if (!simHistoryKeys.has(key)) continue;
           const history = pt[key]?.history;
@@ -80,7 +82,20 @@ function collectDashboardStats(db, simHistoryKeys, extras) {
     totals.mappedSections += best.mapped;
     totals.discoveredSections += best.discovered;
   }
+  if (hasBattleLedger) {
+    const battles = db.prepare(`SELECT COUNT(*) AS battlesFought,
+      COALESCE(SUM(outcome='win'),0) AS battlesWon,
+      COALESCE(SUM(outcome='loss'),0) AS battlesLost FROM sim_battle_gem_battles`).get();
+    Object.assign(totals, battles);
+  }
   return totals;
 }
 
-module.exports = { addGameplayStats, collectDashboardStats };
+function getSimulatorBattleStats(db, userId) {
+  return db.prepare(`SELECT COUNT(*) AS simBattlesFought,
+    COALESCE(SUM(outcome='win'),0) AS simBattlesWon,
+    COALESCE(SUM(outcome='loss'),0) AS simBattlesLost
+    FROM sim_battle_gem_battles WHERE user_id=?`).get(userId);
+}
+
+module.exports = { addGameplayStats, collectDashboardStats, getSimulatorBattleStats };

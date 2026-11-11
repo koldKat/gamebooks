@@ -765,7 +765,7 @@ SIM_HISTORY_KEYS.push('sim1566', 'sim1575', 'sim1576', 'sim1577', 'sim1578', 'si
 SIM_HISTORY_KEYS.push('sim1473');
 SIM_HISTORY_KEYS.push('sim1621');
 SIM_HISTORY_KEYS.push('sim1622');
-SIM_HISTORY_KEYS.push('sim388', 'sim390', 'sim391');
+SIM_HISTORY_KEYS.push('sim388', 'sim390', 'sim391', 'sim409', 'sim410');
 SIM_HISTORY_KEYS.push('sim1649');
 SIM_HISTORY_KEYS.push('sim261', 'sim262', 'sim281', 'sim282', 'sim283', 'sim284', 'sim310', 'sim311', 'sim312', 'sim313', 'sim314', 'sim315', 'sim326', 'sim327', 'sim328', 'sim329', 'sim330', 'sim331', 'sim332', 'sim333', 'sim334', 'sim335', 'sim336', 'sim337');
 const RETIRED_SIM_HISTORY_KEYS = ['sim758', 'sim2116'];

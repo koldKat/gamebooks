@@ -6,9 +6,8 @@ const { db } = require('./db/connection');
 const books = require('./db');
 const { authenticate, tokenFromReq, send, isLocalhostReal } = require('./request-helpers');
 
-const DIRECTORY = path.join(__dirname, '..', 'reading-images');
+const { DIRECTORY, MAX_BYTES } = require('./reading-image-storage');
 const FILE_PATTERN = /^[a-f0-9]{64}\.(png|jpg|gif|webp)$/;
-const MAX_BYTES = 256 * 1024;
 
 function setReadingImageCookie(req, res) {
   const secure = req.socket.encrypted || req.headers['x-forwarded-proto'] === 'https';

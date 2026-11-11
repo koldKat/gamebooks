@@ -21,11 +21,12 @@
 .reading-unlock-dialog::backdrop { background: #0009; }
 .reading-unlock-dialog h2 { margin: 0 0 .6rem; font-size: 1rem; }
 .reading-unlock-dialog p { margin: 0 0 .6rem; line-height: 1.5; }
+.reading-unlock-dialog .reading-unlock-question { text-align: center; color: #93c5fd; }
 .reading-unlock-preview { display: flex; align-items: flex-start; gap: .7rem; }
 .reading-unlock-preview > img { width: 100px; max-width: 28%; height: auto; flex-shrink: 0; }
 .reading-unlock-preview > div { min-width: 0; overflow-wrap: anywhere; }
 .reading-unlock-preview > div > p:not(.reading-unlock-author) { text-align: justify; hyphens: auto; }
-.reading-unlock-preview > img { cursor: zoom-in; }
+.reading-unlock-preview > img { cursor: pointer; }
 .reading-unlock-cover-hover {
   position: fixed; z-index: 2; display: block; width: min(280px, calc(100vw - 16px));
   height: auto; max-height: min(420px, calc(100dvh - 16px)); object-fit: contain;
@@ -53,10 +54,12 @@
 .reading-frontmatter--structured { white-space: normal; }
 .reading-frontmatter img:not(.reading-inline-symbol):not(.reading-inline-initial):not(.reading-inline-word),
 .liveread-body img:not(.reading-inline-symbol):not(.reading-inline-initial):not(.reading-inline-word),
-.m-top img:not(.reading-inline-symbol):not(.reading-inline-initial):not(.reading-inline-word) { cursor: zoom-in; }
+.m-top img:not(.reading-inline-symbol):not(.reading-inline-initial):not(.reading-inline-word) { cursor: pointer; }
 .reading-frontmatter [role="button"][aria-label="Enlarge illustration"],
 .liveread-body [role="button"][aria-label="Enlarge illustration"],
-.m-top [role="button"][aria-label="Enlarge illustration"] { cursor: zoom-in; }
+.m-top [role="button"][aria-label="Enlarge illustration"] { cursor: pointer; }
+.reading-zoom-target,
+.reading-zoom-target :is(img, figure, div, p, span) { cursor: pointer; }
 .reading-image-zoom {
   position: fixed; inset: 0; margin: auto;
   box-sizing: border-box; width: fit-content; max-width: 75vw;
@@ -333,6 +336,7 @@
 }
 .reading-unlock-button:hover:not(:disabled) { background: #243520; border-color: #4ade80; color: #4ade80; }
 .reading-unlock-button .coin-icon { width: 14px; height: 14px; display: block; }
+.reading-unlock-button .reading-unlock-cost { color: #f5c85b; }
 .reading-unlock-button:disabled { opacity: 0.35; cursor: default; }
 .reading-unlock-button:disabled:hover { background: #1c2a18; border-color: #2d5a1b; color: #86efac; }
 .reading-unlock-button:focus-visible { outline: 2px solid #86efac; outline-offset: 3px; }

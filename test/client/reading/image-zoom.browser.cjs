@@ -9,7 +9,7 @@ const file = path.join(root, 'reading-image-zoom-check.html');
 fs.writeFileSync(file, `<!doctype html><meta charset="utf-8">
 <style>body{margin:0;background:#111827;color:#ddd;font:14px Arial}dialog{margin:0} ${fs.readFileSync(path.join(publicRoot, 'css/reading-access.css'), 'utf8')}</style>
 <div id="source"></div><script type="module">
-import {openReadingImageZoom} from 'file://${publicRoot}/js/reading/image-zoom.js';
+import {openReadingImageZoom,bindReadingImageZoom} from 'file://${publicRoot}/js/reading/image-zoom.js';
 const check=(value,label)=>{if(!value)throw Error(label)};
 const image=async(w,h)=>{
  const img=new Image();img.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'"><rect width="100%" height="100%" fill="#64748b"/></svg>');
@@ -24,7 +24,15 @@ try {
    if(parts==='figure')source.append(await image(w,h));
    else source.append(await image(parts==='stack'?w:w/2,parts==='stack'?h/2:h),await image(parts==='stack'?w:w/2,parts==='stack'?h/2:h));
   }
-  document.getElementById('source').append(source);openReadingImageZoom(source);
+  document.getElementById('source').append(source);
+  bindReadingImageZoom(document.getElementById('source'));
+  check(getComputedStyle(source).cursor==='pointer','clickable artwork hand cursor '+name);
+  for(const child of source.querySelectorAll('img'))check(getComputedStyle(child).cursor==='pointer','layered artwork hand cursor '+name);
+  if(parts==='stack'){
+    const label=document.createElement('p');label.textContent='Original artwork label';source.append(label);
+    check(getComputedStyle(label).cursor==='pointer','original text layer hand cursor');label.remove();
+  }
+  openReadingImageZoom(source);
   const dialog=document.querySelector('dialog'),viewport=dialog.querySelector('.reading-image-zoom-viewport');
   const r=dialog.getBoundingClientRect(),v=viewport.getBoundingClientRect();
   check(Math.abs(r.x+r.width/2-document.documentElement.clientWidth/2)<1,'horizontal center '+name);

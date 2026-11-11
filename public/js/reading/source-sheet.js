@@ -1,7 +1,7 @@
 // Preserve separate PDF artwork and text layers in a responsive original sheet.
 import { bindReadingImageZoom } from './image-zoom.js';
 export function mountReadingSourceSheets(container, bookId) {
-  const imagePath = new RegExp(`^/api/books/${Number(bookId)}/reading-images/[a-f0-9]{64}\\.png$`);
+  const imagePath = new RegExp(`^/api/books/${Number(bookId)}/reading-images/[a-f0-9]{64}\\.(?:png|jpg|gif|webp)$`);
   for (const sheet of container.querySelectorAll('figure.reading-source-sheet[data-source-width]')) {
     if (sheet.parentElement?.closest('figure.reading-source-sheet')) continue;
     sheet.replaceWith(copySourceSheet(sheet, container.ownerDocument, imagePath));

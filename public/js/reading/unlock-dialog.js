@@ -44,6 +44,7 @@ export function openReadingUnlock(access, { onConfirm, isCurrent, onCancel }) {
   details.append(blurb);
   preview.append(details);
   const message = document.createElement('p');
+  message.className = 'reading-unlock-question';
   message.textContent = t('reading_access.permanent');
   const status = document.createElement('p');
   status.className = 'reading-unlock-status';
@@ -56,11 +57,11 @@ export function openReadingUnlock(access, { onConfirm, isCurrent, onCancel }) {
   const unlock = document.createElement('button');
   unlock.className = 'reading-unlock-button';
   const label = document.createElement('span');
+  const amount = document.createElement('span');
+  amount.className = 'reading-unlock-cost';
   const coin = document.createElement('span');
   coin.innerHTML = COIN_SVG;
-  const ending = document.createElement('span');
-  ending.textContent = ')';
-  unlock.append(label, coin, ending);
+  unlock.append(label, amount, coin);
   actions.append(cancel, unlock);
   dialog.append(title, preview, message, status, actions);
   const close = () => {
@@ -83,8 +84,9 @@ export function openReadingUnlock(access, { onConfirm, isCurrent, onCancel }) {
   });
   const update = latest => {
     access = { ...access, ...latest };
-    label.textContent = t('reading_access.unlock_action', { cost: access.cost });
-    unlock.setAttribute('aria-label', t('reading_access.unlock_action', { cost: access.cost }) + ' gold coins)');
+    label.textContent = t('reading_access.unlock_action');
+    amount.textContent = access.cost;
+    unlock.setAttribute('aria-label', t('reading_access.unlock_action') + ' ' + t('reading_access.coin_cost', { cost: access.cost }));
     unlock.disabled = access.busy || !access.canAfford;
     cancel.disabled = !!access.busy;
     status.textContent = access.error || (access.busy ? t('reading_access.unlocking') : access.canAfford ? '' : t('reading_access.insufficient'));

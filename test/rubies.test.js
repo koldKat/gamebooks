@@ -41,6 +41,36 @@ function fixture(t) {
 }
 const range=(start,end)=>Array.from({length:end-start+1},(_,i)=>start+i);
 
+test('sleep references cannot block a completed book reward or make an incomplete book qualify',t=>{
+  const f=fixture(t);const add=f.db.prepare('INSERT INTO book_sections VALUES(?,?)');
+  for(const id of [10,11]){
+    f.addBook(id,50);
+    for(const section of [...range(1,50),'sleep'])add.run(id,String(section));
+  }
+  f.save(2,10,[range(1,50)]);f.save(2,11,[range(1,49)]);
+  assert.equal(f.check(2,11),0);
+  assert.equal(f.check(2,10),1);
+  assert.equal(f.check(2,10),0);
+  assert.equal(f.wallet(2).rubies_earned,1);
+});
+
+test('sleep-reference migration repairs previously missed rewards once without changing runs',t=>{
+  const f=fixture(t);f.addBook(10,50);
+  const add=f.db.prepare('INSERT INTO book_sections VALUES(10,?)');
+  for(const section of [...range(1,50),'sleep'])add.run(String(section));
+  f.save(2,10,[range(1,50)],{notes:'Keep this',inventory:[{id:7}]});
+  const previous=f.db.prepare('INSERT INTO ruby_migrations VALUES(?)');
+  for(const name of ['completion-v1','squire-completion-25-v1','player-completion-50-v1',
+    'mapped-completion-v1','discoverable-completion-v1','supplemental-epilogue-completion-v1',
+    'supplemental-matter-completion-v1'])previous.run(name);
+  const state=f.db.prepare('SELECT *FROM user_books').all();
+  ruby.backfillRubies(f.db);
+  assert.equal(f.wallet(2).rubies_earned,1);
+  ruby.backfillRubies(f.db);
+  assert.equal(f.wallet(2).rubies_earned,1);
+  assert.deepEqual(f.db.prepare('SELECT *FROM user_books').all(),state);
+});
+
 test('Squires qualify at 25 sections; other players need 50 and current role is read on every check',t=>{
   const f=fixture(t);
   for(const total of [24,25,49,50,99,100]){

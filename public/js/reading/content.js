@@ -46,7 +46,7 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
   if (!/^\s*<(?:p|h[2-4]|ol|ul|figure|table)[\s>]/i.test(text)) return false;
   const template = document.createElement('template');
   template.innerHTML = text;
-  const imagePath = new RegExp(`^/api/books/${Number(bookId)}/reading-images/[a-f0-9]{64}\\.png$`);
+  const imagePath = new RegExp(`^/api/books/${Number(bookId)}/reading-images/[a-f0-9]{64}\\.(?:png|jpg|gif|webp)$`);
   function copySourceFrame(node) {
     const names = ['class', 'data-source-width', 'data-source-height', 'data-heading-box', 'data-body-box', 'data-font-size', 'data-line-height'];
     if (node.attributes.length !== names.length || [...node.attributes].some(a => !names.includes(a.name))) throw new Error('Invalid source frame');

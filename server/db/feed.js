@@ -8,6 +8,7 @@ const { getJobTitle } = require('./job-xp');
 const { getRandomLevelUpTemplate, getRandomJoinTemplate } = require('./content');
 const { _getAggregateRating, _getAuthorRatings, getAnthologyExtraMembers } = require('./books');
 const { getPlayerRatingStats } = require('./rating-stats');
+const { getSimulatorBattleStats } = require('./gameplay-stats');
 
 // ── Activity feed ─────────────────────────────────────────────────────────────
 
@@ -1078,6 +1079,7 @@ function getPublicProfile(username) {
     createdBooks,
     books,
     ...getPlayerRatingStats(db, user.id),
+    ...getSimulatorBattleStats(db, user.id),
   };
 }
 
@@ -1113,7 +1115,7 @@ function getProfileStats(userId) {
   }
   const totalRuns = wins + deaths + battles;
   return { totalBooks, createdBooks, booksPlayed, totalRuns, wins, deaths, battles,
-    ...getPlayerRatingStats(db, userId) };
+    ...getPlayerRatingStats(db, userId), ...getSimulatorBattleStats(db, userId) };
 }
 
 function getPublicCovers() {

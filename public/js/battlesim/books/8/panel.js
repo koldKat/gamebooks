@@ -2,16 +2,18 @@ import { AXE_DICE_BONUS, POTION_HEAL_BONUS } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
+import { createSetup } from './setup.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, AXE_DICE_BONUS, POTION_HEAL_BONUS, SVG_SKULL, SVG_TARGET, SVG_TROPHY, _appendLog, _calcDmg, _closeSim8, _data, _diceHtml, _dieHtml, _dmgHtml, _enemyList, _enemyName, _fireBow, _loadEnemyList, _openSim8, _recordOutcome, _renderHistory, _renderInputs, _renderLog, _resetBattle, _rollDice, _runRound, _setupEnemyAutocomplete, _statField, _updateItemBtns, _updateStatus, _usePotion, apiFetch, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initBattleSim8, registerPanelShortcut, renderSim8, saveState, setSim8Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, AXE_DICE_BONUS, POTION_HEAL_BONUS, SVG_SKULL, SVG_TARGET, SVG_TROPHY, _appendLog, _calcDmg, _closeSim8, _data, _diceHtml, _dieHtml, _dmgHtml, _enemyList, _enemyName, _fireBow, _loadEnemyList, _openSim8, _recordOutcome, _renderHistory, _renderInputs, _renderLog, _resetBattle, _rollDice, _runRound, _setupEnemyAutocomplete, _statField, _updateItemBtns, _updateStatus, _usePotion, apiFetch, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initBattleSim8, registerPanelShortcut, renderSim8, saveState, setSim8Visible, shortcutLabel, showAlert, t, _fightActive });
 const { _data, _appendLog, _recordOutcome } = createState(simulatorContext);
-const { _rollDice, _calcDmg, _diceHtml, _enemyName, _runRound, _fireBow, _resetBattle } = createCombat(simulatorContext);
+const { _rollDice, _calcDmg, _diceHtml, _enemyName, _fightActive, _runRound, _fireBow, _resetBattle, _startEncounter, _chooseOpponent, _resolveEnemyAttack } = createCombat(simulatorContext);
 const { _usePotion } = createEffects(simulatorContext);
+const setup = createSetup(() => ({ ...simulatorContext(), _fightActive, _startEncounter, _chooseOpponent, _resolveEnemyAttack }));
 // END SIMULATOR WIRING
 // ── Симулатор на битки - Пламъкът на Андалусия: Зарево над Кордоба (кн. 8) ──
 // State stored in pt.sim8. Rules: roll N dice (N=Умение); 4-5→1 щ., 6→2 щ.
-// Адрин напада пръв; при foeFirst - врагът напада преди него.
+// Ахрин attacks first in the opening duel; later opponents attack first.
 
 import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
@@ -63,12 +65,12 @@ function _updateItemBtns() {
   const preRound = d.round === 1;
 
   if (bowBtn) {
-    const canFire = alive && preRound && !d.bowFired && d.items?.bow && (d.items?.arrows > 0);
+    const canFire = alive && preRound && !d.bowFired && !d.group?.bowForbidden && !d.enemy.foeFirst && !d.pendingAttack && !d.outcomeRecorded && d.items?.bow && (d.items?.arrows > 0);
     bowBtn.style.display = canFire ? '' : 'none';
     if (canFire) bowBtn.textContent = t('battlesim8.btn.bow_fire_count', { n: d.items.arrows });
   }
   if (potBtn) {
-    const inBattle = d.round > 1 && d.player.life > 0 && d.enemy.life > 0;
+    const inBattle = _fightActive(d);
     const canUse = !inBattle && d.player.life > 0 && d.items?.potion && d.player.life < d.player.lifeMax;
     potBtn.style.display = canUse ? '' : 'none';
   }
@@ -79,9 +81,10 @@ function _updateStatus() {
   const el = document.getElementById('s8-status');
   if (!d || !el) return;
   if (d.player.life <= 0)     el.innerHTML = `${SVG_SKULL} ${t('battlesim8.status.fallen')}`;
+  else if (d.awaitingOpponent) el.textContent = t('battlesim8.ui.choose_next');
   else if (d.enemy.life <= 0) el.innerHTML = `${SVG_TROPHY} ${t('battlesim8.status.victory')}`;
   else                        el.innerHTML = '';
-  document.getElementById('s8-round').disabled = d.player.life <= 0 || d.enemy.life <= 0;
+  document.getElementById('s8-round').disabled = d.player.life <= 0 || d.enemy.life <= 0 || !!d.pendingAttack || !!d.outcomeRecorded;
 }
 
 function _renderInputs() {
@@ -113,6 +116,7 @@ function _renderInputs() {
 
   _updateStatus();
   _updateItemBtns();
+  setup.render();
 }
 
 // ── Enemy autocomplete ───────────────────────────────────────────────────────
@@ -139,7 +143,7 @@ function _setupEnemyAutocomplete() {
   }
 
   function render(q) {
-    const list = _enemyList || [];
+    const list = (_enemyList || []).filter(enemy => !enemy.stats?.encounter);
     const ql   = q.trim().toLowerCase();
     matches    = ql ? list.filter(e => e.name.toLowerCase().includes(ql)) : list;
     if (!matches.length) { closeDropdown(); return; }
@@ -155,7 +159,7 @@ function _setupEnemyAutocomplete() {
 
   function select(enemy) {
     const d = _data();
-    if (!d || !enemy) return;
+    if (!d || !enemy || _fightActive(d) || d.group) return;
     input.value  = enemy.name;
     d.enemy.name = enemy.name;
     if (enemy.attack != null) d.enemy.skill   = enemy.attack;
@@ -463,6 +467,7 @@ export function initBattleSim8() {
   });
 
   _setupEnemyAutocomplete();
+  setup.mount(overlay).catch(() => showAlert(t('battlesim8.ui.load_failed')));
 }
 
 function _dieHtml(d) {

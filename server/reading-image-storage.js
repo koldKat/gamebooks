@@ -3,10 +3,11 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { spawnSync } = require('child_process');
 
 const DIRECTORY = path.join(__dirname, '..', 'reading-images');
-const MAX_BYTES = 256 * 1024;
+const TARGET_BYTES = 512000;
+// Allow rare lossless originals above the target, with a bounded delivery size.
+const MAX_BYTES = 8 * 1024 * 1024;
 const DATA_IMAGE = /data:image\/(png|jpeg|jpg|gif|webp);base64,([A-Za-z0-9+/=\r\n]+)/g;
 
 function bookImageDirectory(bookId, directory = DIRECTORY) {
@@ -18,29 +19,12 @@ function bookImageDirectory(bookId, directory = DIRECTORY) {
 
 function storeImage(format, base64, bookId, directory = DIRECTORY) {
   directory = bookImageDirectory(bookId, directory);
-  let data = Buffer.from(base64, 'base64');
+  const data = Buffer.from(base64, 'base64');
   if (!data.length) throw new Error('Empty reading image');
-  if (format !== 'png' || data.length > MAX_BYTES) {
-    let converted;
-    for (const size of [null, 1800, 1500, 1200, 1000, 800, 600]) {
-      for (const colors of [null, 256]) {
-        const args = ['-n', '10', 'convert', '-[0]', '-auto-orient', '-strip'];
-        if (size) args.push('-resize', `${size}x${size}>`);
-        if (colors) args.push('-colors', String(colors));
-        args.push('-define', 'png:compression-level=9', 'png:-');
-        const result = spawnSync('nice', args, {
-          input: data, maxBuffer: 32 * 1024 * 1024, timeout: 30000,
-          env: { ...process.env, MAGICK_THREAD_LIMIT: '1' },
-        });
-        if (result.error || result.status !== 0) throw new Error(`Image conversion failed: ${result.error || result.stderr}`);
-        if (result.stdout.length && result.stdout.length <= MAX_BYTES) { converted = result.stdout; break; }
-      }
-      if (converted) break;
-    }
-    if (!converted) throw new Error('Cannot fit reading image within 256 KB');
-    data = converted;
-  }
-  const filename = `${crypto.createHash('sha256').update(data).digest('hex')}.png`;
+  if (!/^(png|jpeg|jpg|gif|webp)$/.test(format)) throw new Error('Invalid reading image format');
+  if (data.length > MAX_BYTES) throw new Error('Reading image exceeds the 8 MiB delivery limit');
+  const extension = format === 'jpeg' ? 'jpg' : format;
+  const filename = `${crypto.createHash('sha256').update(data).digest('hex')}.${extension}`;
   fs.mkdirSync(directory, { recursive: true });
   const destination = path.join(directory, filename);
   try { fs.writeFileSync(destination, data, { flag: 'wx' }); }
@@ -56,4 +40,4 @@ function externalizeImages(html, bookId, directory) {
     `/api/books/${Number(bookId)}/reading-images/${storeImage(format, base64, bookId, directory)}`);
 }
 
-module.exports = { DIRECTORY, MAX_BYTES, DATA_IMAGE, bookImageDirectory, storeImage, externalizeImages };
+module.exports = { DIRECTORY, TARGET_BYTES, MAX_BYTES, DATA_IMAGE, bookImageDirectory, storeImage, externalizeImages };

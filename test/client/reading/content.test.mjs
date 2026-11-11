@@ -36,6 +36,18 @@ test('plain text retains legacy rendering without heading or sentence guessing',
   }
 });
 
+test('native single-file JPEG, PNG, GIF and WebP illustrations remain protected by book ownership', () => {
+  for (const extension of ['jpg','png','gif','webp']) {
+    const src=`/api/books/414/reading-images/${'a'.repeat(64)}.${extension}`;
+    const {mount,document}=setup([source('FIGURE',[source('IMG',[],{src,alt:'Native illustration',loading:'lazy'})])]);
+    assert.equal(renderReadingMatter(mount,414,'<figure></figure>',document),true);
+    assert.equal(mount.children[0].children.length,1);
+    assert.equal(mount.children[0].children[0].src,src);
+    const wrong=setup([source('FIGURE',[source('IMG',[],{src:src.replace('/414/','/413/')})])]);
+    assert.equal(renderReadingMatter(wrong.mount,414,'<figure></figure>',wrong.document),false);
+  }
+});
+
 test('printed time sheets preserve bounded empty spacers and manual checkpoint links', () => {
   const nodes = [source('TABLE', [source('TBODY', [source('TR', [
     source('TD', [], { class: 'reading-time-gap', colspan: '3' }),

@@ -189,6 +189,16 @@ function backfillRubies(db) {
       for (const {user_id,book_id} of candidates) check(user_id,book_id);
       db.prepare("INSERT INTO ruby_migrations(name) VALUES('supplemental-matter-completion-v1')").run();
     }
+    if (!db.prepare("SELECT 1 FROM ruby_migrations WHERE name='sleep-reference-completion-v1'").get()) {
+      const check = createRubyCompletionChecker(db);
+      const candidates = db.prepare(`SELECT DISTINCT ub.user_id,ub.book_id FROM user_books ub
+        JOIN book_sections s ON s.book_id=ub.book_id WHERE lower(s.section_id)='sleep'
+        UNION SELECT DISTINCT x.user_id,s.book_id FROM xp_events x JOIN book_sections s
+        ON s.book_id=CAST(substr(x.ref,1,instr(x.ref,':')-1) AS INTEGER)
+        WHERE x.event='visit_node' AND lower(s.section_id)='sleep'`).all();
+      for (const {user_id,book_id} of candidates) check(user_id,book_id);
+      db.prepare("INSERT INTO ruby_migrations(name) VALUES('sleep-reference-completion-v1')").run();
+    }
   }).immediate();
 }
 

@@ -1,4 +1,4 @@
-import { readRosterDocument } from '../../helpers/roster-db.cjs';
+import { readRosterDocument, getRosterRows } from '../../helpers/roster-db.cjs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from './simulator-source.mjs';
@@ -173,6 +173,112 @@ function labyrinthFight() {
   f.run('Math.random = () => 0.5');
   return f;
 }
+
+function labyrinthPreset(id) {
+  const f = labyrinthFight();
+  const enemy = getRosterRows(286).find(row => row.id === id);
+  assert.ok(enemy, `Missing installed encounter ${id}`);
+  f.run(`_selectEncounter(_data(), ${JSON.stringify(enemy)})`);
+  return f;
+}
+
+test('286: six Shadows each get one attempt, a miss costs exactly 15 and removes that Shadow', () => {
+  const f = labyrinthPreset(217);
+  f.d.player.shieldKey = 'large'; f.d.player.extraDef = 20;
+  f.d.effects.doubleAttack = true;
+  f.run('Math.random = () => 0; _runRound()');
+  assert.equal(f.d.player.life, 35);
+  assert.deepEqual(Array.from(f.d.group.hp), [0, 4, 4, 4, 4, 4]);
+  f.run('Math.random = () => 0.2; for (var i=0;i<6;i++) _runRound()');
+  assert.equal(f.d.player.life, 35);
+  assert.equal(f.d.history.length, 1);
+  assert.equal(f.d.history[0].outcome, 'win');
+});
+
+test('286: a fatal miss against the final Shadow records only a loss', () => {
+  const f = labyrinthPreset(217);
+  f.d.player.life = 15;
+  f.run('for(var i=0;i<5;i++) _runRound(); Math.random=()=>0; _runRound(); _runRound()');
+  assert.equal(f.d.player.life, 0);
+  assert.equal(f.d.history.length, 1);
+  assert.equal(f.d.history[0].outcome, 'loss');
+});
+
+test('286: every surviving soldier/priest answers, while dead members stay silent', () => {
+  for (const [id, damage] of [[921, 16], [922, 28], [923, 10]]) {
+    const f = labyrinthPreset(id);
+    f.run('Math.random=()=>0.999; _runRound()');
+    // Priests take 13 damage from the glove, so one is defeated before retaliation.
+    assert.equal(f.d.player.life, 50 - (id === 922 ? 21 : damage));
+    assert.equal(f.d.group.hp.length, id === 923 ? 2 : 4);
+  }
+});
+
+test('286: fixed damage and reduced glove bonuses come from the selected preset', () => {
+  for (const [id, hp, life] of [[204,7,46],[205,32,43],[207,19,44],[209,29,44],[211,8,45],[212,9,45],[214,10,47]]) {
+    const f = labyrinthPreset(id);
+    f.run('Math.random=()=>0.999; _runRound()');
+    assert.equal(f.d.enemy.hp, hp, `encounter ${id} enemy HP`);
+    assert.equal(f.d.player.life, life, `encounter ${id} player HP`);
+  }
+});
+
+test('286: surrender thresholds differ at seven and below seven; bare-hand chief also surrenders', () => {
+  for (const [id, life, over] of [[921,7,true],[922,7,true],[210,7,false],[210,6,true],[215,7,false],[215,6,true]]) {
+    const f = labyrinthPreset(id); f.d.player.life = life;
+    assert.equal(f.run('_playerDefeated(_data())'), over);
+  }
+  const f = labyrinthPreset(215);
+  f.d.player.shieldKey = 'small'; f.d.player.extraDef = 20;
+  assert.equal(f.run('_totalPlayerDef(_data())'), -2);
+  f.d.enemy.hp = 12;
+  f.run('Math.random=()=>0.999; _runRound(); _runRound()');
+  assert.equal(f.d.enemy.hp, 6);
+  assert.equal(f.d.history.length, 1);
+  assert.equal(f.d.history[0].outcome, 'win');
+});
+
+test('286: tent retreat preserves dead Shadows and restores only survivors', () => {
+  const f = labyrinthPreset(216);
+  f.run('_runRound(); _runRound(); _runRound(); _retreat()');
+  assert.deepEqual(Array.from(f.d.group.hp), [0,18,18,18]);
+  assert.equal(f.d.roundsThisBattle, 0);
+  assert.equal(f.d.history.length, 0);
+  f.run('_heal(10)');
+  assert.equal(f.d.healUsedThisBattle, true);
+});
+
+test('286: gas stuns only the selected foe for its next three attacks', () => {
+  const f = labyrinthPreset(216);
+  f.run('_activateTech("gas"); _enemyTurn(_data())');
+  assert.equal(f.d.group.stun[0], 2);
+  assert.equal(f.d.player.life, 35); // activation 3, other three Shadows deal 4 each
+});
+
+test('286: presets reset special settings without altering equipment, and saved fights retain rules', () => {
+  const f = labyrinthPreset(219);
+  assert.equal(f.d.player.enemyFirst, true);
+  f.run('_runRound()');
+  const saved = JSON.parse(JSON.stringify(f.d));
+  assert.deepEqual(JSON.parse(JSON.stringify(fixture(286, saved).d)), saved);
+  const normal = getRosterRows(286).find(row => row.id === 202);
+  f.run(`_selectEncounter(_data(), ${JSON.stringify(normal)})`);
+  assert.equal(f.d.player.enemyFirst, false);
+  assert.equal(f.d.player.weaponKey, 'glove');
+  assert.equal(f.d.enemy.fixedDamage, 0);
+  assert.equal(f.d.enemy.extraAttackers, 0);
+});
+
+test('286: directly selecting the dream lion uses its net, sword and armor', () => {
+  const f = labyrinthPreset(9459);
+  f.run('Math.random=()=>0.5; _runRound()');
+  assert.equal(f.d.history[0].outcome, 'win');
+  const g = labyrinthPreset(9459);
+  g.d.player.shieldKey = 'large'; g.d.player.extraDef = 10;
+  g.run('var rolls=[0,0,.999,.999,.999,.999]; Math.random=()=>rolls.shift(); _runRound()');
+  assert.equal(g.d.enemy.hp, 13);
+  assert.equal(g.d.player.life, 45);
+});
 
 test('286: future group fight ends only when every health pool is defeated', () => {
   const f = labyrinthFight();

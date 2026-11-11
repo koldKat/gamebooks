@@ -6,7 +6,7 @@ function _usePotion() {
 
   const d = _data();
   if (!d) return;
-  const inBattle = d.round > 1 && d.player.life > 0 && d.enemy.life > 0;
+  const inBattle = getContext()._fightActive(d);
   if (inBattle || !d.items?.potion || d.player.life <= 0 || d.player.life >= d.player.lifeMax) return;
 
   const roll  = 1 + Math.floor(Math.random() * 6);

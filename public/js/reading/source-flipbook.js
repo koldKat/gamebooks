@@ -6,7 +6,7 @@ function framesFor(node, bookId) {
   if (node.attributes.length !== names.length
       || [...node.attributes].some(a => !names.includes(a.name))) throw new Error('Invalid flipbook attributes');
   const frames = JSON.parse(node.getAttribute('data-reading-frames'));
-  const imagePath = new RegExp(`^/api/books/${Number(bookId)}/reading-images/[a-f0-9]{64}\\.png$`);
+  const imagePath = new RegExp(`^/api/books/${Number(bookId)}/reading-images/[a-f0-9]{64}\\.(?:png|jpg|gif|webp)$`);
   if (!Array.isArray(frames) || frames.length < 2 || frames.length > 200
       || frames.some(f => !f || Object.keys(f).sort().join(',') !== 'label,src'
         || typeof f.src !== 'string' || !imagePath.test(f.src)

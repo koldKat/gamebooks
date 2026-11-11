@@ -66,6 +66,25 @@ test('battle credit survives XP cleanup and cannot be reclaimed by changing an o
   assert.equal(f.count(),100);assert.deepEqual(f.wallet(1),{ruby:1,diamond:1});
 });
 
+test('saved history predating XP reconciles once, rewards missed milestones and survives deletion', t => {
+  const f=fixture(t);initializeSimBattleGems(f.db);
+  for(let n=1;n<=49;n++)f.event('sim8:'+n);
+  f.db.exec(`DELETE FROM sim_battle_gem_migrations WHERE name='saved-history-v2';
+    CREATE TABLE user_books(user_id INTEGER,state_data TEXT);`);
+  const history=Array.from({length:60},(_,i)=>({ts:i+1,outcome:i<49?'win':'loss'}));
+  const raw=JSON.stringify({playthroughs:[{startedAt:1,sim8:{history:history.concat([{ts:61,outcome:'cancelled'},{outcome:'win'}])}}]});
+  f.db.prepare('INSERT INTO user_books VALUES(1,?)').run(raw);
+  f.db.prepare('INSERT INTO user_books VALUES(1,?)').run(raw); // duplicated history, same owner
+  assert.deepEqual(initializeSimBattleGems(f.db),{battlesRecorded:11,rubiesAdded:1,diamondsAdded:0});
+  assert.equal(f.count(),60);assert.deepEqual(f.wallet(1),{ruby:1,diamond:0});assert.equal(f.pool(),1);
+  assert.deepEqual(f.db.prepare('SELECT outcome,COUNT(*) n FROM sim_battle_gem_battles GROUP BY outcome ORDER BY outcome').all(),
+    [{outcome:'loss',n:11},{outcome:'win',n:49}]);
+  f.db.exec('DELETE FROM user_books; DELETE FROM xp_events');
+  assert.deepEqual(initializeSimBattleGems(f.db),{battlesRecorded:0,rubiesAdded:0,diamondsAdded:0});
+  f.event('sim8:1','battlesim_loss');assert.equal(f.count(),60);assert.equal(f.pool(),1);
+  assert.equal(f.db.prepare("SELECT outcome FROM sim_battle_gem_battles WHERE ref='sim8:1'").get().outcome,'win');
+});
+
 test('failed reward rolls back battle credit, wallet, notification and pool together',t=>{
   const f=fixture(t);initializeSimBattleGems(f.db);
   for(let n=1;n<50;n++)f.event('sim1:'+n);

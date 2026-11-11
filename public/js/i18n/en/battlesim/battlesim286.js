@@ -1,5 +1,10 @@
 // English translations: simulator 286.
 export default {
+    'battlesim286.btn.retreat': 'Оттегляне',
+    'battlesim286.log.retreat': 'Оттегляш се. Унищожените сенки остават мъртви; останалите възстановяват 18 ТЖ. Можеш да се възстановиш преди следващата схватка.',
+    'battlesim286.log.shadow_hit': 'Зарове {roll}: унищожаваш сянката от първия удар.',
+    'battlesim286.log.shadow_miss': 'Зарове {roll}: пропускаш. Сянката загива, но губиш {damage} ТЖ. Остават ти {life} ТЖ.',
+    'battlesim286.status.defeated': 'Схватката приключи: нямаш сили да продължиш.',
     'battlesim286.ui.target': 'Цел',
     'battlesim286.ui.group_member': 'Противник {n}',
     'battlesim286.dream3.instructions': 'Хвърляй по един зар. Сбор 9-12 възстановява живот; спиране под 9 или сбор над 12 отнема сбора от живота.',

@@ -8,7 +8,7 @@ const { createReadingAccess } = require('../server/db/reading-access');
 function fixture({ tester = false } = {}) {
   const db = new Database(':memory:');
   db.pragma('foreign_keys = ON');
-  db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, xp INTEGER, bonus_coins INTEGER, coins_spent INTEGER, bonus_gc_mint_purchased INTEGER NOT NULL DEFAULT 0, is_admin INTEGER NOT NULL DEFAULT 0, username TEXT);
+  db.exec(`CREATE TABLE users (id INTEGER PRIMARY KEY, xp INTEGER, bonus_coins INTEGER, coins_spent INTEGER, bonus_gc_mint_purchased INTEGER NOT NULL DEFAULT 0, is_admin INTEGER NOT NULL DEFAULT 0, is_moderator INTEGER NOT NULL DEFAULT 0, username TEXT);
     CREATE TABLE admin_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
     CREATE TABLE books (id INTEGER PRIMARY KEY, name TEXT, total_sections INTEGER, has_live_reading INTEGER, is_public INTEGER DEFAULT 1, created_by INTEGER, cover_path TEXT, description TEXT, authors TEXT);
     CREATE TABLE user_books (user_id INTEGER, book_id INTEGER, state_data TEXT);
@@ -177,6 +177,42 @@ test('Sashii pays before threshold and keeps existing reading runs',()=>{
   assert.equal(access.unlock(2,263,4).alreadyUnlocked,true);
   assert.equal(db.prepare('SELECT coins_spent FROM users WHERE id=2').get().coins_spent,4);
   assert.equal(access.getAccess(2,999).locked,false);
+  db.close();
+});
+
+test('Lorekeepers use real coin purchases before threshold and keep permanent unlocks',()=>{
+  const {db,access}=fixture();
+  db.exec('UPDATE users SET is_moderator=1, bonus_coins=10 WHERE id=2');
+  assert.equal(access.getAccess(2,263).locked,true);
+  assert.equal(access.getAccess(2,263).cost,4);
+  assert.equal(access.getAccess(2,999).locked,false);
+  db.prepare('INSERT INTO user_books VALUES (2,263,?)').run(JSON.stringify({playthroughs:[{path:[1]}]}));
+  assert.equal(access.getAccess(2,263).purchased,false,'new runs cannot bypass payment');
+  assert.equal(access.unlock(2,263,4).newBalance,6);
+  assert.equal(access.unlock(2,263,4).alreadyUnlocked,true);
+  assert.equal(db.prepare('SELECT coins_spent FROM users WHERE id=2').get().coins_spent,4);
+  db.exec('DELETE FROM user_books WHERE user_id=2; UPDATE users SET is_moderator=0 WHERE id=2');
+  assert.equal(access.getAccess(2,263).purchased,true);
+  assert.equal(access.getAccess(2,202).locked,false,'test eligibility follows the current role');
+  db.close();
+});
+
+test('updated free-run triggers preserve older unlocks while excluding Lorekeeper runs',()=>{
+  const {db,access}=fixture();
+  db.prepare('INSERT INTO user_books VALUES (2,202,?)').run(JSON.stringify({playthroughs:[{path:[1]}]}));
+  assert.equal(access.getAccess(2,202).purchased,true);
+  for(const suffix of ['insert','update']){
+    const sql=db.prepare("SELECT sql FROM sqlite_master WHERE type='trigger' AND name=?").get('reading_free_run_'+suffix).sql;
+    db.exec('DROP TRIGGER reading_free_run_'+suffix);
+    db.exec(sql.replace(' AND is_moderator = 0',''));
+  }
+  db.exec('UPDATE users SET is_moderator=1 WHERE id=2');
+  const updated=createReadingAccess(db);
+  assert.equal(updated.getAccess(2,202).purchased,true,'existing free-period ownership remains');
+  db.prepare('INSERT INTO user_books VALUES (2,263,?)').run(JSON.stringify({playthroughs:[{path:[]}]}));
+  db.prepare('UPDATE user_books SET state_data=? WHERE user_id=2 AND book_id=263').run(JSON.stringify({playthroughs:[{path:[1]}]}));
+  assert.equal(updated.getAccess(2,263).purchased,false,'old trigger definitions were upgraded');
+  assert.equal(updated.getAccess(2,263).locked,true);
   db.close();
 });
 

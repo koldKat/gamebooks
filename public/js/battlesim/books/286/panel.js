@@ -3,9 +3,9 @@ import { createState } from './state.js';
 import { createCombat } from './combat.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ DREAM_ENCOUNTERS, ALL_PANEL_OVERLAY_IDS, MAX_LIFE_ROLLS, SHIELDS, SVG_SKULL, SVG_TROPHY, TECH_ATTEMPT_COST, TECH_ITEMS, WEAPONS, _activateTech, _advanceTarget, _allEnemiesDefeated, _appendLog, _checkField, _data, _dream3Finish, _dream3Roll, _dream3Stop, _enemyAttackOnce, _enemyList, _enemyName, _enemyNameSafe, _enemyTurn, _heal, _loadEnemyList, _loadoutAE, _notReady, _numField, _playerAttackOnce, _recordOutcome, _renderAll, _renderEffectsBadges, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _resolveDream, _resolveExtraAttackers, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _shieldDef, _sleepAttempt, _startGroup, _syncGroup, _techButtonsHtml, _techDesc, _techName, _totalPlayerDef, _weaponIsGlove, _weaponMinHit, apiFetch, closeSim286, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim286, openSim286, registerPanelShortcut, renderSim286, saveState, setSim286Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ _playerDefeated, _selectEncounter, _retreat, DREAM_ENCOUNTERS, ALL_PANEL_OVERLAY_IDS, MAX_LIFE_ROLLS, SHIELDS, SVG_SKULL, SVG_TROPHY, TECH_ATTEMPT_COST, TECH_ITEMS, WEAPONS, _activateTech, _advanceTarget, _allEnemiesDefeated, _appendLog, _checkField, _data, _dream3Finish, _dream3Roll, _dream3Stop, _enemyAttackOnce, _enemyList, _enemyName, _enemyNameSafe, _enemyTurn, _heal, _loadEnemyList, _loadoutAE, _notReady, _numField, _playerAttackOnce, _recordOutcome, _renderAll, _renderEffectsBadges, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _resolveDream, _resolveExtraAttackers, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _shieldDef, _sleepAttempt, _startGroup, _syncGroup, _techButtonsHtml, _techDesc, _techName, _totalPlayerDef, _weaponIsGlove, _weaponMinHit, apiFetch, closeSim286, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim286, openSim286, registerPanelShortcut, renderSim286, saveState, setSim286Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
-const { _techName, _techDesc, _loadoutAE, _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _startGroup, _syncGroup, _allEnemiesDefeated, _advanceTarget, _enemyTurn, _weaponMinHit, _weaponIsGlove, _shieldDef, _totalPlayerDef, _playerAttackOnce, _enemyAttackOnce, _resolveExtraAttackers, _runRound, _heal, _resetBattle, _activateTech, _sleepAttempt, _resolveDream, _dream3Finish, _dream3Roll, _dream3Stop } = createCombat(simulatorContext);
+const { _playerDefeated, _selectEncounter, _retreat, _techName, _techDesc, _loadoutAE, _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _startGroup, _syncGroup, _allEnemiesDefeated, _advanceTarget, _enemyTurn, _weaponMinHit, _weaponIsGlove, _shieldDef, _totalPlayerDef, _playerAttackOnce, _enemyAttackOnce, _resolveExtraAttackers, _runRound, _heal, _resetBattle, _activateTech, _sleepAttempt, _resolveDream, _dream3Finish, _dream3Roll, _dream3Stop } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
 // Battle Simulator (В лабиринта на времето, book 286)
 // Weapon damage = max(0,2d6-minHit), with glove/tech bonuses; shields reduce incoming damage.
@@ -94,14 +94,17 @@ function _renderStatus() {
   if (!d || !el) return;
   const notReady = _notReady(d);
   if (notReady)                el.innerHTML = t('battlesim286.status.not_ready');
-  else if (d.player.life <= 0) el.innerHTML = `${SVG_SKULL} ${t('battlesim286.status.fallen')}`;
+  else if (_playerDefeated(d)) el.innerHTML = `${SVG_SKULL} ${t(d.player.life > 0 ? 'battlesim286.status.defeated' : 'battlesim286.status.fallen')}`;
   else if (_allEnemiesDefeated(d)) el.innerHTML = `${SVG_TROPHY} ${t('battlesim286.status.victory')}`;
   else                         el.innerHTML = '';
-  const over = notReady || d.player.life <= 0 || _allEnemiesDefeated(d);
+  const over = notReady || _playerDefeated(d) || _allEnemiesDefeated(d);
+  const retreat = document.getElementById('sim286-retreat');
+  retreat.hidden = !d.enemy.encounter?.retreat;
+  retreat.disabled = over || !d.roundsThisBattle || !!d.dream3;
   document.getElementById('sim286-round').disabled = over || !!d.dream3;
   // Recovery rules 1+3: no healing mid-fight, and only once per battle-cycle.
   const midFight = d.roundsThisBattle > 0 && !over;
-  document.getElementById('sim286-heal').disabled = over || midFight || d.healUsedThisBattle || !!d.dream3;
+  document.getElementById('sim286-heal').disabled = notReady || d.player.life <= 0 || midFight || d.healUsedThisBattle || !!d.dream3;
   // "Не можеш да спиш, докато си нападнат" - same mid-fight block as healing.
   document.getElementById('sim286-sleep').disabled = notReady || d.player.life <= 0 || midFight || !!d.dream3;
   document.getElementById('sim286-reset').disabled = !!d.dream3;
@@ -115,6 +118,7 @@ function _renderEffectsBadges(d) {
   const el = document.getElementById('sim286-effects');
   if (!el) return;
   const badges = [];
+  if (d.enemy.encounter?.note) badges.push(d.enemy.encounter.note);
   if (d.effects.tempShield)   badges.push(t('battlesim286.badge.temp_shield'));
   if (d.effects.doubleAttack) badges.push(t('battlesim286.badge.double_attack'));
   if (d.effects.pendingBonus > 0) badges.push(t('battlesim286.badge.pending_bonus', { n: d.effects.pendingBonus }));
@@ -160,7 +164,7 @@ function _renderInputs() {
   document.getElementById('sim286-enemy-minhit').value  = d.enemy.minHit;
   document.getElementById('sim286-enemy-fixeddmg').value = d.enemy.fixedDamage;
   document.getElementById('sim286-enemy-extra').value    = d.enemy.extraAttackers;
-  document.getElementById('sim286-enemy-extra').disabled = !!d.group && d.roundsThisBattle > 0;
+  document.getElementById('sim286-enemy-extra').disabled = !!d.enemy.encounter?.count || (!!d.group && d.roundsThisBattle > 0);
   const target = document.getElementById('sim286-target');
   target.closest('.inv-edit-row').style.display = d.group?.hp.length > 1 ? '' : 'none';
   target.innerHTML = d.group ? d.group.hp.map((hp, i) => `<option value="${i}" ${hp <= 0 ? 'disabled' : ''}>${escapeHtml(t('battlesim286.ui.group_member', { n: i + 1 }))}: ${i === d.group.target ? d.enemy.hp : hp}/${d.enemy.hpMax}</option>`).join('') : '';
@@ -189,6 +193,7 @@ function openSim286() {
     showAlert(t('battlesim.no_active_playthrough'));
     return;
   }
+  _enemyList = null;
   _renderAll();
   document.getElementById('sim286-overlay').classList.add('active');
 }
@@ -247,16 +252,7 @@ function _setupEnemyAutocomplete() {
     const d = _data();
     if (!d || !enemy || d.dream3) return;
     input.value = enemy.name;
-    d.enemy.name = enemy.name;
-    if (enemy.hp != null)     { d.enemy.hp = enemy.hp; d.enemy.hpMax = enemy.hp; }
-    if (enemy.attack != null) d.enemy.minHit = enemy.attack;
-    // Reset manual fixed-damage/multi-attacker settings on enemy selection; roster labels indicate exceptions.
-    d.enemy.fixedDamage = 0;
-    d.enemy.extraAttackers = 0;
-    d.battleStart = { playerLife: d.player.life, enemyHp: d.enemy.hp };
-    d.roundsThisBattle = 0;
-    _startGroup(d);
-    d.healUsedThisBattle = false;
+    _selectEncounter(d, enemy);
     closeDropdown();
     saveState();
     _renderAll();
@@ -398,6 +394,7 @@ export function initSim286() {
           </div>
           <div class="inv-modal-ftr">
             <button id="sim286-round" class="inv-add-btn bsim-action-primary">${t('battlesim286.btn.round')}</button>
+            <button id="sim286-retreat" class="inv-add-btn" hidden>${t('battlesim286.btn.retreat')}</button>
             <button id="sim286-sleep" class="inv-add-btn">${t('battlesim286.btn.sleep')}</button>
             <button id="sim286-reset" class="inv-add-btn">${t('battlesim286.btn.reset')}</button>
           </div>
@@ -436,6 +433,7 @@ export function initSim286() {
   });
 
   document.getElementById('sim286-round').addEventListener('click', _runRound);
+  document.getElementById('sim286-retreat').addEventListener('click', _retreat);
   document.getElementById('sim286-sleep').addEventListener('click', _sleepAttempt);
   document.getElementById('sim286-reset').addEventListener('click', _resetBattle);
   document.getElementById('sim286-dream3-roll').addEventListener('click', _dream3Roll);
@@ -482,7 +480,7 @@ export function initSim286() {
     if (!d) return;
     const map = FIELD_MAP[id];
     if (!map) return;
-    if (d.dream3 || (id === 'sim286-enemy-extra' && d.group && d.roundsThisBattle > 0)) return;
+    if (d.dream3 || (id === 'sim286-enemy-extra' && (d.enemy.encounter?.count || (d.group && d.roundsThisBattle > 0)))) return;
     val = Math.max(0, val);
     if (id === 'sim286-enemy-extra' && d.groupRules) val = Math.min(20, val);
     if (id === 'sim286-player-life') val = Math.min(val, d.player.lifeMax);
@@ -582,6 +580,7 @@ export function initSim286() {
   document.getElementById('sim286-enemy-pick').addEventListener('input', e => {
     const d = _data();
     if (!d) return;
+    if (!d.roundsThisBattle && d.enemy.name !== e.target.value) delete d.enemy.encounter;
     d.enemy.name = e.target.value;
     saveState();
   });
@@ -594,12 +593,13 @@ function _techButtonsHtml(d) {
   // Block gadgets after resolution except the revive, which has its own alive/unused guard.
   // Require starting life/AE rolls for both.
   const notReady = _notReady(d);
-  const battleOver = notReady || d.player.life <= 0 || _allEnemiesDefeated(d) || !!d.dream3;
+  const prohibited = d.enemy.encounter?.noTech || d.enemy.encounter?.oneAttempt || d.enemy.encounter?.dreamLion;
+  const battleOver = notReady || _playerDefeated(d) || _allEnemiesDefeated(d) || !!d.dream3;
   return TECH_ITEMS.map(item => {
     const s = d.tech[item.key];
-    const depleted = item.kind === 'revive'
+    const depleted = prohibited || (item.kind === 'revive'
       ? (s.usesLeft <= 0 || notReady || d.player.life <= 0 || !!d.dream3)
-      : (s.usesLeft <= 0 || battleOver);
+      : (s.usesLeft <= 0 || battleOver));
     const label = item.kind === 'revive'
       ? t('battlesim286.ui.tech_revive_label', { name: _techName(item.key), cost: item.cost })
       : (item.charged && s.activated ? t('battlesim286.ui.tech_fire_label', { name: _techName(item.key) }) : t('battlesim286.ui.tech_activate_label', { name: _techName(item.key) }));

@@ -32,9 +32,10 @@ function _appendLog(d, html) {
 
 function _recordOutcome(d, outcome) {
   const { _enemyName } = getContext();
-
+  if (d.outcomeRecorded) return;
+  d.outcomeRecorded = true;
   d.history.push({
-    enemy: _enemyName(d), outcome,
+    enemy: d.group?.name || _enemyName(d), outcome,
     playerLife: d.player.life, playerLifeMax: d.player.lifeMax,
     ts: Date.now(),
   });

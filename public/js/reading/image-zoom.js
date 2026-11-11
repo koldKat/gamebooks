@@ -18,6 +18,7 @@ export function bindReadingImageZoom(root) {
   };
   const targets = new Set([...root.querySelectorAll('img')].map(targetFor).filter(Boolean));
   for (const target of targets) {
+    target.classList.add('reading-zoom-target');
     if (target.querySelector('a,button,input')) continue;
     target.tabIndex = 0;
     target.setAttribute('role', 'button');
@@ -65,6 +66,7 @@ export function openReadingImageZoom(source, document = source.ownerDocument) {
   const originalImages = source.tagName === 'IMG' ? [source] : [...source.querySelectorAll('img')];
   let imageIndex = 0;
   for (const node of [copy, ...copy.querySelectorAll('*')]) {
+    node.classList.remove('reading-zoom-target');
     node.removeAttribute('id');
     node.removeAttribute('tabindex');
     if (node.getAttribute('role') === 'button') {

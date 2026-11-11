@@ -89,6 +89,16 @@ test('dashboard totals immediately reflect gameplay changes and library removals
   assert.equal(stats().luckyGcClaimed, 7);
 });
 
+test('simulator dashboard uses permanent reconciled battle totals, including deleted runs', t => {
+  const {db,stats}=fixture(t);
+  db.exec(`CREATE TABLE sim_battle_gem_battles(user_id INTEGER,ref TEXT,outcome TEXT);
+    INSERT INTO sim_battle_gem_battles VALUES(1,'sim891:1','win'),(1,'sim891:2','loss'),(2,'sim8:3','win');`);
+  assert.equal(stats().battlesFought,3);
+  assert.equal(stats().battlesWon,2);assert.equal(stats().battlesLost,1);
+  db.exec('DELETE FROM user_books');
+  assert.equal(stats().battlesFought,3);
+});
+
 test('admin timers skip hidden tabs and refresh metrics upon return', () => {
   const source = fs.readFileSync('admin/js/boot.js', 'utf8');
   const callbacks = [], counts = { live: 0, stats: 0, gc: 0, size: 0 };

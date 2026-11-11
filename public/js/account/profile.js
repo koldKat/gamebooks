@@ -335,6 +335,9 @@ function renderXpBlock(data) {
       `<span class="pub-stat pub-stat-win"><span class="pub-stat-val">${wins}</span> wins</span>` +
       `<span class="pub-stat pub-stat-death"><span class="pub-stat-val">${deaths}</span> losses</span>` +
       (battles > 0 ? `<span class="pub-stat pub-stat-battle"><span class="pub-stat-val">${battles}</span> ${t('pub.stat.battle_deaths')}</span>` : '') +
+      `<span class="pub-stat"><span class="pub-stat-val">${data.simBattlesFought ?? 0}</span> ${t('pub.stat.sim_battles')}</span>` +
+      `<span class="pub-stat pub-stat-win"><span class="pub-stat-val">${data.simBattlesWon ?? 0}</span> ${t('pub.stat.sim_wins')}</span>` +
+      `<span class="pub-stat pub-stat-death"><span class="pub-stat-val">${data.simBattlesLost ?? 0}</span> ${t('pub.stat.sim_losses')}</span>` +
       `<span class="pub-stat">${t('profile.ratings_given')} <span class="pub-stat-val">${data.ratingsGiven ?? 0}</span></span>` +
       `<span class="pub-stat">${t('profile.average_rating')} <span class="pub-stat-val">${data.averageRating == null ? '-' : Number(data.averageRating).toFixed(2)}</span></span>`;
   }

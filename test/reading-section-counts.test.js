@@ -8,8 +8,8 @@ test('supplemental prose is excluded consistently while actual numbered and lett
   const db = new Database(':memory:');t.after(() => db.close());
   db.exec('CREATE TABLE book_sections(book_id,section_id)');
   const ignored = ['intro','Intro','introduction','prolog','prologue','opening','opening-prologue',
-    'epilog','epilogue','epilog-won','epilogue-loss'];
-  const counted = ['1','313','1A','А1','101-A','introspection','epilogue2','loc1','map7'];
+    'epilog','epilogue','epilog-won','epilogue-loss','sleep','Sleep'];
+  const counted = ['1','313','1A','А1','101-A','introspection','epilogue2','loc1','map7','sleeper','sleep-1'];
   const add = db.prepare('INSERT INTO book_sections VALUES(1,?)');
   for (const id of [...ignored,...counted]) add.run(id);
   for (const id of ignored) assert.equal(isSupplementalSection(id),true,id);
