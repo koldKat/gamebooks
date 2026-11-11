@@ -1031,4 +1031,5 @@ require('./db/job-digging').migrateJobDigging(db, coinBalance);
 require('./db/rubies').backfillRubies(db);
 require('./db/job-level-rubies').initializeJobLevelRubies(db);
 require('./db/completed-run-gems').initializeCompletedRunGems(db);
+require('./db/sim-battle-gems').initializeSimBattleGems(db);
 require('./db/admin-crystal-gold').initializeAdminCrystalGold(db);

@@ -1,7 +1,7 @@
 import { _scheduleAnthologyCardCoverFlows, _getBookCoverObserver, _queueBookCovers } from './covers.js';
 
 // Materialize collapsed groups on expansion or search to keep hidden DOM bounded.
-export const lazyState = { builders: new Map(), wireContent: null, sequence: 0 };
+export const lazyState = { builders: new Map(), matchers: new Map(), wireContent: null, sequence: 0 };
 const _materializingGroups = new WeakMap();
 const pendingSteps = [];
 let pendingFrame = null;
@@ -33,16 +33,16 @@ function scheduleNextFrame() {
     }
   });
 }
-function materializeExpandedDescendants(root, immediate) {
+function materializeExpandedDescendants(root, immediate, defer = false) {
   for (const group of root.querySelectorAll?.('[data-lazy-group]') || []) {
     if (!group.closest?.('[style*="display:none"], [style*="display: none"]')) {
-      _materializeLazyGroup(group, { immediate });
+      _materializeLazyGroup(group, { immediate, defer });
     }
   }
 }
 // Sequence builder keys per render: duplicate stash containers share data-parent.
 
-export function _materializeLazyGroup(group, { immediate = false } = {}) {
+export function _materializeLazyGroup(group, { immediate = false, defer = false } = {}) {
   const active = group && _materializingGroups.get(group);
   if (active) {
     if (immediate) active.complete();
@@ -57,10 +57,10 @@ export function _materializeLazyGroup(group, { immediate = false } = {}) {
   delete group.dataset.lazyGroup;
   // Retain the builder so reclaimed groups can be rebuilt on expansion.
   group.dataset.lazyKey = key;
-  if (immediate || (Array.isArray(items) && items.length <= 12) || !lazyState.wireContent) {
+  if (immediate || (!defer && Array.isArray(items) && items.length <= 12) || !lazyState.wireContent) {
     group.innerHTML = Array.from(items).join('');
     lazyState.wireContent?.(group);
-    materializeExpandedDescendants(group, immediate);
+    materializeExpandedDescendants(group, immediate, defer);
     _queueBookCovers(group, { reset: false });
     _scheduleAnthologyCardCoverFlows();
     return;
@@ -92,9 +92,9 @@ export function _materializeLazyGroup(group, { immediate = false } = {}) {
       _queueBookCovers(child, { reset: false });
       // Expanded descendants start as small placeholders, never a giant HTML item.
       if (child.dataset?.lazyGroup && !child.closest?.('[style*="display:none"], [style*="display: none"]')) {
-        _materializeLazyGroup(child, { immediate: job.immediate });
+        _materializeLazyGroup(child, { immediate: job.immediate, defer });
       }
-      materializeExpandedDescendants(child, job.immediate);
+      materializeExpandedDescendants(child, job.immediate, defer);
     }
     _wiredCount = kids.length;
     _scheduleAnthologyCardCoverFlows();

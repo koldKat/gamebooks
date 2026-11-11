@@ -14,8 +14,8 @@ test('lazy chunks finish for search and cannot repopulate reclaimed or detached 
   globalThis.requestAnimationFrame = fn => { frames.push(fn); return frames.length; };
   globalThis.cancelAnimationFrame = () => {};
   const flush = () => { while (frames.length) frames.shift()(); };
-  const group = () => ({
-    dataset: { lazyGroup: 'test' }, children: [], isConnected: true,
+  const group = (key = 'test') => ({
+    dataset: { lazyGroup: key }, children: [], isConnected: true,
     set innerHTML(html) { this.children = (html.match(/<card>/g) || []).map(() => ({ querySelectorAll: () => [] })); },
     insertAdjacentHTML(_, html) { this.children.push(...(html.match(/<card>/g) || []).map(() => ({ querySelectorAll: () => [] }))); },
     querySelectorAll(selector) { return selector.includes('.book-item') ? this.children : []; },
@@ -25,7 +25,13 @@ test('lazy chunks finish for search and cannot repopulate reclaimed or detached 
   let wired = 0;
   lazyState.wireContent = () => { wired++; };
   lazyState.builders.set('test', () => Array(251).fill('<card>'));
+  lazyState.builders.set('small', () => Array(4).fill('<card>'));
   try {
+    const small = group('small');
+    _materializeLazyGroup(small, { defer: true });
+    assert.equal(small.children.length, 0, 'Search leaves even small groups off the typing task');
+    flush();
+    assert.equal(small.children.length, 4);
     const immediate = group();
     _materializeLazyGroup(immediate, { immediate: true });
     assert.equal(immediate.children.length, 251);
@@ -63,6 +69,7 @@ test('lazy chunks finish for search and cannot repopulate reclaimed or detached 
     assert.equal(detached.dataset.materializingGroup, undefined);
   } finally {
     lazyState.builders.delete('test');
+    lazyState.builders.delete('small');
     lazyState.wireContent = previousWire;
     for (const [key, value] of Object.entries(saved)) {
       if (value === undefined) delete globalThis[key];

@@ -54,6 +54,9 @@
 .reading-frontmatter img:not(.reading-inline-symbol):not(.reading-inline-initial):not(.reading-inline-word),
 .liveread-body img:not(.reading-inline-symbol):not(.reading-inline-initial):not(.reading-inline-word),
 .m-top img:not(.reading-inline-symbol):not(.reading-inline-initial):not(.reading-inline-word) { cursor: zoom-in; }
+.reading-frontmatter [role="button"][aria-label="Enlarge illustration"],
+.liveread-body [role="button"][aria-label="Enlarge illustration"],
+.m-top [role="button"][aria-label="Enlarge illustration"] { cursor: zoom-in; }
 .reading-image-zoom {
   position: fixed; inset: 0; margin: auto;
   box-sizing: border-box; width: fit-content; max-width: 75vw;

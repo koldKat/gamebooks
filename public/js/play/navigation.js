@@ -1,6 +1,6 @@
 // navigation.js - Internal play-screen module; use ../play.js externally.
 
-import { state, saveState, isTerminal, currentPlaythrough, allDiscoveredSections } from '../core/state.js';
+import { state, saveState, isTerminal, isSectionMapped, currentPlaythrough, allDiscoveredSections } from '../core/state.js';
 import { network } from '../graph.js';
 import { t } from '../i18n.js';
 import { showAlert } from '../ui-helpers/confirm.js';
@@ -13,7 +13,8 @@ import { maxUndos } from './limits.js';
 export function wouldAutoNav(sec, pt) {
   const secData = state.graph[sec];
   const isEntry = (state.uncountedSections || []).some(entry => String(entry) === String(sec));
-  return !isEntry && !(playContext._suppressAutoNavDepth > 0) && !secData?.manualNavigation && secData?.choices.length === 1 && !isTerminal(secData.choices[0]) && !pt?.path.includes(secData.choices[0]) && !(playContext._owIsOpenWorld && secData.portals?.length);
+  // Reader discovery exposes choices without visiting them. Never walk into an unread placeholder.
+  return !isEntry && !(playContext._suppressAutoNavDepth > 0) && !secData?.manualNavigation && secData?.choices.length === 1 && !isTerminal(secData.choices[0]) && isSectionMapped(secData.choices[0]) && !pt?.path.includes(secData.choices[0]) && !(playContext._owIsOpenWorld && secData.portals?.length);
 }
 
 export function navigate(sec) {

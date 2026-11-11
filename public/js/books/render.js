@@ -3,6 +3,7 @@ import { booksState, _BOOKS_LS_KEY, _SERIES_LS_KEY, _STASHES_LS_KEY } from './st
 import { _getExpandedPref, _syncMovedSeriesPrefs } from './prefs.js';
 import { _scheduleAnthologyCardCoverFlows, _queueBookCovers } from './covers.js';
 import { lazyState, _materializeLazyGroup } from './lazy.js';
+import { createBookSearchIndex } from './search-data.js';
 import { _applyBooksSearchFilter } from './search.js';
 import { _bookItemHtml } from './markup.js';
 import { _containerIdsFor, _sortChildrenMap, _sortBooks, _sortSeriesBooks, _aggregateProgress } from './groups.js';
@@ -18,6 +19,8 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
   if (!Array.isArray(allOwnedBooks)) return;
   // Stable keys let preserved groups use builders backed by the latest cache.
   lazyState.builders.clear();
+  lazyState.matchers.clear();
+  const searchGroup = createBookSearchIndex();
   lazyState.sequence = 0;
   const openWorldSeriesIds = new Set((allSeries || []).filter(s => s.is_open_world).map(s => s.id));
   for (const b of allOwnedBooks) b.isOpenWorld = b.series_id != null && openWorldSeriesIds.has(b.series_id);
@@ -106,6 +109,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
   function _registerContainerBuilder(b, customChildrenMap, context) {
     const key = `children:${context}:${b.id}`;
     const children = customChildrenMap[b.id] || [];
+    lazyState.matchers.set(key, searchGroup([b, ...children]));
     lazyState.builders.set(key, ({ incremental = false } = {}) => {
       const items = (function* () {
         for (const child of children) yield _bookItemHtml(child, true, false, 0, null, isAdmin, b.id);
@@ -196,6 +200,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
   function _registerSeriesBuilder(s, stashId) {
     const { activeBooks, activeChildrenMap, topInSeries } = _getSeriesActiveBooksForContext(s, stashId);
     const context = `series:${stashId ?? ''}:${s.id}`;
+    lazyState.matchers.set(context, searchGroup([s, ...activeBooks]));
     for (const b of topInSeries) if (b.is_container) _registerContainerBuilder(b, activeChildrenMap, context);
     lazyState.builders.set(context, ({ incremental = false } = {}) => {
       const items = (function* () {
@@ -298,6 +303,8 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     const stashFullyDone = stashAggrS > 0 && stashAggrV >= stashAggrS;
     const stashBarColor = stashFullyDone ? 'rgba(34,197,94,0.6)' : 'rgba(52,211,153,0.5)';
     const stashKey = `stash:${stash.id}`;
+    lazyState.matchers.set(stashKey, searchGroup([stash, ...stashBooksRaw, ...stashSeries,
+      ...stashSeries.flatMap(s => _getSeriesActiveBooksForContext(s, stash.id).activeBooks)]));
     for (const b of stashContainers) _registerContainerBuilder(b, stashChildrenMap, stashKey);
     lazyState.builders.set(stashKey, ({ incremental = false } = {}) => {
       const items = (function* () {

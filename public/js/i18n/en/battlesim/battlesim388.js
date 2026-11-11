@@ -1,0 +1,28 @@
+// English controls for Golden Dragon's printed encounter charts.
+const labels = {
+  title:'The Lord of Shadow Keep: Combat', player:'You', vigour:'VIGOUR', psi:'PSI', branches:'Branches remaining',
+  rules:'Enter your current stats, then choose a source encounter or enter your own opponent. Each combat round uses the printed two-dice chart.',
+  manualStory:'Apply story choices and printed continuations in the reader.',
+  currentVigour:'Your current VIGOUR', currentPsi:'Your current PSI', currentAgility:'Your current AGILITY',
+  gauntlet:'Wear the Gauntlet of Weakness (-1 to chart rolls)',
+  netRollModifier:'Net combat-roll modifier', woundDamage:'VIGOUR lost by an opponent per wound',
+  firstRoundPenalty:'Dwarf surprise: -2 in the first round only',
+  progressiveBonus:'Automaton: add completed rounds to combat rolls',
+  psiSavePrompt:'Roll two additional dice against your current PSI:', psiSave:'Roll PSI save', rollTotal:'Dice total',
+  custom:'Custom encounter', customChart:'Custom combat chart',
+  customRules:'For custom encounters, lower totals wound you and higher totals wound the chosen opponent.',
+  playerHitThrough:'You are hit on totals 2 through', playerDamage:'VIGOUR lost when you are hit', enemyDamage:'Opponent VIGOUR lost when hit',
+  start:'Start encounter', roll:'Roll combat round', flee:'FLEE', cancel:'End encounter',
+  cancelConfirm:'End this encounter without a victory or defeat?',
+  invalid:'Enter valid current stats and opponent values. Supply both dice or leave both empty.',
+  ready:'Ready', rounds:'Completed rounds', target:'Target', manualDice:'Optional dice', die1:'First die', die2:'Second die',
+  unresolved:'The modified roll is outside the printed chart. Choose a result only after making a manual ruling:',
+  printedTotal:'Printed chart result', chooseRuling:'Choose a result', adjudicate:'Apply manual ruling', manualRuling:'Manual ruling',
+  log:'Combat log', history:'History', chartTotal:'Chart total', hitsTaken:'Wounding hits in this fight',
+  venomBites:'Venomous bites', paralysisHits:'Paralyzing hits',
+  'event.round':'Combat round', 'event.flee':'Escape', 'event.unresolved':'Unprinted result', 'event.cancel':'Encounter ended',
+  'event.psiSave':'PSI save',
+  'status.fighting':'Fighting', 'status.win':'Victory', 'status.loss':'Defeat', 'status.fled':'Escaped',
+  'status.paused':'Stage complete: return to the reader', 'status.cancelled':'Encounter ended',
+};
+export default Object.fromEntries(Object.entries(labels).map(([key, value]) => ['battlesim388.' + key, value]));

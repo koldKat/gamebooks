@@ -1,7 +1,7 @@
 import { booksState } from './state.js';
 import { _refreshBooksListOnly } from './data.js';
 import { _scheduleAnthologyCardCoverFlows, _queueBookCovers } from './covers.js';
-import { _materializeLazyGroup } from './lazy.js';
+import { lazyState, _materializeLazyGroup, _maybeReclaimLazyGroup, afterLazyGroupsSettled } from './lazy.js';
 import { getToken } from '../core/state.js';
 import { foldForSearch } from '../core/sort.js';
 import { t } from '../i18n.js';
@@ -40,6 +40,7 @@ export function _booksSearchBlob(el) {
 }
 
 export function _booksSearchMatches(el, query) {
+  if (!el) return false;
   if (!query) return true;
   return _booksSearchBlob(el).includes(query);
 }
@@ -64,6 +65,9 @@ export function _restoreBooksSearchFilter(list) {
     el.style.display = '';
   });
   list.querySelectorAll('.book-item--container[data-search-expanded]').forEach(el => delete el.dataset.searchExpanded);
+  for (const group of list.querySelectorAll('[data-lazy-key]')) {
+    if (group.style.display === 'none') _maybeReclaimLazyGroup(group);
+  }
   list.querySelector('.books-search-empty')?.remove();
 }
 
@@ -126,9 +130,25 @@ export function _applyBooksSearchFilter() {
     return;
   }
 
-  // Materialize lazy groups before DOM search; repeat until nested builders are exhausted.
-  let lazyGroup;
-  while ((lazyGroup = list.querySelector('[data-lazy-group],[data-materializing-group]'))) _materializeLazyGroup(lazyGroup, { immediate: true });
+  // Inspect metadata first; keep unrelated collapsed groups out of the DOM.
+  // Matching groups use the existing frame budget, including small nested groups.
+  let pending = false;
+  for (const group of list.querySelectorAll('[data-lazy-group],[data-materializing-group]')) {
+    const key = group.dataset.lazyGroup || group.dataset.materializingGroup;
+    let matches = !lazyState.matchers.has(key) || lazyState.matchers.get(key)(query);
+    for (let parent = group; !matches && parent && parent !== list; parent = parent.parentElement) {
+      if (parent.matches('.stash-items-group,.series-books-group,.book-children-group')) {
+        matches = _booksSearchMatches(parent.previousElementSibling, query);
+      }
+    }
+    if (!matches && !group.dataset.materializingGroup) continue;
+    _materializeLazyGroup(group, { defer: true });
+    pending = true;
+  }
+  if (pending) {
+    afterLazyGroupsSettled(() => _scheduleApplyBooksSearchFilter(0));
+    return;
+  }
 
   list.querySelector('.books-search-empty')?.remove();
   let anyVisible = false;

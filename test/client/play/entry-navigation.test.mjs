@@ -13,6 +13,7 @@ function setup() {
     isTerminal: value => value === 0 || value === -1,
     isValidSecId: value => value != null && value !== 0 && value !== -1,
     currentPlaythrough: () => state.playthroughs[0], allDiscoveredSections: () => new Set(),
+    isSectionMapped: sec => !!state.graph[sec] && !state.graph[sec].discovered,
     saveState: () => saves++, render() {}, network: null, showAlert() {}, endPlaythrough() {},
     naturalCompare: (a,b) => String(a).localeCompare(String(b)), t: value => value,
     playContext: {}, maxUndos: () => 3,
@@ -35,6 +36,39 @@ test('noncounting opening waits for a choice and string choices navigate to nume
   s.context.navigate('1');
   assert.deepEqual(s.state.playthroughs[0].path, ['opening', 1]);
   assert.equal(s.saves(), saves);
+});
+
+test('reopening after reader discovery does not walk into an unmapped destination', () => {
+  const scheduled = [];
+  const context = vm.createContext({ console, Date, Set, String,
+    localStorage: { getItem: () => null },
+    setTimeout: fn => scheduled.push(fn), clearTimeout() {},
+    network: null, playContext: {}, render() {}, showAlert() {}, endPlaythrough() {},
+    maxUndos: () => 3, maxFastTravels: () => 3, renderPathTrail() {},
+    computeOutcomes: () => ({}), escapeHtml: String, sectionLabel: value => value,
+    currentBookId: 1, CHOICES_PULSE_THRESHOLD: 3, t: key => key,
+  });
+  const load = file => vm.runInContext(readFileSync(new URL(`../../../public/js/${file}.js`, import.meta.url), 'utf8')
+    .replace(/^import .*;$/gm, '').replace(/^export /gm, ''), context);
+  load('core/state');
+  load('play/navigation');
+  load('play/markup');
+  vm.runInContext(`state.graph = {1: {choices: [2]}, 2: {choices: [], discovered: true}};
+    state.playthroughs = [{path: [1], completed: false}]; state.activePtIndex = 0;`, context);
+  const panel = () => vm.runInContext('renderPanelMarkup(currentPlaythrough(), currentSection())', context);
+  assert.match(panel(), /data-choice="2"/);
+  assert.equal(scheduled.length, 0, 'reopening must not schedule an automatic move');
+  assert.equal(vm.runInContext('currentSection()', context), 1);
+  vm.runInContext('delete state.graph[2]', context);
+  panel();
+  assert.equal(scheduled.length, 0, 'missing destination is also only discovered');
+  vm.runInContext('state.graph[2] = {choices: [3]}; state.graph[3] = {choices: [], discovered: true}', context);
+  panel();
+  assert.equal(scheduled.length, 1, 'previously mapped forced steps still work');
+  scheduled.shift()();
+  assert.equal(vm.runInContext('currentSection()', context), 2);
+  panel();
+  assert.equal(scheduled.length, 0, 'a mapped chain stops before its unread destination');
 });
 
 test('manual choices cannot record a numeric self-link against a string current section', () => {
