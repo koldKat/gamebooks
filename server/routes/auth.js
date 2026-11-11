@@ -19,6 +19,7 @@ async function handleRegister(req, res) {
     return send(res, 400, { error: 'username must be 3–64 characters' });
   try {
     const user   = await db.createUser(trimmed, password, email || null);
+    db.readingAccess.syncActivation();
     const token  = db.createSession(user.id);
     send(res, 200, { token, username: user.username });
     feedPush({ type: 'feed_changed', entity: 'profile', action: 'user_joined', id: user.id });

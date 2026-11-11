@@ -1,0 +1,11 @@
+.node-shape-grid { display:grid; grid-template-columns:repeat(3,30px); gap:4px; padding:4px; }
+.node-shape-grid .node-shape-choice {
+  display:flex !important; align-items:center; justify-content:center;
+  width:30px !important; height:30px; padding:4px !important;
+  color:#cbd5e1 !important; background:#111827; border:1px solid #4b5563 !important; border-radius:4px;
+}
+.node-shape-choice svg { fill:#334155; stroke:currentColor; stroke-width:1.6; }
+.node-shape-choice:hover:not(:disabled) { background:#374151; color:#fff; }
+.node-shape-choice.active { color:#f5a623 !important; border-color:#f5a623 !important; background:#374151; }
+.node-shape-choice:focus-visible { outline:2px solid #f5a623; outline-offset:1px; }
+.node-shape-choice:disabled { opacity:.4; cursor:default; }

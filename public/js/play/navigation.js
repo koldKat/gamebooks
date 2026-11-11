@@ -48,7 +48,7 @@ export function undoRun() {
   while (pt.path.length > 1) {
     const node = state.graph[pt.path[pt.path.length - 1]];
     if (!node || node.manualNavigation || node.choices.length !== 1) break; // real decision point, dead end, or missing node
-    const hasMetadata = node.note || node.priority || node.battle || node.color || node.portals || node.showNote || node.manual;
+    const hasMetadata = node.note || node.priority || node.battle || node.color || node.shape || node.portals || node.showNote || node.manual;
     const wouldAutoNavHere = !isTerminal(node.choices[0]) && !pt.path.includes(node.choices[0]) && !(playContext._owIsOpenWorld && node.portals?.length);
     if (hasMetadata && !wouldAutoNavHere) break;
     pt.path.pop();

@@ -14,25 +14,34 @@ function scanDirectory(root, patterns) {
   });
 }
 
-function createDirectorySizeReader(root, { ttlMs = 5 * 60_000, now = Date.now, scan = scanDirectory } = {}) {
-  let cached = null;
+function createDirectorySizeReader(root, { scan = scanDirectory, loadCached = () => null, loadCheckedAt = () => 0,
+  saveCached = () => {}, now = Date.now, ttlMs = 60 * 60 * 1000 } = {}) {
+  const saved = loadCached();
+  let cached = saved !== null && saved !== undefined && Number.isSafeInteger(Number(saved)) && Number(saved) >= 0
+    ? Number(saved) : null;
   let pending = null;
+  let checkedAt = Number(loadCheckedAt()) || 0;
 
   async function read(patterns) {
-    const key = JSON.stringify(patterns);
-    if (cached?.key === key && now() < cached.expiresAt) return cached.bytes;
-    if (pending) {
-      await pending;
-      return read(patterns);
-    }
+    const age = now() - checkedAt;
+    if (cached !== null && age >= 0 && age < ttlMs) return cached;
+    return read.refresh(patterns);
+  }
+
+  read.refresh = async function (patterns) {
+    if (pending) return pending;
     pending = (async () => {
       const bytes = await scan(root, patterns);
-      cached = { key, bytes, expiresAt: now() + ttlMs };
+      if (!Number.isSafeInteger(bytes) || bytes < 0) throw new Error('Invalid directory size');
+      const completedAt = now();
+      await saveCached(bytes, completedAt);
+      cached = bytes;
+      checkedAt = completedAt;
       return bytes;
     })();
     try { return await pending; }
     finally { pending = null; }
-  }
+  };
 
   return read;
 }

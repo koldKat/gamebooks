@@ -528,6 +528,10 @@ db.exec(`CREATE TABLE IF NOT EXISTS book_frontmatter (
   extracted_at INTEGER DEFAULT (strftime('%s', 'now'))
 )`);
 
+db.exec(`CREATE TABLE IF NOT EXISTS admin_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL DEFAULT ''
+)`);
 const readingAccess = require('./db/reading-access').createReadingAccess(db);
 require('./db/reading-ownership').installReadingOwnershipGuards(db);
 
@@ -659,13 +663,6 @@ db.exec(`CREATE INDEX IF NOT EXISTS idx_attachments_kind_linked ON attachments (
     }
   }
 }
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS admin_settings (
-    key   TEXT PRIMARY KEY,
-    value TEXT NOT NULL DEFAULT ''
-  );
-`);
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS announcements (

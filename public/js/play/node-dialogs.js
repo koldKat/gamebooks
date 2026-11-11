@@ -73,7 +73,7 @@ export function openNoteModal(nodeId) {
       delete state.graph[nodeId].showNote;
       const n = state.graph[nodeId];
       // Retain nodes with portals or other metadata when clearing notes.
-      if (n.discovered && !n.priority && !n.battle && !n.color && !n.portals && !n.manual) delete state.graph[nodeId];
+      if (n.discovered && !n.priority && !n.battle && !n.color && !n.shape && !n.portals && !n.manual) delete state.graph[nodeId];
     }
     saveState();
     render();

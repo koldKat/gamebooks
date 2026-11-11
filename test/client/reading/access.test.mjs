@@ -4,9 +4,9 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../../../public/js/reading/access.js', import.meta.url), 'utf8')
-  .replace(/^import .*;$/gm, '').replace('export async function', 'async function');
+  .replace(/^import .*;$/gm, '').replace(/^export /gm, '');
 function setup({ locked = true, cost = 0, balance = 5 } = {}) {
-  let token = 'player-one', connected = true, unlocked = 0, fail = false;
+  let token = 'player-one', connected = true, unlocked = 0, fail = false, confirmation;
   const requests = [], matterOptions = [];
   const events = {};
   const element = tag => ({ tag, style: {}, disabled: false, listeners: {}, children: [],
@@ -17,6 +17,7 @@ function setup({ locked = true, cost = 0, balance = 5 } = {}) {
     append(...children) { this.children.push(...children); } };
   const context = vm.createContext({ document: { createElement: element, querySelectorAll: () => [mount], addEventListener() {} },
     window: { addEventListener: (type, fn) => { events[type] = fn; } },
+    openReadingUnlock: (access, options) => { confirmation = { ...options, access, update(value) { this.access={...this.access,...value}; }, close() {} }; return confirmation; },
     COIN_SVG: '<svg class="coin-icon"></svg>',
     renderReadingMatter: (_mount, _book, _text, _document, options) => { matterOptions.push(options); return false; },
     getToken: () => token, t: (key, params) => params ? `${key}:${params.cost}` : key,
@@ -31,103 +32,39 @@ function setup({ locked = true, cost = 0, balance = 5 } = {}) {
     emitBalance: value => events['coins-balance-changed']({ detail: { token, balance: value } }),
     show: () => context.showReadingGate(mount, 263, { isCurrent: () => connected, onUnlock: () => unlocked++ }),
     set token(value) { token = value; }, set connected(value) { connected = value; }, set fail(value) { fail = value; },
-    confirm: () => mount.children[1].children[1].children[1].children[1].listeners.click(),
-    cancel: () => mount.children[1].children[1].children[1].children[0].listeners.click(),
+    confirm: () => confirmation.onConfirm(confirmation.access.cost),
+    get confirmation() { return confirmation; },
     get unlocked() { return unlocked; } };
 }
 
-test('paid unlock controls follow live balance and preflight catches spending elsewhere', async () => {
-  const s = setup({ cost: 4, balance: 1 });
-  await s.show();
-  const button = s.mount.children[1].children[0];
-  const accept = s.mount.children[1].children[1].children[1].children[1];
-  assert.equal(button.disabled, true);
-  assert.equal(accept.disabled, true);
-  s.emitBalance(5);
-  assert.equal(button.disabled, false);
-  button.listeners.click();
-  s.emitBalance(0);
-  assert.equal(accept.disabled, true);
-  await s.confirm();
-  assert.equal(s.requests.length, 1);
-  s.emitBalance(5);
-  s.balance = 0;
-  await s.confirm();
-  assert.equal(s.requests.filter(([, method]) => method === 'POST').length, 0);
-  assert.equal(accept.disabled, true);
-  assert.equal(s.mount.children[1].children.at(-1).textContent, 'reading_access.insufficient');
+test('paid dialog opens immediately and disables purchase until enough coins are available',async()=>{
+ const s=setup({cost:4,balance:1});await s.show();
+ assert.equal(s.confirmation.access.canAfford,false);
+ assert.equal(s.requests.length,1);
+ s.emitBalance(5);assert.equal(s.confirmation.access.canAfford,true);
+ s.balance=0;await s.confirm();
+ assert.equal(s.requests.filter(([,method])=>method==='POST').length,0);
+ assert.equal(s.confirmation.access.canAfford,false);
 });
 
-test('server insufficient-coins rejection disables stale paid controls; free trial stays available', async () => {
-  const paid = setup({ cost: 4 });
-  await paid.show();
-  paid.mount.children[1].children[0].listeners.click();
-  paid.fail = 'insufficient_coins';
-  await paid.confirm();
-  assert.equal(paid.mount.children[1].children[0].disabled, true);
-  assert.equal(paid.unlocked, 0);
-  const free = setup({ balance: -1 });
-  await free.show();
-  free.emitBalance(-5);
-  assert.equal(free.mount.children[1].children[0].disabled, false);
+test('confirmed paid unlock is single-flight and sends the agreed cost',async()=>{
+ const s=setup({cost:4,balance:5});await s.show();
+ const first=s.confirm();await s.confirm();await first;
+ assert.equal(s.unlocked,1);
+ assert.equal(s.requests.filter(([,method])=>method==='POST').length,1);
 });
 
-test('frontmatter renders safely; zero-cost unlock is single-flight', async () => {
-  const s = setup();
-  assert.equal(await s.show(), true);
-  assert.equal(s.matterOptions.length, 2);
-  assert.ok(s.matterOptions.every(options => options.sectionLinks === false), 'locked previews must not contain run navigation links');
-  assert.equal(s.mount.children[0].children[1].textContent, '<script>alert(1)</script>');
-  assert.equal(s.mount.children[0].children[1].innerHTML, undefined, 'imported prose is never injected as HTML');
-  const button = s.mount.children[1].children[0];
-  assert.equal(button.children[0].textContent, 'reading_access.unlock:0');
-  assert.match(button.children[1].innerHTML, /coin-icon/);
-  assert.equal(s.mount.children[0].children[1].className, 'reading-frontmatter');
-  button.listeners.click();
-  const first = s.confirm();
-  await s.confirm();
-  assert.equal(button.disabled, true);
-  await first;
-  assert.equal(s.unlocked, 1);
-  assert.equal(s.requests.filter(([, method]) => method === 'POST').length, 1);
+test('account switches and canceled reader views cannot spend coins',async()=>{
+ const s=setup({cost:4});await s.show();s.token='another-account';await s.confirm();
+ assert.equal(s.requests.length,1);assert.equal(s.unlocked,0);
 });
 
-test('failed unlock offers retry and account changes prevent another-account purchases', async () => {
-  const s = setup();
-  await s.show();
-  const button = s.mount.children[1].children[0];
-  s.fail = true;
-  button.listeners.click();
-  await s.confirm();
-  assert.equal(button.disabled, false);
-  assert.equal(s.mount.children[1].children.at(-1).textContent, 'auth.network_error');
-  s.fail = false;
-  s.token = 'player-two';
-  await button.listeners.click();
-  assert.equal(s.requests.length, 2, 'old dialog cannot purchase as the new player');
-  assert.equal(s.unlocked, 0);
-});
-
-test('inline confirmation can cancel; stale confirmations cannot purchase', async () => {
-  const s = setup();
-  await s.show();
-  const button = s.mount.children[1].children[0];
-  button.listeners.click();
-  assert.equal(s.requests.length, 1, 'opening confirmation sends no purchase');
-  assert.equal(button.disabled, false);
-  assert.equal(button.hidden, true);
-  s.cancel();
-  assert.equal(button.hidden, false);
-  assert.equal(s.requests.length, 1, 'cancel sends no purchase');
-  button.listeners.click();
-  s.token = 'another-player';
-  await s.confirm();
-  assert.equal(s.requests.length, 1);
-  assert.equal(s.unlocked, 0);
-  s.token = 'player-one';
-  button.listeners.click();
-  await s.confirm();
-  assert.equal(s.unlocked, 1);
+test('locked reading mounts no reader prose and a server balance rejection disables paid controls',async()=>{
+ const s=setup({cost:4});await s.show();
+ assert.equal(s.matterOptions.length,0);
+ assert.equal(s.mount.children.length,0);
+ s.fail='insufficient_coins';await s.confirm();
+ assert.equal(s.confirmation.access.canAfford,false);assert.equal(s.unlocked,0);
 });
 
 test('unlocked books leave existing reader markup alone; stale access results do nothing', async () => {
@@ -169,7 +106,7 @@ function desktopSetup({ hasRun = true, startSection = 1 } = {}) {
   const events = [], starts = [];
   const context = vm.createContext({
     document: { getElementById: id => id === 'liveread-panel' ? panel : body, addEventListener() {}, removeEventListener() {} },
-    t: key => key, currentBookId: 263, state: { startSection },
+    t: key => key, currentBookId: 263, state: { startSection }, closeReadingGate() {},
     getToken: () => 'account',
     currentPlaythrough: () => hasRun ? ({}) : null, currentSection: () => hasRun ? section : null,
     suppressAutoNav: value => events.push(value), setLightweightRestabilize() {},
@@ -181,20 +118,23 @@ function desktopSetup({ hasRun = true, startSection = 1 } = {}) {
   });
   vm.runInContext(desktop, context);
   vm.runInContext('_showSection = sec => { globalThis.lastSection = sec; }', context);
-  return { context, body, events, starts, get gateOptions() { return gateOptions; },
+  return { context, body, events, starts, get isPanelOpen() { return active.has('active'); }, get gateOptions() { return gateOptions; },
     resolve: value => resolveGate(value) };
 }
 
 test('desktop render cannot overwrite locked frontmatter; unlock starts at 1 without deleting a run', async () => {
   const s = desktopSetup();
   const opened = s.context._open();
+  assert.equal(s.isPanelOpen,false,'reading panel stays closed while access is checked');
   s.context.renderLiveRead();
   assert.equal(s.context.lastSection, undefined, 'pending access blocks section render');
   s.resolve(true);
   await opened;
+  assert.equal(s.isPanelOpen,false,'locked book shows only the purchase dialog');
   s.context.renderLiveRead();
   assert.equal(s.context.lastSection, undefined, 'locked access blocks section render');
   await s.gateOptions.onUnlock();
+  assert.equal(s.isPanelOpen,true,'reader opens after successful unlock');
   assert.deepEqual(s.starts, [1]);
   assert.equal(s.context.lastSection, 1, 'normal reader starts at section one');
 });
@@ -221,7 +161,7 @@ test('desktop close cancels late access results and releases suppression', async
   s.resolve(false);
   await opened;
   assert.equal(s.context.lastSection, undefined);
-  assert.deepEqual(s.events, [true, false]);
+  assert.deepEqual(s.events, [false]);
 });
 
 test('desktop book-defined entry applies only to new default runs or an explicit unlock', async () => {
@@ -258,7 +198,7 @@ test('switching books closes an old unlock preview rather than retaining its loc
   s.context.renderLiveRead();
   assert.equal(s.gateOptions.isCurrent(), false);
   assert.equal(s.context.lastSection, undefined);
-  assert.deepEqual(s.events, [true, false]);
+  assert.deepEqual(s.events, [false]);
 });
 
 const mobile = readFileSync(new URL('../../../public/mobile/js/reader.js', import.meta.url), 'utf8')
@@ -274,6 +214,7 @@ test('mobile locked preview initializes no graph or run; unlock preserves old ru
     currentPlaythrough: () => state.playthroughs[state.activePtIndex],
     currentSection: () => state.playthroughs[state.activePtIndex]?.path.at(-1),
     loadState: async () => loaded++, saveState: async () => saved++,
+    connectRunSync() {}, applyRemotePositions() {},
     resumed: options => { resumed = options; },
   });
   vm.runInContext(mobile, context);
@@ -332,7 +273,7 @@ test('mobile book-defined entry preserves active runs and custom starting sectio
       currentPlaythrough: () => state.playthroughs[state.activePtIndex],
       currentSection: () => state.playthroughs[state.activePtIndex]?.path.at(-1),
       _updateRunControls() {}, _showSection: async value => { context.shown = value; },
-      _ensureMVisited() {},
+      _ensureMVisited() {}, connectRunSync() {}, applyRemotePositions() {},
     });
     vm.runInContext(mobile, context);
     context._updateRunControls = () => {};

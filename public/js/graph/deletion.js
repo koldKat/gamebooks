@@ -57,7 +57,7 @@ export function deleteNodes(ids) {
   const visited = new Set(state.playthroughs.flatMap(pt => pt.path.map(parseSecId)));
   Object.keys(state.graph).forEach(sec => {
     const node = state.graph[sec];
-    const hasMetadata = node.note || node.priority || node.battle || node.color || node.portals || node.showNote || node.manual;
+    const hasMetadata = node.note || node.priority || node.battle || node.color || node.shape || node.portals || node.showNote || node.manual;
     if (node.choices.length === 0 && !visited.has(parseSecId(sec)) && !hasMetadata)
       delete state.graph[sec];
   });

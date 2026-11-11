@@ -792,6 +792,27 @@ test('adjoining native strips cover fractional seams without extending terminal 
   assert.match(mount.children[0].children[1].attrs.style, /height:50%;/);
 });
 
+test('quarter-turned native strips extend their shared edge without stretching the cross-axis', () => {
+  const mask = '/api/books/1497/reading-images/' + 'c'.repeat(64) + '.png';
+  const sheet = originalSheet();
+  sheet.childNodes = [0, 700].map((top, i) => source('IMG', [], {
+    src: '/api/books/1497/reading-images/' + (i ? 'b' : 'a').repeat(64) + '.png',
+    'data-source-box': `0,${top},800,${top + 700}`,
+    'data-source-affine': '0,1,-1,0,1,0',
+    'data-source-mask': mask,
+  }));
+  const { mount, document } = setup([sheet]);
+  assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), true);
+  const [first, last] = mount.children[0].children;
+  assert.match(first.attrs.style, /left:100%;top:0%;width:calc\(87\.5cqw \+ 1px\);height:100cqw/);
+  assert.match(last.attrs.style, /left:100%;top:50%;width:87\.5cqw;height:100cqw/);
+  for (const image of [first, last]) {
+    assert.match(image.attrs.style, /transform:rotate\(90deg\)/);
+    assert.ok(image.attrs.style.includes(`mask-image:url("${mask}")`));
+    assert.doesNotMatch(image.attrs.style, /matrix\(/);
+  }
+});
+
 test('flipped native strips cover transformed seams while retaining exact terminal bounds', () => {
   const sheet = originalSheet();
   sheet.childNodes = [

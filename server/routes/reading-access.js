@@ -1,7 +1,7 @@
 'use strict';
 
 const { readingAccess } = require('../db');
-const { authenticate, send, isRequestImpersonating } = require('../request-helpers');
+const { authenticate, send, readBody, isRequestImpersonating } = require('../request-helpers');
 const { userBadgePush } = require('../sse');
 const { setReadingImageCookie } = require('../reading-images');
 
@@ -9,7 +9,9 @@ async function handleReadingAccess(req, res, bookId, purchase = false) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
   if (purchase && isRequestImpersonating(req)) return send(res, 403, { error: 'forbidden' });
-  const result = purchase ? readingAccess.unlock(userId, bookId) : readingAccess.getAccess(userId, bookId);
+  const body = purchase ? await readBody(req) : null;
+  if (purchase && (!Number.isSafeInteger(body?.expectedCost) || body.expectedCost < 0)) return send(res, 400, { error: 'invalid_cost' });
+  const result = purchase ? readingAccess.unlock(userId, bookId, body.expectedCost) : readingAccess.getAccess(userId, bookId);
   if (!result) return send(res, 404, { error: 'not_found' });
   if (result.error) return send(res, result.error === 'not_found' ? 404 : 403, result);
   if (!purchase) setReadingImageCookie(req, res);

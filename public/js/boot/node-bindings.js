@@ -5,8 +5,19 @@ import { render, openEditModal, openNoteModal, closeNoteModal, showConfirm, show
 import { t } from '../i18n.js';
 import { doJumpCrossBook, getOwCrossBookRoute } from '../play/open-world.js';
 import { hideCtxMenu, _hideBgCtxMenu } from '../play/bg.js';
+import { initNodeShapePicker } from '../play/node-shape-menu.js';
 
 export function initNodeBindings() {
+  initNodeShapePicker(document.getElementById('ctx-shape-grid'), shape => {
+    const id = bootState.ctxNodeId; hideCtxMenu();
+    if (id === null || state.graph[id]?.portals?.length) return;
+    if (!state.graph[id]) state.graph[id] = { choices: [], discovered: true };
+    if (shape === 'circle') delete state.graph[id].shape;
+    else state.graph[id].shape = shape;
+    _pruneDiscovered(id);
+    saveState();
+    render();
+  });
   document.getElementById('ctx-edit-btn').addEventListener('click', () => {
     const id = bootState.ctxNodeId; hideCtxMenu();
     if (id !== null) openEditModal(id);
@@ -25,7 +36,7 @@ export function initNodeBindings() {
   function _pruneDiscovered(id) {
     const n = state.graph[id];
     if (!n?.discovered) return;
-    const hasMetadata = n.note || n.priority || n.battle || n.color || n.portals || n.showNote || n.manual;
+    const hasMetadata = n.note || n.priority || n.battle || n.color || n.shape || n.portals || n.showNote || n.manual;
     if (!hasMetadata && (!n.choices || n.choices.length === 0)) delete state.graph[id];
   }
 

@@ -547,6 +547,13 @@
     }
     .tools-input:focus { border-color: #6b7280; }
     .tools-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+    #tools-reading-policy { padding: 0.25rem 0.5rem; }
+    #tools-reading-policy .tools-section-title { margin-bottom: 0; margin-right: 0.3rem; }
+    #tools-reading-policy .tools-row { gap: 0.35rem; }
+    #tools-reading-policy label { font-size: 0.78rem; }
+    #tools-reading-policy p { margin: 0.2rem 0 0; font-size: 0.75rem; line-height: 1.4; color: #9ca3af; }
+    #tools-reading-threshold { box-sizing: border-box; flex: 0 0 3.5rem; width: 3.5rem; min-width: 0; height: 1.4rem; padding: 0.1rem 0.3rem; font-size: 0.78rem; border-radius: 4px; }
+    #tools-reading-save { padding: 0.1rem 0.4rem; font-size: 0.75rem; border-radius: 4px; }
     .tools-save-btn {
       background: #374151; color: #d1d5db; border: 1px solid #4b5563;
       border-radius: 6px; padding: 0.2rem 0.6rem; font-size: 0.8rem;
@@ -1067,6 +1074,17 @@
           <button id="tools-version-save" class="tools-save-btn">Save</button>
           <span id="tools-version-saved" class="tools-saved-msg">Saved</span>
         </div>
+      </div>
+
+      <div class="tools-section" id="tools-reading-policy">
+        <div class="tools-row">
+          <div class="tools-section-title">In-app reading</div>
+          <label for="tools-reading-threshold">Start charging at registered users</label>
+          <input id="tools-reading-threshold" class="tools-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" value="482">
+          <button id="tools-reading-save" class="tools-save-btn">Save</button>
+          <span id="tools-reading-saved" class="tools-saved-msg">Saved</span>
+        </div>
+        <p>1 GC per full 100 sections. Books under 100 sections are free. Admin and reading testers pay before this threshold; existing runs keep permanent access.</p>
       </div>
 
       <div class="tools-section">

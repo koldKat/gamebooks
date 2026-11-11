@@ -184,6 +184,7 @@
 #ctx-priority-high-btn:hover { background: #14532d !important; }
 #ctx-priority-low-btn:hover  { background: #450a0a !important; }
 #ctx-color-wrap .ctx-submenu-panel { min-width: 0; width: fit-content; }
+#ctx-shape-wrap .ctx-submenu-panel { min-width: 0; width: fit-content; }
 .ctx-color-grid {
   display: grid;
   grid-template-columns: repeat(4, 22px);

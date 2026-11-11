@@ -9,6 +9,8 @@ const child = `
 window.addEventListener('error', e => parent.fail(e.message));
 window.addEventListener('unhandledrejection', e => parent.fail(String(e.reason)));
 const id = Number(document.body.dataset.client), client = parent.clients[id];
+const RealNetwork=vis.Network;
+vis.Network=class extends RealNetwork { constructor(...args){super(...args);client.network=this;} };
 localStorage.setItem('gamebook_auth_token','same-account');
 window.fetch = async (url, options={}) => {
  if(url.endsWith('/party')) return new Response(JSON.stringify({party:null}));
@@ -42,12 +44,17 @@ if(id===0){
  await data.loadState(1);
  document.getElementById('login-screen').style.display='none';document.getElementById('books-screen').style.display='none';document.getElementById('main-screen').style.display='flex';
  graph.initGraph();play.render();await party.connectPartySSE(1);
- Object.assign(client,{graph,play,party,focusAfterLoad:_focusNodeAfterLoad});
+ const bindings=await import('${base}/js/boot/node-bindings.js'),bg=await import('${base}/js/play/bg.js'),boot=await import('${base}/js/boot/state.js');
+ bindings.initNodeBindings();
+ const choices=await import('${base}/js/play/choices.js');
+ Object.assign(client,{graph,play,party,bg,boot,choices,document,focusAfterLoad:_focusNodeAfterLoad});
 }else{
  document.body.innerHTML='<div id="screen"></div>';
+ const css=document.createElement('link');css.rel='stylesheet';css.href='${base}/mobile/css/style.css';document.head.append(css);
  const reader=await import('${base}/mobile/js/reader.js'),mobileGraph=await import('${base}/mobile/js/graph-view.js');
  await reader.renderReader(document.getElementById('screen'),{id:1,name:'Device fixture'},()=>{});
- Object.assign(client,{reader,mobileGraph,document});
+ const contextMenu=await import('${base}/mobile/js/context-menu.js');
+ Object.assign(client,{reader,mobileGraph,document,contextMenu});
 }
 client.ready=true;
 `;
@@ -66,6 +73,52 @@ for(let id=0;id<2;id++){
  check(clients.every(c=>c.ready),'Readers ready');await wait(150);
  const [desktop,mobile]=clients;
  check(desktop.stream.clientId!==mobile.stream.clientId,'Each page has its own origin ID despite shared authentication');
+ const expected={circle:'dot',roundedSquare:'custom',hexagon:'hexagon',triangle:'triangle',octagon:'custom',trapezoid:'custom'};
+ desktop.data.state.graph[2].battle=true;desktop.play.render();
+ const battleColor=desktop.graph.visNodes.get(2).color.border;
+ const chooseDesktop=shape=>{
+  desktop.boot.bootState.ctxNodeId=2;
+  desktop.bg._updateColorSwatches(2);
+  desktop.bg._positionMenu(desktop.document.getElementById('node-ctx-menu'),100,100);
+  desktop.document.querySelector('#ctx-shape-grid [data-shape="'+shape+'"]').click();
+ };
+ for(const [shape,rendered] of Object.entries(expected)){
+  chooseDesktop(shape);await wait(120);
+  desktop.graph.network.redraw();mobile.network.redraw();
+  check(desktop.graph.visNodes.get(2).shape===rendered,'Desktop shape '+shape);
+  check(mobile.data.state.graph[2].shape===(shape==='circle'?undefined:shape),'Shape synced to mobile '+shape);
+  check(mobile.network.body.data.nodes.get('2').shape===rendered,'Mobile renders '+shape);
+  check(desktop.graph.visNodes.get(2).color.border===battleColor&&desktop.graph.visNodes.get(2).borderWidth===4,'Battle outline retained '+shape);
+  check(mobile.network.body.data.nodes.get('2').color.border==='#f97316','Mobile battle outline retained '+shape);
+  for(const net of [desktop.graph.network,mobile.network]){
+   const position=net.getPositions([2])[2],point=net.canvasToDOM(position),box=net.getBoundingBox(2);
+   check(String(net.getNodeAt(point))==='2','Shape remains clickable '+shape);
+   check(box.left<=position.x&&box.right>=position.x&&box.bottom>=position.y,'Shape bounds '+shape+' '+JSON.stringify(box));
+  }
+ }
+ // Both custom shapes reuse one renderer: verify a custom-to-custom update.
+ chooseDesktop('roundedSquare');await wait(120);desktop.graph.network.redraw();
+ check(desktop.graph.network.body.nodes[2].shape.options.shapeProperties.borderRadius===5,'Rounded square corner style');
+ chooseDesktop('octagon');await wait(120);desktop.graph.network.redraw();
+ check(desktop.graph.network.body.nodes[2].shape.options.shapeProperties.borderRadius===0,'Octagon replaces rounded square');
+ mobile.contextMenu.openNodeContextMenu(2,200,200,{maxFastTravels:()=>0});
+ mobile.document.querySelector('[data-submenu="m-ctx-shape-panel"]').click();
+ const mobileChoice=mobile.document.querySelector('#m-ctx-shape-grid [data-shape="triangle"]');
+ check(mobileChoice.getBoundingClientRect().width===30,'Mobile shape picker is compact');
+ mobileChoice.click();await wait(150);
+ check(desktop.data.state.graph[2].shape==='triangle','Mobile shape selection syncs to desktop');
+ // Choice editing must preserve the independently selected shape.
+ desktop.choices.commitChoices(2,[4,5]);await wait(120);
+ check(desktop.data.state.graph[2].shape==='triangle','Choice editing preserves shape');
+ desktop.data.state.graph[3].portals=[{bookId:2,section:1}];desktop.data.state.graph[3].shape='octagon';
+ desktop.graph.setGraphOpenWorld(true);
+ desktop.play.render();desktop.bg._updateColorSwatches(3);
+ check(desktop.graph.visNodes.get(3).shape==='diamond','Portal diamond overrides saved ordinary shape');
+ check([...desktop.document.querySelectorAll('#ctx-shape-grid button')].every(b=>b.disabled),'Portal shape choices disabled');
+ delete desktop.data.state.graph[3].portals;delete desktop.data.state.graph[3].shape;
+ desktop.graph.setGraphOpenWorld(false);
+ chooseDesktop('circle');await wait(120);
+ check(!('shape' in desktop.data.state.graph[2]),'Default circle needs no saved override');
  desktop.play.navigate(2);await wait(250);
  check(mobile.data.currentSection()===2,'Desktop move reaches mobile');
  check(mobile.document.getElementById('m-top').textContent.includes('Section 2'),'Mobile prose follows remote move');
@@ -105,7 +158,7 @@ for(let id=0;id<2;id++){
  const before=saves;await wait(150);const stableSaves=window.saves;await wait(300);check(window.saves===stableSaves,'No update loop');
  desktop.party.disconnectPartySSE();desktop.graph.destroyNetwork();
  mobile.data.state.playthroughs[0].completed=true;mobile.data.setCurrentBookId(null);
- document.body.dataset.test=JSON.stringify({soloAccount:true,actualDesktopAndMobile:true,bidirectionalProgress:true,readerProse:true,chartPathAndCurrentNode:true,coordinatePatches:true,noSaveEcho:true,reopenLatestProgress:true,overlappingCameraAnimations:true,mouseRedrawStable:true,productionWrites:0});
+ document.body.dataset.test=JSON.stringify({soloAccount:true,actualDesktopAndMobile:true,nodeShapes:true,allSixShapes:true,trapezoid:true,customShapeUpdates:true,shapeHitTesting:true,battleOutlines:true,portalDiamondsReserved:true,shapeChoiceEditing:true,bidirectionalProgress:true,readerProse:true,chartPathAndCurrentNode:true,coordinatePatches:true,noSaveEcho:true,reopenLatestProgress:true,overlappingCameraAnimations:true,mouseRedrawStable:true,productionWrites:0});
 })().catch(e=>fail(e.stack));
 </script>`;
 (async()=>{fs.writeFileSync(file,html);try{

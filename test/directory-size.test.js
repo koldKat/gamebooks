@@ -23,26 +23,30 @@ test('size preserves glob exclusions, nested files, and skips symbolic links', a
   await fs.writeFile(path.join(root, 'literal[1].txt'), '123456');
   await fs.writeFile(path.join(root, 'node_modules', 'ignored.js'), '12345');
   await fs.symlink(root, path.join(root, 'cycle'));
-  assert.equal(await createDirectorySizeReader(root)(['node_modules', '*backup*', 'literal[1].txt']), 8);
+  assert.equal(await createDirectorySizeReader(root).refresh(['node_modules', '*backup*', 'literal[1].txt']), 8);
 });
 
-test('unchanged polls reuse a bounded result, expiry and changed exclusions rescan', async t => {
+test('reads reuse an hourly result and persist its timestamp across restarts', async t => {
   const root = await fixture(t);
   const file = path.join(root, 'book.png');
   await fs.writeFile(file, '123');
-  let now = 100;
-  const read = createDirectorySizeReader(root, { ttlMs: 10, now: () => now });
+  let saved = null, checkedAt = 0, now = 100;
+  const options = { loadCached: () => saved, loadCheckedAt: () => checkedAt, now: () => now,
+    saveCached: (bytes, at) => { saved = String(bytes); checkedAt = at; } };
+  const read = createDirectorySizeReader(root, options);
   assert.equal(await read([]), 3);
   await fs.writeFile(file, '123456');
-  now = 109;
+  now += 3599999;
   assert.equal(await read([]), 3);
-  now = 110;
+  assert.equal(await createDirectorySizeReader(root, options)([]), 3);
+  now++;
   assert.equal(await read([]), 6);
-  assert.equal(await read(['*.png']), 0);
-  assert.equal(await read([]), 6);
+  assert.equal(await createDirectorySizeReader(root, options)([]), 6);
+  assert.equal(checkedAt, now);
+  assert.equal(saved, '6');
 });
 
-test('simultaneous admin polls share one scan', async t => {
+test('simultaneous expired admin reads share one scan', async t => {
   const root = await fixture(t);
   await fs.writeFile(path.join(root, 'app.js'), '123');
   let scans = 0;
@@ -65,19 +69,21 @@ test('file scans yield so other server work can run', async t => {
   await Promise.all(Array.from({ length: 100 }, (_, i) => fs.writeFile(path.join(root, String(i)), '1')));
   let ticks = 0;
   const timer = setInterval(() => ticks++, 1);
-  try { assert.equal(await createDirectorySizeReader(root)([]), 100); }
+  try { assert.equal(await createDirectorySizeReader(root).refresh([]), 100); }
   finally { clearInterval(timer); }
   assert.ok(ticks > 0);
 });
 
-test('failed scans reject waiting polls and allow a later retry', async () => {
+test('failed scans preserve the saved value and allow a manual retry', async () => {
   let attempts = 0;
-  const read = createDirectorySizeReader('unused', { scan: async () => {
+  const read = createDirectorySizeReader('unused', { loadCached: () => '7', loadCheckedAt: () => 100, now: () => 100, scan: async () => {
     if (++attempts === 1) throw new Error('worker failed');
     return 12;
   } });
-  const result = await Promise.allSettled([read([]), read([])]);
+  const result = await Promise.allSettled([read.refresh([]), read.refresh([])]);
   assert.ok(result.every(row => row.status === 'rejected'));
-  assert.equal(await read([]), 12);
+  assert.equal(await read([]), 7);
+  assert.equal(attempts, 1);
+  assert.equal(await read.refresh([]), 12);
   assert.equal(attempts, 2);
 });

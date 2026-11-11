@@ -5,12 +5,13 @@ import { canReach } from '../../js/graph.js';
 import { refreshGraph } from './graph-view.js';
 import { t } from '../../js/i18n.js';
 import { openNoteModal } from './note-modal.js';
+import { initNodeShapePicker, updateNodeShapePicker } from '../../js/play/node-shape-menu.js';
 
 // Preserve nodes with remaining metadata when pruning cleared entries.
 export function pruneDiscovered(id) {
   const n = state.graph[id];
   if (!n?.discovered) return;
-  const hasMetadata = n.note || n.priority || n.battle || n.color || n.portals || n.showNote || n.manual;
+  const hasMetadata = n.note || n.priority || n.battle || n.color || n.shape || n.portals || n.showNote || n.manual;
   if (!hasMetadata && (!n.choices || n.choices.length === 0)) delete state.graph[id];
 }
 
@@ -73,9 +74,25 @@ export function openNodeContextMenu(id, x, y, hooks) {
           <button class="m-ctx-btn" data-priority="low">${t('ctx.priority.low')}</button>
         </div>
       </div>
+      <div class="m-ctx-submenu-wrap">
+        <button class="m-ctx-btn m-ctx-trigger" data-submenu="m-ctx-shape-panel">${t('ctx.shape')}</button>
+        <div class="m-ctx-submenu-panel" id="m-ctx-shape-panel"><div id="m-ctx-shape-grid"></div></div>
+      </div>
       <button id="m-ctx-ft-btn" class="m-ctx-btn">${t('ctx.fasttravel')}</button>
       <button id="m-ctx-battle-btn" class="m-ctx-btn">${t('ctx.battle')}</button>`;
     document.body.appendChild(menu);
+    initNodeShapePicker(document.getElementById('m-ctx-shape-grid'), shape => {
+      const nodeId = menu.dataset.nodeId;
+      hideNodeContextMenu();
+      if (!nodeId || state.graph[nodeId]?.portals?.length) return;
+      if (!state.graph[nodeId]) state.graph[nodeId] = { choices: [], discovered: true };
+      if (shape === 'circle') delete state.graph[nodeId].shape;
+      else state.graph[nodeId].shape = shape;
+      pruneDiscovered(nodeId);
+      saveState();
+      hooks.checkXpReward?.();
+      refreshGraph(currentSection());
+    });
 
     // Ignore the trailing synthetic click after a long-press so it cannot immediately close the menu.
     document.addEventListener('click', e => {
@@ -119,6 +136,7 @@ export function openNodeContextMenu(id, x, y, hooks) {
   }
 
   menu.dataset.nodeId = String(id);
+  updateNodeShapePicker(document.getElementById('m-ctx-shape-grid'), state.graph[id]?.shape, !!state.graph[id]?.portals?.length);
   menu.querySelectorAll('.m-ctx-submenu-panel').forEach(p => p.classList.remove('open'));
 
   const pt = currentPlaythrough();

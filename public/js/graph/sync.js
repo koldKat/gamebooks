@@ -1,5 +1,5 @@
 import { state, viewingPt, currentPlaythrough, allDiscoveredSections, isTerminal, parseSecId, saveState } from '../core/state.js';
-import { visNodes, visEdges, graphRuntime } from './runtime.js';
+import { network, visNodes, visEdges, graphRuntime } from './runtime.js';
 import { _hasValidPos, _effectiveStartSec } from './helpers.js';
 import { nodeColor, nodeLabel, nodeTitle } from './appearance.js';
 import { computeOutcomes } from './outcomes.js';
@@ -8,6 +8,9 @@ import { _assignLocalPositions } from './layout-local.js';
 import { _buildOverlayCache } from './overlay-cache.js';
 import { syncPhysics } from './physics.js';
 import { updateChangedItems } from './dataset-updates.js';
+import { nodeShapeOptions, createNodeShapeRenderer } from './node-shapes.js';
+
+const shapeRenderer = createNodeShapeRenderer(id => network?.body.nodes[id]?.shape, id => state.graph[id]?.shape);
 
 export function syncGraph() {
   if (!visNodes || !visEdges) return;
@@ -46,10 +49,11 @@ export function syncGraph() {
           ? { ...nodeColor(sec), border: '#22d3ee', highlight: { ...(nodeColor(sec).highlight || {}), border: '#67e8f9' } }
           : nodeColor(sec)),
       title:       nodeTitle(sec, portals, visNodes.get(sec)?.title),
-      shape:       isPortal ? 'diamond' : 'dot',
+      ...nodeShapeOptions(state.graph[sec]?.shape, shapeRenderer, isPortal),
       size:        isPortal ? 16 : 14,
       borderWidth: (hasTerminal || hasBattle) ? 4 : (isPortal || isXBookReachable) ? 3 : 2,
-      shapeProperties: isXBookReachable ? { borderDashes: [4, 3] } : { borderDashes: false },
+      shapeProperties: { ...nodeShapeOptions(state.graph[sec]?.shape, shapeRenderer).shapeProperties,
+        borderDashes: isXBookReachable ? [4, 3] : false },
       font:        sec === startSec ? { size: 11, color: '#fde047', face: 'Segoe UI, system-ui, sans-serif', bold: true } : undefined,
       physics:     !posValid,
       ...(posValid ? { x: pos.x, y: pos.y } : {}),

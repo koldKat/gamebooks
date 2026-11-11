@@ -75,7 +75,7 @@ The admin series selector searches the global catalog. Selecting **Part of antho
 - File uploads do not award XP.
 - Cover controls upload, replace, or remove the image.
 
-Book Access for downloads is separate from Live Reading availability. Reading-access policy is maintained in the server configuration; the panel does not provide a general unlock-policy editor.
+Book Access for downloads is separate from Live Reading availability. Tools lets you set the registered-user threshold for paid in-app reading (482 by default). Reading costs 1 GC per full 100 sections; shorter books stay free. Admin pays before the threshold. Existing runs with reading available are permanently unlocked when charging begins.
 
 ### Other actions
 

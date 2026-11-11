@@ -14,7 +14,7 @@ export function loadActiveTab() {
   if (!tabRequests.has(tab)) tabRequests.set(tab, Promise.resolve().then(tabLoaders[tab]).finally(() => tabRequests.delete(tab)));
   return tabRequests.get(tab);
 }
-export function loadAll() { return Promise.all([loadStats(), loadAdminGc(), loadActiveTab(), loadAppSize()]); }
+export function loadAll() { return Promise.all([loadStats(), loadAdminGc(), loadActiveTab()]); }
 
 // ── Main view - Stats ─────────────────────────────────────────────────────────
 
@@ -112,6 +112,7 @@ export async function loadTools() {
   try {
     const s = await api('GET', '/api/admin/settings');
     document.getElementById('tools-version-input').value = s.app_version          ?? '';
+    document.getElementById('tools-reading-threshold').value = s.reading_paid_user_threshold ?? 482;
     document.getElementById('tools-notepad').value       = s.notepad              ?? '';
     document.getElementById('tools-size-ignore').value   = s.size_ignore_patterns ?? '';
     document.getElementById('smtp-host').value           = s.smtp_host   ?? '';
@@ -283,13 +284,17 @@ function _updateBackupDeleteBtn() {
   btn.textContent = n > 0 ? `Delete selected (${n})` : 'Delete selected';
 }
 
+let appSizeInFlight = false;
 export async function loadAppSize() {
+  if (appSizeInFlight) return;
+  appSizeInFlight = true;
   try {
     const { bytes } = await api('GET', '/api/admin/appsize');
-    document.getElementById('s-appsize').textContent = fmtBytes(bytes);
+    document.getElementById('s-appsize').textContent = bytes === null ? '-' : fmtBytes(bytes);
   } catch (e) {
-    document.getElementById('s-appsize').textContent = 'Error';
     console.error('App size:', e);
+  } finally {
+    appSizeInFlight = false;
   }
 }
 
@@ -399,6 +404,18 @@ document.getElementById('xp-config-save').addEventListener('click', async () => 
     btn.disabled = false;
     controls.forEach(control => { control.disabled = false; });
   }
+});
+
+document.getElementById('tools-reading-save').addEventListener('click', async () => {
+  const button = document.getElementById('tools-reading-save');
+  const value = document.getElementById('tools-reading-threshold').value.trim();
+  if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) return showAlert('Enter a whole number of registered users.');
+  button.disabled = true;
+  try {
+    await api('POST', '/api/admin/settings', { key: 'reading_paid_user_threshold', value });
+    flashSaved(document.getElementById('tools-reading-saved'));
+  } catch (_) { showAlert('Failed to save the reading threshold.'); }
+  finally { button.disabled = false; }
 });
 
 document.getElementById('tools-notepad-save').addEventListener('click', async () => {

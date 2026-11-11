@@ -547,7 +547,7 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET'  && urlPath === '/api/admin/xp-config') return await handleAdminGetXpConfig(req, res);
     if (method === 'POST' && urlPath === '/api/admin/xp-config') return await handleAdminSetXpAmount(req, res);
     if (method === 'POST' && urlPath === '/api/admin/smtp/test') return await handleAdminSmtpTest(req, res);
-    if (method === 'GET'  && urlPath === '/api/admin/appsize')  return await handleAdminAppSize(req, res);
+    if ((method === 'GET' || method === 'POST') && urlPath === '/api/admin/appsize') return await handleAdminAppSize(req, res);
     if (method === 'GET'  && urlPath === '/api/admin/gc-supply') {
       return send(res, 200, db.getAdminGcSupply(getAppBirthAt()));
     }

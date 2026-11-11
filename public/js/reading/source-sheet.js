@@ -82,7 +82,6 @@ export function copySourceSheet(node, document, imagePath, { sectionLinks = true
       const mask = child.getAttribute('data-source-mask');
       if (mask !== null) {
         if (!imagePath.test(mask)) throw new Error('Invalid source sheet mask');
-        layer.setAttribute('style', layer.getAttribute('style') + `;mask-image:url("${mask}");mask-mode:luminance;mask-size:100% 100%;mask-repeat:no-repeat`);
       }
       if (affine !== null) {
         const values = affine.split(',');
@@ -92,9 +91,17 @@ export function copySourceSheet(node, document, imagePath, { sectionLinks = true
           const px = a * u + c * v + e, py = b * u + d * v + f;
           return px < -1e-6 || px > 1.000001 || py < -1e-6 || py > 1.000001;
         })) throw new Error('Invalid source sheet transform');
-        const ratio = (bottom - y) / (right - x);
-        layer.setAttribute('style', layer.getAttribute('style') + `;transform-origin:0 0;transform:translate(${100 * e}%,${100 * f}%) matrix(${a},${b * ratio},${c / ratio},${d},0,0)`);
+        if (a === 0 && b === 1 && c === -1 && d === 0 && e === 1 && f === 0) {
+          // Rotate native strips without stretching their cross-axis when the
+          // shared edge is extended. A unit-matrix ratio assumes no extension.
+          const rotatedWidth = `${100 * (bottom - y) / width}cqw`;
+          layer.setAttribute('style', `position:absolute;left:${100 * right / width}%;top:${100 * y / height}%;width:${continues ? `calc(${rotatedWidth} + 1px)` : rotatedWidth};height:${100 * (right - x) / width}cqw;max-width:none;margin:0;transform-origin:0 0;transform:rotate(90deg)`);
+        } else {
+          const ratio = (bottom - y) / (right - x);
+          layer.setAttribute('style', layer.getAttribute('style') + `;transform-origin:0 0;transform:translate(${100 * e}%,${100 * f}%) matrix(${a},${b * ratio},${c / ratio},${d},0,0)`);
+        }
       }
+      if (mask !== null) layer.setAttribute('style', layer.getAttribute('style') + `;mask-image:url("${mask}");mask-mode:luminance;mask-size:100% 100%;mask-repeat:no-repeat`);
     } else if (child.tagName === 'FIGURE') {
       layer = copySourceSheet(child, document, imagePath, { sectionLinks, depth: depth + 1 });
       layer.setAttribute('style', layer.getAttribute('style') + `;position:absolute;left:${100 * x / width}%;top:${100 * y / height}%;width:${100 * (right - x) / width}%;height:${100 * (bottom - y) / height}%;max-width:none;margin:0`);

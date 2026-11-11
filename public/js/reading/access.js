@@ -1,9 +1,9 @@
 import { apiFetch, getToken } from '../core/state.js';
 import { t } from '../i18n.js';
-import { COIN_SVG } from '../ui-helpers/coin-icon.js';
-import { renderReadingMatter } from './content.js';
+import { openReadingUnlock } from './unlock-dialog.js';
 
 const gates = new WeakMap();
+export function closeReadingGate(mount) { gates.get(mount)?.close(); }
 let balanceEventsInstalled = false;
 function installBalanceEvents() {
   if (balanceEventsInstalled) return;
@@ -24,7 +24,7 @@ function installBalanceEvents() {
 }
 
 // No access cache: account changes and purchases in other tabs must be authoritative.
-export async function showReadingGate(mount, bookId, { isCurrent, onUnlock, onError, onStartSection }) {
+export async function showReadingGate(mount, bookId, { isCurrent, onUnlock, onError, onStartSection, onCancel }) {
   const token = getToken();
   const current = () => token === getToken() && isCurrent();
   const res = await apiFetch(`/api/books/${bookId}/reading-access`);
@@ -33,67 +33,14 @@ export async function showReadingGate(mount, bookId, { isCurrent, onUnlock, onEr
   if (!current()) return true;
   onStartSection?.(access.startSection ?? 1);
   if (!access.locked) { gates.delete(mount); mount.classList.remove('reading-gate'); return false; }
-  mount.replaceChildren();
   mount.classList.add('reading-gate');
-  const prose = document.createElement('div');
-  prose.className = 'reading-gate-prose';
-  for (const [heading, text] of [[t('reading_access.intro'), access.introText], [t('reading_access.rules'), access.rulesText]]) {
-    if (!text) continue;
-    const title = document.createElement('h2');
-    title.textContent = heading;
-    const content = document.createElement('div');
-    content.className = 'reading-frontmatter';
-    if (!renderReadingMatter(content, bookId, text, document, { sectionLinks: false })) content.textContent = text;
-    prose.append(title, content);
-  }
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'reading-unlock-button';
-  const label = document.createElement('span');
-  label.textContent = t('reading_access.unlock', { cost: access.cost });
-  const coin = document.createElement('span');
-  coin.innerHTML = COIN_SVG;
-  button.append(label, coin);
-  button.setAttribute('aria-label', `${label.textContent} GC`);
-  const status = document.createElement('p');
-  status.setAttribute('role', 'status');
-  status.className = 'reading-unlock-status';
-  const footer = document.createElement('div');
-  footer.className = 'reading-gate-footer';
-  const confirmation = document.createElement('div');
-  confirmation.className = 'reading-unlock-confirmation';
-  confirmation.hidden = true;
-  const message = document.createElement('p');
-  message.className = 'reading-confirm-message';
-  message.textContent = t('reading_access.confirm', { name: access.name });
-  const actions = document.createElement('div');
-  actions.className = 'reading-confirm-actions';
-  const accept = document.createElement('button');
-  accept.type = 'button';
-  accept.className = 'reading-unlock-button reading-confirm-accept';
-  const acceptLabel = document.createElement('span');
-  acceptLabel.textContent = t('reading_access.confirm_action', { cost: access.cost });
-  const acceptCoin = document.createElement('span');
-  acceptCoin.innerHTML = COIN_SVG;
-  accept.append(acceptLabel, acceptCoin);
-  accept.setAttribute('aria-label', `${acceptLabel.textContent} GC`);
-  const cancel = document.createElement('button');
-  cancel.type = 'button';
-  cancel.className = 'reading-confirm-cancel';
-  cancel.textContent = t('btn.cancel');
-  actions.append(cancel, accept);
-  confirmation.append(message, actions);
-  footer.append(button, confirmation, status);
-  mount.append(prose, footer);
   let purchasing = false;
   let affordable = access.cost === 0 || access.canAfford === true;
   let balanceVersion = 0;
   let refreshing = null;
+  let dialog = null;
   const updateButtons = () => {
-    button.disabled = purchasing || !affordable;
-    accept.disabled = purchasing || !affordable;
-    cancel.disabled = purchasing;
-    if (!purchasing) status.textContent = affordable ? '' : t('reading_access.insufficient');
+    dialog?.update({ cost: access.cost, canAfford: affordable, busy: purchasing, error: '' });
   };
   const setBalance = balance => {
     if (!Number.isFinite(balance)) return;
@@ -109,28 +56,37 @@ export async function showReadingGate(mount, bookId, { isCurrent, onUnlock, onEr
       if (!response.ok) throw new Error('Balance unavailable');
       const latest = await response.json();
       if (!current() || gates.get(mount) !== gate) return;
+      if (!latest.locked) {
+        dialog?.close();
+        gates.delete(mount);
+        mount.classList.remove('reading-gate');
+        await onUnlock();
+        return;
+      }
+      access.cost = latest.cost;
       if (version === balanceVersion) setBalance(latest.balance);
     })().finally(() => { refreshing = null; });
     return refreshing;
   };
-  const gate = { current, setBalance, refresh };
+  const close = () => { dialog?.close(); gates.delete(mount); mount.classList.remove('reading-gate'); };
+  const gate = { current, setBalance, refresh, close };
   gates.set(mount, gate);
   installBalanceEvents();
   updateButtons();
-  const purchase = async () => {
-    if (purchasing || !affordable || confirmation.hidden || !current()) return;
+  const purchase = async expectedCost => {
+    if (purchasing || !affordable || !current() || gates.get(mount) !== gate) return;
     purchasing = true;
-    button.disabled = true;
-    accept.disabled = true;
-    cancel.disabled = true;
-    status.textContent = t('reading_access.unlocking');
+    updateButtons();
     try {
       if (access.cost > 0) {
         await refresh();
-        if (!current()) return;
+        if (!current() || gates.get(mount) !== gate) return;
         if (!affordable) { purchasing = false; updateButtons(); return; }
+        if (access.cost !== expectedCost) { purchasing = false; updateButtons(); requestPurchase(); return; }
       }
-      const result = await apiFetch(`/api/books/${bookId}/reading-access`, { method: 'POST' });
+      const result = await apiFetch(`/api/books/${bookId}/reading-access`, {
+        method: 'POST', body: JSON.stringify({ expectedCost }),
+      });
       if (!result.ok) {
         const error = await result.json();
         if (!current()) return;
@@ -140,37 +96,34 @@ export async function showReadingGate(mount, bookId, { isCurrent, onUnlock, onEr
           updateButtons();
           return;
         }
+        if (error.error === 'cost_changed') {
+          purchasing = false;
+          await refresh();
+          updateButtons();
+          if (gates.get(mount) === gate) requestPurchase();
+          return;
+        }
         throw new Error('Book unlock failed');
       }
       if (!current()) return;
       mount.classList.remove('reading-gate');
+      dialog?.close();
       gates.delete(mount);
       await onUnlock();
     } catch (error) {
       if (!current()) return;
       mount.classList.add('reading-gate');
-      status.textContent = t('auth.network_error');
       purchasing = false;
       updateButtons();
-      if (affordable) status.textContent = t('auth.network_error');
+      dialog?.update({ error: t('auth.network_error') });
       onError?.(error);
     }
   };
-  button.addEventListener('click', () => {
-    if (button.disabled || !current()) return;
-    button.hidden = true;
-    confirmation.hidden = false;
-    status.textContent = '';
-    cancel.focus();
-  });
-  accept.addEventListener('click', purchase);
-  cancel.addEventListener('click', () => {
+  const requestPurchase = () => {
     if (purchasing || !current()) return;
-    confirmation.hidden = true;
-    button.hidden = false;
-    updateButtons();
-    button.focus();
-  });
-  mount.scrollTop = 0;
+    dialog?.close();
+    dialog = openReadingUnlock({ ...access, canAfford: affordable }, { onConfirm: purchase, isCurrent: current, onCancel: () => { gates.delete(mount); mount.classList.remove('reading-gate'); onCancel?.(); } });
+  };
+  requestPurchase();
   return true;
 }

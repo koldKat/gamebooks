@@ -6,7 +6,7 @@ const path = require('path');
 
 const BOOK_EVENTS = new Set([
   'discover_node', 'visit_node', 'discover_all', 'visit_all', 'add_note', 'set_priority',
-  'mark_battle', 'set_color', 'run_depth', 'death_run', 'battle_run', 'win_run',
+  'mark_battle', 'set_color', 'set_shape', 'run_depth', 'death_run', 'battle_run', 'win_run',
   'first_win', 'first_loss', 'first_battle_death', 'clean_run', 'share_run',
   'charsheet_run', 'charsheet_saved', 'notebook_saved', 'rate_book', 'add_to_library',
   'add_book', 'add_isbn', 'add_issn', 'add_asin', 'add_pages', 'add_authors',

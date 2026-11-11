@@ -9,6 +9,7 @@ import { COLORS } from '../../js/core/constants.js';
 import { t } from '../../js/i18n.js';
 import { _getPositionedNeighbors } from '../../js/graph/layout-helpers.js';
 import { _chooseOpenPosition } from '../../js/graph/layout-placement.js';
+import { nodeShapeOptions, createNodeShapeRenderer } from '../../js/graph/node-shapes.js';
 
 const LAYER_GAP  = 120; // vertical spacing between BFS depth layers
 const GRID_SIZE  = 40;  // matches graph.js's own GRID_SIZE - shared state.positions data
@@ -19,6 +20,7 @@ const DEFAULT_SCALE = 1.15;
 let network = null;
 let visNodes = null;
 let visEdges = null;
+const shapeRenderer = createNodeShapeRenderer(id => network?.body.nodes[id]?.shape, id => state.graph[id]?.shape);
 let _onTap = null;
 let _onHold = null;
 let _onDragStart = null;
@@ -215,17 +217,19 @@ function _nodeColor(id, startSec, curSec, everVisitedSecs, finalNode, finalResul
     if (finalResult === 'battle')  return _withHighlight(COLORS.battleDeath);
     return _withHighlight(COLORS.death);
   }
-  // Color from permanent mVisited, not the undoable live path.
-  if (everVisitedSecs.has(id)) return _withHighlight(COLORS.visitedRun);
+  // Color from permanent mVisited, not the undoable live path; battle outlines remain visible.
+  const withBorder = color => _withHighlight(state.graph[id]?.battle
+    ? {...color, border:COLORS.battleOutline.border} : color);
+  if (everVisitedSecs.has(id)) return withBorder(COLORS.visitedRun);
   const choices    = (state.graph[id]?.choices || []).map(parseSecId);
   const hasDeath   = choices.includes(-1);
   const hasVictory = choices.includes(0);
-  if (hasDeath && hasVictory) return _withHighlight(COLORS.bothOutline);
-  if (hasDeath)                return _withHighlight(COLORS.deathOutline);
-  if (hasVictory)              return _withHighlight(COLORS.victoryOutline);
+  if (hasDeath && hasVictory) return withBorder(COLORS.bothOutline);
+  if (hasDeath)                return withBorder(COLORS.deathOutline);
+  if (hasVictory)              return withBorder(COLORS.victoryOutline);
   // Use mapped colors for recorded choices and discovered colors for metadata-only placeholders.
-  if (state.graph[id] && (!state.graph[id].discovered || state.graph[id].portals?.length > 0)) return _withHighlight(COLORS.mapped);
-  return _withHighlight(COLORS.discovered);
+  if (state.graph[id] && (!state.graph[id].discovered || state.graph[id].portals?.length > 0)) return withBorder(COLORS.mapped);
+  return withBorder(COLORS.discovered);
 }
 
 // Use the browser's contextmenu event for touch-and-hold.
@@ -328,6 +332,8 @@ export function refreshGraph(centerOnSec) {
     x: state.positions[id].x,
     y: state.positions[id].y,
     physics: false,
+    ...nodeShapeOptions(state.graph[id]?.shape, shapeRenderer, !!state.graph[id]?.portals?.length),
+    borderWidth: state.graph[id]?.battle || (state.graph[id]?.choices || []).some(n => isTerminal(parseSecId(n))) ? 4 : 2,
     color: _nodeColor(id, startSec, curSec, everVisitedSecs, finalNode, finalResult),
   })));
 

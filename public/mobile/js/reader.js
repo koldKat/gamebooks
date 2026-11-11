@@ -129,6 +129,7 @@ function _commitChoices(sec, choices) {
   if (existing.priority) state.graph[sec].priority = existing.priority;
   if (existing.battle)   state.graph[sec].battle   = existing.battle;
   if (existing.color)    state.graph[sec].color    = existing.color;
+  if (existing.shape)    state.graph[sec].shape    = existing.shape;
   if (existing.portals)  state.graph[sec].portals  = existing.portals;
   if (existing.showNote) state.graph[sec].showNote = existing.showNote;
   if (existing.manualNavigation) state.graph[sec].manualNavigation = true;
@@ -210,7 +211,7 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
   };
   let entrySection = 1;
   const locked = await showReadingGate(gateBody, book.id, {
-    isCurrent, onUnlock: resume, onStartSection: section => { entrySection = section; },
+    isCurrent, onUnlock: resume, onCancel: leave, onStartSection: section => { entrySection = section; },
   });
   if (!isCurrent() || locked) return;
   _sectionCache.clear();
@@ -357,7 +358,7 @@ function _undoRun() {
   while (pt.path.length > 1) {
     const node = state.graph[pt.path[pt.path.length - 1]];
     if (!node || node.choices.length !== 1) break;
-    const hasMetadata = node.note || node.priority || node.battle || node.color || node.portals || node.showNote || node.manual;
+    const hasMetadata = node.note || node.priority || node.battle || node.color || node.shape || node.portals || node.showNote || node.manual;
     const wouldAutoNavHere = !isTerminal(node.choices[0]) && !pt.path.includes(node.choices[0]);
     if (hasMetadata && !wouldAutoNavHere) break;
     pt.path.pop();

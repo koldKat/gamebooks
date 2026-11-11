@@ -2,6 +2,7 @@
 
 import { apiFetch, currentBookId, state } from '../core/state.js';
 import { t } from '../i18n.js';
+import { updateNodeShapePicker } from './node-shape-menu.js';
 
 let _hooks = {};
 export function setBgHooks(h) { _hooks = h || {}; }
@@ -151,6 +152,7 @@ export function _exitBgMoveMode() {
 }
 
 export function _updateColorSwatches(nodeId) {
+  updateNodeShapePicker(document.getElementById('ctx-shape-grid'), state.graph[nodeId]?.shape, !!state.graph[nodeId]?.portals?.length);
   const cur = state.graph[nodeId]?.color ?? null;
   const isPreset = Array.from(document.querySelectorAll('.ctx-color-swatch')).some(s => s.dataset.color === cur);
   document.querySelectorAll('.ctx-color-swatch').forEach(s => {

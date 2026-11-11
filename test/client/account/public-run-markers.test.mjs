@@ -2,10 +2,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import {nodeShapeOptions, createNodeShapeRenderer} from '../../../public/js/graph/node-shapes.js';
 
 const source = readFileSync(new URL('../../../public/js/account/public-profile.js', import.meta.url), 'utf8');
 const build = vm.runInNewContext(source.slice(source.indexOf('function _buildPubSegNetwork(')) + '\n_buildPubSegNetwork', {
   isValidSecId: id => Number.isSafeInteger(id) && id > 0,
+  nodeShapeOptions, createNodeShapeRenderer,
   vis: { DataSet: class { constructor(rows) { this.rows = rows; } },
     Network: class { constructor(_container, data) { this.data = data; } } },
 });
@@ -54,4 +56,19 @@ test('open-world portal entries and intermediate portals retain their existing s
   assert.equal(n.get(6).color.background, '#0e7490');
   assert.equal(n.get(7).shape, 'diamond');
   assert.equal(n.get(7).color.background, '#0e7490');
+});
+
+test('public runs retain ordinary saved shapes with battle outlines', () => {
+  graph[5].shape = 'octagon';
+  graph[6].shape = 'triangle';
+  try {
+    const n = nodes([1,6,7], 'success');
+    assert.equal(n.get(5).shape, 'custom');
+    assert.equal(n.get(5).color.border, '#f97316');
+    assert.equal(n.get(5).borderWidth, 4);
+    assert.equal(n.get(6).shape, 'triangle');
+    assert.equal(nodes([6,7], 'portal', [], true).get(6).shape, 'diamond');
+  } finally {
+    delete graph[5].shape;delete graph[6].shape;
+  }
 });

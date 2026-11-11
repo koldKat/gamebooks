@@ -103,6 +103,7 @@ export function createMagnakaiPanel(catalog, dependencies) {
     if (supportsArchery) { el('bowModifier').value = value.nextBowModifier || 0; el('bowModifier').disabled = locked; }
     for (const key of ['encounter','roll','start']) el(key).disabled = locked;
     el('round').disabled = !locked; el('cancel').disabled = !locked;
+    if (definition.allowContinuations) el('continue').disabled = !value.combatEffects?.continuable || value.endurance <= 0 || value.enemy.endurance <= 0;
     const rules = catalog.ENCOUNTER_RULES[value.combatEffects?.ruleKey ?? value.combatEffects?.section] || {};
     el('escape').disabled = !locked || !core._escapeRoute(value);
     el('pick').disabled = !locked || !el('manual').checked;
@@ -112,7 +113,7 @@ export function createMagnakaiPanel(catalog, dependencies) {
     el('archery').hidden = !catalog.ENCOUNTER_RULES[preset?.key ?? preset?.section]?.archery;
     el('hint').textContent = preset?.hint || '';
     const status = !value.rolled ? 'ready' : value.combatEffects?.cancelled ? 'cancelled'
-      : core._health(value) <= 0 ? 'loss' : value.combatEffects?.route ? 'reader' : value.enemy.endurance <= 0 ? 'win' : 'active';
+      : core._health(value) <= 0 ? 'loss' : value.combatEffects?.finished ? 'reader' : value.enemy.endurance <= 0 ? 'win' : 'active';
     el('status').textContent = tk('status.' + status);
     el('destination').textContent = value.combatEffects?.route ? tk('destination', {section:value.combatEffects.route}) : '';
     el('totals').textContent = value.rolled ? tk(rules.archery ? 'targetTotals' : 'totals', {
@@ -143,6 +144,8 @@ export function createMagnakaiPanel(catalog, dependencies) {
       .insertAdjacentHTML('afterend',numericControls.map(([key,,min,max])=>numeric(key,min,max)).join(''));
     if (definition.combatOptions?.healing) overlay.querySelector('#'+id+'-potion')
       .insertAdjacentHTML('afterend',button('heal'));
+    if (definition.allowContinuations) overlay.querySelector('#'+id+'-round')
+      .insertAdjacentHTML('afterend',button('continue'));
     document.body.append(overlay);
     for (const mode of Object.keys(definition.combatOptions?.psychicModes || {})) {
       const option = document.createElement('option');
@@ -177,6 +180,7 @@ export function createMagnakaiPanel(catalog, dependencies) {
       value.fightSerial=(value.fightSerial||0)+1;value.roundsThisBattle=definition.allowPriorRounds?stats.nextPriorRounds:0;value.rolled=true;core._captureFightEffects(value);if(!value.combatEffects.finished)store.appendLog(value,tk('started',{enemy:value.enemy.name}));
     }));
     el('round').addEventListener('click',()=>act(()=>core._runRound()));
+    if (definition.allowContinuations) el('continue').addEventListener('click',()=>act(value=>core._continueCombat(value)));
     el('escape').addEventListener('click',()=>act(()=>core._escape()));
     el('cancel').addEventListener('click',()=>confirmed('cancelConfirm',value=>{if(active(value)){value.combatEffects.finished=true;value.combatEffects.cancelled=true;core._finishCombatEffects(value);store.appendLog(value,tk('cancelled'));}}));
     el('potion').addEventListener('click',()=>act(value=>{const restored=store.potion(value);store.appendLog(value,tk('healed',{restored}));}));

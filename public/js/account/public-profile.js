@@ -6,6 +6,7 @@ import { isValidSecId } from '../core/state.js';
 import { escapeHtml } from '../core/util.js';
 import { publicName } from '../core/public-name.js';
 import { t } from '../i18n.js';
+import { nodeShapeOptions, createNodeShapeRenderer } from '../graph/node-shapes.js';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};
@@ -335,6 +336,8 @@ function _buildPubSegNetwork(container, graph, positions, path, result, allVisit
   const startSec = isPortalEntry ? null : (isValidSecId(startSection) ? startSection : 1);
   const entrySec = isPortalEntry && path.length ? path[0] : null;
   const nodesArr = [];
+  let network;
+  const shapeRenderer = createNodeShapeRenderer(id => network?.body.nodes[id]?.shape, id => graph[id]?.shape);
   const edgesArr = [];
 
   const allIds = new Set(path.filter(s => s >= 1));
@@ -391,14 +394,15 @@ function _buildPubSegNetwork(container, graph, positions, path, result, allVisit
                 : isEntry  ? `${id}\n⇒ IN`
                 : isPortal ? `${id}\n⇒`
                 : String(id);
+    const font = { size:11, color:fontColor, face:'Segoe UI, system-ui, sans-serif', bold:fontBold };
     nodesArr.push({
       id, label,
-      shape,
+      ...nodeShapeOptions(gNode?.shape, shapeRenderer, shape === 'diamond'),
       // Only this run's final node is an ending. Other runs' endings follow
       // the ordinary mapped/visited rules, including hollow outcome markers.
       color: { background: bg, border,
         highlight: { background: bg, border }, hover: { background: bg, border } },
-      font:  { size: 11, color: fontColor, face: 'Segoe UI, system-ui, sans-serif', bold: fontBold },
+      font,
       borderWidth: bw, size: shape === 'diamond' ? 16 : 14,
       ...(pos ? { x: pos.x, y: pos.y, physics: false } : {}),
     });
@@ -436,7 +440,7 @@ function _buildPubSegNetwork(container, graph, positions, path, result, allVisit
     });
   });
 
-  return new vis.Network(
+  return network = new vis.Network(
     container,
     { nodes: new vis.DataSet(nodesArr), edges: new vis.DataSet(edgesArr) },
     {

@@ -17,7 +17,14 @@ const {
 
 // This module lives at server/routes/admin.js - the project root is two levels up.
 const PROJECT_ROOT = path.join(__dirname, '..', '..');
-const readAppSize = require('../directory-size').createDirectorySizeReader(PROJECT_ROOT);
+const readAppSize = require('../directory-size').createDirectorySizeReader(PROJECT_ROOT, {
+  loadCached: () => db.getAdminSetting('app_size_bytes'),
+  loadCheckedAt: () => db.getAdminSetting('app_size_checked_at'),
+  saveCached: (bytes, checkedAt) => {
+    db.setAdminSetting('app_size_bytes', String(bytes));
+    db.setAdminSetting('app_size_checked_at', String(checkedAt));
+  },
+});
 
 // Mirror explicit admin version changes to the version file; use it only as a missing-setting seed.
 const VERSION_FILE = path.join(PROJECT_ROOT, 'VERSION');
@@ -299,6 +306,7 @@ async function handleAdminGetSettings(req, res) {
   send(res, 200, {
     notepad:              settings.notepad              ?? '',
     app_version:          settings.app_version          ?? _readVersionFileFallback(),
+    reading_paid_user_threshold: db.readingAccess.threshold(),
     size_ignore_patterns: settings.size_ignore_patterns ?? SIZE_IGNORE_DEFAULTS,
     smtp_host:            settings.smtp_host            ?? '',
     smtp_port:            settings.smtp_port            ?? '465',
@@ -316,7 +324,7 @@ async function handleAdminAppSize(req, res) {
   if (!requireLocalhost(req, res)) return;
   const raw      = db.getAdminSetting('size_ignore_patterns') ?? SIZE_IGNORE_DEFAULTS;
   const patterns = raw.split('\n').map(l => l.trim()).filter(Boolean);
-  const bytes    = await readAppSize(patterns);
+  const bytes    = req.method === 'POST' ? await readAppSize.refresh(patterns) : await readAppSize(patterns);
   send(res, 200, { bytes });
 }
 
@@ -377,6 +385,11 @@ async function handleAdminSetSetting(req, res) {
   if (!requireLocalhost(req, res)) return;
   const { key, value } = await readBody(req);
   if (!key || typeof value !== 'string') return send(res, 400, { error: 'Invalid' });
+  if (key === 'reading_paid_user_threshold') {
+    if (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value))) return send(res, 400, { error: 'Enter a whole number of registered users.' });
+    db.readingAccess.setThreshold(Number(value));
+    return send(res, 200, { ok: true });
+  }
   if (key === 'smtp_pass' && value === '') return send(res, 200, { ok: true }); // blank = keep existing
   db.setAdminSetting(key, value);
   if (key.startsWith('smtp_')) reinitTransporter();

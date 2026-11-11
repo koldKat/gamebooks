@@ -61,6 +61,12 @@ function _captureFightEffects(d) {
     ...(rules.archery ? { targetPoints: rules.archery.targetPoints } : {}),
   };
   if (rules.archery) d.enemy.endurance = d.enemy.enduranceMax = rules.archery.targetPoints;
+  if (rules.resumeRounds) d.roundsThisBattle = Math.max(d.roundsThisBattle, rules.resumeRounds);
+  for (const cost of getContext().combatOptions?.openingCosts || []) {
+    if (d.roundsThisBattle > 0 || !d.combatEffects[cost.whenTrue] || cost.equipmentOnly && !_equipmentAvailable(d)) continue;
+    d.endurance = Math.max(0, d.endurance - cost.amount);
+    getContext()._appendLog(d, tk('log.extra_loss', {n: cost.amount}));
+  }
   const boost = rules.temporaryBoost;
   if (boost && d.combatEffects[boost.whenTrue]) {
     d.combatEffects.temporaryBoost = {skill: boost.skill, endurance: boost.endurance, active: true};
@@ -76,9 +82,11 @@ function _captureFightEffects(d) {
   d.ratio = _combatRatio(d);
   if (mirror && rules.stop && d.enemy.endurance <= rules.stop.endurance) _setRoute(d, rules.stop.route);
   if (rules.entryRoute && d.combatEffects[rules.entryRoute.whenTrue]) _setRoute(d, rules.entryRoute.route);
+  if (d.endurance <= 0) _checkBattleEnd(d);
 }
 
 function _finishCombatEffects(d) {
+  if (d.combatEffects?.continuable) return;
   const boost = d.combatEffects?.temporaryBoost;
   if (!boost?.active) return;
   boost.active = false;
@@ -92,9 +100,17 @@ function _health(d) {
  return _rulesFor(d.combatEffects?.ruleKey ?? d.combatEffects?.section).archery ? d.combatEffects.targetPoints : d.endurance; }
 
 function _psychicProfile(d) {
+  const override = _rulesFor(d.combatEffects?.ruleKey ?? d.combatEffects?.section).psychicProfile;
+  if (override) return override;
   const profile = getContext().combatOptions?.psychicProfile;
   return profile && (!profile.whenTrue || d.combatEffects?.[profile.whenTrue]) ? profile
     : {blast: 2, surge: 4, cost: 2, minimumEndurance: 6};
+}
+
+function _psychicPower(d, mode) {
+  const power = getContext().combatOptions?.psychicModes?.[mode];
+  if (!power) return null;
+  return {...power, ..._rulesFor(d.combatEffects?.ruleKey ?? d.combatEffects?.section).psychicModes?.[mode]};
 }
 
 function _equipmentAvailable(d) {
@@ -137,10 +153,12 @@ function _psychic(d) {
   if (!effects?.captured) return 'none';
   const rules = _rulesFor(effects.ruleKey ?? effects.section);
   if (rules.psychicImmune || Number.isFinite(rules.fixedSkill) || Number.isFinite(rules.fixedRatio)) return 'none';
+  if (rules.allowedPsychicModes && !rules.allowedPsychicModes.includes(effects.psychic)) return 'none';
   if (effects.psychic === 'blast' && !rules.blastImmune) return 'blast';
   if (effects.psychic === 'surge' && !rules.surgeImmune && d.endurance > _psychicProfile(d).minimumEndurance) return 'surge';
-  const power = getContext().combatOptions?.psychicModes?.[effects.psychic];
+  const power = _psychicPower(d, effects.psychic);
   if (power && !rules[power.immunityFlag] && d.endurance > power.minimumEndurance
+      && (!power.allowedSections || power.allowedSections.includes(effects.section))
       && !(power.oncePerCombat && effects.usedPsychicPowers?.[effects.psychic])) return effects.psychic;
   return 'none';
 }
@@ -162,14 +180,18 @@ function _effectiveSkill(d) {
   const psychic = _psychic(d);
   const conditionalMultiplier = rules.psychicSkillMultiplierWhen;
   const psychicMultiplier = conditionalMultiplier && effects[conditionalMultiplier.whenTrue]
-    ? conditionalMultiplier.multiplier : (rules.psychicSkillMultiplier || 1);
+    ? conditionalMultiplier.multiplier : (rules.psychicSkillMultipliers?.[psychic] ?? rules.psychicSkillMultiplier ?? 1);
   const profile = _psychicProfile(d);
   if (psychic === 'blast') skill += profile.blast * psychicMultiplier;
   if (psychic === 'surge') skill += profile.surge * psychicMultiplier;
-  const power = getContext().combatOptions?.psychicModes?.[psychic];
+  const power = _psychicPower(d, psychic);
   if (power) skill += (rules.psychicBonuses?.[psychic] ?? power.bonus) * psychicMultiplier;
-  for (const adjustment of rules.skillAdjustments || []) {
-    if (d.roundsThisBattle >= adjustment.maxRounds || adjustment.unlessAny?.some(flag => effects[flag]) || adjustment.whenFalse && effects[adjustment.whenFalse]
+  for (const adjustment of [...(getContext().combatOptions?.skillAdjustments || []), ...(rules.skillAdjustments || [])]) {
+    if (d.roundsThisBattle < (adjustment.minRounds || 0) || d.roundsThisBattle >= adjustment.maxRounds
+        || adjustment.equipmentOnly && !_equipmentAvailable(d)
+        || adjustment.requiresUndead && !(rules.undead || effects.section === 0 && effects.enemyUndead)
+        || adjustment.psychicModes && !adjustment.psychicModes.includes(psychic)
+        || adjustment.unlessAny?.some(flag => effects[flag]) || adjustment.whenFalse && effects[adjustment.whenFalse]
         || adjustment.whenTrue && !effects[adjustment.whenTrue]) continue;
     skill += adjustment.amount;
   }
@@ -191,8 +213,21 @@ function _setRoute(d, section) {
 
   d.combatEffects.finished = true;
   d.combatEffects.route = section;
+  d.combatEffects.continuable = !!section && _rulesFor(d.combatEffects.ruleKey ?? d.combatEffects.section).continueAt === section;
   _finishCombatEffects(d);
-  _appendLog(d, tk('log.continue', { section }));
+  if (section) _appendLog(d, tk('log.continue', { section }));
+}
+
+function _continueCombat(d) {
+  const effects = d.combatEffects || {};
+  const rules = _rulesFor(effects.ruleKey ?? effects.section);
+  const next = rules.continueAt;
+  if (!effects.continuable || effects.route !== next || !next || d.endurance <= 0 || d.enemy.endurance <= 0)
+    throw new RangeError('Combat continuation unavailable');
+  effects.ruleKey = rules.continueKey ?? String(next); effects.section = next;
+  effects.finished = false; effects.continuable = false; delete effects.route;
+  d.nextSection = next; d.nextEncounterKey = effects.ruleKey;
+  getContext()._appendLog(d, tk('log.continue_fight', {section: next}));
 }
 
 function _escapeRule(d) {
@@ -234,6 +269,16 @@ function _runRound(escaping = false) {
   if (rules.roundLimit && d.roundsThisBattle >= rules.roundLimit.rounds) {
     _setRoute(d, rules.roundLimit.route); saveState(); _renderAll(); return;
   }
+  for (const adjustment of rules.roundAdjustments || []) {
+    const round = d.roundsThisBattle + 1;
+    if (round !== adjustment.round || effects.appliedRoundAdjustments?.includes(round)) continue;
+    (effects.appliedRoundAdjustments ??= []).push(round);
+    if (Number.isFinite(adjustment.enemySkill)) d.enemy.skill = adjustment.enemySkill;
+    if (adjustment.enemyEnduranceGain) {
+      d.enemy.endurance += adjustment.enemyEnduranceGain;
+      d.enemy.enduranceMax += adjustment.enemyEnduranceGain;
+    }
+  }
   const startingEndurance = d.endurance;
   const startingEnemyEndurance = d.enemy.endurance;
   // Click handlers pass an Event, not the explicit escape flag.
@@ -246,7 +291,7 @@ function _runRound(escaping = false) {
     if (d.endurance <= 0) { _checkBattleEnd(d); saveState(); _renderAll(); return; }
   }
   const psychic = _psychic(d);
-  const power = getContext().combatOptions?.psychicModes?.[psychic];
+  const power = _psychicPower(d, psychic);
   let psychicDamage = 0;
   if (!escaping && power?.damageDice) {
     for (let i = 0; i < power.damageDice; i++) {
@@ -268,20 +313,34 @@ function _runRound(escaping = false) {
   }
   const col = _ratioCol(ratio);
   let [enemyLoss, lwLoss] = COMBAT_TABLE[_pickRow(pick)][col];
-  if (escaping || d.roundsThisBattle === rules.noEnemyDamageRound
+  const cannotHurtEnemy = escaping || d.roundsThisBattle === rules.noEnemyDamageRound
       || d.roundsThisBattle <= (rules.noEnemyDamageRounds || 0)
-        && !(rules.noEnemyDamageUnless && effects[rules.noEnemyDamageUnless])) enemyLoss = 0;
+        && !(rules.noEnemyDamageUnless && effects[rules.noEnemyDamageUnless]);
+  if (cannotHurtEnemy) { enemyLoss = 0; psychicDamage = 0; }
   const ignorePlayerLoss = d.roundsThisBattle <= (rules.ignorePlayerLossRounds || 0);
   if (ignorePlayerLoss || d.roundsThisBattle <= (rules.protectedRounds || 0)) lwLoss = 0;
   if (rules.sommerwerdMultiplier && effects.sommerwerd && enemyLoss !== 'K') enemyLoss *= rules.sommerwerdMultiplier;
   const weaponMultiplier = rules.weaponLossMultiplier
     ?? (effects.section === 0 && effects.enemyUndead ? getContext().combatOptions?.weaponLossMultiplier : null);
   if (weaponMultiplier && equipped && enemyLoss !== 'K'
-      && weaponMultiplier.whenAny.some(flag => effects[flag])) enemyLoss *= weaponMultiplier.amount;
+      && weaponMultiplier.whenAny.some(flag => effects[flag]))
+    enemyLoss *= effects[weaponMultiplier.enhancedWhen] ? weaponMultiplier.enhancedAmount : weaponMultiplier.amount;
   if (rules.enemyLossMultiplier && (!rules.enemyMultiplierRequiresPsychic || psychic !== 'none') && enemyLoss !== 'K') enemyLoss *= rules.enemyLossMultiplier;
-  if (rules.playerLossMultiplier && (!rules.playerMultiplierUnless || !effects[rules.playerMultiplierUnless]) && lwLoss !== 'K') lwLoss *= rules.playerLossMultiplier;
+  if (rules.playerLossMultiplier && (!rules.playerLossMultiplierRounds || d.roundsThisBattle <= rules.playerLossMultiplierRounds)
+      && (!rules.playerMultiplierUnless || !effects[rules.playerMultiplierUnless]) && lwLoss !== 'K') lwLoss *= rules.playerLossMultiplier;
+  if (rules.totalDamageReduction && lwLoss !== 'K') {
+    const reduction = Math.min(lwLoss, Math.max(0, rules.totalDamageReduction - (effects.damageReductionUsed || 0)));
+    lwLoss -= reduction;
+    effects.damageReductionUsed = (effects.damageReductionUsed || 0) + reduction;
+  }
   const flame = getContext().combatOptions?.weaponFlame;
-  if (!escaping && enemyLoss !== 'K' && enemyLoss > 0 && flame && effects[flame.whenTrue] && equipped) enemyLoss += flame.amount;
+  if (!escaping && enemyLoss !== 'K' && enemyLoss > 0 && flame && effects[flame.whenTrue] && equipped
+      && !flame.unlessAny?.some(flag => effects[flag])) enemyLoss += flame.amount;
+  for (const bonus of getContext().combatOptions?.weaponDamageBonuses || []) {
+    if (!escaping && equipped && effects[bonus.whenTrue] && enemyLoss !== 'K' && enemyLoss > 0) enemyLoss += bonus.amount;
+  }
+  if (!escaping && enemyLoss !== 'K' && enemyLoss > 0 && enemyLoss < rules.bonusEnemyLossBelow)
+    enemyLoss += rules.bonusEnemyLossAmount;
   if (enemyLoss !== 'K') enemyLoss += psychicDamage;
   _appendLog(d, tk('log.round', { round: d.roundsThisBattle, ratio, pick }));
   if (psychicDamage) _appendLog(d, tk('log.psychic_damage', {n: psychicDamage}));
@@ -303,10 +362,14 @@ function _runRound(escaping = false) {
       : rules.permanentRoundCost || getContext().combatOptions?.permanentRoundCost;
     const permanentCost = !ignorePlayerLoss && cost && equipped && d.roundsThisBattle >= cost.minRound
       && (!cost.whenTrue || effects[cost.whenTrue]) ? cost.amount : 0;
-    const extra = ignorePlayerLoss ? 0 : (!effects.nexus ? (rules.nexusLoss || 0) : 0) +
+    const openingCost = d.roundsThisBattle === 1 && equipped
+      ? (getContext().combatOptions?.firstRoundCosts || []).reduce((sum, cost) => sum +
+        (effects[cost.whenTrue] ? (effects[cost.enhancedWhen] ? cost.enhancedAmount : cost.amount) : 0), 0) : 0;
+    const extra = ignorePlayerLoss ? 0 : (!effects.nexus ? (rules.nexusLoss || 0) : 0) + openingCost +
       (psychic === 'surge' ? _psychicProfile(d).cost : 0) +
       (power?.oncePerCombat && escaping ? 0 : (power?.cost || 0)) +
-      (rules.extraPlayerLossUnless && effects[rules.extraPlayerLossUnless] ? 0 : (rules.extraPlayerLoss || 0)) +
+      (rules.extraPlayerLossUnless && effects[rules.extraPlayerLossUnless]
+        || rules.extraPlayerLossRounds && d.roundsThisBattle > rules.extraPlayerLossRounds ? 0 : (rules.extraPlayerLoss || 0)) +
       (wound && lwLoss > 0 && !(wound.unless && effects[wound.unless]) ? wound.amount : 0) + permanentCost;
     if (extra && d.endurance > 0) {
       d.endurance = Math.max(0, d.endurance - extra);
@@ -381,7 +444,9 @@ function _checkBattleEnd(d) {
     const comparison = rules.roundLimit.compareLosses;
     const losses = effects.lastRoundLoss;
     _setRoute(d, comparison && losses
-      ? (losses.player > losses.enemy ? comparison.playerMore : comparison.otherwise)
+      ? (losses.player > losses.enemy ? comparison.playerMore
+        : losses.enemy > losses.player ? (comparison.enemyMore ?? comparison.otherwise)
+        : (comparison.equal ?? comparison.otherwise))
       : rules.roundLimit.route);
   } else if (d.endurance <= 0) {
     _appendLog(d, tk('log.fallen', { skull: SVG_SKULL }));
@@ -391,5 +456,5 @@ function _checkBattleEnd(d) {
 }
 
 // END EXTRACTED RULES
-  return { _rulesFor, _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _finishCombatEffects, _health, _psychicProfile, _equipmentAvailable, _permanentLoss, _healingAvailable, _heal, _psychic, _effectiveSkill, _combatRatio, _setRoute, _escapeRule, _escapeRoute, _escape, _runRound, _checkBattleEnd };
+  return { _rulesFor, _ratioCol, _pickRow, _pick10, _enemyName, _enemyNameSafe, _captureFightEffects, _finishCombatEffects, _continueCombat, _health, _psychicProfile, _equipmentAvailable, _permanentLoss, _healingAvailable, _heal, _psychic, _effectiveSkill, _combatRatio, _setRoute, _escapeRule, _escapeRoute, _escape, _runRound, _checkBattleEnd };
 }

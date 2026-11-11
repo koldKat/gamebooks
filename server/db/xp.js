@@ -33,7 +33,7 @@ db.prepare(`CREATE TABLE IF NOT EXISTS xp_config (
 
 const _xpDefaults = {
   discover_node: 1, visit_node: 2, discover_all: 30, visit_all: 40,
-  add_note: 5, set_priority: 2, mark_battle: 3, set_color: 2,
+  add_note: 5, set_priority: 2, mark_battle: 3, set_color: 2, set_shape: 2,
   run_depth: 25, death_run: 15, battle_run: 15, win_run: 20,
   first_win: 100, first_loss: 50, first_battle_death: 25, clean_run: 50,
   // First-outcome achievements remain per book; open-world completions use higher amounts.
@@ -768,6 +768,7 @@ SIM_HISTORY_KEYS.push('sim1622');
 SIM_HISTORY_KEYS.push('sim1649');
 SIM_HISTORY_KEYS.push('sim261', 'sim262', 'sim281', 'sim282', 'sim283', 'sim284', 'sim310', 'sim311', 'sim312', 'sim313', 'sim314', 'sim315', 'sim326', 'sim327', 'sim328', 'sim329', 'sim330', 'sim331', 'sim332', 'sim333', 'sim334', 'sim335', 'sim336', 'sim337');
 const RETIRED_SIM_HISTORY_KEYS = ['sim758', 'sim2116'];
+const CUSTOM_NODE_SHAPES = new Set(['roundedSquare', 'hexagon', 'triangle', 'octagon', 'trapezoid']);
 
 function processStateXp(userId, bookId, oldState, newState, totalSections) {
   // Use discoverable_sections as the effective ceiling if set, else fall back to totalSections
@@ -836,12 +837,14 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
     }
   }
 
-  // Notes, priorities, and battle flags - always per-book
+  // Node customization rewards use permanent per-book/node refs, once per type.
   for (const [sec, data] of Object.entries(newGraph)) {
     if (data.note     && !oldGraph[sec]?.note)     awardXp(userId, 'add_note',     `${bookId}:${sec}`);
     if (data.priority && !oldGraph[sec]?.priority) awardXp(userId, 'set_priority', `${bookId}:${sec}`);
     if (data.battle   && !oldGraph[sec]?.battle)   awardXp(userId, 'mark_battle',  `${bookId}:${sec}`);
     if (data.color    && !oldGraph[sec]?.color)    awardXp(userId, 'set_color',    `${bookId}:${sec}`);
+    if (CUSTOM_NODE_SHAPES.has(data.shape) && !CUSTOM_NODE_SHAPES.has(oldGraph[sec]?.shape))
+      awardXp(userId, 'set_shape', `${bookId}:${sec}`);
   }
 
   // Reward fields absent from the template, not inherited fields in fresh runs.
@@ -1051,6 +1054,7 @@ function migrateXpForUser(userId) {
       if (data.note)     awardXp(userId, 'add_note',     `${bid}:${sec}`);
       if (data.priority) awardXp(userId, 'set_priority', `${bid}:${sec}`);
       if (data.color)    awardXp(userId, 'set_color',    `${bid}:${sec}`);
+      if (CUSTOM_NODE_SHAPES.has(data.shape)) awardXp(userId, 'set_shape', `${bid}:${sec}`);
     }
 
     for (let i = 0; i < pts.length; i++) {

@@ -8,7 +8,7 @@ import { network, setLightweightRestabilize } from '../graph.js';
 import { t } from '../i18n.js';
 import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { TROPHY_SVG, BROKEN_SHIELD_SVG, terminalHeadingKey } from './liveread-shared.js';
-import { showReadingGate } from './access.js';
+import { showReadingGate, closeReadingGate } from './access.js';
 import { renderReadingMatter } from './content.js';
 import { bindReadingMapEntry, isReadingMapSection, readingChoices } from './map-entry.js';
 import { bindReadingPreviousEntry } from './previous-entry.js';
@@ -354,21 +354,21 @@ function _returnToCurrent() {
 async function _open() {
   const panel = document.getElementById('liveread-panel');
   if (!panel) return;
-  suppressAutoNav(true);
-  setLightweightRestabilize(true);
-  panel.classList.add('active');
   _isFirstShowSinceOpen = true;
   const bookId = currentBookId;
   _accessBookId = bookId;
   const authToken = getToken();
   const token = ++_showToken;
-  const isCurrent = () => authToken === getToken() && token === _showToken && bookId === currentBookId && panel.classList.contains('active');
+  const isCurrent = () => authToken === getToken() && token === _showToken && bookId === currentBookId;
   _accessPending = true;
   _accessLocked = false;
   const body = document.getElementById('liveread-body');
-  body.innerHTML = _loadingHtml();
   let entrySection = 1;
   const begin = (unlocked = false) => {
+    suppressAutoNav(true);
+    setLightweightRestabilize(true);
+    panel.classList.add('active');
+    body.innerHTML = _loadingHtml();
     _accessPending = false;
     _accessLocked = false;
     _shownSec = undefined;
@@ -382,22 +382,23 @@ async function _open() {
   };
   try {
     const locked = await showReadingGate(body, bookId, {
-      isCurrent, onUnlock: () => begin(true), onStartSection: section => { entrySection = section; },
+      isCurrent, onUnlock: () => begin(true), onCancel: _close, onStartSection: section => { entrySection = section; },
     });
     if (!isCurrent()) return;
     _accessPending = false;
     _accessLocked = locked;
     if (!locked) begin();
-    else document.getElementById('liveread-heading').textContent = t('reading_access.intro');
   } catch (_) {
     if (!isCurrent()) return;
     _accessPending = false;
     _accessLocked = true;
-    body.textContent = t('auth.network_error');
+    _close();
+    showAlert(t('auth.network_error'));
   }
 }
 
 function _close() {
+  closeReadingGate(document.getElementById('liveread-body'));
   document.getElementById('liveread-body')?.classList?.remove('reading-gate');
   _resetMatterMenu();
   ++_showToken;
@@ -432,8 +433,9 @@ export function setLiveReadVisible(visible) {
 // Follow navigation and viewed-run changes; retain the terminal screen after completion.
 export function renderLiveRead() {
   const panel = document.getElementById('liveread-panel');
-  if (!panel || !panel.classList.contains('active')) return;
+  if (!panel) return;
   if (_accessBookId !== null && _accessBookId !== currentBookId) { _close(); return; }
+  if (!panel.classList.contains('active')) return;
   if (_accessPending || _accessLocked) return;
   const sec = currentSection();
   if (sec != null) {

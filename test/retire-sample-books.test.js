@@ -65,6 +65,7 @@ test('registration creates an account and session without adding any book or cov
   const calls = [];
   const deps = {
     '../geoip': {}, '../db': {
+      readingAccess: {syncActivation() {}},
       createUser: async () => { calls.push('account'); return { id: 1, username: 'Player' }; },
       createSession: () => { calls.push('session'); return 'token'; },
     },

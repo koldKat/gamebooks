@@ -930,6 +930,7 @@ const RESETTABLE_PROGRESS_EVENTS = [
   'set_priority',
   'mark_battle',
   'set_color',
+  'set_shape',
   'death_run',
   'battle_run',
   'win_run',

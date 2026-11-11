@@ -52,15 +52,16 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 registerTabLoaders({ series: loadAdminSeries, anthologies: loadAdminAnthologies, tips: loadTips, inventory: loadInventory, feedback: loadFeedback, announcements: loadAnnouncements, seasons: loadSeasons, tools: loadTools });
 loadAll();
 loadLive();
+loadAppSize();
 const pollVisible = callback => () => { if (!document.hidden) callback(); };
 setInterval(pollVisible(loadLive),    1000);
 setInterval(pollVisible(loadStats),  60000);
 setInterval(pollVisible(loadAdminGc), 60000);
-setInterval(pollVisible(loadAppSize), 60000);
+setInterval(pollVisible(loadAppSize), 3600000);
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
   loadLive();
   loadStats();
   loadAdminGc();
-  loadAppSize();
+  loadAppSize(); // The shared server cache scans at most once per hour.
 });

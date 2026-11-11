@@ -31,7 +31,7 @@ test('unlock endpoint authenticates and blocks impersonation', async () => {
     if (path === '../db') return { readingAccess: { unlock: () => { calls++; return { ok: true }; } } };
     if (path === '../reading-images') return { setReadingImageCookie() {} };
     return { authenticate: async () => userId, isRequestImpersonating: () => impersonating,
-      send: (req, code) => { status = code; } };
+      readBody: async () => ({expectedCost:4}), send: (req, code) => { status = code; } };
   } });
   vm.runInContext(source, context);
   const handler = context.module.exports.handleReadingAccess;

@@ -7100,6 +7100,191 @@ for(const id of BOOK_IDS){
     el('round-profile').value='284';el('round-profile').dispatchEvent(new Event('change'));
     check(dogs.opponents[1].endurance===12,'Assassin alternate printed dog health does not reset ongoing fight');
   }
+  if(id===349){
+    const el=key=>document.getElementById('sim349-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=skill=>{el('skill').value=skill;el('endurance').value=100;el('maximum').value=100;el('modifier').value=0;};
+    const stop=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    check(requestedRosters.has(349)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Storms catalog and overlay registered');
+    check(el('encounter').options.length===44&&el('psychic').options.length===5&&el('kirusami')&&el('powerStrike')&&el('continue'),'Storms printed combat controls');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();
+    check(el('skill').value==='25'&&el('endurance').value==='30','Storms fresh New Order stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];
+    el('start').click();el('round').click();check(run.sim349.history.length===1,'Storms editable custom combat');
+    choose(66);setup(42);el('start').click();Math.random=()=>.1;for(let n=0;n<3;n++)el('round').click();
+    check(!el('continue').disabled&&run.sim349.enemy.endurance===28&&run.sim349.history.length===1,'Storms phase stops without a victory');
+    el('continue').click();el('round').click();
+    check(run.sim349.roundsThisBattle===4&&run.sim349.enemy.endurance===25&&run.sim349.endurance===80,'Storms continuation keeps both wounded stats');stop();
+    choose(100);setup(54);el('start').click();for(let n=0;n<6;n++)el('round').click();
+    const remaining=run.sim349.enemy.endurance;el('continue').click();el('round').click();
+    check(run.sim349.enemy.skill===59&&run.sim349.enemy.endurance===remaining+5,'Storms round seven adds five EP once');
+    el('round').click();check(run.sim349.enemy.skill===54&&run.sim349.roundsThisBattle===8,'Storms round eight restores original enemy skill');stop();
+    choose(101);setup(1000);el('start').click();for(let n=0;n<6;n++)el('round').click();
+    check(run.sim349.combatEffects.route===294&&run.sim349.history.length===1,'Storms fatigue challenge has no battle reward');
+    choose(2);setup(50);el('kirusami').checked=true;el('kirusami').dispatchEvent(new Event('change'));el('start').click();el('round').click();
+    check(run.sim349.enemy.endurance===42&&run.sim349.endurance===92,'Storms Kirusami doubles undead wounds and charges first-round cost');
+    check(!el('log').textContent.includes('battlesim349.'),'Storms combat log translated');
+    const saved=JSON.stringify(run.sim349);module.render();check(JSON.stringify(run.sim349)===saved,'Storms rendering preserves the ongoing fight');
+  }
+  if(id===348){
+    const el=key=>document.getElementById('sim348-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=skill=>{el('skill').value=skill;el('endurance').value=100;el('maximum').value=100;el('modifier').value=0;};
+    const stop=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    check(requestedRosters.has(348)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Sejanoz catalog and overlay registered');
+    check(el('encounter').options.length===28&&el('psychic').options.length===4&&el('stolenIlluminatus')&&el('nexus'),'Sejanoz printed encounter controls');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();
+    check(el('skill').value==='25'&&el('endurance').value==='30','Sejanoz fresh New Order stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];
+    el('start').click();el('round').click();check(run.sim348.history.length===1,'Sejanoz editable custom combat works');
+    choose(39);setup(30);el('start').click();check(run.sim348.ratio===-4,'Sejanoz ladder penalty');stop();
+    choose(76);setup(100);el('start').click();el('round').click();
+    check(run.sim348.combatEffects.route===69&&run.sim348.history.length===1,'Sejanoz trapdoor victory has no battle reward');
+    choose(76);setup(50);el('start').click();el('escape').click();
+    check(run.sim348.endurance===100&&run.sim348.roundsThisBattle===0&&run.sim348.combatEffects.route===118,'Sejanoz trapdoor abandonment is immediate');
+    choose(18);setup(42);el('start').click();Math.random=()=>.1;el('round').click();el('round').click();
+    check(run.sim348.enemy.endurance===38,'Sejanoz ambush protects the enemy for two rounds');
+    el('round').click();check(run.sim348.enemy.endurance===35,'Sejanoz ambush protection expires');stop();
+    choose(71);setup(52);el('stolenIlluminatus').checked=true;el('stolenIlluminatus').dispatchEvent(new Event('change'));el('start').click();
+    check(run.sim348.ratio===-2,'Sejanoz stolen Illuminatus enemy bonus');stop();
+    choose(200);setup(57);el('nexus').checked=true;el('nexus').dispatchEvent(new Event('change'));el('start').click();
+    check(run.sim348.ratio===3,'Sejanoz Brumalghast protection is one three-skill bonus');
+    check(!el('log').textContent.includes('battlesim348.'),'Sejanoz combat log translated');
+    const saved=JSON.stringify(run.sim348);module.render();check(JSON.stringify(run.sim348)===saved,'Sejanoz render preserves ongoing fight');
+  }
+  if(id===347){
+    const el=key=>document.getElementById('sim347-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=skill=>{el('skill').value=skill;el('endurance').value=100;el('maximum').value=100;el('modifier').value=0;};
+    const psychic=mode=>{el('psychic').value=mode;el('psychic').dispatchEvent(new Event('change'));};
+    const stop=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    check(requestedRosters.has(347)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Vampirium catalog and overlay registered');
+    check(el('encounter').options.length===12&&el('psychic').options.length===4&&el('flame')&&el('deliverance'),'Vampirium printed controls and psychic modes');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();
+    check(el('skill').value==='25'&&el('endurance').value==='30','Vampirium fresh New Order stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];
+    el('start').click();el('round').click();check(run.sim347.history.length===1,'Vampirium editable custom combat works');
+    choose(37);setup(38);el('start').click();check(run.sim347.ratio===2,'Vampirium ranger support adds two skill');stop();
+    choose(338);setup(48);psychic('kaiBlast');el('start').click();Math.random=()=>.1;el('round').click();
+    check(run.sim347.enemy.endurance===37&&run.sim347.endurance===95,'Vampirium possessed Gildas blocks psychic damage and cost');stop();
+    choose(33);setup(37);psychic('none');el('flame').checked=true;el('flame').dispatchEvent(new Event('change'));el('start').click();el('round').click();
+    check(run.sim347.enemy.endurance===36,'Vampirium weapon flame adds one damage');
+    psychic('kaiBlast');Math.random=()=>0;el('round').click();
+    check(run.sim347.enemy.endurance===21&&run.sim347.endurance===91&&run.sim347.ratio===0,'Vampirium Kai-blast replaces other psychic attacks and counts zero damage draws as one');
+    check(!el('log').textContent.includes('battlesim347.'),'Vampirium printed combat log is translated');
+    const saved=JSON.stringify(run.sim347);module.render();check(JSON.stringify(run.sim347)===saved,'Vampirium render preserves ongoing fight');
+  }
+  if(id===346){
+    const el=key=>document.getElementById('sim346-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=skill=>{el('skill').value=skill;el('endurance').value=100;el('maximum').value=100;el('modifier').value=0;};
+    const stop=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    check(requestedRosters.has(346)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Blood Mountain catalog and overlay registered');
+    check(el('encounter').options.length===47&&el('deliverance')&&el('curingReady')&&!el('kaiScreen'),'Blood Mountain printed encounter controls');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();
+    check(el('skill').value==='25'&&el('endurance').value==='30','Blood Mountain fresh New Order stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];
+    el('start').click();el('round').click();check(run.sim346.history.length===1,'Blood Mountain custom combat works');
+    choose(109);setup(42);el('start').click();check(run.sim346.ratio===5,'Blood Mountain Prince Leomin adds five skill');stop();
+    choose(27);setup(100);el('start').click();el('round').click();
+    check(run.sim346.combatEffects.route===110&&run.sim346.history.length===1,'Blood Mountain tomb challenge gives no battle victory');
+    choose(146);setup(33);el('start').click();Math.random=()=>.1;
+    el('round').click();el('round').click();check(run.sim346.enemy.endurance===38,'Blood Mountain surprise protects enemy for two rounds');
+    el('round').click();check(run.sim346.enemy.endurance===35,'Blood Mountain surprise protection expires');
+    const saved=JSON.stringify(run.sim346);module.render();check(JSON.stringify(run.sim346)===saved,'Blood Mountain render preserves ongoing fight');
+  }
+  if(id===345){
+    const el=key=>document.getElementById('sim345-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=skill=>{el('skill').value=skill;el('endurance').value=100;el('maximum').value=100;el('modifier').value=0;};
+    const stop=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    check(requestedRosters.has(345)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Trail of the Wolf catalog and overlay registered');
+    check(el('encounter').options.length===40&&el('kaiScreen')&&el('deliverance')&&el('curingReady'),'Trail of the Wolf encounter controls');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();
+    check(el('skill').value==='25'&&el('endurance').value==='30','Trail of the Wolf fresh New Order stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];
+    el('start').click();el('round').click();check(run.sim345.history.length===1,'Trail of the Wolf custom combat works');
+    choose(222);setup(55);el('kaiScreen').checked=true;el('kaiScreen').dispatchEvent(new Event('change'));
+    el('psychic').value='none';el('psychic').dispatchEvent(new Event('change'));el('start').click();Math.random=()=>.1;
+    el('round').click();check(run.sim345.endurance===100,'Trail of the Wolf amulet absorbs first five damage');
+    el('round').click();check(run.sim345.endurance===95,'Trail of the Wolf amulet allowance does not repeat');
+    el('round').click();check(run.sim345.combatEffects.route===260&&run.sim345.history.length===1,'Trail of the Wolf three-round confrontation stops without false victory');
+    choose(265);setup(48);el('start').click();el('round').click();
+    check(run.sim345.enemy.endurance===40&&run.sim345.endurance===90,'Trail of the Wolf spider ambush applies opening losses');
+    el('round').click();check(run.sim345.enemy.endurance===37&&run.sim345.endurance===85,'Trail of the Wolf spider ambush expires after one round');
+    const saved=JSON.stringify(run.sim345);module.render();check(JSON.stringify(run.sim345)===saved,'Trail of the Wolf render preserves the ongoing fight');stop();
+  }
+  if(id===344){
+    const el=key=>document.getElementById('sim344-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=(skill,modifier=0)=>{el('skill').value=skill;el('endurance').value=100;el('maximum').value=100;el('modifier').value=modifier;};
+    const psychic=mode=>{el('psychic').value=mode;el('psychic').dispatchEvent(new Event('change'));};
+    const toggle=(key,on)=>{el(key).checked=on;el(key).dispatchEvent(new Event('change'));};
+    const stop=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    check(requestedRosters.has(344)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Rune War catalog and overlay registered');
+    check(el('encounter').options.length===37&&el('kaiScreen')&&el('deliverance')&&el('curingReady'),'Rune War printed encounter controls');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();check(el('skill').value==='25'&&el('endurance').value==='30','Rune War fresh New Order stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];el('start').click();el('round').click();check(run.sim344.history.length===1,'Rune War custom fight works');
+    choose(206);setup(39);psychic('surge');el('start').click();Math.random=()=>.1;
+    for(let round=0;round<4;round++)el('round').click();
+    check(run.sim344.endurance===100&&run.sim344.roundsThisBattle===4,'Rune War net protects four rounds');
+    el('round').click();check(run.sim344.endurance<100,'Rune War net protection expires');stop();
+    choose(136);setup(58);toggle('kaiScreen',false);psychic('surge');el('start').click();check(run.sim344.ratio===5,'Rune War blue vial permits surge with missing-screen penalty');
+    for(let round=0;round<3;round++)el('round').click();
+    check(run.sim344.combatEffects.route===209&&run.sim344.history.length===1,'Rune War three-round encounter stops without false victory');
+    choose(154);setup(58);toggle('kaiScreen',true);psychic('surge');el('start').click();check(run.sim344.ratio===-7,'Rune War yellow vial suppresses psychic powers');stop();
+    choose(101);setup(25,9);psychic('none');el('start').click();check(run.sim344.ratio===0,'Rune War unarmed combat excludes weapon bonus without skill penalty');
+    el('round').click();el('round').click();check(run.sim344.enemy.endurance===18,'Rune War dog ignores first two enemy losses');
+    el('round').click();check(run.sim344.enemy.endurance<18,'Rune War dog damage resumes');
+    const saved=JSON.stringify(run.sim344);module.render();check(JSON.stringify(run.sim344)===saved,'Rune War render preserves ongoing fight');
+  }
+  if(id===343){
+    const el=key=>document.getElementById('sim343-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=(skill,modifier=0)=>{el('skill').value=skill;el('endurance').value=100;el('maximum').value=100;el('modifier').value=modifier;};
+    const psychic=mode=>{el('psychic').value=mode;el('psychic').dispatchEvent(new Event('change'));};
+    check(requestedRosters.has(343)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Mydnight catalog and overlay registered');
+    check(el('encounter').options.length===18&&el('psychic').options.length===3&&el('deliverance')&&el('curingReady'),'Mydnight printed encounter controls');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();check(el('skill').value==='25'&&el('endurance').value==='30','Mydnight fresh New Order stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];el('start').click();el('round').click();check(run.sim343.history.length===1,'Mydnight custom fight works');
+    choose(60);setup(42);psychic('none');el('start').click();Math.random=()=>.1;el('round').click();
+    check(run.sim343.roundsThisBattle===1&&run.sim343.combatEffects.route===40&&run.sim343.history.length===1,'Mydnight one-pass joust returns without a false victory');
+    choose(25);setup(47);el('start').click();el('round').click();el('round').click();el('round').click();
+    check(run.sim343.roundsThisBattle===3&&el('totals').textContent.includes('Combat Ratio 5'),'Mydnight Karvas joins after three rounds');
+    const saved=JSON.stringify(run.sim343);module.render();check(JSON.stringify(run.sim343)===saved,'Mydnight render preserves combat');
+    el('cancel').click();document.getElementById('confirm-ok').click();
+    choose(203);setup(43,13);psychic('blast');el('start').click();check(run.sim343.ratio===4,'Mydnight confiscated equipment excludes weapon and companion bonuses');
+    const fighting=JSON.stringify(run.sim343);el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim343)===fighting,'Mydnight stale confirmation preserves another book');app.setCurrentBookId(id);button.click();
+  }
+  if(id===342){
+    const el=key=>document.getElementById('sim342-'+key),run=app.currentPlaythrough();
+    const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
+    const choose=section=>{el('encounter').value='section:'+section+':slot:0';el('encounter').dispatchEvent(new Event('change'));};
+    const setup=(skill,modifier=0)=>{el('skill').value=skill;el('endurance').value=100;el('maximum').value=100;el('modifier').value=modifier;};
+    const psychic=mode=>{el('psychic').value=mode;el('psychic').dispatchEvent(new Event('change'));};
+    const toggle=(key,on)=>{el(key).checked=on;el(key).dispatchEvent(new Event('change'));};
+    check(requestedRosters.has(342)&&ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'Buccaneers catalog and overlay registered');
+    check(el('encounter').options.length===26&&el('psychic').options.length===3&&el('nexus')&&el('kholoFootnote'),'Buccaneers printed controls');
+    check(!el('kholoFootnote').checked,'Buccaneers optional footnote begins disabled');
+    Math.random=()=>0;el('roll').click();document.getElementById('confirm-ok').click();check(el('skill').value==='25'&&el('endurance').value==='30','Buccaneers fresh New Order stats');
+    setup(100);for(const input of el('editor').querySelectorAll('[data-stat]'))input.value=({skill:1,stamina:10})[input.dataset.stat];el('start').click();el('round').click();check(run.sim342.history.length===1,'Buccaneers custom fight works');
+    choose(86);setup(40,5);psychic('surge');el('start').click();check(run.sim342.ratio===21,'Buccaneers only psychic bonus doubles');
+    psychic('blast');Math.random=()=>.1;el('round').click();check(el('totals').textContent.includes('Combat Ratio 9'),'Buccaneers default Mindblast stays undoubled');
+    const saved=JSON.stringify(run.sim342);module.render();check(JSON.stringify(run.sim342)===saved,'Buccaneers render preserves combat');
+    el('cancel').click();document.getElementById('confirm-ok').click();
+    choose(269);setup(40,5);toggle('kholoFootnote',true);psychic('blast');el('start').click();check(run.sim342.ratio===13,'Buccaneers source-footnote choice doubles Mindblast');
+    el('cancel').click();document.getElementById('confirm-ok').click();
+    choose(245);setup(53);psychic('none');el('start').click();el('round').click();el('round').click();check(run.sim342.combatEffects.route===215&&run.sim342.history.length===1,'Buccaneers two-round return is not a victory');
+    choose(67);setup(40);toggle('nexus',true);psychic('surge');el('start').click();check(run.sim342.ratio===0,'Buccaneers Grand Nexus removes oxygen penalty while psychic immunity remains');
+    const fighting=JSON.stringify(run.sim342);el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();check(JSON.stringify(run.sim342)===fighting,'Buccaneers stale confirmation preserves another book');app.setCurrentBookId(id);button.click();
+  }
   if(id===341){
     const el=key=>document.getElementById('sim341-'+key),run=app.currentPlaythrough();
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');

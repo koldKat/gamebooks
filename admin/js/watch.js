@@ -1,5 +1,6 @@
 // Read-only admin viewer; polls saved graph and HUD state.
 import { mountReadingSourceSheets } from '/js/reading/source-sheet.js';
+import { nodeShapeOptions, createNodeShapeRenderer } from '/js/graph/node-shapes.js';
 
 const POLL_MS = 1000;
 
@@ -72,6 +73,8 @@ function applyBgPref(bgPref) {
 }
 
 let network = null, visNodes = null, visEdges = null;
+let currentGraph = {};
+const shapeRenderer = createNodeShapeRenderer(id => network?.body.nodes[id]?.shape, id => currentGraph[id]?.shape);
 let lastStateJson = null; // skip a redraw if nothing actually changed since last poll
 let lastConnectorStyle = null;
 let lastPositions = new Map(); // secId -> "x,y" of the position last actually applied
@@ -330,6 +333,7 @@ function portalTitle(secId, portals) {
 }
 
 function render(state, isOpenWorld) {
+  currentGraph = state.graph || {};
   ensureNetwork();
   gridState.showGrid  = !!state.showGrid;
   gridState.fogOfGrid = !!state.fogOfGrid;
@@ -366,7 +370,7 @@ function render(state, isOpenWorld) {
       label: isPortal ? `${secId}\n⇒` : String(secId),
       title: portalTitle(secId, portals),
       color: isPortal ? { ...color, border: '#facc15', highlight: { ...(color.highlight || {}), border: '#fde047' } } : color,
-      shape: isPortal ? 'diamond' : 'dot',
+      ...nodeShapeOptions(data.shape, shapeRenderer, isPortal),
       size: isPortal ? 16 : 14,
       borderWidth: (data.battle || (data.choices || []).some(isTerm)) ? 4 : isPortal ? 3 : 2,
     };

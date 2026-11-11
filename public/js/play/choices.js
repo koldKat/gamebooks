@@ -26,6 +26,7 @@ export function commitChoices(sec, choices) {
   const existingPri     = state.graph[sec]?.priority;
   const existingBattle  = state.graph[sec]?.battle;
   const existingColor   = state.graph[sec]?.color;
+  const existingShape   = state.graph[sec]?.shape;
   const existingPortals = state.graph[sec]?.portals;
   const existingShowNote = state.graph[sec]?.showNote;
   const manualNavigation = state.graph[sec]?.manualNavigation;
@@ -35,6 +36,7 @@ export function commitChoices(sec, choices) {
   if (existingPri)      state.graph[sec].priority = existingPri;
   if (existingBattle)   state.graph[sec].battle   = existingBattle;
   if (existingColor)    state.graph[sec].color    = existingColor;
+  if (existingShape)    state.graph[sec].shape    = existingShape;
   if (existingPortals)  state.graph[sec].portals  = existingPortals;
   if (existingShowNote) state.graph[sec].showNote  = existingShowNote;
   if (manualNavigation) state.graph[sec].manualNavigation = true;
@@ -68,7 +70,7 @@ function _cleanupOrphanedTargets(sec, oldChoices, newChoices) {
     });
 
     const node = state.graph[target];
-    const hasMetadata = node && (node.note || node.priority || node.battle || node.color || node.portals || node.showNote || node.manual);
+    const hasMetadata = node && (node.note || node.priority || node.battle || node.color || node.shape || node.portals || node.showNote || node.manual);
     if (node && !hasMetadata) {
       delete state.graph[target];
     }
