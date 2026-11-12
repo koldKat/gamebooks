@@ -5,15 +5,20 @@ import {createSanta,createNewYearChampagne} from './winter-cursors.js';
 import {createCursorCompanion} from './cursor-companion.js';
 import {variantArtwork} from './variant-artwork.js';
 import {lateAutumnArtwork} from './late-autumn-artwork.js';
+import {fridayArtwork} from './friday-artwork.js';
 
 const palettes={thanksgiving:['#bd915e','#a66c42','#8b9b62','#d8b778'],'st-nicholas':['#ad665b','#d8bd81','#91a17c','#d9d3bc'],'st-lucia':['#e6d7b2','#b7c18b','#c7a15f','#b77c73'],halloween:['#d38a38','#789961','#d8ceb0','#a66d79'],diwali:['#d8b779','#a37597','#789b75','#c1a169'],christmas:['#c4d0cc','#b77369','#a88860','#e0c28b'],'new-year':['#d7bb7d','#789dac','#a685b7','#648d6f']};
 function variant(id,label,effects,durations,season){
  const actions=effects.map((name,i)=>({name,delay:[70000,90000,120000][Math.min(i,2)],spread:[60000,70000,90000][Math.min(i,2)],duration:durations[i],previewDelay:[4500,10000,16000,22000][i]}));
- return {id,label,colors:palettes[season],actions:effects,create:options=>{
-  const stop=createCursorCompanion({...options,name:id,svg:variantArtwork[id]||lateAutumnArtwork[id],face:true,actions});stop.node.classList.add('seasonal-variant');return stop;
+ return {id,label,colors:palettes[season]||['#897c91','#ba7772','#aaa391','#6c727e'],actions:effects,create:options=>{
+  const stop=createCursorCompanion({...options,name:id,svg:variantArtwork[id]||lateAutumnArtwork[id]||fridayArtwork[id],face:true,actions});stop.node.classList.add('seasonal-variant');return stop;
  }};
 }
 export const cursorDesigns={
+ 'friday-13':[
+  variant('black-cat','Black cat',['is-hissing','is-startled','is-shadowing'],[2400,2000,2800],'friday-13'),
+  variant('cracked-mirror','Cracked mirror',['is-cracking','is-haunted','is-shuddering'],[2400,3000,1800],'friday-13'),
+  variant('cursed-die','Slasher mask',['is-stalking','is-slashing','is-sawing'],[2400,2600,3200],'friday-13')],
  thanksgiving:[
   variant('turkey','Turkey',['is-fanning','is-gobbling','is-leaffall'],[2600,2200,2800],'thanksgiving'),
   variant('acorn','Acorn',['is-caplift','is-sprouting','is-leaffall'],[2400,3200,2800],'thanksgiving'),

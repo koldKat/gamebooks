@@ -11,6 +11,18 @@ function floaterLayer(channel) {
     ? 'reward-float-layer' : 'app-reward-float-layer');
 }
 
+function addSurvivalDrips(chip, type) {
+  if (type !== 'survival' && type !== 'survival-green') return;
+  const count = 4 + Math.floor(Math.random() * 3);
+  for (let i = 0; i < count; i++) {
+    const drip = document.createElement('span');
+    drip.className = 'survival-drip';
+    drip.setAttribute('aria-hidden', 'true');
+    drip.style.cssText = `--drip-left:${10 + Math.random() * 80}%;--drip-width:${2 + Math.random() * 2}px;--drip-height:${6 + Math.random() * 9}px;--drip-delay:${Math.random() * 3.4}s;--drip-duration:${.7 + Math.random() * .5}s`;
+    chip.appendChild(drip);
+  }
+}
+
 function drainFloaters() {
   if (!floatiesEnabled() || !pendingFloaters.length) return;
   if (waitForCameraIdle(drainFloaters)) return;
@@ -25,6 +37,7 @@ function drainFloaters() {
     const prefix = item.channel === 'admin' ? 'app-reward-float' : 'reward-float';
     chip.className = `${prefix} ${prefix}--${item.type}`;
     chip.innerHTML = item.html;
+    addSurvivalDrips(chip, item.type);
     layer.appendChild(chip);
     const timer = setTimeout(() => {
       chip.remove();

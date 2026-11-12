@@ -2,11 +2,12 @@
   {
     "id": "halloween",
     "title": "Halloween event active",
-    "description": "double XP for losses, battle deaths and sim battle losses.",
+    "description": "double XP for losses, battle deaths, sim battle losses and surviving (heartbeats).",
     "start": 1028,
     "end": 1103,
     "day": 1031,
     "xpMultiplier": 2,
+    "heartbeatFloater": "survival-green",
     "xpEvents": [
       "death_run",
       "battle_run",
@@ -14,7 +15,8 @@
       "first_battle_death",
       "first_loss_ow",
       "first_battle_death_ow",
-      "battlesim_loss"
+      "battlesim_loss",
+      "idle_heartbeat"
     ]
   },
   {
@@ -149,6 +151,30 @@
     "xpMultiplier": 2,
     "xpEvents": [
       "*"
+    ]
+  },
+  {
+    "id": "friday-13",
+    "title": "Friday the 13th event active",
+    "description": "5x XP for losses, battle deaths and sim battle losses; 2x XP for surviving (heartbeats).",
+    "rule": {
+      "day": 13,
+      "weekday": 5
+    },
+    "daysAround": 1,
+    "skipOverlaps": true,
+    "xpMultiplier": 5,
+    "xpMultipliers": { "idle_heartbeat": 2 },
+    "heartbeatFloater": "survival",
+    "xpEvents": [
+      "death_run",
+      "battle_run",
+      "first_loss",
+      "first_battle_death",
+      "first_loss_ow",
+      "first_battle_death_ow",
+      "battlesim_loss",
+      "idle_heartbeat"
     ]
   }
 ]

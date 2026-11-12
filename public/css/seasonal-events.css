@@ -76,9 +76,10 @@
   line-height: 1.45;
 }
 .seasonal-event-notice strong { color: #f0b17e; font-weight: 600; }
+.seasonal-event-details { font-family: inherit; font-size: .78rem; font-weight: 400; line-height: 1.35; }
 .seasonal-event-ete, .seasonal-event-eta { opacity:.8; white-space:nowrap; font-size:.9em; }
 .seasonal-event-ete-label, .seasonal-event-eta-label { color:#fbbf24; }
-.seasonal-event-loss { color: #f87171; font-weight: 600; }
+.seasonal-event-loss, .seasonal-event-heartbeat { color: #f87171; font-weight: 600; }
 .seasonal-event-sim-loss { color: #c47777; font-weight: 600; }
 .seasonal-event-battle-death { color: #d97706; font-weight: 600; }
 .seasonal-event-win { color: #d7b36c; font-weight: 600; }

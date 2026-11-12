@@ -1,5 +1,7 @@
 // English translations: simulator 233.
 export default {
+    'battlesim233.status.continue': 'Continue reading at section {section}.',
+    'battlesim233.btn.swap': 'Attack the other opponent',
     'battlesim233.status.not_ready':  'Roll your starting SKILL, STAMINA and LUCK to begin.',
     'battlesim233.status.fallen':     '{skull} You have fallen in battle.',
     'battlesim233.status.victory':    '{trophy} Victory!',

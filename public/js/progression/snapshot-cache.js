@@ -6,7 +6,7 @@ const fields = new Set(['id', 'username', 'xp', 'eventXp', 'jobXp', 'jobLevel', 
   'coinsBalance', 'coinsSpent', 'coinsEarned', 'coinXpUntilNext', 'xpBoostPct', 'xpBoostPurchased', 'xpFromBoost',
   'bonusHeartbeatXp', 'bonusHeartbeatXpFree', 'bonusUndos', 'bonusFastTravels',
   'bonusGcChancePurchased', 'bonusGcMintPurchased', 'bonusGcClaimed', 'pendingBonusGc',
-  'bronzeBalance', 'silverBalance', 'heartbeatGoldEarned']);
+  'bronzeBalance', 'silverBalance', 'heartbeatGoldEarned', 'heartbeatXpEarned']);
 
 function digest(token) {
   if (token !== tokenForDigest) {

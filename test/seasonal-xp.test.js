@@ -26,7 +26,7 @@ test('Diwali doubles normal and simulator wins only within its moving Sofia date
 
 test('Halloween loss bonuses use inclusive Sofia dates and exclude unrelated rewards', () => {
   for (const year of [2026, 2027, 2028]) {
-    for (const event of ['death_run','battle_run','first_loss','first_battle_death','first_loss_ow','first_battle_death_ow','battlesim_loss']) {
+    for (const event of ['death_run','battle_run','first_loss','first_battle_death','first_loss_ow','first_battle_death_ow','battlesim_loss','idle_heartbeat']) {
       const offset = year === 2026 ? '+02:00' : '+03:00';
       assert.equal(seasonalXpMultiplier(event, new Date(`${year}-10-27T23:59:59${offset}`)), 1);
       assert.equal(seasonalXpMultiplier(event, new Date(`${year}-10-28T00:00:00${offset}`)), 2);
@@ -34,7 +34,7 @@ test('Halloween loss bonuses use inclusive Sofia dates and exclude unrelated rew
       assert.equal(seasonalXpMultiplier(event, new Date(`${year}-11-03T22:00:00Z`)), 1);
     }
   }
-  for (const event of ['win_run','first_win','battlesim_win','discover_node','run_depth','idle_heartbeat']) {
+  for (const event of ['win_run','first_win','battlesim_win','discover_node','run_depth']) {
     assert.equal(seasonalXpMultiplier(event, new Date('2026-10-31T12:00:00Z')), 1);
   }
 });
@@ -45,7 +45,8 @@ function fixture(t) {
     xp_boost_carry REAL DEFAULT 0,xp_from_boost INTEGER DEFAULT 0,coins_spent INTEGER DEFAULT 0,
     bonus_coins INTEGER DEFAULT 0,pending_bonus_gc INTEGER DEFAULT 0,bonus_gc_generated INTEGER DEFAULT 0,
     bonus_gc_chance_purchased INTEGER DEFAULT 0,bonus_gc_mint_purchased INTEGER DEFAULT 0,
-    bonus_heartbeat_xp INTEGER DEFAULT 0,heartbeat_carry REAL DEFAULT 0,heartbeat_minutes_banked INTEGER DEFAULT 0);
+    bonus_heartbeat_xp INTEGER DEFAULT 0,heartbeat_carry REAL DEFAULT 0,heartbeat_minutes_banked INTEGER DEFAULT 0,
+    heartbeat_xp_earned INTEGER NOT NULL DEFAULT 0);
     INSERT INTO users(id) VALUES(1);
     CREATE TABLE xp_events(user_id INTEGER,event TEXT,ref TEXT,template_id INTEGER,UNIQUE(user_id,event,ref));
     CREATE TABLE coin_events(user_id INTEGER,event TEXT,ref TEXT,amount INTEGER,UNIQUE(user_id,event,ref));
@@ -55,10 +56,10 @@ function fixture(t) {
   initializeSeasonParticipation(db, new Date('2026-02-01T12:00:00Z'));
   let date = new Date('2026-10-31T12:00:00Z'), impersonating = false;
   const context = vm.createContext({db, Math, _appXpHook:null, _xpFeedHook:null,
-    recordSeasonParticipation:(db,id,event)=>recordSeasonParticipation(db,id,event,date),
+    recordSeasonParticipation:(db,id,event,_date,ref)=>recordSeasonParticipation(db,id,event,date,ref),
     _insertNotif:db.prepare('INSERT INTO notifications VALUES(?,?,?)'),
     isImpersonatingContext:()=>impersonating,
-    seasonalXpMultiplier:event=>seasonalXpMultiplier(event,date),
+    seasonalContributionEligible:require('../server/db/seasonal-contributions').seasonalContributionEligible,seasonalXpMultiplier:(event,_date,context)=>seasonalXpMultiplier(event,date,context),
     getXpAmount:event=>({death_run:15,battle_run:15,battlesim_loss:5,win_run:20,battlesim_win:10,first_win:100}[event] ?? 0),
     getTitleForLevel:()=>'',advanceHeartbeatCoins:()=>false});
   const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
@@ -70,6 +71,33 @@ function fixture(t) {
     xp:()=>db.prepare('SELECT xp FROM users WHERE id=1').get().xp,
     date:value=>{date=new Date(value);},impersonate:()=>{impersonating=true;}};
 }
+
+test('Friday the 13th pays five times for losses and twice for surviving, with normal wins and no duplicate awards', t => {
+  const f = fixture(t); f.date('2026-11-12T12:00:00Z');
+  for(const event of ['death_run','battle_run','first_loss','first_battle_death','first_loss_ow','first_battle_death_ow','battlesim_loss','idle_heartbeat']) {
+    const multiplier=event==='idle_heartbeat'?2:5;
+    assert.equal(seasonalXpMultiplier(event,new Date('2026-11-12T12:00:00Z')),multiplier);
+    const before=f.xp(); assert.equal(f.award(event,event,10),true);
+    assert.equal(f.xp()-before,10*multiplier,event);
+    assert.equal(f.award(event,event,10),false);
+    assert.equal(f.xp()-before,10*multiplier,'duplicate');
+  }
+  assert.equal(f.db.prepare('SELECT heartbeat_xp_earned n FROM users WHERE id=1').get().n,20);
+  for(const event of ['win_run','battlesim_win','discover_node','add_note']) assert.equal(seasonalXpMultiplier(event,new Date('2026-11-13T12:00:00Z')),1);
+  for(const stamp of ['2026-11-11T21:59:59Z','2026-11-14T22:00:00Z']) assert.equal(seasonalXpMultiplier('idle_heartbeat',new Date(stamp)),1);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM seasonal_participation_days WHERE season_id=?').get('friday-13').n,1);
+});
+
+test('Friday survival heartbeat banking doubles once and respects the level cap', t => {
+  const f=fixture(t);f.date('2026-11-13T12:00:00Z');
+  vm.runInContext('_liveUserCount=()=>0;getXpAmount=()=>1;',f.context);
+  f.db.prepare('UPDATE users SET xp=65990 WHERE id=1').run();
+  f.context.awardIdleHeartbeatXp(1);assert.equal(f.xp(),65992);
+  f.db.prepare('UPDATE users SET xp=65998 WHERE id=1').run();
+  f.context.awardIdleHeartbeatXp(1);assert.equal(f.xp(),65999);
+  assert.equal(f.db.prepare('SELECT heartbeat_xp_earned n FROM users WHERE id=1').get().n,3);
+  f.context.awardIdleHeartbeatXp(1);assert.equal(f.xp(),65999);
+});
 
 test('real XP transaction doubles losses, preserves boosts and never re-awards an existing ref', t => {
   const f=fixture(t);
@@ -85,6 +113,52 @@ test('real XP transaction doubles losses, preserves boosts and never re-awards a
   f.award('death_run','run:5');assert.equal(f.xp(),480,'normal amount after event');
   assert.equal(f.award('death_run','run:1'),false);assert.equal(f.xp(),480);
   assert.equal(f.db.prepare('SELECT COUNT(*) n FROM seasonal_participation_days').get().n,1);
+});
+
+test('catalog contribution XP and participation require public items, including publication itself', t => {
+  const f=fixture(t);f.date('2026-12-06T12:00:00Z');
+  f.db.exec(`CREATE TABLE series(id INTEGER PRIMARY KEY,is_public INTEGER);
+    CREATE TABLE books(id INTEGER PRIMARY KEY,is_public INTEGER,series_id INTEGER,parent_book_id INTEGER);
+    INSERT INTO series VALUES(1,1),(2,0);
+    INSERT INTO books VALUES(1,1,1,3),(2,0,2,4),(3,1,NULL,NULL),(4,0,NULL,NULL);`);
+  f.award('add_description','2',40);assert.equal(f.xp(),40);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM seasonal_participation_days').get().n,0);
+  f.db.exec('UPDATE books SET is_public=1 WHERE id=2');
+  f.award('make_book_public','2',100);assert.equal(f.xp(),240);
+  assert.equal(f.award('add_description','2',40),false,'publication never re-awards old private edits');
+  f.award('add_description','1',40);assert.equal(f.xp(),320);
+  f.award('create_series','2',50);assert.equal(f.xp(),370);
+  f.db.exec('UPDATE series SET is_public=1 WHERE id=2');
+  f.award('make_series_public','2',100);assert.equal(f.xp(),570);
+  f.award('add_description','4',40);assert.equal(f.xp(),610,'private anthology stays normal');
+  f.db.exec('UPDATE books SET is_public=1 WHERE id=4');
+  f.award('make_book_public','4',100);assert.equal(f.xp(),810,'anthology publication qualifies');
+  f.date('2026-12-31T12:00:00Z');
+  f.db.exec('UPDATE books SET is_public=0 WHERE id=4');
+  f.award('add_authors','4',10);assert.equal(f.xp(),820,'wildcard events use the same visibility rule');
+});
+
+test('private contributions cannot gain a seasonal job bonus or qualify through its trigger',t=>{
+  t.mock.timers.enable({apis:['Date'],now:new Date('2027-01-01T12:00:00Z')});
+  const f=fixture(t);f.date('2027-01-01T12:00:00Z');
+  f.db.exec(`CREATE TABLE series(id INTEGER PRIMARY KEY,is_public INTEGER);
+    CREATE TABLE books(id INTEGER PRIMARY KEY,is_public INTEGER,series_id INTEGER,parent_book_id INTEGER);
+    INSERT INTO books VALUES(1,1,NULL,NULL),(2,0,NULL,NULL);`);
+  require('../server/db/diamonds').initializeDiamondBalances(f.db);
+  require('../server/db/job-xp').initializeJobXp(f.db);
+  const job=()=>f.db.prepare('SELECT xp,seasonal_bonus_eligible FROM user_job_xp WHERE user_id=1').get();
+  const days=()=>f.db.prepare('SELECT COUNT(*) n FROM seasonal_participation_days').get().n;
+  f.award('add_description','2',40);
+  assert.equal(f.xp(),40);assert.equal(job().xp,1);assert.equal(days(),0);
+  assert.equal(job().seasonal_bonus_eligible,1,'temporary award context cleared');
+  f.award('add_description','1',40);
+  assert.equal(f.xp(),120);assert.equal(job().xp,3);assert.equal(days(),1);
+  f.db.exec('UPDATE user_job_xp SET xp=998 WHERE user_id=1;DELETE FROM seasonal_participation_days');
+  f.award('add_authors','2',10);
+  assert.equal(job().xp,999);assert.equal(days(),0,'private contribution capped to one job XP does not qualify');
+  f.db.exec('UPDATE user_job_xp SET xp=998 WHERE user_id=1');
+  f.award('add_authors','1',10);
+  assert.equal(job().xp,999);assert.equal(days(),1,'public doubled job award still qualifies with only one XP of cap room');
 });
 
 test('season participation requires a genuine positive award and ignores duplicates and impersonation', t => {
@@ -118,8 +192,9 @@ test('Christmas doubles wins, new runs, full-book milestones and heartbeats only
 
 test('New Year doubles every XP event and amount override without duplicating awards',t=>{
   const f=fixture(t);f.date('2026-12-31T12:00:00Z');
+  f.db.exec('CREATE TABLE series(id INTEGER PRIMARY KEY,is_public INTEGER);CREATE TABLE books(id INTEGER PRIMARY KEY,is_public INTEGER,series_id INTEGER,parent_book_id INTEGER);INSERT INTO books VALUES(1,1,NULL,NULL)');
   for(const event of ['win_run','battlesim_loss','idle_heartbeat','discover_node','add_note','rate_book','upload_cover','future_xp_event']) {
-    const before=f.xp();f.award(event,event,7);assert.equal(f.xp()-before,14,event);assert.equal(f.award(event,event,7),false);
+    const ref=event==='upload_cover'?'1':event;const before=f.xp();f.award(event,ref,7);assert.equal(f.xp()-before,14,event);assert.equal(f.award(event,ref,7),false);
   }
   assert.equal(seasonalXpMultiplier('future_xp_event',new Date('2027-01-04T21:59:59Z')),2);
   assert.equal(seasonalXpMultiplier('future_xp_event',new Date('2027-01-04T22:00:00Z')),1);

@@ -50,6 +50,29 @@
 .seasonal-star.is-rainbow .star-face{animation:star-rainbow 2.4s ease-in-out both;}
 .seasonal-cursor-particles{position:fixed;pointer-events:none;z-index:9998;width:128px;height:128px;contain:layout style paint;}
 @keyframes variant-breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.015)}}
+.seasonal-variant.is-hissing .unlucky-fangs{opacity:1}
+.seasonal-variant.is-startled .unlucky-ears{transform-origin:24px 20px;animation:variant-shake .2s ease-in-out 8}
+.seasonal-variant.is-shadowing .unlucky-smoke,
+.seasonal-variant.is-smoking .unlucky-smoke{animation:variant-cloud 2.8s ease-out both}
+.seasonal-variant.is-cracking .unlucky-cracks{stroke:#c98985;stroke-width:1.8}
+.seasonal-variant.is-haunted .unlucky-reflection{animation:variant-flash 3s ease-in-out both}
+.seasonal-variant.is-shuddering .variant-main{animation:variant-shake .15s ease-in-out 12}
+.seasonal-variant.is-stalking .variant-main{transform-origin:24px 25px;animation:unlucky-head-tilt 2.4s ease-in-out both}
+.seasonal-variant.is-slashing .unlucky-machete{transform-origin:40px 40px;animation:unlucky-slash 2.6s ease-in-out both}
+.seasonal-variant.is-slashing .unlucky-mask-blood{stroke-dasharray:22;animation:unlucky-mask-drip 2.6s ease-in-out both}
+.seasonal-variant.is-slashing .unlucky-knife-blood,
+.seasonal-variant.is-sawing .unlucky-saw-blood{opacity:1}
+.unlucky-knife-blood path,.unlucky-saw-blood path{opacity:0;transform-box:fill-box;transform-origin:center}
+.seasonal-variant.is-slashing .unlucky-knife-blood path{animation:unlucky-blood-spray 1.05s ease-in 2 both;animation-delay:calc(.1s + var(--blood-delay))}
+.seasonal-variant.is-sawing .unlucky-saw-blood path{animation:unlucky-blood-spray .9s ease-in 3 both;animation-delay:calc(.05s + var(--blood-delay))}
+.seasonal-variant.is-sawing .unlucky-chainsaw{animation:variant-flash 3.2s ease-in-out both}
+.seasonal-variant.is-sawing .unlucky-saw-body{animation:variant-shake .08s linear infinite}
+.seasonal-variant.is-sawing .unlucky-chain{animation:unlucky-chain-run .16s linear infinite}
+@keyframes unlucky-blood-spray{0%{opacity:0;transform:translate(0,0) scale(.25)}8%{opacity:1}35%{transform:translate(var(--blood-mid-x),var(--blood-mid-y)) rotate(-15deg) scale(1)}78%{opacity:.95}100%{opacity:0;transform:translate(var(--blood-x),var(--blood-y)) rotate(var(--blood-turn)) scale(.85)}}
+@keyframes unlucky-chain-run{to{stroke-dashoffset:-8}}
+@keyframes unlucky-head-tilt{0%,100%{transform:rotate(0)}35%,65%{transform:rotate(-12deg)}}
+@keyframes unlucky-slash{0%,100%{opacity:0;transform:rotate(20deg)}20%,70%{opacity:1}35%{transform:rotate(-25deg)}48%{transform:rotate(15deg)}65%{transform:rotate(-15deg)}}
+@keyframes unlucky-mask-drip{0%,100%{opacity:0;stroke-dashoffset:22}15%{opacity:1}80%{opacity:1;stroke-dashoffset:0}}
 @keyframes mummy-fire-reveal{0%,36%,78%,100%{opacity:0}43%,68%{opacity:1}}
 @keyframes mummy-fire-flicker{from{transform:scale(.9,.85) rotate(-4deg)}to{transform:scale(1.05,1.12) rotate(3deg)}}
 @keyframes mummy-uncovered{0%,32%,78%,100%{opacity:1}40%,70%{opacity:0}}

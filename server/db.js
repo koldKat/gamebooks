@@ -57,6 +57,7 @@ try { db.exec(`ALTER TABLE users ADD COLUMN admin_gifted_coins    INTEGER NOT NU
 try { db.exec(`ALTER TABLE users ADD COLUMN xp_from_boost         INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN xp_boost_carry        REAL    NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN heartbeat_carry              REAL    NOT NULL DEFAULT 0`);        } catch (_) {}
+try { db.exec('ALTER TABLE users ADD COLUMN heartbeat_xp_earned INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN heartbeat_minutes_banked   INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN bonus_gc_chance_purchased INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}
 try { db.exec(`ALTER TABLE users ADD COLUMN bonus_gc_mint_purchased   INTEGER NOT NULL DEFAULT 0`);        } catch (_) {}

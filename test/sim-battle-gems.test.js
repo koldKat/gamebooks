@@ -98,8 +98,8 @@ test('failed reward rolls back battle credit, wallet, notification and pool toge
 test('central XP impersonation guard prevents permanent simulator credit and gems',t=>{
   const f=fixture(t);initializeSimBattleGems(f.db);
   const source=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');
-  const context=vm.createContext({isImpersonatingContext,_xpFeedHook:null,_appXpHook:null,
-    getXpAmount:()=>10,seasonalXpMultiplier:()=>1,_awardXpTx:(id,event,ref)=>Boolean(f.event(ref,event,id).changes)});
+  const context=vm.createContext({db:f.db,isImpersonatingContext,_xpFeedHook:null,_appXpHook:null,
+    getXpAmount:()=>10,seasonalContributionEligible:require('../server/db/seasonal-contributions').seasonalContributionEligible,seasonalXpMultiplier:()=>1,_awardXpTx:(id,event,ref)=>Boolean(f.event(ref,event,id).changes)});
   vm.runInContext(source.slice(source.indexOf('function awardXp('),source.indexOf('function awardIdleHeartbeatXp(')),context);
   assert.equal(runInImpersonationContext(true,()=>context.awardXp(1,'battlesim_win','sim1:1')),false);
   assert.equal(f.count(),0);assert.equal(f.pool(),0);

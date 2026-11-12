@@ -2,11 +2,16 @@
 
 const { initializeJobLevelTemplates } = require('./job-level-templates');
 const { seasonalXpMultiplier } = require('../seasonal-events');
+const { ensureJobSeasonEligibility } = require('./seasonal-contributions');
 
 // Job XP counts events, independently of awarded XP, boosts and mining bonuses.
 function initializeJobXp(db, { xpMultiplier = () => seasonalXpMultiplier('job_xp') } = {}) {
   db.function('seasonal_job_xp_multiplier', { deterministic:false }, () => xpMultiplier());
   db.transaction(() => {
+    db.exec(`CREATE TABLE IF NOT EXISTS user_job_xp (
+      user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      xp INTEGER NOT NULL DEFAULT 0 CHECK(xp>=0))`);
+    ensureJobSeasonEligibility(db);
     db.exec(`CREATE TABLE IF NOT EXISTS job_xp_policy (
       id INTEGER PRIMARY KEY CHECK(id=1), user_count INTEGER NOT NULL CHECK(user_count>=0));
       INSERT INTO job_xp_policy(id,user_count) SELECT 1,COUNT(*) FROM users WHERE true
@@ -36,7 +41,7 @@ function initializeJobXp(db, { xpMultiplier = () => seasonalXpMultiplier('job_xp
       CREATE TRIGGER award_job_xp_event AFTER INSERT ON xp_events
         WHEN NEW.event!='idle_heartbeat' BEGIN
         INSERT OR IGNORE INTO user_job_xp(user_id) VALUES(NEW.user_id);
-        UPDATE user_job_xp SET xp=MIN(xp+seasonal_job_xp_multiplier(),1000*(bounds.ceiling+1)*(bounds.ceiling+2)/2-1)
+        UPDATE user_job_xp SET xp=MIN(xp+CASE WHEN seasonal_bonus_eligible=1 THEN seasonal_job_xp_multiplier() ELSE 1 END,1000*(bounds.ceiling+1)*(bounds.ceiling+2)/2-1)
         FROM (SELECT MAX((SELECT user_count/10 FROM job_xp_policy WHERE id=1),
           CAST((sqrt(1+8*xp/1000.0)-1)/2 AS INTEGER)) AS ceiling
           FROM user_job_xp WHERE user_id=NEW.user_id) AS bounds

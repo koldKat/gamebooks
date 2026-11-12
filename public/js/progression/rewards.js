@@ -14,6 +14,7 @@ import { escapeHtml } from '../core/util.js';
 import { floatiesEnabled } from './floaties.js';
 import { enqueueRewardFloater, clearRewardFloaters } from './floater-queue.js';
 import { waitForCameraIdle } from '../graph/camera-motion.js';
+import { activeSeasonalEvents } from '../seasonal-events/calendar.js';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let _lastRewardXp        = null;
@@ -21,6 +22,9 @@ let _lastRewardCoins     = null;
 let _lastCoinsEarned     = null;
 let _lastRewardLevel     = null;
 let _lastHeartbeatGold   = null;
+let _lastHeartbeatXp = null;
+const _rewardAccumSurvival = new Map();
+const survivalPhrases = ['Surviving', 'Running', 'Hiding', 'Escaping', 'Fleeing', 'Sneaking', 'Dodging', 'Cowering', 'Trembling', 'Scrambling'];
 let _lastDiamondsEarned  = null;
 let _lastRubiesEarned = null;
 let _lastCollectibleRubies = null;
@@ -56,7 +60,7 @@ window.addEventListener('floaties-change', () => {
   _rewardBodyObserver?.disconnect(); _rewardBodyObserver = null;
   document.removeEventListener('transitionend', rewardAnchorTransition);
   clearRewardFloaters('personal');
-  _rewardAccumXp = 0; _rewardAccumCoins = 0;
+  _rewardAccumXp = 0; _rewardAccumCoins = 0; _rewardAccumSurvival.clear();
   clearTimeout(_rewardFlushTimer); _rewardFlushTimer = null;
 });
 
@@ -135,15 +139,22 @@ function _spawnRewardFloater(type, html) {
   enqueueRewardFloater('personal', type, html);
 }
 
-function _queueRewardFloater(xpDelta = 0, coinDelta = 0) {
+function _queueRewardFloater(xpDelta = 0, coinDelta = 0, survivalDelta = 0, survivalType = 'survival') {
   if (!floatiesEnabled()) return;
   if (xpDelta > 0) _rewardAccumXp += xpDelta;
   if (coinDelta > 0) _rewardAccumCoins += coinDelta;
+  if (survivalDelta > 0) _rewardAccumSurvival.set(survivalType, (_rewardAccumSurvival.get(survivalType) || 0) + survivalDelta);
   if (_rewardFlushTimer) return;
   _rewardFlushTimer = setTimeout(() => {
     const xp = _rewardAccumXp; const coins = _rewardAccumCoins;
+    const survival = [..._rewardAccumSurvival];
+    _rewardAccumSurvival.clear();
     _rewardAccumXp = 0; _rewardAccumCoins = 0; _rewardFlushTimer = null;
     if (xp > 0)    _spawnRewardFloater('xp',    `<span>+${xp.toLocaleString()} XP</span>`);
+    for (const [type, amount] of survival) {
+      const phrase = survivalPhrases[Math.floor(Math.random() * survivalPhrases.length)];
+      _spawnRewardFloater(type, `<span>+${amount.toLocaleString()} XP · ${phrase}</span>`);
+    }
     if (coins > 0) _spawnRewardFloater('coins', `${COIN_SVG}<span>+${coins.toLocaleString()}</span>`);
   }, 750);
 }
@@ -160,6 +171,7 @@ export function _resetRewardSnapshotState() {
   updateDiamondsDisplay(null);
   updateHeartbeatCoinsDisplay(null);
   _lastHeartbeatGold = null;
+  _lastHeartbeatXp = null; _rewardAccumSurvival.clear();
   _lastDiamondsEarned = null;
   _lastRewardXp = null; _lastRewardCoins = null; _lastRewardLevel = null;
   _lastCoinsEarned = null;
@@ -191,6 +203,9 @@ export function _processRewardSnapshot(data, opts = {}) {
   const heartbeatGold = Number(data.heartbeatGoldEarned) || 0;
   const silentGold = _lastHeartbeatGold === null ? 0 : Math.max(0, heartbeatGold - _lastHeartbeatGold);
   _lastHeartbeatGold = heartbeatGold;
+  const heartbeatXp = Number(data.heartbeatXpEarned) || 0;
+  const heartbeatDelta = _lastHeartbeatXp === null ? 0 : Math.max(0, heartbeatXp - _lastHeartbeatXp);
+  _lastHeartbeatXp = heartbeatXp;
   const rubiesEarned = data.rubiesEarned;
   const collectibleRubies = Number(data.rubiesCollectibleEarned) || 0;
   const silentRubies = _lastCollectibleRubies === null ? 0 : Math.max(0,collectibleRubies-_lastCollectibleRubies);
@@ -222,7 +237,10 @@ export function _processRewardSnapshot(data, opts = {}) {
   if (broadcast) _broadcastLiveEvent('reward_snapshot', data);
   if (coinDelta > 0 || levelDelta > 0) _scheduleLiveUiRefresh({ notif: true }, 60);
   if (!floatiesEnabled()) return { xpDelta, coinDelta, levelDelta };
-  if (xpDelta > 0 || coinsGained > silentGold) _queueRewardFloater(Math.max(0, xpDelta), Math.max(0, coinsGained - silentGold));
+  const survivalType = heartbeatDelta > 0 && activeSeasonalEvents().find(event => event.heartbeatFloater)?.heartbeatFloater;
+  const survival = survivalType
+    ? Math.min(Math.max(0, xpDelta), heartbeatDelta) : 0;
+  if (xpDelta > 0 || coinsGained > silentGold) _queueRewardFloater(Math.max(0, xpDelta - survival), Math.max(0, coinsGained - silentGold), survival, survivalType);
   if (rubyDelta > 0) _spawnRewardFloater('rubies', `${RUBY_SVG}<span>+${rubyDelta.toLocaleString()}</span>`);
   if (diamondDelta > 0) _spawnRewardFloater('diamonds', `${DIAMOND_SVG}<span>+${diamondDelta.toLocaleString()}</span>`);
   if (levelDelta > 0) {

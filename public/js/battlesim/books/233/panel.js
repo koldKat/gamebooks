@@ -4,9 +4,9 @@ import { createCombat } from './combat.js';
 import { createEffects } from './effects.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, MAX_PROVISIONS, PROVISIONS_HEAL, SIDE_WOUND_DMG, STARTING_PROVISIONS, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _eatProvisions, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _sideEnemyNameSafe, _skipLuck, _testLuck, apiFetch, closeSim233, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim233, openSim233, registerPanelShortcut, renderSim233, saveState, setSim233Visible, shortcutLabel, showAlert, t });
+const simulatorContext = () => ({ _selectEncounter, _swapTarget, ALL_PANEL_OVERLAY_IDS, MAX_PROVISIONS, PROVISIONS_HEAL, SIDE_WOUND_DMG, STARTING_PROVISIONS, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _eatProvisions, _enemyList, _enemyName, _enemyNameSafe, _loadEnemyList, _notReady, _numField, _recordOutcome, _renderAll, _renderHistory, _renderInputs, _renderLog, _renderStatus, _resetBattle, _resetEncounterKnobs, _roll1d6, _roll2d6, _runRound, _setupEnemyAutocomplete, _sideEnemyNameSafe, _skipLuck, _testLuck, apiFetch, closeSim233, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initSim233, openSim233, registerPanelShortcut, renderSim233, saveState, setSim233Visible, shortcutLabel, showAlert, t });
 const { _data, _notReady, _appendLog, _recordOutcome } = createState(simulatorContext);
-const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _resetEncounterKnobs, _runRound, _testLuck, _skipLuck, _resetBattle } = createCombat(simulatorContext);
+const { _selectEncounter, _swapTarget, _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _resetEncounterKnobs, _runRound, _testLuck, _skipLuck, _resetBattle } = createCombat(simulatorContext);
 const { _eatProvisions } = createEffects(simulatorContext);
 // END SIMULATOR WIRING
 // Battle Simulator (Portal of Evil, book 233)
@@ -41,15 +41,16 @@ function _renderStatus() {
   const hasEnemy = d.enemy.staminaMax > 0;
   if (notReady)                                    el.innerHTML = t('battlesim233.status.not_ready');
   else if (d.player.stamina <= 0)                   el.innerHTML = t('battlesim233.status.fallen', { skull: SVG_SKULL });
-  else if (hasEnemy && d.enemy.stamina <= 0)         el.innerHTML = t('battlesim233.status.victory', { trophy: SVG_TROPHY });
+  else if (d.encounterStopped === 'paused')          el.textContent = t('battlesim233.status.continue', { section: d.encounterRules.limitDestination });
+  else if (hasEnemy && d.enemy.stamina <= 0 && !(d.encounterRules?.defeatableSide && d.sideEnemy.stamina > 0))         el.innerHTML = t('battlesim233.status.victory', { trophy: SVG_TROPHY });
   else                                               el.innerHTML = '';
-  const over = notReady || d.player.stamina <= 0 || (hasEnemy && d.enemy.stamina <= 0);
+  const over = notReady || !!d.encounterStopped || d.player.stamina <= 0 || (hasEnemy && d.enemy.stamina <= 0);
   document.getElementById('sim233-round').disabled = over || !!d.pendingLuckQueue.length;
   document.getElementById('sim233-luck-yes').disabled = notReady || !d.pendingLuckQueue.length || d.player.luck <= 0;
   document.getElementById('sim233-luck-no').disabled  = notReady || !d.pendingLuckQueue.length;
   document.getElementById('sim233-provisions').disabled =
     notReady || d.player.provisionsLeft <= 0 || d.player.stamina >= d.player.staminaInitial ||
-    (d.roundsThisBattle > 0 && d.player.stamina > 0 && d.enemy.stamina > 0);
+    (d.roundsThisBattle > 0 && !d.encounterStopped && d.player.stamina > 0 && d.enemy.stamina > 0);
 }
 
 function _renderHistory() {
@@ -110,6 +111,12 @@ function _renderInputs() {
   document.getElementById('sim233-side-skill').value = d.sideEnemy.skill;
   document.getElementById('sim233-side-staminamax').value = d.sideEnemy.staminaMax;
   document.getElementById('sim233-side-fields').style.display = d.pairedFight ? '' : 'none';
+  const canTarget = !!d.encounterRules?.defeatableSide;
+  document.getElementById('sim233-side-current').hidden = !canTarget;
+  document.getElementById('sim233-side-stamina').value = d.sideEnemy.stamina ?? d.sideEnemy.staminaMax;
+  const swap = document.getElementById('sim233-swap');
+  swap.hidden = !canTarget || !d.pairedFight;
+  swap.disabled = !!d.encounterStopped || !!d.pendingLuckQueue.length || !(d.sideEnemy.stamina > 0);
 
   const pendingEl = document.getElementById('sim233-luck-prompt');
   pendingEl.style.display = d.pendingLuckQueue.length ? '' : 'none';
@@ -281,7 +288,9 @@ export function initSim233() {
                 </div>
               </div>
               ${_numField(t('battlesim233.ui.skill'), 'sim233-side-skill')}
+              <div id="sim233-side-current" hidden>${_numField(t('battlesim233.ui.stamina'), 'sim233-side-stamina')}</div>
               ${_numField(t('battlesim233.ui.stamina_max'), 'sim233-side-staminamax')}
+              <button id="sim233-swap" class="inv-edit-done" type="button" hidden>${t('battlesim233.btn.swap')}</button>
             </div>
           </div>
           <div id="sim233-status" class="bsim-status"></div>
@@ -328,6 +337,11 @@ export function initSim233() {
     if (e.key === 'Escape' && overlay.classList.contains('active')) closeSim233();
   });
 
+  document.getElementById('sim233-swap').addEventListener('click', () => {
+    const d = _data();
+    if (!d) return;
+    _swapTarget(d); saveState(); _renderAll();
+  });
   document.getElementById('sim233-round').addEventListener('click', _runRound);
   document.getElementById('sim233-reset').addEventListener('click', _resetBattle);
   document.getElementById('sim233-luck-yes').addEventListener('click', _testLuck);
@@ -391,6 +405,7 @@ export function initSim233() {
     'sim233-enemy-stamina':        ['enemy', 'stamina'],
     'sim233-enemy-staminamax':     ['enemy', 'staminaMax'],
     'sim233-enemy-wounddmg':       ['player', 'enemyWoundDamage'],
+    'sim233-side-stamina':      ['sideEnemy', 'stamina'],
     'sim233-side-skill':        ['sideEnemy', 'skill'],
     'sim233-side-staminamax':   ['sideEnemy', 'staminaMax'],
   };
@@ -435,12 +450,7 @@ export function initSim233() {
   _setupEnemyAutocomplete('sim233-enemy-pick', 'sim233-enemy-pick-dropdown', enemy => {
     const d = _data();
     if (!d) return;
-    d.enemy.name = enemy.name;
-    if (enemy.attack != null) d.enemy.skill = enemy.attack;
-    if (enemy.hp != null)     { d.enemy.stamina = enemy.hp; d.enemy.staminaMax = enemy.hp; }
-    d.roundsThisBattle = 0;
-    d.pendingLuckQueue = [];
-    _resetEncounterKnobs(d);
+    _selectEncounter(d, enemy, _enemyList || []);
     saveState();
     _renderAll();
   });

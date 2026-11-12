@@ -54,7 +54,7 @@ function _recordOutcome(d, outcome) {
   const { _enemyName } = getContext();
 
   d.history.push({
-    enemy: _enemyName(d), outcome,
+    enemy: d.encounterName || _enemyName(d), outcome,
     playerStamina: d.player.stamina, playerStaminaMax: d.player.staminaInitial,
     ts: Date.now(),
   });

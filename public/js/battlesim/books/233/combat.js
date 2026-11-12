@@ -26,13 +26,68 @@ function _resetEncounterKnobs(d) {
   d.player.enemyAutoWinFirstRound = false;
   d.pairedFight = false;
   d.sideEnemy = { name: '', skill: 0, staminaMax: 0 };
+  delete d.encounterRules;
+  delete d.encounterStopped;
+  delete d.encounterName;
+  delete d.encounterStart;
+}
+
+function _selectEncounter(d, enemy, roster) {
+  _resetEncounterKnobs(d);
+  d.enemy = { name: enemy.name, skill: enemy.attack ?? 0, stamina: enemy.hp ?? 0, staminaMax: enemy.hp ?? 0 };
+  d.encounterRules = { ...enemy.stats?.rules };
+  const other = roster.find(row => row.id === d.encounterRules.pairedOpponentId);
+  if (other) {
+    d.pairedFight = true;
+    d.sideEnemy = { name: other.name, skill: other.attack, stamina: other.hp, staminaMax: other.hp };
+    d.encounterName = `${enemy.name} / ${other.name}`;
+  }
+  d.roundsThisBattle = 0;
+  d.pendingLuckQueue = [];
+  if (other) d.encounterStart = structuredClone({ enemy: d.enemy, sideEnemy: d.sideEnemy, pairedFight: d.pairedFight });
+}
+
+function _swapTarget(d) {
+  if (!d.encounterRules?.defeatableSide || !d.pairedFight || d.pendingLuckQueue.length || d.encounterStopped
+      || !(d.sideEnemy.stamina > 0)) return;
+  [d.enemy, d.sideEnemy] = [d.sideEnemy, d.enemy];
+}
+
+function _settleCombat(d) {
+  const { SVG_SKULL, SVG_TROPHY, _appendLog, _enemyNameSafe, _recordOutcome, t } = getContext();
+  if (d.encounterStopped) return;
+  if (d.player.stamina <= 0) {
+    d.encounterStopped = 'loss';
+    d.pendingLuckQueue = [];
+    _appendLog(d, t('battlesim233.log.fallen', { skull: SVG_SKULL }));
+    _recordOutcome(d, 'loss');
+    return;
+  }
+  if (d.pendingLuckQueue.length) return;
+  if (d.enemy.stamina <= 0) {
+    _appendLog(d, t('battlesim233.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
+    if (d.encounterRules?.defeatableSide && d.pairedFight && d.sideEnemy.stamina > 0) {
+      d.enemy = { ...d.sideEnemy };
+      d.sideEnemy = { name: '', skill: 0, stamina: 0, staminaMax: 0 };
+      d.pairedFight = false;
+    } else {
+      d.encounterStopped = 'win';
+      _recordOutcome(d, 'win');
+      return;
+    }
+  }
+  const limit = d.encounterRules?.roundLimit;
+  if (limit && d.roundsThisBattle >= limit) {
+    d.encounterStopped = 'paused';
+    _appendLog(d, t('battlesim233.status.continue', { section: d.encounterRules.limitDestination }));
+  }
 }
 
 function _runRound() {
   const { SIDE_WOUND_DMG, SVG_SKULL, SVG_TROPHY, _appendLog, _data, _enemyNameSafe, _notReady, _recordOutcome, _renderAll, _roll2d6, _sideEnemyNameSafe, saveState, t } = getContext();
 
   const d = _data();
-  if (!d || _notReady(d) || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
+  if (!d || _notReady(d) || d.encounterStopped || d.player.stamina <= 0 || d.enemy.stamina <= 0 || d.pendingLuckQueue.length) return;
   const isFirstRound = d.roundsThisBattle === 0;
   d.roundsThisBattle++;
 
@@ -62,8 +117,9 @@ function _runRound() {
     if (d.player.stamina > 0) d.pendingLuckQueue.push({ kind: 'enemy-hit' });
   }
 
-  // Tree Man's other branch rolls independently and cannot be wounded back (sec 155).
-  if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0) {
+  // The untargeted enemy attacks independently, including the round its partner falls.
+  if (d.pairedFight && d.sideEnemy.staminaMax > 0 && d.player.stamina > 0
+      && (!d.encounterRules?.defeatableSide || d.sideEnemy.stamina > 0)) {
     const sidePlayerAS = _roll2d6() + d.player.skill + (d.player.attackModifier || 0);
     const sideAS = _roll2d6() + d.sideEnemy.skill;
     _appendLog(d, t('battlesim233.log.side_round', { enemy: _sideEnemyNameSafe(d), playerAS: sidePlayerAS, enemyAS: sideAS }));
@@ -76,14 +132,7 @@ function _runRound() {
     }
   }
 
-  if (d.enemy.stamina <= 0) {
-    _appendLog(d, t('battlesim233.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) }));
-    _recordOutcome(d, 'win');
-  } else if (d.player.stamina <= 0) {
-    _appendLog(d, t('battlesim233.log.fallen', { skull: SVG_SKULL }));
-    _recordOutcome(d, 'loss');
-    d.pendingLuckQueue = [];
-  }
+  _settleCombat(d);
 
   saveState();
   _renderAll();
@@ -106,7 +155,6 @@ function _testLuck() {
       d.enemy.stamina = Math.min(d.enemy.staminaMax, d.enemy.stamina + 1);
       _appendLog(d, t('battlesim233.log.luck_player_hit_unlucky', { roll, enemy: _enemyNameSafe(d), stamina: d.enemy.stamina, staminaMax: d.enemy.staminaMax }));
     }
-    if (d.enemy.stamina <= 0) { _appendLog(d, t('battlesim233.log.defeated', { trophy: SVG_TROPHY, enemy: _enemyNameSafe(d) })); _recordOutcome(d, 'win'); }
   } else {
     const source = event.kind === 'side-hit' ? _sideEnemyNameSafe(d) : _enemyNameSafe(d);
     if (lucky) {
@@ -116,12 +164,8 @@ function _testLuck() {
       d.player.stamina = Math.max(0, d.player.stamina - 1);
       _appendLog(d, t('battlesim233.log.luck_hit_unlucky', { roll, source, stamina: d.player.stamina, staminaMax: d.player.staminaInitial }));
     }
-    if (d.player.stamina <= 0) {
-      _appendLog(d, t('battlesim233.log.fallen', { skull: SVG_SKULL }));
-      _recordOutcome(d, 'loss');
-      d.pendingLuckQueue = [];
-    }
   }
+  _settleCombat(d);
   saveState();
   _renderAll();
 }
@@ -132,6 +176,7 @@ function _skipLuck() {
   const d = _data();
   if (!d || !d.pendingLuckQueue.length) return;
   d.pendingLuckQueue.shift();
+  _settleCombat(d);
   saveState();
   _renderAll();
 }
@@ -141,6 +186,10 @@ function _resetBattle() {
 
   const d = _data();
   if (!d) return;
+  if (d.encounterStart) {
+    Object.assign(d, structuredClone(d.encounterStart));
+  }
+  delete d.encounterStopped;
   d.enemy.stamina = d.enemy.staminaMax;
   d.player.stamina = d.player.staminaInitial;
   d.roundsThisBattle = 0;
@@ -152,5 +201,5 @@ function _resetBattle() {
 }
 
 // END EXTRACTED RULES
-  return { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _resetEncounterKnobs, _runRound, _testLuck, _skipLuck, _resetBattle };
+  return { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _sideEnemyNameSafe, _resetEncounterKnobs, _selectEncounter, _swapTarget, _settleCombat, _runRound, _testLuck, _skipLuck, _resetBattle };
 }

@@ -6,7 +6,7 @@ function _eatProvisions() {
 
   const d = _data();
   if (!d || _notReady(d)) return;
-  if (d.roundsThisBattle > 0 && d.player.stamina > 0 && d.enemy.stamina > 0) {
+  if (d.roundsThisBattle > 0 && !d.encounterStopped && d.player.stamina > 0 && d.enemy.stamina > 0) {
     showAlert(t('battlesim233.alert.provisions_midfight'));
     return;
   }

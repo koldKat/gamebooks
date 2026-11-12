@@ -14,7 +14,8 @@ function fixture(t) {
     public_profile INTEGER DEFAULT 0, hide_from_feed INTEGER DEFAULT 0, avatar_path TEXT,
     is_author INTEGER DEFAULT 0, is_contributor INTEGER DEFAULT 0, is_moderator INTEGER DEFAULT 0,
     is_squire INTEGER DEFAULT 0, display_name TEXT);
-    CREATE TABLE xp_events(user_id INTEGER,event TEXT,ref TEXT,UNIQUE(user_id,event,ref));`);
+    CREATE TABLE xp_events(user_id INTEGER,event TEXT,ref TEXT,UNIQUE(user_id,event,ref));
+    CREATE TABLE user_rubies(user_id INTEGER PRIMARY KEY,rubies_earned INTEGER DEFAULT 0);`);
   for (let id=1;id<=20;id++) db.prepare('INSERT INTO users(id,username) VALUES(?,?)').run(id,'User'+id);
   initializeDiamondBalances(db); initializeJobXp(db);
   return db;
@@ -28,7 +29,8 @@ test('Job promotions use the feed privacy/cutoff rules and invalidate the pollin
   }};
   const context = {module:{exports:{}}, require(name) {
     return {'./connection':{db:feedDb},'./xp':{computeLevel,getTitleForLevel:()=> 'Main title'},
-      './job-xp':{getJobTitle},'./content':{},'./books':{},'./rating-stats':{}}[name];
+      './job-xp':{getJobTitle},'./content':{},'./books':{},'./rating-stats':{},
+      './gameplay-stats':{getSimulatorBattleStats:()=>({fought:0,won:0,lost:0})}}[name];
   }};
   vm.runInNewContext(fs.readFileSync(require.resolve('../server/db/feed'),'utf8'),context);
   const api=context.module.exports, before=api.getFeedVersion();
@@ -56,7 +58,7 @@ test('live feed pushes only real Job Level crossings, including a legitimate mai
   db.exec('UPDATE user_job_xp SET xp=999 WHERE user_id=1');
   const insert=db.prepare('INSERT OR IGNORE INTO xp_events VALUES(?,?,?)');
   const source=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');
-  const context=vm.createContext({db,computeLevel,isImpersonatingContext:()=>false,getXpAmount:()=>0,seasonalXpMultiplier:()=>1,
+  const context=vm.createContext({db,computeLevel,isImpersonatingContext:()=>false,getXpAmount:()=>0,seasonalContributionEligible:require('../server/db/seasonal-contributions').seasonalContributionEligible,seasonalXpMultiplier:()=>1,
     _xpFeedHook:event=>feed.push(event),_appXpHook:event=>gems.push(event),
     _awardXpTx:(user,event,ref)=>insert.run(user,event,ref).changes>0});
   vm.runInContext(source.slice(source.indexOf('function awardXp('),source.indexOf('function awardIdleHeartbeatXp(')),context);

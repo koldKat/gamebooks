@@ -38,7 +38,7 @@ test('Diwali has an inclusive seven-day window around each year’s moving date'
   assert.equal(activeSeasonalEvent(new Date('2026-11-04T21:59:59Z')),null);
   assert.equal(activeSeasonalEvent(new Date('2026-11-04T22:00:00Z'))?.id,'diwali');
   assert.equal(activeSeasonalEvent(new Date('2026-11-11T21:59:59Z'))?.id,'diwali');
-  assert.equal(activeSeasonalEvent(new Date('2026-11-11T22:00:00Z')),null);
+  assert.equal(activeSeasonalEvent(new Date('2026-11-11T22:00:00Z'))?.id,'friday-13');
   assert.equal(seasonWindow(diwali,2040),null); // Never pretend the moving date is fixed.
 });
 
@@ -67,7 +67,7 @@ test('the next event uses activation windows, moving dates and the next year', (
   const next = nextSeasonalEvent(new Date('2026-11-03T22:00:00Z'));
   assert.equal(next.id, 'diwali'); assert.equal(next.window.start, '2026-11-05');
   assert.equal(nextSeasonalEvent(new Date('2026-11-11T22:00:00Z')).id, 'thanksgiving');
-  assert.equal(nextSeasonalEvent(new Date('2027-01-04T22:00:00Z')).id, 'diwali');
+  assert.equal(nextSeasonalEvent(new Date('2027-01-04T22:00:00Z')).id, 'friday-13');
   assert.equal(nextSeasonalEvent(new Date('2034-11-14T22:00:00Z')).id, 'thanksgiving');
   const winter = seasonalEvents.filter(e => e.id === 'new-year');
   assert.equal(nextSeason(winter, new Date('2027-01-05T12:00:00Z')).window.start, '2027-12-29');

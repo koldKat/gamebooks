@@ -11,7 +11,8 @@ function fixture({ xp = 495999, purchased = 16, bonus = 393, spent = 899 } = {})
     xp_boost_carry REAL DEFAULT 0, xp_from_boost INTEGER DEFAULT 0, coins_spent INTEGER DEFAULT 0,
     bonus_coins INTEGER DEFAULT 0, pending_bonus_gc INTEGER DEFAULT 0, bonus_gc_generated INTEGER DEFAULT 0,
     bonus_gc_chance_purchased INTEGER DEFAULT 0, bonus_gc_mint_purchased INTEGER DEFAULT 0,
-    bonus_heartbeat_xp INTEGER DEFAULT 0, heartbeat_carry REAL DEFAULT 0, heartbeat_minutes_banked INTEGER DEFAULT 0);
+    bonus_heartbeat_xp INTEGER DEFAULT 0, heartbeat_carry REAL DEFAULT 0, heartbeat_minutes_banked INTEGER DEFAULT 0,
+    heartbeat_xp_earned INTEGER NOT NULL DEFAULT 0);
     CREATE TABLE notifications (id INTEGER PRIMARY KEY, user_id INTEGER, type TEXT, payload TEXT);
     CREATE TABLE xp_events (id INTEGER PRIMARY KEY, user_id INTEGER, event TEXT, ref TEXT, template_id INTEGER,
       UNIQUE(user_id,event,ref));
@@ -23,7 +24,7 @@ function fixture({ xp = 495999, purchased = 16, bonus = 393, spent = 899 } = {})
   db.prepare('INSERT INTO users(id,xp,bonus_gc_mint_purchased,bonus_coins,coins_spent) VALUES(1,?,?,?,?)')
     .run(xp, purchased, bonus, spent);
   const math = Object.create(Math); math.random = () => 1;
-  const context = vm.createContext({ db, Math: math, isImpersonatingContext: () => false, seasonalXpMultiplier: () => 1,
+  const context = vm.createContext({ db, Math: math, isImpersonatingContext: () => false, seasonalContributionEligible:require('../server/db/seasonal-contributions').seasonalContributionEligible,seasonalXpMultiplier: () => 1,
     recordSeasonParticipation: () => {},
     _insertNotif: db.prepare('INSERT INTO notifications(user_id,type,payload) VALUES(?,?,?)'),
     _appXpHook: null, _xpFeedHook: null, getTitleForLevel: level => 'Level ' + level });

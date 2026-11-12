@@ -99,7 +99,7 @@ toggle.checked=true;toggle.dispatchEvent(new Event('change'));
 check(!document.querySelector('.seasonal-pumpkin'),'turn off immediately');
 check(!document.querySelector('.seasonal-background'),'background follows visual preference');
 const notice=document.getElementById('seasonal-event-notice');
-check(!notice.hidden&&notice.textContent.startsWith('Halloween event active (ETE: ')&&notice.textContent.endsWith('): double XP for losses, battle deaths and sim battle losses.'),'reward notice independent of decorations');
+check(!notice.hidden&&notice.textContent.startsWith('Halloween event active (ETE: ')&&notice.textContent.endsWith('): double XP for losses, battle deaths, sim battle losses and surviving (heartbeats).'),'reward notice independent of decorations');
 check(getComputedStyle(notice.querySelector('.seasonal-event-loss')).color==='rgb(248, 113, 113)','losses red');
 const simLoss=notice.querySelector('.seasonal-event-sim-loss');
 check(simLoss?.textContent==='sim battle losses'&&getComputedStyle(simLoss).color==='rgb(196, 119, 119)','entire sim battle losses phrase muted red');

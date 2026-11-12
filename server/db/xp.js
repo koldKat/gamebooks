@@ -13,6 +13,7 @@ const { getJobTitle } = require('./job-xp');
 const { advanceHeartbeatCoins } = require('./heartbeat-coins');
 const { seasonalXpMultiplier } = require('../seasonal-events');
 const { recordSeasonParticipation } = require('./season-participation');
+const { seasonalContributionEligible } = require('./seasonal-contributions');
 const { uncountedReadingSections, supplementalSectionSql, isMappedGraphNode } = require('./reading-section-counts');
 
 // ── Impersonation tokens ──────────────────────────────────────────────────────
@@ -358,7 +359,11 @@ function claimBonusGc(userId) {
   return result;
 }
 
-const _awardXpTx = db.transaction((userId, event, ref, amount) => {
+const _awardXpTx = db.transaction((userId, event, ref, amount, seasonalEligible = true) => {
+  if (!seasonalEligible) {
+    db.prepare('INSERT OR IGNORE INTO user_job_xp(user_id) VALUES(?)').run(userId);
+    db.prepare('UPDATE user_job_xp SET seasonal_bonus_eligible=0 WHERE user_id=?').run(userId);
+  }
   const before      = db.prepare('SELECT xp, xp_boost_pct, xp_boost_carry, coins_spent, bonus_coins, pending_bonus_gc, bonus_gc_chance_purchased, bonus_gc_mint_purchased FROM users WHERE id = ?').get(userId);
   const beforeXp    = before?.xp ?? 0;
   const boost       = before?.xp_boost_pct ?? 0;
@@ -386,7 +391,8 @@ const _awardXpTx = db.transaction((userId, event, ref, amount) => {
   if (r.changes > 0) _rollBonusGc(userId, beforeXp, before?.pending_bonus_gc, before?.bonus_gc_chance_purchased);
   if (r.changes > 0 && boosted > 0) {
     db.prepare('UPDATE users SET xp = xp + ?, xp_from_boost = xp_from_boost + ?, xp_boost_carry = ? WHERE id = ?').run(boosted, extraWhole, newCarry, userId);
-    recordSeasonParticipation(db, userId, event);
+    if (event === 'idle_heartbeat') db.prepare('UPDATE users SET heartbeat_xp_earned = heartbeat_xp_earned + ? WHERE id = ?').run(boosted, userId);
+    recordSeasonParticipation(db, userId, event, undefined, ref);
     try { _appXpHook?.({ userId, xpDelta: boosted }); } catch (_) {}
     const after    = db.prepare('SELECT xp FROM users WHERE id = ?').get(userId)?.xp ?? 0;
     const lvBefore = computeLevel(beforeXp);
@@ -413,6 +419,7 @@ const _awardXpTx = db.transaction((userId, event, ref, amount) => {
       _insertNotif.run(userId, 'coin_gain', JSON.stringify({ amount: coinsGained, balance: coinBalance(current), reason: 'xp_milestone' }));
     }
   }
+  if (!seasonalEligible) db.prepare('UPDATE user_job_xp SET seasonal_bonus_eligible=1 WHERE user_id=?').run(userId);
   return r.changes > 0;
 });
 
@@ -421,7 +428,7 @@ function awardXp(userId, event, ref, amountOverride = null) {
   if (isImpersonatingContext()) return false;
   // Seasonal rewards are independent of cosmetic preferences. Apply before normal
   // boosts/caps and retain the same event/ref, so retries cannot earn a second award.
-  const amount = (amountOverride ?? getXpAmount(event)) * seasonalXpMultiplier(event);
+  const amount = (amountOverride ?? getXpAmount(event)) * seasonalXpMultiplier(event, undefined, { db, ref });
   // Reuse the mining snapshot for feed changes, including a main level-up event
   // awarded during a heartbeat. Job events themselves never award XP or coins.
   const snapshot = () => db.prepare(`SELECT
@@ -430,7 +437,7 @@ function awardXp(userId, event, ref, amountOverride = null) {
     COALESCE((SELECT xp FROM user_job_xp WHERE user_id=?),0) AS jobXp,
     COALESCE((SELECT xp FROM users WHERE id=?),0) AS normalXp`).get(userId, userId, userId, userId);
   const before = (_xpFeedHook || (_appXpHook && event !== 'idle_heartbeat')) ? snapshot() : null;
-  const awarded = _awardXpTx(userId, event, String(ref), amount);
+  const awarded = _awardXpTx(userId, event, String(ref), amount, seasonalContributionEligible(db, event, ref));
   if (awarded && before) {
     const after = snapshot();
     if (event !== 'idle_heartbeat' && after.normalXp === before.normalXp) {
@@ -465,6 +472,7 @@ function awardIdleHeartbeatXp(userId) {
       * seasonalXpMultiplier('idle_heartbeat')), room);
     if (add > 0) db.transaction(() => {
       db.prepare('UPDATE users SET xp = xp + ? WHERE id = ?').run(add, userId);
+      db.prepare('UPDATE users SET heartbeat_xp_earned = heartbeat_xp_earned + ? WHERE id = ?').run(add, userId);
       recordSeasonParticipation(db, userId, 'idle_heartbeat');
     })();
     _rollBonusGc(userId, curXp, row?.pending_bonus_gc, row?.bonus_gc_chance_purchased);
@@ -496,7 +504,7 @@ function awardIdleHeartbeatXp(userId) {
 
 function getUserXpInfo(userId) {
   const row  = db.prepare(`SELECT xp, coins_spent, xp_boost_pct, bonus_undos, bonus_fast_travels,
-    bonus_heartbeat_xp, bonus_coins, admin_gifted_coins, xp_from_boost,
+    bonus_heartbeat_xp, bonus_coins, admin_gifted_coins, xp_from_boost, heartbeat_xp_earned,
     bonus_gc_chance_purchased, bonus_gc_mint_purchased, pending_bonus_gc,
     bonus_diamond_dig_purchased, bonus_diamond_exchange_purchased,
     COALESCE((SELECT qualifying_events FROM user_diamonds WHERE user_id = users.id), 0) AS event_xp,
@@ -515,6 +523,7 @@ function getUserXpInfo(userId) {
   return { ...info, eventXp: row?.event_xp || 0, jobXp: row?.job_xp || 0, jobLevelCap: row?.job_level_cap || 0,
     jobLevel: computeLevel(row?.job_xp || 0),
     bronzeBalance: heartbeats % 100, silverBalance: Math.floor(heartbeats / 100) % 100,
+    heartbeatXpEarned: row?.heartbeat_xp_earned || 0,
     heartbeatGoldEarned: Math.floor(heartbeats / 10000), ...diamondInfoForUser(userId, row, info.level), ...rubyInfoForUser(db, userId) };
 }
 

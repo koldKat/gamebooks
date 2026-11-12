@@ -17,7 +17,7 @@ test('each event has three distinct companions with their occasional actions',()
   assert.equal(designs.length,3);
   for(const design of designs){assert.ok(!ids.has(design.id));ids.add(design.id);assert.equal(design.actions.length,design.id==='zombie'?4:3);assert.equal(typeof design.create,'function');}
  }
- assert.equal(ids.size,21);
+ assert.equal(ids.size,24);
 });
 test('Santa and the diya use smooth artwork with their existing animation hooks',()=>{
  for(const svg of [santaCursorSvg,diyaCursorSvg]){assert.doesNotMatch(svg,/crispEdges/);assert.match(svg,/<path/);}

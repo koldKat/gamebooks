@@ -4,10 +4,11 @@
 const events = require('../../public/js/seasonal-events/calendar.json');
 const { activeSeasons, seasonalDay } = require('../../public/js/seasonal-events/schedule.js');
 const { seasonalXpSeasons } = require('../seasonal-events');
+const { ensureJobSeasonEligibility } = require('./seasonal-contributions');
 const dayKey = date => new Date(seasonalDay(date)).toISOString().slice(0, 10);
 
-function recordSeasonParticipation(db, userId, event, date = new Date()) {
-  const seasons = seasonalXpSeasons(event, date);
+function recordSeasonParticipation(db, userId, event, date = new Date(), ref = null) {
+  const seasons = seasonalXpSeasons(event, date, { db, ref });
   if (!seasons.length) return;
   const day = dayKey(date);
   const insert = db.prepare(`INSERT OR IGNORE INTO seasonal_participation_days
@@ -21,6 +22,7 @@ function recordSeasonParticipation(db, userId, event, date = new Date()) {
 }
 
 function initializeSeasonParticipation(db, now = new Date()) {
+  ensureJobSeasonEligibility(db);
   db.transaction(() => {
     db.exec(`CREATE TABLE IF NOT EXISTS seasonal_participation_policy (
         id INTEGER PRIMARY KEY CHECK(id=1), started_on TEXT NOT NULL);
@@ -49,12 +51,12 @@ function initializeSeasonParticipation(db, now = new Date()) {
       const floor = Date.parse(season.window.start + 'T00:00:00Z') / 1000 - 86400;
       const names = season.xpEvents;
       const filter = names.includes('*') ? '' : ` AND event IN (${names.map(() => '?').join(',')})`;
-      const rows = db.prepare(`SELECT user_id,event,created_at FROM xp_events
+      const rows = db.prepare(`SELECT user_id,event,ref,created_at FROM xp_events
         WHERE created_at>=? AND created_at<=?${filter}`);
       for (const row of rows.all(floor, Math.floor(now.getTime() / 1000), ...(names.includes('*') ? [] : names))) {
         const date = new Date(row.created_at * 1000);
         if (seasonalXpSeasons(row.event, date).some(s => s.id === season.id)) {
-          recordSeasonParticipation(db, row.user_id, row.event, date);
+          recordSeasonParticipation(db, row.user_id, row.event, date, row.ref);
         }
       }
     }
@@ -67,8 +69,9 @@ function initializeSeasonParticipation(db, now = new Date()) {
       name: season.title.replace(/ event active$/, ''), day,
     })));
   });
-  db.exec(`CREATE TRIGGER IF NOT EXISTS seasonal_job_participation AFTER UPDATE OF xp ON user_job_xp
-    WHEN NEW.xp>OLD.xp BEGIN
+  db.exec(`DROP TRIGGER IF EXISTS seasonal_job_participation;
+    CREATE TRIGGER seasonal_job_participation AFTER UPDATE OF xp ON user_job_xp
+    WHEN NEW.xp>OLD.xp AND NEW.seasonal_bonus_eligible=1 BEGIN
       INSERT OR IGNORE INTO seasonal_participation_days
         (season_id,starts_on,ends_on,event_name,user_id,earned_on)
       SELECT json_extract(value,'$.id'),json_extract(value,'$.start'),json_extract(value,'$.end'),

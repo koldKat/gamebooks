@@ -64,7 +64,7 @@ test('diamond progress is atomic, works for new players and survives book-log cl
 test('reward snapshots expose diamonds to every player using primary-key lookups', t => {
   const h = fixture(t);
   for (const column of ['coins_spent', 'xp_boost_pct', 'bonus_undos', 'bonus_fast_travels',
-    'bonus_heartbeat_xp', 'bonus_coins', 'admin_gifted_coins', 'xp_from_boost',
+    'bonus_heartbeat_xp', 'bonus_coins', 'admin_gifted_coins', 'xp_from_boost', 'heartbeat_xp_earned',
     'bonus_gc_chance_purchased', 'bonus_gc_mint_purchased', 'pending_bonus_gc']) {
     h.db.exec(`ALTER TABLE users ADD COLUMN ${column} INTEGER DEFAULT 0`);
   }

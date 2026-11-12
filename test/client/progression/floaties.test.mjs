@@ -12,7 +12,14 @@ test('floatie setting persists, removes active chips and follows changes from ot
       querySelectorAll:()=>[{remove:()=>removed++}]},
     window:{addEventListener:(name,fn)=>listeners.set(name,fn),dispatchEvent:()=>changes++}});
   vm.runInContext(fs.readFileSync('public/js/progression/floaties.js','utf8').replace(/^export /gm,''),context);
+  vm.runInContext(fs.readFileSync('public/js/seasonal-events/preferences.js','utf8').replace(/^export /gm,''),context);
   assert.equal(context.floatiesEnabled(),true);
+  const removedBeforeSeasonalToggle=removed;
+  context.applySeasonalEventsPreference('0');
+  assert.equal(context.seasonalEventsEnabled(),false);
+  assert.equal(context.floatiesEnabled(),true,'disabling seasonal companions leaves floaties enabled');
+  assert.equal(disabled,false,'seasonal companions do not change the floatie visibility class');
+  assert.equal(removed,removedBeforeSeasonalToggle,'seasonal companions do not remove active floaties');
   context.initFloatiesSettings(patch=>patches.push(patch));
   listeners.get('checkbox:change')({target:{checked:true}});
   assert.equal(context.floatiesEnabled(),false);

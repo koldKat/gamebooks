@@ -1,5 +1,5 @@
 // Admin seasonal calendar and private account-scoped visual preview controls.
-import { seasonalEvents, activeSeasonalEvents, seasonWindow, reloadSeasonalCalendar } from '/js/seasonal-events/calendar.js';
+import { seasonalEvents, activeSeasonalEvents, seasonWindow, availableSeasonWindows, reloadSeasonalCalendar } from '/js/seasonal-events/calendar.js';
 import { setSeasonPreviewUser, seasonPreview, setSeasonPreview, applySeasonPreviewPreference, isSeasonPreviewStorageKey } from '/js/seasonal-events/preview.js';
 import { apiFetch, getToken } from '/js/core/state.js';
 import {createCursorPreviews} from '/js/seasonal-events/cursor-previews.js';
@@ -14,9 +14,13 @@ function renderSeasonCards(preview = null, canTest = false) {
   for (const event of seasonalEvents) {
     const card = document.createElement('section'); card.className = 'season-card';
     const heading = document.createElement('h3'); heading.textContent = event.title.replace(/ event active$/, '');
-    const dates = document.createElement('p'), window = seasonWindow(event,year);
+    const today = new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Sofia',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+    const dates = document.createElement('p'), window = event.rule?.day !== undefined
+      ? [year,year+1].flatMap(y=>availableSeasonWindows(seasonalEvents,event,y)).find(w=>w.end>=today)
+      : seasonWindow(event,year);
     dates.textContent = window ? `${window.start} – ${window.end} · Europe/Sofia · automatic every year`
       : 'This year’s festival date needs adding to the calendar.';
+    if (event.skipOverlaps) dates.textContent = `${window ? window.start+' – '+window.end+' · ' : ''}Every Friday the 13th, ±1 day; overlapping occurrences skipped.`;
     const detail = document.createElement('p'); detail.textContent = event.description;
     const test = document.createElement('button'); test.className = 'btn-warn'; test.textContent = 'Test season';
     test.disabled = !canTest || preview === event.id; test.dataset.seasonTest = event.id;

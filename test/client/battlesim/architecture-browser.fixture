@@ -91,6 +91,42 @@ for(const id of BOOK_IDS){
     const options = [...overlay.querySelectorAll('[role="option"]')];
     check(options.some(option => option.textContent.includes(rosterSeeds[id][0].name)), 'legacy roster displays installed opponent ' + id);
   }
+  if(id===233){
+    const run=app.currentPlaythrough(),data=()=>run.sim233,el=key=>document.getElementById('sim233-'+key);
+    const initialGame=structuredClone(run.sim233);
+    run.inventory=[{name:'Unrelated equipment'}];run.sim222={preserved:true};
+    const unrelated=JSON.stringify([run.inventory,run.sim222,run.path]);
+    const choose=async name=>{
+      const input=el('enemy-pick');input.value=name;input.dispatchEvent(new FocusEvent('focus'));
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      for(let i=0;i<50&&![...overlay.querySelectorAll('#sim233-enemy-pick-dropdown.open [role="option"]')].some(node=>node.textContent.includes(name));i++)await new Promise(r=>setTimeout(r,20));
+      const option=[...overlay.querySelectorAll('#sim233-enemy-pick-dropdown [role="option"]')].find(node=>node.textContent.includes(name));
+      check(option,'Portal installed encounter '+name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
+    };
+    await choose('METAMAGGOT §125');
+    check(data().enemy.skill===6&&data().enemy.stamina===7&&data().encounterRules.roundLimit===4,'Portal source Metamaggot stats and limit');
+    Object.assign(data().player,{skill:6,skillInitial:12,stamina:40,staminaInitial:40,luck:0});data().rolled=true;data().roundsThisBattle=3;module.render();
+    const random=Math.random;
+    try{
+      Math.random=()=>.5;el('round').click();
+      check(data().encounterStopped==='paused'&&data().history.length===0&&el('round').disabled,'Portal fourth round pauses without a false result');
+      check(el('status').textContent.includes('321'),'Portal printed continuation shown');
+      const paused=JSON.stringify(data());module.render();check(JSON.stringify(data())===paused,'Portal paused encounter survives render');
+      await choose('First SLAVE WARRIOR §280');
+      check(data().pairedFight&&data().sideEnemy.skill===4&&data().sideEnemy.stamina===7,'Portal paired source preset');
+      Object.assign(data().player,{skill:12,skillInitial:12,stamina:40,staminaInitial:40,luck:0});module.render();
+      check(!el('swap').hidden&&!el('swap').disabled,'Portal target control visible');el('swap').click();
+      check(data().enemy.name.includes('Second SLAVE WARRIOR'),'Portal target selection reaches actual panel');el('swap').click();
+      Math.random=()=>.99;data().enemy.stamina=1;module.render();el('round').click();
+      check(data().history.length===0&&data().enemy.name.includes('Second SLAVE WARRIOR')&&data().enemy.stamina===7,'Portal first kill keeps second warrior active');
+      data().enemy.stamina=1;module.render();el('round').click();
+      check(data().history.length===1&&data().history[0].outcome==='win','Portal both kills yield one battle result');
+      el('reset').click();check(data().pairedFight&&data().enemy.stamina===7&&data().sideEnemy.stamina===7,'Portal reset restores full pair');
+      const active=JSON.stringify(data());module.render();check(JSON.stringify(data())===active,'Portal saved pair survives render');
+    }finally{Math.random=random;}
+    check(JSON.stringify([run.inventory,run.sim222,run.path])===unrelated,'Portal unrelated inventory, fight and path preserved');
+    run.sim233=initialGame;module.render();
+  }
   if(id===1587){
     const run=app.currentPlaythrough(),data=()=>run.sim1587,el=key=>document.getElementById('sim1587-'+key);
     run.inventory=[{name:'Unrelated item'}];run.sim1578={preserved:true};

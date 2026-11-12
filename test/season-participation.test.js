@@ -15,7 +15,7 @@ function fixture(t, initialize = true) {
       bonus_gc_mint_purchased INTEGER DEFAULT 0);
     INSERT INTO users(id,username) VALUES(1,'Alice'),(2,'Bob'),(3,'Carol');
     CREATE TABLE user_job_xp(user_id INTEGER PRIMARY KEY,xp INTEGER DEFAULT 0);
-    CREATE TABLE xp_events(user_id INTEGER,event TEXT,created_at INTEGER);
+    CREATE TABLE xp_events(user_id INTEGER,event TEXT,created_at INTEGER,ref TEXT);
     CREATE TABLE admin_settings(key TEXT PRIMARY KEY,value TEXT);
     CREATE TABLE notifications(user_id INTEGER,type TEXT,payload TEXT);`);
   if (initialize) initializeSeasonParticipation(db, new Date('2026-02-01T12:00:00Z'));
@@ -158,7 +158,7 @@ test('future calendar events and overlapping qualifying events require no payout
 });
 
 test('first deployment recovers the active festival once and retains days after XP cleanup', t => {
-  const f = fixture(t, false), insert = f.db.prepare('INSERT INTO xp_events VALUES(?,?,?)');
+  const f = fixture(t, false), insert = f.db.prepare('INSERT INTO xp_events(user_id,event,created_at) VALUES(?,?,?)');
   for (const [event, at] of [['death_run', '2026-10-28T12:00:00Z'], ['death_run', '2026-10-29T12:00:00Z'],
     ['win_run', '2026-10-30T12:00:00Z'], ['death_run', '2025-10-31T12:00:00Z']]) insert.run(1, event, Date.parse(at) / 1000);
   initializeSeasonParticipation(f.db, new Date('2026-11-01T12:00:00Z'));
@@ -169,7 +169,7 @@ test('first deployment recovers the active festival once and retains days after 
 
 test('doubled positive job XP records participation even with no ordinary XP gain', t => {
   t.mock.timers.enable({ apis: ['Date'], now: new Date('2027-01-01T12:00:00Z') });
-  const f = fixture(t); f.db.exec(`INSERT INTO user_job_xp VALUES(1,0),(2,999);
+  const f = fixture(t); f.db.exec(`INSERT INTO user_job_xp(user_id,xp) VALUES(1,0),(2,999);
     UPDATE user_job_xp SET xp=xp+2 WHERE user_id=1;
     UPDATE user_job_xp SET xp=xp+1 WHERE user_id=2;`);
   assert.equal(f.db.prepare('SELECT COUNT(*) n FROM seasonal_participation_days').get().n, 2,

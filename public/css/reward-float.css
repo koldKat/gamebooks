@@ -53,3 +53,38 @@
   72% { opacity: 1; transform: translateY(-18px); }
   100% { opacity: 0; transform: translateY(-40px); }
 }
+
+/* Survival rewards reuse the five-second floater lifetime; no particle timers. */
+.reward-float--survival,
+.reward-float--survival-green {
+  position: relative;
+  overflow: visible;
+  color: var(--survival-text, #efa5a0);
+  border-color: var(--survival-border, #a94745);
+  background: var(--survival-background, #381c22);
+  box-shadow: 0 4px 12px #16090e66;
+}
+.reward-float--survival-green {
+  --survival-text: #a8ce95;
+  --survival-border: #608a4e;
+  --survival-background: #203023;
+  --survival-drip: #6d9e51;
+}
+.survival-drip {
+  position: absolute;
+  top: calc(100% - 2px);
+  left: var(--drip-left);
+  width: var(--drip-width);
+  height: var(--drip-height);
+  border-radius: 0 0 75% 75%;
+  background: var(--survival-drip, #b34749);
+  transform-origin: top;
+  animation: survival-blood-drip var(--drip-duration) var(--drip-delay) ease-in 1 both;
+  pointer-events: none;
+}
+@keyframes survival-blood-drip {
+  0% { transform: scaleY(.02); opacity: 0; }
+  15% { transform: scaleY(.15); opacity: .8; }
+  65% { transform: scaleY(1); opacity: 1; }
+  100% { transform: translateY(12px) scaleY(.5); opacity: 0; }
+}

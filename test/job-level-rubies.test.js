@@ -107,7 +107,7 @@ test('normal XP awards report the promotion ruby through the existing live rewar
   const source=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');
   const context=vm.createContext({db,
     computeLevel:xp=>Math.floor((Math.sqrt(1+8*xp/1000)-1)/2),
-    isImpersonatingContext:()=>false, getXpAmount:()=>0, seasonalXpMultiplier:()=>1,
+    isImpersonatingContext:()=>false, getXpAmount:()=>0, seasonalContributionEligible:require('../server/db/seasonal-contributions').seasonalContributionEligible,seasonalXpMultiplier:()=>1,
     _xpFeedHook:event=>feed.push(event), _appXpHook:event=>gems.push(event),
     _awardXpTx:(user,event,ref)=>insert.run(user,event,ref).changes>0 });
   vm.runInContext(source.slice(source.indexOf('function awardXp('),source.indexOf('function awardIdleHeartbeatXp(')),context);

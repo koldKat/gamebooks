@@ -24,7 +24,7 @@ test('node color and shape each award matching XP once per player/book/node, inc
   assert.equal(defaults.set_color,2);assert.equal(defaults.set_shape,defaults.set_color);
   const context=vm.createContext({db, Math, _appXpHook:null, _xpFeedHook:null,
     _insertNotif:db.prepare('INSERT INTO notifications VALUES(?,?,?)'),
-    isImpersonatingContext:()=>false, seasonalXpMultiplier:()=>1, recordSeasonParticipation:()=>{},
+    isImpersonatingContext:()=>false, seasonalContributionEligible:require('../server/db/seasonal-contributions').seasonalContributionEligible,seasonalXpMultiplier:()=>1, recordSeasonParticipation:()=>{},
     getTitleForLevel:()=>'', getXpAmount:event=>defaults[event]??0,
     uncountedReadingSections:()=>[], _discoveredSet:()=>new Set(), _visitedSet:()=>new Set(), _mappedSet:()=>new Set()});
   vm.runInContext(source.slice(source.indexOf('function computeLevel('),source.indexOf('function toRoman('))+'\n_liveUserCount=()=>1000;',context);

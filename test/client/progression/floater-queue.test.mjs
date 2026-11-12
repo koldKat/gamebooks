@@ -17,7 +17,8 @@ function fixture(mobile = true) {
     document: {
       getElementById: id => layers.get(id),
       createElement() {
-        const chip = { parent: null, remove() { this.parent = null; } };
+        const chip = { parent: null, children: [], style: {}, setAttribute() {},
+          appendChild(child) { this.children.push(child); }, remove() { this.parent = null; } };
         chips.push(chip);
         return chip;
       },
@@ -95,4 +96,19 @@ test('crossing the mobile breakpoint moves chips into one lane without overlap',
   assert.equal(f.visible()[0].innerHTML, 'other');
   assert.equal(f.visible()[0].parent.id, 'reward-float-layer');
   f.resize(false); assert.equal(f.visible()[0].parent.id, 'app-reward-float-layer');
+});
+
+test('survival drips vary per chip, share its lifetime and skip preparation when disabled', () => {
+  const f=fixture();
+  f.enqueue('personal','survival','red');
+  const red=f.visible()[0];assert.ok(red.children.length>=4&&red.children.length<=6);
+  const pattern=red.children.map(drop=>drop.style.cssText);
+  assert.equal(new Set(pattern).size,pattern.length);
+  assert.equal(f.timers.size,1,'drips add no JavaScript timers');
+  f.expire();assert.equal(f.visible().length,0);
+  f.enqueue('personal','survival-green','green');
+  assert.notDeepEqual(f.visible()[0].children.map(drop=>drop.style.cssText),pattern);
+  f.disable();const count=f.chips.length;
+  f.enqueue('personal','survival','hidden');assert.equal(f.chips.length,count);
+  assert.equal(f.timers.size,0);
 });
