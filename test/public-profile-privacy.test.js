@@ -19,6 +19,7 @@ test('public profile responses omit private progression and balances', () => {
     './job-xp': {}, './content': {}, './books': {},
     './rating-stats': { getPlayerRatingStats: () => ({ ratingsGiven: 7, averageRating: 3.5 }) },
     './gameplay-stats': { getSimulatorBattleStats: () => ({ simBattlesFought: 12, simBattlesWon: 9, simBattlesLost: 3 }) },
+    './profile-progress': { ...require('../server/db/profile-progress'), collectedCount: () => 2 },
   };
   const context = vm.createContext({ module: { exports: {} }, require: name => deps[name] });
   vm.runInContext(fs.readFileSync(require.resolve('../server/db/feed'), 'utf8'), context);
@@ -30,6 +31,10 @@ test('public profile responses omit private progression and balances', () => {
   assert.equal(profile.simBattlesFought, 12);
   assert.equal(profile.simBattlesWon, 9);
   assert.equal(profile.simBattlesLost, 3);
+  assert.equal(profile.collectiblesCollected, 2);
+  assert.equal(profile.sectionsDiscovered, 0);
+  assert.equal(profile.sectionsVisited, 0);
+  assert.equal(profile.booksWon, 0);
   const ownStats = context.module.exports.getProfileStats(user.id);
   assert.equal(ownStats.simBattlesFought, 12);
   assert.equal(ownStats.simBattlesWon, 9);
@@ -48,6 +53,8 @@ test('public profile renderer never displays job progression from a stale respon
     return nodes.get(id);
   } };
   const context = vm.createContext({ document, escapeHtml: String, publicName, t: key => key });
+  vm.runInContext(fs.readFileSync('public/js/account/profile-stats.js', 'utf8')
+    .replace(/^import .*;\n/gm, '').replace(/\bexport /g, ''), context);
   const source = fs.readFileSync('public/js/account/public-profile.js', 'utf8')
     .replace(/^import .*;\n/gm, '').replace(/\bexport /g, '');
   vm.runInContext(source, context);
@@ -56,10 +63,10 @@ test('public profile renderer never displays job progression from a stale respon
     simBattlesFought: 12, simBattlesWon: 9, simBattlesLost: 3 });
   const html = nodes.get('pub-modal-body').innerHTML;
   assert.match(html, /Adventurer/);
-  assert.match(html, /profile.ratings_given.*>7</);
-  assert.match(html, /profile.average_rating.*>3\.50</);
-  assert.match(html, />12<\/span> pub.stat.sim_battles/);
-  assert.match(html, />9<\/span> pub.stat.sim_wins/);
-  assert.match(html, />3<\/span> pub.stat.sim_losses/);
+  assert.match(html, /Profile.ratings_given.*>7</);
+  assert.match(html, /Profile.average_rating.*>3\.50</);
+  assert.match(html, /Profile.stats.fought<\/span><span class="pub-stat-val">12</);
+  assert.match(html, /Pub.stat.wins<\/span><span class="pub-stat-val">9</);
+  assert.match(html, /Pub.stat.losses<\/span><span class="pub-stat-val">3</);
   assert.doesNotMatch(html, /job-xp|Job Lvl|Job events|15234|15,234|Miner/);
 });

@@ -54,7 +54,7 @@ export default {
   'battlesim557.finished': "{outcome} · continue to section {section}",
   'battlesim557.win': "Win",
   'battlesim557.loss': "Loss",
-  'battlesim557.unresolved': "Two wins, two losses: the supplied book gives no outcome. No victory or XP is recorded.",
+  'battlesim557.unresolved': "Two wins, two losses: the supplied book gives no outcome. No victory or Xp is recorded.",
   'battlesim557.result': "Round {round}: {dice} + {modifier} = {total} / {target} · {outcome}",
   'battlesim557.dark_future': "Dark Future: doubles fail the round and add 1 Doom.",
   'battlesim557.crisis': "Crisis of Identity: rolled {die}; lose 1 Sanity on 1.",

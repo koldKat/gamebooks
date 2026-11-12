@@ -19,6 +19,7 @@ test('desktop battle-sim relocation retains the registry and visibility lifecycl
   const unchanged = (source.slice(0, start) + source.slice(end))
     .replace('const _loading = new Map();\n', '')
     .replace("import {prepareBattleSimLayout, simulatorOverlay} from './layout.js';\n\n", '')
+    .replace('  prepareBattleSimLayout(simulatorOverlay(document, sim.id));\n', '')
     .replace(/const SUPPORTED_BATTLE_SIM_BOOKS = new Set\(\[[\s\S]*?\]\);/, 'SUPPORTED_SET');
   assert.equal(createHash('sha256').update(unchanged).digest('hex'),
     '3cce23bb8c59cf73e60f839520bfa24a895c9062049d4f4ac8efc9599ac32069');

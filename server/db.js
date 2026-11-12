@@ -1034,3 +1034,5 @@ require('./db/job-level-rubies').initializeJobLevelRubies(db);
 require('./db/completed-run-gems').initializeCompletedRunGems(db);
 require('./db/sim-battle-gems').initializeSimBattleGems(db);
 require('./db/admin-crystal-gold').initializeAdminCrystalGold(db);
+require('./db/book-discovery-rubies').initializeBookDiscoveryRubies(db);
+require('./db/completion-reward-conversion').initializeCompletionRewardConversion(db);

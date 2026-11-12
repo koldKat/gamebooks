@@ -5,11 +5,11 @@ const labels = Object.fromEntries(Object.entries(common)
   .map(([key, value]) => [key.replace('battlesim674.', ''), value]));
 Object.assign(labels, {
   title: 'Battle Simulator - Over the Blood-Dark Sea',
-  created: 'Character created: Rank 3, STAMINA 16, chain mail and 40 Shards.',
+  created: 'Character created: Rank 3, Stamina 16, chain mail and 40 Shards.',
   note: 'Wounds carry between fights. Enter effective abilities, including equipment. Apply story rewards and ship losses yourself. Toggle the Three Fortunes curse while it limits ability checks to one die.',
   abilityCurse: 'Three Fortunes curse: one die for ability checks', hasCargo: 'Ship carries cargo',
   canFlee: 'Fleeing follows this encounter’s printed damage and destination.',
-  'effect.calcium': 'Untick entry wounds if you have the codeword Calcium; otherwise lose 3 STAMINA before fighting.',
+  'effect.calcium': 'Untick entry wounds if you have the codeword Calcium; otherwise lose 3 Stamina before fighting.',
   'effect.unarmed': 'The sailor attacks first. Armour does not protect you; remove your weapon bonus with the extra attack modifier.',
   'seaKind.tavern': 'Tavern attack', 'seaKind.kraken': 'Kraken', 'seaKind.hydras': 'Hydra assault',
   'seaKind.ram': 'Ram the slavers', 'seaKind.overloaded': 'Overloaded evacuation',

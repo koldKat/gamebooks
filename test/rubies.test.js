@@ -12,7 +12,8 @@ function fixture(t) {
     bonus_coins INTEGER DEFAULT 100,coins_spent INTEGER DEFAULT 0,bonus_gc_mint_purchased INTEGER DEFAULT 0,is_squire INTEGER NOT NULL DEFAULT 0);
     INSERT INTO users(id,username,is_admin) VALUES(1,'Admin',1),(17,'Sashii',0),(2,'Player',0);
     CREATE TABLE books(id INTEGER PRIMARY KEY,name TEXT,is_container INTEGER DEFAULT 0,parent_book_id INTEGER,
-      total_sections INTEGER DEFAULT 100,discoverable_sections INTEGER,max_section_number INTEGER,is_public INTEGER NOT NULL DEFAULT 1);
+      total_sections INTEGER DEFAULT 100,discoverable_sections INTEGER,max_section_number INTEGER,is_public INTEGER NOT NULL DEFAULT 1,series_id INTEGER);
+    CREATE TABLE series(id INTEGER PRIMARY KEY,is_public INTEGER DEFAULT 1);
     CREATE TABLE user_books(user_id INTEGER,book_id INTEGER,state_data TEXT,PRIMARY KEY(user_id,book_id));
     CREATE TABLE book_sections(book_id INTEGER,section_id TEXT);
     CREATE TABLE book_reading_entries(book_id INTEGER,section_id TEXT,counts_as_section INTEGER);
@@ -20,6 +21,8 @@ function fixture(t) {
     CREATE TABLE xp_events(user_id INTEGER,event TEXT,ref TEXT,UNIQUE(user_id,event,ref));
     CREATE TABLE coin_events(user_id INTEGER,event TEXT,ref TEXT,amount INTEGER,UNIQUE(user_id,event,ref));
     CREATE TABLE notifications(user_id INTEGER,type TEXT,payload TEXT);`);
+  db.exec(`CREATE TABLE user_diamonds(user_id INTEGER PRIMARY KEY,diamonds_earned INTEGER DEFAULT 0,
+    diamonds_bought INTEGER DEFAULT 0,diamonds_spent INTEGER DEFAULT 0);`);
   ruby.initializeRubies(db);
   const check=ruby.createRubyCompletionChecker(db);
   const addBook=(id,total=100,parent=null,container=0)=>db.prepare('INSERT INTO books(id,total_sections,parent_book_id,is_container) VALUES(?,?,?,?)').run(id,total,parent,container);
@@ -28,7 +31,8 @@ function fixture(t) {
   let impersonating=false;
   const isImpersonatingContext=()=>impersonating;
   const source=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');
-  const xp=vm.createContext({db,isImpersonatingContext,_appXpHook:null,_insertNotif:db.prepare('INSERT INTO notifications VALUES(?,?,?)')});
+  const xp=vm.createContext({db,isImpersonatingContext,_appXpHook:null,_insertNotif:db.prepare('INSERT INTO notifications VALUES(?,?,?)'),
+    require:name=>name==='./completion-reward-conversion'?require('../server/db/completion-reward-conversion'):require(name)});
   vm.runInContext(source.slice(source.indexOf('function computeLevel('),source.indexOf('function toRoman('))+
     source.slice(source.indexOf('const _awardCoinsTx'),source.indexOf('// Roll bonus GC')),xp);
   const context=vm.createContext({module:{exports:{}},require(name){
@@ -41,11 +45,11 @@ function fixture(t) {
 }
 const range=(start,end)=>Array.from({length:end-start+1},(_,i)=>start+i);
 
-test('sleep references cannot block a completed book reward or make an incomplete book qualify',t=>{
+for (const reference of ['sleep','bonanza']) test(`${reference} references cannot block a completed book reward or make an incomplete book qualify`,t=>{
   const f=fixture(t);const add=f.db.prepare('INSERT INTO book_sections VALUES(?,?)');
   for(const id of [10,11]){
     f.addBook(id,50);
-    for(const section of [...range(1,50),'sleep'])add.run(id,String(section));
+    for(const section of [...range(1,50),reference])add.run(id,String(section));
   }
   f.save(2,10,[range(1,50)]);f.save(2,11,[range(1,49)]);
   assert.equal(f.check(2,11),0);
@@ -179,12 +183,13 @@ test('Squire small-book rewards still require the canonical visited IDs and a fa
 });
 
 test('admin Squire assignment retroactively rewards past completions atomically, once, without revoking on removal',t=>{
-  const f=fixture(t);f.addBook(25,25);f.save(17,25,[range(1,25)]);
+  const f=discoveryFixture(t);f.addBook(25,25);f.save(17,25,[range(1,25)]);
   const context=vm.createContext({module:{exports:{}},require(name){
     if(name==='./connection')return {db:f.db};
     if(name==='./xp')return {_insertNotif:f.db.prepare('INSERT INTO notifications VALUES(?,?,?)')};
     if(name==='./squires')return require('../server/db/squires');
     if(name==='./rubies')return ruby;
+    if(name==='./book-discovery-rubies')return require('../server/db/book-discovery-rubies');
     return {};
   }});
   vm.runInContext(fs.readFileSync(require.resolve('../server/db/feed'),'utf8'),context);
@@ -197,7 +202,8 @@ test('admin Squire assignment retroactively rewards past completions atomically,
   assert.equal(f.wallet(17).rubies_earned,1);
   assert.equal(context.module.exports.setSquire(17,true),true);
   assert.equal(f.wallet(17).rubies_earned,1);
-  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM notifications').get().n,1);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM notifications').get().n,3);
+  assert.equal(f.discoveryBalance(17),1);
   assert.equal(context.module.exports.setSquire(17,false),true);
   assert.equal(f.wallet(17).rubies_earned,1);
 });
@@ -413,4 +419,134 @@ test('failed gold notification rolls back a sale and failed trade history rolls 
   f.db.exec("CREATE TRIGGER fail_trade BEFORE INSERT ON ruby_exchanges BEGIN SELECT RAISE(ABORT,'trade failed'); END");
   assert.throws(()=>f.exchange(17,1,'ruby-request-0002',3,'buy'),/trade failed/);
   assert.equal(f.gold(17),gold);assert.equal(f.wallet(17),undefined);assert.equal(f.db.prepare('SELECT rubies FROM ruby_market').get().rubies,1);
+});
+
+
+function discoveryFixture(t) {
+  const f=fixture(t);
+  f.db.exec(`CREATE TABLE diamond_market(id INTEGER PRIMARY KEY,diamonds_mined INTEGER DEFAULT 0);
+    INSERT INTO diamond_market VALUES(1,0);`);
+  require('../server/db/gem-notifications').initializeGemNotifications(f.db);
+  require('../server/db/admin-crystal-gold').initializeAdminCrystalGold(f.db);
+  const discovery=require('../server/db/book-discovery-rubies');
+  discovery.initializeBookDiscoveryRubies(f.db);
+  return {...f,discovery,discover:ruby.createRubyCompletionChecker(f.db,{discovery:true}),
+    discoveryBalance:id=>f.db.prepare('SELECT diamonds_earned n FROM user_diamonds WHERE user_id=?').get(id)?.n||0};
+}
+
+test('discovery awards the displayed ruby for public books at 25 Squire / 50 normal sections, independently of mapping',t=>{
+  const f=discoveryFixture(t);f.db.exec('UPDATE users SET is_squire=1 WHERE id=17');
+  for(const total of [24,25,49,50]){
+    f.addBook(total,total);
+    const graph=Object.fromEntries(range(1,total).map(n=>[n,{discovered:true,choices:[-1]}]));
+    for(const user of [2,17]){
+      f.save(user,total,[],{graph});
+      assert.equal(f.discover(user,total),total>=(user===17?25:50)?1:0);
+      assert.equal(f.check(user,total),0,'discovery must not award the mapped-book diamond');
+      assert.equal(f.discover(user,total),0,'permanent deduplication');
+    }
+  }
+  f.addBook(90,50);f.db.exec('UPDATE books SET is_public=0 WHERE id=90');
+  f.save(2,90,[range(1,50)]);assert.equal(f.discover(2,90),0);
+  assert.equal(f.discoveryBalance(2),1);assert.equal(f.discoveryBalance(17),3);
+  f.save(2,50,[range(1,50)]);assert.equal(f.check(2,50),1,'mapping retains its diamond');
+  assert.equal(f.discover(2,50),0);assert.equal(f.wallet(2).rubies_earned,1);
+  assert.equal(f.db.prepare('SELECT generated FROM admin_crystal_gold').get().generated,5);
+  f.save(2,50,[]);assert.equal(f.discover(2,50),0,'reset cannot repeat an award');
+});
+
+test('discovery uses outgoing destinations and permanent discovery history, validates canonical IDs and reachable limits',t=>{
+  const f=discoveryFixture(t);f.addBook(10,50);
+  f.save(2,10,[],{graph:{1:{discovered:true,choices:range(2,50)}}});assert.equal(f.discover(2,10),1);
+  f.addBook(11,50);f.db.exec('UPDATE books SET max_section_number=100,discoverable_sections=49 WHERE id=11');
+  const add=f.db.prepare('INSERT INTO book_sections VALUES(11,?)');
+  for(const id of [...range(1,50).map(n=>String(n*2)),'epilogue','intro'])add.run(id);
+  const event=f.db.prepare("INSERT INTO xp_events VALUES(2,'discover_node',?)");
+  for(const id of range(1,48))event.run('11:'+id*2);
+  event.run('11:epilogue');assert.equal(f.discover(2,11),0);
+  event.run('11:98');assert.equal(f.discover(2,11),1);
+  f.addBook(12,50);f.db.exec("INSERT INTO book_sections VALUES(12,'1')");
+  f.save(2,12,[range(1,50)]);assert.equal(f.discover(2,12),0,'incomplete import cannot certify canonical coverage');
+});
+
+test('discovery backfill is idempotent, preserves progress and old diamonds, and supports role/public changes',t=>{
+  const f=discoveryFixture(t);
+  for(const id of [10,11]){f.addBook(id,id===10?25:50);f.save(2,id,[],{graph:Object.fromEntries(range(1,id===10?25:50).map(n=>[n,{discovered:true}]))});}
+  f.db.exec("DELETE FROM currency_migrations WHERE name='public-book-discovery-rubies-v1'");
+  const before=f.db.prepare('SELECT * FROM user_books').all();
+  assert.equal(f.discovery.initializeBookDiscoveryRubies(f.db),1);
+  assert.equal(f.discovery.initializeBookDiscoveryRubies(f.db),0);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM ruby_rewards').get().n,0);
+  f.db.exec('UPDATE users SET is_squire=1 WHERE id=2');
+  assert.equal(f.discovery.backfillDiscoveryRubiesForUser(f.db,2),1);
+  f.addBook(12,50);f.save(2,12,[range(1,50)]);f.db.exec('UPDATE books SET is_public=0 WHERE id=12');
+  assert.deepEqual(f.discovery.backfillDiscoveryRubiesForBook(f.db,12),[]);
+  f.db.exec('UPDATE books SET is_public=1 WHERE id=12');
+  assert.deepEqual(f.discovery.backfillDiscoveryRubiesForBook(f.db,12),[{userId:2,amount:1}]);
+  assert.deepEqual(f.discovery.backfillDiscoveryRubiesForBook(f.db,12),[]);
+  assert.deepEqual(f.db.prepare('SELECT * FROM user_books WHERE book_id IN(10,11)').all(),before);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM notifications WHERE type='diamond_gain'").get().n,3);
+});
+
+
+test('impersonation cannot issue discovery rubies through metadata or role backfills',t=>{
+  const f=discoveryFixture(t);f.addBook(10,50);f.save(2,10,[range(1,50)]);
+  require('../server/impersonation-context').runInImpersonationContext(true,()=>{
+    assert.equal(f.discovery.backfillDiscoveryRubiesForUser(f.db,2),0);
+    assert.deepEqual(f.discovery.backfillDiscoveryRubiesForBook(f.db,10),[]);
+  });
+  assert.equal(f.discoveryBalance(2),0);
+  assert.equal(f.discovery.backfillDiscoveryRubiesForUser(f.db,2),1);
+});
+
+test('public series and anthologies award one discovery ruby and one mapping diamond, with no duplicate anthology diamond',t=>{
+  const f=discoveryFixture(t);f.db.exec('INSERT INTO series VALUES(7,1)');
+  f.addBook(100,0,null,1);f.addBook(10,25,100);f.addBook(11,25);
+  f.db.exec('UPDATE books SET series_id=7 WHERE id=100; INSERT INTO book_anthology_memberships VALUES(11,100)');
+  // The second book is both a secondary anthology member and a direct series member.
+  f.db.exec('UPDATE books SET series_id=7 WHERE id=11');
+  for(const id of [10,11])f.save(2,id,[],{graph:Object.fromEntries(range(1,25).map(n=>[n,{discovered:true}]))});
+  assert.equal(f.discover(2,10),2,'both collections, despite children below individual minimum');
+  assert.equal(f.check(2,10),0,'discovering is not mapping');
+  f.save(2,10,[range(1,25)]);assert.equal(f.check(2,10),0,'every member required');
+  f.save(2,11,[range(1,25)]);assert.equal(f.check(2,11),2,'anthology plus series diamonds');
+  assert.equal(f.check(2,10),0);assert.equal(f.discover(2,11),0);
+  assert.equal(f.discoveryBalance(2),2);assert.equal(f.wallet(2).rubies_earned,2);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM ruby_rewards WHERE kind='anthology'").get().n,1);
+  assert.equal(f.db.prepare('SELECT generated FROM admin_crystal_gold').get().generated,4);
+});
+
+test('private collections or any private or incomplete member cannot earn collection gems; publication retries safely',t=>{
+  const f=discoveryFixture(t);f.db.exec('INSERT INTO series VALUES(7,0)');
+  f.addBook(100,0,null,1);f.addBook(10,25,100);f.addBook(11,25,100);
+  f.db.exec('UPDATE books SET series_id=7 WHERE id=100; UPDATE books SET is_public=0 WHERE id IN(100,11)');
+  f.save(2,10,[range(1,25)]);f.save(2,11,[range(1,24)]);
+  assert.equal(f.check(2,10),0);assert.equal(f.discover(2,10),0);
+  f.db.exec('UPDATE series SET is_public=1; UPDATE books SET is_public=1');
+  assert.equal(f.check(2,10),0);assert.equal(f.discover(2,10),0);
+  f.save(2,11,[range(1,25)]);
+  const backfill=require('../server/db/completion-reward-conversion').backfillCompletionGemsForBook;
+  require('../server/impersonation-context').runInImpersonationContext(true,()=>assert.deepEqual(backfill(f.db,10,true),[]));
+  assert.deepEqual(backfill(f.db,10,true),[{userId:2,diamondDelta:2,rubyDelta:2}]);
+  assert.deepEqual(backfill(f.db,10,true),[]);
+});
+
+test('conversion reverses only direct completion gold, including spent balances, once and transactionally',t=>{
+  const f=discoveryFixture(t),convert=require('../server/db/completion-reward-conversion').initializeCompletionRewardConversion;
+  f.db.exec(`UPDATE users SET bonus_coins=2,coins_spent=20 WHERE id=2;
+    INSERT INTO coin_events VALUES(2,'book_completed','10',1),(2,'visit_all_series','7',3),
+      (2,'visit_all_anthology','100',2),(2,'discover_all_series','8',4),(2,'level_up_coin','1',1);
+    INSERT INTO coin_events VALUES(17,'book_completed','10',1);`);
+  f.addBook(10,50);f.save(2,10,[range(1,50)]);
+  const progress=f.db.prepare('SELECT * FROM user_books').all();
+  f.db.exec("CREATE TRIGGER fail_conversion BEFORE INSERT ON coin_events WHEN NEW.event='completion_gold_reversal' BEGIN SELECT RAISE(ABORT,'rollback'); END");
+  assert.throws(()=>convert(f.db),/rollback/);assert.equal(f.db.prepare('SELECT bonus_coins FROM users WHERE id=2').get().bonus_coins,2);
+  f.db.exec('DROP TRIGGER fail_conversion');
+  const result=convert(f.db);assert.equal(result.goldRemoved,11);assert.equal(result.rubiesAdded,1);assert.equal(result.diamondsAdded,1);
+  assert.equal(f.db.prepare('SELECT bonus_coins FROM users WHERE id=2').get().bonus_coins,-8);
+  assert.equal(f.db.prepare('SELECT coins_spent FROM users WHERE id=2').get().coins_spent,20);
+  assert.equal(f.db.prepare("SELECT SUM(amount) n FROM coin_events WHERE user_id=2 AND event!='level_up_coin'").get().n,0);
+  assert.deepEqual(f.db.prepare('SELECT * FROM user_books').all(),progress);assert.equal(convert(f.db),null);
+  assert.equal(f.db.prepare("INSERT INTO coin_events VALUES(2,'book_completed','999',1)").run().changes,0,
+    'an older request still in flight cannot reintroduce retired gold');
 });

@@ -13,12 +13,12 @@ Object.assign(labels,{
   'battlesim1438.enduranceLog':'{name}: Endurance {value}',
   'battlesim1438.trialFailedLog':'The alarm sounds after {defeated} sleeping Orcs defeated.',
   'battlesim1438.otherSpells':'Travel, information and recovery spells follow the reader. Calm affects one normal foe at a time.',
-  'battlesim1438.item-owl':'Owl companion (§230/373): OB +1',
-  'battlesim1438.item-elvishSword':'Elvish short sword (§197): Melee OB +1',
+  'battlesim1438.item-owl':'Owl companion (§230/373): Ob +1',
+  'battlesim1438.item-elvishSword':'Elvish short sword (§197): Melee Ob +1',
   'battlesim1438.item-weightlessStaff':'Weightless quarterstaff (§202): Magical +1',
-  'battlesim1438.item-banditSword':'Sword (§259): Melee OB +1',
-  'battlesim1438.item-magicAxe':'Axe (§317): Melee OB +1, normal axe damage +2',
-  'battlesim1438.item-magicHelmet':'Helmet (§384): DB +1',
-  'battlesim1438.item-silkenShirt':'Silken shirt (§448): DB +2',
+  'battlesim1438.item-banditSword':'Sword (§259): Melee Ob +1',
+  'battlesim1438.item-magicAxe':'Axe (§317): Melee Ob +1, normal axe damage +2',
+  'battlesim1438.item-magicHelmet':'Helmet (§384): Db +1',
+  'battlesim1438.item-silkenShirt':'Silken shirt (§448): Db +2',
 });
 export default labels;

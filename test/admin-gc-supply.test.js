@@ -59,9 +59,9 @@ test('other contributions and gifted-coin accounting remain intact', t => {
     INSERT INTO xp_events VALUES ('visit_all');
     INSERT INTO coin_events VALUES ('visit_all_series', 3), ('visit_all_anthology', 2), ('unrelated', 100);
   `);
-  assert.deepEqual(f.supply(), { earned: 14, gifted: 1, available: 13 });
+  assert.deepEqual(f.supply(), { earned: 8, gifted: 1, available: 7 });
   f.db.exec("UPDATE admin_settings SET value = '99' WHERE key = 'admin_gc_gifted'");
-  assert.deepEqual(f.supply(), { earned: 14, gifted: 99, available: 0 });
+  assert.deepEqual(f.supply(), { earned: 8, gifted: 99, available: 0 });
 });
 
 test('generated crystals contribute to the pool without changing gifted gold', t => {

@@ -357,7 +357,7 @@ export function initCharSheet() {
         <button id="cs-add-field" class="cs-btn-add">+ ${t('cs.add')}</button>
         <div class="cs-ftr-actions">
           <button id="cs-save"          class="cs-btn-save">${t('cs.save')}</button>
-          <button id="cs-save-template" class="cs-btn-template">${t('cs.save_template')}</button>
+          <button id="cs-save-template" class="cs-btn-template" data-tooltip="${escapeHtml(t('cs.save_template_tooltip'))}">${t('cs.save_template')}</button>
           <button id="cs-cancel"        class="cs-btn-cancel">${t('cs.cancel')}</button>
         </div>
       </div>

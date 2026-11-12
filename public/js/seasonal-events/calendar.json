@@ -50,7 +50,7 @@
   {
     "id": "thanksgiving",
     "title": "Thanksgiving event active",
-    "description": "double XP for sharing runs, rating books and series, and creating or joining parties.",
+    "description": "double XP for all party activities, sharing runs, and rating books and series.",
     "rule": {
       "month": 11,
       "weekday": 4,
@@ -58,6 +58,7 @@
     },
     "daysAround": 3,
     "xpMultiplier": 2,
+    "partyXpEvents": true,
     "xpEvents": [
       "share_run",
       "rate_book",

@@ -9,7 +9,7 @@ const checks = ['paragraph_implosion_ck', 'paragraph_explosion_ck', 'section_glu
 
 function fixture() {
   let row = { has_live_reading: 1, has_sections: 1, is_container: 0, unimportable: 0,
-    sim_applicable: 0, sim_registered: 0, has_battle_sim: 0,
+    sim_applicable: 0, sim_registered: 0, has_battle_sim: 0, has_matter_record: 1,
     ...Object.fromEntries(checks.map(key => [key, 1])) };
   let queries = 0;
   const events = [], replies = [];
@@ -81,9 +81,18 @@ test('matter notifications require a local request and an existing prepared read
   f.set(null); f.matter();
   assert.equal(f.replies[0].status, 404);
   for (const changes of [{ has_live_reading: 0 }, { has_sections: 0 }, { is_container: 1 },
-    { frontmatter_done: 0 }, { intro_text: ' ', rules_text: null }]) {
+    { frontmatter_done: 0 }, { has_matter_record: 0 }]) {
     const g = fixture(); g.set({ ...g.current(), intro_text: '<p>Preface</p>', ...changes }); g.matter();
     assert.equal(g.replies[0].status, 409);
     assert.equal(g.events.length, 0);
+  }
+});
+
+test('reviewed readers can notify removal of redundant matter or absence of separate matter', () => {
+  for (const blank of ['',null]) {
+    const f=fixture();f.set({...f.current(),intro_text:blank,rules_text:blank});f.matter();
+    assert.equal(f.replies[0].status,200);
+    assert.deepEqual(f.events,[{type:'public_catalog_changed',entity:'book',id:1073,action:'matter_updated'}]);
+    assert.equal(f.queries(),1);
   }
 });

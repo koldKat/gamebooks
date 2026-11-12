@@ -1583,57 +1583,7 @@ function adminRefundShopItem(userId, item, all = false) {
   }
 }
 
-// One-time back-fill: grant 1 GC for books that were already fully visited
-{
-  const _bfDone = db.prepare("SELECT value FROM admin_settings WHERE key = 'book_complete_coin_backfilled'").get();
-  if (!_bfDone) {
-    db.transaction(() => {
-      const rows = db.prepare("SELECT DISTINCT user_id, ref FROM xp_events WHERE event = 'visit_all'").all();
-      const insert = db.prepare('INSERT OR IGNORE INTO coin_events (user_id, event, ref, amount) VALUES (?, ?, ?, 1)');
-      const grantedByUser = new Map();
-      for (const row of rows) {
-        const ref = String(row.ref || '').trim();
-        if (!/^[0-9]+$/.test(ref)) continue;
-        if (insert.run(row.user_id, 'book_completed', ref).changes > 0) {
-          grantedByUser.set(row.user_id, (grantedByUser.get(row.user_id) || 0) + 1);
-        }
-      }
-      const addCoins = db.prepare('UPDATE users SET bonus_coins = bonus_coins + ? WHERE id = ?');
-      for (const [userId, granted] of grantedByUser.entries()) addCoins.run(granted, userId);
-      db.prepare("INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('book_complete_coin_backfilled', '1')").run();
-    })();
-  }
-}
-
-// One-time back-fill: grant coins for series/anthology already fully visited (visit_all_series / visit_all_anthology)
-{
-  const _bfDone = db.prepare("SELECT value FROM admin_settings WHERE key = 'group_complete_coin_backfilled'").get();
-  if (!_bfDone) {
-    db.transaction(() => {
-      const insert     = db.prepare('INSERT OR IGNORE INTO coin_events (user_id, event, ref, amount) VALUES (?, ?, ?, ?)');
-      const addCoins   = db.prepare('UPDATE users SET bonus_coins = bonus_coins + ? WHERE id = ?');
-      const seriesRows = db.prepare("SELECT DISTINCT user_id, ref FROM xp_events WHERE event = 'visit_all_series'").all();
-      const grantedByUser = new Map();
-      for (const { user_id, ref } of seriesRows) {
-        const total = db.prepare(
-          'SELECT COUNT(*) AS n FROM books WHERE series_id = ? AND is_container = 0'
-        ).get(Number(ref))?.n || 0;
-        if (total > 0 && insert.run(user_id, 'visit_all_series', String(ref), total).changes > 0)
-          grantedByUser.set(user_id, (grantedByUser.get(user_id) || 0) + total);
-      }
-      const anthologyRows = db.prepare("SELECT DISTINCT user_id, ref FROM xp_events WHERE event = 'visit_all_anthology'").all();
-      for (const { user_id, ref } of anthologyRows) {
-        const total = db.prepare(
-          'SELECT COUNT(*) AS n FROM books WHERE parent_book_id = ?'
-        ).get(Number(ref))?.n || 0;
-        if (total > 0 && insert.run(user_id, 'visit_all_anthology', String(ref), total).changes > 0)
-          grantedByUser.set(user_id, (grantedByUser.get(user_id) || 0) + total);
-      }
-      for (const [userId, granted] of grantedByUser.entries()) addCoins.run(granted, userId);
-      db.prepare("INSERT OR REPLACE INTO admin_settings (key, value) VALUES ('group_complete_coin_backfilled', '1')").run();
-    })();
-  }
-}
+// Direct book and collection completion gold was retired; see completion-reward-conversion.js.
 
 // One-time back-fill: award XP for existing library additions (adder + creator)
 {

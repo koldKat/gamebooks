@@ -58,6 +58,7 @@ function _resolveEnemyAttack(index = -1) {
 }
 function _runRound() {
   const { _data, _rollDice, AXE_DICE_BONUS } = getContext();
+  if (getContext()._prepareEncounter?.() === false) return;
   const d = _data();
   if (!d || d.player.life <= 0 || d.enemy.life <= 0 || d.pendingAttack || d.outcomeRecorded) return;
   d.battleStarted = true;
@@ -94,6 +95,7 @@ function _chooseOpponent(index) {
 }
 function _fireBow() {
   const { _data, _rollDice, _calcDmg, _appendLog, _diceHtml, _dmgHtml, _enemyName, t, escapeHtml } = getContext();
+  if (getContext()._prepareEncounter?.() === false) return;
   const d = _data();
   if (!d || d.round !== 1 || d.bowFired || d.group?.bowForbidden || d.enemy.foeFirst || d.pendingAttack || d.outcomeRecorded || !d.items?.bow || !(d.items.arrows > 0) || d.player.life <= 0 || d.enemy.life <= 0) return;
   const dice = _rollDice(1), damage = _calcDmg(dice);

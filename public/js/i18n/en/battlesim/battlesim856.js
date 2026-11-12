@@ -1,6 +1,6 @@
 export default {
   'battlesim856.title': 'Rampage',
-  'battlesim856.note': 'Each fighter rolls one die + STRENGTH. Ties cause no damage. Track time, loot, food and chaos manually.',
+  'battlesim856.note': 'Each fighter rolls one die + Strength. Ties cause no damage. Track time, loot, food and chaos manually.',
   'battlesim856.character': 'Adventure Sheet',
   'battlesim856.preset': 'Ready-made character',
   'battlesim856.race': 'Race',

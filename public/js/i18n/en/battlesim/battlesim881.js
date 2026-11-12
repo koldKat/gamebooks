@@ -2,8 +2,8 @@
 export default {
     'battlesim881.ui.title':          'Симулатор на битки - Дракон в мазето',
     'battlesim881.ui.you':            'Твоят герой',
-    'battlesim881.ui.sila':           'СИЛА',
-    'battlesim881.ui.izd':            'ИЗДРЪЖЛИВОСТ',
+    'battlesim881.ui.sila':           'Сила',
+    'battlesim881.ui.izd':            'Издръжливост',
     'battlesim881.ui.sword':          'Меч',
     'battlesim881.ui.encounter':      'Схватка',
     'battlesim881.ui.pick':           'Избери',

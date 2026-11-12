@@ -14,9 +14,9 @@ export default Object.fromEntries(Object.entries({
   activeOpponent:'Active opponent', automatic:'Automatic', die1:'Die 1', die2:'Die 2', roll:'Roll', spell:'Use a Death Spell', prayer:'Use Ocelotl Prayer', antidote:'Use antidote', healEnemy:'Priest drinks pulque', escape:'Try to escape (two dice)',
   'phase.initiative':'Roll one die for the first attack. An escape attempt uses two dice.', 'phase.player':'Your attack: roll two dice.', 'phase.enemy':'Opponent attack: roll two dice.', 'phase.spray':'Roll two dice for the skunk spray.',
   'status.fighting':'Fight in progress', 'status.win':'Victory', 'status.loss':'Defeat', 'status.fled':'Escaped', 'status.ended':'Encounter resolved', 'status.cancelled':'Canceled', ready:'Ready',
-  totals:'Life Points: {hp} / {maxHp} · EXP: {experience} · Ammo: {ammo} · Spells: {spells}', remaining:'Opponents remaining: {count}', enemyTotals:'{name}: {hp} LP · {count} remaining', poisoned:'Poison: {amount} LP at the start of each turn',
+  totals:'Life Points: {hp} / {maxHp} · Exp: {experience} · Ammo: {ammo} · Spells: {spells}', remaining:'Opponents remaining: {count}', enemyTotals:'{name}: {hp} Lp · {count} remaining', poisoned:'Poison: {amount} Lp at the start of each turn',
   destination:'Continue in the reader at section {section}.', manualStory:'Apply story instructions in the reader. Equipment, healing outside combat and character progression stay under your control.', log:'Combat log', history:'Recent fights',
-  event:'{action} · {name} · {dice} · damage / healing {amount} · your LP {hp}',
+  event:'{action} · {name} · {dice} · damage / healing {amount} · your Lp {hp}',
   'action.initiative':'Initiative', 'action.attack':'Attack', 'action.target':'Opponent changed', 'action.weapon':'Weapon changed', 'action.healEnemy':'Enemy healing',
   'action.antidote':'Antidote', 'action.prayer':'Prayer', 'action.spell':'Death Spell', 'action.spray':'Skunk spray', 'action.escape':'Escape attempt', 'action.cancel':'Canceled',
 }).map(([key,value]) => [prefix + key,value]));

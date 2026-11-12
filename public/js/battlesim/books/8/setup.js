@@ -2,13 +2,41 @@
 import { createOpponentEditor } from '../../opponents.js';
 
 export function createSetup(getContext) {
-  let editor, preset, select, note, apply, choices, armor, stamp = '';
+  let editor, preset, select, repeat, note, apply, choices, armor, stamp = '', dirty = false;
+  function setOpponents() {
+    const encounter = preset?.stats.encounter;
+    const opponents = encounter?.repeatCount
+      ? Array.from({length:Number(repeat.value)}, (_, index) => ({...encounter.opponents[0], displayName:`${encounter.opponents[0].displayName} ${index + 1}`}))
+      : encounter?.opponents || [{displayName:'',skill:3,lifeMax:6}];
+    editor.set(opponents);
+  }
+  function markDirty() {
+    dirty = true;
+    getContext()._updateStatus(); getContext()._updateItemBtns();
+  }
+  function prepare() {
+    if (!dirty) return true;
+    const { _startEncounter, t, showAlert } = getContext();
+    try {
+      if (!_startEncounter(editor.read(), {...preset?.stats.encounter, name:preset?.name})) return false;
+      dirty = false;
+      editor.element.open = false;
+      getContext()._updateStatus(); getContext()._updateItemBtns();
+      return true;
+    } catch { showAlert(t('battlesim8.ui.invalid')); return false; }
+  }
   async function mount(overlay) {
     const { t, _loadEnemyList, _data, _startEncounter, _chooseOpponent, _resolveEnemyAttack, escapeHtml, showAlert } = getContext();
     const box = document.createElement('div');
     box.className = 'bsim-side';
     box.innerHTML = `<label class="inv-edit-row"><span>${t('battlesim8.ui.encounter')}</span><select id="s8-encounter" class="inv-edit-input"><option value="">${t('battlesim8.ui.custom')}</option></select></label><div id="s8-encounter-note" class="s8-rules-note"></div><div id="s8-editor"></div><button id="s8-apply" class="inv-add-btn">${t('battlesim8.btn.prepare')}</button><div id="s8-opponent-choices"></div><div id="s8-chainmail-choice"></div>`;
     overlay.querySelector('.bsim-col-left').prepend(box);
+    const repeatRow = document.createElement('label');
+    repeatRow.className = 'inv-edit-row';
+    repeatRow.hidden = true;
+    repeatRow.innerHTML = `<span>${t('battlesim8.ui.soldiers')}</span><select id="s8-soldiers" class="inv-edit-input"></select>`;
+    box.querySelector('#s8-editor').before(repeatRow);
+    repeat = repeatRow.querySelector('select');
     select = box.querySelector('select'); note = box.querySelector('#s8-encounter-note');
     apply = box.querySelector('#s8-apply'); choices = box.querySelector('#s8-opponent-choices'); armor = box.querySelector('#s8-chainmail-choice');
     const rows = await _loadEnemyList();
@@ -17,7 +45,7 @@ export function createSetup(getContext) {
     select.insertAdjacentHTML('beforeend', presets.map(row => `<option value="${row.id}">${escapeHtml(row.name)}</option>`).join(''));
     editor = createOpponentEditor({ document, id: 's8', t, language: 'bg',
       fields: [{key:'skill',label:t('battlesim8.ui.skill'),min:2,max:5}, {key:'lifeMax',label:t('battlesim8.ui.life'),min:1,max:1000000}],
-      presets: rows.filter(row => !row.stats?.encounter).map(row => ({displayName:row.name,skill:row.attack,lifeMax:row.hp})),
+      presets: rows.filter(row => !row.stats?.encounter).map(row => ({displayName:row.name,skill:row.attack,lifeMax:row.hp})), onSelect:markDirty,
     });
     box.querySelector('#s8-editor').append(editor.element);
     const d = _data();
@@ -27,14 +55,28 @@ export function createSetup(getContext) {
       if (getContext()._fightActive(_data())) return;
       preset = presets.find(row => String(row.id) === select.value);
       const encounter = preset?.stats.encounter;
+      repeatRow.hidden = !encounter?.repeatCount;
+      repeat.replaceChildren();
+      if (encounter?.repeatCount) {
+        const {min, max, initial} = encounter.repeatCount;
+        for (let count = min; count <= max; count++) repeat.add(new Option(String(count), String(count)));
+        repeat.value = String(initial);
+      }
       editor.fixCount(Boolean(encounter));
-      editor.set(encounter?.opponents || [{displayName:'',skill:3,lifeMax:6}]);
+      setOpponents();
       editor.element.open = true;
       note.textContent = encounter?.note || '';
+      markDirty();
     });
+    repeat.addEventListener('change', () => {
+      if (getContext()._fightActive(_data())) return;
+      setOpponents(); markDirty();
+    });
+    for (const event of ['input','change']) editor.element.addEventListener(event, markDirty);
+    editor.element.addEventListener('click', event => { if (event.target.closest('button') && !getContext()._fightActive(_data())) markDirty(); });
     apply.addEventListener('click', () => {
       try {
-        if (_startEncounter(editor.read(), {...preset?.stats.encounter, name:preset?.name})) editor.element.open = false;
+        if (_startEncounter(editor.read(), {...preset?.stats.encounter, name:preset?.name})) { dirty = false; editor.element.open = false; getContext()._updateStatus(); getContext()._updateItemBtns(); }
       } catch { showAlert(t('battlesim8.ui.invalid')); }
     });
     choices.addEventListener('click', event => {
@@ -52,7 +94,7 @@ export function createSetup(getContext) {
     const { _data, _fightActive, t, escapeHtml } = getContext(), d = _data();
     if (!d) return;
     const locked = !!_fightActive(d);
-    editor.lock(locked); select.disabled = locked; apply.disabled = locked;
+    editor.lock(locked); select.disabled = locked; repeat.disabled = locked; apply.disabled = locked;
     for (const input of document.querySelectorAll('#s8-overlay [data-group], #s8-overlay [id^="s8-item-"], #s8-arrows, #s8-arrows-dec, #s8-arrows-inc, #s8-six-wins, #s8-enemy-pick, #s8-enemy-foe-first')) {
       input.disabled = locked || (!!d.group && (input.dataset.group === 'enemy' || input.id === 's8-enemy-pick' || input.id === 's8-enemy-foe-first'));
     }
@@ -64,5 +106,5 @@ export function createSetup(getContext) {
     if (canChoose && d.group.remaining.length) choices.insertAdjacentHTML('beforeend', `<div class="inv-modal-ftr">${d.group.remaining.map((enemy, index) => `<button class="inv-add-btn" data-opponent="${index}">${escapeHtml(enemy.name || t('battlesim8.ui.enemy'))} (${enemy.skill}/${enemy.life})</button>`).join('')}</div>`);
     armor.innerHTML = d.pendingAttack ? `<p class="s8-rules-note">${t('battlesim8.ui.chainmail_choice')}</p><div class="inv-modal-ftr">${d.pendingAttack.dice.map((die, index) => die >= 4 ? `<button class="inv-add-btn" data-reroll="${index}">${t('battlesim8.btn.reroll', {n:die})}</button>` : '').join('')}<button class="inv-add-btn" data-reroll="-1">${t('battlesim8.btn.keep')}</button></div>` : '';
   }
-  return { mount, render };
+  return { mount, render, prepare, pending: () => dirty ? {bowForbidden:!!preset?.stats.encounter.bowForbidden} : null };
 }

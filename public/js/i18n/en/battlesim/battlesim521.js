@@ -1,9 +1,9 @@
 export default {
   'battlesim521.title': 'Battle Simulator - Monsters of the Marsh',
   'battlesim521.character': 'Your character',
-  'battlesim521.expertise': 'EXPERTISE',
-  'battlesim521.vitality': 'VITALITY',
-  'battlesim521.fortune': 'FORTUNE',
+  'battlesim521.expertise': 'Expertise',
+  'battlesim521.vitality': 'Vitality',
+  'battlesim521.fortune': 'Fortune',
   'battlesim521.weaponDamage': 'Weapon damage',
   'battlesim521.fortune_roll': 'Roll initial Fortune',
   'battlesim521.potion': 'Drink vitality potion (+8)',

@@ -8,7 +8,7 @@ const { ensureJobSeasonEligibility } = require('./seasonal-contributions');
 const dayKey = date => new Date(seasonalDay(date)).toISOString().slice(0, 10);
 
 function recordSeasonParticipation(db, userId, event, date = new Date(), ref = null) {
-  const seasons = seasonalXpSeasons(event, date, { db, ref });
+  const seasons = seasonalXpSeasons(event, date, { db, ref, userId });
   if (!seasons.length) return;
   const day = dayKey(date);
   const insert = db.prepare(`INSERT OR IGNORE INTO seasonal_participation_days

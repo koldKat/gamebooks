@@ -62,7 +62,7 @@ export function initStashBindings(mousedownOnOverlayRef) {
         return;
       }
       _closeAddStash();
-      await _refreshBooksListOnly();
+      await _refreshBooksListOnly({ afterMutation: true, stashMembershipChanged: true });
     } catch (_) {
       errEl.textContent = t('editbook.failed');
     }
@@ -127,7 +127,7 @@ export function initStashBindings(mousedownOnOverlayRef) {
         return;
       }
       _closeEditStash();
-      await _refreshBooksListOnly();
+      await _refreshBooksListOnly({ afterMutation: true, stashMembershipChanged: true });
     } catch (_) {
       errEl.textContent = t('editbook.failed');
     }

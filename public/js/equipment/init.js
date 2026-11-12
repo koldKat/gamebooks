@@ -2,7 +2,7 @@
 
 import { state, saveState } from '../core/state.js';
 import { getPlayBtnRow } from '../play/charsheet.js';
-import { shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
+import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from '../core/util.js';
 import { t } from '../i18n.js';
 import { equipmentRuntime } from './runtime.js';
 import { _isReadOnly, _eq, _eqVisible, _eqItemId, _eqMeta, _eqQty } from './model.js';
@@ -27,7 +27,7 @@ export function initEquipment() {
       <div id="eq-body" class="eq-body"></div>
       <div id="eq-items" class="eq-items-row"></div>
       <div class="inv-modal-ftr">
-        <button id="eq-save-template-btn" class="inv-save-template-btn">${t('inv.save_template')}</button>
+        <button id="eq-save-template-btn" class="inv-save-template-btn" data-tooltip="${escapeHtml(t('eq.save_template_tooltip'))}">${t('inv.save_template')}</button>
       </div>
     </div>`;
   document.body.appendChild(overlay);

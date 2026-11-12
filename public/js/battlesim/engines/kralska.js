@@ -54,7 +54,10 @@ export function createKralskaSim({ bookId, idPrefix, stateKey, i18nPrefix, start
     return d;
   }
 
-  function _enemyName(d) { return d.enemy.name.trim() || tk('ui.enemy'); }
+  function _enemyName(d) {
+    const name = d.enemy.name.trim() || tk('ui.enemy');
+    return d.enemy.group ? `${name} [${d.enemy.activeIndex + 1}/${d.enemy.group.length}]` : name;
+  }
   function _enemyNameSafe(d) { return escapeHtml(_enemyName(d)); }
 
   function _appendLog(d, line) {
@@ -63,11 +66,23 @@ export function createKralskaSim({ bookId, idPrefix, stateKey, i18nPrefix, start
   }
 
   function _recordOutcome(d, outcome) {
-    d.history.push({ enemy: _enemyName(d), outcome, ts: Date.now() });
+    d.history.push({ enemy: d.enemy.name.trim() || tk('ui.enemy'), outcome, ts: Date.now() });
   }
 
   function _over(d) {
-    return d.player.izd <= 0 || d.enemy.curIzd <= 0;
+    return d.player.izd <= 0 || (d.enemy.group
+      ? d.enemy.group.every(hp => hp <= 0) : d.enemy.curIzd <= 0);
+  }
+
+  function _nextGroupOpponent(enemy) {
+    for (let offset = 1; offset <= enemy.group.length; offset++) {
+      const index = (enemy.activeIndex + offset) % enemy.group.length;
+      if (enemy.group[index] > 0) {
+        enemy.activeIndex = index;
+        enemy.curIzd = enemy.group[index];
+        return;
+      }
+    }
   }
   function _ready(d) {
     return d.enemy.hasStats;
@@ -85,8 +100,12 @@ export function createKralskaSim({ bookId, idPrefix, stateKey, i18nPrefix, start
   // Resolves one round in place on `d`, appending the log line and recording the outcome if over.
   function _stepRound(d) {
     const r = resolveRound(d.player.sila, d.enemy.sila);
+    if (r.playerLoss && d.enemy.incomingDamage > 1 && !d.enemy.damageProtected) {
+      r.playerLoss = d.enemy.incomingDamage;
+    }
     d.player.izd = Math.max(0, d.player.izd - r.playerLoss);
     d.enemy.curIzd = Math.max(0, d.enemy.curIzd - r.enemyLoss);
+    if (d.enemy.group) d.enemy.group[d.enemy.activeIndex] = d.enemy.curIzd;
 
     if (r.outcome === 'player') {
       _appendLog(d, tk('log.round_win', {
@@ -94,7 +113,7 @@ export function createKralskaSim({ bookId, idPrefix, stateKey, i18nPrefix, start
       }));
     } else if (r.outcome === 'enemy') {
       _appendLog(d, tk('log.round_lose', {
-        name: _enemyNameSafe(d), proll: r.playerRoll, ptotal: r.playerTotal, eroll: r.enemyRoll, etotal: r.enemyTotal, izd: d.player.izd,
+        name: _enemyNameSafe(d), proll: r.playerRoll, ptotal: r.playerTotal, eroll: r.enemyRoll, etotal: r.enemyTotal, izd: d.player.izd, loss: r.playerLoss,
       }));
     } else {
       _appendLog(d, tk('log.round_tie', {
@@ -102,8 +121,9 @@ export function createKralskaSim({ bookId, idPrefix, stateKey, i18nPrefix, start
       }));
     }
 
-    if (d.enemy.curIzd <= 0) _finishWin(d);
+    if (d.enemy.group ? d.enemy.group.every(hp => hp <= 0) : d.enemy.curIzd <= 0) _finishWin(d);
     else if (d.player.izd <= 0) _finishLoss(d);
+    else if (d.enemy.group && (d.enemy.groupMode !== 'sequential' || d.enemy.curIzd <= 0)) _nextGroupOpponent(d.enemy);
   }
 
   function _runRound() {
@@ -127,6 +147,10 @@ export function createKralskaSim({ bookId, idPrefix, stateKey, i18nPrefix, start
     const d = _data();
     if (!d) return;
     d.enemy.curIzd = d.enemy.izd;
+    if (d.enemy.group) {
+      d.enemy.group = d.enemy.group.map(() => d.enemy.izd);
+      d.enemy.activeIndex = 0;
+    }
     if (d.log.length) _appendLog(d, tk('log.reset_sep'));
     _appendLog(d, tk('log.reset'));
     saveState();
@@ -143,7 +167,7 @@ export function createKralskaSim({ bookId, idPrefix, stateKey, i18nPrefix, start
     if (!d || !el) return;
     if (!d.enemy.hasStats) el.innerHTML = tk('status.pick');
     else if (d.player.izd <= 0) el.innerHTML = `${SVG_SKULL} ${tk('status.defeat')}`;
-    else if (d.enemy.curIzd <= 0) el.innerHTML = `${SVG_TROPHY} ${tk('status.victory')}`;
+    else if (_over(d)) el.innerHTML = `${SVG_TROPHY} ${tk('status.victory')}`;
     else el.innerHTML = tk('status.fighting', { enemy: _enemyNameSafe(d), eizd: d.enemy.curIzd });
     const strikeBtn = document.getElementById(`${ID}-strike`);
     if (strikeBtn) strikeBtn.disabled = !_ready(d) || _over(d);
@@ -158,6 +182,12 @@ export function createKralskaSim({ bookId, idPrefix, stateKey, i18nPrefix, start
     _setVal(`${ID}-player-izd`, d.player.izd);
     _setVal(`${ID}-e-sila`, d.enemy.sila);
     _setVal(`${ID}-e-izd`, d.enemy.curIzd);
+    const protectionRow = document.getElementById(`${ID}-protection-row`);
+    if (protectionRow) {
+      protectionRow.style.display = d.enemy.damageProtectionLabel ? '' : 'none';
+      document.getElementById(`${ID}-protection-label`).textContent = d.enemy.damageProtectionLabel || '';
+      document.getElementById(`${ID}-protection`).checked = !!d.enemy.damageProtected;
+    }
     const pick = document.getElementById(`${ID}-enemy-pick`);
     if (pick && document.activeElement !== pick) pick.value = d.enemy.name;
     _renderStatus();
@@ -234,6 +264,25 @@ export function createKralskaSim({ bookId, idPrefix, stateKey, i18nPrefix, start
     d.enemy.izd = enemy.hp || 0;
     d.enemy.curIzd = d.enemy.izd;
     d.enemy.hasStats = enemy.attack != null && enemy.hp != null;
+    delete d.enemy.group;
+    delete d.enemy.activeIndex;
+    delete d.enemy.groupMode;
+    delete d.enemy.incomingDamage;
+    delete d.enemy.damageProtectionLabel;
+    delete d.enemy.damageProtected;
+    let rules;
+    try { rules = enemy.stats || (typeof enemy.stats_json === 'string' ? JSON.parse(enemy.stats_json) : enemy.stats_json); } catch {}
+    if (Number.isSafeInteger(rules?.incomingDamage) && rules.incomingDamage >= 2 && rules.incomingDamage <= 20) {
+      d.enemy.incomingDamage = rules.incomingDamage;
+      if (typeof rules.damageProtectionLabel === 'string') d.enemy.damageProtectionLabel = rules.damageProtectionLabel;
+      d.enemy.damageProtected = false;
+    }
+    if (['alternating', 'sequential'].includes(rules?.groupMode) && Number.isSafeInteger(rules.groupCount)
+        && rules.groupCount >= 2 && rules.groupCount <= 20 && d.enemy.hasStats) {
+      d.enemy.group = Array(rules.groupCount).fill(d.enemy.izd);
+      d.enemy.activeIndex = 0;
+      d.enemy.groupMode = rules.groupMode;
+    }
     if (!preserveDeadPlayer) d.player.izd = d.player.izd > 0 ? d.player.izd : startIzd;
   }
 
@@ -338,6 +387,10 @@ export function createKralskaSim({ bookId, idPrefix, stateKey, i18nPrefix, start
               </div>
               ${_numField(tk('ui.sila'), `${ID}-e-sila`)}
               ${_numField(tk('ui.izd'), `${ID}-e-izd`)}
+              <label id="${ID}-protection-row" class="bsim-checkbox" style="display:none">
+                <input id="${ID}-protection" type="checkbox">
+                <span id="${ID}-protection-label"></span>
+              </label>
             </div>
             <div id="${ID}-status" class="bsim-status"></div>
             <div class="inv-modal-ftr bsim-action-grid">
@@ -379,6 +432,12 @@ export function createKralskaSim({ bookId, idPrefix, stateKey, i18nPrefix, start
     document.getElementById(`${ID}-strike`).addEventListener('click', _runRound);
     document.getElementById(`${ID}-to-end`).addEventListener('click', _runToEnd);
     document.getElementById(`${ID}-reset`).addEventListener('click', _resetBattle);
+    document.getElementById(`${ID}-protection`).addEventListener('change', e => {
+      const d = _data();
+      if (!d || !d.enemy.damageProtectionLabel) return;
+      d.enemy.damageProtected = e.target.checked;
+      saveState();
+    });
 
     const FIELD_MAP = {
       [`${ID}-player-sila`]: ['player', 'sila'],
@@ -394,6 +453,10 @@ export function createKralskaSim({ bookId, idPrefix, stateKey, i18nPrefix, start
       val = Math.max(0, val);
       if (map[0] === 'enemy') d.enemy.hasStats = true;
       d[map[0]][map[1]] = val;
+      if (map[0] === 'enemy' && map[1] === 'curIzd' && d.enemy.group) {
+        d.enemy.group[d.enemy.activeIndex] = val;
+        if (val === 0 && d.enemy.group.some(hp => hp > 0)) _nextGroupOpponent(d.enemy);
+      }
       saveState();
       _renderInputs();
     }

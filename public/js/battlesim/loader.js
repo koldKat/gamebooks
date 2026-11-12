@@ -33,6 +33,7 @@ export function setBattleSimCharacterTransferHook(hook) { _characterTransferHook
 function renderSimulator(sim) {
   sim.render();
   if (_characterTransferHook?.(sim.id)) sim.render();
+  prepareBattleSimLayout(simulatorOverlay(document, sim.id));
 }
 
 // Legacy panels initialize saved state only when opened. Refresh after their

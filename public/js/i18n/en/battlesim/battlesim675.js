@@ -5,11 +5,11 @@ const labels = Object.fromEntries(Object.entries(common)
   .map(([key, value]) => [key.replace('battlesim674.', ''), value]));
 Object.assign(labels, {
   title: 'Battle Simulator - Cities of Gold and Glory',
-  created: 'Character created: Rank 2, STAMINA 13, leather armour and 16 Shards.',
+  created: 'Character created: Rank 2, Stamina 13, leather armour and 16 Shards.',
   note: 'Wounds carry between fights. Enter effective abilities, including equipment. Apply story rewards and inventory changes yourself. Nagil tests (270/362): use one Rank die with modifier +1 for the strict under-Rank rule.',
   canFlee: 'Fleeing follows this encounter’s printed damage and destination.',
   'effect.hydra': 'After victory, section 361 sends wounded characters to 377; otherwise to 17. Poison requires an immunity blessing.',
-  'effect.spider': 'If wounded, lose another 1d6 STAMINA in section 277, unless protected by Maka’s blessing.',
+  'effect.spider': 'If wounded, lose another 1d6 Stamina in section 277, unless protected by Maka’s blessing.',
   'effect.paladin': 'If you flee, remove the Paladin of Ravayne title. Victory does not remove it.',
   'effect.unarmed': 'Armour does not protect you. Remove your weapon bonus using the extra attack modifier.',
 });

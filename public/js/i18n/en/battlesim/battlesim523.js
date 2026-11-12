@@ -1,9 +1,9 @@
 export default {
   'battlesim523.title': 'Battle Simulator - Mine of Torments',
   'battlesim523.character': 'Your character',
-  'battlesim523.expertise': 'EXPERTISE',
-  'battlesim523.vitality': 'VITALITY',
-  'battlesim523.fortune': 'FORTUNE',
+  'battlesim523.expertise': 'Expertise',
+  'battlesim523.vitality': 'Vitality',
+  'battlesim523.fortune': 'Fortune',
   'battlesim523.weaponDamage': 'Weapon damage',
   'battlesim523.potions': 'Healing draughts',
   'battlesim523.provisions': 'Meals',

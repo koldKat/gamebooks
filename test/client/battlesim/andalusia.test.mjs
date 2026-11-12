@@ -69,6 +69,22 @@ test('bow restrictions, precombat shot and no premature group reward',()=>{
   c._chooseOpponent(0);c._fireBow();assert.equal(d.items.arrows,2);
   assert.equal(d.enemy.foeFirst,true);
 });
+test('first arrow prepares the selected group and a defeated soldier cannot be restored by prepare',()=>{
+  const {d,c,rolls}=fixture();d.items.bow=true;d.items.arrows=3;
+  d.enemy={name:'Previous opponent',skill:2,life:1,lifeMax:1,foeFirst:false};
+  let pending=true;
+  c._prepareEncounter=()=>{
+    if(!pending)return true;
+    const prepared=c._startEncounter([enemy('First soldier',2,1),enemy('Second soldier',2,4),enemy('Third soldier',3,4)]);
+    if(prepared)pending=false;
+    return prepared;
+  };
+  rolls.push([6]);c._fireBow();
+  assert.equal(d.enemy.name,'First soldier');assert.equal(d.enemy.life,0);
+  assert.equal(d.group.remaining.length,2);assert.equal(d.items.arrows,2);assert.equal(d.history.length,0);
+  assert.equal(c._startEncounter([enemy('First soldier',2,1),enemy('Second soldier',2,4),enemy('Third soldier',3,4)]),false);
+  assert.equal(d.enemy.life,0);assert.equal(d.group.remaining.length,2);
+});
 test('no potion between opponents, reset restores entire group and retains history',()=>{
   const {d,c,rolls}=fixture();d.items.potion=true;d.player.life=10;
   c._startEncounter([enemy('A',2,1),enemy('B',2,1)]);
@@ -90,13 +106,16 @@ test('invalid custom groups cannot replace an existing setup',()=>{
 });
 test('installed roster covers all reviewed episodes with fixed encounter and remaining-soldier variants',()=>{
   const rows=getRosterRows(8),presets=rows.filter(e=>e.stats?.encounter);
-  assert.equal(presets.length,41);
-  assert.equal(new Set(presets.map(e=>e.stats.encounter.section)).size,34);
+  assert.equal(presets.length,36);
+  assert.equal(new Set(presets.map(e=>e.stats.encounter.section)).size,35);
   const at=section=>presets.filter(e=>e.stats.encounter.section===section).map(e=>e.stats.encounter);
+  assert.deepEqual(at('38')[0].opponents,[{displayName:'Кастилец',skill:3,lifeMax:3}]);
   assert.equal(at('147')[0].opponents.length,5);assert.equal(at('238')[0].opponents.length,4);
   assert.equal(at('36')[0].opponents.length,6);
   assert.deepEqual(at('164').map(e=>e.opponents.length).sort(),[1,2]);
-  assert.deepEqual(at('218').map(e=>e.opponents.length).sort(),[2,3,4,5,6,7,8]);
+  assert.equal(at('218').length,1);
+  assert.deepEqual(at('218')[0].repeatCount,{min:2,max:8,initial:8});
+  assert.deepEqual(at('218')[0].opponents,[{displayName:'Войник',skill:3,lifeMax:3}]);
   for(const section of ['25','35','85','100','180','190','218','220','222a','225','230','235'])assert.ok(at(section).every(e=>e.bowForbidden),section);
-  assert.ok(rows.filter(e=>!e.stats?.encounter).length>=20,'legacy roster retained');
+  assert.equal(rows.filter(e=>!e.stats?.encounter).length,0,'unsupported generic roster removed');
 });

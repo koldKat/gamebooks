@@ -6,6 +6,7 @@ import { isValidSecId } from '../core/state.js';
 import { escapeHtml } from '../core/util.js';
 import { publicName } from '../core/public-name.js';
 import { t } from '../i18n.js';
+import { profileStatsHtml } from './profile-stats.js';
 import { nodeShapeOptions, createNodeShapeRenderer } from '../graph/node-shapes.js';
 
 // Callbacks wired in by main.js at boot
@@ -96,17 +97,7 @@ export function renderPublicProfile(profile) {
       <div class="pub-profile-info">
         <div class="pub-profile-username">${escapeHtml(_dn)}${_hooks.adminBadge?.(profile.username) ?? ''}${_hooks.authorBadge?.(profile.username) ?? ''}${_hooks.contributorBadge?.(profile.username) ?? ''}${_hooks.moderatorBadge?.(profile.username) ?? ''}${_hooks.squireBadge?.(profile.username) ?? ''}${levelSuffix}</div>
         <div class="pub-profile-stats">
-          <span class="pub-stat"><span class="pub-stat-val">${profile.totalBooks}</span> ${t('pub.stat.books_suffix')}${profile.createdBooks > 0 ? ` <span style="color:#6b7280;font-size:0.78em">(<span style="color:#60a5fa;font-weight:700">${profile.createdBooks}</span> ${t('pub.stat.created_suffix')})</span>` : ''}</span>
-          <span class="pub-stat"><span class="pub-stat-val">${profile.books.length}</span> ${t('pub.stat.books_played')}</span>
-          <span class="pub-stat"><span class="pub-stat-val">${allRuns.length}</span> ${t('pub.stat.runs')}</span>
-          <span class="pub-stat pub-stat-win"><span class="pub-stat-val">${wins}</span> ${t('pub.stat.wins')}</span>
-          <span class="pub-stat pub-stat-death"><span class="pub-stat-val">${losses}</span> ${t('pub.stat.losses')}</span>
-          ${battles > 0 ? `<span class="pub-stat pub-stat-battle"><span class="pub-stat-val">${battles}</span> ${t('pub.stat.battle_deaths')}</span>` : ''}
-          <span class="pub-stat"><span class="pub-stat-val">${profile.simBattlesFought ?? 0}</span> ${t('pub.stat.sim_battles')}</span>
-          <span class="pub-stat pub-stat-win"><span class="pub-stat-val">${profile.simBattlesWon ?? 0}</span> ${t('pub.stat.sim_wins')}</span>
-          <span class="pub-stat pub-stat-death"><span class="pub-stat-val">${profile.simBattlesLost ?? 0}</span> ${t('pub.stat.sim_losses')}</span>
-          <span class="pub-stat">${t('profile.ratings_given')} <span class="pub-stat-val">${profile.ratingsGiven ?? 0}</span></span>
-          <span class="pub-stat">${t('profile.average_rating')} <span class="pub-stat-val">${profile.averageRating == null ? '-' : Number(profile.averageRating).toFixed(2)}</span></span>
+          ${profileStatsHtml({ ...profile, booksPlayed: profile.books.length, totalRuns: allRuns.length, wins, losses, battles })}
         </div>
       </div>
     </div>`;

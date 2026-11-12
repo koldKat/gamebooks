@@ -1,5 +1,5 @@
 import { booksState, _BOOKS_LS_KEY } from './state.js';
-import { _captureExpandedPrefsFromDom } from './prefs.js';
+import { _captureExpandedPrefsFromDom, _syncMovedSeriesPrefs } from './prefs.js';
 import { getToken, apiFetch } from '../core/state.js';
 import { loadCovers, _isLandingBooksViewVisible } from '../covers.js';
 import { waitForCameraIdle } from '../graph/camera-motion.js';
@@ -100,14 +100,14 @@ export async function _refreshLibraryUi({ feed = false, covers = false } = {}) {
   booksState._hooks.scheduleRewardProfileRefresh?.(250);
 }
 
-export async function _refreshBooksListOnly({ afterMutation = false } = {}) {
+export async function _refreshBooksListOnly({ afterMutation = false, stashMembershipChanged = false } = {}) {
   if (!getToken()) return;
   if (_booksRefreshPromise) {
     await _booksRefreshPromise;
     // A request started before a save may contain the old membership. Fetch
     // again after it settles; ordinary background callers can still share it.
-    if (!afterMutation) return;
-    return _refreshBooksListOnly();
+    if (!afterMutation && !stashMembershipChanged) return;
+    return _refreshBooksListOnly({ stashMembershipChanged });
   }
   _booksRefreshPromise = (async () => {
     const revision = _booksMutationRevision;
@@ -134,6 +134,10 @@ export async function _refreshBooksListOnly({ afterMutation = false } = {}) {
       }
       const safeSeriesArr  = Array.isArray(safeSeries)  ? safeSeries  : (booksState._cachedAllSeries || []);
       const safeStashesArr = Array.isArray(safeStashes) ? safeStashes : [];
+      // Only a confirmed stash edit may carry expansion from an old location.
+      if (stashMembershipChanged && stashesRes.ok && Array.isArray(safeStashes)) {
+        _syncMovedSeriesPrefs(safeStashes);
+      }
       // Skip unchanged poll results to preserve list DOM and scroll position.
       const fingerprint = JSON.stringify({ books, series: safeSeriesArr, stashes: safeStashesArr, activeRuns: booksState._activeSeriesRuns });
       if (fingerprint !== booksState._booksListFingerprint) {

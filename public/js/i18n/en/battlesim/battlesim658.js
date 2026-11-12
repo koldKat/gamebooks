@@ -14,7 +14,7 @@ export default {
   "battlesim658.health.2": "Seriously wounded",
   "battlesim658.health.3": "Incapacitated",
   "battlesim658.weapon": "Weapon",
-  "battlesim658.weapon.hk": "HK rifle (+3)",
+  "battlesim658.weapon.hk": "Hk rifle (+3)",
   "battlesim658.weapon.uzi": "Uzi (+2)",
   "battlesim658.weapon.bomb": "Radio bomb (+2)",
   "battlesim658.weapon.grenade": "Grenade (+2)",

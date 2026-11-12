@@ -8,6 +8,7 @@ function hasRubyAccess(db, userId) {
 }
 
 function initializeRubies(db) {
+  require('./collection-completion-gems').initializeCollectionCompletionGems(db);
   db.exec(`CREATE TABLE IF NOT EXISTS ruby_rewards (
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     book_id INTEGER NOT NULL,
@@ -44,15 +45,17 @@ function initializeRubies(db) {
   }
 }
 
-function createRubyCompletionChecker(db) {
+function createRubyCompletionChecker(db, { discovery = false } = {}) {
   const user = db.prepare('SELECT is_squire FROM users WHERE id=?');
   const book = db.prepare(`SELECT b.*, e.section_id AS uncounted_entry FROM books b
     LEFT JOIN book_reading_entries e ON e.book_id=b.id AND e.counts_as_section=0 WHERE b.id=?`);
   const sections = db.prepare('SELECT section_id FROM book_sections WHERE book_id=?');
   const state = db.prepare('SELECT state_data FROM user_books WHERE user_id=? AND book_id=?');
-  const visits = db.prepare("SELECT ref FROM xp_events WHERE user_id=? AND event='visit_node' AND ref LIKE ?");
-  const rewarded = db.prepare('SELECT 1 FROM ruby_rewards WHERE user_id=? AND book_id=? AND kind=?');
-  const award = db.prepare('INSERT OR IGNORE INTO ruby_rewards(user_id,book_id,kind) VALUES(?,?,?)');
+  const visits = db.prepare(`SELECT ref FROM xp_events WHERE user_id=? AND event IN
+    (${discovery ? "'discover_node','visit_node'" : "'visit_node'"}) AND ref LIKE ?`);
+  const ledger = discovery ? 'book_discovery_ruby_rewards' : 'ruby_rewards';
+  const rewarded = db.prepare(`SELECT 1 FROM ${ledger} WHERE user_id=? AND book_id=? AND kind=?`);
+  const award = db.prepare(`INSERT OR IGNORE INTO ${ledger}(user_id,book_id,kind) VALUES(?,?,?)`);
   const children = db.prepare(`SELECT id FROM books WHERE is_container=0 AND (parent_book_id=? OR id IN
     (SELECT book_id FROM book_anthology_memberships WHERE anthology_id=?))`);
   const parents = db.prepare(`SELECT parent_book_id AS id FROM books WHERE id=? AND parent_book_id IS NOT NULL
@@ -82,7 +85,8 @@ function createRubyCompletionChecker(db) {
     }
     // Match the graph and XP completion rule, including unreachable manual nodes.
     for (const [id, node] of Object.entries(saved?.graph || {})) {
-      if (isMappedGraphNode(node)) visited.add(String(id));
+      if (discovery || isMappedGraphNode(node)) visited.add(String(id));
+      if (discovery) for (const choice of Array.isArray(node?.choices) ? node.choices : []) visited.add(String(choice));
     }
     if (canonical.length) return { count: total,
       complete: canonical.filter(id => visited.has(id)).length >= target };
@@ -101,17 +105,22 @@ function createRubyCompletionChecker(db) {
     return { count: total, complete: true };
   }
 
+  const checkCollections = require('./collection-completion-gems').createCollectionCompletionChecker(db, completion, discovery);
   const check = db.transaction((userId, bookId) => {
     const account = user.get(userId);
     if (!account) return 0;
     const minimumSections = account.is_squire ? 25 : 50;
     const row = book.get(bookId);
     if (!row) return 0;
+    // An incomplete/private member cannot complete any public collection.
+    // Avoid scanning every other member on each ordinary discovery or visit.
+    const bookComplete = !row.is_container && row.is_public && completion(userId,row).complete;
+    if (!row.is_container && !bookComplete) return 0;
     let earned = 0;
     if (row.is_public && !row.is_container && row.total_sections >= minimumSections && !rewarded.get(userId, row.id, 'book')) {
-      if (completion(userId, row).complete) earned += award.run(userId, row.id, 'book').changes;
+      if (bookComplete) earned += award.run(userId, row.id, 'book').changes;
     }
-    const anthologyIds = row.is_container ? [{ id: row.id }] : parents.all(bookId, bookId);
+    const anthologyIds = discovery ? [] : row.is_container ? [{ id: row.id }] : parents.all(bookId, bookId);
     for (const { id } of anthologyIds) {
       const anthology = book.get(id);
       if (rewarded.get(userId, id, 'anthology') || !anthology?.is_container || !anthology.is_public) continue;
@@ -119,7 +128,7 @@ function createRubyCompletionChecker(db) {
       if (!members.length || members.some(child => !child.is_public) || members.reduce((n, child) => n+child.total_sections,0) < minimumSections) continue;
       if (members.every(child => completion(userId,child).complete)) earned += award.run(userId,id,'anthology').changes;
     }
-    return earned;
+    return earned + checkCollections(userId, bookId, minimumSections);
   });
   return (userId, bookId) => check.immediate(userId,bookId);
 }

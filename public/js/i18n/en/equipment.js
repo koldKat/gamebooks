@@ -16,6 +16,7 @@ export default {
     'cs.cancel':          'Cancel',
     'cs.save':            'Save',
     'cs.save_template':   'Save as template',
+    'cs.save_template_tooltip': 'Save the current character sheet as a template to reuse across runs.',
 
     'inv.badge.item':      'Item',
     'inv.badge.equipped':  'Equipped',
@@ -30,6 +31,8 @@ export default {
     'inv.add_title':       'Add Item',
     'inv.add_btn':         '+ Add to Inventory',
     'inv.save_template':   'Save as Template',
+    'inv.save_template_tooltip': 'Save the current inventory as a template to reuse across runs.',
+    'eq.save_template_tooltip': 'Save the current equipment as a template to reuse across runs.',
     'inv.qty_label':       'Qty',
     'inv.note_label':      'Note',
     'inv.note_placeholder': 'e.g. 1d6+4, rusted…',

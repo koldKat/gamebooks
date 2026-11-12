@@ -1,9 +1,9 @@
 export default {
   'battlesim524.title': 'Battle Simulator - Garden of Madness',
   'battlesim524.character': 'Your character',
-  'battlesim524.expertise': 'EXPERTISE',
-  'battlesim524.vitality': 'VITALITY',
-  'battlesim524.fortune': 'FORTUNE',
+  'battlesim524.expertise': 'Expertise',
+  'battlesim524.vitality': 'Vitality',
+  'battlesim524.fortune': 'Fortune',
   'battlesim524.weaponDamage': 'Weapon damage',
   'battlesim524.potions': 'Healing draughts',
   'battlesim524.provisions': 'Meals',

@@ -3,13 +3,13 @@ const labels = Object.fromEntries(Object.entries(common).filter(([key]) => !key.
   .map(([key, value]) => [key.replace('battlesim674.', ''), value]));
 Object.assign(labels, {
   title: 'Battle Simulator - The Plains of Howling Darkness',
-  created: 'Character created: Rank 4, STAMINA 20, chain mail and 65 Shards.',
+  created: 'Character created: Rank 4, Stamina 20, chain mail and 65 Shards.',
   note: 'Wounds carry between fights. Enter effective abilities, including equipment. Apply story rewards, poison, disease and ship losses yourself. Arena spell choices are resolved in the reader.',
-  'effect.immortal': 'Kaschuf is still immortal. Follow section 304 after winning; escaping there costs one die of STAMINA.',
+  'effect.immortal': 'Kaschuf is still immortal. Follow section 304 after winning; escaping there costs one die of Stamina.',
   'effect.wolfpack': 'After winning, take a wolf pelt and choose your route in section 147.',
   'effect.daggers': 'The first wound ends this encounter. If still alive, continue at section 184.',
-  'effect.snake': 'If wounded, reduce CHARISMA and COMBAT by 1 until the poison is cured.',
-  'effect.blight': 'If wounded, the Blight of Nagil reduces CHARISMA and COMBAT by 1 until cured.',
+  'effect.snake': 'If wounded, reduce Charisma and Combat by 1 until the poison is cured.',
+  'effect.blight': 'If wounded, the Blight of Nagil reduces Charisma and Combat by 1 until cured.',
   'seaKind.shipwreck': 'Survive the shipwreck',
 });
 const enemies = ['Faery Hound', 'Vampire', 'Manbeast', 'Kaschuf', 'Nomad', 'Wolfpack', 'Avar Hordeth',

@@ -11,6 +11,6 @@ export default {...labels,
   'battlesim1440.note':'Use the bonuses on your character record. Choose a passage preset or enter your own opponent. Source items and Strength here belong only to this simulator.',
   'battlesim1440.openingNote':'Before fighting, Run Away succeeds on 8 or more; failure leaves you surprised. During combat you need 9 or more.',
   'battlesim1440.otherSpells':'The staff supplies Fire Bolt while charges remain. Other spell costs still apply. Record the Skeleton’s Strength loss until the adventure ends; recovery and information spells follow the reader.',
-  'battlesim1440.item-talisman':'Talisman (§206): DB +2 while worn',
+  'battlesim1440.item-talisman':'Talisman (§206): Db +2 while worn',
   'battlesim1440.item-enchantedSpear':'Enchanted spear (§222): double numeric damage when using the spear',
 };

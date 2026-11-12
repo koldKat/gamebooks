@@ -4,11 +4,13 @@
 const events = require('../public/js/seasonal-events/calendar.json');
 const { activeSeasons } = require('../public/js/seasonal-events/schedule.js');
 const { seasonalContributionEligible } = require('./db/seasonal-contributions');
+const { isPartyXpContext } = require('./seasonal-party-context');
 
 function seasonalXpSeasons(event, date = new Date(), context = null) {
   if (context && !seasonalContributionEligible(context.db, event, context.ref)) return [];
   return activeSeasons(events, date)
-    .filter(season => season.xpMultiplier > 1 && (season.xpEvents.includes('*') || season.xpEvents.includes(event)));
+    .filter(season => season.xpMultiplier > 1 && (season.xpEvents.includes('*')
+      || season.xpEvents.includes(event) || (season.partyXpEvents && isPartyXpContext(context))));
 }
 
 function seasonalXpMultiplier(event, date = new Date(), context = null) {

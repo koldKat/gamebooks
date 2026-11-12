@@ -1,3 +1,4 @@
+@import url('./themed-select.css');
 /* ── Battle Simulator (Пътят на пъдпъдъка) ───────────────────────────────── */
 
 #play-btn-row > :is(#battlesim-btn, button[id^="sim"][id$="-btn"]) {
@@ -69,8 +70,8 @@
   color: #9ca3af;
   padding: 0.4rem 0.85rem;
   font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  text-transform: none;
+  letter-spacing: normal;
   cursor: pointer;
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
@@ -89,8 +90,8 @@
   color: #9ca3af;
   padding: 0.4rem 0.85rem;
   font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  text-transform: none;
+  letter-spacing: normal;
   cursor: pointer;
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
@@ -117,8 +118,8 @@
   color: #9ca3af;
   padding: 0.4rem 0.85rem;
   font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  text-transform: none;
+  letter-spacing: normal;
   cursor: pointer;
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
@@ -145,8 +146,8 @@
   color: #9ca3af;
   padding: 0.4rem 0.85rem;
   font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  text-transform: none;
+  letter-spacing: normal;
   cursor: pointer;
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
@@ -167,8 +168,8 @@
   color: #9ca3af;
   padding: 0.4rem 0.85rem;
   font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  text-transform: none;
+  letter-spacing: normal;
   cursor: pointer;
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
@@ -189,8 +190,8 @@
   color: #9ca3af;
   padding: 0.4rem 0.85rem;
   font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  text-transform: none;
+  letter-spacing: normal;
   cursor: pointer;
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
@@ -303,8 +304,8 @@
   color: #9ca3af;
   padding: 0.4rem 0.85rem;
   font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  text-transform: none;
+  letter-spacing: normal;
   cursor: pointer;
   backdrop-filter: blur(6px);
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
@@ -451,8 +452,8 @@
   font-size: 0.68rem;
   font-weight: 600;
   color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: none;
+  letter-spacing: normal;
   margin-bottom: 0.1rem;
 }
 .bsim-sync-btn {
@@ -568,8 +569,8 @@
   font-size: 0.68rem;
   font-weight: 600;
   color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: none;
+  letter-spacing: normal;
   list-style: none;
 }
 .bsim-history summary::-webkit-details-marker { display: none; }
@@ -697,7 +698,8 @@
   min-width: 0;
 }
 .bsim-modal .bsim-checkbox { min-height: 22px; }
-.bsim-modal .bsim-btn-row { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.bsim-modal .bsim-btn-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0.3rem; }
+.bsim-modal .bsim-btn-row > button { flex: 1 1 auto; width: auto; }
 .bsim-report-table { width: 100%; border-collapse: collapse; }
 .bsim-report-table :is(th, td) { padding: 0.15rem 0.35rem; text-align: left; }
 .bsim-report-table th { color: #9ca3af; font-weight: normal; }
@@ -712,8 +714,33 @@
 .bsim-modal :is(.inv-edit-input, .inv-qty-btn) { height: 22px; min-height: 22px; line-height: 1.2; }
 .bsim-modal .inv-edit-input { padding: 2px 6px; }
 .bsim-modal .inv-modal-hdr { padding: 0.4rem 0.5rem; }
+
+/* Shared presentation for every simulator, including older book panels. */
+.bsim-modal {
+  --bsim-success: #86b58c;
+  --bsim-danger: #d77979;
+  --bsim-accent: #cfb66f;
+  --bsim-muted: #87919e;
+}
+.inv-overlay .bsim-modal :is(button, label, summary, legend, h1, h2, h3, h4, .inv-modal-title, .bsim-side-title) {
+  text-transform: none !important;
+  letter-spacing: normal;
+  font-family: inherit;
+}
+.bsim-modal label.inv-edit-row:has(> .themed-select:first-child:nth-last-child(2)):has(> select.themed-select-native:last-child) {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  align-items: center;
+}
+.bsim-modal .inv-edit-row > .themed-select { min-width: 0; }
+.inv-overlay .bsim-modal .themed-select-trigger { padding-right: 22px; }
+.bsim-log :is(.bsim-log-success, .s8-dmg-player, .s8-win, .s8-die-hit) { color: var(--bsim-success); }
+.bsim-log :is(.bsim-log-danger, .s8-dmg-enemy, .s8-dead) { color: var(--bsim-danger); }
+.bsim-log :is(.bsim-log-accent, .s8-die-6) { color: var(--bsim-accent); }
+.bsim-log :is(.bsim-log-muted, .s8-miss, .s8-die-miss) { color: var(--bsim-muted); }
+.bsim-log :is(.bsim-log-success, .bsim-log-danger, .bsim-log-accent) { font-weight: 600; }
 .bsim-modal .inv-modal-ftr { padding: 0.35rem 0 0; gap: 0.3rem; }
-.bsim-opponent-row { min-width: 0; margin: 0.25rem 0; padding: 0.25rem; border: 1px solid #374151; border-radius: 4px; }
+.bsim-opponent-row { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; margin: 0.25rem 0; padding: 0.25rem; border: 1px solid #374151; border-radius: 4px; }
 .bsim-opponent-editor .autocomplete-wrap { flex: 1; min-width: 0; }
 .bsim-opponent-editor .autocomplete-wrap > .inv-edit-input { width: 100%; }
 .bsim-opponent-editor > button[hidden], .bsim-opponent-row > button[hidden] { display: none; }

@@ -180,18 +180,18 @@ export async function showBooks() {
   if (getToken()) { _scheduleLiveUiRefresh({ party: true }, 60); }
 
   // Render immediately to avoid blank/stale flash
-  if (getCachedBooks()) {
+  if (Array.isArray(getCachedBooks()) && Array.isArray(getCachedAllSeries()) && Array.isArray(getCachedStashes())) {
     // Re-render with current prefs maps so the screen shows correct collapsed state immediately
-    renderBooksList(getCachedBooks(), getCachedAllSeries() ?? [], getCachedStashes() ?? []);
+    renderBooksList(getCachedBooks(), getCachedAllSeries(), getCachedStashes());
   } else {
     // No in-memory cache - fall back to localStorage so the list isn't blank
     try {
       const cb = JSON.parse(localStorage.getItem('books_list_v1')  || 'null');
       const cs = JSON.parse(localStorage.getItem('series_list_v1') || 'null');
       const ct = JSON.parse(localStorage.getItem('stashes_list_v1') || 'null');
-      if (Array.isArray(cb)) {
+      if (Array.isArray(cb) && Array.isArray(cs) && Array.isArray(ct)) {
         setBooksDataFresh(false);
-        renderBooksList(cb, Array.isArray(cs) ? cs : [], Array.isArray(ct) ? ct : []);
+        renderBooksList(cb, cs, ct);
       }
       else if (cb) { localStorage.removeItem('books_list_v1'); localStorage.removeItem('series_list_v1'); localStorage.removeItem('stashes_list_v1'); }
     } catch (_) {}
@@ -210,14 +210,16 @@ export async function showBooks() {
     ]);
     if (getToken() !== sessionToken) return;
     const books   = await booksRes.json();
-    const stashes = stashesRes.ok ? await stashesRes.json() : [];
-    const allSeries = seriesRes.ok ? await seriesRes.json() : [];
+    if (!booksRes.ok || !stashesRes.ok || !seriesRes.ok) throw new Error('Library data is incomplete');
+    const stashes = await stashesRes.json();
+    const allSeries = await seriesRes.json();
     const activeRuns = activeRunsRes?.ok ? await activeRunsRes.json().catch(() => null) : null;
     if (getToken() !== sessionToken) return;
     if (Array.isArray(activeRuns)) setActiveSeriesRuns(activeRuns);
     await _prefsReady;
     if (getToken() !== sessionToken) return;
-    renderBooksList(books, allSeries, Array.isArray(stashes) ? stashes : []);
+    if (!Array.isArray(books) || !Array.isArray(allSeries) || !Array.isArray(stashes)) return;
+    renderBooksList(books, allSeries, stashes);
     setBooksDataFresh(true);
   } catch (_) {}
 }

@@ -122,6 +122,21 @@ scroll.api._setLandingPanelCollapsed('unknown', true);
 scroll.api._setPlayPanelCollapsed('unknown', true);
 assert.equal(scroll.requests.length, 0, 'unknown panel keys ignored');
 
+const playReload = await harness();
+playReload.state.books = [{ id: 42, series_id: 2 }];
+playReload.state.series = [{ id: 2 }, { id: 4 }];
+playReload.state.stashes = null;
+const stashPrefs = { seriesExpanded: { 'main:2': '1', '7:2': '0', 'main:4': '0', '7:4': '1' } };
+playReload.api.applyPrefs(stashPrefs);
+assert.equal(playReload.effects.filter(e => e[0] === 'render').length, 0,
+  'refreshing in play must not render unknown stashes as an empty library');
+assert.equal(playReload.state.stashes, null, 'partial preference refresh retains the unloaded stash baseline');
+assert.deepEqual(plain(playReload.effects.find(e => e[0] === 'expanded')[2]), stashPrefs.seriesExpanded);
+playReload.state.stashes = [{ id: 7, seriesIds: [2, 4] }];
+playReload.api.applyPrefs(stashPrefs);
+assert.deepEqual(plain(playReload.effects.find(e => e[0] === 'render')[3]), playReload.state.stashes,
+  'returning Home renders actual stash membership with the saved collapsed and expanded choices');
+
 const applied = await harness();
 applied.body.classList.toggle('feed-collapsed', false);
 applied.api.applyPrefs({ 'covers-collapsed': '1', 'right-collapsed': '0', 'sidebar-collapsed': '1',

@@ -5,7 +5,7 @@ import { createEffects } from './effects.js';
 import { createSetup } from './setup.js';
 
 // BEGIN SIMULATOR WIRING
-const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, AXE_DICE_BONUS, POTION_HEAL_BONUS, SVG_SKULL, SVG_TARGET, SVG_TROPHY, _appendLog, _calcDmg, _closeSim8, _data, _diceHtml, _dieHtml, _dmgHtml, _enemyList, _enemyName, _fireBow, _loadEnemyList, _openSim8, _recordOutcome, _renderHistory, _renderInputs, _renderLog, _resetBattle, _rollDice, _runRound, _setupEnemyAutocomplete, _statField, _updateItemBtns, _updateStatus, _usePotion, apiFetch, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initBattleSim8, registerPanelShortcut, renderSim8, saveState, setSim8Visible, shortcutLabel, showAlert, t, _fightActive });
+const simulatorContext = () => ({ ALL_PANEL_OVERLAY_IDS, AXE_DICE_BONUS, POTION_HEAL_BONUS, SVG_SKULL, SVG_TARGET, SVG_TROPHY, _appendLog, _calcDmg, _closeSim8, _data, _diceHtml, _dieHtml, _dmgHtml, _enemyList, _enemyName, _fireBow, _loadEnemyList, _openSim8, _recordOutcome, _renderHistory, _renderInputs, _renderLog, _resetBattle, _rollDice, _runRound, _setupEnemyAutocomplete, _statField, _updateItemBtns, _updateStatus, _usePotion, apiFetch, currentBookId, currentPlaythrough, escapeHtml, getPlayBtnRow, initBattleSim8, registerPanelShortcut, renderSim8, saveState, setSim8Visible, shortcutLabel, showAlert, t, _fightActive, _prepareEncounter: () => setup.prepare() });
 const { _data, _appendLog, _recordOutcome } = createState(simulatorContext);
 const { _rollDice, _calcDmg, _diceHtml, _enemyName, _fightActive, _runRound, _fireBow, _resetBattle, _startEncounter, _chooseOpponent, _resolveEnemyAttack } = createCombat(simulatorContext);
 const { _usePotion } = createEffects(simulatorContext);
@@ -63,9 +63,10 @@ function _updateItemBtns() {
 
   const alive   = d.player.life > 0 && d.enemy.life > 0;
   const preRound = d.round === 1;
+  const pendingSetup = setup.pending();
 
   if (bowBtn) {
-    const canFire = alive && preRound && !d.bowFired && !d.group?.bowForbidden && !d.enemy.foeFirst && !d.pendingAttack && !d.outcomeRecorded && d.items?.bow && (d.items?.arrows > 0);
+    const canFire = d.player.life > 0 && d.items?.bow && (d.items?.arrows > 0) && (pendingSetup ? !pendingSetup.bowForbidden : alive && preRound && !d.bowFired && !d.group?.bowForbidden && !d.enemy.foeFirst && !d.pendingAttack && !d.outcomeRecorded);
     bowBtn.style.display = canFire ? '' : 'none';
     if (canFire) bowBtn.textContent = t('battlesim8.btn.bow_fire_count', { n: d.items.arrows });
   }
@@ -80,11 +81,13 @@ function _updateStatus() {
   const d  = _data();
   const el = document.getElementById('s8-status');
   if (!d || !el) return;
+  const pendingSetup = setup.pending();
   if (d.player.life <= 0)     el.innerHTML = `${SVG_SKULL} ${t('battlesim8.status.fallen')}`;
+  else if (pendingSetup) el.textContent = t('battlesim8.ui.prepare_hint');
   else if (d.awaitingOpponent) el.textContent = t('battlesim8.ui.choose_next');
   else if (d.enemy.life <= 0) el.innerHTML = `${SVG_TROPHY} ${t('battlesim8.status.victory')}`;
   else                        el.innerHTML = '';
-  document.getElementById('s8-round').disabled = d.player.life <= 0 || d.enemy.life <= 0 || !!d.pendingAttack || !!d.outcomeRecorded;
+  document.getElementById('s8-round').disabled = d.player.life <= 0 || (!pendingSetup && (d.enemy.life <= 0 || !!d.pendingAttack || !!d.outcomeRecorded));
 }
 
 function _renderInputs() {
@@ -287,7 +290,7 @@ export function initBattleSim8() {
             </div>
           </div>
           <div class="s8-rules-note">
-            ${t('battlesim8.ui.rules_note')}
+            ${t('battlesim8.ui.rules_note')}<br>${t('battlesim8.ui.potion_timing')}
           </div>
           <div class="inv-edit-row">
             <input id="s8-six-wins" type="checkbox" class="inv-edit-check">
@@ -315,6 +318,7 @@ export function initBattleSim8() {
   const btn = document.createElement('button');
   btn.id            = 'sim8-btn';
   btn.innerHTML     = shortcutLabel(t('battlesim.title'));
+  btn.setAttribute('aria-keyshortcuts', 'S');
   btn.style.display = 'none';
   getPlayBtnRow().appendChild(btn);
 
@@ -331,7 +335,7 @@ export function initBattleSim8() {
     close: _closeSim8,
   });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && overlay.classList.contains('active')) _closeSim8();
+    if (e.key === 'Escape' && !e.defaultPrevented && overlay.classList.contains('active')) _closeSim8();
   });
 
   document.getElementById('s8-round').addEventListener('click', _runRound);

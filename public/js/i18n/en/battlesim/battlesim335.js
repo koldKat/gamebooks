@@ -7,6 +7,6 @@ export default {
   'battlesim335.animal':'Animal Mastery',
   'battlesim335.pathsmanship':'Grand Pathsmanship',
   'battlesim335.strength':'Cast Strength (Sun Knight with Kai-alchemy)',
-  'battlesim335.log.temporary_boost_started':'Strength adds {skill} CS and {endurance} EP for this fight.',
-  'battlesim335.log.temporary_boost_ended':'Strength ended. The temporary EP bonus is removed; a surviving player retains at least 1 EP.',
+  'battlesim335.log.temporary_boost_started':'Strength adds {skill} Cs and {endurance} Ep for this fight.',
+  'battlesim335.log.temporary_boost_ended':'Strength ended. The temporary Ep bonus is removed; a surviving player retains at least 1 Ep.',
 };

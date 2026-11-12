@@ -31,12 +31,18 @@ const stubs = {
   '../core/util.js': { escapeHtml: value => String(value), compressToBlob() {} },
 };
 const mod = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), { context });
-await mod.link(specifier => {
+async function link(specifier) {
+  if (specifier === './profile-stats.js') {
+    const stats = new SourceTextModule(readFileSync(new URL('./profile-stats.js', 'file://' + process.argv[1]), 'utf8'), { context });
+    await stats.link(link);
+    return stats;
+  }
   const values = stubs[specifier]; assert.ok(values, specifier);
   return new SyntheticModule(Object.keys(values), function () {
     for (const [name, value] of Object.entries(values)) this.setExport(name, value);
   }, { context });
-});
+}
+await mod.link(link);
 await mod.evaluate();
 const profile = mod.namespace;
 profile.setProfileHooks({ onRewardSnapshot: () => { snapshots++; } });
@@ -52,10 +58,10 @@ assert.equal(snapshots, 1);
 for (const prefix of ['books', 'play', 'profile']) {
   assert.equal(el(prefix + '-xp-hb-rate').textContent, '', 'zero heartbeat rate stays out of the new-account display');
 }
-assert.match(el('profile-own-stats').innerHTML, /profile.ratings_given.*>4<.*profile.average_rating.*>3\.50</);
-assert.match(el('profile-own-stats').innerHTML, />12<\/span> pub.stat.sim_battles/);
-assert.match(el('profile-own-stats').innerHTML, />9<\/span> pub.stat.sim_wins/);
-assert.match(el('profile-own-stats').innerHTML, />3<\/span> pub.stat.sim_losses/);
+assert.match(el('profile-own-stats').innerHTML, /Profile.ratings_given.*>4<.*Profile.average_rating.*>3\.50</);
+assert.match(el('profile-own-stats').innerHTML, /Profile.stats.fought<\/span><span class="pub-stat-val">12</);
+assert.match(el('profile-own-stats').innerHTML, /Pub.stat.wins<\/span><span class="pub-stat-val">9</);
+assert.match(el('profile-own-stats').innerHTML, /Pub.stat.losses<\/span><span class="pub-stat-val">3</);
 profile.closeProfileModal();
 
 const late = profile.openProfileModal();

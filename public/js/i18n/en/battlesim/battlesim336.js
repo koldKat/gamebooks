@@ -9,6 +9,6 @@ export default {
   'battlesim336.flame':'Sun Lord: ignite a nonmagical metal weapon',
   'battlesim336.deathstaff':'Using the Deathstaff',
   'battlesim336.ranksAboveGrandGuardian':'Ranks above Kai Grand Guardian',
-  'battlesim336.kaiBlast':'Kai-blast (two damage draws / costs 4 EP)',
-  'battlesim336.log.psychic_damage':'Kai-blast inflicts {n} additional ENDURANCE loss.',
+  'battlesim336.kaiBlast':'Kai-blast (two damage draws / costs 4 Ep)',
+  'battlesim336.log.psychic_damage':'Kai-blast inflicts {n} additional Endurance loss.',
 };

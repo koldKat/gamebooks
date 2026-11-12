@@ -6,8 +6,9 @@ import {createOpponentEditor} from '../../opponents.js';
 import {currentBookId,currentPlaythrough,saveState} from '../../../core/state.js';
 import {getPlayBtnRow} from '../../../play/charsheet.js';
 import {showAlert,showConfirm} from '../../../ui-helpers/confirm.js';
-import {registerPanelShortcut,ALL_PANEL_OVERLAY_IDS} from '../../../core/util.js';
+import {registerPanelShortcut,shortcutLabel,ALL_PANEL_OVERLAY_IDS} from '../../../core/util.js';
 import {t} from '../../../i18n.js';
+import {createThemedSelect} from '../../../ui-helpers/themed-select.js';
 
 const ID=definition.stateKey;
 const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -16,9 +17,20 @@ export function createGoblinPanel({document,t,getBookId,getRun,save,showAlert,sh
   const tk=(key,params)=>t('battlesim3196.'+key,params),el=key=>document.getElementById(ID+'-'+key);
   const store=createState(()=>({bookId:getBookId(),run:getRun,save}));
   let shownRun,editor,editorRun;
+  const menus=[];
   const button=key=>`<button type="button" class="inv-add-btn bsim-action-btn" id="${ID}-${key}">${escape(tk(key))}</button>`;
   const input=(key,min,max)=>`<label class="inv-edit-row"><span>${escape(tk(key))}</span><input id="${ID}-${key}" class="inv-edit-input" type="number" min="${min}" max="${max}" step="1" autocomplete="off" required></label>`;
-  function close(){el('overlay')?.classList.remove('active');}
+  function logLine(line) {
+    if (typeof line === 'string') return escape(line);
+    if (line?.type !== 'roll') return '';
+    const color=(value,kind)=>`<span class="bsim-log-${kind}">${escape(value)}</span>`;
+    return tk('roll', {...Object.fromEntries(Object.entries(line).map(([key,value])=>[key,escape(value)])),
+      dice:color(line.dice.join(' + '),'accent'),
+      total:color(line.total,line.hit?'success':'muted'),
+      enemyLoss:color(line.enemyLoss,line.enemyLoss?'success':'muted'),
+      playerLoss:color(line.playerLoss,line.playerLoss?'danger':'muted')});
+  }
+  function close(){menus.forEach(menu=>menu.close());el('overlay')?.classList.remove('active');}
   function change(update){
     if(getRun()!==shownRun||Number(getBookId())!==3196||!el('overlay')?.classList.contains('active')){close();return;}
     try{if(store.change(update))render();}catch{showAlert(tk('invalid'));}
@@ -50,8 +62,9 @@ export function createGoblinPanel({document,t,getBookId,getRun,save,showAlert,sh
     el('status').textContent=tk('status.'+(fight?.outcome??(fight?'active':'ready')))+(fight?.outcome==='loss'&&fight.hp>0?' '+tk('timeout'):'');
     el('destination').textContent=fight?.destination?tk('destination',{section:fight.destination}):'';
     el('opponents').innerHTML=fight?fight.enemies.map(e=>`<div>${escape(tk('enemyLine',{name:e.name,hp:e.hp,rounds:e.rounds}))}</div>`).join(''):'';
-    el('log').innerHTML=d.log.map(line=>'<div>'+escape(line)+'</div>').join('');
+    el('log').innerHTML=d.log.map(line=>'<div>'+logLine(line)+'</div>').join('');
     el('history').innerHTML=d.history.slice(-40).reverse().map(row=>'<div>'+escape(row.enemy+': '+tk('status.'+row.outcome))+'</div>').join('');
+    menus.forEach(menu=>menu.sync());
   }
   function open(){
     if(Number(getBookId())!==3196||!getRun()){showAlert(t('battlesim.no_active_playthrough'));return;}
@@ -89,7 +102,7 @@ export function createGoblinPanel({document,t,getBookId,getRun,save,showAlert,sh
     }));
     for(const [key,attack]of [['standard',7],['power',9]])el(key).addEventListener('click',()=>change(d=>{
       d.fight=round(d.fight,Number(el('target').value),attack);
-      for(const e of d.fight.events)d.log.push(tk('roll',{...e,dice:e.dice.join(' + ')}));
+      for(const e of d.fight.events)d.log.push({type:'roll',...e});
     }));
     el('cancel').addEventListener('click',()=>{
       const run=getRun(),before=store.read();
@@ -97,12 +110,13 @@ export function createGoblinPanel({document,t,getBookId,getRun,save,showAlert,sh
         if(getRun()===run&&store.read()===before)change(d=>{d.fight=null;});
       });
     });
-    const trigger=document.createElement('button');trigger.id=ID+'-btn';trigger.style.display='none';trigger.textContent=t('battlesim.title');getButtonRow().appendChild(trigger);trigger.addEventListener('click',open);
+    const trigger=document.createElement('button');trigger.id=ID+'-btn';trigger.style.display='none';trigger.innerHTML=shortcutLabel(t('battlesim.title'));trigger.setAttribute('aria-keyshortcuts','S');getButtonRow().appendChild(trigger);trigger.addEventListener('click',open);
     el('close').addEventListener('click',close);
     let backdrop=false;overlay.addEventListener('mousedown',event=>{backdrop=event.target===overlay;});
     overlay.addEventListener('click',event=>{if(backdrop&&event.target===overlay)close();});
     overlay.addEventListener('keydown',event=>{if(event.key==='Escape'&&!event.defaultPrevented){event.stopPropagation();close();}});
     registerShortcut('KeyS',{getButton:()=>trigger,getOverlay:()=>overlay,otherOverlayIds:ALL_PANEL_OVERLAY_IDS.filter(id=>id!==overlay.id),open,close});
+    menus.push(...['encounter','target'].map(key=>createThemedSelect(el(key))));
   }
   return {init,render,setVisible(visible){if(el('btn'))el('btn').style.display=visible?'':'none';if(!visible)close();}};
 }

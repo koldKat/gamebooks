@@ -6,6 +6,37 @@ const vm = require('node:vm');
 const Database = require('better-sqlite3');
 const { seasonalXpMultiplier } = require('../server/seasonal-events');
 const { initializeSeasonParticipation, recordSeasonParticipation } = require('../server/db/season-participation');
+const { withPartyXpContext } = require('../server/seasonal-party-context');
+
+test('Thanksgiving doubles every party award, records participation and leaves solo activity alone', t => {
+  const f = fixture(t), date = new Date('2026-11-26T12:00:00Z');
+  f.date(date);
+  f.db.exec(`CREATE TABLE user_books(user_id INTEGER,book_id INTEGER,party_id INTEGER);
+    INSERT INTO user_books VALUES(1,10,7),(2,10,7),(1,20,NULL),(1,30,8);`);
+  const party = award => withPartyXpContext(f.db, 1, 10, award, date);
+  for (const event of ['discover_node','visit_node','set_shape','add_item','win_run','battle_run',
+    'battlesim_win','battlesim_loss','discover_all_series','future_party_action']) {
+    const before = f.xp();
+    party(() => assert.equal(f.award(event, 'party:' + event, 10), true));
+    assert.equal(f.xp() - before, 20, event);
+    assert.equal(party(() => f.award(event, 'party:' + event, 10)), false, 'no duplicate XP');
+  }
+  assert.equal(party(() => seasonalXpMultiplier('job_xp', date)), 2, 'party awards also double job XP');
+  assert.equal(party(() => seasonalXpMultiplier('share_run', date)), 2, 'existing bonus does not stack');
+  assert.equal(party(() => seasonalXpMultiplier('visit_node', date, { db:f.db,userId:2 })), 1,
+    'another player cannot inherit this award context');
+  for (const book of [20,30]) {
+    const before = f.xp();
+    withPartyXpContext(f.db, 1, book, () => f.award('visit_node', 'solo:' + book, 10), date);
+    assert.equal(f.xp() - before, 10, 'solo book or lone party member');
+  }
+  assert.equal(seasonalXpMultiplier('visit_node', date), 1, 'context cleared after award');
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM seasonal_participation_days WHERE season_id='thanksgiving'").get().n, 1);
+  assert.throws(() => party(() => { throw Error('cancel award'); }), /cancel award/);
+  assert.equal(seasonalXpMultiplier('visit_node', date), 1, 'context cleared on errors');
+  const ended = new Date('2026-11-29T22:00:00Z');
+  assert.equal(withPartyXpContext(f.db,1,10,()=>seasonalXpMultiplier('visit_node',ended),ended),1);
+});
 
 test('Diwali doubles normal and simulator wins only within its moving Sofia dates', () => {
   for (const event of ['win_run','first_win','first_win_ow','battlesim_win']) {

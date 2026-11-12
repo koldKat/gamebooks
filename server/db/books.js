@@ -407,6 +407,13 @@ function updateSeries(id, name, description, isPublic, isOpenWorld = null) {
       WHERE id = ?
     `).run(name.trim(), description?.trim() || null, isPublic ? 1 : 0, firstPublish ? 1 : 0, id);
   }
+  if (isPublic && !old.is_public) {
+    const member=db.prepare(`SELECT b.id FROM books b LEFT JOIN books p ON p.id=b.parent_book_id
+      WHERE b.is_container=0 AND (b.series_id=? OR (b.series_id IS NULL AND p.series_id=?)) LIMIT 1`).get(id,id);
+    if (member) for (const reward of require('./completion-reward-conversion').backfillCompletionGemsForBook(db,member.id,true)) {
+      reportGemReward(reward.userId,reward);
+    }
+  }
   return true;
 }
 
@@ -1042,10 +1049,15 @@ function updateBook(userId, bookId, name, totalSections, isbn, issn, asin, pages
         : Math.max(vis.size, _permanentVisitedCount(row.user_id, bookId));
       if (trulyVisited >= discoverableSections) {
         awardXp(row.user_id, 'visit_all', bookId);
-        awardCoins(row.user_id, 'book_completed', bookId, 1);
         _checkGroupMilestone(row.user_id, seriesId, parentBookId,
           'visit_all', 'visit_all_series', 'visit_all_anthology', true);
       }
+    }
+  }
+
+  if (isPublic && (!oldBook?.is_public || oldBook.total_sections !== totalSections || oldDs !== (discoverableSections ?? null))) {
+    for (const reward of require('./completion-reward-conversion').backfillCompletionGemsForBook(db, bookId, !!isContainer)) {
+      reportGemReward(reward.userId, reward);
     }
   }
 

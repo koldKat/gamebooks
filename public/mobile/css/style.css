@@ -31,6 +31,12 @@ html, body {
   flex-direction: column;
 }
 
+/* Legacy simulators share the launcher row with desktop; keep mobile labels natural. */
+#m-sim-btn-row #play-btn-row > button {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 button, input {
   font: inherit;
   color: inherit;

@@ -9,9 +9,10 @@ const script = `
 import {renderBooksList} from 'file://${repo}/public/js/books/render.js';
 import {_refreshBooksListOnly,_applySavedBookResponse} from 'file://${repo}/public/js/books/data.js';
 import {booksState} from 'file://${repo}/public/js/books/state.js';
+import {_syncMovedSeriesPrefs} from 'file://${repo}/public/js/books/prefs.js';
 import {coversState} from 'file://${repo}/public/js/covers/state.js';
 import {renderCoverActivity} from 'file://${repo}/public/js/covers/book-dialog.js';
-import {syncPrefs} from 'file://${repo}/public/js/ui-helpers/prefs.js';
+import {syncPrefs,applyPrefs,savePrefs} from 'file://${repo}/public/js/ui-helpers/prefs.js';
 const check=(value,label)=>{if(!value)throw Error(label);};
 try {
  localStorage.setItem('gamebook_auth_token','fixture-only');
@@ -36,9 +37,27 @@ try {
  };
  booksState._currentUserId=1;
  booksState.renderBooksList=renderBooksList;
- booksState._hooks={openEditBookModal:options=>edit=options,openEditCompModal:options=>edit=options};
+ booksState._hooks={savePrefs,openEditBookModal:options=>edit=options,openEditCompModal:options=>edit=options};
  coversState._hooks={getIsAdmin:()=>true,refreshBooksListOnly:_refreshBooksListOnly,applySavedBookResponse:_applySavedBookResponse,...booksState._hooks};
  coversState.renderCoverActivity=renderCoverActivity;
+ // Refresh directly in play, receive prefs before stashes, then return Home.
+ const reloadRows=[{id:91,name:'First book',series_id:1,total_sections:100},{id:92,name:'Second book',series_id:2,total_sections:100}];
+ const reloadSeries=[{id:1,name:'Призвание Герой!',is_owner:true},{id:2,name:'Collapsed series',is_owner:true}];
+ const reloadStashes=[{id:20,name:'Series',bookIds:[],seriesIds:[1,2]}];
+ const reloadPrefs={seriesExpanded:{'main:1':'0','20:1':'1','main:2':'1','20:2':'0'},stashExpanded:{20:'1'}};
+ booksState._cachedBooks=reloadRows;booksState._cachedAllSeries=reloadSeries;booksState._cachedStashes=null;
+ localStorage.setItem('sr_expanded_1','0');localStorage.setItem('sr_expanded_2','1');
+ applyPrefs(reloadPrefs);
+ check(booksState._cachedStashes===null,'play refresh does not turn unloaded stashes into an empty stash list');
+ // Home used to render an incomplete stash cache as [], then infer two fake moves.
+ renderBooksList(reloadRows,reloadSeries,[]);
+ renderBooksList(reloadRows,reloadSeries,reloadStashes);
+ check(document.querySelector('.series-header-row[data-series-id="1"]').dataset.expanded==='1','returning Home retains the expanded hero series');
+ check(document.querySelector('.series-header-row[data-series-id="2"]').dataset.expanded==='0','returning Home keeps other series collapsed despite opposite main-list preferences');
+ applyPrefs(reloadPrefs);
+ check(document.querySelector('.series-header-row[data-series-id="2"]').dataset.expanded==='0','later preference updates preserve the correct stash state');
+ check(prefWrites===0,'loading a stash never saves invented move preferences');
+ booksState._cachedStashes=null;checks++;
  for(const expanded of [false,true]) for(const anthology of [false,true]) for(const viaInfo of [false,true]) {
   rows=[{id:42,name:'Moved item',total_sections:100,is_public:0,created_by:1,is_container:anthology?1:0,series_id:1,series_name:'Old series'}];
   if(anthology) rows.push({id:43,name:'Child',total_sections:100,parent_book_id:42,is_public:0,created_by:1});
@@ -90,6 +109,7 @@ try {
   document.querySelector(selector).click();
   check(document.querySelector(selector).dataset.expanded==='0','new group starts collapsed before moving');
   const stashes=[{id:70,name:'Destination',bookIds:anthology?[700]:[],seriesIds:anthology?[]:[700]}];
+  _syncMovedSeriesPrefs(stashes); // Confirmed successful stash edit, not an ordinary render.
   renderBooksList(structuredClone(rows),newSeries,stashes);
   if(closedStash) document.querySelector('.stash-header-row[data-stash-id="70"]').click();
   const moved=document.querySelector(selector);
@@ -99,6 +119,7 @@ try {
   moved.click();
   check(moved.dataset.expanded==='1'&&moved.nextElementSibling.querySelector('.book-item'),'moved group still expands normally');
   moved.click();
+  _syncMovedSeriesPrefs([]); // Confirmed removal from the stash.
   renderBooksList(structuredClone(rows),newSeries,[]);
   check(document.querySelector(selector)?.dataset.expanded==='0','moving out also preserves collapse');
   checks++;
@@ -133,6 +154,7 @@ try {
  const syncedStashes=[{id:70,name:'Shared stash',seriesIds:[72],bookIds:[730]}];
  renderBooksList(structuredClone(rows),syncedSeries,syncedStashes);
  const stable=document.querySelector('.book-open-btn[data-id="999"]').closest('.book-item');
+ const writesBeforeRemoteSync=prefWrites;
  for(const expanded of ['0','1','0','1']) {
   remotePrefs={bookExpanded:{700:expanded,710:expanded,720:expanded,730:expanded},seriesExpanded:{'main:71':expanded,'70:72':expanded},stashExpanded:{70:expanded}};
   await syncPrefs();
@@ -143,7 +165,7 @@ try {
   check(document.querySelector('.book-open-btn[data-id="999"]').closest('.book-item')===stable,'remote expansion preserves unrelated DOM');
   checks++;
  }
- check(prefWrites===0,'receiving remote expansion never echoes a preference write');
+ check(prefWrites===writesBeforeRemoteSync,'receiving remote expansion never echoes a preference write');
  document.body.dataset.test=JSON.stringify({width:innerWidth,checks});
 }catch(error){document.body.dataset.failure=error.stack;}
 `;

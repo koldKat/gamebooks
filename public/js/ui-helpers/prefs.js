@@ -116,7 +116,11 @@ export function applyPrefs(p, { renderBooks = true } = {}) {
       'choices-input--pulse', Number(p.choicesRecordedCount) < CHOICES_PULSE_THRESHOLD
     );
   }
-  if (renderBooks && getCachedBooks() && Array.isArray(getCachedBooks())) {
+  // A direct play-page load fetches books before stashes. Rendering that
+  // partial cache as an empty stash list makes the next full load look like
+  // every series moved, overwriting saved stash expansion with main-list state.
+  if (renderBooks && Array.isArray(getCachedBooks())
+      && Array.isArray(getCachedAllSeries()) && Array.isArray(getCachedStashes())) {
     renderBooksList(getCachedBooks(), getCachedAllSeries(), getCachedStashes());
   }
   // Recalculate feed tile sizes after applying saved panel widths.

@@ -49,6 +49,9 @@ const module = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), {
   },
 });
 await module.link(specifier => {
+  if (specifier === '../ui-helpers/themed-select.js') {
+    return new SourceTextModule(readFileSync(process.argv[1].replace(/battlesim\/loader\.js$/, 'ui-helpers/themed-select.js'), 'utf8'), {context});
+  }
   assert.equal(specifier, './layout.js', 'Only the shared layout helper may be eager');
   return new SourceTextModule(readFileSync(process.argv[1].replace(/loader\.js$/, 'layout.js'), 'utf8'), {context});
 });

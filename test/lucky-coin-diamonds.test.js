@@ -64,6 +64,7 @@ test('claims accumulate per player, skip duplicates and unrelated coins, and sur
 function claims(f) {
   const events=[]; let impersonating=false, clock=10000;
   const context=vm.createContext({db:f.db,isImpersonatingContext:()=>impersonating,
+    require:name=>name==='./completion-reward-conversion'?require('../server/db/completion-reward-conversion'):require(name),
     Date:class extends Date { static now(){return ++clock;} },
     _appXpHook:event=>events.push({...event}),coinBalance:row=>row.bonus_coins,
     _insertNotif:f.db.prepare('INSERT INTO notifications VALUES(?,?,?)')});

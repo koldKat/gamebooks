@@ -23,7 +23,7 @@ async function _removeLibraryEntry(url) {
       showAlert((await response.json().catch(() => ({}))).error || t('err.remove_library_entry'));
       return;
     }
-    await _refreshBooksListOnly();
+    await _refreshBooksListOnly({ afterMutation: true, stashMembershipChanged: url.startsWith('/api/stashes/') });
   } catch (_) { showAlert(t('err.remove_library_entry')); }
 }
 

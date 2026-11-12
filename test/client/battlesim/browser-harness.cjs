@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const { spawn } = require('node:child_process');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-module.exports = async function checkBrowser({ file, url, profile, root, width, chromium, timeoutMs = 20000, screenshotPath, screenshotCheck, collectBrowserMemory = false }) {
+module.exports = async function checkBrowser({ file, url, profile, root, width, chromium, timeoutMs = 20000, screenshotPath, screenshotCheck, collectBrowserMemory = false, interact }) {
   if (!chromium || !fs.existsSync(chromium)) throw Error('Set CHROMIUM to a headless Chromium executable');
   const env = { ...process.env, TMPDIR: root };
   delete env.DISPLAY;
@@ -64,6 +64,7 @@ module.exports = async function checkBrowser({ file, url, profile, root, width, 
     await send('Page.bringToFront', {}, sessionId);
     await send('Emulation.setDeviceMetricsOverride', { width, height: 900, deviceScaleFactor: 1, mobile: false }, sessionId);
     await send('Page.navigate', { url: url || 'file://' + file }, sessionId);
+    if (interact) await interact((method, params = {}) => send(method, params, sessionId));
     let last;
     for (let index = 0; index < Math.ceil(timeoutMs / 100); index++) {
       const { result } = await send('Runtime.evaluate', {

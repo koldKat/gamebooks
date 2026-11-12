@@ -7,6 +7,7 @@ import { updateRubiesDisplay } from '../progression/rubies.js';
 import { updateDiamondsDisplay } from '../progression/diamonds.js';
 import { escapeHtml, compressToBlob } from '../core/util.js';
 import { waitForCameraIdle } from '../graph/camera-motion.js';
+import { profileStatsHtml } from './profile-stats.js';
 
 let _hooks = {};
 let _profileModalGeneration = 0;
@@ -326,20 +327,10 @@ function renderXpBlock(data) {
   updateCoinsDisplay(coinsBalance);
   const statsEl = document.getElementById('profile-own-stats');
   if (statsEl) {
-    statsEl.innerHTML =
-      `<span class="pub-stat"><span class="pub-stat-val">${totalBooks}</span> books` +
-        (createdBooks > 0 ? ` <span style="color:#6b7280;font-size:0.78em">(<span style="color:#60a5fa;font-weight:700">${createdBooks}</span> created)</span>` : '') +
-      `</span>` +
-      `<span class="pub-stat"><span class="pub-stat-val">${booksPlayed}</span> played</span>` +
-      `<span class="pub-stat"><span class="pub-stat-val">${totalRuns}</span> runs</span>` +
-      `<span class="pub-stat pub-stat-win"><span class="pub-stat-val">${wins}</span> wins</span>` +
-      `<span class="pub-stat pub-stat-death"><span class="pub-stat-val">${deaths}</span> losses</span>` +
-      (battles > 0 ? `<span class="pub-stat pub-stat-battle"><span class="pub-stat-val">${battles}</span> ${t('pub.stat.battle_deaths')}</span>` : '') +
-      `<span class="pub-stat"><span class="pub-stat-val">${data.simBattlesFought ?? 0}</span> ${t('pub.stat.sim_battles')}</span>` +
-      `<span class="pub-stat pub-stat-win"><span class="pub-stat-val">${data.simBattlesWon ?? 0}</span> ${t('pub.stat.sim_wins')}</span>` +
-      `<span class="pub-stat pub-stat-death"><span class="pub-stat-val">${data.simBattlesLost ?? 0}</span> ${t('pub.stat.sim_losses')}</span>` +
-      `<span class="pub-stat">${t('profile.ratings_given')} <span class="pub-stat-val">${data.ratingsGiven ?? 0}</span></span>` +
-      `<span class="pub-stat">${t('profile.average_rating')} <span class="pub-stat-val">${data.averageRating == null ? '-' : Number(data.averageRating).toFixed(2)}</span></span>`;
+    statsEl.innerHTML = profileStatsHtml({
+      ...data, totalBooks, createdBooks, booksPlayed, totalRuns,
+      wins, losses: deaths, battles,
+    });
   }
 }
 

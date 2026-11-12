@@ -1,7 +1,7 @@
 'use strict';
 
-// Keep importer-created prose and the sleep reference outside gamebook totals.
-const supplementalSection = /^(?:(?:intro(?:duction)?|prolog(?:ue)?|epilog(?:ue)?|opening)(?:[-_].+)?|sleep)$/i;
+// Keep importer-created prose, sleep references and the Bonanza manuscript outside gamebook totals.
+const supplementalSection = /^(?:(?:intro(?:duction)?|prolog(?:ue)?|epilog(?:ue)?|opening)(?:[-_].+)?|sleep|bonanza)$/i;
 const isSupplementalSection = id => supplementalSection.test(String(id));
 // An ending marker can be recorded as a hint before its section is explored.
 const isMappedGraphNode = node => !!node && (!node.discovered
@@ -9,7 +9,7 @@ const isMappedGraphNode = node => !!node && (!node.discovered
   || (node.portals || []).length > 0);
 const names = ['intro', 'introduction', 'prolog', 'prologue', 'epilog', 'epilogue', 'opening'];
 const supplementalSectionSql = column => '(' + names.map(name =>
-  `(lower(${column})='${name}' OR lower(${column}) GLOB '${name}[-_]*')`).concat(`lower(${column})='sleep'`).join(' OR ') + ')';
+  `(lower(${column})='${name}' OR lower(${column}) GLOB '${name}[-_]*')`).concat(`lower(${column}) IN ('sleep','bonanza')`).join(' OR ') + ')';
 
 function uncountedReadingSections(db, bookId, entry) {
   const ids = db.prepare(`SELECT section_id FROM book_sections WHERE book_id=? AND ${supplementalSectionSql('section_id')}`)

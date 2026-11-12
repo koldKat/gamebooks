@@ -17,14 +17,14 @@ if(scenario&&!/^[a-z-]+$/.test(scenario))throw Error('Invalid simulator scenario
   const languages = scenario ? ['en','bg'] : (process.env.SIMULATOR_LANGUAGES?.split(',') ?? ['en']);
   if (!languages.length || !languages.every(language => ['en','bg'].includes(language))) throw Error('Invalid simulator languages');
   for(const language of languages){
-  for(const mode of ['desktop','mobile']){
+  for(const mode of process.env.SIMULATOR_MODE ? [process.env.SIMULATOR_MODE] : ['desktop','mobile']){
     const rosterSeeds=installedRosters;
-    const fixture=fs.readFileSync(__dirname+'/'+(scenario?scenario+'-integration':'architecture-browser')+'.fixture','utf8').replaceAll('REPO','file://'+repo).replaceAll('MODE',mode).replaceAll('LANGUAGE',language).replaceAll('AUDIT_LEGACY_ROSTERS', String(process.env.SIMULATOR_LIVE_ROSTERS === '1')).replace('BOOK_IDS',JSON.stringify(ids)).replace('ROSTER_SEEDS',JSON.stringify(rosterSeeds));
+    const fixture=fs.readFileSync(__dirname+'/'+(scenario?scenario+'-integration':'architecture-browser')+'.fixture','utf8').replaceAll('REPO','file://'+repo).replaceAll('MODE',mode).replaceAll('LANGUAGE',language).replaceAll('PRESENTATION_ONLY',String(process.env.SIMULATOR_PRESENTATION_ONLY === '1')).replaceAll('AUDIT_LEGACY_ROSTERS', String(process.env.SIMULATOR_LIVE_ROSTERS === '1')).replace('BOOK_IDS',JSON.stringify(ids)).replace('ROSTER_SEEDS',JSON.stringify(rosterSeeds));
     const css=['style','charsheet','equipment','battlesim','confirm'].map(n=>`<link rel="stylesheet" href="file://${repo}/public/css/${n}.css">`).join('')
       + `<link rel="stylesheet" href="file://${repo}/public/${mode === 'mobile' ? 'mobile/css/style' : 'css/play'}.css">`;
     const file=path.join(scratch,mode+'.html');
     fs.writeFileSync(file,`<!doctype html><meta charset="utf-8">${css}<div id="${mode === 'mobile' ? 'm-sim-btn-row' : 'main-screen'}"></div><div id="inv-overlay"></div><script>addEventListener('error',e=>document.body.dataset.failure=e.error?.stack||e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=e.reason?.stack||String(e.reason));</script><script type="module">${fixture}</script>`);
-    for(const width of [320,390,1100]){
+    for(const width of process.env.SIMULATOR_WIDTH ? [Number(process.env.SIMULATOR_WIDTH)] : [320,390,1100]){
       const result=await checkBrowser({file,profile:path.join(scratch,mode+'-'+width),root,width,chromium:process.env.CHROMIUM,timeoutMs:120000});
       results.push(result);console.log(JSON.stringify({...result,books:result.books?.length}));
     }

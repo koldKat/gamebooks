@@ -9,9 +9,11 @@ const { isCleanRun } = require('../clean-run');
 const { diamondInfoForUser } = require('./diamonds');
 const { rubyInfoForUser, createRubyCompletionChecker } = require('./rubies');
 let _rubyCompletionChecker;
+let _discoveryRubyChecker;
 const { getJobTitle } = require('./job-xp');
 const { advanceHeartbeatCoins } = require('./heartbeat-coins');
 const { seasonalXpMultiplier } = require('../seasonal-events');
+const { withPartyXpContext } = require('../seasonal-party-context');
 const { recordSeasonParticipation } = require('./season-participation');
 const { seasonalContributionEligible } = require('./seasonal-contributions');
 const { uncountedReadingSections, supplementalSectionSql, isMappedGraphNode } = require('./reading-section-counts');
@@ -314,6 +316,7 @@ const _awardCoinsTx = db.transaction((userId, event, ref, amount) => {
 
 // Reject all coin awards during impersonation, regardless of the caller.
 function awardCoins(userId, event, ref, amount) {
+  if (require('./completion-reward-conversion').RETIRED_COMPLETION_GOLD.has(event)) return false;
   if (isImpersonatingContext()) return false;
   return _awardCoinsTx(userId, event, String(ref), amount);
 }
@@ -428,7 +431,7 @@ function awardXp(userId, event, ref, amountOverride = null) {
   if (isImpersonatingContext()) return false;
   // Seasonal rewards are independent of cosmetic preferences. Apply before normal
   // boosts/caps and retain the same event/ref, so retries cannot earn a second award.
-  const amount = (amountOverride ?? getXpAmount(event)) * seasonalXpMultiplier(event, undefined, { db, ref });
+  const amount = (amountOverride ?? getXpAmount(event)) * seasonalXpMultiplier(event, undefined, { db, ref, userId });
   // Reuse the mining snapshot for feed changes, including a main level-up event
   // awarded during a heartbeat. Job events themselves never award XP or coins.
   const snapshot = () => db.prepare(`SELECT
@@ -646,7 +649,7 @@ function _permanentVisitedCount(userId, bookId) {
     .get(userId, `${bookId}:%`, bookId).n;
 }
 
-function _checkGroupMilestone(userId, seriesId, parentBookId, perBookEvent, seriesEvent, anthologyEvent, awardCoinsOnComplete = false) {
+function _checkGroupMilestone(userId, seriesId, parentBookId, perBookEvent, seriesEvent, anthologyEvent) {
   if (seriesId) {
     const total = db.prepare(
       'SELECT COUNT(*) AS n FROM books WHERE series_id = ? AND is_container = 0'
@@ -662,7 +665,6 @@ function _checkGroupMilestone(userId, seriesId, parentBookId, perBookEvent, seri
       `).get(seriesId, userId, perBookEvent).n;
       if (missing === 0) {
         awardXp(userId, seriesEvent, String(seriesId), total * getXpAmount(seriesEvent));
-        if (awardCoinsOnComplete) awardCoins(userId, seriesEvent, String(seriesId), total);
       }
     }
   }
@@ -681,7 +683,6 @@ function _checkGroupMilestone(userId, seriesId, parentBookId, perBookEvent, seri
       `).get(parentBookId, userId, perBookEvent).n;
       if (missing === 0) {
         awardXp(userId, anthologyEvent, String(parentBookId), total * getXpAmount(anthologyEvent));
-        if (awardCoinsOnComplete) awardCoins(userId, anthologyEvent, String(parentBookId), total);
       }
     }
   }
@@ -841,7 +842,6 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
     const trulyVisited = combined.size >= effective ? combined.size : Math.max(combined.size, _permanentVisitedCount(userId, bookId));
     if (trulyVisited >= effective) {
       awardXp(userId, 'visit_all', bookId);
-      awardCoins(userId, 'book_completed', bookId, 1);
       _checkGroupMilestone(userId, bookRow?.series_id, bookRow?.parent_book_id,
         'visit_all', 'visit_all_series', 'visit_all_anthology', true);
     }
@@ -1012,6 +1012,13 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
       try { _appXpHook?.({ userId, rubyDelta }); } catch (_) {}
     }
   }
+  if (!isImpersonatingContext() && (rubyCandidate
+      || [...newDisc].some(section => !oldDisc.has(section))
+      || (effective > 0 && newDisc.size >= effective))) {
+    _discoveryRubyChecker ||= createRubyCompletionChecker(db, { discovery: true });
+    const diamondDelta = _discoveryRubyChecker(userId, bookId); // Legacy field displays ruby.
+    if (diamondDelta > 0) reportGemReward(userId, { diamondDelta });
+  }
 }
 
 function migrateXpForUser(userId) {
@@ -1057,7 +1064,6 @@ function migrateXpForUser(userId) {
     const visOrMapped = new Set([...vis, ...(_mappedSet(graph, excluded))]);
     if (effective > 0 && visOrMapped.size >= effective) {
       awardXp(userId, 'visit_all', bid);
-      awardCoins(userId, 'book_completed', bid, 1);
     }
 
     for (const [sec, data] of Object.entries(graph)) {
@@ -1137,7 +1143,8 @@ module.exports = {
   awardCoins, awardXp, awardIdleHeartbeatXp, getUserXpInfo, getAllUsersXpInfo, claimBonusGc,
   getBookCreator, getBookIdentifiers,
   _discoveredSet, _visitedSet, _mappedSet, _permanentVisitedCount,
-  _checkGroupMilestone, _checkGroupWonAll, processStateXp,
+  _checkGroupMilestone, _checkGroupWonAll,
+  processStateXp: (...args) => withPartyXpContext(db, args[0], args[1], () => processStateXp(...args)),
   migrateXpForUser, runXpMigration, migratePublicBookXp, migrateEquipmentXp,
   _insertNotif, SIM_HISTORY_KEYS, RETIRED_SIM_HISTORY_KEYS,
 };

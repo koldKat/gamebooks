@@ -1,6 +1,9 @@
 // Bulgarian source labels for simulator 8.
 export default {
+    'battlesim8.ui.prepare_hint': 'Избраната среща се подготвя автоматично с първото действие.',
+    'battlesim8.ui.potion_timing': 'Отварата може да се пие само извън бойния епизод.',
     'battlesim8.ui.encounter': 'Среща',
+    'battlesim8.ui.soldiers': 'Оставащи войници',
     'battlesim8.ui.custom': 'Свободна битка',
     'battlesim8.ui.invalid': 'Въведи Умение от 2 до 5 и положителен Живот за всеки противник.',
     'battlesim8.ui.load_failed': 'Срещите не се заредиха. Затвори и отвори отново симулатора.',

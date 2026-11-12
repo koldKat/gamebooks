@@ -9,6 +9,7 @@ const { getRandomLevelUpTemplate, getRandomJoinTemplate } = require('./content')
 const { _getAggregateRating, _getAuthorRatings, getAnthologyExtraMembers } = require('./books');
 const { getPlayerRatingStats } = require('./rating-stats');
 const { getSimulatorBattleStats } = require('./gameplay-stats');
+const { addBookProgress, collectedCount } = require('./profile-progress');
 
 // ── Activity feed ─────────────────────────────────────────────────────────────
 
@@ -983,6 +984,7 @@ function setSquire(userId, value) {
   _changeSquire ||= require('./squires').createSquireSetter(db, (id, payload) => {
     _insertNotif.run(id, 'role_assigned', JSON.stringify(payload));
     require('./rubies').backfillRubiesForUser(db, id);
+    require('./book-discovery-rubies').backfillDiscoveryRubiesForUser(db, id);
   });
   const result = _changeSquire(userId, value);
   if (result.changed) _squireRevision++;
@@ -1015,8 +1017,9 @@ function getPublicProfile(username) {
   if (!user || !user.public_profile) return null;
 
   const bookRows = db.prepare(`
-    SELECT b.id, b.name, b.created_by, b.parent_book_id, b.is_container, ub.state_data
+    SELECT b.id, b.name, b.created_by, b.parent_book_id, b.is_container, e.section_id AS uncounted_entry, ub.state_data
     FROM user_books ub JOIN books b ON b.id = ub.book_id
+    LEFT JOIN book_reading_entries e ON e.book_id=b.id AND e.counts_as_section=0
     WHERE ub.user_id = ?
   `).all(user.id);
 
@@ -1035,9 +1038,11 @@ function getPublicProfile(username) {
 
   // Group runs: child books aggregate under their parent anthology
   const groupMap = new Map();
+  const progress = { sectionsDiscovered: 0, sectionsVisited: 0, booksWon: 0 };
   for (const row of bookRows) {
     if (row.is_container) continue;
     let s; try { s = JSON.parse(row.state_data); } catch { continue; }
+    addBookProgress(progress, s, row.uncounted_entry);
     const mapRun = (pt, i) => ({
       index:       i,
       bookId:      row.id,
@@ -1078,6 +1083,8 @@ function getPublicProfile(username) {
     totalBooks,
     createdBooks,
     books,
+    ...progress,
+    collectiblesCollected: collectedCount(db, user.id),
     ...getPlayerRatingStats(db, user.id),
     ...getSimulatorBattleStats(db, user.id),
   };
@@ -1085,8 +1092,9 @@ function getPublicProfile(username) {
 
 function getProfileStats(userId) {
   const bookRows = db.prepare(`
-    SELECT b.id, b.created_by, b.parent_book_id, ub.state_data
+    SELECT b.id, b.created_by, b.parent_book_id, b.is_container, e.section_id AS uncounted_entry, ub.state_data
     FROM user_books ub JOIN books b ON b.id = ub.book_id
+    LEFT JOIN book_reading_entries e ON e.book_id=b.id AND e.counts_as_section=0
     WHERE ub.user_id = ?
   `).all(userId);
   // Count root items only; an anthology counts once, not once per child.
@@ -1094,8 +1102,10 @@ function getProfileStats(userId) {
   const totalBooks    = rootRows.length;
   const createdBooks  = rootRows.filter(b => b.created_by === userId).length;
   let booksPlayed = 0;
+  const progress = { sectionsDiscovered: 0, sectionsVisited: 0, booksWon: 0 };
   for (const row of bookRows) {
     let s; try { s = JSON.parse(row.state_data); } catch { continue; }
+    if (!row.is_container) addBookProgress(progress, s, row.uncounted_entry);
     // Pre-series runs remain real historical runs and must count.
     const allRuns = [...(s.playthroughs || []), ...(s.preSeriesRuns || [])];
     const completed = allRuns.filter(pt => pt.result === 'death' || pt.result === 'success' || pt.result === 'battle');
@@ -1115,6 +1125,7 @@ function getProfileStats(userId) {
   }
   const totalRuns = wins + deaths + battles;
   return { totalBooks, createdBooks, booksPlayed, totalRuns, wins, deaths, battles,
+    ...progress, collectiblesCollected: collectedCount(db, userId),
     ...getPlayerRatingStats(db, userId), ...getSimulatorBattleStats(db, userId) };
 }
 

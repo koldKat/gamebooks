@@ -6,8 +6,8 @@ Object.assign(labels,{
   'battlesim1437.useSupport':'Ham attacks with his sling after every other attack',
   'battlesim1437.supportPick':'Ham’s sling attack',
   'battlesim1437.otherSpells':'Travel, information and recovery spells follow the original descriptions in the reader. Calm affects one normal foe at a time.',
-  'battlesim1437.item-mithrilBelt':'Mithril belt (§200): OB and DB +1',
-  'battlesim1437.item-enchantedCloak':'Enchanted cloak (§532): DB and Trickery +1',
+  'battlesim1437.item-mithrilBelt':'Mithril belt (§200): Ob and Db +1',
+  'battlesim1437.item-enchantedCloak':'Enchanted cloak (§532): Db and Trickery +1',
   'battlesim1437.item-purpleBerries':'Purple berries (§258): all bonuses -1 until tomorrow',
 });
 export default labels;

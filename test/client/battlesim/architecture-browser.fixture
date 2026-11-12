@@ -27,10 +27,12 @@ for(const id of BOOK_IDS){
   const button=document.getElementById(id===829?'battlesim-btn':'sim'+id+'-btn');
   check(button,'trigger '+id);
   const triggerStyle=getComputedStyle(button);
-  check(triggerStyle.backgroundColor==='rgba(31, 41, 55, 0.88)'&&triggerStyle.borderTopStyle==='solid'&&triggerStyle.borderTopColor==='rgb(55, 65, 81)'&&triggerStyle.textTransform==='uppercase','themed simulator launcher '+id);
+  check(triggerStyle.backgroundColor==='rgba(31, 41, 55, 0.88)'&&triggerStyle.borderTopStyle==='solid'&&triggerStyle.borderTopColor==='rgb(55, 65, 81)'&&triggerStyle.textTransform===('MODE'==='desktop'?'uppercase':'none'),'themed simulator launcher '+id+' '+JSON.stringify({background:triggerStyle.backgroundColor,border:triggerStyle.borderTopColor,transform:triggerStyle.textTransform}));
   if('MODE'!=='mobile')button.click();
   const overlay=document.getElementById(id===829?'bsim-overlay':id===8?'s8-overlay':'sim'+id+'-overlay');
   check(overlay?.classList.contains('active'),'opens '+id);
+  // Let shared controls enhance fields created by a panel's opening render.
+  await Promise.resolve();
   if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817||id===832||id===833||id===838||id===1578||id===1587||id===1589||id===1591||id===1592||id===1596||id===1597||id===1598||id===1607||id===1608){
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
     check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
@@ -50,6 +52,11 @@ for(const id of BOOK_IDS){
   for(const control of overlay.querySelectorAll('.bsim-col :is(label,summary,p,h4,legend,input,select,textarea,button:not(.inv-close-btn),.inv-edit-label,.bsim-tech-desc,.bsim-tech-uses,.bsim-effects)')){
     const style=getComputedStyle(control);
     check(Math.abs(parseFloat(style.fontSize)-textSize)<0.1,'consistent readable text '+id+' '+control.className+': '+style.fontSize);
+    check(style.textTransform!=='uppercase','simulator controls use normal capitalization '+id);
+  }
+  for(const select of overlay.querySelectorAll('select:not([multiple])')){
+    if(select.size>1)continue;
+    check(select.classList.contains('themed-select-native')&&getComputedStyle(select).display==='none','custom themed simulator dropdown '+id+' '+select.id);
   }
   const left=overlay.querySelector('.bsim-col-left');
   for(const row of left.querySelectorAll('label.inv-edit-row')){
@@ -77,7 +84,7 @@ for(const id of BOOK_IDS){
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
   }
   if (AUDIT_LEGACY_ROSTERS && rosterSeeds[id]?.length && ([186,200,201,205].includes(id) || !rosterSeeds[id].some(row => row.stats?.roster))) {
-    const inputs = [...overlay.querySelectorAll('[role="combobox"]')];
+    const inputs = [...overlay.querySelectorAll('input[role="combobox"]')];
     check(inputs.length, 'legacy roster has editable autocomplete ' + id);
     for (const input of inputs) {
       input.value = '';
@@ -90,6 +97,125 @@ for(const id of BOOK_IDS){
     check(requestedRosters.has(id), 'legacy roster requested actual API data ' + id);
     const options = [...overlay.querySelectorAll('[role="option"]')];
     check(options.some(option => option.textContent.includes(rosterSeeds[id][0].name)), 'legacy roster displays installed opponent ' + id);
+  }
+  if(PRESENTATION_ONLY){
+    const saved=JSON.stringify(app.currentPlaythrough());
+    for(const select of overlay.querySelectorAll('select.themed-select-native')){
+      const trigger=select.previousElementSibling?.querySelector('[role=combobox]');
+      if(!trigger||trigger.disabled||!trigger.getClientRects().length)continue;
+      trigger.scrollIntoView({block:'nearest'});
+      trigger.click();
+      const menu=document.getElementById(trigger.getAttribute('aria-controls')),bounds=menu.getBoundingClientRect();
+      check(!menu.hidden&&menu.querySelectorAll('[role=option]').length===select.options.length,'custom menu exposes actual choices '+id+' '+select.id);
+      check(bounds.left>=0&&bounds.right<=innerWidth&&bounds.top>=0&&bounds.bottom<=innerHeight,'custom menu fits viewport '+id+' '+select.id);
+      trigger.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
+      check(menu.hidden&&overlay.classList.contains('active'),'menu Escape preserves open simulator '+id+' '+select.id);
+    }
+    check(JSON.stringify(app.currentPlaythrough())===saved,'menu preview preserves saved fight '+id);
+  }else{
+  if(id===481){
+    const el=key=>document.getElementById('sim481-'+key),run=app.currentPlaythrough();
+    const choose=async row=>{
+      const input=el('enemy-pick');input.value=row.name;
+      input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
+      let option;
+      for(let attempt=0;attempt<50;attempt++){
+        option=[...el('enemy-pick-dropdown').querySelectorAll('[role=option]')].find(item=>item.textContent.startsWith(row.name));
+        if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
+      }
+      check(option,'Royal Blood actual roster option '+row.name);
+      option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
+    };
+    check(/[А-Яа-я]/.test(overlay.querySelector('.inv-modal-title').textContent),'Royal Blood Bulgarian source UI');
+    for(const row of rosterSeeds[id]){
+      await choose(row);
+      check(run.sim481.enemy.sila===row.attack&&run.sim481.enemy.curIzd===row.hp,'Royal Blood exact installed stats '+row.name);
+    }
+    const group=rosterSeeds[id].find(row=>row.stats?.groupMode==='alternating');
+    check(group?.stats.groupCount===3,'Royal Blood source33 has three alternating orcs');await choose(group);
+    el('player-sila').value='100';el('player-sila').dispatchEvent(new Event('input',{bubbles:true}));
+    const random=Math.random;Math.random=()=>0;
+    try{
+      for(let round=1;round<=15;round++){
+        el('strike').click();
+        check(run.sim481.enemy.group.reduce((sum,hp)=>sum+hp,0)===15-round,'Royal Blood separate group HP '+round);
+        check(run.sim481.history.length===(round===15?1:0),'Royal Blood one outcome for all three '+round);
+      }
+      check(run.sim481.history[0].outcome==='win'&&el('strike').disabled,'Royal Blood ends only after all three opponents');
+      const saved=JSON.stringify(run.sim481);run.sim481=JSON.parse(saved);module.render();
+      check(JSON.stringify(run.sim481)===saved,'Royal Blood grouped save reload preserves all HP/history');
+      el('reset').click();check(run.sim481.enemy.group.every(hp=>hp===5)&&run.sim481.enemy.activeIndex===0,'Royal Blood explicit reset restores the full group');
+      await choose(rosterSeeds[id].find(row=>!row.stats?.groupCount));
+      check(!run.sim481.enemy.group&&run.sim481.history.length===1,'Royal Blood ordinary fights remain independent');
+    }finally{Math.random=random;}
+  }
+  if(id===486){
+    const el=key=>document.getElementById('sim486-'+key),run=app.currentPlaythrough();
+    const choose=async row=>{
+      const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));let option;
+      for(let attempt=0;attempt<50;attempt++){
+        option=[...el('enemy-pick-dropdown').querySelectorAll('[role=option]')].find(item=>item.textContent.startsWith(row.name));
+        if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
+      }
+      check(option,'Royal Blood continuation roster '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
+    };
+    for(const row of rosterSeeds[id]){await choose(row);check(run.sim486.enemy.sila===row.attack&&run.sim486.enemy.curIzd===row.hp,'Royal Blood continuation exact installed stats '+row.name);}
+    const group=rosterSeeds[id].find(row=>row.stats?.groupMode==='sequential');
+    check(group?.stats.groupCount===5&&group.attack===6&&group.hp===1,'Royal Blood source8five one-hit skeletons');await choose(group);
+    el('player-sila').value='100';el('player-sila').dispatchEvent(new Event('input',{bubbles:true}));
+    const random=Math.random;Math.random=()=>0;
+    try{
+      for(let defeated=1;defeated<=5;defeated++){
+        el('strike').click();check(run.sim486.enemy.group.filter(hp=>hp===0).length===defeated,'Royal Blood five separate skeleton HP');
+        check(run.sim486.history.length===(defeated===5?1:0),'Royal Blood no win before all five skeletons');
+      }
+      check(run.sim486.history[0].outcome==='win'&&el('strike').disabled,'Royal Blood five-skeleton encounter has one final outcome');
+      const saved=JSON.stringify(run.sim486);run.sim486=JSON.parse(saved);module.render();check(JSON.stringify(run.sim486)===saved,'Royal Blood five-skeleton reload preserves state');
+      el('reset').click();check(run.sim486.enemy.group.every(hp=>hp===1)&&run.sim486.enemy.activeIndex===0,'Royal Blood reset restores five opponents');
+      await choose(rosterSeeds[id].find(row=>!row.stats?.groupCount));check(!run.sim486.enemy.group&&run.sim486.history.length===1,'Royal Blood continuation ordinary duels preserved');
+    }finally{Math.random=random;}
+  }
+  if(id===491){
+    const el=key=>document.getElementById('sim491-'+key),run=app.currentPlaythrough();
+    const data=()=>run.sim491;
+    const choose=async row=>{
+      const input=el('enemy-pick');input.value=row.name;
+      input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
+      let option;
+      for(let attempt=0;attempt<50;attempt++){
+        option=[...el('enemy-pick-dropdown').querySelectorAll('[role=option]')].find(item=>item.textContent.startsWith(row.name));
+        if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
+      }
+      check(option,'Royal Blood second part roster '+row.name);
+      option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
+    };
+    const setStrength=value=>{el('player-sila').value=String(value);el('player-sila').dispatchEvent(new Event('input',{bubbles:true}));};
+    check(/[А-Яа-я]/.test(overlay.querySelector('.inv-modal-title').textContent),'Royal Blood second part uses Bulgarian source UI');
+    for(const row of rosterSeeds[id]){
+      await choose(row);check(data().enemy.sila===row.attack&&data().enemy.curIzd===row.hp,'Royal Blood second part original stats '+row.name);
+    }
+    const group=rosterSeeds[id].find(row=>row.stats?.groupMode==='alternating');
+    check(group?.stats.groupCount===2&&group.attack===3&&group.hp===6,'Royal Blood two undead source31');
+    await choose(group);setStrength(100);
+    const random=Math.random;Math.random=()=>0;
+    try{
+      for(let round=1;round<=12;round++){
+        el('strike').click();check(data().enemy.group.reduce((sum,hp)=>sum+hp,0)===12-round,'Royal Blood undead separate HP');
+        check(data().history.length===(round===12?1:0),'Royal Blood undead one whole encounter');
+      }
+      const poison=rosterSeeds[id].find(row=>row.stats?.incomingDamage===2);check(poison,'Royal Blood source40poison');
+      await choose(poison);setStrength(0);const hp=data().player.izd;
+      check(el('protection-row').style.display!== 'none'&&el('protection-label').textContent.includes('мъченика'),'Royal Blood themed herb control');
+      el('strike').click();check(data().player.izd===hp-2,'Royal Blood unprotected poison double damage');
+      check(el('log').textContent.includes('губиш 2 т.'),'Royal Blood poison log actual damage');
+      el('protection').checked=true;el('protection').dispatchEvent(new Event('change',{bubbles:true}));
+      el('strike').click();check(data().player.izd===hp-3,'Royal Blood protected poison normal damage');
+      const saved=JSON.stringify(data());run.sim491=JSON.parse(saved);module.render();
+      check(JSON.stringify(data())===saved&&el('protection').checked,'Royal Blood reload preserves herb/fight/history');
+      setStrength(4);el('strike').click();check(data().player.izd===hp-3,'Royal Blood poison tie harmless');
+      await choose(rosterSeeds[id].find(row=>!row.stats?.incomingDamage&&!row.stats?.groupCount));
+      check(el('protection-row').style.display==='none'&&!data().enemy.group&&!data().enemy.incomingDamage,'Royal Blood ordinary encounter clears optional effects');
+    }finally{Math.random=random;}
   }
   if(id===233){
     const run=app.currentPlaythrough(),data=()=>run.sim233,el=key=>document.getElementById('sim233-'+key);
@@ -1471,7 +1597,7 @@ for(const id of BOOK_IDS){
     for(const row of rosterSeeds[id]){
       name.value=row.name;name.dispatchEvent(new FocusEvent('focus'));name.dispatchEvent(new Event('input',{bubbles:true}));
       await Promise.resolve();
-      const option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(option=>option.textContent.startsWith(row.name+'УМЕНИЕ:'));
+      const option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(option=>option.textContent.startsWith(row.name+'Умение:'));
       check(option,'Robot Commando installed profile '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
       check(state().enemy.name===row.name&&state().enemy.skill===row.attack&&state().enemy.life===row.hp&&state().enemy.speed===row.defense,'Robot Commando original stats and speed '+row.name);
     }
@@ -1492,7 +1618,7 @@ for(const id of BOOK_IDS){
       name.value=row.name;name.dispatchEvent(new FocusEvent('focus'));name.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...overlay.querySelectorAll('#sim468-enemy-pick-dropdown [role="option"]')].find(option=>option.textContent.startsWith(row.name)&&option.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...overlay.querySelectorAll('#sim468-enemy-pick-dropdown [role="option"]')].find(option=>option.textContent.startsWith(row.name)&&option.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;
         await new Promise(resolve=>setTimeout(resolve,20));
       }
@@ -1522,7 +1648,7 @@ for(const id of BOOK_IDS){
       name.value=row.name;name.dispatchEvent(new FocusEvent('focus'));name.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...overlay.querySelectorAll('#sim464-enemy-pick-dropdown [role="option"]')].find(option=>option.textContent.startsWith(row.name)&&option.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...overlay.querySelectorAll('#sim464-enemy-pick-dropdown [role="option"]')].find(option=>option.textContent.startsWith(row.name)&&option.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;
         await new Promise(resolve=>setTimeout(resolve,20));
       }
@@ -1552,7 +1678,7 @@ for(const id of BOOK_IDS){
       name.value=row.name;name.dispatchEvent(new FocusEvent('focus'));name.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...overlay.querySelectorAll('#sim462-enemy-pick-dropdown [role="option"]')].find(option=>option.textContent.startsWith(row.name)&&option.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...overlay.querySelectorAll('#sim462-enemy-pick-dropdown [role="option"]')].find(option=>option.textContent.startsWith(row.name)&&option.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;
         await new Promise(resolve=>setTimeout(resolve,20));
       }
@@ -2212,7 +2338,7 @@ for(const id of BOOK_IDS){
       const prior={...state().enemy};
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;for(let attempt=0;attempt<50;attempt++){
-        option=[...overlay.querySelectorAll('[role="option"]')].find(item=>item.textContent===row.name+'А:'+(row.attack??'?')+' ТЖ:'+(row.hp??'?')+' З:'+(row.defense??'?')+' ПБ:'+(row.pb??'?'));
+        option=[...overlay.querySelectorAll('[role="option"]')].find(item=>item.textContent===row.name+'А:'+(row.attack??'?')+' Тж:'+(row.hp??'?')+' З:'+(row.defense??'?')+' Пб:'+(row.pb??'?'));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Quail original profile '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2246,7 +2372,7 @@ for(const id of BOOK_IDS){
       Object.assign(state().player,{attack:0,defense:100,speed:8});
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;for(let attempt=0;attempt<50;attempt++){
-        option=[...overlay.querySelectorAll('[role="option"]')].find(item=>item.textContent===row.name+'АТАКА:'+(row.attack??'?')+' ЗАЩИТА:'+(row.defense??'?')+' УДАРИ:'+(row.hp??'?'));
+        option=[...overlay.querySelectorAll('[role="option"]')].find(item=>item.textContent===row.name+'Атака:'+(row.attack??'?')+' Защита:'+(row.defense??'?')+' Удари:'+(row.hp??'?'));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Tetiva original opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2281,7 +2407,7 @@ for(const id of BOOK_IDS){
       Object.assign(state().player,{barzina:speed,reflekt:reflex});const before=JSON.stringify(state().player);
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;for(let attempt=0;attempt<50;attempt++){
-        option=[...overlay.querySelectorAll('[role="option"]')].find(item=>item.textContent===row.name+'А:'+(row.attack??'?')+' З:'+(row.defense??'?')+' ПБ:'+(row.pb??'?')+' ИЗ:'+(row.hp??'?'));
+        option=[...overlay.querySelectorAll('[role="option"]')].find(item=>item.textContent===row.name+'А:'+(row.attack??'?')+' З:'+(row.defense??'?')+' Пб:'+(row.pb??'?')+' Из:'+(row.hp??'?'));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Arena original opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2307,7 +2433,7 @@ for(const id of BOOK_IDS){
       Object.assign(state(),{rolled:true,endurance:100,enduranceInitial:100,combatSkill:20,combatSkillInitial:20,attackModifier:0});
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;for(let attempt=0;attempt<50;attempt++){
-        option=[...overlay.querySelectorAll('[role="option"]')].find(item=>item.textContent===row.name+'БУ:'+(row.attack??'?')+' ТИ:'+(row.hp??'?'));
+        option=[...overlay.querySelectorAll('[role="option"]')].find(item=>item.textContent===row.name+'Бу:'+(row.attack??'?')+' Ти:'+(row.hp??'?'));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Lone Wolf original opponent '+id+' '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2402,7 +2528,7 @@ for(const id of BOOK_IDS){
       Object.assign(state(),{rolled:true});Object.assign(state().player,{skill:30,skillInitial:30,stamina:100,staminaInitial:100,luck:12,luckInitial:12});
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;for(let attempt=0;attempt<50;attempt++){
-        option=[...overlay.querySelectorAll('#sim267-enemy-pick-dropdown [role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...overlay.querySelectorAll('#sim267-enemy-pick-dropdown [role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Blood Island installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2446,7 +2572,7 @@ for(const id of BOOK_IDS){
       Object.assign(state(),{rolled:true});Object.assign(state().player,{skill:12,skillInitial:12,stamina:100,staminaInitial:100,luck:12,luckInitial:12});
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;for(let attempt=0;attempt<50;attempt++){
-        option=[...overlay.querySelectorAll('#sim236-enemy-pick-dropdown [role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...overlay.querySelectorAll('#sim236-enemy-pick-dropdown [role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Dead of Night installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2490,7 +2616,7 @@ for(const id of BOOK_IDS){
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...overlay.querySelectorAll('#sim206-enemy-pick-dropdown [role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...overlay.querySelectorAll('#sim206-enemy-pick-dropdown [role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'House of Hell installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2530,7 +2656,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Talisman installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2561,7 +2687,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Freeway installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2602,7 +2728,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Temple installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2634,7 +2760,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Kether installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2686,7 +2812,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('ATK:'+row.attack+' HP:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Atk:'+row.attack+' Hp:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Seas installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2723,7 +2849,7 @@ for(const id of BOOK_IDS){
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'FEAR installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2765,7 +2891,7 @@ for(const id of BOOK_IDS){
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Rebel installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2794,7 +2920,7 @@ for(const id of BOOK_IDS){
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Demons installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2825,7 +2951,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Samurai installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2866,7 +2992,7 @@ for(const id of BOOK_IDS){
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Trial installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2896,7 +3022,7 @@ for(const id of BOOK_IDS){
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' HP:'+row.hp));
+        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Hp:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Robot installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2914,7 +3040,10 @@ for(const id of BOOK_IDS){
       el('luck-yes').click();check(game.player.stamina===18&&game.player.armour===9&&game.player.luck===6&&el('mode').disabled,'Robot personal Luck heals stamina only and keeps mode locked for remaining side event');
       mode('robot');check(game.mode==='personal','Robot mode remains locked until every pending wound resolves');el('luck-no').click();check(!el('mode').disabled,'Robot mode unlocks after final Luck choice');
       mode('robot');check(game.mode==='robot'&&game.player.stamina===18&&game.player.armour===9,'Robot mode change preserves both existing health pools');
-      for(const key of ['mode','player-speed','enemy-speed'])check(Math.abs(el(key).getBoundingClientRect().height-22)<0.1&&getComputedStyle(el(key)).backgroundColor!=='rgb(255, 255, 255)','Robot selector uses themed compact input '+key);
+      for(const key of ['mode','player-speed','enemy-speed']){
+        const field=el(key).classList.contains('themed-select-native')?el(key).previousElementSibling.querySelector('[role=combobox]'):el(key);
+        check(Math.abs(field.getBoundingClientRect().height-22)<0.1&&getComputedStyle(field).backgroundColor!=='rgb(255, 255, 255)','Robot selector uses themed compact input '+key);
+      }
       game.enemy.skill=20;module.render();el('round').click();
       check(game.player.armour===2&&game.player.stamina===18&&game.pendingLuckQueue.map(event=>event.kind).join(',')==='enemy-hit,side-hit'&&game.roundsThisBattle===6,'Robot custom primary wound and independent side wound damage armour only');
       game=JSON.parse(JSON.stringify(game));app.currentPlaythrough().sim218=game;module.render();const robotSaved=JSON.stringify(game);module.render();mode('personal');check(game.mode==='robot'&&JSON.stringify(game)===robotSaved&&el('mode').disabled,'Robot reloaded pending armour Luck cannot be redirected into stamina');
@@ -2932,7 +3061,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Masks installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2963,7 +3092,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Havoc installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -2999,7 +3128,7 @@ for(const id of BOOK_IDS){
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Nightmare installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3030,7 +3159,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Crypt installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3061,7 +3190,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Strider installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3093,7 +3222,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Phantoms installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3124,7 +3253,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Rogue installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3155,7 +3284,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Chasms installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3192,7 +3321,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Battleblade installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3227,7 +3356,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Abyss installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3267,7 +3396,7 @@ for(const id of BOOK_IDS){
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Sky Lord installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3294,7 +3423,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Stealer installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3326,7 +3455,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Daggers installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3354,7 +3483,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Armies installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3379,7 +3508,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Portal installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3403,7 +3532,7 @@ for(const id of BOOK_IDS){
       const input=el(suffix+'-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el(suffix+'-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Vault installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3429,7 +3558,7 @@ for(const id of BOOK_IDS){
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Fangs installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3457,7 +3586,7 @@ for(const id of BOOK_IDS){
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Chaos installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3483,7 +3612,7 @@ for(const id of BOOK_IDS){
       if(suffix==='second'){game.secondEnemy.active=true;module.render();}
       for(const row of rosterSeeds[id]){
         const input=el(suffix==='enemy'?'enemy-pick':'second-name');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));let option;
-        for(let attempt=0;attempt<50;attempt++){option=[...el(suffix==='enemy'?'enemy-pick-dropdown':'second-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));if(option)break;await new Promise(resolve=>setTimeout(resolve,20));}
+        for(let attempt=0;attempt<50;attempt++){option=[...el(suffix==='enemy'?'enemy-pick-dropdown':'second-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));if(option)break;await new Promise(resolve=>setTimeout(resolve,20));}
         check(option,'Black Vein installed '+suffix+' opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));const actor=suffix==='enemy'?game.enemy:game.secondEnemy;check(actor.name===row.name&&actor.skill===row.attack&&actor.stamina===row.hp&&actor.staminaMax===row.hp,'Black Vein original '+suffix+' opponent columns '+row.name);
       }
     }
@@ -3502,7 +3631,7 @@ for(const id of BOOK_IDS){
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));
       let option;
       for(let attempt=0;attempt<50;attempt++){
-        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+row.attack+' STAMINA:'+row.hp));
+        option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+row.attack+' Stamina:'+row.hp));
         if(option)break;await new Promise(resolve=>setTimeout(resolve,20));
       }
       check(option,'Lich installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
@@ -3528,7 +3657,7 @@ for(const id of BOOK_IDS){
     const {SHADOW_RULES}=await import('REPO/public/js/battlesim/books/240/definition.js');check(SHADOW_RULES.skullWinFace===6,'Shadow skull setting loaded from installed metadata');check(game.player.provisionsLeft===0,'Shadow new character has no invented provisions');
     for(const row of rosterSeeds[id]){
       const prior=[game.enemy.stamina,game.enemy.staminaMax],input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));let option;
-      for(let attempt=0;attempt<50;attempt++){option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+(row.attack??'?')+' STAMINA:'+(row.hp??'?')));if(option)break;await new Promise(resolve=>setTimeout(resolve,20));}
+      for(let attempt=0;attempt<50;attempt++){option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+(row.attack??'?')+' Stamina:'+(row.hp??'?')));if(option)break;await new Promise(resolve=>setTimeout(resolve,20));}
       check(option,'Shadow installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));check(game.enemy.name===row.name&&game.enemy.skill===row.attack&&(row.hp==null?game.enemy.stamina===prior[0]&&game.enemy.staminaMax===prior[1]:game.enemy.stamina===row.hp&&game.enemy.staminaMax===row.hp),'Shadow original opponent columns and unknown health retained '+row.name);
     }
     Object.assign(game,{rolled:true,correctedCombatRules:true,pendingLuckQueue:[{kind:'enemy-hit',damage:1,luckyDamage:0,unluckyDamage:2,extension:true}],roundsThisBattle:5,groupFight:true,sideEnemies:[{name:'Strong side',skill:20,extension:{kept:true}},{name:'Weak side',skill:1,extension:{kept:true}}],disarmMode:false,immuneToWounds:true,voivodThrives:true,voivodDefensive:true,extension:{kept:true},history:[]});Object.assign(game.player,{skill:10,skillInitial:12,stamina:17,staminaInitial:24,luck:7,luckInitial:12,weapon:'axe',armour:'chainmail',armourHitsLeft:1,hasSpear:true,spearLifeForce:3,spearRolled:true,provisionsLeft:3,extension:{kept:true}});Object.assign(game.enemy,{name:'Saved foe',skill:20,stamina:21,staminaMax:20,extension:{kept:true}});
@@ -3550,7 +3679,7 @@ for(const id of BOOK_IDS){
     const el=key=>document.getElementById('sim'+id+'-'+key),game=app.currentPlaythrough()['sim'+id];
     for(const row of rosterSeeds[id]){
       const prior=[game.enemy.stamina,game.enemy.staminaMax],input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));let option;
-      for(let attempt=0;attempt<50;attempt++){option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+(row.attack??'?')+' STAMINA:'+(row.hp??'?')));if(option)break;await new Promise(resolve=>setTimeout(resolve,20));}
+      for(let attempt=0;attempt<50;attempt++){option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+(row.attack??'?')+' Stamina:'+(row.hp??'?')));if(option)break;await new Promise(resolve=>setTimeout(resolve,20));}
       check(option,'Scalar Luck installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));check(game.enemy.name===row.name&&game.enemy.skill===row.attack&&(row.hp==null?game.enemy.stamina===prior[0]&&game.enemy.staminaMax===prior[1]:game.enemy.stamina===row.hp&&game.enemy.staminaMax===row.hp),'Scalar Luck original opponent columns and unknown health retained '+row.name);
     }
     Object.assign(game,{rolled:true,pendingLuck:'enemy-hit',roundsThisBattle:5,extension:{kept:true},history:[]});Object.assign(game.player,{skill:10,skillInitial:12,stamina:17,staminaInitial:24,luck:7,luckInitial:12,provisionsLeft:3,extension:{kept:true}});Object.assign(game.enemy,{name:'Saved foe',skill:8,stamina:10,staminaMax:20,extension:{kept:true}});
@@ -3567,7 +3696,7 @@ for(const id of BOOK_IDS){
     const el=key=>document.getElementById('sim246-'+key),game=app.currentPlaythrough().sim246;
     for(const row of rosterSeeds[id]){
       const input=el('enemy-pick');input.value=row.name;input.dispatchEvent(new FocusEvent('focus'));input.dispatchEvent(new Event('input',{bubbles:true}));let option;
-      for(let attempt=0;attempt<50;attempt++){option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('SKILL:'+(row.attack??'?')+' STAMINA:'+(row.hp??'?')));if(option)break;await new Promise(resolve=>setTimeout(resolve,20));}
+      for(let attempt=0;attempt<50;attempt++){option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(item=>item.textContent.startsWith(row.name)&&item.textContent.endsWith('Skill:'+(row.attack??'?')+' Stamina:'+(row.hp??'?')));if(option)break;await new Promise(resolve=>setTimeout(resolve,20));}
       check(option,'Firetop installed opponent '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));check(game.enemy.name===row.name&&game.enemy.skill===row.attack&&game.enemy.stamina===row.hp&&game.enemy.staminaMax===row.hp,'Firetop all original opponent columns including zero health '+row.name);
     }
     Object.assign(game,{rolled:true,pendingLuckQueue:[{kind:'enemy-hit',extension:true}],roundsThisBattle:5,hasRequiredWeapon:false,reducedWoundDamage:1,instantKillThreshold:4,extension:{kept:true},history:[]});Object.assign(game.player,{skill:10,skillInitial:12,stamina:17,staminaInitial:24,luck:7,luckInitial:12,attackModifier:-1,extension:{kept:true}});Object.assign(game.enemy,{name:'Saved foe',skill:0,stamina:10,staminaMax:20,extension:{kept:true}});
@@ -5379,7 +5508,7 @@ for(const id of BOOK_IDS){
     const state=await import('REPO/public/js/battlesim/engines/urowen/state.js');
     const {UROWEN_SOURCE}=await import('REPO/public/js/battlesim/engines/urowen/roster.js');
     const specs=state.compileUrowenEncounters(UROWEN_SOURCE),el=key=>document.getElementById('sim550-'+key),data=()=>app.currentPlaythrough().sim550;
-    const fresh=()=>{const p=core.createUrowenCharacter();p.coins=100;p.attributes={STR:4,SK:4,MAG:4,PER:4};return state.createUrowenSimState(p);};
+    const fresh=()=>{const p=core.createUrowenCharacter();p.coins=100;p.attributes={Str:4,Sk:4,Mag:4,Per:4};return state.createUrowenSimState(p);};
     const prepare=section=>{const s=state.prepareUrowenEncounter(fresh(),specs.find(x=>x.section===section));app.currentPlaythrough().sim550=s;el('encounter').value=String(section);module.render();return s;};
     const random=Math.random;
     try{
@@ -7738,21 +7867,55 @@ for(const id of BOOK_IDS){
   if(id===3196){
     const el=key=>document.getElementById('sim3196-'+key),run=app.currentPlaythrough();
     check(requestedRosters.has(3196),'Goblin roster loaded through the real loader');
+    check(el('btn').querySelector('.shortcut-hint-letter')&&el('btn').getAttribute('aria-keyshortcuts')==='S','Goblin launcher shows its S shortcut');
+    const beforeShortcut=JSON.stringify(run);
+    const pressS=target=>(target??document).dispatchEvent(new KeyboardEvent('keydown',{code:'KeyS',key:'s',bubbles:true,cancelable:true}));
+    if('MODE'!=='mobile'){
+      pressS();check(!el('overlay').classList.contains('active'),'Goblin S shortcut closes');
+      pressS();check(el('overlay').classList.contains('active'),'Goblin S shortcut opens');
+    }else{
+      pressS();check(el('overlay').classList.contains('active'),'Goblin hidden mobile launcher ignores S');
+    }
+    pressS(el('hp'));check(el('overlay').classList.contains('active'),'Goblin S shortcut ignores typing');
+    check(JSON.stringify(run)===beforeShortcut,'Goblin shortcuts preserve saved state');
+    const encounterButton=el('encounter').parentElement.querySelector('[role=combobox]');
+    check(getComputedStyle(el('encounter')).display==='none'&&encounterButton,'Goblin encounter uses a custom menu');
+    encounterButton.click();
+    const encounterMenu=document.getElementById(encounterButton.getAttribute('aria-controls'));
+    check(!encounterMenu.hidden&&encounterMenu.querySelectorAll('[role=option]').length===el('encounter').options.length,'Goblin custom menu exposes all encounters');
+    const menuBounds=encounterMenu.getBoundingClientRect();
+    check(menuBounds.left>=0&&menuBounds.right<=innerWidth&&menuBounds.top>=0&&menuBounds.bottom<=innerHeight,'Goblin custom menu stays within viewport');
+    encounterMenu.querySelector('[data-index="1"]').click();
+    check(el('encounter').selectedIndex===1&&encounterMenu.hidden,'Goblin custom menu selects an encounter');
+    encounterButton.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));
+    encounterButton.dispatchEvent(new KeyboardEvent('keydown',{key:'End',bubbles:true,cancelable:true}));
+    encounterButton.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));
+    check(el('encounter').selectedIndex===el('encounter').options.length-1,'Goblin custom menu supports keyboard selection');
+    encounterButton.click();
+    encounterButton.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
+    check(encounterMenu.hidden&&el('overlay').classList.contains('active'),'Goblin menu Escape leaves simulator open');
     const choose=key=>{el('encounter').value=key;el('encounter').dispatchEvent(new Event('change'));};
     choose('example');el('hp').value=9;el('hp').dispatchEvent(new Event('change'));el('start').click();
     check(el('hp').disabled&&el('encounter').disabled,'Goblin setup locked during a fight');
+    check(encounterButton.disabled,'Goblin custom menu locks during a fight');
     const originalRandom=Math.random;
     try{
       let values=[3,4,5,5,2,3,4,5];Math.random=()=>(values.shift()-.5)/6;
       for(const key of ['power','standard','power','power'])el(key).click();
       check(run.sim3196.fight.outcome==='win'&&run.sim3196.hp===5&&run.sim3196.history.length===1,'Goblin source worked example resolves exactly');
+      check(el('log').querySelector('.bsim-log-success')&&el('log').querySelector('.bsim-log-danger')&&el('log').querySelector('.bsim-log-accent'),'Goblin battle log distinguishes damage and dice');
       choose('grievers');el('start').click();Math.random=()=>.99;
       check(el('target').options.length===3,'Goblin group includes all three enemies');
+      const targetButton=el('target').parentElement.querySelector('[role=combobox]');targetButton.click();
+      const targetMenu=document.getElementById(targetButton.getAttribute('aria-controls'));
+      targetMenu.querySelector('[data-index="2"]').click();
+      check(el('target').value==='2'&&targetMenu.hidden,'Goblin custom target menu selects a group enemy');
       el('target').value='2';el('standard').click();
       check(run.sim3196.fight.enemies[0].rounds===3&&run.sim3196.fight.enemies[2].rounds===3,'Goblin independent enemy timers');
       el('target').value='0';el('standard').click();el('target').value='1';el('standard').click();el('standard').click();
       check(run.sim3196.fight.outcome==='win'&&run.sim3196.history.length===2,'Goblin group ends only when all enemies fall');
     }finally{Math.random=originalRandom;}
+  }
   }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   for(const key of overlay.textContent.match(/battlesim(?:\d+)?\.[\w.]+/g)??[])missingTranslations.add(key);
@@ -7767,4 +7930,4 @@ for(const id of BOOK_IDS){
   results.push(id);
 }
 check(!missingTranslations.size,'missing simulator translations: '+[...missingTranslations].join(', '));
-document.body.dataset.test=JSON.stringify({mode:'MODE',language:'LANGUAGE',width:innerWidth,books:results,requestedRosters:[...requestedRosters],writes,productionWrites:0});
+document.body.dataset.test=JSON.stringify({mode:'MODE',language:'LANGUAGE',width:innerWidth,books:results,requestedRosters:[...requestedRosters],writes,productionWrites:0,presentationOnly:PRESENTATION_ONLY});
