@@ -740,7 +740,7 @@ SIM_HISTORY_KEYS.push('sim895');
 SIM_HISTORY_KEYS.push('sim896');
 SIM_HISTORY_KEYS.push('sim903');
 SIM_HISTORY_KEYS.push('sim904');
-SIM_HISTORY_KEYS.push('sim906');
+SIM_HISTORY_KEYS.push('sim906', 'sim3196');
 SIM_HISTORY_KEYS.push('sim1285');
 SIM_HISTORY_KEYS.push('sim1286');
 SIM_HISTORY_KEYS.push('sim1287');

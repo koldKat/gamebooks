@@ -7735,6 +7735,25 @@ for(const id of BOOK_IDS){
     el('technique').value='kick';el('technique').dispatchEvent(new Event('change'));
     check(el('attack-defense').value==='7'&&!el('mirror-controls').hidden,'Usurper mirror controls and defense remain valid');el('attack').click();
   }
+  if(id===3196){
+    const el=key=>document.getElementById('sim3196-'+key),run=app.currentPlaythrough();
+    check(requestedRosters.has(3196),'Goblin roster loaded through the real loader');
+    const choose=key=>{el('encounter').value=key;el('encounter').dispatchEvent(new Event('change'));};
+    choose('example');el('hp').value=9;el('hp').dispatchEvent(new Event('change'));el('start').click();
+    check(el('hp').disabled&&el('encounter').disabled,'Goblin setup locked during a fight');
+    const originalRandom=Math.random;
+    try{
+      let values=[3,4,5,5,2,3,4,5];Math.random=()=>(values.shift()-.5)/6;
+      for(const key of ['power','standard','power','power'])el(key).click();
+      check(run.sim3196.fight.outcome==='win'&&run.sim3196.hp===5&&run.sim3196.history.length===1,'Goblin source worked example resolves exactly');
+      choose('grievers');el('start').click();Math.random=()=>.99;
+      check(el('target').options.length===3,'Goblin group includes all three enemies');
+      el('target').value='2';el('standard').click();
+      check(run.sim3196.fight.enemies[0].rounds===3&&run.sim3196.fight.enemies[2].rounds===3,'Goblin independent enemy timers');
+      el('target').value='0';el('standard').click();el('target').value='1';el('standard').click();el('standard').click();
+      check(run.sim3196.fight.outcome==='win'&&run.sim3196.history.length===2,'Goblin group ends only when all enemies fall');
+    }finally{Math.random=originalRandom;}
+  }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   for(const key of overlay.textContent.match(/battlesim(?:\d+)?\.[\w.]+/g)??[])missingTranslations.add(key);
   check(JSON.stringify(app.currentPlaythrough())===before,'repeat render preserves state '+id);

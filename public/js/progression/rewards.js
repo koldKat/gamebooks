@@ -36,7 +36,7 @@ let _rewardProfileTimer  = null;
 let _pendingSummary = null;
 let _rewardLayoutObserver = null;
 let _rewardBodyObserver = null;
-const REWARD_LAYOUT_ANCHORS = ['play-bottom-stack','play-btn-row','dice-roller-wrap','feed-panel','landing-right','graph-container','covers-panel','landing-wrapper','books-screen','main-screen'];
+const REWARD_LAYOUT_ANCHORS = ['play-bottom-stack','play-btn-row','app-banner-community','dice-roller-wrap','feed-panel','landing-right','graph-container','covers-panel','landing-wrapper','books-screen','main-screen'];
 
 function rewardAnchorTransition(event) {
   if (REWARD_LAYOUT_ANCHORS.includes(event.target?.id)) _positionRewardLayer();
@@ -121,10 +121,25 @@ export function _positionRewardLayer() {
       transform = 'translateX(-50%)'; alignItems = 'center';
     }
   }
+  // Mobile feedback shares the clear bottom lane to the left of visible actions.
+  // Measure only on existing layout notifications, never for each reward chip.
+  let mobileRight = '';
+  if (window.matchMedia?.('(max-width: 768px)')?.matches) {
+    const edges = ['app-banner-community', 'play-btn-row'].flatMap(id => {
+      const element = document.getElementById(id), rect = element?.getBoundingClientRect();
+      return rect?.width > 0 && rect.height > 0 && rect.bottom > innerHeight - 120
+        && rect.top < innerHeight && getComputedStyle(element).visibility !== 'hidden' ? [rect.left] : [];
+    });
+    if (edges.length) mobileRight = `${Math.max(12, innerWidth - Math.min(...edges) + 8)}px`;
+  }
+  const rootStyle = document.documentElement?.style;
+  if (rootStyle) {
+    if (mobileRight) rootStyle.setProperty('--mobile-reward-right', mobileRight);
+    else rootStyle.removeProperty('--mobile-reward-right');
+  }
   window.dispatchEvent(new Event('reward-layer-layout'));
   Object.assign(layer.style, { left, right, bottom: '1rem', transform, alignItems });
   // Dialog top layers inherit these anchors without measuring layout when a chip spawns.
-  const rootStyle = document.documentElement?.style;
   if (rootStyle) {
     for (const [name, value] of [['--personal-reward-left', left], ['--personal-reward-transform', transform]]) {
       if (rootStyle.getPropertyValue(name) === value) continue;
@@ -153,7 +168,7 @@ function _queueRewardFloater(xpDelta = 0, coinDelta = 0, survivalDelta = 0, surv
     if (xp > 0)    _spawnRewardFloater('xp',    `<span>+${xp.toLocaleString()} XP</span>`);
     for (const [type, amount] of survival) {
       const phrase = survivalPhrases[Math.floor(Math.random() * survivalPhrases.length)];
-      _spawnRewardFloater(type, `<span>+${amount.toLocaleString()} XP · ${phrase}</span>`);
+      _spawnRewardFloater(type, `<span>+${amount.toLocaleString()} XP for ${phrase.toLowerCase()}</span>`);
     }
     if (coins > 0) _spawnRewardFloater('coins', `${COIN_SVG}<span>+${coins.toLocaleString()}</span>`);
   }, 750);

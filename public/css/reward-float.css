@@ -20,12 +20,23 @@
   #app-reward-float-layer,
   .collectibles-reward-layer {
     left: max(0.75rem, env(safe-area-inset-left)) !important;
-    right: auto !important;
+    right: var(--mobile-reward-right, max(0.75rem, env(safe-area-inset-right))) !important;
+    width: auto !important;
     transform: none !important;
-    align-items: flex-start !important;
+    align-items: center !important;
   }
   #reward-float-layer,
-  #app-reward-float-layer { bottom: 1rem !important; }
+  #app-reward-float-layer,
+  .collectibles-reward-layer { bottom: max(1rem, env(safe-area-inset-bottom)) !important; }
+  #reward-float-layer > *,
+  #app-reward-float-layer > *,
+  .collectibles-reward-layer > * {
+    max-width: 100%;
+    box-sizing: border-box;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
 }
 
 .reward-float {
