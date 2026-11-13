@@ -12,6 +12,8 @@ test('scans wait for startup, run off the request thread, and exclude tests and 
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const included = ['server.js', 'server/example.js', 'public/js/example.mjs', 'admin/js/example.js',
     'public/mobile/js/example.js', 'public/css/example.css', 'public/mobile/css/example.css',
+    'public/css/components/nested/example.css', 'public/css/mobile/app.css',
+    'server/styles/pages/maintenance.css', 'docs/styles/documentation.css',
     'public/index.html', 'public/mobile/index.html', 'admin/index.html'];
   const excluded = ['server/tests/ignored.js', 'server/test/ignored.js', 'server/__tests__/ignored.js',
     'server/example.test.js', 'public/js/example.spec.mjs', 'public/guide.html', 'admin/admin-guide.html', 'admin/technical.html'];

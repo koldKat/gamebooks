@@ -6,7 +6,7 @@ assert.ok(root && root !== '/tmp', 'Set TMPDIR to the external audit scratch dir
 const chromium = process.env.CHROMIUM;
 assert.ok(chromium && fs.existsSync(chromium), 'Set CHROMIUM to a headless Chromium binary');
 const scratch = fs.mkdtempSync(path.join(root, 'orc-power-panel-'));
-const css = ['equipment','battlesim'].map(name => fs.readFileSync('public/css/' + name + '.css', 'utf8')).join('\n');
+const css = ['components/equipment','components/battlesim'].map(name => fs.readFileSync('public/css/' + name + '.css', 'utf8')).join('\n');
 const source = fs.readFileSync(__dirname + '/orc-power-panel.fixture', 'utf8').replaceAll('REPO', 'file://' + process.cwd());
 try {
   const file = path.join(scratch, 'panel.html');
@@ -22,7 +22,7 @@ try {
     results.push(JSON.parse(match[1].replaceAll('&quot;', '"')));
   }
   const paths = ['core','game','fields','roster','panel'].map(name => 'public/js/battlesim/engines/orc-power/' + name + '.js')
-    .concat(['public/js/i18n/en/battlesim/battlesim654.js','public/js/i18n/bg/battlesim/battlesim654.js','public/css/battlesim.css']);
+    .concat(['public/js/i18n/en/battlesim/battlesim654.js','public/js/i18n/bg/battlesim/battlesim654.js','public/css/components/battlesim.css']);
   const hashes = Object.fromEntries(require('./browser-sources.cjs')(paths).map(file => [file, crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')]));
   if (process.env.RECEIPT) fs.writeFileSync(process.env.RECEIPT, JSON.stringify({ status:'isolated-draft-panel-check', hashes, results }, null, 2));
   console.log(JSON.stringify(results));

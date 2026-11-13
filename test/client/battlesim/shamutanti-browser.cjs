@@ -5,7 +5,7 @@ const root = process.env.TMPDIR, chromium = process.env.CHROMIUM;
 assert.ok(root && root.startsWith('/media/koldKat/MediaDrive/.tmp/'), 'Use MediaDrive audit scratch');
 assert.ok(chromium && fs.existsSync(chromium), 'Set CHROMIUM');
 const scratch = fs.mkdtempSync(path.join(root, 'shamutanti-panel-'));
-const css = ['equipment', 'battlesim'].map(name => fs.readFileSync('public/css/' + name + '.css', 'utf8')).join('\n');
+const css = ['components/equipment', 'components/battlesim'].map(name => fs.readFileSync('public/css/' + name + '.css', 'utf8')).join('\n');
 const fixture = fs.readFileSync(__dirname + '/shamutanti-panel.fixture', 'utf8').replaceAll('REPO', 'file://' + process.cwd());
 try {
   const file = path.join(scratch, 'panel.html');
@@ -21,7 +21,7 @@ try {
     results.push(JSON.parse(match[1].replaceAll('&quot;', '"')));
   }
   const files = ['core', 'roster', 'panel'].map(name => 'public/js/battlesim/engines/shamutanti/' + name + '.js')
-    .concat(['public/js/i18n/en/battlesim/battlesim671.js', 'public/js/i18n/bg/battlesim/battlesim671.js', 'public/js/reading/content.js', 'public/css/battlesim.css']);
+    .concat(['public/js/i18n/en/battlesim/battlesim671.js', 'public/js/i18n/bg/battlesim/battlesim671.js', 'public/js/reading/content.js', 'public/css/components/battlesim.css']);
   const hashes = Object.fromEntries(require('./browser-sources.cjs')(files).map(file => [file, crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')]));
   if (process.env.RECEIPT) fs.writeFileSync(process.env.RECEIPT, JSON.stringify({ status: 'isolated-draft-panel-check', hashes, results }, null, 2));
   console.log(JSON.stringify(results));

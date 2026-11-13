@@ -1,0 +1,126 @@
+/* Shared personal reward feedback, including standalone mobile dialogs. */
+.disable-floaties .reward-float,
+.disable-floaties .app-reward-float {
+  display: none;
+}
+
+#reward-float-layer,
+#app-reward-float-layer {
+  contain: layout style;
+}
+
+.reward-float,
+.app-reward-float {
+  /* These short-lived chips own their compositor layer, not the graph canvas. */
+  will-change: transform, opacity;
+}
+
+@media (max-width: 768px) {
+  #reward-float-layer,
+  #app-reward-float-layer {
+    left: max(0.75rem, env(safe-area-inset-left)) !important;
+    right: var(--mobile-reward-right, max(0.75rem, env(safe-area-inset-right))) !important;
+    width: auto !important;
+    transform: none !important;
+    align-items: center !important;
+  }
+  #reward-float-layer,
+  #app-reward-float-layer {
+    bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+  }
+  #reward-float-layer > *,
+  #app-reward-float-layer > * {
+    max-width: 100%;
+    box-sizing: border-box;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+}
+
+.reward-float {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  max-width: min(280px, 72vw);
+  padding: 0.45rem 0.72rem;
+  border-radius: 999px;
+  border: 1px solid rgba(103, 232, 249, 0.55);
+  background: rgba(8, 47, 73, 0.94);
+  color: #67e8f9;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.38),
+    0 0 18px rgba(34, 211, 238, 0.18);
+  font-size: 0.83rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transform: translateY(0);
+  opacity: 0;
+  animation: reward-float-rise 4.6s ease-out forwards;
+}
+@keyframes reward-float-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  72% {
+    opacity: 1;
+    transform: translateY(-18px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-40px);
+  }
+}
+
+/* Survival rewards reuse the five-second floater lifetime; no particle timers. */
+.reward-float--survival,
+.reward-float--survival-green {
+  position: relative;
+  overflow: visible;
+  color: var(--survival-text, #efa5a0);
+  border-color: var(--survival-border, #a94745);
+  background: var(--survival-background, #381c22);
+  box-shadow: 0 4px 12px #16090e66;
+}
+.reward-float--survival-green {
+  --survival-text: #a8ce95;
+  --survival-border: #608a4e;
+  --survival-background: #203023;
+  --survival-drip: #6d9e51;
+}
+.survival-drip {
+  position: absolute;
+  top: calc(100% - 2px);
+  left: var(--drip-left);
+  width: var(--drip-width);
+  height: var(--drip-height);
+  border-radius: 0 0 75% 75%;
+  background: var(--survival-drip, #b34749);
+  transform-origin: top;
+  animation: survival-blood-drip var(--drip-duration) var(--drip-delay) ease-in 1 both;
+  pointer-events: none;
+}
+@keyframes survival-blood-drip {
+  0% {
+    transform: scaleY(0.02);
+    opacity: 0;
+  }
+  15% {
+    transform: scaleY(0.15);
+    opacity: 0.8;
+  }
+  65% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(12px) scaleY(0.5);
+    opacity: 0;
+  }
+}

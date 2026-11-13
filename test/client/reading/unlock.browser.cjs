@@ -9,7 +9,7 @@ const file = path.join(root, 'reading-unlock-check.html');
 const coverFile = path.join(root, 'reading-unlock-cover.svg');
 fs.writeFileSync(coverFile, '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="360"><rect width="240" height="360" fill="#253247"/><rect x="20" y="20" width="200" height="320" fill="none" stroke="#ab956f"/></svg>');
 fs.writeFileSync(file, `<!doctype html><meta charset="utf-8">
-<style>body{background:#111827;color:#ddd;font:14px Georgia,serif}${fs.readFileSync(path.join(publicRoot,'css/reading-access.css'),'utf8')}</style>
+<style>body{background:#111827;color:#ddd;font:14px Georgia,serif}${fs.readFileSync(path.join(publicRoot,'css/components/reading-access.css'),'utf8')}</style>
 <div id="reader"></div><script type="module">
 import {showReadingGate} from 'file://${publicRoot}/js/reading/access.js';
 import {setToken} from 'file://${publicRoot}/js/core/state.js';

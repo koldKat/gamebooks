@@ -49,7 +49,7 @@ function addForumSecurityHeaders(res) {
   res.setHeader('Content-Security-Policy',
     "default-src 'none'; " +
     "script-src 'unsafe-inline'; " +
-    "style-src 'unsafe-inline'; " +
+    "style-src 'self' 'unsafe-inline'; " +
     "img-src 'self'; " +
     "connect-src 'self'; " +
     "form-action 'self'; " +

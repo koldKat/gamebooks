@@ -34,7 +34,7 @@ window.openProbe=async id=>{
 };
 window.finishProbe=()=>{window.probeOverlay.classList.remove('active');};
 window.pointerReady=true;`;
-    const css = ['style', 'charsheet', 'equipment', 'battlesim', 'confirm'].map(n => `<link rel="stylesheet" href="file://${repo}/public/css/${n}.css">`).join('')
+    const css = ['base/app', 'components/charsheet', 'components/equipment', 'components/battlesim', 'components/confirm'].map(n => `<link rel="stylesheet" href="file://${repo}/public/css/${n}.css">`).join('')
       + `<link rel="stylesheet" href="file://${repo}/public/${mode === 'mobile' ? 'mobile/css/style' : 'css/play'}.css">`;
     const imports = process.env.SIMULATOR_SELECT_SOURCE ? `<script type="importmap">${JSON.stringify({imports:{['file://' + repo + '/public/js/ui-helpers/themed-select.js']:'file://' + process.env.SIMULATOR_SELECT_SOURCE}})}</script>` : '';
     const file = path.join(scratch, mode + '.html');

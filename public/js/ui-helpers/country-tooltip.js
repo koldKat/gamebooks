@@ -13,6 +13,11 @@ export function bindCountryTooltip(element, countries = []) {
     code, count, name: code ? names.of(code) : 'Unknown',
   })).sort((a, b) => a.name.localeCompare(b.name, 'en'));
   element.dataset.tooltip = 'Users by country';
+  element.dataset.tooltipTap = '1';
+  element.tabIndex = 0;
+  element.setAttribute('role', 'button');
+  element.setAttribute('aria-label', 'Users by country');
+  element.setAttribute('aria-expanded', 'false');
   setTooltipContent(element, tip => {
     const list = document.createElement('div');
     list.className = 'tooltip-country-list';

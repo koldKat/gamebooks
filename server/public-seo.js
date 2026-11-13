@@ -64,7 +64,7 @@ function renderPublicPage(html, meta, kind) {
   <meta name="twitter:description" content="${esc(description)}">
   <meta name="twitter:image" content="${esc(image)}">
   <script type="application/ld+json">${json(structuredData(meta, kind, url))}</script>
-  <link rel="stylesheet" href="/css/public-catalogue.css">`;
+  <link rel="stylesheet" href="/css/pages/catalogue.css">`;
   return html.replace(/<title>[\s\S]*?<\/title>/, () => `<title>${esc(title)}</title>`)
     .replace(/<meta (?:name="(?:description|twitter:[^"]+)"|property="og:[^"]+")[^>]*>/g, '')
     .replace(/<link rel="canonical"[^>]*>/g, '')
@@ -85,7 +85,7 @@ function renderCatalogue(items, {type = 'books', page = 1, pageSize = 60} = {}) 
   const title = `${type === 'series' ? 'Gamebook series' : 'Gamebook catalogue'}${page > 1 ? ` - Page ${page}` : ''} - Gamebook Tracker`;
   const description = `Browse ${items.length} public ${type === 'series' ? 'gamebook series' : 'gamebooks and anthologies'} on Gamebook Tracker. Find your next adventure${page > 1 ? ` on page ${page}` : ''}.`;
   const selected = items.slice((page - 1) * pageSize, page * pageSize);
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(description)}"><link rel="canonical" href="${esc(SITE + pageUrl(page))}"><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/css/public-catalogue.css"></head><body class="public-catalogue"><header>${navigation}<h1>${type === 'series' ? 'Gamebook series' : 'Gamebook catalogue'}</h1><p>${esc(description)}</p></header><main><ul class="public-book-links">${selected.map(item => `<li><a href="${type === 'series' ? '/series/' + item.id : bookPath(item)}">${esc(item.name)}</a>${item.authors ? `<span>${esc(item.authors)}</span>` : ''}</li>`).join('')}</ul><nav class="public-catalogue-nav" aria-label="Catalogue pages">${page > 1 ? `<a rel="prev" href="${esc(pageUrl(page - 1))}">Previous</a>` : ''}<span>Page ${page} of ${pages}</span>${page < pages ? `<a rel="next" href="${esc(pageUrl(page + 1))}">Next</a>` : ''}</nav></main></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(description)}"><link rel="canonical" href="${esc(SITE + pageUrl(page))}"><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/css/pages/catalogue.css"></head><body class="public-catalogue"><header>${navigation}<h1>${type === 'series' ? 'Gamebook series' : 'Gamebook catalogue'}</h1><p>${esc(description)}</p></header><main><ul class="public-book-links">${selected.map(item => `<li><a href="${type === 'series' ? '/series/' + item.id : bookPath(item)}">${esc(item.name)}</a>${item.authors ? `<span>${esc(item.authors)}</span>` : ''}</li>`).join('')}</ul><nav class="public-catalogue-nav" aria-label="Catalogue pages">${page > 1 ? `<a rel="prev" href="${esc(pageUrl(page - 1))}">Previous</a>` : ''}<span>Page ${page} of ${pages}</span>${page < pages ? `<a rel="next" href="${esc(pageUrl(page + 1))}">Next</a>` : ''}</nav></main></body></html>`;
 }
 
 module.exports = {renderPublicPage, renderCatalogue};

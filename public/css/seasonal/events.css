@@ -1,0 +1,343 @@
+@import url('./winter.css');
+@import url('./cursor-variants.css');
+@import url('./late-autumn.css');
+/* Cursor companions stay below hover previews (9999) and shared tooltips (10001). */
+.seasonal-pumpkin {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  z-index: 9998;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 2px 2px #0008);
+  contain: layout style;
+}
+.seasonal-pumpkin[hidden] {
+  display: none;
+}
+.seasonal-pumpkin svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.seasonal-pumpkin__pupils {
+  transform: translate(var(--pumpkin-look-x, 0px), var(--pumpkin-look-y, 0px));
+  transition: transform 220ms ease;
+}
+.seasonal-pumpkin__eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 65ms ease;
+}
+.seasonal-pumpkin.is-blinking .seasonal-pumpkin__eyes {
+  transform: scaleY(0.08);
+}
+.seasonal-pumpkin__mouth {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 160ms ease;
+}
+.seasonal-pumpkin__mouth-open {
+  display: none;
+}
+.seasonal-pumpkin.is-gaping .seasonal-pumpkin__mouth-open,
+.seasonal-pumpkin.is-clacking .seasonal-pumpkin__mouth-open {
+  display: block;
+}
+.seasonal-pumpkin.is-gaping .seasonal-pumpkin__mouth-closed,
+.seasonal-pumpkin.is-clacking .seasonal-pumpkin__mouth-closed {
+  display: none;
+}
+.seasonal-pumpkin.is-clacking .seasonal-pumpkin__upper-teeth {
+  animation: pumpkin-clack-upper 200ms linear infinite;
+}
+.seasonal-pumpkin.is-clacking .seasonal-pumpkin__lower-teeth {
+  animation: pumpkin-clack-lower 200ms linear infinite;
+}
+@keyframes pumpkin-clack-upper {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45%,
+  60% {
+    transform: translateY(2px);
+  }
+}
+@keyframes pumpkin-clack-lower {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  45%,
+  60% {
+    transform: translateY(-4px);
+  }
+}
+.seasonal-pumpkin.is-gaping .seasonal-pumpkin__body {
+  animation: pumpkin-shake 110ms linear infinite;
+}
+@keyframes pumpkin-shake {
+  0%,
+  100% {
+    transform: translateX(-1.5px) rotate(-4deg) scale(1.08);
+  }
+  50% {
+    transform: translateX(1.5px) rotate(4deg) scale(1.08);
+  }
+}
+.seasonal-pumpkin__body {
+  transform-origin: 24px 26px;
+}
+.seasonal-pumpkin__drool {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: top;
+}
+.seasonal-pumpkin.is-drooling .seasonal-pumpkin__drool {
+  animation: pumpkin-drool 2.3s ease-in both;
+}
+@keyframes pumpkin-drool {
+  0% {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+  15% {
+    opacity: 1;
+    transform: scaleY(0.3);
+  }
+  75% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(4px) scaleY(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .seasonal-pumpkin * {
+    transition: none;
+  }
+}
+@media print {
+  .seasonal-pumpkin {
+    display: none;
+  }
+}
+.seasonal-event-notice {
+  margin: 0 0 0.4rem;
+  padding: 0.4rem 0.8rem 0.35rem;
+  border: 1.5px solid #6f5485;
+  border-left: 3px solid #d58b48;
+  border-radius: 7px;
+  background: rgb(25 27 43 / 50%);
+  color: #d9d7e7;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+.seasonal-event-notice strong {
+  color: #f0b17e;
+  font-weight: 600;
+}
+.seasonal-event-details {
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.35;
+}
+.seasonal-event-ete,
+.seasonal-event-eta {
+  opacity: 0.8;
+  white-space: nowrap;
+  font-size: 0.9em;
+}
+.seasonal-event-ete-label,
+.seasonal-event-eta-label {
+  color: #fbbf24;
+}
+.seasonal-event-loss,
+.seasonal-event-heartbeat {
+  color: #f87171;
+  font-weight: 600;
+}
+.seasonal-event-sim-loss {
+  color: #c47777;
+  font-weight: 600;
+}
+.seasonal-event-battle-death {
+  color: #d97706;
+  font-weight: 600;
+}
+.seasonal-event-win {
+  color: #d7b36c;
+  font-weight: 600;
+}
+.seasonal-event-sim-win {
+  color: #8fb5a3;
+  font-weight: 600;
+}
+.seasonal-event-notice[data-season='diwali'] {
+  background: rgb(35 31 26 / 50%);
+  border-color: #735e3f;
+  border-left-color: #c9a65e;
+}
+.seasonal-event-notice[data-season='diwali'] strong {
+  color: #dfc18a;
+}
+.seasonal-event-notice[data-mode='upcoming'] strong {
+  color: #aeb8c7;
+}
+.seasonal-event-notice[data-mode='upcoming'] .seasonal-event-name {
+  color: #9fc9cf;
+}
+.seasonal-event-notice[data-mode='upcoming'] .seasonal-event-eta {
+  color: #aeb8c7;
+  opacity: 1;
+}
+.seasonal-event-notice[data-mode='upcoming'] [data-season-start] {
+  color: #d2d9e2;
+}
+.seasonal-preview-hint {
+  font-size: 0.78rem;
+  color: #a9a4b3;
+  margin-top: 0.25rem;
+}
+.seasonal-diya {
+  position: fixed;
+  inset: 0 auto auto 0;
+  width: 32px;
+  height: 32px;
+  z-index: 9998;
+  pointer-events: none;
+  user-select: none;
+  contain: layout style;
+}
+.seasonal-diya[hidden] {
+  display: none;
+}
+.seasonal-diya svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.seasonal-diya__fire,
+.seasonal-diya__flame {
+  transform-origin: 22.5px 21px;
+}
+.seasonal-diya__flame {
+  animation: diya-flicker 1.1s steps(4, end) infinite;
+  filter: drop-shadow(0 0 2px #e4bf6b80);
+}
+.seasonal-diya__embers circle,
+.seasonal-diya__smoke path {
+  opacity: 0;
+}
+.seasonal-diya.is-flaring .seasonal-diya__fire {
+  animation: diya-flare 1.8s ease-in-out;
+}
+.seasonal-diya.is-sparking .seasonal-diya__embers circle {
+  animation: diya-ember 1.7s ease-out both;
+}
+.seasonal-diya.is-sparking .seasonal-diya__embers circle:nth-child(2) {
+  animation-delay: 0.3s;
+  --ember-x: 9px;
+}
+.seasonal-diya.is-sparking .seasonal-diya__embers circle:nth-child(3) {
+  animation-delay: 0.6s;
+  --ember-x: -10px;
+}
+.seasonal-diya.is-smoking .seasonal-diya__smoke path {
+  animation: diya-smoke 2.4s ease-out both;
+}
+.seasonal-diya.is-smoking .seasonal-diya__smoke path:nth-child(2) {
+  animation-delay: 0.45s;
+}
+.seasonal-diya.is-smoking .seasonal-diya__fire {
+  animation: diya-dip 3s ease-in-out;
+}
+@keyframes diya-flicker {
+  0%,
+  100% {
+    transform: scale(0.95, 1) rotate(-3deg);
+  }
+  24% {
+    transform: scale(1.08, 0.88) rotate(4deg);
+  }
+  49% {
+    transform: scale(0.87, 1.14) rotate(-5deg);
+  }
+  76% {
+    transform: scale(1.04, 0.96) rotate(2deg);
+  }
+}
+@keyframes diya-flare {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  22% {
+    transform: scale(1.25, 1.65) rotate(-5deg);
+  }
+  45% {
+    transform: scale(1.1, 1.4) rotate(5deg);
+  }
+  66% {
+    transform: scale(1.2, 1.55) rotate(-3deg);
+  }
+}
+@keyframes diya-ember {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  12%,
+  45% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--ember-x, -5px), -23px);
+  }
+}
+@keyframes diya-smoke {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.7);
+  }
+  18% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(6px, -20px) scale(1.2);
+  }
+}
+@keyframes diya-dip {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  24% {
+    transform: scale(0.8, 0.65);
+    opacity: 0.7;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .seasonal-diya * {
+    animation: none !important;
+  }
+  .seasonal-diya__embers circle,
+  .seasonal-diya__smoke path {
+    opacity: 0;
+  }
+}
+@media print {
+  .seasonal-diya {
+    display: none;
+  }
+}

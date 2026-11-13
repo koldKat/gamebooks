@@ -63,6 +63,8 @@ test('public profile titles and headers mask email names without changing lookup
   } };
   const context = clientModule('public/js/account/public-profile.js', {
     document, escapeHtml, publicName: (await clientFormatter).publicName, t: key => key,
+    profileStatsHtml: () => '',
+    loadingHtml: () => '',
   });
   const profile = { username: 'reader@example.com', books: [], totalBooks: 0 };
   context.renderPublicProfile(profile);
@@ -90,6 +92,8 @@ test('server-rendered profile, feed and forum labels mask email domains', () => 
     },
     '../paths': { ROOT: '/unused' }, '../request-helpers': { addSecurityHeaders() {} },
     '../html-escape': { escapeHtml, escapeJsonString }, '../public-name': { publicName },
+    '../public-seo': require('../server/public-seo'),
+    '../not-found': { serveNotFoundPage() { throw new Error('Unexpected missing page'); } },
   };
   const context = vm.createContext({ module: { exports: {} }, require: key => {
     assert.ok(Object.hasOwn(deps, key), key); return deps[key];

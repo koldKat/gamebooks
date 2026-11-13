@@ -63,7 +63,12 @@ function codeStats() {
       if (/\.(?:m?js)$/.test(file) && !/\.(?:test|spec)\.(?:m?js)$/.test(file)) count(file);
     }, name => ['test', 'tests', '__tests__'].includes(name));
   }
-  for (const dir of ['public/css', 'public/mobile/css', 'admin']) {
+  for (const dir of ['public/css', 'public/mobile/css', 'server/styles', 'docs/styles']) {
+    walk(path.join(workerData.root, dir), file => {
+      if (file.endsWith('.css')) count(file);
+    });
+  }
+  for (const dir of ['admin']) {
     let handle;
     try { handle = fs.opendirSync(path.join(workerData.root, dir)); }
     catch (error) { if (error.code === 'ENOENT') continue; throw error; }
@@ -71,9 +76,8 @@ function codeStats() {
       let entry;
       while ((entry = handle.readSync())) {
         pause();
-        if (entry.isFile() && (dir === 'admin'
-          ? entry.name.endsWith('.html') && !['admin-guide.html', 'technical.html'].includes(entry.name)
-          : entry.name.endsWith('.css'))) count(path.join(workerData.root, dir, entry.name));
+        if (entry.isFile() && entry.name.endsWith('.html')
+          && !['admin-guide.html', 'technical.html'].includes(entry.name)) count(path.join(workerData.root, dir, entry.name));
       }
     } finally { handle.closeSync(); }
   }

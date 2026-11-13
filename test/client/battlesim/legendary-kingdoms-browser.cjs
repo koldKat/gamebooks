@@ -18,7 +18,7 @@ const files=['test/helpers/roster-db.cjs',fixturePath,__filename,
   ...fs.readdirSync('public/js/battlesim/engines/legendary-kingdoms').filter(name=>name.endsWith('.js'))
     .map(name=>'public/js/battlesim/engines/legendary-kingdoms/'+name),
   ...['en','bg'].map(language=>'public/js/i18n/'+language+'/battlesim/battlesim'+(crown?'690':'689')+'.js'),
-  ...['style','charsheet','equipment','battlesim','confirm'].map(name=>'public/css/'+name+'.css')];
+  ...['base/app','components/charsheet','components/equipment','components/battlesim','components/confirm'].map(name=>'public/css/'+name+'.css')];
 const hashFiles=()=>Object.fromEntries(require('./browser-sources.cjs')(files).map(file=>[file,crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')]));
 const hashes=hashFiles();
 (async()=>{
@@ -30,7 +30,7 @@ const hashes=hashFiles();
       if(crown&&integrated)fixture=fixture.replaceAll('689','690').replace('length===76','length===86')
         .replace("value='16'","value='5'");
       fixture=fixture.replaceAll('ROSTER_SEED',JSON.stringify(rosterSeed));
-      const css=['style','charsheet','equipment','battlesim','confirm'].map(name=>
+      const css=['base/app','components/charsheet','components/equipment','components/battlesim','components/confirm'].map(name=>
         `<link rel="stylesheet" href="file://${repo}/public/css/${name}.css">`).join('');
       const file=path.join(scratch,language+'.html');
       const mount=integrated||crownEntry?(language==='mobile'?'m-sim-btn-row':'main-screen'):'buttons';

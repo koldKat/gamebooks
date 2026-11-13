@@ -7,7 +7,7 @@ const checkBrowser = require('./browser-harness.cjs');
 const {getRosterRows}=require('../../helpers/roster-db.cjs');
 const repo = process.cwd();
 const fixturePath = 'test/client/battlesim/sword-of-samurai-integration.fixture';
-const styles = ['style', 'charsheet', 'equipment', 'battlesim', 'confirm'];
+const styles = ['base/app', 'components/charsheet', 'components/equipment', 'components/battlesim', 'components/confirm'];
 const rosterSeed = getRosterRows(672);
 const files = ['test/helpers/roster-db.cjs', fixturePath, __filename, 'test/client/battlesim/browser-harness.cjs', 'public/js/battlesim/loader.js', 'public/mobile/js/battlesim-dispatch.js',
   'public/js/battlesim/battlesim672.js', 'public/js/core/state.js', 'public/js/core/util.js',

@@ -6,16 +6,17 @@ const read = path => readFileSync(new URL('../../../' + path, import.meta.url), 
 const registered = source => [...source.match(/SUPPORTED_BATTLE_SIM_BOOKS = new Set\(\[([\s\S]*?)\]\)/)[1].matchAll(/\d+/g)].map(match => Number(match[0]));
 const desktop = registered(read('public/js/battlesim/loader.js'));
 const mobile = registered(read('public/mobile/js/battlesim-dispatch.js'));
-const css = read('public/css/battlesim.css');
+const css = read('public/css/components/battlesim.css');
 
 test('every registered simulator launch button has normal and hover styles', () => {
   assert.deepEqual(desktop, mobile);
-  const rules = [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)];
+  const rules = [...css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/@import[^;]+;/g, '').matchAll(/([^{}]+)\{([^{}]*)\}/g)];
   for (const id of desktop) {
     const button = id === 829 ? 'battlesim-btn' : 'sim' + id + '-btn';
     for (const suffix of ['', ':hover']) {
+      const shared = "#play-btn-row > :is(#battlesim-btn, button[id^='sim'][id$='-btn'])" + suffix;
       assert.ok(rules.some(([, selectors, declarations]) =>
-        selectors.split(',').map(value => value.trim()).includes('#' + button + suffix) && /background\s*:/.test(declarations)), button + suffix + ' lacks theme styling');
+        (selectors.trim() === shared || selectors.split(',').map(value => value.trim()).includes('#' + button + suffix)) && /background\s*:/.test(declarations)), button + suffix + ' lacks theme styling');
     }
   }
 });

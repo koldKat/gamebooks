@@ -23,8 +23,8 @@ const repo=process.cwd(),scratch=fs.mkdtempSync(path.join(root,'destinyquest-pan
     .replace('SWEEP_PRESETS',String(process.argv.includes('--presets')))
     .replace('ROSTER_SEED',JSON.stringify(readRosterDocument(1285).enemies))
     .replace('LEGION_ENEMIES',legionAbilities||legionBook?JSON.stringify(readRosterDocument(1286).enemies):'[]');
-  const css=['style','charsheet','equipment','battlesim','confirm','play'].map(name=>`<link rel="stylesheet" href="file://${repo}/public/css/${name}.css">`).join('')
-    +(mode==='mobile'?`<link rel="stylesheet" href="file://${repo}/public/mobile/css/style.css">`:'');
+  const css=['base/app','components/charsheet','components/equipment','components/battlesim','components/confirm','layouts/play'].map(name=>`<link rel="stylesheet" href="file://${repo}/public/css/${name}.css">`).join('')
+    +(mode==='mobile'?`<link rel="stylesheet" href="file://${repo}/public/css/mobile/app.css">`:'');
   const file=path.join(scratch,'test.html');
   fs.writeFileSync(file,`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${css}<div id="${mode==='mobile'?'m-sim-btn-row':'main-screen'}"></div><script>addEventListener('error',e=>document.body.dataset.failure=e.error?.stack||e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=e.reason?.stack||String(e.reason));</script><script type="module">${source}</script>`);
   const result=await checkBrowser({file,profile:path.join(scratch,'profile'),root,width,chromium:process.env.CHROMIUM,timeoutMs:30000,

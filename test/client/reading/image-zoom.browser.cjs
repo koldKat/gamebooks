@@ -7,7 +7,7 @@ if (!root) throw Error('Provide a scratch directory');
 const publicRoot = path.resolve('public');
 const file = path.join(root, 'reading-image-zoom-check.html');
 fs.writeFileSync(file, `<!doctype html><meta charset="utf-8">
-<style>body{margin:0;background:#111827;color:#ddd;font:14px Arial}dialog{margin:0} ${fs.readFileSync(path.join(publicRoot, 'css/reading-access.css'), 'utf8')}</style>
+<style>body{margin:0;background:#111827;color:#ddd;font:14px Arial}dialog{margin:0} ${fs.readFileSync(path.join(publicRoot, 'css/components/reading-access.css'), 'utf8')}</style>
 <div id="source"></div><script type="module">
 import {openReadingImageZoom,bindReadingImageZoom} from 'file://${publicRoot}/js/reading/image-zoom.js';
 const check=(value,label)=>{if(!value)throw Error(label)};

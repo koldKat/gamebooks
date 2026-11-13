@@ -22,7 +22,7 @@ const { getRatingStats } = require('../../server/db/rating-stats');
   const db = new Database('database.sqlite', { readonly: true });
   Object.assign(stats, getRatingStats(db));
   db.close();
-  const css = ['style', 'feedback', 'mobile', 'feed', 'tooltip'].map(name =>
+  const css = ['base/app', 'components/feedback', 'layouts/responsive', 'components/feed', 'components/tooltip'].map(name =>
     fs.readFileSync(`public/css/${name}.css`, 'utf8')).join('\n');
   const html = `<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${imagePolicy}"><style>${css}</style>
     <div id="stats-modal-overlay"><div id="stats-modal"><div id="stats-modal-header">
@@ -30,7 +30,7 @@ const { getRatingStats } = require('../../server/db/rating-stats');
     </div><div id="stats-modal-body"></div></div></div>
     <script type="module">
     import {bindCountryTooltip} from 'file://${path.resolve('public/js/ui-helpers/country-tooltip.js')}';
-    import {initTooltip} from 'file://${path.resolve('public/js/ui-helpers/tooltip.js')}';
+    import {initTooltip,dismissTooltip} from 'file://${path.resolve('public/js/ui-helpers/tooltip.js')}';
     const messages = ${JSON.stringify(messages)}, stats = ${JSON.stringify(stats)};
     const t = key => messages[key] || key;
     const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g,
@@ -59,6 +59,28 @@ const { getRatingStats } = require('../../server/db/rating-stats');
         const done=()=>{clearTimeout(timeout);img.naturalWidth>0?resolve():reject(Error('Flag missing: '+img.src));};
         if(img.complete)done();else{img.onload=done;img.onerror=done;}
       })));
+      registered.click();
+      const countryTip = document.getElementById('app-tooltip');
+      check(countryTip.style.display === 'block' && registered.getAttribute('aria-expanded') === 'true', 'tap opens country details');
+      const bounds = countryTip.getBoundingClientRect();
+      check(bounds.left >= 0 && bounds.right <= innerWidth && bounds.top >= 0 && bounds.bottom <= innerHeight, 'tapped country details stay in viewport');
+      check(countryTip.scrollWidth <= countryTip.clientWidth + 1, 'country details widen without horizontal scrolling');
+      check(getComputedStyle(countryTip).overflow === 'visible', 'country details have no scrollbars');
+      for (const row of countryTip.querySelectorAll('.tooltip-country-row')) {
+        const name = row.children[1];
+        const range = document.createRange();
+        range.selectNodeContents(name);
+        check(range.getClientRects().length === 1, 'country names stay on one line');
+        check(row.children[2].getBoundingClientRect().left >= name.getBoundingClientRect().right, 'country counts do not overlap names');
+      }
+      countryTip.firstElementChild.click();
+      check(countryTip.style.display === 'block', 'interacting with country details keeps them open');
+      registered.click();
+      check(countryTip.style.display === 'none' && registered.getAttribute('aria-expanded') === 'false', 'second tap closes country details');
+      registered.dispatchEvent(new KeyboardEvent('keydown', {key:'Enter',bubbles:true}));
+      check(countryTip.style.display === 'block', 'keyboard opens country details');
+      registered.dispatchEvent(new KeyboardEvent('keydown', {key:'Escape',bubbles:true}));
+      check(countryTip.style.display === 'none', 'Escape dismisses country details');
       check(body.querySelectorAll('.stats-rating-table tbody tr').length === 12, 'all rating rows rendered');
       const cpu = body.querySelector('.stats-cpu-model');
       const cpuRange = document.createRange();
@@ -101,6 +123,10 @@ const { getRatingStats } = require('../../server/db/rating-stats');
       document.getElementById('stats-modal').style.maxHeight = '360px';
       body.scrollTop = body.scrollHeight;
       check(body.scrollHeight > body.clientHeight && body.scrollTop > 0, 'short screens scroll');
+      registered.click();
+      closeStatsModal();
+      check(countryTip.style.display === 'none', 'closing stats dismisses country details');
+      await openStatsModal();
       document.body.dataset.test = JSON.stringify({width:innerWidth,sections:12,ratingRows:12,matchingTypography:true,noOverflow:true,shortScreenScroll:true,maxGap});
     } catch (error) { document.body.dataset.failure = error.stack; }
     </script>`;
@@ -109,7 +135,32 @@ const { getRatingStats } = require('../../server/db/rating-stats');
   try {
     fs.writeFileSync(file, html);
     for (const width of [1100, 800, 390, 320]) {
-      console.log(JSON.stringify(await browser({file,root,width,profile:path.join(root,'profile'),chromium:process.env.CHROMIUM})));
+      const interact = width > 390 ? undefined : async send => {
+        await send('Emulation.setTouchEmulationEnabled', {enabled:true,maxTouchPoints:1});
+        let ready = false;
+        for (let attempt=0;attempt<200;attempt++) {
+          const response = await send('Runtime.evaluate', {expression:'({ready:!!document.body?.dataset.test,failure:document.body?.dataset.failure})',returnByValue:true});
+          if (response.result.value?.failure) throw Error(response.result.value.failure);
+          if (response.result.value?.ready) { ready=true;break; }
+          await new Promise(resolve=>setTimeout(resolve,50));
+        }
+        assert.ok(ready, 'stats ready for actual mobile touch');
+        const position = await send('Runtime.evaluate', {expression:'(()=>{const el=document.getElementById("stats-registered-users");el.scrollIntoView({block:"center"});const r=el.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+r.height/2};})()',returnByValue:true});
+        await new Promise(resolve=>setTimeout(resolve,50));
+        const point = position.result.value;
+        await send('Input.dispatchTouchEvent', {type:'touchStart',touchPoints:[point]});
+        await send('Input.dispatchTouchEvent', {type:'touchEnd',touchPoints:[]});
+        await new Promise(resolve=>setTimeout(resolve,100));
+        const result = await send('Runtime.evaluate', {expression:'({visible:document.getElementById("app-tooltip").style.display,expanded:document.getElementById("stats-registered-users").getAttribute("aria-expanded")})',returnByValue:true});
+        assert.equal(result.result.value.visible, 'block', 'actual touch keeps country list open');
+        assert.equal(result.result.value.expanded, 'true');
+        await send('Input.dispatchTouchEvent', {type:'touchStart',touchPoints:[{x:8,y:8}]});
+        await send('Input.dispatchTouchEvent', {type:'touchEnd',touchPoints:[]});
+        await new Promise(resolve=>setTimeout(resolve,100));
+        const dismissed = await send('Runtime.evaluate', {expression:'document.getElementById("app-tooltip").style.display',returnByValue:true});
+        assert.equal(dismissed.result.value, 'none', 'outside touch dismisses country list');
+      };
+      console.log(JSON.stringify(await browser({file,root,width,profile:path.join(root,'profile'),chromium:process.env.CHROMIUM,interact})));
     }
   } finally {
     fs.rmSync(root, { recursive: true, force: true });

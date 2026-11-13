@@ -1,0 +1,320 @@
+/* Non-blocking reader panel; keep the underlying graph interactive. */
+
+/* Self-hosted PT Serif provides native Cyrillic glyphs for reading. */
+@import url('/vendor/fonts/pt-serif/pt-serif.css');
+
+/* The live-reading trigger belongs to the static play button bar; charsheet.css styles it. */
+
+.liveread-panel {
+  display: none;
+  flex-direction: column;
+  position: fixed;
+  /* Dock below the legend using its observed height.
+     Cap panel height without anchoring both ends, leaving space for the button row. */
+  right: 12px;
+  top: calc(var(--legend-h, 260px) + 24px);
+  max-height: 50vh;
+  width: 380px;
+  max-width: calc(100vw - 24px);
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  z-index: 350;
+  overflow: hidden;
+}
+.liveread-panel.active {
+  display: flex;
+}
+
+/* Group font controls and close button at the header's right edge. */
+.liveread-font-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-left: auto;
+}
+.liveread-font-btn {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.liveread-font-pct {
+  font-size: 0.68rem;
+  color: #6b7280;
+  min-width: 2.4em;
+  text-align: center;
+  user-select: none;
+}
+
+/* Three-line menu opening frontmatter/backmatter, anchored left of the close button. */
+/* The font controls' margin-left:auto already right-aligns the whole cluster, so cancel the
+   shared .inv-close-btn auto-margin that would otherwise shove the close button to the far edge. */
+#liveread-close {
+  margin-left: 0;
+}
+.liveread-menu-wrap {
+  position: relative;
+  display: flex;
+}
+.liveread-menu-btn {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.liveread-menu-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  z-index: 360;
+}
+.liveread-menu-dropdown[hidden] {
+  display: none;
+}
+.liveread-menu-item {
+  background: none;
+  border: none;
+  color: #d1d5db;
+  text-align: left;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.liveread-menu-item:hover:not(:disabled) {
+  background: #374151;
+}
+.liveread-menu-item:disabled {
+  color: #4b5563;
+  cursor: default;
+}
+
+.liveread-body {
+  /* min-height:0 lets the flex child scroll within the panel's height limit. */
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0.9rem 1rem;
+  overflow-y: auto;
+  line-height: 1.55;
+  color: #d1d5db;
+  /* Scope font-size controls to this reader panel. */
+  font-size: var(--liveread-font-size, 0.88rem);
+  /* Use self-hosted PT Serif for screen reading and native Cyrillic; keep a serif fallback. */
+  font-family: 'PT Serif', 'Times New Roman', serif;
+}
+/* Hyphenate justified text to avoid wide word gaps in the narrow panel. */
+.liveread-body p {
+  margin: 0 0 0.75rem;
+  text-align: justify;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.liveread-body p:last-child {
+  margin-bottom: 0;
+}
+.liveread-body figure {
+  margin: 0 0 0.75rem;
+}
+.liveread-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+.liveread-body a {
+  color: #38bdf8;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.liveread-body a:hover {
+  color: #7dd3fc;
+}
+.liveread-empty {
+  opacity: 0.7;
+  font-style: italic;
+  margin: 0;
+}
+
+/* Loading indicator markup/animation is the shared .feed-loading-graph/.flg-*
+   graph icon (feed.css) - this wrapper only supplies the flex layout. */
+.liveread-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 0;
+  color: #9ca3af;
+}
+.liveread-back {
+  margin-top: 1rem;
+  border-top: 1px solid #374151;
+  padding-top: 0.75rem;
+}
+
+/* Read-only preview banner, matching mobile. */
+.liveread-preview-banner {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  font-style: italic;
+  border-bottom: 1px solid #374151;
+  padding-bottom: 0.75rem;
+  margin: 0 0 0.75rem;
+}
+
+/* One-shot run-end entrance using opacity and transform. */
+.liveread-end {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  padding: 2.5rem 0 1rem;
+  animation: liveread-end-in 0.4s ease-out;
+}
+@keyframes liveread-end-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Shared reading icon class, scoped by each platform's wrapper. */
+.liveread-end .end-icon {
+  width: 56px;
+  height: 56px;
+}
+.liveread-end--death .end-icon {
+  filter: drop-shadow(0 0 6px rgba(231, 76, 60, 0.35));
+}
+.liveread-end--win .end-icon {
+  filter: drop-shadow(0 0 6px rgba(245, 166, 35, 0.4));
+}
+.liveread-end-heading {
+  font-family: inherit;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.liveread-end--win .liveread-end-heading {
+  color: #f5a623;
+}
+.liveread-end--death .liveread-end-heading {
+  color: #e74c3c;
+}
+
+/* Dark-theme equivalents of source-prose structural classes. */
+.liveread-body p.choice {
+  font-weight: 600;
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  border-left: 3px solid #38bdf8;
+  padding-left: 0.6rem;
+}
+.liveread-body p.end {
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.08em;
+  color: #f3f4f6;
+}
+.liveread-body p.note {
+  font-style: italic;
+  opacity: 0.75;
+  text-align: left;
+}
+
+/* Preserve source line breaks while wrapping long stat/choice lines and unbroken dice notation. */
+.liveread-body pre {
+  margin: 0 0 0.75rem;
+  font-family: inherit;
+  font-size: inherit;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-left: 3px solid #38bdf8;
+  padding-left: 0.6rem;
+}
+.liveread-body pre:last-child {
+  margin-bottom: 0;
+}
+
+/* Style paragraph stat blocks like preformatted stats. */
+.liveread-body p.statline,
+.liveread-body p.stats {
+  border-left: 3px solid #38bdf8;
+  padding-left: 0.6rem;
+  font-weight: 600;
+}
+.liveread-body p.combat-note {
+  font-style: italic;
+  opacity: 0.75;
+  text-align: left;
+}
+/* Distinguish missing source text from ordinary stat blocks. */
+.liveread-body p.source-gap {
+  border-left: 3px solid #f59e0b;
+  padding-left: 0.6rem;
+  color: #fbbf24;
+  font-style: italic;
+}
+
+/* Space line-broken choices separately from narrative prose. */
+.liveread-body div.choices {
+  margin: 0 0 0.75rem;
+  border-left: 3px solid #38bdf8;
+  padding-left: 0.6rem;
+  line-height: 1.9;
+}
+.liveread-body div.choices:last-child {
+  margin-bottom: 0;
+}
+
+/* Frame source inscriptions as quoted blocks without changing their line layout. */
+.liveread-body div.listblock {
+  margin: 0 0 0.75rem;
+  border-left: 3px solid #6b7280;
+  padding-left: 0.6rem;
+  font-style: italic;
+  opacity: 0.9;
+}
+.liveread-body div.listblock:last-child {
+  margin-bottom: 0;
+}
+
+/* Constrain tables to panel width so long cells cannot cause horizontal overflow. */
+.liveread-body table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+}
+.liveread-body table:last-child {
+  margin-bottom: 0;
+}
+.liveread-body th,
+.liveread-body td {
+  border: 1px solid #374151;
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+  overflow-wrap: break-word;
+}
+.liveread-body th {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  font-weight: 600;
+}
+.liveread-body td.skill,
+.liveread-body td.stamina {
+  text-align: center;
+  width: 22%;
+}

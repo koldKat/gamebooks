@@ -1,0 +1,127 @@
+/* Compact admin editing surfaces, matching the main app's dialogs. */
+.admin-editor {
+  background: #1f2937;
+  width: min(760px, 96vw);
+}
+.admin-editor-header {
+  padding: 0.65rem 0.75rem;
+}
+.admin-editor-header h2 {
+  margin: 0;
+  line-height: 1.4;
+}
+.admin-editor-body {
+  padding: 0.75rem;
+  overscroll-behavior: contain;
+}
+.admin-editor-section + .admin-editor-section {
+  margin-top: 0.85rem;
+}
+.admin-editor-section h3 {
+  color: #c4ceda;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin: 0 0 0.45rem;
+}
+.admin-editor-hint {
+  color: #9ca3af;
+  font-size: 0.75rem;
+  margin: -0.15rem 0 0.5rem;
+}
+.admin-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 0.65rem;
+}
+.admin-editor-wide {
+  grid-column: 1 / -1;
+}
+.admin-editor-field {
+  min-width: 0;
+  gap: 0.25rem;
+}
+.admin-editor-field > label {
+  color: #9ca3af;
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+.admin-editor-field input,
+.admin-editor-field textarea,
+.admin-editor-field select {
+  background: #111827 !important;
+  padding: 0.35rem 0.5rem !important;
+  font-size: 0.82rem !important;
+}
+.admin-editor-overview {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+.admin-editor-overview .admin-editor-grid {
+  grid-template-columns: 1fr;
+}
+.admin-editor-cover {
+  min-width: 0 !important;
+  gap: 0.4rem !important;
+}
+.admin-editor-cover img {
+  object-fit: contain !important;
+}
+.admin-editor-cover .btn {
+  width: 100%;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.4rem;
+}
+.admin-editor-parent-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.65rem;
+}
+.admin-editor > .admin-editor-actions {
+  position: static;
+  flex-shrink: 0;
+  margin: 0 !important;
+  padding: 0.6rem 0.75rem !important;
+  background: #1f2937;
+  border-top: 1px solid #374151;
+  justify-content: flex-end;
+  align-items: center;
+}
+.admin-editor-actions .btn {
+  min-width: 72px;
+}
+.admin-editor-discard {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-top: 1px solid #6b4938;
+  color: #f3bb8d;
+  font-size: 0.8rem;
+}
+.admin-editor-discard[hidden] {
+  display: none;
+}
+.admin-editor :focus-visible {
+  outline: 2px solid #b68d48;
+  outline-offset: 2px;
+}
+@media (max-width: 540px) {
+  .admin-editor-overview {
+    grid-template-columns: 90px minmax(0, 1fr);
+  }
+  .admin-editor-cover > div {
+    width: 90px !important;
+    height: 120px !important;
+  }
+  .admin-editor-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-editor-parent-row {
+    grid-template-columns: minmax(0, 1fr) 80px;
+  }
+}

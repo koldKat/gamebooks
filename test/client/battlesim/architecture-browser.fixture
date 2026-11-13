@@ -113,6 +113,265 @@ for(const id of BOOK_IDS){
     }
     check(JSON.stringify(app.currentPlaythrough())===saved,'menu preview preserves saved fight '+id);
   }else{
+  if(id===603){
+    const run=app.currentPlaythrough(),field=key=>overlay.querySelector('[data-field="'+key+'"]'),
+      action=key=>overlay.querySelector('[data-action="'+key+'"]');
+    const choose=section=>{
+      const input=overlay.querySelector('input[role="combobox"]');input.value='§'+section+')';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      const option=overlay.querySelector('[role="option"]');check(option,'Moon Knight preset '+section);
+      option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
+    };
+    const {encounters}=await import('REPO/public/js/battlesim/books/603/definition.js');
+    check(requestedRosters.has(603)&&encounters.length===36,'Moon Knight API supplies all36combat encounters');
+    check(!field('item.caltrop')&&!field('item.crystal'),'Moon Knight excludes other books’ combat items');
+    for(const entry of encounters){
+      choose(entry.section);
+      check(overlay.querySelectorAll('.bsim-opponent-row').length===entry.rounds.length,'Moon Knight exact round count '+entry.section);
+      check([...overlay.querySelectorAll('[data-stat="stats"]')].every((select,index)=>select.value===entry.rounds[index].stats.join('+')),'Moon Knight preserves every preset stat formula '+entry.section);
+      check(!run.sim603,'Moon Knight preset inspection creates no fight');
+    }
+    const random=Math.random;
+    try{
+      Math.random=()=>0.99;choose(281);action('start').click();
+      for(let n=0;n<2;n++){action('roll').click();action('resolve').click();}
+      check(run.sim603.fight.rounds.every(r=>r.playerDice.length===1),'Moon Knight museum encounter uses one die');
+      action('finish').click();check(run.sim603.history.length===1&&run.sim603.fight.destination===129,'Moon Knight confirms one history entry');
+      choose(192);for(const key of ['might','mystic','mind'])field(key).value='10';
+      field('snakebite').value='4';field('darkPower').value='2';field('awed').value='1';
+      for(const key of ['khopesh','ankh','eyeOfHorus'])field(key).checked=true;
+      action('start').click();Math.random=()=>0;
+      for(let n=0;n<5;n++){action('roll').click();action('resolve').click();}
+      check(run.sim603.fight.rounds.map(r=>r.total).join(',')==='15,26,27,26,38','Moon Knight Seth bonuses and Dark power match source');
+      action('finish').click();check(run.sim603.history.length===2&&run.sim603.fight.destination===128,'Moon Knight five-round result and history');
+      const saved=JSON.stringify(run.sim603);module.render();check(JSON.stringify(run.sim603)===saved,'Moon Knight render preserves fight');
+      choose(41);field('might').value='5';field('unlocked').value='0';field('eclipsed').value='0';
+      action('start').click();Math.random=()=>0.99;
+      for(let n=0;n<2;n++){action('roll').click();action('resolve').click();}
+      Math.random=()=>0;action('roll').click();const stale=action('resolve');stale.click();
+      check(run.sim603.fight.result==='manual'&&run.sim603.fight.player.might===6&&run.sim603.history.length===2,'Moon Knight ambiguous outcome waits for confirmation');
+      const old=run.sim603;app.state.playthroughs=[{startedAt:2,path:[1]}];stale.click();
+      check(!app.currentPlaythrough().sim603&&run.sim603===old,'Moon Knight stale run cannot write to either run');
+      module.render();action('custom').click();overlay.querySelector('input[role="combobox"]').value='Practice';
+      action('start').click();action('roll').click();action('resolve').click();
+      check(app.currentPlaythrough().sim603.fight.encounter.key===''&&app.currentPlaythrough().sim603.fight.result==='manual','Moon Knight custom combat needs no preset');
+    }finally{Math.random=random;}
+  }
+  if(id===602){
+    const run=app.currentPlaythrough(),field=key=>overlay.querySelector('[data-field="'+key+'"]'),
+      action=key=>overlay.querySelector('[data-action="'+key+'"]');
+    const choose=section=>{
+      const input=overlay.querySelector('input[role="combobox"]');input.value='§'+section+')';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      const option=overlay.querySelector('[role="option"]');check(option,'She-Hulk preset '+section);
+      option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
+    };
+    const {encounters}=await import('REPO/public/js/battlesim/books/602/definition.js');
+    check(requestedRosters.has(602)&&encounters.length===35,'She-Hulk API supplies all35combat encounters');
+    check(!field('item.caltrop')&&!field('item.timeGrenade')&&!field('item.creepyBall'),'She-Hulk has only its own combat items');
+    for(const entry of encounters){
+      choose(entry.section);
+      check(overlay.querySelectorAll('.bsim-opponent-row').length===entry.rounds.length,'She-Hulk exact round count '+entry.section);
+      check(!run.sim602,'She-Hulk preset inspection creates no fight');
+    }
+    const random=Math.random;
+    try{
+      Math.random=()=>0;choose(33);field('item.pepperSpray').checked=true;action('start').click();
+      const stale=action('consume.pepperSpray');stale.click();
+      check(run.sim602.fight.round===1&&run.sim602.fight.consumables.pepperSpray===0,'She-Hulk first-round spray is used once');
+      const unchanged=JSON.stringify(run.sim602);stale.click();check(JSON.stringify(run.sim602)===unchanged,'She-Hulk stale consumable action is ignored');
+      action('roll').click();action('resolve').click();action('finish').click();
+      check(run.sim602.history.length===1&&run.sim602.fight.player.concentration===2,'She-Hulk dog bite cost and one confirmed history result');
+      choose(268);field('terribleStake').checked=true;action('start').click();Math.random=()=>0.99;
+      for(let n=0;n<2;n++){action('roll').click();action('resolve').click();}
+      check(run.sim602.fight.params.terribleStake===0&&run.sim602.setup.params.terribleStake===0&&!field('terribleStake').checked,'She-Hulk broken stake expires before round3and in saved setup');
+      action('roll').click();action('resolve').click();action('finish').click();
+      check(run.sim602.history.length===2&&run.sim602.fight.rounds[2].total===15,'She-Hulk third round excludes expired stake bonus');
+      choose(14);field('evilCowbell').checked=true;field('item.crystal').checked=true;action('start').click();
+      action('consume.crystal').click();
+      check(run.sim602.fight.player.power===2&&run.sim602.fight.player.charm===2&&run.sim602.fight.player.concentration===1,'She-Hulk crystal immediately removes all three passive bonuses');
+      action('automaticWin').click();action('finish').click();
+      check(run.sim602.history.length===3&&run.sim602.fight.destination===145,'She-Hulk cowbell resolves the remaining combat round');
+      const saved=JSON.stringify(run.sim602);module.render();check(JSON.stringify(run.sim602)===saved,'She-Hulk render preserves saved fight');
+      choose(287);field('power').value='3';action('start').click();Math.random=()=>0;
+      for(let n=0;n<2;n++){action('roll').click();action('resolve').click();}
+      check(run.sim602.fight.player.charm===2&&run.sim602.fight.player.concentration===1,'She-Hulk death branch skips later surviving costs');
+      action('finish').click();check(run.sim602.fight.destination===7&&run.sim602.history.length===4,'She-Hulk printed death destination is preserved');
+      choose(120);action('start').click();const old=run.sim602,oldAction=action('roll');
+      app.state.playthroughs=[{startedAt:2,path:[1]}];oldAction.click();
+      check(!app.currentPlaythrough().sim602&&run.sim602===old,'She-Hulk stale run cannot affect either fight');
+      module.render();action('custom').click();overlay.querySelector('input[role="combobox"]').value='Practice';
+      action('start').click();action('roll').click();action('resolve').click();
+      check(app.currentPlaythrough().sim602.fight.encounter.key===''&&app.currentPlaythrough().sim602.fight.result==='manual','She-Hulk custom fight works without preset');
+      check(action('confirm.win')&&action('confirm.loss')&&app.currentPlaythrough().sim602.history.length===0,'She-Hulk custom result waits for confirmation');
+    }finally{Math.random=random;}
+  }
+  if(id===601){
+    const run=app.currentPlaythrough(),field=key=>overlay.querySelector('[data-field="'+key+'"]'),
+      action=key=>overlay.querySelector('[data-action="'+key+'"]');
+    const choose=section=>{
+      const input=overlay.querySelector('input[role="combobox"]');input.value='§'+section+')';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      const option=overlay.querySelector('[role="option"]');check(option,'Deadpool preset '+section);
+      option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
+    };
+    const {encounters}=await import('REPO/public/js/battlesim/books/601/definition.js');
+    check(requestedRosters.has(601)&&encounters.length===42,'Deadpool API supplies all42combat encounters');
+    for(const entry of encounters){
+      choose(entry.section);
+      check(overlay.querySelectorAll('.bsim-opponent-row').length===entry.rounds.length,'Deadpool exact round count '+entry.section);
+      const selectedStats=[...overlay.querySelectorAll('[data-stat="stats"]')];
+      check(selectedStats.every(select=>select.value!==''||select.options[select.selectedIndex]?.textContent==='No stat'),'Deadpool preset stat formula is selectable '+entry.section);
+      check(!run.sim601,'Deadpool preset inspection creates no fight');
+    }
+    const random=Math.random;
+    try{
+      choose(125);field('guardsGuards').value='2';field('item.caltrop').checked=true;
+      action('start').click();
+      check(run.sim601.fight.encounter.rounds[0].target===3&&run.sim601.fight.params.guardsGuards===2,'Deadpool preserves derived guard target base');
+      Math.random=()=>0;action('roll').click();
+      const stale=action('resolve');stale.click();
+      check(run.sim601.fight.rounds[0].target===7&&run.sim601.fight.rounds[0].total===6,'Deadpool derived target and Caltrop match source');
+      const unchanged=JSON.stringify(run.sim601);stale.click();check(JSON.stringify(run.sim601)===unchanged,'Deadpool stale round cannot resolve twice');
+      action('roll').click();action('resolve').click();action('finish').click();
+      check(run.sim601.history.length===1&&run.sim601.fight.status==='win','Deadpool records combat once after confirmation');
+      choose(191);field('merc').value='2';field('focus').value='3';action('start').click();
+      check(!run.sim601.fight.items.caltrop&&run.sim601.fight.modifier===0,'Deadpool one-fight modifiers expire');
+      action('roll').click();action('resolve').click();
+      check(run.sim601.fight.player.merc===-1,'Deadpool round1damage applies before later rounds');
+      Math.random=()=>0.99;
+      for(let index=0;index<3;index++){action('roll').click();action('resolve').click();}
+      check(run.sim601.fight.rounds[2].total===13&&run.sim601.fight.result==='win','Deadpool later rounds use current Merc and round2bonus');
+      action('finish').click();check(run.sim601.history.length===2,'Deadpool second result records once');
+      const saved=JSON.stringify(run.sim601);module.render();check(JSON.stringify(run.sim601)===saved,'Deadpool render preserves saved fight');
+      choose(259);field('casinoOutrage').value='2';field('rollingStone').value='4';field('chaos').value='5';action('start').click();
+      check(run.sim601.fight.params.penalty===2,'Deadpool Jengarm derives exactly the met thresholds');
+      action('roll').click();const old=run.sim601,oldAction=action('resolve');
+      app.state.playthroughs=[{startedAt:2,path:[1]}];oldAction.click();
+      check(!app.currentPlaythrough().sim601&&run.sim601===old,'Deadpool stale run cannot write to either run');
+      module.render();action('custom').click();overlay.querySelector('input[role="combobox"]').value='Practice';
+      action('start').click();check(app.currentPlaythrough().sim601.fight.encounter.key===''&&app.currentPlaythrough().sim601.fight.encounter.rounds.length===1,'Deadpool custom fight needs no preset');
+    }finally{Math.random=random;}
+  }
+  if(id===592){
+    const run=app.currentPlaythrough(),field=key=>overlay.querySelector('[data-field="'+key+'"]'),
+      action=key=>overlay.querySelector('[data-action="'+key+'"]');
+    const choose=section=>{
+      const input=overlay.querySelector('input[role="combobox"]');input.value='§'+section+')';
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      const option=overlay.querySelector('[role="option"]');check(option,'Shadow preset '+section);
+      option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));
+    };
+    const {encounters}=await import('REPO/public/js/battlesim/books/592/definition.js');
+    check(requestedRosters.has(592)&&encounters.length===34,'Shadow API roster has34encounters');
+    for(const entry of encounters){choose(entry.section);check(!run.sim592,'Shadow preset inspection creates no battle');}
+    choose(129);field('armor').value='leather';action('start').click();
+    check(run.sim592.fight.encounter.section==='129'&&run.sim592.fight.core.enemies.length===3,'Shadow keeps selected guard encounter');
+    const random=Math.random;
+    try{
+      Math.random=()=>0;const stale=action('attack.7');stale.click();
+      check(run.sim592.fight.player.hp===8&&run.sim592.fight.core.enemies[0].rounds===3,'Shadow all living guards attack with separate armor');
+      const saved=JSON.stringify(run.sim592);stale.click();check(JSON.stringify(run.sim592)===saved,'Shadow detached stale action rejected');
+      Math.random=()=>0.99;
+      for(let n=0;n<3;n++)action('attack.11').click();
+      check(run.sim592.fight.status==='win'&&run.sim592.history.length===1,'Shadow group records one outcome');
+      const done=JSON.stringify(run.sim592);module.render();check(JSON.stringify(run.sim592)===done,'Shadow render preserves fight');
+      choose(167);field('arrows').value='1';field('skill').value='5';action('start').click();action('shoot').click();
+      check(run.sim592.fight.status==='loss'&&run.sim592.fight.targets.filter(e=>e.hp).length===2&&run.sim592.fight.player.hp===8,'Shadow archery tracks survivors without melee damage');
+      choose(38);field('remaining').value='1';action('start').click();action('defend').click();
+      check(run.sim592.fight.status==='win'&&run.sim592.fight.destination===139&&run.sim592.history.length===3,'Shadow Wowl uses surviving beasts');
+      choose(198);field('captured').value='2';action('start').click();
+      check(run.sim592.fight.core.enemies.length===4&&run.sim592.fight.core.enemies[3].hp===2,'Shadow removes net-caught goblins from bottom');
+      const old=run.sim592,oldAction=action('attack.7');app.state.playthroughs=[{startedAt:2,path:[1]}];
+      oldAction.click();check(!app.currentPlaythrough().sim592&&run.sim592===old,'Shadow stale run cannot change either fight');
+      module.render();action('custom').click();
+      const input=overlay.querySelector('input[role="combobox"]');input.value='Practice guard';
+      action('start').click();check(app.currentPlaythrough().sim592.fight.encounter.key===''&&app.currentPlaythrough().sim592.fight.core.enemies.length===1,'Shadow custom encounter needs no preset');
+    }finally{Math.random=random;}
+  }
+  if(id===581){
+    const run=app.currentPlaythrough(),action=key=>overlay.querySelector('[data-action="'+key+'"]');
+    const field=key=>[...overlay.querySelectorAll('[data-field]')].find(node=>node.dataset.field===key);
+    const specs=[...new Map(rosterSeeds[id].map(row=>[row.stats.entryIndex,row.stats.entry.spec])).values()];
+    const choose=entry=>{
+      const input=overlay.querySelector('input[role=combobox]');
+      input.value='§'+entry.section+(entry.tableRoll?', '+entry.tableRoll:'')+')';
+      input.dispatchEvent(new FocusEvent('focus'));
+      const option=[...overlay.querySelectorAll('[role=option]')].find(node=>node.textContent.startsWith(entry.name+' (§'+entry.section+(entry.tableRoll?', '+entry.tableRoll:'')+')'));
+      check(option,'Savage Realms actual preset '+entry.key);
+      option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));
+    };
+    check(specs.length===168,'Savage Realms full installed roster');
+    for(const entry of specs){
+      choose(entry);
+      check(overlay.querySelectorAll('.bsim-opponent-row').length===entry.profiles.length,'Savage Realms preset group '+entry.key);
+      check(!run.sim581,'Savage Realms preset inspection creates no battle');
+    }
+    choose(specs.find(entry=>entry.section===3));
+    field('useCompanion').checked=false;
+    field('bonus').value='1';
+    action('start').click();
+    check(run.sim581.fight.opponent.section===3&&run.sim581.fight.enemies[0].stopHp===15,'Savage Realms retains selected partial encounter');
+    check(field('hp').disabled,'Savage Realms locks setup');
+    for(let i=0;i<2;i++){
+      field('die.player').value=6;field('die.enemy').value=1;
+      action('roll').click();check(run.sim581.fight.pending.player===6,'Savage Realms manual dice');
+      field('damageDie').value=6;
+      const resolve=action('resolve');resolve.click();
+      const saved=JSON.stringify(run.sim581);resolve.click();check(JSON.stringify(run.sim581)===saved,'Savage Realms stale action ignored');
+    }
+    check(run.sim581.fight.result==='win'&&run.sim581.history.length===0,'Savage Realms provisional victory');
+    const finish=action('finish');finish.click();finish.click();
+    check(run.sim581.history.length===1&&run.sim581.fight.status==='win','Savage Realms records victory once');
+    check(field('bonus').value==='0','Savage Realms potion bonus expires after one battle');
+    const saved=JSON.stringify(run.sim581);module.render();check(JSON.stringify(run.sim581)===saved,'Savage Realms rendering preserves fight');
+    choose(specs.find(entry=>entry.section===196));field('count').value=4;
+    action('start').click();
+    check(run.sim581.fight.enemies.length===4&&run.sim581.fight.companion.name==='Mateo','Savage Realms variable allied encounter');
+    field('die.player').value=6;field('die.enemy').value=1;field('die.companion').value=5;
+    action('roll').click();field('hit.player').checked=true;field('hit.companion').checked=true;
+    for(const input of overlay.querySelectorAll('[data-field=damageDie]'))input.value=3;
+    action('resolve').click();
+    check(run.sim581.fight.enemies[0].hp===1&&run.sim581.fight.events.at(-1).manualAlliedResolution,'Savage Realms manual allied allocation');
+    check(right.querySelector('.bsim-log-success')&&right.querySelector('.bsim-log-muted'),'Savage Realms semantic combat logs');
+    const original=run.sim581;app.state.playthroughs=[{startedAt:2,path:[1]}];
+    const stale=action('roll');stale.click();check(!app.currentPlaythrough().sim581&&run.sim581===original,'Savage Realms stale run cannot change either fight');
+    module.render();action('custom').click();
+    check(overlay.querySelectorAll('.bsim-opponent-row').length===1,'Savage Realms fresh custom encounter');
+    overlay.querySelector('input[role=combobox]').value='Test opponent';
+    action('start').click();check(app.currentPlaythrough().sim581.fight.opponent.section===undefined,'Savage Realms custom battle works without preset');
+  }
+  if(id===567){
+    const run=app.currentPlaythrough(),action=key=>overlay.querySelector('[data-action="'+key+'"]');
+    const seeds=rosterSeeds[id].map(row=>row.stats.entry.spec);
+    for(const entry of seeds){
+      const input=overlay.querySelector('input[role=combobox]');input.value='';input.dispatchEvent(new FocusEvent('focus'));
+      const option=[...overlay.querySelectorAll('[role=option]')].find(node=>node.textContent.includes('(§'+entry.section+')'));
+      check(option,'Craven actual preset '+entry.section);option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));
+      check(Number(overlay.querySelector('[data-field=rounds]').value)===entry.rounds,'Craven preset retains printed round count '+entry.section);
+      check(overlay.querySelectorAll('.bsim-opponent-row').length===entry.profiles.length,'Craven preset group size '+entry.section);
+      check(!run.sim567,'Craven preset inspection does not create a battle');
+    }
+    const last=overlay.querySelector('input[role=combobox]');last.value='';last.dispatchEvent(new FocusEvent('focus'));
+    [...overlay.querySelectorAll('[role=option]')].find(node=>node.textContent.includes('(§533)')).dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));
+    action('start').click();check(run.sim567.fight.opponent.section===533,'Craven starts selected encounter without reverting to custom');
+    check(overlay.querySelector('[data-field=ttp]').disabled,'Craven setup locks during combat');
+    for(let i=0;i<6;i++){
+      const control=document.getElementById('sim567-controls'),first=control.querySelectorAll('[data-field=die1]'),second=control.querySelectorAll('[data-field=die2]');
+      first[0].value=3;second[0].value=4;first[1].value=1;second[1].value=2;
+      action('roll').click();check(run.sim567.fight.pending.player[0]===3,'Craven uses entered dice');
+      const resolve=action('resolve');resolve.click();
+      const saved=JSON.stringify(run.sim567);resolve.click();check(JSON.stringify(run.sim567)===saved,'Craven rejects detached stale action');
+    }
+    check(run.sim567.fight.result==='win'&&run.sim567.fight.status==='fighting'&&run.sim567.history.length===0,'Craven final roll waits for confirmation');
+    const finish=action('finish');finish.click();finish.click();
+    check(run.sim567.fight.status==='win'&&run.sim567.history.length===1,'Craven victory records exactly once');
+    check(right.querySelector('.bsim-log-success')&&right.querySelector('.bsim-log-accent'),'Craven logs use shared score and dice colors');
+    const saved=JSON.stringify(run.sim567);module.render();check(JSON.stringify(run.sim567)===saved,'Craven render preserves confirmed fight');
+    action('custom').click();const two=overlay.querySelector('[data-field=pair]');two.checked=true;two.dispatchEvent(new Event('change'));
+    check(overlay.querySelectorAll('.bsim-opponent-row').length===2,'Craven custom encounters allow paired opponents');
+    action('start').click();check(run.sim567.fight.enemies===2&&run.sim567.fight.opponent.section===0,'Craven custom paired battle starts without a preset');
+  }
   if(id===481){
     const el=key=>document.getElementById('sim481-'+key),run=app.currentPlaythrough();
     const choose=async row=>{

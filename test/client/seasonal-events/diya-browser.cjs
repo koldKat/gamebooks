@@ -8,7 +8,7 @@ const root = fs.mkdtempSync(path.join(process.env.TMPDIR || os.tmpdir(), 'diya-b
 const publicRoot = path.resolve('public');
 const file = path.join(root, 'check.html');
 const source = `<!doctype html><meta charset="utf-8">
-<link rel="stylesheet" href="file://${publicRoot}/css/seasonal-events.css">
+<link rel="stylesheet" href="file://${publicRoot}/css/seasonal/events.css">
 <style>body{margin:32px;background:#111827;color:#ddd;font:16px sans-serif}.examples{display:flex;gap:60px;margin-top:55px}.example{width:130px}.example .seasonal-diya{position:relative;inset:auto;width:96px;height:96px;margin:30px auto}</style>
 <h2>Diwali cursor: flame and occasional actions</h2><p>The clay lamp stays still while its flame moves.</p>
 <script>addEventListener('error',e=>document.body.dataset.failure=e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=String(e.reason));</script>

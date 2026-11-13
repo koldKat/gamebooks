@@ -9,7 +9,7 @@ const root = fs.mkdtempSync(path.join(process.env.TMPDIR || os.tmpdir(), 'season
 const publicRoot = path.resolve('public');
 const file = path.join(root, 'check.html');
 const source = `<!doctype html><meta charset="utf-8">
-<link rel="stylesheet" href="file://${publicRoot}/css/seasonal-events.css">
+<link rel="stylesheet" href="file://${publicRoot}/css/seasonal/events.css">
 <style>body{margin:24px;background:#111827;color:#ddd;font:16px sans-serif}button{display:block;width:100%;height:350px;cursor:pointer;background:#263147;color:white;border:1px solid #64748b;border-radius:12px;margin-top:20px}</style>
 <label><input type="checkbox" id="seasonal-events-cb"> Seasonal events</label>
 <div id="seasonal-event-notice" class="seasonal-event-notice" hidden></div>

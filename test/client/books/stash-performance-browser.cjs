@@ -86,7 +86,7 @@ try {
 (async()=>{
  try {
   const file=path.join(scratch,'stashes.html');
-  fs.writeFileSync(file,'<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="file://'+repo+'/public/css/style.css"><body><div id="books-viewport" style="width:360px;height:800px;overflow:auto"><div id="books-list"></div></div><script type="module">'+script+'</script>');
+  fs.writeFileSync(file,'<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="file://'+repo+'/public/css/base/app.css"><body><div id="books-viewport" style="width:360px;height:800px;overflow:auto"><div id="books-list"></div></div><script type="module">'+script+'</script>');
   for(const width of [1100,390]) console.log(JSON.stringify(await browser({file,root,width,profile:path.join(scratch,'profile-'+width),chromium:process.env.CHROMIUM,timeoutMs:30000})));
  }finally{fs.rmSync(scratch,{recursive:true,force:true});}
 })().catch(error=>{console.error(error);process.exitCode=1;});

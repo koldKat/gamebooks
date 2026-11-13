@@ -26,7 +26,7 @@ gamebooks/
     startup.js              Startup status and recovery
     js/                     Desktop and shared ES modules
     css/                    Shared and feature styles
-    mobile/                 Mobile shell, styles and feature modules
+    mobile/                 Mobile shell and feature modules
     books/                  Book attachments, served with access checks
     guide.html              Generated player guide
   admin/
@@ -184,6 +184,10 @@ Sitemap entries include public content and reliable modification dates. Do not f
 
 Feature CSS files own their domains; shared styles own reusable buttons, inputs, dialogs, tooltips, and layout primitives. Cross-cutting mobile and reduced-motion rules load after the relevant base styles.
 
+Stylesheets are grouped under `public/css/`: `base/` contains app defaults and preferences, `layouts/` contains screen layouts and desktop responsive rules, `components/` contains reusable UI, `pages/` contains standalone page styles, `seasonal/` contains event visuals, `admin/` contains operator screens, and `mobile/` contains the dedicated mobile frontend. Preserve stylesheet order and update relative imports and asset URLs when moving files.
+
+Static stylesheet blocks belong in CSS files, formatted with two-space indentation and one declaration per line. The CSS-only Prettier configuration is in `.prettierrc.json`. Documentation styles live in `docs/styles/`; the generator embeds them in the generated guides. Maintenance and export styles live in `server/styles/pages/` and `server/styles/exports/`; those pages embed the file contents so maintenance does not depend on blocked asset requests and exported HTML works offline.
+
 Dialogs share modal chrome, focus handling, close controls, and backdrop behavior. Escape dismisses autocomplete before the containing dialog. Saving can temporarily disable dismissal. Closing a top dialog must not also close one underneath it.
 
 Character-sheet edits use a local draft until Save. Inventory and equipment operations belong to the original run and item. Finished runs remain visible but read-only. Failed transfers, including an unequip into a full inventory, must preserve the item.
@@ -250,6 +254,16 @@ The Way of the Tiger engine separates attack rolls, damage rolls, blocking, thro
 Shared engines accept declarative rules rather than branching on book IDs. Fighting Fantasy combat accepts database-defined weapon damage, doubles, opponent traits, limited poison and item charges, active opponent limits and printed stopping thresholds. These rules affect only an entered combat encounter and its saved combat resources. Panels own DOM and lifecycle; state and combat modules receive live application context through callbacks. Pending actions must reject stale account, book, or run contexts.
 
 The Dungeons to Dominions engine resolves two-dice attack values, armor, shield hit points, missiles, escape, poison and declarative encounter effects. Combined enemy profiles remain single combatants, while sequential encounters prevent replacement opponents from gaining a free attack. Combat resources and history belong to the initiating run; the engine does not perform story actions or move the reader.
+
+Craven Manor combat uses six-round scoring rows, time-point adjustments after rolls, optional time abilities and explicit encounter exceptions from the database. Flat rewind checkpoints and bounded logs prevent saved fights from growing recursively. Outcomes remain provisional until the player confirms them, so rewinding a final round cannot record duplicate victories. Its gunfight procedure tracks each opponent's wounds and individual dodge rolls separately from ordinary combat rows.
+
+Savage Realms combat resolves opposed single-die totals and separate damage rolls, with sequential opponents, explicit stopping thresholds and optional combat items. Allied rounds expose all totals and require manual hit allocation where the printed rules leave that allocation unspecified. The shared encounter state store guards run identity and records confirmed outcomes once; flat logs remain bounded. One-fight modifiers expire after the encounter, and supplemental puzzle solutions remain outside combat and completion counts.
+
+The Usborne adventure engine resolves chosen attack thresholds and independent opponent round limits. Book adapters explicitly configure available attacks, armor and encounter exceptions while preserving legacy fight formats. Archery and companion-defense adapters remain encounter-local; they do not navigate the story or modify campaign inventory. Presets load from the database, and run-identity and revision guards reject stale actions.
+
+The finite round-check engine resolves mixed dice pools, explicit stat formulas, threshold-derived penalties, capped opposed rolls and bonuses from earlier rounds. Database presets declare the round rules and combat consequences. Its shared panel supports editable custom rounds, combat-local consumables and explicit result confirmation where the source gives no overall victory condition. Stat changes apply at the printed point in combat; the player's campaign inventory, story choices and character sheet remain separate. Saved fights use revision and run-identity guards, and confirmed outcomes enter history once.
+
+Round presets can also declare automatic wins, consumable eligibility and costs, round-start effects, and conditional result destinations. The shared panel configures item controls per book and preserves combat-local parameter expiry without editing campaign inventory. These optional rules preserve earlier saved fight formats; rendering never reapplies a round-start effect or consumes an item.
 
 The opposed-roll comic engine accepts database encounter metadata for alternating or sequential opponent groups, with separate HP and one outcome for the whole encounter. Optional incoming damage and a player-selected protection control affect combat only. Existing saved fights retain their captured rules; rendering never upgrades or resets a fight.
 

@@ -1,0 +1,164 @@
+/* Collection dialog and its shared companion previews. */
+@keyframes collectibles-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(74, 222, 128, 0.3);
+  }
+}
+[data-open-collectibles].collectibles-btn--new {
+  animation: collectibles-pulse 4s ease-in-out infinite;
+}
+#collectibles-btn.collectibles-btn--new,
+.m-topbar [data-open-collectibles].collectibles-btn--new,
+[data-open-collectibles].collectibles-btn--new {
+  color: #4ade80;
+  border-color: #16a34a;
+}
+body.reduce-motion [data-open-collectibles].collectibles-btn--new {
+  animation: none;
+}
+@keyframes collectible-border-pulse {
+  0%,
+  100% {
+    border-color: #303b49;
+    box-shadow: inset 0 0 0 0 #4ade8000;
+  }
+  50% {
+    border-color: #68a67e;
+    box-shadow: inset 0 0 0 1px #4ade8040;
+  }
+}
+#collectibles-dialog .collectible-item--new {
+  animation: collectible-border-pulse 4s ease-in-out infinite;
+}
+.m-topbar [data-open-collectibles] {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  color: #bdb6a6;
+  padding: 4px;
+  cursor: pointer;
+}
+.m-topbar [data-open-collectibles] svg {
+  width: 18px;
+  height: 18px;
+}
+.gift-icon {
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  vertical-align: -0.1em;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 7h8v4H3zm10 0h8v4h-8zM4 13h7v8H4zm9 0h7v8h-7z'/%3E%3Cpath d='M12 7H8a2.5 2.5 0 1 1 2.5-2.5L12 7zm0 0h4a2.5 2.5 0 1 0-2.5-2.5L12 7z' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E")
+    center/contain no-repeat;
+}
+@media (max-width: 768px) {
+  #app-banner-tools .gift-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+#collectibles-dialog {
+  width: min(540px, calc(100vw - 24px));
+  max-height: calc(100dvh - 40px);
+  box-sizing: border-box;
+  margin: auto;
+  padding: 8px 10px 10px;
+  border: 1px solid #46505d;
+  border-radius: 10px;
+  background: #19212c;
+  color: #d8d7d1;
+  color-scheme: dark;
+  overflow: auto;
+  cursor: default;
+}
+#collectibles-dialog::backdrop {
+  background: #0009;
+}
+#collectibles-dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0;
+}
+#collectibles-dialog h2 {
+  font-size: 0.9rem;
+  line-height: 1.1;
+  margin: 0;
+}
+#collectibles-dialog header button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: none;
+  color: inherit;
+  border: 0;
+  font-size: 20px;
+  line-height: 1;
+  cursor: default;
+}
+.collectibles-body {
+  padding-top: 4px;
+  font-size: 0.85rem;
+}
+.collectibles-empty {
+  margin: 0;
+  padding: 16px 8px;
+  text-align: center;
+  color: #9ca3af;
+}
+#collectibles-dialog #app-tooltip {
+  white-space: pre-line;
+}
+#collectibles-dialog .season-cursor-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 4px;
+}
+#collectibles-dialog .collectible-item {
+  min-width: 0;
+  padding: 0 0 5px;
+  border: 1px solid #303b49;
+  border-radius: 8px;
+  background: #1d2733;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: default;
+}
+#collectibles-dialog .collectible-item:focus-visible {
+  outline: 2px solid #c6ae7b;
+  outline-offset: 2px;
+}
+#collectibles-dialog .season-cursor-preview {
+  height: 60px;
+  display: grid;
+  place-items: center;
+  contain: layout style paint;
+  overflow: hidden;
+}
+#collectibles-dialog
+  .seasonal-inline-preview
+  :is(.seasonal-pumpkin, .seasonal-diya, .seasonal-companion) {
+  position: relative !important;
+  inset: auto !important;
+  transform: none !important;
+  width: 44px !important;
+  height: 44px !important;
+  z-index: auto !important;
+}
+#collectibles-dialog .collectible-item span {
+  display: block;
+  font-size: 0.65rem;
+  line-height: 1.15;
+}

@@ -1,0 +1,160 @@
+/* Seasonal calendar cards and private admin preview controls. */
+#tab-seasons {
+  max-width: 1000px;
+  margin: auto;
+}
+.season-explanation {
+  color: #9ca3af;
+  margin: 0.65rem 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.season-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin: 1rem 0;
+}
+.season-actions a {
+  color: #d4b574;
+  font-size: 0.85rem;
+}
+.season-actions button,
+.season-card button {
+  border: 1px solid #66583f;
+  background: #242c38;
+  color: #dfbd80;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.season-actions button:hover:not(:disabled),
+.season-card button:hover:not(:disabled) {
+  background: #333948;
+}
+.season-actions button:focus-visible,
+.season-card button:focus-visible {
+  outline: 2px solid #dfbd80;
+  outline-offset: 3px;
+}
+#seasons-status {
+  color: #d4b574;
+  margin: 1rem 0;
+  font-size: 0.85rem;
+}
+#seasons-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+@media (max-width: 680px) {
+  #seasons-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.season-card {
+  background: #1a2332;
+  border: 1px solid #374151;
+  border-radius: 9px;
+  padding: 0.65rem;
+}
+.season-card h3 {
+  color: #e0bf83;
+  margin: 0 0 0.35rem;
+}
+.season-card p {
+  font-size: 0.82rem;
+  line-height: 1.4;
+  margin: 0.35rem 0;
+}
+.season-card .muted {
+  color: #8792a2;
+}
+.season-actions button:disabled,
+.season-card button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.season-cursor-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.3rem;
+  margin: 0.45rem 0 0;
+}
+.season-cursor-gallery figure {
+  min-width: 0;
+  margin: 0;
+  text-align: center;
+}
+.season-cursor-gallery figcaption {
+  font-size: 0.73rem;
+  color: #bcb7ac;
+  line-height: 1.35;
+}
+.season-cursor-preview {
+  height: 96px;
+  display: grid;
+  place-items: center;
+  contain: layout style paint;
+  overflow: hidden;
+}
+.seasonal-inline-preview :is(.seasonal-pumpkin, .seasonal-diya, .seasonal-companion) {
+  position: relative !important;
+  inset: auto !important;
+  transform: none !important;
+  width: 60px !important;
+  height: 60px !important;
+  z-index: auto !important;
+}
+.season-payouts {
+  margin-top: 1.25rem;
+  border-top: 1px solid #374151;
+}
+.season-payouts h3 {
+  margin: 0;
+  color: #e0bf83;
+}
+.season-payouts .muted {
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+.season-payout-report {
+  border: 1px solid #374151;
+  border-radius: 6px;
+  margin: 0.5rem 0;
+  padding: 0.65rem;
+  font-size: 0.85rem;
+}
+.season-payout-report summary {
+  cursor: pointer;
+}
+.season-payout-report summary span {
+  display: block;
+  color: #d4b574;
+  margin-top: 0.3rem;
+}
+.season-payout-report p {
+  line-height: 1.45;
+  color: #bcb7ac;
+}
+.season-payout-report table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.season-payout-report th,
+.season-payout-report td {
+  padding: 0.4rem;
+  border-bottom: 1px solid #374151;
+  overflow-wrap: anywhere;
+}
+.season-payout-report :is(th, td):first-child {
+  width: 50%;
+  text-align: left;
+}
+.season-payout-report :is(th, td):not(:first-child) {
+  text-align: right;
+}

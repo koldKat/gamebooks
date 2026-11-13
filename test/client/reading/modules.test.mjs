@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 
 const dir = new URL('../../../public/js/', import.meta.url);
 test('dedicated mobile reader constrains original artwork and tables without shrinking prose', () => {
-  const css = readFileSync(new URL('../mobile/css/style.css', dir), 'utf8');
+  const css = readFileSync(new URL('../css/mobile/app.css', dir), 'utf8');
   assert.match(css, /\.m-top > \*\s*\{[^}]*flex-shrink:\s*0/);
   assert.match(css, /\.m-top figure\s*\{[^}]*margin:\s*0 0/);
   assert.match(css, /\.m-top img\s*\{[^}]*max-width:\s*100%[^}]*height:\s*auto/);

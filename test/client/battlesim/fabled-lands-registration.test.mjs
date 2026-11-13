@@ -38,7 +38,7 @@ test('both loaders, shortcuts, styling and XP register the new simulator exactly
   }
   assert.equal([...read('server/db/xp.js').matchAll(/['"]sim674['"]/g)].length, 1);
   assert.equal([...read('public/js/core/util.js').matchAll(/['"]sim674-overlay['"]/g)].length, 1);
-  const selectors = [...read('public/css/battlesim.css').matchAll(/(?:^|\n)([^{}]+)\{/g)]
+  const selectors = [...read('public/css/components/battlesim.css').matchAll(/(?:^|\n)([^{}]+)\{/g)]
     .flatMap(match => match[1].split(',').map(selector => selector.trim()));
   assert.ok(selectors.includes('#sim674-btn'));
   assert.match(read('public/js/battlesim/engines/fabled-lands/panel.js'), /class="inv-modal bsim-modal bsim-compact-form"/);
@@ -88,6 +88,8 @@ test('the actual XP handler awards wins and losses once, not surrender or abando
     },
     awardCoins() {}, getXpAmount: () => 50, isCleanRun: () => false,
     _discoveredSet: () => new Set(), _visitedSet: () => new Set(), _mappedSet: () => new Set(),
+    uncountedReadingSections: () => new Set(),
+    isImpersonatingContext: () => false,
     _checkGroupWonAll() {}, SIM_HISTORY_KEYS: keys, _xpRefSeq: 0 };
   runInNewContext(source.slice(source.indexOf('function processStateXp('), source.indexOf('function migrateXpForUser(')), context);
   const state = (id,history) => ({ playthroughs: [{ startedAt: 1, path: [], ['sim'+id]: { history } }] });

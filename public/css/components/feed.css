@@ -1,0 +1,609 @@
+#feed-panel {
+  width: min(max(896px, 35vw), calc(100vw - 2rem));
+  max-width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 1.2rem 2rem;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    max-height 0.25s ease,
+    padding 0.25s ease;
+}
+
+#feed-header {
+  font-size: 0.8rem;
+  width: fit-content;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #6b7280;
+  margin-bottom: 0.4rem;
+}
+.feed-header-sub {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: inherit;
+}
+
+#feed-header.feed-header--filters {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+}
+.feed-header-label {
+  white-space: nowrap;
+}
+.feed-filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+.feed-filter-btn {
+  appearance: none;
+  font: inherit;
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  text-transform: none;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid #374151;
+  border-radius: 5px;
+  background: rgba(17, 24, 39, 0.8);
+  color: #9ca3af;
+  cursor: pointer;
+}
+.feed-filter-btn[aria-pressed='true'] {
+  border-color: #496952;
+  background: #213b2b;
+  color: #bed6c5;
+}
+.feed-filter-btn:hover {
+  border-color: #9ca3af;
+}
+.feed-filter-btn:focus-visible {
+  outline: 2px solid #f5a623;
+  outline-offset: 2px;
+}
+
+.feed-day-card {
+  position: relative;
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.6rem;
+  overflow: hidden;
+}
+/* Paint a viewport-aligned cover copy to bypass the landing dim layer.
+   When day covers are off, apply it to every card, not only cover-less cards. */
+.feed-day-card--glass,
+body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card {
+  background-image: var(--landing-cover-url, none);
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: var(--landing-cover-pos, center);
+}
+/* Fade the old cover in ::before at the page crossfade rate; background-image cannot interpolate. */
+body:not(.no-feed-day-covers) .feed-day-card--glass::before,
+body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--landing-cover-url-prev, none);
+  background-size: cover;
+  background-position: var(--landing-cover-pos-prev, center);
+  opacity: var(--landing-cover-fade, 0);
+  transition: opacity 3.3s ease;
+}
+body:not(.no-feed-day-covers) .feed-day-card--glass::after,
+body.no-feed-day-covers:not(.no-feed-glass-cards) .feed-day-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(31, 41, 55, 0.9);
+}
+/* Stack cover tiles behind a legibility overlay. */
+.feed-day-cover-stack {
+  position: absolute;
+  inset: 0;
+}
+.feed-day-cover-stack::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(31, 41, 55, 0.9);
+}
+.feed-day-cover-tile {
+  /* Each tile's inline box already matches its cover aspect ratio. */
+  position: absolute;
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.feed-day-content {
+  position: relative;
+  z-index: 1;
+}
+body.no-feed-day-covers .feed-day-cover-stack {
+  display: none !important;
+}
+/* Covers/glass are independent: glass applies to cover-less days, or every day when covers are off. */
+body.no-feed-glass-cards .feed-day-card--glass {
+  background-color: #1f2937 !important;
+  background-image: none !important;
+}
+body.no-feed-glass-cards .feed-day-card--glass::after {
+  display: none !important;
+}
+body.no-feed-glass-cards .feed-day-card--glass::before {
+  display: none !important;
+}
+
+.feed-day-header {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #d1d5db;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.85),
+    0 0 6px rgba(0, 0, 0, 0.65);
+  margin-bottom: 0.5rem;
+}
+
+.feed-entry {
+  font-size: 0.85rem;
+  color: #d1d5db;
+  padding: 0.2rem 0;
+  line-height: 1.4;
+}
+.feed-entry:has(> .feed-announcement) {
+  padding-top: 0;
+}
+.feed-entry--party {
+  border-left: 2px solid #2dd4bf;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+}
+.feed-entry--join {
+  border-left: 2px solid #f59e0b;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+}
+.feed-entry--levelup,
+.feed-entry--joblevel {
+  border-left: 2px solid #a78bfa;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+}
+.feed-entry--joblevel {
+  border-left-color: #fb7185;
+}
+.feed-entry--rated {
+  border-left: 2px solid #33cc33;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+}
+.feed-entry--created {
+  border-left: 2px solid #38bdf8;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+}
+.feed-user-group .feed-entry--party {
+  border-left: none;
+  padding-left: 0;
+  margin-left: 0;
+}
+.feed-party-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #2dd4bf;
+  background: rgba(45, 212, 191, 0.12);
+  border: 1px solid rgba(45, 212, 191, 0.3);
+  border-radius: 4px;
+  padding: 0.05em 0.4em;
+  vertical-align: middle;
+  letter-spacing: 0.03em;
+}
+
+/* Read-only inline feed rating; reuse star colors without widget spacing or cursors. */
+.feed-rating-stars.star-rating {
+  cursor: default;
+  margin-top: 0;
+  vertical-align: middle;
+}
+.feed-rating-stars .star {
+  font-size: 0.8rem;
+}
+/* Override star selectors regardless of stylesheet order to use the rating event's green highlight. */
+.star-rating.feed-rating-stars .star.on {
+  color: #33cc33;
+}
+.star-rating.feed-rating-stars .star.half {
+  background: linear-gradient(90deg, #33cc33 50%, #374151 50%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.feed-user {
+  font-weight: 600;
+  color: #f5a623;
+}
+.feed-book {
+  font-weight: 600;
+  color: #e2e8f0;
+}
+.feed-run {
+  font-size: 0.75rem;
+  color: #fde047;
+}
+.feed-verb.died {
+  color: #e74c3c;
+}
+.feed-verb.lost {
+  color: #e74c3c;
+}
+.feed-verb.won {
+  color: #27ae60;
+}
+.feed-verb.neutral {
+  color: #9ca3af;
+}
+.feed-level {
+  font-weight: 600;
+  color: #67e8f9;
+}
+.feed-title {
+  color: #0891b2;
+  font-style: italic;
+  font-weight: 600;
+}
+
+.feed-empty {
+  font-size: 0.8rem;
+  color: #4b5563;
+}
+
+/* Animate only initial loading, never failed requests or populated background refreshes. */
+.feed-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 2.5rem 0;
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+/* Choice-graph loading indicator; animate opacity and scale only. */
+.feed-loading-graph {
+  width: 34px;
+  height: 34px;
+}
+.feed-loading-graph .flg-center {
+  transform-origin: 16px 16px;
+  animation: flg-pulse 1.3s ease-in-out infinite;
+}
+.feed-loading-graph .flg-node {
+  transform-origin: center;
+  transform-box: fill-box;
+  opacity: 0;
+}
+@keyframes flg-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.75;
+  }
+}
+/* Separate timelines let all nodes share a dwell period.
+   Clockwise order is n1, n2, n4, n3 for both appearance and disappearance. */
+.flg-n1 {
+  animation: flg-n1-cycle 2.2s ease-in-out infinite;
+}
+.flg-n2 {
+  animation: flg-n2-cycle 2.2s ease-in-out infinite;
+}
+.flg-n4 {
+  animation: flg-n3-cycle 2.2s ease-in-out infinite;
+}
+.flg-n3 {
+  animation: flg-n4-cycle 2.2s ease-in-out infinite;
+}
+/* Longer transition windows make growth and shrinkage visible. */
+@keyframes flg-n1-cycle {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  7% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  11% {
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  60% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+@keyframes flg-n2-cycle {
+  0%,
+  9% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  16% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  20% {
+    transform: scale(1);
+  }
+  59% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  69% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+@keyframes flg-n3-cycle {
+  0%,
+  18% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  29% {
+    transform: scale(1);
+  }
+  68% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  78% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+@keyframes flg-n4-cycle {
+  0%,
+  27% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  34% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  38% {
+    transform: scale(1);
+  }
+  77% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  87% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+.feed-user-group {
+}
+.feed-user-group--party {
+  border-left: 2px solid #2dd4bf;
+  padding-left: calc(0.5rem - 2px);
+  margin: 0 0 0 -0.5rem;
+}
+.feed-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #9ca3af;
+  padding: 0.2rem 0;
+  width: 100%;
+  text-align: left;
+}
+.feed-group-toggle--inline {
+  display: inline-flex;
+  width: auto;
+  padding: 0 0 0 0.3rem;
+  font-size: 0.75rem;
+  vertical-align: baseline;
+}
+.feed-group-toggle:hover {
+  color: #d1d5db;
+}
+.feed-group-chevron {
+  font-size: 0.65rem;
+  color: #6b7280;
+  transition: color 0.15s;
+}
+.feed-group-body {
+  border-left: 2px solid #374151;
+  padding-top: 0.1rem;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+}
+.feed-group-count {
+  color: #9ca3af;
+  font-weight: 400;
+}
+.feed-group-name {
+  display: inline;
+}
+.feed-group-toggle .feed-user {
+  color: #f5a623;
+}
+.feed-group-toggle .author-badge {
+  color: #fbbf24;
+}
+.feed-group-toggle .contributor-badge {
+  color: #34d399;
+}
+.feed-group-toggle .admin-badge {
+  color: #60a5fa;
+}
+
+.feed-announcement {
+  position: relative;
+  min-inline-size: 0;
+  border: 1.5px solid #f59e0b;
+  border-radius: 7px;
+  padding: 0 0.5rem 0.5rem;
+  margin: 0 -0.5rem 0.15rem;
+}
+.feed-ann-title {
+  margin-left: -0.1rem;
+  padding: 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #f59e0b;
+  letter-spacing: 0.04em;
+}
+.feed-ann-body {
+  font-size: 0.85rem;
+  color: #e5e7eb;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.45;
+  text-align: justify;
+}
+.feed-ann-body a,
+.feed-pinned-body a {
+  color: #60a5fa;
+  text-decoration: none;
+}
+.feed-ann-body a:hover,
+.feed-pinned-body a:hover {
+  text-decoration: underline;
+}
+.feed-ann-body a:visited,
+.feed-pinned-body a:visited {
+  color: #60a5fa;
+}
+
+.feed-pinned-card {
+  position: relative;
+  min-inline-size: 0;
+  border: 1.5px solid #f59e0b;
+  border-radius: 7px;
+  padding: 0 0.8rem 0.5rem;
+  margin: 0 0 0.4rem;
+}
+.feed-pinned-legend {
+  margin-left: -0.1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #f3f4f6;
+}
+.feed-pin-icon {
+  width: 13px;
+  height: 13px;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+.feed-pinned-body {
+  font-size: 0.85rem;
+  color: #e5e7eb;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.45;
+  text-align: justify;
+}
+
+#landing-right {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: var(--landing-panel-w);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid #1f2937;
+  padding: 1rem 1.1rem 0.4rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #374151 transparent;
+  scrollbar-gutter: stable;
+  background: rgba(17, 24, 39, 0.45);
+  transition: transform 0.25s ease;
+}
+#landing-right::-webkit-scrollbar {
+  width: 5px;
+}
+#landing-right::-webkit-scrollbar-track {
+  background: transparent;
+}
+#landing-right::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+#landing-right::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+body.right-collapsed #landing-right {
+  transform: translateX(var(--landing-panel-w));
+  border-left: none;
+}
+
+.feed-group-toggle .moderator-badge {
+  color: #c084fc;
+}
+.feed-group-toggle .squire-badge {
+  color: #fb923c;
+}
+
+.feed-entry--joblevel .feed-level,
+.feed-entry--joblevel .feed-title {
+  color: #fb7185;
+}

@@ -13,7 +13,7 @@ test('admin tooltip keeps a readable width and stays inside the right and bottom
   assert.equal(tip.style.left,'668px');assert.equal(tip.style.top,'618px');assert.equal(tip.style.display,'block');
   handlers.mousemove({clientX:10,clientY:10});assert.equal(tip.style.left,'24px');
   handlers.mouseleave();assert.equal(tip.style.display,'none');
-  const css=readFileSync('public/css/admin.css','utf8');
+  const css=readFileSync('public/css/admin/dashboard.css','utf8');
   assert.match(css,/#admin-tooltip\s*\{[^}]*width: max-content;[^}]*max-width: min\(360px, calc\(100vw - 24px\)\)/);
 });
 

@@ -1,5 +1,9 @@
 'use strict';
 const zlib = require('zlib');
+const fs = require('node:fs');
+const path = require('node:path');
+// Exported HTML must remain readable without a network connection.
+const bookExportStyles = fs.readFileSync(path.join(__dirname, 'styles/exports/book.css'), 'utf8');
 const { escapeHtml } = require('./html-escape');
 
 // Avoid Windows reserved device names in ZIP entries, even with extensions.
@@ -479,28 +483,7 @@ function buildBookHtml(book, username, itemsById = new Map()) {
 <head>
 <meta charset="utf-8">
 <title>${esc(book.name)} - Gamebook Tracker</title>
-<style>
-  body{font-family:Georgia,serif;max-width:980px;margin:2rem auto;padding:0 1.2rem;color:#1a1a1a}
-  h1{font-size:1.6rem;margin-bottom:.15rem}
-  .sub{color:#555;font-size:.88rem;margin-bottom:1.5rem}
-  h2{font-size:1.05rem;border-bottom:1px solid #ccc;padding-bottom:.2rem;margin-top:1.8rem}
-  table{border-collapse:collapse;width:100%;font-size:.85rem;margin-top:.4rem}
-  th{background:#f0f0f0;text-align:left;padding:.3rem .5rem;border:1px solid #ccc}
-  td{padding:.22rem .5rem;border:1px solid #ddd;vertical-align:top}
-  .path-cell{font-family:monospace;font-size:.78rem;word-break:break-all}
-  .note-cell{white-space:pre-line}
-  .stats{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;margin:.5rem 0 1rem;font-size:.88rem}
-  .stats span{background:#f0f0f0;padding:.15rem .5rem;border-radius:3px}
-  pre{background:#f8f8f8;border:1px solid #ddd;padding:.7rem;white-space:pre-wrap;font-size:.83rem}
-  details{border:1px solid #ddd;border-radius:3px;margin:.4rem 0;padding:.3rem .6rem}
-  details[open]{padding-bottom:.6rem}
-  summary{cursor:pointer;font-size:.88rem;font-weight:600;padding:.2rem 0}
-  .det-label{font-size:.78rem;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.04em;margin:.7rem 0 .1rem}
-  .legend{display:flex;flex-wrap:wrap;gap:.3rem .9rem;margin:.5rem 0 1rem;font-size:.8rem}
-  .legend-item{display:flex;align-items:center;gap:.35rem}
-  .legend-dot{width:.8rem;height:.8rem;border-radius:50%;flex-shrink:0}
-  @media print{body{margin:0}details{border:none}details[open]{border-bottom:1px solid #eee}}
-</style>
+<style>${bookExportStyles}</style>
 </head>
 <body>
 <h1>${esc(book.name)}</h1>

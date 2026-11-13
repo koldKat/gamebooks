@@ -1,0 +1,860 @@
+/* Styles for the dedicated mobile frontend, not desktop media-query overrides. */
+
+* {
+  box-sizing: border-box;
+}
+
+/* Disable horizontal overscroll gestures that conflict with canvas touch panning. */
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #111827;
+  color: #e5e7eb;
+  font:
+    16px/1.5 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  overscroll-behavior-x: none;
+}
+
+/* Theme reader panes' scrollbars consistently. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #374151 transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+#screen {
+  /* A definite height is required for the reader's percentage flex split. */
+  /* Use the measured --vh, not a later dvh override; embedded browsers can overreport dvh. */
+  height: 100vh;
+  height: calc(var(--vh, 1vh) * 100);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Legacy simulators share the launcher row with desktop; keep mobile labels natural. */
+#m-sim-btn-row #play-btn-row > button {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+/* ── Top bar (book list / reader) ─────────────────────────────────────── */
+
+.m-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  padding-top: calc(0.75rem + env(safe-area-inset-top));
+  background: rgba(17, 24, 39, 0.95);
+  border-bottom: 1px solid #374151;
+  backdrop-filter: blur(6px);
+}
+.m-topbar button {
+  background: rgba(55, 65, 81, 0.6);
+  border: 1px solid #374151;
+  border-radius: 6px;
+  color: #e5e7eb;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+}
+.m-username {
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+.m-pane-toggle-btn {
+  flex-shrink: 0;
+  display: flex;
+  padding: 0.4rem !important;
+}
+.m-pane-toggle-btn svg {
+  width: 18px;
+  height: 18px;
+}
+.m-pane-toggle-btn.active {
+  background: #f5a623 !important;
+  border-color: #f5a623 !important;
+  color: #111827 !important;
+}
+/* .m-book-title's own flex:1 shrinks around these on a narrow phone -
+   title ellipsis already handles that, no extra media query needed. */
+.m-book-title {
+  flex: 1;
+  text-align: center;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Login screen ──────────────────────────────────────────────────────── */
+
+.m-login {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  gap: 1rem;
+  padding: 1.5rem;
+  max-width: 420px;
+  margin: 0 auto;
+  width: 100%;
+}
+.m-login h1 {
+  text-align: center;
+  color: #f5a623;
+  font-size: 1.6rem;
+  margin: 0 0 0.5rem;
+}
+.m-login form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.m-login input {
+  --autofill-background: #1f2937;
+  --autofill-color: #e5e7eb;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+  font-size: 1rem;
+}
+.m-login button[type='submit'] {
+  background: #f5a623;
+  border: none;
+  border-radius: 8px;
+  color: #111827;
+  font-weight: 600;
+  padding: 0.8rem;
+  cursor: pointer;
+}
+.m-error {
+  color: #f87171;
+  font-size: 0.85rem;
+  min-height: 1.1em;
+}
+.m-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: #9ca3af;
+}
+
+/* Fixed reading/graph split with physics disabled. */
+
+.m-panes {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* Reserve the home-indicator safe area in every pane mode. */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.m-top {
+  flex: 1 1 50%;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 1rem 1.1rem 1.5rem;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+.m-top p {
+  margin: 0 0 0.9rem;
+  text-align: justify;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+}
+.m-top p:last-child {
+  margin-bottom: 0;
+}
+.m-top > * {
+  flex-shrink: 0;
+  min-width: 0;
+}
+.m-top figure {
+  margin: 0 0 0.9rem;
+  min-width: 0;
+}
+.m-top img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+.m-top pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: inherit;
+}
+.m-top table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin: 0 0 0.9rem;
+  font-size: 0.85rem;
+}
+.m-top :is(th, td) {
+  border: 1px solid #374151;
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.m-top th {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  font-weight: 600;
+}
+.m-top :is(h2, h3, h4) {
+  overflow-wrap: anywhere;
+}
+.m-top a {
+  color: #38bdf8;
+  text-decoration: underline;
+}
+.m-top p.choice {
+  font-weight: 600;
+  border-left: 3px solid #38bdf8;
+  padding-left: 0.6rem;
+}
+.m-end {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  margin: auto 0;
+}
+/* Center the unavailable notice and hint together, not as separate flex items. */
+.m-notice {
+  margin: auto 0;
+}
+
+/* Run-end achievement layout and entrance animation, separate from unavailable-text notices. */
+.m-end-achievement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.5rem;
+  margin: auto 0;
+  animation: m-end-achievement-in 0.4s ease-out;
+}
+@keyframes m-end-achievement-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Scope the shared reading icon class to mobile achievements. */
+.m-end-achievement .end-icon {
+  width: 56px;
+  height: 56px;
+}
+.m-end-achievement--death .end-icon {
+  filter: drop-shadow(0 0 6px rgba(231, 76, 60, 0.35));
+}
+.m-end-achievement--win .end-icon {
+  filter: drop-shadow(0 0 6px rgba(245, 166, 35, 0.4));
+}
+.m-end-heading {
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+}
+.m-end-achievement--win .m-end-heading {
+  color: #f5a623;
+}
+.m-end-achievement--death .m-end-heading {
+  color: #e74c3c;
+}
+.m-back-link {
+  margin-top: 1.5rem;
+  border-top: 1px solid #374151;
+  padding-top: 1rem;
+}
+.m-preview-banner {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-style: italic;
+  border-bottom: 1px solid #374151;
+  padding-bottom: 0.9rem;
+}
+
+/* Notebook is always available; simulator availability is book-specific. */
+.m-tool-row {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.32rem 0.6rem;
+  border-top: 1px solid #374151;
+  background: rgba(17, 24, 39, 0.95);
+}
+.m-tool-btn {
+  flex: 1;
+  min-width: 0;
+  background: rgba(55, 65, 81, 0.6);
+  border: 1px solid #374151;
+  border-radius: 6px;
+  color: #e5e7eb;
+  padding: 0.35rem 0.3rem;
+  font-size: 0.76rem;
+  line-height: 1.15;
+  cursor: pointer;
+}
+.m-tool-btn:active {
+  background: rgba(75, 85, 99, 0.7);
+}
+.m-tool-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.m-tool-row + .m-tool-row {
+  border-top: none;
+  padding-top: 0;
+}
+/* Touch-sized outcome buttons using desktop colors. */
+#m-endrun-row .m-tool-btn {
+  font-size: 0.7rem;
+  padding: 0.35rem 0.15rem;
+}
+.m-win-btn {
+  background: #14532d;
+  color: #86efac;
+  border-color: #166534;
+}
+.m-win-btn:active {
+  background: #166534;
+  color: #bbf7d0;
+}
+.m-loss-btn {
+  background: #450a0a;
+  color: #fca5a5;
+  border-color: #7f1d1d;
+}
+.m-loss-btn:active {
+  background: #7f1d1d;
+  color: #fecaca;
+}
+.m-battledeath-btn {
+  background: #431407;
+  color: #fb923c;
+  border-color: #7c2d12;
+}
+.m-battledeath-btn:active {
+  background: #7c2d12;
+  color: #fed7aa;
+}
+.ft-modal {
+  width: min(320px, 88vw);
+}
+.m-note-modal {
+  width: min(440px, 92vw);
+}
+.ft-modal-body {
+  padding: 1rem 1.1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+.ft-input-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.ft-input-row-label {
+  color: #d1d5db;
+  font-size: 0.92rem;
+}
+/* Give the stepper one shared background and border; keep its children transparent. */
+.ft-qty-wrap {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: stretch;
+  width: 132px;
+  height: 2.6rem;
+  background: #1f2937;
+  border: 1px solid #4b5563;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.ft-qty-btn {
+  flex: 0 0 34px;
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.ft-qty-btn:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+.ft-qty-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  border-left: 1px solid #374151;
+  border-right: 1px solid #374151;
+  color: #f3f4f6;
+  font-size: 1.05rem;
+  text-align: center;
+  outline: none;
+}
+.ft-dialog-modes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ft-dialog-modes button {
+  flex: 1 1 40%;
+  padding: 0.75rem 0.5rem;
+  font-size: 0.88rem;
+  color: #d1d5db;
+}
+
+/* Touch context menu with inline submenus and larger tap targets. */
+/* Reading reference menu (frontmatter/backmatter), anchored under the topbar button. */
+.m-reading-menu {
+  position: fixed;
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.m-reading-menu button {
+  background: none;
+  border: none;
+  color: #e5e7eb;
+  text-align: left;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.m-reading-menu button:disabled {
+  color: #4b5563;
+}
+.m-reading-menu button:active:not(:disabled) {
+  background: #374151;
+}
+
+.m-ctx-menu {
+  position: fixed;
+  display: none;
+  flex-direction: column;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 7px;
+  padding: 0.3rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  min-width: 190px;
+  z-index: 500;
+  /* Same --vh reasoning as #screen's own height - plain 100vh can measure
+     taller than the real visible area in an embedded/in-app browser. */
+  max-height: calc(100vh - 16px);
+  max-height: calc(var(--vh, 1vh) * 100 - 16px);
+  overflow-y: auto;
+}
+.m-ctx-menu.active {
+  display: flex;
+}
+.m-ctx-btn {
+  background: none;
+  border: none;
+  color: #d1d5db;
+  text-align: left;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: 5px;
+}
+.m-ctx-btn:active {
+  background: #374151;
+}
+.m-ctx-submenu-panel {
+  display: none;
+  flex-direction: column;
+  background: #161e2b;
+  border-radius: 5px;
+  margin: 0.15rem 0;
+}
+.m-ctx-submenu-panel.open {
+  display: flex;
+}
+.m-ctx-submenu-panel .m-ctx-btn {
+  padding-left: 1.75rem;
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.m-note-input {
+  width: 100%;
+  min-height: 110px;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  color: #e5e7eb;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.m-graph-wrap {
+  flex: 1 1 50%;
+  min-height: 0;
+  border-top: 2px solid #374151;
+  position: relative;
+}
+.m-graph {
+  position: absolute;
+  inset: 0;
+  background: #0b1220;
+}
+.m-graph-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0b1220;
+}
+.m-panes.m-text-only .m-graph-wrap {
+  display: none;
+}
+.m-panes.m-text-only .m-top {
+  flex: 1 1 100%;
+}
+.m-panes.m-graph-only .m-top {
+  display: none;
+}
+.m-panes.m-graph-only .m-graph-wrap {
+  flex: 1 1 100%;
+}
+
+.m-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  height: 100%;
+  color: #9ca3af;
+  font-size: 0.9rem;
+  padding: 2rem;
+  text-align: center;
+}
+/* Use flex growth when the loader is a direct child of the screen. */
+.m-loading-full {
+  flex: 1;
+  height: auto;
+}
+/* Mobile-local version of the shared graph loader; avoid importing desktop CSS. */
+.mlg-graph {
+  width: 30px;
+  height: 30px;
+}
+.mlg-graph .mlg-center {
+  transform-origin: 16px 16px;
+  animation: mlg-pulse 1.3s ease-in-out infinite;
+}
+.mlg-graph .mlg-node {
+  transform-origin: center;
+  transform-box: fill-box;
+  opacity: 0;
+}
+@keyframes mlg-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.75;
+  }
+}
+/* Separate keyframes give all four nodes a shared visible dwell window. */
+.mlg-n1 {
+  animation: mlg-n1-cycle 2.2s ease-in-out infinite;
+}
+.mlg-n2 {
+  animation: mlg-n2-cycle 2.2s ease-in-out infinite;
+}
+.mlg-n4 {
+  animation: mlg-n3-cycle 2.2s ease-in-out infinite;
+}
+.mlg-n3 {
+  animation: mlg-n4-cycle 2.2s ease-in-out infinite;
+}
+@keyframes mlg-n1-cycle {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  7% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  11% {
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  60% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+@keyframes mlg-n2-cycle {
+  0%,
+  9% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  16% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  20% {
+    transform: scale(1);
+  }
+  59% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  69% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+@keyframes mlg-n3-cycle {
+  0%,
+  18% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  29% {
+    transform: scale(1);
+  }
+  68% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  78% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+@keyframes mlg-n4-cycle {
+  0%,
+  27% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  34% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+  38% {
+    transform: scale(1);
+  }
+  77% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  87% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+.m-graph-error {
+  padding: 1rem;
+  text-align: center;
+  color: #9ca3af;
+}
+
+/* Show the unavailable-reading hint below the centered notice. */
+.m-manual-hint {
+  color: #9ca3af;
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* ── Generic full-screen overlay (notebook, any future mobile modal) ───── */
+
+.m-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 3000;
+  align-items: center;
+  justify-content: center;
+  padding: env(safe-area-inset-top) 0.75rem env(safe-area-inset-bottom);
+}
+.m-overlay.active {
+  display: flex;
+}
+
+.m-notebook-modal {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 480px;
+  height: min(80vh, 640px);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+.m-notebook-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #374151;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+.m-notebook-input {
+  flex: 1;
+  min-height: 0;
+  resize: none;
+  border: none;
+  background: transparent;
+  color: #e5e7eb;
+  padding: 0.9rem 1rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  font-family: inherit;
+}
+.m-notebook-input:focus {
+  outline: none;
+}
+.m-notebook-ftr {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #374151;
+}
+
+.m-icon-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+}
+
+.m-btn-primary,
+.m-btn-secondary {
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: 1px solid #4b5563;
+}
+.m-btn-secondary {
+  background: #374151;
+  color: #9ca3af;
+}
+.m-btn-primary {
+  background: #1d4ed8;
+  color: #dbeafe;
+  border-color: #1e40af;
+}
+
+/* ── Toast (toast.js) ─────────────────────────────────────────────────── */
+
+#m-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  transform: translate(-50%, 12px);
+  background: #15803d;
+  color: #bbf7d0;
+  border: 1px solid #166534;
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 4000;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+#m-toast.active {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}

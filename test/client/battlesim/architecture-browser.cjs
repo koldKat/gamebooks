@@ -20,7 +20,7 @@ if(scenario&&!/^[a-z-]+$/.test(scenario))throw Error('Invalid simulator scenario
   for(const mode of process.env.SIMULATOR_MODE ? [process.env.SIMULATOR_MODE] : ['desktop','mobile']){
     const rosterSeeds=installedRosters;
     const fixture=fs.readFileSync(__dirname+'/'+(scenario?scenario+'-integration':'architecture-browser')+'.fixture','utf8').replaceAll('REPO','file://'+repo).replaceAll('MODE',mode).replaceAll('LANGUAGE',language).replaceAll('PRESENTATION_ONLY',String(process.env.SIMULATOR_PRESENTATION_ONLY === '1')).replaceAll('AUDIT_LEGACY_ROSTERS', String(process.env.SIMULATOR_LIVE_ROSTERS === '1')).replace('BOOK_IDS',JSON.stringify(ids)).replace('ROSTER_SEEDS',JSON.stringify(rosterSeeds));
-    const css=['style','charsheet','equipment','battlesim','confirm'].map(n=>`<link rel="stylesheet" href="file://${repo}/public/css/${n}.css">`).join('')
+    const css=['base/app','components/charsheet','components/equipment','components/battlesim','components/confirm'].map(n=>`<link rel="stylesheet" href="file://${repo}/public/css/${n}.css">`).join('')
       + `<link rel="stylesheet" href="file://${repo}/public/${mode === 'mobile' ? 'mobile/css/style' : 'css/play'}.css">`;
     const file=path.join(scratch,mode+'.html');
     fs.writeFileSync(file,`<!doctype html><meta charset="utf-8">${css}<div id="${mode === 'mobile' ? 'm-sim-btn-row' : 'main-screen'}"></div><div id="inv-overlay"></div><script>addEventListener('error',e=>document.body.dataset.failure=e.error?.stack||e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=e.reason?.stack||String(e.reason));</script><script type="module">${fixture}</script>`);
@@ -34,7 +34,7 @@ if(scenario&&!/^[a-z-]+$/.test(scenario))throw Error('Invalid simulator scenario
   if(scenario){
     const files=ids.map(id=>'public/js/battlesim/battlesim'+id+'.js').concat([
       'public/js/battlesim/loader.js','public/mobile/js/battlesim-dispatch.js',
-      'public/js/core/state.js','public/js/core/util.js','public/css/battlesim.css',
+      'public/js/core/state.js','public/js/core/util.js','public/css/components/battlesim.css',
       ...ids.flatMap(id=>['en','bg'].map(lang=>'public/js/i18n/'+lang+'/battlesim/battlesim'+id+'.js').filter(file=>fs.existsSync(file))),
       __filename,__dirname+'/'+scenario+'-integration.fixture']);
     const hash=bytes=>require('node:crypto').createHash('sha256').update(bytes).digest('hex');

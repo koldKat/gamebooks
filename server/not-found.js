@@ -15,7 +15,7 @@ function renderNotFoundPage(message = messages[Math.floor(Math.random() * messag
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex"><title>Off the map | Gamebook Tracker</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/not-found.css"></head><body><main>
+<link rel="stylesheet" href="/css/pages/not-found.css"></head><body><main>
 <img src="/images/lost-adventurer.svg" width="280" height="184" alt="A puzzled adventurer studying a map beside signposts pointing in opposite directions">
 <div class="code">404 · PAGE NOT FOUND</div><h1>You’ve wandered off the map.</h1>
 <p>${escapeHtml(message)}</p><a href="/">&#8592; Back to the adventure</a>

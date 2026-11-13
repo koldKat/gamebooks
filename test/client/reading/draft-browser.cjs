@@ -12,7 +12,7 @@ const publicRoot = path.resolve('public');
 const sha = data => crypto.createHash('sha256').update(data).digest('hex');
 const mobile = process.env.READER_MODE === 'mobile';
 const paneClass = mobile ? 'm-top' : 'liveread-body';
-const sources = [mobile ? 'mobile/css/style.css' : 'css/liveread.css', 'css/reading-access.css', 'js/reading/content.js', 'js/reading/map-entry.js'];
+const sources = [mobile ? 'css/mobile/app.css' : 'css/layouts/liveread.css', 'css/components/reading-access.css', 'js/reading/content.js', 'js/reading/map-entry.js'];
 const hashes = Object.fromEntries(sources.map(file => [file, sha(fs.readFileSync(path.join(publicRoot, file)))]));
 const scratch = fs.mkdtempSync(path.join(root, `${draft.bookId}-reader-`));
 const payload = JSON.stringify(draft).replaceAll('<', '\\u003c');

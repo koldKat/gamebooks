@@ -50,7 +50,7 @@ if(id===0){
  Object.assign(client,{graph,play,party,bg,boot,choices,document,focusAfterLoad:_focusNodeAfterLoad});
 }else{
  document.body.innerHTML='<div id="screen"></div>';
- const css=document.createElement('link');css.rel='stylesheet';css.href='${base}/mobile/css/style.css';document.head.append(css);
+ const css=document.createElement('link');css.rel='stylesheet';css.href='${base}/css/mobile/app.css';document.head.append(css);
  const reader=await import('${base}/mobile/js/reader.js'),mobileGraph=await import('${base}/mobile/js/graph-view.js');
  await reader.renderReader(document.getElementById('screen'),{id:1,name:'Device fixture'},()=>{});
  const contextMenu=await import('${base}/mobile/js/context-menu.js');

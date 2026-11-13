@@ -17,7 +17,7 @@ const scratch = fs.mkdtempSync(path.join(root, 'mobile-banner-'));
 
 (async () => {
   try {
-    const css = ['style', 'landing', 'feedback', 'profile', 'mobile'].map(name =>
+    const css = ['base/app', 'layouts/landing', 'components/feedback', 'components/profile', 'layouts/responsive'].map(name =>
       `<link rel="stylesheet" href="file://${repo}/public/css/${name}.css">`).join('');
     const script = `
       const check=(ok,label)=>{if(!ok)throw Error(label);};

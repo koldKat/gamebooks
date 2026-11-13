@@ -39,7 +39,8 @@ const stubData = {
       if (sec === failedSection) { failedSection = null; throw new Error('Temporary connection failure'); }
       return { ok: true, json: async () => ({ html: '<p>Section ' + sec + '</p>' + (mapMode ? '<form data-reading-map-entry><input name="marker" max="150"><button type="submit">Go</button></form>' : ''), choices: sec === 1 ? [2] : sec === 120 ? [197] : [] }) }; } },
   '../play.js': { navigate(sec) { section = sec; run.path.push(sec); }, startPlaythrough() {}, commitChoices(sec, choices) { commits.push([sec, [...choices]]); graph[sec] = { ...graph[sec], choices: [...choices] }; }, showAlert() {}, suppressAutoNav: value => suppression.push(value) },
-  './access.js': { showReadingGate: async () => false },
+  './access.js': { showReadingGate: async () => false, closeReadingGate() {} },
+  './image-zoom.js': { bindReadingImageZoom() {} },
   './content.js': { renderReadingMatter: () => false },
   '../graph.js': { network: null, setLightweightRestabilize: value => physics.push(value) },
   '../i18n.js': { t: key => key },

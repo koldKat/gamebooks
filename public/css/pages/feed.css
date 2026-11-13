@@ -1,0 +1,150 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  background: #111827;
+  color: #e5e7eb;
+  font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+  font-size: 15px;
+  line-height: 1.5;
+  padding: 1.5rem 1rem 3rem;
+}
+a {
+  color: #60a5fa;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+a:visited {
+  color: #60a5fa;
+}
+.site-header {
+  max-width: 680px;
+  margin: 0 auto 1.5rem;
+  border-bottom: 1px solid #374151;
+  padding-bottom: 0.9rem;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.site-header h1 {
+  font-size: 1.1rem;
+  color: #f3f4f6;
+}
+.site-header .sub {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+.back {
+  font-size: 0.8rem;
+  margin-left: auto;
+}
+.feed {
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.pinned-card {
+  border: 1.5px solid #f59e0b;
+  border-radius: 7px;
+  padding: 0.7rem 0.85rem 0.65rem;
+}
+.pinned-legend {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #f59e0b;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+.pinned-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f3f4f6;
+  margin-bottom: 0.3rem;
+}
+.pinned-body {
+  font-size: 0.85rem;
+  color: #d1d5db;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.45;
+}
+.day-card {
+  background: #1f2937;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.day-header {
+  background: #374151;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.entry {
+  padding: 0.42rem 0.75rem;
+  font-size: 0.82rem;
+  border-top: 1px solid #374151;
+}
+.entry:first-of-type {
+  border-top: none;
+}
+.fu {
+  color: #60a5fa;
+  font-weight: 600;
+}
+.fb {
+  color: #34d399;
+}
+.fl {
+  color: #a78bfa;
+  font-weight: 600;
+}
+.ft {
+  color: #a78bfa;
+}
+.fv {
+  font-weight: 600;
+}
+.fv-won {
+  color: #34d399;
+}
+.fv-died {
+  color: #f87171;
+}
+.fv-lost {
+  color: #f87171;
+}
+.ann {
+}
+.ann-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #f59e0b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+.ann-body {
+  font-size: 0.82rem;
+  color: #e5e7eb;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.45;
+}
+.empty {
+  color: #6b7280;
+  font-size: 0.85rem;
+}

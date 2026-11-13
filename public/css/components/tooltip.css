@@ -1,0 +1,59 @@
+/* Shared app tooltip theme. */
+#app-tooltip {
+  display: none;
+  position: fixed;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 7px;
+  color: #d1d5db;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.7rem;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 10001;
+}
+#app-tooltip.tip-wrap {
+  white-space: normal;
+  max-width: 260px;
+  line-height: 1.6;
+}
+.tooltip-country-list {
+  display: grid;
+  gap: 0.25rem;
+  min-width: max-content;
+}
+.country-count-tooltip {
+  border-bottom: 1px dotted currentColor;
+  padding-bottom: 1px;
+}
+.country-count-tooltip[role='button'] {
+  cursor: pointer;
+}
+#app-tooltip.tip-interactive {
+  pointer-events: auto;
+  overflow: visible;
+  width: max-content;
+  max-height: none;
+  max-width: none;
+  box-sizing: border-box;
+  touch-action: auto;
+}
+.tooltip-country-row {
+  display: grid;
+  grid-template-columns: 20px minmax(max-content, 1fr) auto;
+  align-items: center;
+  column-gap: 0.5rem;
+}
+.tooltip-country-row > :nth-child(2) {
+  white-space: nowrap;
+}
+.tooltip-country-row img {
+  border-radius: 2px;
+  object-fit: cover;
+}
+.tooltip-country-row > :last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}

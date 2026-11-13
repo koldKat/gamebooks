@@ -1,7 +1,7 @@
 // Exercise rare active-time rotation, bounded particle cleanup and all live companion actions.
 const fs=require('node:fs'),path=require('node:path'),checkBrowser=require('../battlesim/browser-harness.cjs');
 const root=fs.mkdtempSync(path.join(process.env.TMPDIR||'/tmp','cursor-variants-')),base=path.resolve('public'),file=path.join(root,'check.html');
-const html=`<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="file://${base}/css/seasonal-events.css"><link rel="stylesheet" href="file://${base}/css/admin-seasons.css"><style>body{margin:25px;background:#141d29;color:#ccc;font:14px sans-serif}.catalogue{display:grid;grid-template-columns:1fr 1fr;gap:20px}.season-card{min-width:0}.season-cursor-gallery{margin-top:0}</style><script>addEventListener('error',e=>document.body.dataset.failure=e.error?.stack||e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=e.reason?.stack||String(e.reason));</script><script type="module">
+const html=`<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="file://${base}/css/seasonal/events.css"><link rel="stylesheet" href="file://${base}/css/admin/seasons.css"><style>body{margin:25px;background:#141d29;color:#ccc;font:14px sans-serif}.catalogue{display:grid;grid-template-columns:1fr 1fr;gap:20px}.season-card{min-width:0}.season-cursor-gallery{margin-top:0}</style><script>addEventListener('error',e=>document.body.dataset.failure=e.error?.stack||e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=e.reason?.stack||String(e.reason));</script><script type="module">
 const {cursorDesigns}=await import('file://${base}/js/seasonal-events/cursor-designs.js');const {createRotatingCursor}=await import('file://${base}/js/seasonal-events/rotating-cursor.js');
 const check=(v,label)=>{if(!v)throw Error(label);};
 const original={timeout:window.setTimeout,clear:window.clearTimeout,frame:window.requestAnimationFrame,cancel:window.cancelAnimationFrame,now:performance.now.bind(performance)};
@@ -43,7 +43,7 @@ for(const [season,designs]of Object.entries(cursorDesigns)){
  }
 }
 window.setTimeout=original.timeout;window.clearTimeout=original.clear;window.requestAnimationFrame=original.frame;window.cancelAnimationFrame=original.cancel;Object.defineProperty(performance,'now',{configurable:true,value:original.now});
-const rewardsStyle=document.createElement('link');rewardsStyle.rel='stylesheet';rewardsStyle.href='file://${base}/css/reward-float.css';document.head.append(rewardsStyle);await new Promise(resolve=>rewardsStyle.onload=resolve);
+const rewardsStyle=document.createElement('link');rewardsStyle.rel='stylesheet';rewardsStyle.href='file://${base}/css/components/reward-float.css';document.head.append(rewardsStyle);await new Promise(resolve=>rewardsStyle.onload=resolve);
 const rewardLayer=document.createElement('div');rewardLayer.id='reward-float-layer';document.body.append(rewardLayer);
 const {enqueueRewardFloater,clearRewardFloaters}=await import('file://${base}/js/progression/floater-queue.js');
 enqueueRewardFloater('personal','survival','+5 XP · Surviving');let survival=rewardLayer.firstElementChild;

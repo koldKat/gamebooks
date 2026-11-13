@@ -797,7 +797,7 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false, userId = null) {
         pages:         b.pages || null,
         authors:       b.authors || null,
         hasBattleSim:  !!b.has_battle_sim || !!b.child_has_battle_sim,
-        hasLiveReading: !!b.has_live_reading,
+        hasLiveReading: !!b.has_live_reading || children.some(c => c.hasLiveReading),
         pdfPath:       hasPdfAccess ? (b.pdf_path || null) : null,
         children,
       };

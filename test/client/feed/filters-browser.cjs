@@ -105,7 +105,7 @@ try{
 
 (async () => {
   try {
-    const css = ['style', 'landing', 'feed', 'mobile'].map(name => `<link rel="stylesheet" href="file://${repo}/public/css/${name}.css">`).join('');
+    const css = ['base/app', 'layouts/landing', 'components/feed', 'layouts/responsive'].map(name => `<link rel="stylesheet" href="file://${repo}/public/css/${name}.css">`).join('');
     const file = path.join(scratch, 'filters.html');
     fs.writeFileSync(file, `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${css}<body><div id="landing-wrapper"><div id="feed-panel"><div id="feed-content"></div></div></div><script>addEventListener('error',e=>document.body.dataset.failure=e.message)</script><script type="module">${script}</script>`);
     for (const width of [320, 390, 1100, 1920]) {

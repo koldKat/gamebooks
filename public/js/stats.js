@@ -4,8 +4,10 @@ import { escapeHtml, fetchPublic } from './core/util.js';
 import { t } from './i18n.js';
 import { formatStatCount } from './core/format-stat-count.js';
 import { bindCountryTooltip } from './ui-helpers/country-tooltip.js';
+import { dismissTooltip } from './ui-helpers/tooltip.js';
 
 export function closeStatsModal() {
+  dismissTooltip();
   document.getElementById('stats-modal-overlay').classList.remove('active');
 }
 

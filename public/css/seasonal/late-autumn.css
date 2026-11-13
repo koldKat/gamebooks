@@ -1,0 +1,347 @@
+/* Bounded SVG motion: the shared companion owns timers, blinking, gaze and disposal. */
+.autumn-flame {
+  animation: autumn-flicker 2.1s ease-in-out infinite;
+}
+.seasonal-turkey .turkey-tail {
+  transform-origin: 24px 31px;
+  animation: autumn-tail-idle 7s ease-in-out infinite;
+}
+.seasonal-turkey.is-fanning .turkey-tail {
+  animation: autumn-fan 2.6s ease-in-out both;
+}
+.seasonal-turkey.is-gobbling .turkey-beak {
+  transform-origin: 24px 30px;
+  animation: autumn-gobble 0.35s ease-in-out 6;
+}
+.seasonal-turkey.is-gobbling .turkey-wattle {
+  transform-origin: 25px 31px;
+  animation: autumn-wag 0.35s ease-in-out 6;
+}
+.is-leaffall .autumn-leaves {
+  animation: autumn-leaffall 2.8s ease-in-out both;
+}
+.seasonal-acorn.is-caplift .acorn-cap,
+.seasonal-nicholas.is-mitrelift .nicholas-mitre {
+  transform-origin: 24px 16px;
+  animation: autumn-lift 2.4s ease-in-out both;
+}
+.seasonal-acorn.is-sprouting .acorn-sprout {
+  transform-origin: 24px 16px;
+  animation: autumn-sprout 3.2s ease-in-out both;
+}
+.is-steaming .autumn-steam,
+.is-snowpuff .autumn-steam {
+  animation: autumn-steam 2.8s ease-out both;
+}
+.seasonal-harvest-pie.is-berrybounce .pie-berries {
+  animation: autumn-berrybounce 2.4s ease-in-out both;
+}
+.seasonal-harvest-pie.is-crustglow .pie-crust {
+  animation: autumn-crustglow 2.6s ease-in-out both;
+}
+.seasonal-harvest-pie.is-crustglow .autumn-sparkles,
+.seasonal-nicholas.is-blessing .autumn-sparkles,
+.seasonal-ribbon-gift.is-opening .autumn-sparkles,
+.seasonal-lucia-candle.is-embers .autumn-sparkles,
+.seasonal-saffron-bun.is-sugarsparkle .autumn-sparkles,
+.seasonal-candle-crown.is-starlight .autumn-sparkles {
+  transform-origin: 24px 24px;
+  animation: autumn-sparkles 2.4s ease-in-out both;
+}
+.seasonal-nicholas.is-bellringing .nicholas-bell {
+  transform-origin: 39px 27px;
+  animation: autumn-bell 2.4s ease-in-out both;
+}
+.seasonal-ribbon-gift.is-opening .gift-lid {
+  transform-origin: 24px 20px;
+  animation: autumn-lift 3s ease-in-out both;
+}
+.seasonal-ribbon-gift.is-bowbounce .gift-bow {
+  transform-origin: 24px 14px;
+  animation: autumn-bowbounce 2.4s ease-in-out both;
+}
+.seasonal-ribbon-gift.is-ribbonwave .gift-ribbon {
+  transform-origin: 26px 23px;
+  animation: autumn-wag 0.65s ease-in-out 4;
+}
+.seasonal-treat-boot.is-treatpop .boot-cookie {
+  animation: autumn-cookie 3s ease-in-out both;
+}
+.seasonal-treat-boot.is-candywave .boot-candy {
+  transform-origin: 24px 20px;
+  animation: autumn-wag 0.6s ease-in-out 4;
+}
+.seasonal-lucia-candle.is-flaring .candle-fire {
+  transform-origin: 24px 13px;
+  animation: autumn-flare 2.6s ease-in-out both;
+}
+.seasonal-lucia-candle.is-waxdrip .candle-wax {
+  transform-origin: 24px 19px;
+  animation: autumn-wax 3s ease-in-out both;
+}
+.seasonal-saffron-bun.is-uncoiling .bun-coil {
+  transform-origin: 24px 24px;
+  animation: autumn-uncoil 2.6s ease-in-out both;
+}
+.seasonal-candle-crown.is-brightening .crown-fire {
+  animation: autumn-brighten 2.6s ease-in-out both;
+}
+.seasonal-candle-crown.is-candledance .autumn-flame {
+  animation: autumn-dance 0.7s ease-in-out 4;
+}
+@keyframes autumn-flicker {
+  0%,
+  100% {
+    transform: scale(0.98, 1) rotate(-2deg);
+  }
+  50% {
+    transform: scale(1.03, 0.94) rotate(2deg);
+  }
+}
+@keyframes autumn-tail-idle {
+  0%,
+  100% {
+    transform: scaleX(1);
+  }
+  50% {
+    transform: scaleX(0.97);
+  }
+}
+@keyframes autumn-fan {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  30%,
+  65% {
+    transform: scale(1.17, 1.1);
+  }
+  45% {
+    transform: scale(1.1, 1.14);
+  }
+}
+@keyframes autumn-gobble {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.7);
+  }
+}
+@keyframes autumn-wag {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(10deg);
+  }
+}
+@keyframes autumn-leaffall {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px) rotate(-8deg);
+  }
+  20% {
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(16px) rotate(12deg);
+  }
+}
+@keyframes autumn-lift {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  35%,
+  65% {
+    transform: translateY(-8px) rotate(-7deg);
+  }
+}
+@keyframes autumn-sprout {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scaleY(0.1);
+  }
+  25%,
+  75% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+@keyframes autumn-steam {
+  0% {
+    opacity: 0;
+    transform: translateY(5px) scale(0.8);
+  }
+  25% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-12px) scale(1.12);
+  }
+}
+@keyframes autumn-berrybounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-10px);
+  }
+  55% {
+    transform: translateY(0);
+  }
+  72% {
+    transform: translateY(-4px);
+  }
+}
+@keyframes autumn-crustglow {
+  0%,
+  100% {
+    fill: #d5b074;
+  }
+  45%,
+  65% {
+    fill: #f0d49b;
+  }
+}
+@keyframes autumn-sparkles {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.8) rotate(-8deg);
+  }
+  30%,
+  65% {
+    opacity: 1;
+    transform: scale(1.1) rotate(8deg);
+  }
+}
+@keyframes autumn-bell {
+  0%,
+  100% {
+    opacity: 0;
+    transform: rotate(0);
+  }
+  15%,
+  85% {
+    opacity: 1;
+  }
+  25%,
+  65% {
+    transform: rotate(-20deg);
+  }
+  45%,
+  80% {
+    transform: rotate(20deg);
+  }
+}
+@keyframes autumn-bowbounce {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  25%,
+  65% {
+    transform: scale(1.18, 0.8);
+  }
+  45% {
+    transform: scale(0.9, 1.2);
+  }
+}
+@keyframes autumn-cookie {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  25%,
+  75% {
+    opacity: 1;
+    transform: translateY(-5px);
+  }
+}
+@keyframes autumn-flare {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  35%,
+  65% {
+    transform: scale(1.18, 1.45);
+  }
+}
+@keyframes autumn-wax {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  65% {
+    transform: scaleY(1.65);
+  }
+}
+@keyframes autumn-uncoil {
+  0%,
+  100% {
+    transform: rotate(0) scale(1);
+  }
+  40%,
+  65% {
+    transform: rotate(13deg) scale(1.12);
+  }
+}
+@keyframes autumn-brighten {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  45%,
+  65% {
+    filter: drop-shadow(0 0 3px #f1d69d);
+  }
+}
+@keyframes autumn-dance {
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+  30% {
+    transform: rotate(-12deg) scaleY(1.1);
+  }
+  70% {
+    transform: rotate(12deg) scaleY(0.9);
+  }
+}
+.seasonal-event-notice[data-season='thanksgiving'] {
+  background: rgb(36 32 28 / 50%);
+  border-color: #786048;
+  border-left-color: #bc935d;
+}
+.seasonal-event-notice[data-season='st-nicholas'] {
+  background: rgb(38 30 32 / 50%);
+  border-color: #79555a;
+  border-left-color: #bd9970;
+}
+.seasonal-event-notice[data-season='st-lucia'] {
+  background: rgb(34 37 30 / 50%);
+  border-color: #677451;
+  border-left-color: #d1bd85;
+}
+@media (prefers-reduced-motion: reduce) {
+  .seasonal-variant * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

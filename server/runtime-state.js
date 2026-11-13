@@ -3,6 +3,10 @@
 // Shared process-lifetime metrics and maintenance state exposed through accessors.
 
 const os = require('os');
+const fs = require('node:fs');
+const path = require('node:path');
+// Keep this page self-contained: maintenance mode blocks public asset requests.
+const maintenanceStyles = fs.readFileSync(path.join(__dirname, 'styles/pages/maintenance.css'), 'utf8');
 const db = require('./db');
 
 // Optional background bookkeeping must not bring down the request server.
@@ -35,22 +39,7 @@ function maintenanceHtml() {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Maintenance</title>
-<style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#111827;color:#d1d5db;font-family:'Segoe UI',system-ui,sans-serif;
-       display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1.5rem}
-  .card{background:#1f2937;border:1px solid #374151;border-radius:12px;
-        max-width:420px;width:100%;padding:2.5rem 2rem;text-align:center}
-  .icon{width:3rem;height:3rem;margin:0 auto 1rem;display:block}
-  h1{font-size:1.4rem;font-weight:700;color:#f5a623;margin-bottom:0.6rem}
-  #msg{font-size:0.95rem;color:#9ca3af;line-height:1.6;transition:opacity 0.4s}
-  #msg.fade{opacity:0}
-  .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4b5563;margin:0 2px;
-       animation:pulse 1.4s ease-in-out infinite}
-  .dot:nth-child(2){animation-delay:.2s}
-  .dot:nth-child(3){animation-delay:.4s}
-  @keyframes pulse{0%,80%,100%{opacity:.3}40%{opacity:1}}
-</style>
+<style>${maintenanceStyles}</style>
 </head>
 <body>
 <div class="card">

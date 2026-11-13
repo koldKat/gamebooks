@@ -9,7 +9,7 @@ test('hide and restart cancel crossfades without resurrecting or blanking a back
   const images = [];
   let nextId = 1;
   globalThis.localStorage = { getItem: () => null, setItem() {} };
-  globalThis.window = { innerWidth: 1280, matchMedia: () => ({ matches: false }) };
+  globalThis.window = { innerWidth: 1280, matchMedia: () => ({ matches: false }), addEventListener() {}, dispatchEvent() {} };
   globalThis.setTimeout = (fn, ms) => { const id = nextId++; timers.set(id, {fn, ms}); return id; };
   globalThis.clearTimeout = id => timers.delete(id);
   globalThis.setInterval = fn => { const id = nextId++; intervals.set(id, fn); return id; };
@@ -149,7 +149,7 @@ test('hide and restart cancel crossfades without resurrecting or blanking a back
 });
 
 test('landing layers and cover-backed feed cards share the requested 3.3-second fade', () => {
-  for (const file of ['landing.css', 'feed.css']) {
+  for (const file of ['layouts/landing.css', 'components/feed.css']) {
     const css = readFileSync(new URL('../../../public/css/' + file, import.meta.url), 'utf8');
     assert.match(css, /transition: opacity 3\.3s ease;/);
   }
