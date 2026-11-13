@@ -32,8 +32,8 @@ const stubs = {
 };
 const mod = new SourceTextModule(readFileSync(process.argv[1], 'utf8'), { context });
 async function link(specifier) {
-  if (specifier === './profile-stats.js') {
-    const stats = new SourceTextModule(readFileSync(new URL('./profile-stats.js', 'file://' + process.argv[1]), 'utf8'), { context });
+  if (specifier === './profile-stats.js' || specifier === './role-badges.js') {
+    const stats = new SourceTextModule(readFileSync(new URL(specifier, 'file://' + process.argv[1]), 'utf8'), { context });
     await stats.link(link);
     return stats;
   }
@@ -60,8 +60,8 @@ for (const prefix of ['books', 'play', 'profile']) {
 }
 assert.match(el('profile-own-stats').innerHTML, /Profile.ratings_given.*>4<.*Profile.average_rating.*>3\.50</);
 assert.match(el('profile-own-stats').innerHTML, /Profile.stats.fought<\/span><span class="pub-stat-val">12</);
-assert.match(el('profile-own-stats').innerHTML, /Pub.stat.wins<\/span><span class="pub-stat-val">9</);
-assert.match(el('profile-own-stats').innerHTML, /Pub.stat.losses<\/span><span class="pub-stat-val">3</);
+assert.match(el('profile-own-stats').innerHTML, /Profile.stats.won<\/span><span class="pub-stat-val">9</);
+assert.match(el('profile-own-stats').innerHTML, /Profile.stats.lost<\/span><span class="pub-stat-val">3</);
 profile.closeProfileModal();
 
 const late = profile.openProfileModal();

@@ -37,6 +37,9 @@ test('user hover shows escaped normal and Job progression with independent progr
   assert.match(html,/Heartbeat XP<\/th><td>7<\/td><td>\+0.7 XP\/min/);
   assert.match(html,/Ruby Digging<\/th><td>2<\/td><td>\+0.2%/);
   assert.match(html,/Lucky Coin Chance<\/th><td>3<\/td><td>\+0.03%/);
+  assert.match(html,/Lucky coin chance<\/dt><dd class="val-amber">0.06% per XP event/);
+  assert.match(helper({...user,bonusGcChancePurchased:20}),/0.06% per XP event/);
+  assert.match(helper({...user,level:0,bonusGcChancePurchased:20}),/0.00% per XP event/);
   assert.match(html,/Bronze coins<\/dt><dd class="val-bronze">42/);
   assert.match(html,/Silver coins<\/dt><dd class="val-silver">8/);
   assert.match(html,/GC balance<\/dt><dd class="val-amber">123/);

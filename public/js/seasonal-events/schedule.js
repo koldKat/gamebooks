@@ -65,3 +65,15 @@ export function nextSeason(events, date = new Date()) {
   upcoming.sort((a, b) => a.window.start.localeCompare(b.window.start));
   return upcoming[0] ?? null;
 }
+
+// One current or next occurrence per event, ordered for the admin calendar.
+export function orderedSeasonOccurrences(events, date = new Date()) {
+  const today = seasonalDay(date), key = iso(today), year = new Date(today).getUTCFullYear();
+  return events.map(event => {
+    const years = event.dates ? Object.keys(event.dates).map(Number).filter(y => y >= year - 1)
+      : [year - 1, year, year + 1];
+    const window = years.flatMap(y => availableSeasonWindows(events, event, y))
+      .filter(window => window.end >= key).sort((a, b) => a.start.localeCompare(b.start))[0] ?? null;
+    return { event, window };
+  }).sort((a, b) => (a.window?.start ?? '9999-12-31').localeCompare(b.window?.start ?? '9999-12-31'));
+}

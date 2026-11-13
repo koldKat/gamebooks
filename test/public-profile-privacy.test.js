@@ -49,10 +49,12 @@ test('public profile responses omit private progression and balances', () => {
 test('public profile renderer never displays job progression from a stale response', () => {
   const nodes = new Map();
   const document = { getElementById(id) {
-    if (!nodes.has(id)) nodes.set(id, { innerHTML: '', style: {}, classList: { remove() {} } });
+    if (!nodes.has(id)) nodes.set(id, { innerHTML: '', style: {}, querySelectorAll: () => [], classList: { remove() {} } });
     return nodes.get(id);
   } };
   const context = vm.createContext({ document, escapeHtml: String, publicName, t: key => key });
+  vm.runInContext(fs.readFileSync('public/js/account/role-badges.js', 'utf8')
+    .replace(/\bexport /g, ''), context);
   vm.runInContext(fs.readFileSync('public/js/account/profile-stats.js', 'utf8')
     .replace(/^import .*;\n/gm, '').replace(/\bexport /g, ''), context);
   const source = fs.readFileSync('public/js/account/public-profile.js', 'utf8')
@@ -66,7 +68,15 @@ test('public profile renderer never displays job progression from a stale respon
   assert.match(html, /Profile.ratings_given.*>7</);
   assert.match(html, /Profile.average_rating.*>3\.50</);
   assert.match(html, /Profile.stats.fought<\/span><span class="pub-stat-val">12</);
-  assert.match(html, /Pub.stat.wins<\/span><span class="pub-stat-val">9</);
-  assert.match(html, /Pub.stat.losses<\/span><span class="pub-stat-val">3</);
+  assert.match(html, /Profile.stats.won<\/span><span class="pub-stat-val">9</);
+  assert.match(html, /Profile.stats.lost<\/span><span class="pub-stat-val">3</);
   assert.doesNotMatch(html, /job-xp|Job Lvl|Job events|15234|15,234|Miner/);
+  assert.doesNotMatch(html, /profile-titles|Profile.stats.titles/);
+  context.renderPublicProfile({ username: 'Reader', totalBooks: 1, books: [{ id: 10, name: 'Anthology', runs: [
+    { bookId: 11, index: 0, result: 'success' },
+    { bookId: 11, index: 1, result: 'death' },
+    { bookId: 12, index: 0, result: 'success' },
+  ] }] });
+  assert.match(nodes.get('pub-modal-body').innerHTML, /Pub.stat.books_played<\/span><span class="pub-stat-val">2</,
+    'anthology chapters count as individual played books, with repeat runs deduplicated');
 });

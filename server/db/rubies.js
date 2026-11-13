@@ -1,6 +1,7 @@
 'use strict';
 
 const { isSupplementalSection, supplementalSectionSql, isMappedGraphNode } = require('./reading-section-counts');
+const { hasFullBookCoverage } = require('./book-section-coverage');
 
 // Completion rewards are permanent, independent of the mutable runs and catalog.
 function hasRubyAccess(db, userId) {
@@ -64,17 +65,12 @@ function createRubyCompletionChecker(db, { discovery = false } = {}) {
   function completion(userId, row) {
     const total = row.total_sections;
     if (!Number.isSafeInteger(total) || total < 1) return { count: 0, complete: false };
-    const target = Number.isSafeInteger(row.discoverable_sections) && row.discoverable_sections > 0
-      && row.discoverable_sections < total ? row.discoverable_sections : total;
     // Importer-created epilogue destinations keep the ending readable, but are
     // supplemental prose rather than additional numbered gamebook sections.
     const canonical = sections.all(row.id).map(s => String(s.section_id))
       .filter(s => s !== row.uncounted_entry && !isSupplementalSection(s));
     // Sparse/prefixed imports require their actual section IDs, never just a path length.
     // Incomplete imports cannot establish the complete set of required sections.
-    if (canonical.length && canonical.length !== total && !(target < total && canonical.length >= target)) {
-      return { count: total, complete: false };
-    }
     const visited = new Set(visits.all(userId, `${row.id}:%`).map(v => v.ref.slice(String(row.id).length + 1)));
     let saved;
     try { saved = JSON.parse(state.get(userId, row.id)?.state_data || '{}'); } catch { saved = {}; }
@@ -88,21 +84,7 @@ function createRubyCompletionChecker(db, { discovery = false } = {}) {
       if (discovery || isMappedGraphNode(node)) visited.add(String(id));
       if (discovery) for (const choice of Array.isArray(node?.choices) ? node.choices : []) visited.add(String(choice));
     }
-    if (canonical.length) return { count: total,
-      complete: canonical.filter(id => visited.has(id)).length >= target };
-    // An explicit reachable-section limit allows genuine print errors to leave
-    // gaps. Count actual numbered sections, not arbitrary extra graph nodes.
-    if (target < total) {
-      const maximum = row.max_section_number ?? total;
-      const covered = [...visited].filter(id => /^[1-9]\d*$/.test(id) && Number(id) <= maximum).length;
-      return { count: total, complete: covered >= target };
-    }
-    // Without imported prose the catalog's ordinary numbered sections are authoritative.
-    // A sparse numbering scheme needs imported IDs before it can be certified.
-    if ((row.max_section_number ?? total) !== total) return { count: total, complete: false };
-    if (visited.size < total) return { count: total, complete: false };
-    for (let i=1; i<=total; i++) if (!visited.has(String(i))) return { count: total, complete: false };
-    return { count: total, complete: true };
+    return { count: total, complete: hasFullBookCoverage(row, visited, canonical) };
   }
 
   const checkCollections = require('./collection-completion-gems').createCollectionCompletionChecker(db, completion, discovery);

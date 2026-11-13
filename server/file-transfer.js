@@ -57,10 +57,11 @@ function isPdfFile(filename) {
   return readFileHeader(filename, 4).toString('ascii') === '%PDF';
 }
 
-function serveFile(req, res, filename, { headers, gzip = false, etagCache }) {
+function serveFile(req, res, filename, { headers, gzip = false, etagCache, onNotFound }) {
   fs.stat(filename, (error, stat) => {
     if (res.destroyed) return;
     if (error || !stat.isFile()) {
+      if (onNotFound) return onNotFound(req, res);
       res.writeHead(404, { 'Content-Type': 'text/plain' });
       return res.end('Not found');
     }
@@ -87,6 +88,7 @@ function serveFile(req, res, filename, { headers, gzip = false, etagCache }) {
     res.once('close', closed);
     input.once('error', () => {
       if (!res.headersSent && !res.destroyed) {
+        if (onNotFound) return onNotFound(req, res);
         res.writeHead(404, { 'Content-Type': 'text/plain' });
         res.end('Not found');
       }

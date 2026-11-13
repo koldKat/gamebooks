@@ -9,12 +9,15 @@ import {
 } from './core.js';
 import { loadAll, loadStats } from './dashboard.js';
 import { openEditor } from './editor.js';
+import { prepareBookEditor, prepareUserEditor } from './editor-layout.js';
 
 let _userEditor = null;
 let _bookEditor = null;
 let _bookEditGeneration = 0;
 let _openingBookEditor = false;
 let _openingUserEditor = false;
+prepareUserEditor();
+prepareBookEditor();
 document.getElementById('user-edit-form').style.display = 'none';
 document.getElementById('user-edit-form').lastElementChild.classList.add('admin-editor-actions');
 document.getElementById('book-edit-form').lastElementChild.classList.add('admin-editor-actions');
@@ -53,6 +56,7 @@ function openUserEditor() {
   _userEditor = openEditor({
     title: `Edit Player: ${document.getElementById('ue-username').value}`,
     content: form,
+    actions: form.lastElementChild,
     onClose: () => {
       original.forEach(({ input, value, checked }) => { input.value = value; input.checked = checked; });
       document.getElementById('ue-password').value = '';
@@ -68,6 +72,8 @@ function openBookEditor() {
   _bookEditor = openEditor({
     title: `Edit ${_bookDetailData.is_container ? 'Anthology' : 'Book'}: ${_bookDetailData.name}`,
     content: document.getElementById('book-edit-form'),
+    actions: document.getElementById('book-edit-form').lastElementChild,
+    isDirty: () => !!(_pendingAdminPdf || _pendingAdminCover || _removeAdminPdf || _removeAdminCover),
     focus: '#bef-name',
     onClose: () => { _pendingAdminPdf = null; _pendingAdminCover = null; _bookEditor = null; },
   });
@@ -254,7 +260,7 @@ document.getElementById('ue-save').addEventListener('click', async () => {
 });
 
 document.getElementById('ue-cancel').addEventListener('click', () => {
-  _userEditor?.close();
+  _userEditor?.requestClose();
 });
 document.getElementById('book-back-btn').addEventListener('click', () => {
   if (_backCtx && _backCtx.view === 'user') loadUserDetail(_backCtx.userId);
@@ -985,6 +991,8 @@ export function renderPtsTable(data) {
 let _bookDetailData  = null;
 let _pendingAdminPdf = null;
 let _pendingAdminCover = null;
+let _removeAdminPdf = false;
+let _removeAdminCover = false;
 
 function _populateBookEditForm(d) {
   const generation = ++_bookEditGeneration;
@@ -1009,6 +1017,8 @@ function _populateBookEditForm(d) {
   document.getElementById('bef-pdf-name').textContent = '';
   _pendingAdminPdf   = null;
   _pendingAdminCover = null;
+  _removeAdminPdf = false;
+  _removeAdminCover = false;
 
   // Populate series datalist
   api('GET', '/api/admin/series').then(series => {
@@ -1049,6 +1059,7 @@ function _populateBookEditForm(d) {
   const coverImg    = document.getElementById('bef-cover-img');
   const coverPh     = document.getElementById('bef-cover-ph');
   const coverRemove = document.getElementById('bef-cover-remove');
+  coverPh.textContent = 'No cover';
   if (d.cover_path) {
     coverImg.src           = `/covers/${d.cover_path}`;
     coverImg.style.display = 'block';
@@ -1081,7 +1092,7 @@ document.getElementById('book-edit-btn').addEventListener('click', () => {
 });
 
 document.getElementById('bef-cancel').addEventListener('click', () => {
-  _bookEditor?.close();
+  _bookEditor?.requestClose();
 });
 
 // Cover upload
@@ -1093,6 +1104,7 @@ document.getElementById('bef-cover-file').addEventListener('change', e => {
   const file = e.target.files[0];
   if (!file) return;
   _pendingAdminCover = file;
+  _removeAdminCover = false;
   const reader = new FileReader();
   const generation = _bookEditGeneration;
   reader.onload = ev => {
@@ -1106,21 +1118,15 @@ document.getElementById('bef-cover-file').addEventListener('change', e => {
   };
   reader.readAsDataURL(file);
 });
-document.getElementById('bef-cover-remove').addEventListener('click', async () => {
+document.getElementById('bef-cover-remove').addEventListener('click', () => {
   if (!_currentBookId || !_bookEditor) return;
-  const editor = _bookEditor;
-  editor.setBusy(true);
-  try {
-    const response = await fetch(`/api/books/${editor.bookId}/cover/delete`, { method: 'POST' });
-    if (!response.ok) throw new Error(`Cover removal failed (${response.status}).`);
     const img = document.getElementById('bef-cover-img');
     const ph  = document.getElementById('bef-cover-ph');
     img.src = ''; img.style.display = 'none'; ph.style.display = '';
     document.getElementById('bef-cover-remove').style.display = 'none';
     _pendingAdminCover = null;
-    editor.data.cover_path = null;
-  } catch (error) { document.getElementById('bef-error').textContent = error.message; }
-  finally { editor.setBusy(false); }
+    _removeAdminCover = !!_bookEditor.data.cover_path;
+    ph.textContent = _removeAdminCover ? 'Removed on save' : 'No cover';
 });
 
 // PDF upload
@@ -1137,22 +1143,17 @@ document.getElementById('bef-pdf-file').addEventListener('change', e => {
     return;
   }
   _pendingAdminPdf = file;
+  _removeAdminPdf = false;
+  document.getElementById('bef-pdf-remove').style.display = '';
   document.getElementById('bef-pdf-name').textContent = file.name;
 });
-document.getElementById('bef-pdf-remove').addEventListener('click', async () => {
+document.getElementById('bef-pdf-remove').addEventListener('click', () => {
   if (!_currentBookId || !_bookEditor) return;
-  const editor = _bookEditor;
-  editor.setBusy(true);
-  try {
-    const response = await fetch(`/api/books/${editor.bookId}/pdf`, { method: 'DELETE' });
-    if (!response.ok) throw new Error(`PDF removal failed (${response.status}).`);
     document.getElementById('bef-pdf-link').style.display   = 'none';
     document.getElementById('bef-pdf-remove').style.display = 'none';
-    document.getElementById('bef-pdf-name').textContent = '';
+    document.getElementById('bef-pdf-name').textContent = _bookEditor.data.pdf_path ? 'Removed on save' : '';
     _pendingAdminPdf = null;
-    editor.data.pdf_path = null;
-  } catch (error) { document.getElementById('bef-error').textContent = error.message; }
-  finally { editor.setBusy(false); }
+    _removeAdminPdf = !!_bookEditor.data.pdf_path;
 });
 
 document.getElementById('bef-save').addEventListener('click', async () => {
@@ -1182,6 +1183,7 @@ document.getElementById('bef-save').addEventListener('click', async () => {
         method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: buf,
       });
       if (!cr.ok) { errEl.textContent = 'Cover upload failed.'; return; }
+      _pendingAdminCover = null;
     }
 
     // Save metadata
@@ -1220,6 +1222,20 @@ document.getElementById('bef-save').addEventListener('click', async () => {
         try { const j = await pr.json(); if (j.error) msg += `: ${j.error}`; } catch {}
         errEl.textContent = msg; return;
       }
+      _pendingAdminPdf = null;
+    }
+
+    if (_removeAdminCover) {
+      const response = await fetch(`/api/books/${editor.bookId}/cover/delete`, { method: 'POST' });
+      if (!response.ok) throw new Error('Details saved, but cover removal failed. Try Save again.');
+      _removeAdminCover = false;
+      editor.data.cover_path = null;
+    }
+    if (_removeAdminPdf) {
+      const response = await fetch(`/api/books/${editor.bookId}/pdf`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Details saved, but PDF removal failed. Try Save again.');
+      _removeAdminPdf = false;
+      editor.data.pdf_path = null;
     }
 
     editor.setBusy(false);

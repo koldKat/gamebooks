@@ -270,6 +270,7 @@ export function userProgressTooltipHtml(u) {
   const upgrade = (label, count, bonus) => `<tr><th scope="row">${label}</th><td>${number(count).toLocaleString()}</td><td>${esc(bonus)}</td></tr>`;
   const percent = (count, step = 0.1) => `+${(number(count) * step).toLocaleString(undefined, { maximumFractionDigits: 2 })}%`;
   const balance = Number.isFinite(+u.coinsBalance) ? +u.coinsBalance : 0;
+  const luckyCoinChance = ((number(u.level) + Math.min(number(u.bonusGcChancePurchased), number(u.level))) * 0.01).toFixed(2);
   const heartbeatRate = ((number(u.bonusHeartbeatXp) + number(u.bonusHeartbeatXpFree ?? u.level)) * 0.1)
     .toLocaleString(undefined, { maximumFractionDigits: 1 });
   return `<div class="admin-progress-tooltip"><strong>${esc(u.username)}</strong>`
@@ -285,6 +286,7 @@ export function userProgressTooltipHtml(u) {
     + fact('Diamonds', number(u.rubiesBalance).toLocaleString(), 'val-ruby')
     + fact('Coin mint bonus', `${number(u.gcMintPct).toLocaleString(undefined, { maximumFractionDigits: 1 })}%`, 'val-amber')
     + fact('XP from boosts', number(u.xpFromBoost).toLocaleString())
+    + fact('Lucky coin chance', `${luckyCoinChance}% per XP event`, 'val-amber')
     + fact('Lucky coin', u.pendingBonusGc ? 'Ready to claim' : 'None waiting', u.pendingBonusGc ? 'val-amber' : '')
     + '</dl><table class="admin-progress-upgrades"><caption>Shop upgrades</caption><thead><tr><th>Upgrade</th><th>Bought</th><th>Bonus</th></tr></thead><tbody>'
     + upgrade('XP Boost', u.xpBoostPurchased, percent(u.xpBoostPurchased))

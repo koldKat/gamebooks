@@ -4,13 +4,15 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const {createRequire} = require('node:module');
 const Database = require('better-sqlite3');
 const {renderPublicPage, renderCatalogue} = require('../server/public-seo');
 const template = fs.readFileSync('public/index.html', 'utf8');
 const book = {id: 7, name: 'The Test Adventure', description: 'A voyage into danger.', authors: 'A. Writer', coverUrl: '/covers/book.png', isbn: '123', totalSections: 100, seriesId: 3, seriesName: 'Adventures'};
 const data = html => JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)[1]);
 function load(filename, dependencies) {
-  const context = {module: {exports: {}}, require: name => name in dependencies ? dependencies[name] : require(name), URL, Date, Intl};
+  const localRequire = createRequire(path.resolve(filename));
+  const context = {module: {exports: {}}, require: name => name in dependencies ? dependencies[name] : localRequire(name), URL, Date, Intl};
   vm.runInNewContext(fs.readFileSync(filename, 'utf8'), context);
   return context.module.exports;
 }
@@ -79,7 +81,8 @@ test('catalogue pagination provides distinct canonicals, next/previous links and
 test('catalogue route accepts ordinary page numbers and rejects invalid or missing pages', () => {
   const routes = load('server/routes/public.js', {fs, path, '../db': {getAllPublicBooks: () => [{id: 7, name: 'Public book'}]},
     '../paths': {ROOT: path.resolve('public')}, '../request-helpers': {addSecurityHeaders() {}},
-    '../html-escape': require('../server/html-escape'), '../public-name': require('../server/public-name'), '../public-seo': require('../server/public-seo')});
+    '../html-escape': require('../server/html-escape'), '../public-name': require('../server/public-name'), '../public-seo': require('../server/public-seo'),
+    '../not-found': {serveNotFoundPage(req,res) {res.writeHead(404);res.end(require('../server/not-found').renderNotFoundPage('Missing page.'));}}});
   let status, body;
   const res = {writeHead(value) {status = value;}, end(value) {body = value;}};
   for (const url of ['/catalogue', '/catalogue?page=1']) {

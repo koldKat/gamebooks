@@ -1017,7 +1017,8 @@ function getPublicProfile(username) {
   if (!user || !user.public_profile) return null;
 
   const bookRows = db.prepare(`
-    SELECT b.id, b.name, b.created_by, b.parent_book_id, b.is_container, e.section_id AS uncounted_entry, ub.state_data
+    SELECT b.id, b.name, b.created_by, b.parent_book_id, b.is_container, b.total_sections,
+      b.discoverable_sections, b.max_section_number, e.section_id AS uncounted_entry, ub.state_data
     FROM user_books ub JOIN books b ON b.id = ub.book_id
     LEFT JOIN book_reading_entries e ON e.book_id=b.id AND e.counts_as_section=0
     WHERE ub.user_id = ?
@@ -1038,11 +1039,13 @@ function getPublicProfile(username) {
 
   // Group runs: child books aggregate under their parent anthology
   const groupMap = new Map();
-  const progress = { sectionsDiscovered: 0, sectionsVisited: 0, booksWon: 0 };
+  const progress = { sectionsDiscovered: 0, sectionsVisited: 0, booksWon: 0, booksFullyDiscovered: 0, booksFullyMapped: 0 };
+  const canonical = db.prepare('SELECT section_id FROM book_sections WHERE book_id=?');
+  const sectionIds = id => canonical.all(id).map(row => row.section_id);
   for (const row of bookRows) {
     if (row.is_container) continue;
     let s; try { s = JSON.parse(row.state_data); } catch { continue; }
-    addBookProgress(progress, s, row.uncounted_entry);
+    addBookProgress(progress, s, row.uncounted_entry, row, sectionIds);
     const mapRun = (pt, i) => ({
       index:       i,
       bookId:      row.id,
@@ -1092,7 +1095,8 @@ function getPublicProfile(username) {
 
 function getProfileStats(userId) {
   const bookRows = db.prepare(`
-    SELECT b.id, b.created_by, b.parent_book_id, b.is_container, e.section_id AS uncounted_entry, ub.state_data
+    SELECT b.id, b.created_by, b.parent_book_id, b.is_container, b.total_sections,
+      b.discoverable_sections, b.max_section_number, e.section_id AS uncounted_entry, ub.state_data
     FROM user_books ub JOIN books b ON b.id = ub.book_id
     LEFT JOIN book_reading_entries e ON e.book_id=b.id AND e.counts_as_section=0
     WHERE ub.user_id = ?
@@ -1102,10 +1106,12 @@ function getProfileStats(userId) {
   const totalBooks    = rootRows.length;
   const createdBooks  = rootRows.filter(b => b.created_by === userId).length;
   let booksPlayed = 0;
-  const progress = { sectionsDiscovered: 0, sectionsVisited: 0, booksWon: 0 };
+  const progress = { sectionsDiscovered: 0, sectionsVisited: 0, booksWon: 0, booksFullyDiscovered: 0, booksFullyMapped: 0 };
+  const canonical = db.prepare('SELECT section_id FROM book_sections WHERE book_id=?');
+  const sectionIds = id => canonical.all(id).map(row => row.section_id);
   for (const row of bookRows) {
     let s; try { s = JSON.parse(row.state_data); } catch { continue; }
-    if (!row.is_container) addBookProgress(progress, s, row.uncounted_entry);
+    if (!row.is_container) addBookProgress(progress, s, row.uncounted_entry, row, sectionIds);
     // Pre-series runs remain real historical runs and must count.
     const allRuns = [...(s.playthroughs || []), ...(s.preSeriesRuns || [])];
     const completed = allRuns.filter(pt => pt.result === 'death' || pt.result === 'success' || pt.result === 'battle');

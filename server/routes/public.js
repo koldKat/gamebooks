@@ -10,6 +10,7 @@ const { send, addSecurityHeaders } = require('../request-helpers');
 const { escapeHtml, escapeJsonString } = require('../html-escape');
 const { publicName } = require('../public-name');
 const { renderPublicPage, renderCatalogue } = require('../public-seo');
+const { serveNotFoundPage } = require('../not-found');
 
 async function handlePublicUser(req, res, username) {
   const profile = db.getPublicProfile(decodeURIComponent(username));
@@ -34,12 +35,13 @@ function servePublicCataloguePage(req, res) {
   const pageText = query.get('page') || '1';
   const type = query.get('type') || 'books';
   if (!/^[1-9]\d*$/.test(pageText) || !Number.isSafeInteger(Number(pageText)) || !['books', 'series'].includes(type)) {
-    res.writeHead(404, {'Content-Type': 'text/plain'}); return res.end('Not found');
+    return serveNotFoundPage(req, res);
   }
   const items = type === 'series' ? db.getAllPublicSeries() : db.getAllPublicBooks();
   const collator = new Intl.Collator('en', {numeric: true, sensitivity: 'base'});
   items.sort((a, b) => collator.compare(a.name, b.name) || a.id - b.id);
   const html = renderCatalogue(items, {type, page: Number(pageText)});
+  if (!html) return serveNotFoundPage(req, res);
   addSecurityHeaders(res);
   res.writeHead(html ? 200 : 404, {'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300'});
   res.end(html || 'Not found');
@@ -47,7 +49,7 @@ function servePublicCataloguePage(req, res) {
 
 function servePublicContentPage(req, res, meta, kind) {
   if (!meta || (kind === 'anthology' && !meta.isContainer)) {
-    res.writeHead(404, {'Content-Type': 'text/plain'}); return res.end('Not found');
+    return serveNotFoundPage(req, res);
   }
   if (kind === 'book' && meta.isContainer) {
     res.writeHead(301, {Location: '/anthology/' + meta.id}); return res.end();
@@ -78,9 +80,9 @@ function servePublicProfilePage(req, res, username) {
   const profile = db.getPublicProfile(decodeURIComponent(username));
   const indexPath = path.join(ROOT, 'index.html');
   fs.readFile(indexPath, 'utf8', (err, html) => {
-    if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found'); }
+    if (err) return serveNotFoundPage(req, res);
     if (!profile) {
-      res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found');
+      return serveNotFoundPage(req, res);
     }
 
     const SITE      = 'https://pathmap.net';

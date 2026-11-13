@@ -2,8 +2,9 @@
 
 // Summarize exploration and victories from each book's already-loaded chart and runs.
 const { isSupplementalSection, isMappedGraphNode } = require('./reading-section-counts');
+const { completionTarget, hasFullBookCoverage } = require('./book-section-coverage');
 
-function addBookProgress(totals, state, entry) {
+function addBookProgress(totals, state, entry, book = {}, sectionIds = () => []) {
   const discovered = new Set(), visited = new Set();
   const valid = id => id != null && String(id).trim() !== ''
     && !['0', '-1', String(entry)].includes(String(id)) && !isSupplementalSection(id);
@@ -26,6 +27,11 @@ function addBookProgress(totals, state, entry) {
   totals.sectionsDiscovered += discovered.size;
   totals.sectionsVisited += visited.size;
   totals.booksWon += runs.some(run => run?.result === 'success') ? 1 : 0;
+  const target = completionTarget(book);
+  if (book.is_container || !(target > 0) || discovered.size < target) return;
+  const canonical = sectionIds(book.id).map(String).filter(valid);
+  if (hasFullBookCoverage(book, discovered, canonical)) totals.booksFullyDiscovered++;
+  if (hasFullBookCoverage(book, visited, canonical)) totals.booksFullyMapped++;
 }
 
 function collectedCount(db, userId) {

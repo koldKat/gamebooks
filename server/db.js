@@ -10,7 +10,7 @@ const {
   _toSortableString, _foldForSearch, _naturalCompare, _naturalCompareByName,
   _getPdfSize,
 } = require('./db/connection');
-const { getRandomTagline, getRandomLevelUpTemplate, getRandomJoinTemplate } = require('./db/content');
+const { getRandomTagline, getRandomLevelUpTemplate, getRandomJoinTemplate, getRandomNotFoundTemplate } = require('./db/content');
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -963,6 +963,7 @@ require('./db/series-notebooks').installSeriesNotebooks(db);
 }
 
 module.exports = {
+  getRandomNotFoundTemplate,
   getUserById, updateUsername, updatePassword, updateAvatar,
   createUser, verifyUser, setUserEmail, getUserEmail, createPasswordResetToken, validateResetToken, consumeResetToken,
   createSession, getSession, refreshSession, deleteSession, purgeExpiredSessions, purgeOldNotifications, purgeOldHeartbeats, walCheckpoint,
@@ -1034,5 +1035,6 @@ require('./db/job-level-rubies').initializeJobLevelRubies(db);
 require('./db/completed-run-gems').initializeCompletedRunGems(db);
 require('./db/sim-battle-gems').initializeSimBattleGems(db);
 require('./db/admin-crystal-gold').initializeAdminCrystalGold(db);
+require('./db/not-found-templates').initializeNotFoundTemplates(db);
 require('./db/book-discovery-rubies').initializeBookDiscoveryRubies(db);
 require('./db/completion-reward-conversion').initializeCompletionRewardConversion(db);

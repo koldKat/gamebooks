@@ -78,6 +78,7 @@ export function renderPublicProfile(profile) {
   _destroyPubNetworks();
 
   const allRuns = profile.books.flatMap(b => b.runs);
+  const booksPlayed = new Set(profile.books.flatMap(book => book.runs.map(run => run.bookId ?? book.id))).size;
   const wins    = allRuns.filter(r => r.result === 'success').length;
   const losses  = allRuns.filter(r => r.result === 'death').length;
   // Separate battle deaths so wins, losses, and battles sum to total runs.
@@ -97,7 +98,7 @@ export function renderPublicProfile(profile) {
       <div class="pub-profile-info">
         <div class="pub-profile-username">${escapeHtml(_dn)}${_hooks.adminBadge?.(profile.username) ?? ''}${_hooks.authorBadge?.(profile.username) ?? ''}${_hooks.contributorBadge?.(profile.username) ?? ''}${_hooks.moderatorBadge?.(profile.username) ?? ''}${_hooks.squireBadge?.(profile.username) ?? ''}${levelSuffix}</div>
         <div class="pub-profile-stats">
-          ${profileStatsHtml({ ...profile, booksPlayed: profile.books.length, totalRuns: allRuns.length, wins, losses, battles })}
+          ${profileStatsHtml({ ...profile, isAdmin: !!_hooks.adminBadge?.(profile.username), booksPlayed, totalRuns: allRuns.length, wins, losses, battles })}
         </div>
       </div>
     </div>`;

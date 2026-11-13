@@ -8,6 +8,10 @@ const roles = {
   squire: { label: 'Squire', path: 'M10 1.5L16.8 4.05V9.15C16.8 13.4 13.4 16.8 10 18.5C6.6 16.8 3.2 13.4 3.2 9.15V4.05Z' },
 };
 
+export function roleBadgeLabel(role) {
+  return roles[role]?.label || '';
+}
+
 export function renderRoleBadge(role) {
   const badge = roles[role];
   if (!badge) return '';

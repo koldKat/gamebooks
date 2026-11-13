@@ -19,4 +19,9 @@ function getRandomJoinTemplate() {
   return row?.template || 'A new adventurer enters the fray - welcome, {name}.';
 }
 
-module.exports = { getRandomTagline, getRandomLevelUpTemplate, getRandomJoinTemplate };
+function getRandomNotFoundTemplate() {
+  return db.prepare('SELECT template FROM not_found_templates WHERE active = 1 ORDER BY RANDOM() LIMIT 1').get()?.template
+    || 'The compass spins once, sighs, and points back home.';
+}
+
+module.exports = { getRandomTagline, getRandomLevelUpTemplate, getRandomJoinTemplate, getRandomNotFoundTemplate };

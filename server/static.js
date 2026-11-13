@@ -11,6 +11,7 @@ const { getEtagCache, MIME } = require('./runtime-state');
 const { serveFile } = require('./file-transfer');
 const { legacyBookDownload } = require('./book-files');
 const { escapeHtml } = require('./html-escape');
+const { serveNotFoundPage } = require('./not-found');
 
 function serveStatic(req, res) {
   const _spath  = req.url.split('?')[0];
@@ -32,7 +33,10 @@ function serveStatic(req, res) {
     headers['Content-Disposition'] = 'attachment';
   }
   const gzipExts = new Set(['.html', '.js', '.css', '.json', '.svg', '.xml', '.txt']);
-  serveFile(req, res, filePath, { headers, gzip: gzipExts.has(ext), etagCache: getEtagCache() });
+  const isPage = !urlPath.startsWith('/api/') &&
+    (ext === '.html' || (!ext && !/^\/(?:covers|avatars|images|books|attachments|css|js|fonts)\//.test(urlPath)));
+  serveFile(req, res, filePath, { headers, gzip: gzipExts.has(ext), etagCache: getEtagCache(),
+    onNotFound: isPage ? serveNotFoundPage : undefined });
 }
 
 function serveRobots(req, res) {

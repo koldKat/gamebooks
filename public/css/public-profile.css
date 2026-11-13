@@ -264,14 +264,19 @@ a.book-modal-parent-btn, a.book-modal-series-btn, a.book-modal-child-row { text-
 
 .pub-profile-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.2rem 0.85rem;
 }
 
 .profile-stat-group { min-width: 0; }
-.profile-stat-group h4 { margin: 0 0 0.1rem; font-size: 0.75rem; font-weight: 600; color: #9ca3af; }
+.profile-stat-group h4, .profile-titles h4 { margin: 0 0 0.1rem; font-size: 0.75rem; font-weight: 600; color: #9ca3af; }
 .profile-stat-group .pub-stat { display: flex; justify-content: space-between; align-items: baseline; gap: 0.4rem; line-height: 1.45; }
 .profile-stat-group .pub-stat-val { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.profile-stat-stack { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+.profile-titles { grid-column: 1 / -1; padding-bottom: 0.25rem; border-bottom: 1px solid #374151; }
+.profile-title-row { display: flex; align-items: center; gap: 0.35rem; min-height: 18px; font-size: 0.8rem; color: #d1d5db; }
+.profile-title-row > [class$="-badge"] { width: 16px; height: 16px; font-size: 1rem; margin: 0; flex-shrink: 0; vertical-align: middle; }
+.profile-title-row svg { display: block; width: 100%; height: 100%; }
 
 .pub-stat {
   font-size: 0.8rem;
@@ -279,13 +284,22 @@ a.book-modal-parent-btn, a.book-modal-series-btn, a.book-modal-child-row { text-
 }
 
 .pub-stat-val {
-  font-weight: 700;
+  font-size: inherit;
+  font-weight: 500;
   color: #d1d5db;
 }
 
 .pub-stat-win  .pub-stat-val { color: #4ade80; }
 .pub-stat-death .pub-stat-val { color: #f87171; }
 .pub-stat-battle .pub-stat-val { color: #fb923c; }
+
+@media (max-width: 480px) {
+  .pub-profile-header { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 0.4rem 0.6rem; }
+  .pub-profile-header > .pub-profile-avatar { grid-area: 1 / 1; width: 48px; height: 48px; }
+  .pub-profile-info { display: contents; }
+  .pub-profile-username { grid-area: 1 / 2; align-self: center; }
+  .pub-profile-stats { grid-area: 2 / 1 / auto / -1; }
+}
 
 .pub-book {
   margin-bottom: 0.25rem;

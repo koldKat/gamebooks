@@ -11,6 +11,7 @@ const { renderForumIndex, renderForumCategory, renderForumThread } = require('..
 const { sendAdminEmail } = require('../email');
 const { escapeHtml } = require('../html-escape');
 const { ATTACHMENTS_DIR } = require('../paths');
+const { serveNotFoundPage } = require('../not-found');
 
 // ── Forum handlers ────────────────────────────────────────────────────────────
 
@@ -24,6 +25,7 @@ function serveForumIndex(req, res) {
 
 function serveForumCategory(req, res, slug) {
   const category = db.forumGetCategory(slug);
+  if (!category) return serveNotFoundPage(req, res);
   const threads  = category ? db.forumGetThreadsByCategory(category.id) : [];
   const html = renderForumCategory(category || null, threads);
   addForumSecurityHeaders(res);
@@ -34,7 +36,7 @@ function serveForumCategory(req, res, slug) {
 function serveForumThread(req, res, threadId) {
   const data = db.forumGetThread(threadId);
   if (!data) {
-    res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found');
+    return serveNotFoundPage(req, res);
   }
   const html = renderForumThread(data.thread, data.posts);
   addForumSecurityHeaders(res);

@@ -112,3 +112,27 @@ test('simultaneous editors have unique accessible titles', async () => {
     await Promise.resolve();
   } finally { globalThis.document = previous; }
 });
+
+test('Escape and close requests protect unsaved changes, while a successful save can close', () => {
+  const f = fixture();
+  const previous = globalThis.document;
+  globalThis.document = f.document;
+  try {
+    const editor = openEditor({title:'Edit',content:f.form});
+    f.input.value = 'Changed';
+    editor.dialog.dispatchEvent(new Event('cancel', {cancelable:true}));
+    assert.equal(editor.dialog.open, true);
+    const warning = editor.dialog.children.at(-1);
+    assert.equal(warning.hidden, false);
+    warning.children[1].dispatchEvent(new Event('click'));
+    assert.equal(warning.hidden, true);
+    editor.requestClose();
+    assert.equal(warning.hidden, false);
+    warning.children[2].dispatchEvent(new Event('click'));
+    assert.equal(editor.dialog.open, false);
+    const saved = openEditor({title:'Edit',content:f.form});
+    f.input.value = 'Saved';
+    saved.close();
+    assert.equal(saved.dialog.open, false);
+  } finally {globalThis.document=previous;}
+});

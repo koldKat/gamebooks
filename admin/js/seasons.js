@@ -1,25 +1,25 @@
 // Admin seasonal calendar and private account-scoped visual preview controls.
-import { seasonalEvents, activeSeasonalEvents, seasonWindow, availableSeasonWindows, reloadSeasonalCalendar } from '/js/seasonal-events/calendar.js';
+import { seasonalEvents, activeSeasonalEvents, reloadSeasonalCalendar } from '/js/seasonal-events/calendar.js';
+import { orderedSeasonOccurrences, seasonalDay } from '/js/seasonal-events/schedule.js';
 import { setSeasonPreviewUser, seasonPreview, setSeasonPreview, applySeasonPreviewPreference, isSeasonPreviewStorageKey } from '/js/seasonal-events/preview.js';
 import { apiFetch, getToken } from '/js/core/state.js';
 import {createCursorPreviews} from '/js/seasonal-events/cursor-previews.js';
 import { loadSeasonReports } from './season-reports.js';
 let bound = false;
 let stopPreviews=()=>{};
+let renderedDay = null;
 function renderSeasonCards(preview = null, canTest = false) {
   const target = document.getElementById('seasons-list');
   stopPreviews(); target.replaceChildren();
   const previewStops=[]; stopPreviews=()=>previewStops.forEach(stop=>stop());
-  const year = Number(new Intl.DateTimeFormat('en', {timeZone:'Europe/Sofia',year:'numeric'}).format(new Date()));
-  for (const event of seasonalEvents) {
+  const now = new Date();
+  renderedDay = seasonalDay(now);
+  for (const { event, window } of orderedSeasonOccurrences(seasonalEvents, now)) {
     const card = document.createElement('section'); card.className = 'season-card';
     const heading = document.createElement('h3'); heading.textContent = event.title.replace(/ event active$/, '');
-    const today = new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Sofia',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-    const dates = document.createElement('p'), window = event.rule?.day !== undefined
-      ? [year,year+1].flatMap(y=>availableSeasonWindows(seasonalEvents,event,y)).find(w=>w.end>=today)
-      : seasonWindow(event,year);
+    const dates = document.createElement('p');
     dates.textContent = window ? `${window.start} – ${window.end} · Europe/Sofia · automatic every year`
-      : 'This year’s festival date needs adding to the calendar.';
+      : 'The next festival date needs adding to the calendar.';
     if (event.skipOverlaps) dates.textContent = `${window ? window.start+' – '+window.end+' · ' : ''}Every Friday the 13th, ±1 day; overlapping occurrences skipped.`;
     const detail = document.createElement('p'); detail.textContent = event.description;
     const test = document.createElement('button'); test.className = 'btn-warn'; test.textContent = 'Test season';
@@ -37,7 +37,7 @@ export async function loadSeasons() {
   refresh.onclick = loadSeasonReports;
   const target = document.getElementById('seasons-list'), status = document.getElementById('seasons-status');
   // Calendar cards remain available even if the main-app preview session expired.
-  if (!target.children.length) renderSeasonCards();
+  if (!target.children.length || renderedDay !== seasonalDay()) renderSeasonCards();
   for (const button of document.querySelectorAll('[data-season-test],#seasons-automatic,#seasons-off')) button.disabled = true;
   if (!bound) {
     bound = true;
@@ -45,7 +45,10 @@ export async function loadSeasons() {
     document.getElementById('seasons-off').addEventListener('click', () => changePreview('off'));
     window.addEventListener('storage', event => { if (isSeasonPreviewStorageKey(event.key)) loadSeasons(); });
     setInterval(() => {
-      if (!document.hidden && document.getElementById('tab-seasons').classList.contains('active')) void loadSeasonReports();
+      if (!document.hidden && document.getElementById('tab-seasons').classList.contains('active')) {
+        if (renderedDay !== seasonalDay()) void loadSeasons();
+        else void loadSeasonReports();
+      }
     }, 60_000);
   }
   try {
