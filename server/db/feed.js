@@ -407,8 +407,8 @@ function getFeed() {
   ).all(cutoffSec);
   for (const row of lvRows) {
     const lv             = parseInt(row.level, 10);
-    const abilitiesNow   = lv <= 30 ? 3 : Math.min(10, 3 + Math.ceil((lv - 30) / 10));
-    const abilitiesBefore = (lv - 1) <= 30 ? 3 : Math.min(10, 3 + Math.ceil(((lv - 1) - 30) / 10));
+    const abilitiesNow   = Math.min(10, Math.max(3, Math.floor(lv / 10)));
+    const abilitiesBefore = Math.min(10, Math.max(3, Math.floor((lv - 1) / 10)));
     const gainedAbility  = lv > 0 && abilitiesNow > abilitiesBefore;
     const tmplRow = row.template_id != null
       ? db.prepare('SELECT template FROM level_up_templates WHERE id = ?').get(row.template_id)

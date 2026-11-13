@@ -1361,9 +1361,9 @@ function unpinAnnouncement(id) {
   return db.prepare('SELECT * FROM announcements WHERE id = ?').get(id);
 }
 
-// Mirror the shop UI cap: levels 0-10 allow one purchase, then one per additional 10 levels.
+// Mirror the shop UI: one purchase each decade from level 10 through level 100.
 function undoFastTravelCap(level) {
-  return Math.floor((Math.max(level, 1) - 1) / 10) + 1;
+  return Math.min(10, Math.floor(Math.max(level, 0) / 10));
 }
 
 // Server shop configuration enforces price/effect; client configuration handles translated display.
@@ -1397,6 +1397,7 @@ function _loadShopItemsCache() {
     .map(r => [r.id, { cost: r.cost, stepCost: r.step_cost ?? undefined, col: r.col, delta: r.delta }]));
 }
 let _shopItemsCache = _loadShopItemsCache();
+require('./run-allowance-refunds').reconcileRunAllowancePurchases(db, computeLevel);
 
 function getShopItems() { return db.prepare('SELECT id, cost, step_cost, col, delta FROM shop_items ORDER BY id').all(); }
 function setShopItemCost(id, cost, stepCost) {

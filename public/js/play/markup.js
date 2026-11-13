@@ -25,7 +25,7 @@ export function renderPanelMarkup(pt, sec) {
     const isPlaceholder = pt.path.length === 0;
     const trailHeader = playContext._owIsOpenWorld ? 'Path in this book' : null;
     renderPathTrail(isPlaceholder ? null : pt, trailHeader);
-    const undosLeft = maxUndos() - (pt.undosUsed || 0);
+    const undosLeft = Math.max(0, maxUndos() - (pt.undosUsed || 0));
     const undoDisabled = (undosLeft <= 0 || pt.path.length <= 1) ? ' disabled' : '';
     let secDisplay;
     if (isPlaceholder) {
@@ -46,7 +46,7 @@ export function renderPanelMarkup(pt, sec) {
             `<div class="undo-ft-row">` +
             `<button id="undo-run-btn" class="undo-run-btn"${undoDisabled}>${t('runs.undo', { n: undosLeft })}</button>` +
             (!isPlaceholder
-              ? `<button id="fasttravel-btn" class="fasttravel-btn" data-tooltip="${t('ft.tooltip')}"${(maxFastTravels() - (pt.fastTravelsUsed || 0)) <= 0 ? ' disabled' : ''}>${t('runs.fasttravel', { n: maxFastTravels() - (pt.fastTravelsUsed || 0) })}</button>`
+              ? `<button id="fasttravel-btn" class="fasttravel-btn" data-tooltip="${t('ft.tooltip')}"${(maxFastTravels() - (pt.fastTravelsUsed || 0)) <= 0 ? ' disabled' : ''}>${t('runs.fasttravel', { n: Math.max(0, maxFastTravels() - (pt.fastTravelsUsed || 0)) })}</button>`
               : '') +
             `</div>` +
             (!isPlaceholder

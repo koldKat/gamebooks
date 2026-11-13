@@ -1,5 +1,6 @@
 // Schedule personal and admin reward chips, sharing one lane on mobile.
 import { floatiesEnabled } from './floaties.js';
+import { rewardFloaterTypeEnabled } from './floater-policy.js';
 import { waitForCameraIdle } from '../graph/camera-motion.js';
 
 const pendingFloaters = [];
@@ -31,6 +32,7 @@ function drainFloaters() {
     const index = pendingFloaters.findIndex(item => !activeFloaters.has(item.channel));
     if (index < 0) return;
     const item = pendingFloaters.splice(index, 1)[0];
+    if (!rewardFloaterTypeEnabled(item.channel, item.type)) continue;
     const layer = floaterLayer(item.channel);
     if (!layer) continue;
     const chip = document.createElement('div');
@@ -49,7 +51,7 @@ function drainFloaters() {
 }
 
 export function enqueueRewardFloater(channel, type, html) {
-  if (!floatiesEnabled()) return;
+  if (!floatiesEnabled() || !rewardFloaterTypeEnabled(channel, type)) return;
   pendingFloaters.push({ channel, type, html });
   drainFloaters();
 }

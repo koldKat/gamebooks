@@ -65,6 +65,8 @@ The server uses Node.js and `better-sqlite3`. Browser code uses ES modules witho
 
 `server/db/connection.js` owns the shared SQLite connection. `server/db.js` initializes schema and migrations and exports the domain operations. Schema definitions and migration guards in those modules are authoritative; this guide does not duplicate every table and column.
 
+Informational source and app-size scans use persisted cached results. Scanning begins after the HTTP listener is ready, through one shared worker at nice 15, with a small heap, streamed file reads and pauses between batches. Scans run sequentially outside the request thread; requests keep receiving cached values while a refresh runs. App size is checked hourly.
+
 ### Data ownership
 
 - `books` holds shared bibliographic and reading metadata.
@@ -246,6 +248,8 @@ Desktop and mobile load simulator modules and translations lazily. Launcher regi
 The Way of the Tiger engine separates attack rolls, damage rolls, blocking, throws, and follow-up attacks. Database encounter profiles supply printed defenses, counterattacks, round limits, nonlethal outcomes, and explicit combat exceptions such as gripping opponents or untargetable counterattacks. Profiles can also declare exhaustion, protection, fixed damage, opening counterattacks, a single automatic opening shuriken, and hit, casualty or disarm objectives that return control to the reader without recording a win. A separate mirror resolver handles a duplicate's copied combat values, automatic blocks and matching attacks. Switching a round profile preserves current Endurance and pending follow-up bonuses; scripted story outcomes remain in the reader.
 
 Shared engines accept declarative rules rather than branching on book IDs. Fighting Fantasy combat accepts database-defined weapon damage, doubles, opponent traits, limited poison and item charges, active opponent limits and printed stopping thresholds. These rules affect only an entered combat encounter and its saved combat resources. Panels own DOM and lifecycle; state and combat modules receive live application context through callbacks. Pending actions must reject stale account, book, or run contexts.
+
+The Dungeons to Dominions engine resolves two-dice attack values, armor, shield hit points, missiles, escape, poison and declarative encounter effects. Combined enemy profiles remain single combatants, while sequential encounters prevent replacement opponents from gaining a free attack. Combat resources and history belong to the initiating run; the engine does not perform story actions or move the reader.
 
 The opposed-roll comic engine accepts database encounter metadata for alternating or sequential opponent groups, with separate HP and one outcome for the whole encounter. Optional incoming damage and a player-selected protection control affect combat only. Existing saved fights retain their captured rules; rendering never upgrades or resets a fight.
 

@@ -17,7 +17,9 @@ function fixture({ xp = 1890993, purchased = 24, balance = 25 } = {}) {
     CREATE TABLE xp_events (user_id INTEGER, event TEXT, ref TEXT, UNIQUE(user_id,event,ref));
     CREATE TABLE user_job_xp(user_id INTEGER PRIMARY KEY,xp INTEGER);`);
   initializeDiamondBalances(db);
-  const context = vm.createContext({ db, hasDiamondAccess, _insertNotif: db.prepare('INSERT INTO notifications (user_id,type,payload) VALUES (?,?,?)') });
+  const context = vm.createContext({ db, hasDiamondAccess,
+    require:name => { assert.equal(name, './run-allowance-refunds'); return require('../server/db/run-allowance-refunds'); },
+    _insertNotif: db.prepare('INSERT INTO notifications (user_id,type,payload) VALUES (?,?,?)') });
   const xpSource = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
   vm.runInContext(xpSource.slice(xpSource.indexOf('function computeLevel('), xpSource.indexOf('function toRoman(')), context);
   const admin = fs.readFileSync(require.resolve('../server/db/admin'), 'utf8');

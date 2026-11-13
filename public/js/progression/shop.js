@@ -13,15 +13,15 @@ export { COIN_SVG };
 let _hooks = {};
 export function setShopHooks(h) { _hooks = h || {}; }
 
-// Mirror the server cap: one purchase for levels 0-10, then one per additional 10 levels.
+// One purchase each decade from level 10 through level 100.
 function _undoFastTravelCap(level) {
-  return Math.floor((Math.max(level, 1) - 1) / 10) + 1;
+  return Math.min(10, Math.floor(Math.max(level, 0) / 10));
 }
 
-// Base free undos/fast-travels per run (mirrors play/limits.js): 3 up to lvl 30, +1 per 10 levels after, max 10.
+// Three free uses through level 39, then one more each decade through level 100.
 function _undoFtBase(level) {
   const lvl = level || 0;
-  return lvl <= 30 ? 3 : Math.min(10, 3 + Math.ceil((lvl - 30) / 10));
+  return Math.min(10, Math.max(3, Math.floor(lvl / 10)));
 }
 
 const SHOP_ITEMS = [

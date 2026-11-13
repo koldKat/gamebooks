@@ -10,6 +10,7 @@ const {
   requireLocalhost, send, readBody, addSecurityHeaders, addAdminSecurityHeaders, authenticate,
 } = require('../request-helpers');
 const { feedPush, userBadgePush, publicCatalogPush } = require('../sse');
+const { serveNotFoundPage, isDocumentNavigation } = require('../not-found');
 const { reinitTransporter, getTransporter } = require('../email');
 const {
   setMaintenanceMode, getTrafficStats, getAppBirthAt,
@@ -40,6 +41,7 @@ function serveAdminFile(req, res, filename) {
   const contentType = filename.endsWith('.js') ? 'text/javascript; charset=utf-8' : 'text/html; charset=utf-8';
   fs.readFile(filePath, (err, data) => {
     if (err) {
+      if (filename.endsWith('.html') || isDocumentNavigation(req)) return serveNotFoundPage(req, res);
       addAdminSecurityHeaders(res);
       res.writeHead(404, { 'Content-Type': 'text/plain' }); return res.end('Not found');
     }
@@ -324,8 +326,22 @@ async function handleAdminAppSize(req, res) {
   if (!requireLocalhost(req, res)) return;
   const raw      = db.getAdminSetting('size_ignore_patterns') ?? SIZE_IGNORE_DEFAULTS;
   const patterns = raw.split('\n').map(l => l.trim()).filter(Boolean);
-  const bytes    = req.method === 'POST' ? await readAppSize.refresh(patterns) : await readAppSize(patterns);
+  if (req.method === 'POST') readAppSize.refresh(patterns).catch(error => console.error('[app-size] scan failed:', error));
+  const bytes = req.method === 'POST' ? readAppSize.cached() : await readAppSize(patterns);
   send(res, 200, { bytes });
+}
+
+let appSizeScheduleStarted = false;
+function startAppSizeStats() {
+  if (appSizeScheduleStarted) return;
+  appSizeScheduleStarted = true;
+  const refresh = () => {
+    const raw = db.getAdminSetting('size_ignore_patterns') ?? SIZE_IGNORE_DEFAULTS;
+    readAppSize(raw.split('\n').map(line => line.trim()).filter(Boolean))
+      .catch(error => console.error('[app-size] scan failed:', error));
+  };
+  setTimeout(refresh, 10_000).unref();
+  setInterval(refresh, 60 * 60 * 1000).unref();
 }
 
 const BACKUP_DIR_NAME = path.basename(require('../backup').BACKUP_DIR);
@@ -568,6 +584,7 @@ async function handleAdminDeleteSeries(req, res, id) {
 }
 
 module.exports = {
+  startAppSizeStats,
   handleAdminGetTips,
   handleAdminCreateTip,
   handleAdminUpdateTip,

@@ -12,6 +12,7 @@ import { _broadcastLiveEvent } from '../core/livetab.js';
 import { _scheduleLiveUiRefresh } from '../community/notif.js';
 import { escapeHtml } from '../core/util.js';
 import { floatiesEnabled } from './floaties.js';
+import { rewardFloaterTypeEnabled } from './floater-policy.js';
 import { enqueueRewardFloater, clearRewardFloaters } from './floater-queue.js';
 import { waitForCameraIdle } from '../graph/camera-motion.js';
 import { activeSeasonalEvents } from '../seasonal-events/calendar.js';
@@ -150,12 +151,14 @@ export function _positionRewardLayer() {
 }
 
 function _spawnRewardFloater(type, html) {
-  if (!floatiesEnabled()) return;
+  if (!floatiesEnabled() || !rewardFloaterTypeEnabled('personal', type)) return;
   enqueueRewardFloater('personal', type, html);
 }
 
 function _queueRewardFloater(xpDelta = 0, coinDelta = 0, survivalDelta = 0, survivalType = 'survival') {
   if (!floatiesEnabled()) return;
+  if (!rewardFloaterTypeEnabled('personal', 'coins')) coinDelta = 0;
+  if (xpDelta <= 0 && coinDelta <= 0 && survivalDelta <= 0) return;
   if (xpDelta > 0) _rewardAccumXp += xpDelta;
   if (coinDelta > 0) _rewardAccumCoins += coinDelta;
   if (survivalDelta > 0) _rewardAccumSurvival.set(survivalType, (_rewardAccumSurvival.get(survivalType) || 0) + survivalDelta);
@@ -170,7 +173,7 @@ function _queueRewardFloater(xpDelta = 0, coinDelta = 0, survivalDelta = 0, surv
       const phrase = survivalPhrases[Math.floor(Math.random() * survivalPhrases.length)];
       _spawnRewardFloater(type, `<span>+${amount.toLocaleString()} XP for ${phrase.toLowerCase()}</span>`);
     }
-    if (coins > 0) _spawnRewardFloater('coins', `${COIN_SVG}<span>+${coins.toLocaleString()}</span>`);
+    if (coins > 0 && rewardFloaterTypeEnabled('personal', 'coins')) _spawnRewardFloater('coins', `${COIN_SVG}<span>+${coins.toLocaleString()}</span>`);
   }, 750);
 }
 
@@ -216,7 +219,8 @@ export function _processRewardSnapshot(data, opts = {}) {
   updateCoinsDisplay(coins);
   updateHeartbeatCoinsDisplay(data);
   const heartbeatGold = Number(data.heartbeatGoldEarned) || 0;
-  const silentGold = _lastHeartbeatGold === null ? 0 : Math.max(0, heartbeatGold - _lastHeartbeatGold);
+  const showCoins = rewardFloaterTypeEnabled('personal', 'coins');
+  const silentGold = !showCoins || _lastHeartbeatGold === null ? 0 : Math.max(0, heartbeatGold - _lastHeartbeatGold);
   _lastHeartbeatGold = heartbeatGold;
   const heartbeatXp = Number(data.heartbeatXpEarned) || 0;
   const heartbeatDelta = _lastHeartbeatXp === null ? 0 : Math.max(0, heartbeatXp - _lastHeartbeatXp);
@@ -225,17 +229,17 @@ export function _processRewardSnapshot(data, opts = {}) {
   const collectibleRubies = Number(data.rubiesCollectibleEarned) || 0;
   const silentRubies = _lastCollectibleRubies === null ? 0 : Math.max(0,collectibleRubies-_lastCollectibleRubies);
   _lastCollectibleRubies = collectibleRubies;
-  const rubyDelta = Number.isSafeInteger(rubiesEarned) && _lastRubiesEarned !== null
+  const rubyDelta = rewardFloaterTypeEnabled('personal', 'rubies') && Number.isSafeInteger(rubiesEarned) && _lastRubiesEarned !== null
     ? Math.max(0, rubiesEarned - _lastRubiesEarned - silentRubies) : 0;
   _lastRubiesEarned = Number.isSafeInteger(rubiesEarned) ? rubiesEarned : null;
   const diamondsEarned = data.diamondsEarned;
-  const diamondDelta = Number.isSafeInteger(diamondsEarned) && _lastDiamondsEarned !== null
+  const diamondDelta = rewardFloaterTypeEnabled('personal', 'diamonds') && Number.isSafeInteger(diamondsEarned) && _lastDiamondsEarned !== null
     ? Math.max(0, diamondsEarned - _lastDiamondsEarned) : 0;
   if (Number.isSafeInteger(diamondsEarned)) _lastDiamondsEarned = diamondsEarned;
   if (cache) saveRewardCache(data);
   const prevXp = _lastRewardXp;
   const coinsEarned = Number(data.coinsEarned);
-  const coinsGained = Number.isFinite(coinsEarned) && _lastCoinsEarned !== null
+  const coinsGained = !showCoins ? 0 : Number.isFinite(coinsEarned) && _lastCoinsEarned !== null
     ? Math.max(0,coinsEarned-_lastCoinsEarned) : Math.max(0,coins-(_lastRewardCoins??coins));
   _lastCoinsEarned = Number.isFinite(coinsEarned) ? coinsEarned : null;
   if (_lastRewardXp === null || _lastRewardCoins === null || _lastRewardLevel === null) {
@@ -258,7 +262,7 @@ export function _processRewardSnapshot(data, opts = {}) {
   if (xpDelta > 0 || coinsGained > silentGold) _queueRewardFloater(Math.max(0, xpDelta - survival), Math.max(0, coinsGained - silentGold), survival, survivalType);
   if (rubyDelta > 0) _spawnRewardFloater('rubies', `${RUBY_SVG}<span>+${rubyDelta.toLocaleString()}</span>`);
   if (diamondDelta > 0) _spawnRewardFloater('diamonds', `${DIAMOND_SVG}<span>+${diamondDelta.toLocaleString()}</span>`);
-  if (levelDelta > 0) {
+  if (levelDelta > 0 && rewardFloaterTypeEnabled('personal', 'level')) {
     for (let i = 0; i < levelDelta; i++) {
       const reachedLevel = level - levelDelta + i + 1;
       _spawnRewardFloater('level', `<span class="reward-float-kicker">LEVEL UP!</span><span>Lvl ${reachedLevel}</span>${title ? `<span class="reward-float-title">${escapeHtml(title)}</span>` : ''}`);

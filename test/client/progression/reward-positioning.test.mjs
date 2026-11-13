@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
+import {rewardFloaterTypeEnabled} from '../../../public/js/progression/floater-policy.js';
 
 test('admin floats follow cover-panel reveal and transitions without measuring during spawn',()=>{
   const events=new Map(),documentEvents=new Map(),observed=[],chips=[],variables=new Map(),timers=[];
@@ -12,7 +13,7 @@ test('admin floats follow cover-panel reveal and transitions without measuring d
     elements.set(id,{id,style:{display:id==='main-screen'?'none':''},appendChild:chip=>chips.push(chip),
       getBoundingClientRect(){assert.equal(forbidGeometry,false,'spawning must not measure layout');return id==='covers-panel'?covers:id==='feed-panel'?feed:{width:200,left:1650,right:1850};}});
   }
-  const context={Event,floatiesEnabled:()=>enabled,waitForCameraIdle:()=>false,
+  const context={rewardFloaterTypeEnabled,Event,floatiesEnabled:()=>enabled,waitForCameraIdle:()=>false,
     window:{addEventListener:(name,fn)=>{const list=events.get(name)||[];list.push(fn);events.set(name,list);},
       dispatchEvent:event=>{for(const fn of events.get(event.type)||[])fn(event);}},
     document:{body:{classList:{contains:()=>false}},documentElement:{style:{getPropertyValue:name=>variables.get(name)||'',setProperty:(name,value)=>variables.set(name,value),removeProperty:name=>variables.delete(name)}},getElementById:id=>elements.get(id),
@@ -39,7 +40,7 @@ test('admin floats follow cover-panel reveal and transitions without measuring d
   assert.equal(elements.get('app-reward-float-layer').style.left,'550px');
   forbidGeometry=true;context._spawnAppRewardFloater('xp','reward');assert.equal(chips.length,1);
   timers.shift()();
-  for(const type of ['xp','coins','rubies','diamonds','level']) {
+  for(const type of ['xp']) {
     context._spawnRewardFloater(type,'reward');
     assert.equal(elements.get('reward-float-layer').style.left,'1550px');
     assert.equal(chips.at(-1).className,`reward-float reward-float--${type}`);

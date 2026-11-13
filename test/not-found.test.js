@@ -2,8 +2,51 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { serveFile } = require('../server/file-transfer');
-const { renderNotFoundPage, serveNotFoundPage } = require('../server/not-found');
+const { renderNotFoundPage, serveNotFoundPage, isDocumentNavigation } = require('../server/not-found');
 const messages = require('../server/not-found-messages');
+
+test('direct visits to missing assets use the themed page while embedded assets and APIs do not', () => {
+  const fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+  const source = fs.readFileSync(require.resolve('../server/static'), 'utf8');
+  let options;
+  const context = vm.createContext({ROOT:path.resolve('public'), path, MIME:{'.jpg':'image/jpeg'},
+    legacyBookDownload:() => null, addSecurityHeaders() {}, getEtagCache:() => new Map(),
+    serveNotFoundPage, isDocumentNavigation, serveFile(req,res,file,input) {options=input;}});
+  vm.runInContext(source.slice(source.indexOf('function serveStatic('), source.indexOf('function serveRobots(')), context);
+  for (const [url, headers, themed] of [
+    ['/covers/missing.jpg', {'sec-fetch-dest':'document'}, true],
+    ['/covers/missing.jpg', {'sec-fetch-dest':'iframe'}, true],
+    ['/covers/missing.jpg', {'sec-fetch-dest':'frame'}, true],
+    ['/covers/missing.jpg', {accept:'text/html,application/xhtml+xml,*/*;q=0.8'}, true],
+    ['/covers/missing.jpg', {'sec-fetch-dest':'image',accept:'image/avif,image/webp,*/*'}, false],
+    ['/covers/missing.jpg', {'sec-fetch-dest':'image',accept:'text/html'}, false],
+    ['/js/missing.js', {'sec-fetch-dest':'script'}, false],
+    ['/api/missing.jpg', {'sec-fetch-dest':'document'}, false],
+  ]) {
+    context.serveStatic({url,method:'GET',headers}, {});
+    assert.equal(options.onNotFound === serveNotFoundPage, themed, url + JSON.stringify(headers));
+  }
+});
+
+test('missing admin pages and direct asset visits use the same themed 404 after access checks', () => {
+  const fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+  const source = fs.readFileSync(require.resolve('../server/routes/admin'), 'utf8');
+  let allowed=true, themed=0, plain=0;
+  const context=vm.createContext({PROJECT_ROOT:path.resolve('.'),path,
+    fs:{readFile(filename,callback) {callback(Error('ENOENT'));}},
+    requireLocalhost:() => allowed, addAdminSecurityHeaders() {}, isDocumentNavigation,
+    serveNotFoundPage() {themed++;}});
+  vm.runInContext(source.slice(source.indexOf('function serveAdminFile('),source.indexOf('function serveAdminPanel(')),context);
+  const response={writeHead(status) {assert.equal(status,404);},end(body) {assert.equal(body,'Not found');plain++;}};
+  context.serveAdminFile({headers:{}},response,'missing.html');
+  context.serveAdminFile({headers:{'sec-fetch-dest':'document'}},response,'missing.js');
+  assert.equal(themed,2);
+  context.serveAdminFile({headers:{'sec-fetch-dest':'script'}},response,'missing.js');
+  assert.equal(plain,1);
+  allowed=false;
+  context.serveAdminFile({headers:{'sec-fetch-dest':'document'}},response,'missing.html');
+  assert.equal(themed,2,'themed response must not bypass admin access control');
+});
 
 test('not-found templates contain 100 distinct, complete messages and a safe route home', () => {
   assert.equal(messages.length, 100);

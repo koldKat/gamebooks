@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
+import {rewardFloaterTypeEnabled} from '../../../public/js/progression/floater-policy.js';
 
 function fixture(mobile = true) {
   let enabled = true, idle = true, deferred, breakpoint, nextTimer = 0;
@@ -11,6 +12,7 @@ function fixture(mobile = true) {
   }]));
   const media = { matches: mobile, addEventListener(name, callback) { breakpoint = callback; } };
   const context = vm.createContext({
+    rewardFloaterTypeEnabled,
     floatiesEnabled: () => enabled,
     waitForCameraIdle(callback) { if (!idle) deferred = callback; return !idle; },
     window: { matchMedia: () => media, addEventListener: (name, callback) => events.set(name, callback) },
@@ -42,8 +44,8 @@ function fixture(mobile = true) {
 test('mobile personal and admin rewards share one origin and FIFO queue', () => {
   const f = fixture();
   for (const [channel, type, html] of [['personal', 'xp', 'own XP'], ['admin', 'xp', 'player XP'],
-    ['admin', 'coins', 'player coins'], ['personal', 'diamonds', 'own diamond']]) f.enqueue(channel, type, html);
-  for (const expected of ['own XP', 'player XP', 'player coins', 'own diamond']) {
+    ['admin', 'coins', 'player coins'], ['admin', 'diamonds', 'player diamond']]) f.enqueue(channel, type, html);
+  for (const expected of ['own XP', 'player XP', 'player coins', 'player diamond']) {
     assert.equal(f.visible().length, 1);
     assert.equal(f.visible()[0].innerHTML, expected);
     assert.equal(f.visible()[0].parent.id, 'reward-float-layer');
@@ -56,12 +58,12 @@ test('mobile personal and admin rewards share one origin and FIFO queue', () => 
 
 test('desktop retains separate concurrent personal and admin lanes', () => {
   const f = fixture(false);
-  f.enqueue('personal', 'xp', 'own'); f.enqueue('personal', 'coins', 'own coins');
+  f.enqueue('personal', 'xp', 'own'); f.enqueue('personal', 'xp', 'next own XP');
   f.enqueue('admin', 'xp', 'other');
   assert.equal(f.visible().length, 2);
   assert.deepEqual(f.visible().map(chip => chip.parent.id), ['reward-float-layer', 'app-reward-float-layer']);
   f.expire();
-  assert.deepEqual(f.visible().map(chip => chip.innerHTML), ['other', 'own coins']);
+  assert.deepEqual(f.visible().map(chip => chip.innerHTML), ['other', 'next own XP']);
 });
 
 test('disabling floaties clears active chips, queued rewards and timers', () => {
@@ -70,6 +72,17 @@ test('disabling floaties clears active chips, queued rewards and timers', () => 
   f.disable(); f.enqueue('admin', 'coins', 'disabled');
   assert.equal(f.visible().length, 0); assert.equal(f.timers.size, 0);
   assert.equal(f.chips.length, 1, 'disabled feedback creates no nodes');
+});
+
+test('personal non-XP types never reach the camera queue, DOM or timers; admin keeps them', () => {
+  const f = fixture();
+  for (const type of ['coins', 'rubies', 'diamonds', 'level']) f.enqueue('personal', type, 'hidden');
+  assert.equal(f.chips.length, 0); assert.equal(f.timers.size, 0);
+  for (const type of ['coins', 'rubies', 'diamonds', 'level']) {
+    f.enqueue('admin', type, type);
+    assert.equal(f.visible()[0].innerHTML, type);
+    f.expire();
+  }
 });
 
 test('camera motion defers chip construction for both reward sources', () => {

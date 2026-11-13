@@ -5503,6 +5503,32 @@ for(const id of BOOK_IDS){
       changeling.spec.id=257;module.render();
     }finally{Math.random=random;}
   }
+  if(id===551){
+    const field=key=>overlay.querySelector('[data-field="'+key+'"]'),action=key=>overlay.querySelector('[data-action="'+key+'"]');
+    const current=()=>app.currentPlaythrough().sim551;
+    check(requestedRosters.has(551),'Blackwood roster loaded through the actual loader');
+    check(button.querySelector('.shortcut-hint-letter')&&button.getAttribute('aria-keyshortcuts')==='S','Blackwood launcher has its S shortcut');
+    const name=()=>overlay.querySelector('.bsim-opponent-editor [role=combobox]');
+    name().value='Custom opponent';
+    for(const input of overlay.querySelectorAll('[data-stat]'))input.value=({av:0,armor:0,damage:1,hp:1})[input.dataset.stat];
+    field('hp').value=20;field('damage').value=10;action('start').click();
+    check(current().fight&&name().disabled&&field('hp').disabled,'Blackwood custom fight starts and locks setup');
+    field('playerDie1').value=6;field('playerDie2').value=6;action('melee').click();
+    check(current().fight.status==='win'&&current().history.length===1,'Blackwood custom victory recorded once');
+    const choose=section=>{const input=name();input.value='§'+section;input.dispatchEvent(new Event('input',{bubbles:true}));const option=overlay.querySelector('.bsim-opponent-editor [role=option]');check(option,'Blackwood preset '+section);option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));};
+    choose(558);field('hp').value=20;action('start').click();
+    check(current().fight.enemies.length===2&&current().fight.opponent.rules.sequential,'Blackwood woman and knight use two sequential profiles');
+    field('playerDie1').value=6;field('playerDie2').value=6;action('melee').click();
+    check(current().fight.enemies[0].hp===0&&current().fight.player.hp===20&&current().fight.status==='fighting','Blackwood next opponent gets no free counterattack');
+    field('playerDie1').value=6;field('playerDie2').value=6;action('melee').click();
+    check(current().fight.status==='win'&&current().history.length===2,'Blackwood group victory recorded only after both opponents fall');
+    choose(92);field('hp').value=20;field('armor').value=10;action('start').click();
+    field('playerDie1').value=1;field('playerDie2').value=1;field('enemyDie1').value=3;field('enemyDie2').value=3;action('melee').click();
+    check(current().fight.player.hp===19,'Blackwood telepapedes bypass armor');
+    check(overlay.querySelector('.bsim-log-danger')&&overlay.querySelector('.bsim-log-muted'),'Blackwood logs use shared semantic colors');
+    const before=JSON.stringify(current());module.render();module.render();
+    check(JSON.stringify(current())===before,'Blackwood render preserves ongoing combat');
+  }
   if(id===550){
     const core=await import('REPO/public/js/battlesim/engines/urowen/core.js');
     const state=await import('REPO/public/js/battlesim/engines/urowen/state.js');
@@ -7926,6 +7952,7 @@ for(const id of BOOK_IDS){
   else{await desktop.showBattleSimForBook(id);button.click();}
   check(overlay.classList.contains('active'),'saved simulator reopens '+id);
   check(JSON.stringify(app.currentPlaythrough())===before,'save/load restoration preserves fight and history '+id);
+  if(id===551)check(!left.querySelector('.bsim-report'),'Blackwood report stays in the report column after reopening');
   module.setVisible(false);overlay.classList.remove('active');
   results.push(id);
 }

@@ -2,7 +2,6 @@
 
 // Shared process-lifetime metrics and maintenance state exposed through accessors.
 
-const fs = require('fs');
 const os = require('os');
 const db = require('./db');
 
@@ -249,52 +248,22 @@ process.on('SIGTERM', _shutdown);
 
 const APP_LAUNCH_EPOCH = Math.floor(new Date('2026-03-26T00:40:05Z').getTime() / 1000);
 
-let _codeStats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
-(function computeCodeStats() {
-  function walkJsFiles(dir) {
-    let out = [];
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const p = `${dir}/${entry.name}`;
-      if (entry.isDirectory()) {
-        if (!['test', 'tests', '__tests__'].includes(entry.name)) out = out.concat(walkJsFiles(p));
-      } else if (/\.(?:m?js)$/.test(entry.name) && !/\.(?:test|spec)\.(?:m?js)$/.test(entry.name)) out.push(p);
-    }
-    return out;
-  }
-  try {
-    const serverJsFiles = walkJsFiles('server');
-    const publicJsFiles = walkJsFiles('public/js');
-    const adminJsFiles  = walkJsFiles('admin/js');
-    // Isolate optional mobile-tree scans from other code statistics.
-    let mobileJsFiles = [];
-    let mobileCssFiles = [];
-    try {
-      mobileJsFiles  = walkJsFiles('public/mobile/js');
-      mobileCssFiles = fs.readdirSync('public/mobile/css').filter(f => f.endsWith('.css')).map(f => `public/mobile/css/${f}`);
-    } catch (_) {}
-    const files = [
-      'server.js',
-      ...serverJsFiles,
-      ...publicJsFiles,
-      ...adminJsFiles,
-      ...mobileJsFiles,
-      ...fs.readdirSync('public/css').filter(f => f.endsWith('.css')).map(f => `public/css/${f}`),
-      ...mobileCssFiles,
-      'public/index.html',
-      'public/mobile/index.html',
-      ...fs.readdirSync('admin').filter(f => f.endsWith('.html') && !['admin-guide.html', 'technical.html'].includes(f)).map(f => `admin/${f}`),
-    ];
-    let lines = 0, bytes = 0;
-    for (const f of files) {
-      try { const c = fs.readFileSync(f, 'utf8'); lines += c.split('\n').length; bytes += Buffer.byteLength(c, 'utf8'); } catch (_) {}
-    }
-    _codeStats.linesOfCode = lines;
-    _codeStats.codeBytes   = bytes;
-    _codeStats.jsModules   = 1 + serverJsFiles.length + publicJsFiles.length + adminJsFiles.length + mobileJsFiles.length;
-  } catch (_) {}
-})();
-
-function getCodeStats() { return _codeStats; }
+const _codeStats = require('./code-stats').createCodeStats({
+  root: require('path').join(__dirname, '..'),
+  loadCached: () => db.getAdminSetting('code_stats_cache'),
+  saveCached: value => db.setAdminSetting('code_stats_cache', value),
+});
+function getCodeStats() { return _codeStats.get(); }
+let _statsRefreshScheduled = false;
+function startInformationalStats() {
+  if (_statsRefreshScheduled) return;
+  _statsRefreshScheduled = true;
+  // Called only once the listener is ready. Keep optional scans off startup.
+  setTimeout(() => {
+    require('./background-stats').start();
+    _codeStats.refresh().catch(err => console.error('[runtime-state] code statistics failed:', err));
+  }, 5_000).unref();
+}
 
 // CPU release dates require a manual host-specific lookup.
 const CPU_RELEASE_DATES = {
@@ -361,6 +330,6 @@ module.exports = {
   recordTraffic, flushTraffic, getTrafficStats, getEtagCache,
   sampleCpuPercent, getResourceAverages,
   getUptimeStart, getSessionStartAt, getAppBirthAt, getActiveTagline,
-  APP_LAUNCH_EPOCH, getCodeStats, _serverHardwareInfo,
+  APP_LAUNCH_EPOCH, getCodeStats, startInformationalStats, _serverHardwareInfo,
   MIME,
 };

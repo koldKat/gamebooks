@@ -6,6 +6,7 @@ const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
 const { createDirectorySizeReader } = require('../server/directory-size');
+require('../server/background-stats').start();
 
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'directory-size-'));
@@ -34,13 +35,14 @@ test('reads reuse an hourly result and persist its timestamp across restarts', a
   const options = { loadCached: () => saved, loadCheckedAt: () => checkedAt, now: () => now,
     saveCached: (bytes, at) => { saved = String(bytes); checkedAt = at; } };
   const read = createDirectorySizeReader(root, options);
-  assert.equal(await read([]), 3);
+  assert.equal(await read.refresh([]), 3);
   await fs.writeFile(file, '123456');
   now += 3599999;
   assert.equal(await read([]), 3);
   assert.equal(await createDirectorySizeReader(root, options)([]), 3);
   now++;
-  assert.equal(await read([]), 6);
+  assert.equal(await read([]), 3);
+  assert.equal(await read.refresh([]), 6);
   assert.equal(await createDirectorySizeReader(root, options)([]), 6);
   assert.equal(checkedAt, now);
   assert.equal(saved, '6');
@@ -57,7 +59,7 @@ test('simultaneous expired admin reads share one scan', async t => {
     await gate;
     return 3;
   } });
-  const first = read([]), second = read([]), third = read([]);
+  const first = read.refresh([]), second = read.refresh([]), third = read.refresh([]);
   assert.equal(scans, 1);
   release();
   assert.deepEqual(await Promise.all([first, second, third]), [3, 3, 3]);
@@ -72,6 +74,18 @@ test('file scans yield so other server work can run', async t => {
   try { assert.equal(await createDirectorySizeReader(root).refresh([]), 100); }
   finally { clearInterval(timer); }
   assert.ok(ticks > 0);
+});
+
+test('uncached and expired reads return immediately while a single slow scan runs', async () => {
+  let release, scans = 0;
+  const gate = new Promise(resolve => { release = resolve; });
+  const read = createDirectorySizeReader('unused', { scan: async () => { scans++; await gate; return 42; } });
+  assert.equal(await read([]), null);
+  assert.equal(await read([]), null);
+  assert.equal(scans, 1);
+  release();
+  await read.refresh([]);
+  assert.equal(await read([]), 42);
 });
 
 test('failed scans preserve the saved value and allow a manual retry', async () => {

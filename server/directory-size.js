@@ -1,17 +1,9 @@
 'use strict';
 
-const path = require('node:path');
-const { Worker } = require('node:worker_threads');
+const backgroundStats = require('./background-stats');
 
 function scanDirectory(root, patterns) {
-  return new Promise((resolve, reject) => {
-    const worker = new Worker(path.join(__dirname, 'directory-size-worker.js'), {
-      workerData: { root, patterns }, resourceLimits: { maxOldGenerationSizeMb: 64 },
-    });
-    worker.once('message', resolve);
-    worker.once('error', reject);
-    worker.once('exit', code => { if (code !== 0) reject(new Error('Directory scan exited: ' + code)); });
-  });
+  return backgroundStats.scan({ kind: 'size', root, patterns });
 }
 
 function createDirectorySizeReader(root, { scan = scanDirectory, loadCached = () => null, loadCheckedAt = () => 0,
@@ -25,7 +17,9 @@ function createDirectorySizeReader(root, { scan = scanDirectory, loadCached = ()
   async function read(patterns) {
     const age = now() - checkedAt;
     if (cached !== null && age >= 0 && age < ttlMs) return cached;
-    return read.refresh(patterns);
+    // Stale information is preferable to making an admin request wait for disk I/O.
+    read.refresh(patterns).catch(error => console.error('[app-size] scan failed:', error));
+    return cached;
   }
 
   read.refresh = async function (patterns) {
@@ -43,6 +37,7 @@ function createDirectorySizeReader(root, { scan = scanDirectory, loadCached = ()
     finally { pending = null; }
   };
 
+  read.cached = () => cached;
   return read;
 }
 

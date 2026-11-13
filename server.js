@@ -61,7 +61,7 @@ const {
   recordTraffic, flushTraffic, getTrafficStats, getEtagCache,
   sampleCpuPercent, getResourceAverages,
   getUptimeStart, getSessionStartAt, getAppBirthAt, getActiveTagline,
-  APP_LAUNCH_EPOCH, getCodeStats, _serverHardwareInfo,
+  APP_LAUNCH_EPOCH, getCodeStats, startInformationalStats, _serverHardwareInfo,
   MIME,
 } = require('./server/runtime-state');
 
@@ -155,7 +155,7 @@ const {
 } = require('./server/routes/profile');
 
 const {
-  handleAdminStats,
+  handleAdminStats, startAppSizeStats,
   handleAdminSeasonPayouts,
   handleAdminGetUser,
   handleAdminGetBookStats,
@@ -679,4 +679,6 @@ const httpServer = http.createServer(handler);
 attachClientErrorHandler(httpServer);
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`Gamebook Tracker running on port ${PORT}`);
+  startInformationalStats();
+  startAppSizeStats();
 });

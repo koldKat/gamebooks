@@ -327,8 +327,8 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
 }
 
 // Match desktop's level-based limits without importing its UI dependencies.
-function _maxUndos()       { const lvl = currentUserLevel || 0; return (lvl <= 30 ? 3 : Math.min(10, 3 + Math.ceil((lvl - 30) / 10))) + (bonusUndos || 0); }
-function _maxFastTravels() { const lvl = currentUserLevel || 0; return (lvl <= 30 ? 3 : Math.min(10, 3 + Math.ceil((lvl - 30) / 10))) + (bonusFastTravels || 0); }
+function _maxUndos()       { const lvl = currentUserLevel || 0; return Math.min(10, Math.max(3, Math.floor(lvl / 10))) + Math.min(10, bonusUndos || 0); }
+function _maxFastTravels() { const lvl = currentUserLevel || 0; return Math.min(10, Math.max(3, Math.floor(lvl / 10))) + Math.min(10, bonusFastTravels || 0); }
 
 // Keeps the two run-control buttons' label/disabled state in sync with the
 // live playthrough - called after every render, undo, and fast travel.
@@ -337,8 +337,8 @@ function _updateRunControls() {
   const ftBtn   = document.getElementById('m-fasttravel-btn');
   if (!undoBtn || !ftBtn) return;
   const pt = currentPlaythrough();
-  const undosLeft = _maxUndos() - (pt?.undosUsed || 0);
-  const ftLeft     = _maxFastTravels() - (pt?.fastTravelsUsed || 0);
+  const undosLeft = Math.max(0, _maxUndos() - (pt?.undosUsed || 0));
+  const ftLeft     = Math.max(0, _maxFastTravels() - (pt?.fastTravelsUsed || 0));
   undoBtn.textContent = t('runs.undo', { n: undosLeft });
   undoBtn.disabled = !pt || undosLeft <= 0 || pt.path.length <= 1;
   ftBtn.textContent = t('runs.fasttravel', { n: ftLeft });

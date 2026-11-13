@@ -17,8 +17,7 @@
 
 @media (max-width: 768px) {
   #reward-float-layer,
-  #app-reward-float-layer,
-  .collectibles-reward-layer {
+  #app-reward-float-layer {
     left: max(0.75rem, env(safe-area-inset-left)) !important;
     right: var(--mobile-reward-right, max(0.75rem, env(safe-area-inset-right))) !important;
     width: auto !important;
@@ -26,11 +25,9 @@
     align-items: center !important;
   }
   #reward-float-layer,
-  #app-reward-float-layer,
-  .collectibles-reward-layer { bottom: max(1rem, env(safe-area-inset-bottom)) !important; }
+  #app-reward-float-layer { bottom: max(1rem, env(safe-area-inset-bottom)) !important; }
   #reward-float-layer > *,
-  #app-reward-float-layer > *,
-  .collectibles-reward-layer > * {
+  #app-reward-float-layer > * {
     max-width: 100%;
     box-sizing: border-box;
     white-space: normal;

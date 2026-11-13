@@ -43,8 +43,8 @@ function servePublicCataloguePage(req, res) {
   const html = renderCatalogue(items, {type, page: Number(pageText)});
   if (!html) return serveNotFoundPage(req, res);
   addSecurityHeaders(res);
-  res.writeHead(html ? 200 : 404, {'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300'});
-  res.end(html || 'Not found');
+  res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'public, max-age=300'});
+  res.end(html);
 }
 
 function servePublicContentPage(req, res, meta, kind) {

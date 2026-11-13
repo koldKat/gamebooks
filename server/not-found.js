@@ -1,8 +1,14 @@
 'use strict';
 
-// Friendly HTML for missing navigable pages; APIs and missing assets stay machine-readable.
+// Friendly HTML for missing browser destinations; APIs and embedded assets keep their failure responses.
 const messages = require('./not-found-messages');
 const { escapeHtml } = require('./html-escape');
+
+function isDocumentNavigation(req) {
+  const headers = req.headers || {}, destination = headers['sec-fetch-dest'];
+  return ['document', 'iframe', 'frame'].includes(destination)
+    || !destination && /\btext\/html\b/i.test(headers.accept || '');
+}
 
 function renderNotFoundPage(message = messages[Math.floor(Math.random() * messages.length)]) {
   return `<!doctype html>
@@ -27,4 +33,4 @@ function serveNotFoundPage(req, res, getMessage = () => require('./db').getRando
   res.end(req.method === 'HEAD' ? undefined : renderNotFoundPage(getMessage()));
 }
 
-module.exports = { renderNotFoundPage, serveNotFoundPage };
+module.exports = { renderNotFoundPage, serveNotFoundPage, isDocumentNavigation };

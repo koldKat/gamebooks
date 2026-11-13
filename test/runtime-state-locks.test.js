@@ -39,15 +39,17 @@ function loadRuntime(t) {
     purgeOldNotifications() {},
     purgeOldHeartbeats() {},
     walCheckpoint() {},
+    settleSeasonParticipation: () => ({ userIds: [] }),
   };
   const context = vm.createContext({
     module: { exports: {} },
-    require: name => name === './db' ? db : name === 'fs' ? { readdirSync: () => [] } : require(name),
+    require: name => name === './db' ? db : name === './code-stats' ? require('../server/code-stats') : require(name),
+    __dirname: path.dirname(require.resolve('../server/runtime-state')),
     console: { error: (...args) => errors.push(args) },
     Date: Clock,
     Buffer,
-    setInterval: (fn, ms) => intervals.set(ms, fn),
-    setTimeout: (fn, ms) => timeouts.push({ fn, ms }),
+    setInterval: (fn, ms) => { intervals.set(ms, fn); return { unref() {} }; },
+    setTimeout: (fn, ms) => { timeouts.push({ fn, ms }); return { unref() {} }; },
     process: {
       cpuUsage: () => ({ user: 0, system: 0 }),
       memoryUsage: () => ({ heapUsed: 0, heapTotal: 0, rss: 0 }),
