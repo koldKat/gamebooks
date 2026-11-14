@@ -18,7 +18,14 @@ function _canLiveRead(_userId) {
 // Read shared imported prose, not per-player graphs; missing sections return null.
 function getBookSection(bookId, sectionId) {
   const row = db.prepare('SELECT html, choices FROM book_sections WHERE book_id = ? AND section_id = ?').get(bookId, String(sectionId));
-  if (!row) return null;
+  if (!row) {
+    // Printed setup passages can return to the rules without adding a graph section.
+    if (String(sectionId) === 'rules') {
+      const matter = db.prepare('SELECT rules_text FROM book_frontmatter WHERE book_id = ?').get(bookId);
+      if (matter?.rules_text) return { html: matter.rules_text, choices: [] };
+    }
+    return null;
+  }
   let choices = [];
   try { choices = JSON.parse(row.choices); } catch {}
   return { html: row.html, choices };

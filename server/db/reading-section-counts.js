@@ -1,7 +1,7 @@
 'use strict';
 
 // Keep importer-created prose and read-only reference copies outside gamebook totals.
-const supplementalSection = /^(?:(?:intro(?:duction)?|prolog(?:ue)?|epilog(?:ue)?|opening)(?:[-_].+)?|sleep|bonanza|original-maps|reference-[1-9]\d*)$/i;
+const supplementalSection = /^(?:(?:intro(?:duction)?|prolog(?:ue)?|epilog(?:ue)?|opening)(?:[-_].+)?|sleep|bonanza|original-maps|k-map|reference-[1-9]\d*)$/i;
 const isSupplementalSection = id => supplementalSection.test(String(id));
 // An ending marker can be recorded as a hint before its section is explored.
 const isMappedGraphNode = node => !!node && (!node.discovered
@@ -10,7 +10,7 @@ const isMappedGraphNode = node => !!node && (!node.discovered
 const names = ['intro', 'introduction', 'prolog', 'prologue', 'epilog', 'epilogue', 'opening'];
 const supplementalSectionSql = column => '(' + names.map(name =>
   `(lower(${column})='${name}' OR lower(${column}) GLOB '${name}[-_]*')`).concat(
-    `lower(${column}) IN ('sleep','bonanza','original-maps')`,
+    `lower(${column}) IN ('sleep','bonanza','original-maps','k-map')`,
     `(lower(${column}) GLOB 'reference-[1-9]*' AND substr(${column},11) NOT GLOB '*[^0-9]*')`
   ).join(' OR ') + ')';
 

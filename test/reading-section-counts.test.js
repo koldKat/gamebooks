@@ -10,9 +10,9 @@ test('supplemental prose is excluded consistently while actual numbered and lett
   db.exec('CREATE TABLE book_sections(book_id,section_id)');
   const ignored = ['intro','Intro','introduction','prolog','prologue','opening','opening-prologue',
     'epilog','epilogue','epilog-won','epilogue-loss','sleep','Sleep','bonanza','Bonanza',
-    'original-maps','Original-Maps','reference-43','Reference-101'];
+    'original-maps','Original-Maps','K-map','k-MAP','reference-43','Reference-101'];
   const counted = ['1','313','1A','А1','101-A','introspection','epilogue2','loc1','map7','sleeper','sleep-1','bonanza-1',
-    'reference','reference1','reference-1A','reference-0','original-map'];
+    'reference','reference1','reference-1A','reference-0','original-map','K1','K42','K81'];
   const add = db.prepare('INSERT INTO book_sections VALUES(1,?)');
   for (const id of [...ignored,...counted]) add.run(id);
   for (const id of ignored) assert.equal(isSupplementalSection(id),true,id);
@@ -27,4 +27,17 @@ test('read-only copies and original maps cannot block completion of all actual s
   const canonical = rows.filter(id => !isSupplementalSection(id));
   assert.equal(hasFullBookCoverage({total_sections:3}, new Set(['1','2','3']), canonical), true);
   assert.equal(hasFullBookCoverage({total_sections:3}, new Set(['1','2']), canonical), false);
+});
+
+test('the map picker is optional for completion while all printed K sectors remain required', () => {
+  const printed = [
+    ...Array.from({length:289}, (_, i) => String(i + 1)),
+    ...Array.from({length:81}, (_, i) => `K${i + 1}`),
+  ];
+  const canonical = [...printed, 'K-map'].filter(id => !isSupplementalSection(id));
+  assert.equal(canonical.length, 370);
+  assert.equal(hasFullBookCoverage({total_sections:370}, new Set(printed), canonical), true);
+  const missingSector = new Set(printed.filter(id => id !== 'K81'));
+  missingSector.add('K-map');
+  assert.equal(hasFullBookCoverage({total_sections:370}, missingSector, canonical), false);
 });
