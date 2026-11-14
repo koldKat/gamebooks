@@ -83,6 +83,98 @@ for(const id of BOOK_IDS){
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
   }
+  if (id === 732 && !PRESENTATION_ONLY) {
+    const run = app.currentPlaythrough();
+    const field = key => overlay.querySelector('[data-field="' + key + '"]');
+    const action = key => overlay.querySelector('[data-action="' + key + '"]');
+    const choose = text => {
+      const input = overlay.querySelector('input[role="combobox"]');
+      input.value = ''; input.dispatchEvent(new FocusEvent('focus'));
+      const options = [...input.parentElement.querySelectorAll('[role="option"]')];
+      check(options.length === 8, 'Viking invasion loads eight installed duel presets');
+      const option = options.find(option => option.textContent.includes(text));
+      check(option, 'Viking invasion preset ' + text);
+      option.dispatchEvent(new PointerEvent('pointerdown', {bubbles:true}));
+      const method = field('method');
+      check(method.parentElement.querySelector('.themed-select-value').textContent === method.selectedOptions[0].textContent,
+        'Viking invasion preset updates visible method label');
+    };
+    const roll = (values = [0.5, 0.5]) => {
+      const random = Math.random; let index = 0;
+      try {Math.random = () => values[index++]; action('roll').click();} finally {Math.random = random;}
+    };
+    choose('Маската'); check(!run.sim732, 'Viking invasion preset inspection creates no fight');
+    field('strength').value = 4; field('energy').value = 3; action('start').click(); roll();
+    check(run.sim732.fight.status === 'win' && run.sim732.player.energy === 1,
+      'Viking invasion poorer Mask total is an injured victory');
+    check(run.sim732.history.length === 1, 'Viking invasion records one outcome');
+    choose('Ролан'); field('strength').value = 8; field('energy').value = 4;
+    check(field('strengthFactor').value === '4' && field('energyFactor').value === '2', 'Viking invasion Roland formula selected');
+    action('start').click(); roll([0.4, 0.4]);
+    check(run.sim732.fight.events.at(-1).playerTotal === 43 && run.sim732.fight.events.at(-1).enemyTotal === 37,
+      'Viking invasion printed Roland example');
+    check(run.sim732.player.strength === 8, 'Viking invasion leaves campaign Strength rewards in reader');
+    choose('Рагнар (слаб)'); field('strength').value = 13; field('energy').value = 7;
+    field('method').value = 'quick'; field('method').dispatchEvent(new Event('change', {bubbles:true}));
+    action('start').click(); roll([0, 0.99]);
+    check(run.sim732.fight.pending?.length === 2 && run.sim732.history.length === 2,
+      'Viking invasion ambiguous printed result waits without reward');
+    overlay.querySelector('[data-action="choose"][data-section="331"]').click();
+    check(run.sim732.fight.status === 'win' && run.sim732.player.energy === 5 && run.sim732.history.length === 3,
+      'Viking invasion explicit wounded outcome');
+    choose('Рагнар (слаб)'); field('strength').value = 13; field('energy').value = 7;
+    action('start').click(); roll([0, 0.99]);
+    overlay.querySelector('[data-action="choose"][data-section="317"]').click();
+    check(run.sim732.fight.dead && run.sim732.history.length === 4, 'Viking invasion explicit fatal outcome');
+    check(run.path.length === 1, 'Viking invasion never changes story progress');
+    const saved = JSON.stringify(run.sim732); module.render();
+    check(JSON.stringify(run.sim732) === saved, 'Viking invasion render preserves history and fight');
+    field('method').value = 'opposed'; field('method').dispatchEvent(new Event('change', {bubbles:true}));
+    overlay.querySelector('input[role="combobox"]').value = 'Пробен противник';
+    field('strength').value = 5; field('energy').value = 5; action('start').click();
+    check(run.sim732.fight.encounter.key === '' && run.sim732.fight.opponent.name === 'Пробен противник',
+      'Viking invasion ordinary custom fight works without preset');
+    const stale = action('roll'), original = run.sim732;
+    app.state.playthroughs = [{startedAt:2,path:[1]}]; stale.click();
+    check(!app.currentPlaythrough().sim732 && run.sim732 === original, 'Viking invasion stale round cannot write another run');
+    module.render();
+  }
+  if (id === 731 && !PRESENTATION_ONLY) {
+    const run = app.currentPlaythrough();
+    const field = key => overlay.querySelector('[data-field="' + key + '"]');
+    const action = key => overlay.querySelector('[data-action="' + key + '"]');
+    const opponent = key => overlay.querySelector('[data-stat="' + key + '"]');
+    const name = overlay.querySelector('input[role="combobox"]');
+    name.value = ''; name.dispatchEvent(new FocusEvent('focus'));
+    const options = [...name.parentElement.querySelectorAll('[role="option"]')];
+    check(options.length === 4, 'Viking duel loads four installed opponent presets');
+    options.find(option => option.textContent.includes('среден')).dispatchEvent(new PointerEvent('pointerdown', {bubbles:true}));
+    check(opponent('strength').value === '11' && opponent('energy').value === '5', 'Viking duel preset fills printed stats');
+    check(!run.sim731, 'Viking duel inspection creates no saved fight');
+    field('strength').value = 11; field('energy').value = 5; field('method').value = 'quick';
+    field('method').dispatchEvent(new Event('change', {bubbles:true}));
+    action('start').click();
+    check(field('strength').disabled && opponent('energy').disabled, 'Viking duel locks setup during combat');
+    const random = Math.random;
+    try {Math.random = () => 0.5; action('roll').click();} finally {Math.random = random;}
+    check(run.sim731.fight.rescued && !run.sim731.fight.dead && run.sim731.player.energy === 4,
+      'Viking tied quick duel records rescue and one lost Energy');
+    check(run.sim731.history.length === 1 && run.sim731.history[0].outcome === 'loss', 'Viking rescue records one loss');
+    check(run.path.length === 1, 'Viking duel never advances story progress');
+    const saved = JSON.stringify(run.sim731); module.render();
+    check(JSON.stringify(run.sim731) === saved, 'Viking render preserves completed fight and history');
+    field('method').value = 'extended'; field('method').dispatchEvent(new Event('change', {bubbles:true}));
+    action('start').click();
+    const stale = action('roll'), old = run.sim731;
+    app.state.playthroughs = [{startedAt:2,path:[1]}];
+    stale.click();
+    check(!app.currentPlaythrough().sim731 && run.sim731 === old, 'Viking stale action cannot write to another run');
+    module.render();
+    field('strength').value = 10; field('energy').value = 5;
+    overlay.querySelector('input[role="combobox"]').value = 'Пробен противник'; opponent('strength').value = 10; opponent('energy').value = 5;
+    action('start').click();
+    check(app.currentPlaythrough().sim731.fight.opponent.name === 'Пробен противник', 'Viking custom duel works without preset');
+  }
   if (AUDIT_LEGACY_ROSTERS && rosterSeeds[id]?.length && ([186,200,201,205].includes(id) || !rosterSeeds[id].some(row => row.stats?.roster))) {
     const inputs = [...overlay.querySelectorAll('input[role="combobox"]')];
     check(inputs.length, 'legacy roster has editable autocomplete ' + id);
@@ -1835,8 +1927,10 @@ for(const id of BOOK_IDS){
   if(id===739||id===740){
     const el=key=>document.getElementById('sim'+id+'-'+key),state=()=>app.currentPlaythrough()['sim'+id],name=el('enemy-pick');
     for(const row of rosterSeeds[id]){
-      name.value=row.name;name.dispatchEvent(new FocusEvent('focus'));name.dispatchEvent(new Event('input',{bubbles:true}));await Promise.resolve();
-      const option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(option=>option.textContent.startsWith(row.name+'Умение:'));
+      name.value=row.name;name.dispatchEvent(new FocusEvent('focus'));name.dispatchEvent(new Event('input',{bubbles:true}));
+      const findOption=()=>[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(option=>option.textContent.startsWith(row.name+'Умение:'));
+      for(let attempt=0;attempt<20&&!findOption();attempt++)await new Promise(resolve=>setTimeout(resolve,10));
+      const option=findOption();
       check(option,'Sword Masters installed profile '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
       check(state().enemy.name===row.name&&state().enemy.life===row.hp&&state().player.skillDelta===row.attack,'Sword Masters original life and signed skill delta '+row.name);
     }
@@ -1855,8 +1949,9 @@ for(const id of BOOK_IDS){
     const el=key=>document.getElementById('sim734-'+key),state=()=>app.currentPlaythrough().sim734,name=el('enemy-pick');
     for(const row of rosterSeeds[id]){
       name.value=row.name;name.dispatchEvent(new FocusEvent('focus'));name.dispatchEvent(new Event('input',{bubbles:true}));
-      await Promise.resolve();
-      const option=[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(option=>option.textContent.startsWith(row.name+'Умение:'));
+      const findOption=()=>[...el('enemy-pick-dropdown').querySelectorAll('[role="option"]')].find(option=>option.textContent.startsWith(row.name+'Умение:'));
+      for(let attempt=0;attempt<20&&!findOption();attempt++)await new Promise(resolve=>setTimeout(resolve,10));
+      const option=findOption();
       check(option,'Robot Commando installed profile '+row.name);option.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
       check(state().enemy.name===row.name&&state().enemy.skill===row.attack&&state().enemy.life===row.hp&&state().enemy.speed===row.defense,'Robot Commando original stats and speed '+row.name);
     }

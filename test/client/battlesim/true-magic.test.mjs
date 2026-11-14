@@ -126,6 +126,14 @@ test('757: backend registers combat wins and losses once, not draws', () => {
     if(name==='./diamonds')return{diamondInfoForUser:()=>({})};
     if(name==='./rubies')return{rubyInfoForUser:()=>({}),createRubyCompletionChecker:()=>()=>0};
     if(name==='./heartbeat-coins')return{advanceHeartbeatCoins:()=>0};
+    if(name==='./job-xp')return{getJobTitle:()=>''};
+    if(name==='../seasonal-events')return{seasonalXpMultiplier:()=>1};
+    if(name==='../seasonal-party-context')return{withPartyXpContext:(_db,_user,_book,callback)=>callback()};
+    if(name==='./season-participation')return{recordSeasonParticipation(){}};
+    if(name==='./seasonal-contributions')return{seasonalContributionEligible:()=>false};
+    if(name==='./reading-section-counts')return{
+      uncountedReadingSections:()=>new Set(), supplementalSectionSql:()=> '0', isMappedGraphNode:()=>false,
+    };
     if(name==='./auth')return{generateToken:()=> 'test-only'};
     if(name==='../impersonation-context')return{isImpersonatingContext:()=>false};
     if(name==='../clean-run')return{isCleanRun:()=>false};

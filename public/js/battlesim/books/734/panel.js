@@ -186,7 +186,7 @@ function _setupEnemyAutocomplete(inputId, dropdownId, onSelect) {
     matches = ql ? list.filter(e => e.name.toLowerCase().includes(ql)) : list;
     if (!matches.length) { closeDropdown(); return; }
     dropdown.innerHTML = matches.map((e, i) =>
-      `<li role="option" id="${dropdownId}-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">УМЕНИЕ:${e.attack ?? '?'} ТОЧКИ:${e.hp ?? '?'}</span></li>`
+      `<li role="option" id="${dropdownId}-opt-${i}" data-idx="${i}">${escapeHtml(e.name)}<span class="ac-sub">Умение:${e.attack ?? '?'} Точки:${e.hp ?? '?'}</span></li>`
     ).join('');
     activeIdx = -1;
     dropdown.classList.add('open');

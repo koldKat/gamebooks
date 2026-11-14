@@ -16,7 +16,7 @@ const ID = definition.stateKey;
 const SCORES = ['skill', 'stamina', 'luck', 'armour'];
 const ITEMS = ['pills', 'grenades', 'gravityBombs', 'nerveGas', 'energyBars'];
 const FIELDS = [...SCORES, ...SCORES.map(key => key + 'Initial'), ...ITEMS];
-const MAP = '/api/books/735/reading-images/99420122193e40f20e756d63c4b07736be49fcd3b0ff7708d3cc631f1ff4fd85.png';
+const MAP = '/api/books/735/reading-images/6a8f090659f2d179e140dfd1e541c627cc518463cc2aeb33e9a74cbd7d874839.webp';
 const escape = value => String(value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const active = battle => Boolean(battle && !battle.outcome);
 

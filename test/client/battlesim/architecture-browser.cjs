@@ -21,7 +21,7 @@ if(scenario&&!/^[a-z-]+$/.test(scenario))throw Error('Invalid simulator scenario
     const rosterSeeds=installedRosters;
     const fixture=fs.readFileSync(__dirname+'/'+(scenario?scenario+'-integration':'architecture-browser')+'.fixture','utf8').replaceAll('REPO','file://'+repo).replaceAll('MODE',mode).replaceAll('LANGUAGE',language).replaceAll('PRESENTATION_ONLY',String(process.env.SIMULATOR_PRESENTATION_ONLY === '1')).replaceAll('AUDIT_LEGACY_ROSTERS', String(process.env.SIMULATOR_LIVE_ROSTERS === '1')).replace('BOOK_IDS',JSON.stringify(ids)).replace('ROSTER_SEEDS',JSON.stringify(rosterSeeds));
     const css=['base/app','components/charsheet','components/equipment','components/battlesim','components/confirm'].map(n=>`<link rel="stylesheet" href="file://${repo}/public/css/${n}.css">`).join('')
-      + `<link rel="stylesheet" href="file://${repo}/public/${mode === 'mobile' ? 'mobile/css/style' : 'css/play'}.css">`;
+      + `<link rel="stylesheet" href="file://${repo}/public/css/${mode === 'mobile' ? 'mobile/app' : 'layouts/play'}.css">`;
     const file=path.join(scratch,mode+'.html');
     fs.writeFileSync(file,`<!doctype html><meta charset="utf-8">${css}<div id="${mode === 'mobile' ? 'm-sim-btn-row' : 'main-screen'}"></div><div id="inv-overlay"></div><script>addEventListener('error',e=>document.body.dataset.failure=e.error?.stack||e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=e.reason?.stack||String(e.reason));</script><script type="module">${fixture}</script>`);
     for(const width of process.env.SIMULATOR_WIDTH ? [Number(process.env.SIMULATOR_WIDTH)] : [320,390,1100]){

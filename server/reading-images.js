@@ -14,6 +14,19 @@ function setReadingImageCookie(req, res) {
   res.setHeader('Set-Cookie', `reading_image_session=${encodeURIComponent(tokenFromReq(req))}; Path=/api/books/; HttpOnly; SameSite=Strict${secure ? '; Secure' : ''}`);
 }
 
+function resolveReadingImageAlias(html, bookId, filename) {
+  const prefix = `/api/books/${bookId}/reading-images/`;
+  for (const [image] of String(html || '').matchAll(/<img\b[^>]*>/gi)) {
+    const alias = /\sdata-reading-image-alias=["']([^"']+)["']/i.exec(image);
+    if (alias?.[1] !== prefix + filename) continue;
+    const source = /\ssrc=["']([^"']+)["']/i.exec(image)?.[1];
+    if (!source?.startsWith(prefix)) return null;
+    const target = source.slice(prefix.length);
+    return FILE_PATTERN.test(target) && target !== filename ? target : null;
+  }
+  return null;
+}
+
 async function handleReadingImage(req, res, bookId, filename) {
   if (!Number.isSafeInteger(bookId) || bookId <= 0 || !FILE_PATTERN.test(filename)) return send(res, 404, { error: 'not found' });
   const authenticatedRequest = Object.create(req);
@@ -41,18 +54,28 @@ async function handleReadingImage(req, res, bookId, filename) {
   if (!inMatter && !db.prepare('SELECT 1 FROM book_sections WHERE book_id = ? AND instr(html, ?) > 0 LIMIT 1').get(bookId, source)) {
     return send(res, 404, { error: 'not found' });
   }
-  let data;
+  let data, resolvedFilename = filename;
   try {
     try { data = await fs.promises.readFile(path.join(DIRECTORY, String(bookId), filename)); }
     catch (error) {
       // Legacy fallback permits a staged migration without changing protected URLs.
       if (error.code !== 'ENOENT') throw error;
-      data = await fs.promises.readFile(path.join(DIRECTORY, filename));
+      const document = db.prepare(`SELECT COALESCE(intro_text, '') || COALESCE(rules_text, '') AS html
+        FROM book_frontmatter WHERE book_id = ? AND (instr(intro_text, ?) > 0 OR instr(rules_text, ?) > 0)
+        UNION ALL SELECT html FROM book_sections WHERE book_id = ? AND instr(html, ?) > 0 LIMIT 1`)
+        .get(bookId, source, source, bookId, source);
+      const alias = resolveReadingImageAlias(document?.html, bookId, filename);
+      if (alias) {
+        resolvedFilename = alias;
+        data = await fs.promises.readFile(path.join(DIRECTORY, String(bookId), alias));
+      } else {
+        data = await fs.promises.readFile(path.join(DIRECTORY, filename));
+      }
     }
   }
   catch (_) { return send(res, 404, { error: 'not found' }); }
   if (data.length > MAX_BYTES) return send(res, 500, { error: 'image exceeds size limit' });
-  const extension = path.extname(filename).slice(1);
+  const extension = path.extname(resolvedFilename).slice(1);
   res.writeHead(200, {
     'Content-Type': `image/${extension === 'jpg' ? 'jpeg' : extension}`,
     'Content-Length': data.length,
@@ -62,4 +85,4 @@ async function handleReadingImage(req, res, bookId, filename) {
   res.end(data);
 }
 
-module.exports = { DIRECTORY, MAX_BYTES, FILE_PATTERN, setReadingImageCookie, handleReadingImage };
+module.exports = { DIRECTORY, MAX_BYTES, FILE_PATTERN, setReadingImageCookie, resolveReadingImageAlias, handleReadingImage };

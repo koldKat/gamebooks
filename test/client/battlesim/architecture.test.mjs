@@ -77,7 +77,17 @@ test('book modules expose a consistent identity and lifecycle without DOM in ext
     const {definition}=await import(new URL('definition.js',book));
     assert.equal(definition.id,Number(match[1]));assert.ok(definition.title&&definition.family&&definition.stateKey);
     const panel=readFileSync(new URL('panel.js',book),'utf8');
-    assert.match(panel,/export\s*\{\s*\w+\s+as\s+init\s*,\s*\w+\s+as\s+render\s*,\s*\w+\s+as\s+setVisible\s*\}/);
+    const exports = new Set();
+    for (const node of context.exports.parse(panel,{ecmaVersion:'latest',sourceType:'module'}).body) {
+      if (node.type !== 'ExportNamedDeclaration') continue;
+      for (const specifier of node.specifiers) exports.add(specifier.exported.name);
+      if (node.declaration?.type === 'FunctionDeclaration') exports.add(node.declaration.id.name);
+      for (const declaration of node.declaration?.declarations ?? []) {
+        if (declaration.id.type === 'Identifier') exports.add(declaration.id.name);
+        for (const property of declaration.id.properties ?? []) exports.add(property.value.name);
+      }
+    }
+    for (const name of ['init','render','setVisible']) assert.ok(exports.has(name),file+' missing '+name);
     for(const name of readdirSync(book).filter(name=>/^(state|combat|effects)\.js$/.test(name))){
       const source=readFileSync(new URL(name,book),'utf8');
       assert.doesNotMatch(source,/\b(?:document|window|HTMLElement)\b/,match[1]+'/'+name);

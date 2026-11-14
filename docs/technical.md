@@ -223,7 +223,7 @@ Artwork is stored in `reading-images/<book-id>/<hash>.<format>`, not database bl
 
 Image elements authenticate through a scoped HttpOnly session cookie rather than session tokens embedded in image URLs. Protected responses use `private, no-store`.
 
-The storage API is `storeImage(format, base64, bookId)` and `externalizeImages(html, bookId)`. Native archival artwork must preserve its original pixels; adjoining image bands can satisfy the per-file limit.
+The storage API is `storeImage(format, base64, bookId)` and `externalizeImages(html, bookId)`. Reading artwork uses one file per illustration, targeting at most 512,000 bytes while preserving native pixels, dimensions and encoded bytes where possible. Rare larger files are allowed when faithful lossless compression cannot meet that target. Never split illustrations into bands or tiles.
 
 ## Battle simulator architecture
 
@@ -244,6 +244,8 @@ public/js/battlesim/
 ```
 
 `definition.js` and `panel.js` are required. Other book modules exist only when they own behavior that the shared family does not already provide. Every entry exports `definition`, `init`, `render`, and `setVisible`, retaining required compatibility exports.
+
+The Viking duel family shares numerical combat helpers and dialog lifecycle. Book adapters retain their printed formulas, injury outcomes and explicit handling of ambiguous source conditions.
 
 Desktop and mobile load simulator modules and translations lazily. Launcher registration, the database availability flag, and XP-history registration must agree. `scripts/check-battlesim-registration.js` checks installed registration.
 

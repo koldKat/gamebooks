@@ -167,3 +167,64 @@ test('image endpoint falls back only for missing book files, not other read fail
   assert.equal(status, 404);
   assert.equal(calls.length, 0);
 });
+
+test('legacy image aliases resolve only to a valid image in the same book', () => {
+  const context = vm.createContext({ module: { exports: {} }, require: name => {
+    if (name === 'fs') return fs;
+    if (name === 'path') return path;
+    if (name === './reading-image-storage') return { DIRECTORY: '/app/reading-images', MAX_BYTES };
+    return {};
+  } });
+  vm.runInContext(fs.readFileSync(require.resolve('../server/reading-images'), 'utf8'), context);
+  const resolve = context.module.exports.resolveReadingImageAlias;
+  const old = `${'a'.repeat(64)}.png`, current = `${'b'.repeat(64)}.jpg`;
+  const alias = `/api/books/728/reading-images/${old}`;
+  const image = source => `<img src="${source}" data-reading-image-alias="${alias}">`;
+  assert.equal(resolve(image(`/api/books/728/reading-images/${current}`), 728, old), current);
+  assert.equal(resolve(image(`/api/books/729/reading-images/${current}`), 728, old), null);
+  assert.equal(resolve(image('/api/books/728/reading-images/../secret'), 728, old), null);
+  assert.equal(resolve(image('https://example.com/image.jpg'), 728, old), null);
+  assert.equal(resolve(`<a href="${alias}">old</a>`, 728, old), null);
+  assert.equal(resolve(image(alias), 728, old), null);
+});
+
+test('legacy image aliases preserve access gates and serve canonical bytes with their actual format', async () => {
+  const old = `${'a'.repeat(64)}.png`, current = `${'b'.repeat(64)}.jpg`;
+  const alias = `/api/books/728/reading-images/${old}`;
+  const canonical = `/app/reading-images/728/${current}`;
+  const calls = [], bytes = Buffer.from('original JPEG');
+  let locked = true, status, headers, body;
+  const html = `<img src="/api/books/728/reading-images/${current}" data-reading-image-alias="${alias}">`;
+  const context = vm.createContext({ module: { exports: {} }, require: name => {
+    if (name === 'fs') return { promises: { readFile: async file => {
+      calls.push(file);
+      if (file === canonical) return bytes;
+      throw Object.assign(new Error('missing'), { code: 'ENOENT' });
+    } } };
+    if (name === 'path') return path;
+    if (name === './reading-image-storage') return { DIRECTORY: '/app/reading-images', MAX_BYTES };
+    if (name === './db/connection') return { db: { prepare: sql => ({ get: () => {
+      if (sql.includes('UNION ALL')) return { html };
+      return sql.includes('book_frontmatter') ? undefined : { 1: 1 };
+    } }) } };
+    if (name === './db') return { _canLiveRead: () => true, readingAccess: { getAccess: () => ({ locked }) } };
+    return { authenticate: async () => 1, isLocalhostReal: () => false,
+      tokenFromReq: () => 'token', send: (res, code) => { status = code; } };
+  } });
+  vm.runInContext(fs.readFileSync(require.resolve('../server/reading-images'), 'utf8'), context);
+  const handler = context.module.exports.handleReadingImage;
+  const req = { headers: {} }, res = {
+    writeHead(code, values) { status = code; headers = values; },
+    end(value) { body = value; },
+  };
+  await handler(req, res, 728, old);
+  assert.equal(status, 403);
+  assert.equal(calls.length, 0);
+  locked = false;
+  await handler(req, res, 728, old);
+  assert.equal(status, 200);
+  assert.equal(headers['Content-Type'], 'image/jpeg');
+  assert.equal(headers['Cache-Control'], 'private, no-store');
+  assert.equal(body, bytes);
+  assert.deepEqual(calls, [`/app/reading-images/728/${old}`, canonical]);
+});

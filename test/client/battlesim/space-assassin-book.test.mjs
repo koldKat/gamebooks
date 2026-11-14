@@ -65,6 +65,8 @@ test('actual backend awards fresh wins and losses once, not avoidance, escapes o
     db: { prepare: sql => ({ get: () => sql.includes('FROM books') ? {} : { n: 100 } }) },
     isCleanRun: () => false, awardCoins() {}, getXpAmount: () => 50,
     _discoveredSet: () => new Set(), _visitedSet: () => new Set(), _mappedSet: () => new Set(),
+    uncountedReadingSections: () => new Set(),
+    isImpersonatingContext: () => false,
     _checkGroupWonAll() {}, _xpRefSeq: 0,
     awardXp(_user, event, ref) {
       const key = event + ':' + ref;
