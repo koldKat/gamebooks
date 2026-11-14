@@ -82,13 +82,17 @@ test('saved draft encounters without opponent snapshots can still finish', () =>
   assert.equal(game.history[0].enemy, 'soldier');
 });
 
-test('source roster keeps unclear cells unresolved until explicit overrides are supplied', () => {
+test('reviewed source presets initialize without requiring missing-stat overrides', () => {
   const source = structuredClone(ORC_FIGURES);
   assert.equal(ORC_FIGURES.length, 25);
-  assert.throws(() => prepareOrcFigure('soldier', { id: 'one', side: 'player' }), RangeError);
-  const figure = prepareOrcFigure('soldier', { id: 'one', side: 'player', stats: { life: 12 } }, () => 1);
+  for (const template of ORC_FIGURES) {
+    const initialized = prepareOrcFigure(template.id, { id: template.id, side: 'enemy' }, () => 1);
+    assert.ok(initialized.maxLife > 0, template.id);
+  }
+  const figure = prepareOrcFigure('soldier', { id: 'one', side: 'player' }, () => 1);
   assert.equal(figure.maxLife, 12);
   assert.deepEqual(figure.attack, { base: 8, sides: 6 });
+  assert.throws(() => prepareOrcFigure('soldier', { id: 'one', side: 'player', stats: { life: null } }), RangeError);
   assert.throws(() => prepareOrcFigure('soldier', { id: 'one', side: 'player', stats: { side: 'enemy' } }), RangeError);
   assert.throws(() => prepareOrcFigure('unknown', { id: 'one', side: 'player' }), RangeError);
   assert.deepEqual(ORC_FIGURES, source);
@@ -100,9 +104,9 @@ test('elemental weaknesses follow the actual source rows, not assumed opposite p
     ['fireElemental','water'], ['airElemental','fire'],
     ['earthElemental','air'], ['waterElemental','earth'],
   ]);
-  assert.throws(() => prepareOrcFigure('fireElemental', { id:'fire', side:'enemy' }), RangeError);
-  const figure = prepareOrcFigure('fireElemental', { id:'fire', side:'enemy',
-    stats: { attack:8, defence:8, damage:4, life:16 } });
+  const figure = prepareOrcFigure('fireElemental', { id:'fire', side:'enemy' }, () => 1);
+  assert.equal(figure.maxLife, 16);
+  assert.equal(figure.damage, 12);
   assert.equal(figure.elemental, true);
 });
 

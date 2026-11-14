@@ -31,7 +31,8 @@ test('rating changes and clear/re-rate cycles retain the first feed date and res
     return {'./connection':{db:{prepare(sql) {
       return sql.includes("WHERE xe.event = 'rate_") ? db.prepare(sql) : {all:()=>[],get:()=>undefined};
     }}},'./xp':{computeLevel:()=>0,getTitleForLevel:()=>''},
-    './job-xp':{},'./content':{},'./books':{},'./rating-stats':{}}[name];
+    './job-xp':{},'./content':{},'./books':{},'./rating-stats':{},
+    './gameplay-stats':{},'./profile-progress':{}}[name];
   }};
   vm.runInNewContext(fs.readFileSync(require.resolve('../server/db/feed'),'utf8'),context);
   const feed = () => context.module.exports.getFeed();

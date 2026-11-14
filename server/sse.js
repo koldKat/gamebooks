@@ -4,6 +4,7 @@
 
 const db = require('./db');
 const { writeEvent } = require('./sse-transport');
+const { invalidateFeedResponse } = require('./feed-response');
 
 // ── SSE party registry: partyId → Set of { userId, res } ─────────────────────
 const _sseClients = new Map();
@@ -67,6 +68,7 @@ function publicCatalogUnregister(res) {
 }
 
 function publicCatalogPush(payload) {
+  invalidateFeedResponse();
   const data = `data: ${JSON.stringify(payload)}\n\n`;
   for (const res of _publicCatalogClients) {
     writeEvent(res, data);
@@ -82,6 +84,7 @@ function feedUnregister(res) {
 }
 
 function feedPush(payload = { type: 'feed_changed' }) {
+  invalidateFeedResponse();
   const data = `data: ${JSON.stringify(payload)}\n\n`;
   for (const res of _feedClients) {
     writeEvent(res, data);

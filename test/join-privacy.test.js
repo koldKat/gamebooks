@@ -27,6 +27,7 @@ test('join events exclude stored location data and respect hide-from-feed', t =>
       ? db.prepare(sql) : { all: () => [], get: () => undefined } } },
     './xp': { computeLevel: () => 0, getTitleForLevel: () => 'Newborn' },
     './job-xp': require('../server/db/job-xp'), './content': { getRandomJoinTemplate: () => '{name} joins.' }, './books': {}, './rating-stats': {},
+    './gameplay-stats': {}, './profile-progress': {},
   };
   const context = vm.createContext({ module: { exports: {} }, Date, require: n => deps[n] });
   vm.runInContext(fs.readFileSync(require.resolve('../server/db/feed'), 'utf8'), context);
@@ -41,6 +42,7 @@ test('join events exclude stored location data and respect hide-from-feed', t =>
 test('join renderer ignores country data from an older server', () => {
   const context = vm.createContext({ _hooks: {},
     escapeHtml: s => String(s ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;'),
+    publicName: s => s,
     t: () => '{name} joins.',
   });
   vm.runInContext(fs.readFileSync('public/js/feed/entries.js', 'utf8').replace(/^import .*;\n/gm, '').replace(/\bexport /g, ''), context);

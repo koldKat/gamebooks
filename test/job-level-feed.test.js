@@ -30,7 +30,8 @@ test('Job promotions use the feed privacy/cutoff rules and invalidate the pollin
   const context = {module:{exports:{}}, require(name) {
     return {'./connection':{db:feedDb},'./xp':{computeLevel,getTitleForLevel:()=> 'Main title'},
       './job-xp':{getJobTitle},'./content':{},'./books':{},'./rating-stats':{},
-      './gameplay-stats':{getSimulatorBattleStats:()=>({fought:0,won:0,lost:0})}}[name];
+      './gameplay-stats':{getSimulatorBattleStats:()=>({fought:0,won:0,lost:0})},
+      './profile-progress':{}}[name];
   }};
   vm.runInNewContext(fs.readFileSync(require.resolve('../server/db/feed'),'utf8'),context);
   const api=context.module.exports, before=api.getFeedVersion();

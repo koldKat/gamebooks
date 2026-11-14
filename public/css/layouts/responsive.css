@@ -92,6 +92,7 @@
     box-sizing: border-box;
   }
   body.feed-collapsed #feed-panel {
+    min-height: 100%;
     opacity: 1 !important;
     pointer-events: auto !important;
     transform: none !important;

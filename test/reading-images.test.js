@@ -28,11 +28,11 @@ test('rare larger originals retain exact bytes above the 512 KB target without s
   const directory=fs.mkdtempSync(path.join(os.tmpdir(),'reading-image-limit-'));
   try {
     assert.equal(TARGET_BYTES,512000);
-    assert.equal(MAX_BYTES,8*1024*1024);
-    const original=Buffer.alloc(1018534,42);
+    assert.equal(MAX_BYTES,32*1024*1024);
+    const original=Buffer.alloc(9*1024*1024,42);
     const name=storeImage('png',original.toString('base64'),107,directory);
     assert.deepEqual(fs.readFileSync(path.join(directory,'107',name)),original);
-    assert.throws(()=>storeImage('png',Buffer.alloc(MAX_BYTES+1).toString('base64'),107,directory),/exceeds the 8 MiB delivery limit/);
+    assert.throws(()=>storeImage('png',Buffer.alloc(MAX_BYTES+1).toString('base64'),107,directory),/exceeds the 32 MiB delivery limit/);
     assert.throws(()=>storeImage('svg','YWJj',107,directory),/Invalid reading image format/);
     assert.equal(fs.readdirSync(path.join(directory,'107')).length,1);
   } finally {fs.rmSync(directory,{recursive:true,force:true});}

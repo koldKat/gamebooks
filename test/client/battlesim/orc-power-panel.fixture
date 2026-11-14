@@ -26,9 +26,10 @@ assert(!el('overlay').textContent.includes('battlesim654.'), 'visible translatio
 assert([...el('overlay').querySelectorAll('[aria-label]')].every(node =>
   !node.getAttribute('aria-label').includes('battlesim654.')), 'accessible translations complete');
 assert(JSON.stringify(Object.keys(en).sort()) === JSON.stringify(Object.keys(bg).sort()), 'locale parity');
-assert(el('template').options.length === 25, 'all named source figures');
+assert(el('template').options.length === 26 && el('template').querySelector('option[value="custom"]'), '25 source figures and custom setup');
 set('template', 'soldier'); change('template');
-assert(el('life').value === '', 'unknown source endurance remains blank');
+assert(el('life').value === '12', 'reviewed source endurance fills the preset');
+set('life', '');
 const original = JSON.stringify(run); click('add');
 assert(alerts.length === 1 && JSON.stringify(run) === original, 'blank source stat rejects without mutation');
 alerts.length = 0;

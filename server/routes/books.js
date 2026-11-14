@@ -739,7 +739,7 @@ async function handleSaveState(req, res, bookId) {
     const op = oldPts[i];
     return (pt.startedAt && !op?.startedAt)
         || (pt.completed && !op?.completed)
-        || (pt.isPublic && !op?.isPublic && pt.completed);
+        || (!!pt.isPublic !== !!op?.isPublic);
   });
   if (feedRelevant) feedPush({ type: 'feed_changed', entity: 'book', action: 'state_save', id: bookId });
 }

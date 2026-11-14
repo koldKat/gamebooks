@@ -23,7 +23,7 @@ const {
 
 const { reinitTransporter, sendAdminEmail, sendReplyEmail, getTransporter } = require('./server/email');
 
-const { addAnnouncementCovers } = require('./server/announcement-covers');
+const { getFeedResponse } = require('./server/feed-response');
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const { ROOT, AVATARS_DIR, COVERS_DIR, BOOKS_DIR, ATTACHMENTS_DIR } = require('./server/paths');
 
@@ -381,7 +381,7 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET'    && urlPath === '/api/prefs')   return await handleGetPrefs(req, res);
     if (method === 'PATCH'  && urlPath === '/api/prefs')   return await handleSetPrefs(req, res);
     if (method === 'GET'    && urlPath === '/api/feed') {
-      return send(res, 200, addAnnouncementCovers(db.getFeed(), db.getPinnedAnnouncement()));
+      return send(res, 200, getFeedResponse());
     }
     // The feed poll compares a cheap version fingerprint before rebuilding the feed.
     if (method === 'GET'    && urlPath === '/api/feed/version') {

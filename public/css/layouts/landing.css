@@ -856,6 +856,7 @@ body.right-collapsed #landing-wrapper {
   cursor: grabbing;
 }
 body.feed-collapsed #feed-panel {
+  min-height: 0;
   opacity: 0;
   pointer-events: none;
   transform: translateY(-18px);
@@ -903,6 +904,8 @@ body.feed-collapsed #feed-panel {
 }
 
 #app-footer {
+  margin-top: auto;
+  flex-shrink: 0;
   text-align: center;
   font-size: 0.7rem;
   padding: 0.5rem 0 0.75rem;

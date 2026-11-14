@@ -41,6 +41,7 @@ test('party collection discoveries and mapping group together without merging in
     }}},
     './xp': {computeLevel:()=>1,getTitleForLevel:()=>''},
     './job-xp':{}, './content':{}, './books':{}, './rating-stats':{},
+    './gameplay-stats':{}, './profile-progress':{},
   };
   const context = {module:{exports:{}},require:name=>deps[name]};
   vm.runInNewContext(fs.readFileSync(require.resolve('../server/db/feed'),'utf8'),context);

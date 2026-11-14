@@ -31,7 +31,8 @@ test('series run feed follows library membership and surviving started book runs
       return /FROM series_runs sr|FROM books b JOIN user_books ub/.test(sql)
         ? db.prepare(sql) : { all: () => [], get: () => undefined };
     } } }, './xp': { computeLevel: () => 1, getTitleForLevel: () => '' },
-    './job-xp': {}, './content': {}, './books': {}, './rating-stats': {} }[name];
+    './job-xp': {}, './content': {}, './books': {}, './rating-stats': {},
+    './gameplay-stats': {}, './profile-progress': {} }[name];
   } };
   vm.runInNewContext(fs.readFileSync(require.resolve('../server/db/feed'), 'utf8'), context);
   const feed = () => JSON.parse(JSON.stringify(context.module.exports.getFeed()));
