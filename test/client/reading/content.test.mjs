@@ -634,6 +634,28 @@ test('original sheets preserve independent protected artwork and native text lab
   assert.match(sheet.attrs.style, /background:#fff;/);
 });
 
+test('short printed reference lines retain native symbols and selectable values', () => {
+  for (const height of ['25', '0', '7', '4001']) {
+    const label = source('P', [textNode('= 5')], {
+      'data-source-box': '45,3,90,23', 'data-source-font': '12',
+      'data-source-baseline': '19', 'data-source-weight': 'normal',
+    });
+    label.textContent = '= 5';
+    const sheet = source('FIGURE', [source('IMG', [], {
+      src: '/api/books/780/reading-images/' + 'a'.repeat(64) + '.png',
+      'data-source-box': '22,4,38,21',
+    }), label], {
+      class: 'reading-source-sheet', 'data-source-width': '135', 'data-source-height': height,
+    });
+    const { mount, document } = setup([sheet]);
+    assert.equal(renderReadingMatter(mount, 780, '<figure></figure>', document), height === '25');
+    if (height === '25') {
+      assert.match(mount.children[0].attrs.style, /aspect-ratio:135\/25/);
+      assert.equal(mount.children[0].children[1].children[0].textContent, '= 5');
+    }
+  }
+});
+
 test('native illustration cutouts can leave unoccupied areas transparent without altering image layers', () => {
   const { mount, document } = setup([originalSheet({ 'data-source-background': 'transparent' })]);
   assert.equal(renderReadingMatter(mount, 1497, '<figure></figure>', document), true);

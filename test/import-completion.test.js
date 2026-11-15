@@ -81,7 +81,7 @@ test('matter notifications require a local request and an existing prepared read
   f.set(null); f.matter();
   assert.equal(f.replies[0].status, 404);
   for (const changes of [{ has_live_reading: 0 }, { has_sections: 0 }, { is_container: 1 },
-    { frontmatter_done: 0 }, { has_matter_record: 0 }]) {
+    { frontmatter_done: 0 }]) {
     const g = fixture(); g.set({ ...g.current(), intro_text: '<p>Preface</p>', ...changes }); g.matter();
     assert.equal(g.replies[0].status, 409);
     assert.equal(g.events.length, 0);
@@ -89,8 +89,8 @@ test('matter notifications require a local request and an existing prepared read
 });
 
 test('reviewed readers can notify removal of redundant matter or absence of separate matter', () => {
-  for (const blank of ['',null]) {
-    const f=fixture();f.set({...f.current(),intro_text:blank,rules_text:blank});f.matter();
+  for (const blank of ['',null]) for (const has_matter_record of [0,1]) {
+    const f=fixture();f.set({...f.current(),intro_text:blank,rules_text:blank,has_matter_record});f.matter();
     assert.equal(f.replies[0].status,200);
     assert.deepEqual(f.events,[{type:'public_catalog_changed',entity:'book',id:1073,action:'matter_updated'}]);
     assert.equal(f.queries(),1);

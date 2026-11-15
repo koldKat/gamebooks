@@ -6029,6 +6029,7 @@ for(const id of BOOK_IDS){
   if(id===797){
     const el=key=>document.getElementById('sim797-'+key);
     const state=()=>app.currentPlaythrough().sim797;
+    check(!el('elapsed')&&!el('testLuck'),'pirate leaves story clocks and noncombat Luck tests in the reader');
     const editor=overlay.querySelector('.bsim-opponent-editor');
     const name=editor.querySelector('[role="combobox"]');
     name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(editor.querySelector('[role="option"]'),'pirate autocomplete');
@@ -6039,26 +6040,38 @@ for(const id of BOOK_IDS){
       el('newCharacter').click();
       check(state().character.skill===9&&state().character.skillInitial===10&&state().character.stamina===17,'pirate hangover initialization');
       el('start').click();
-      check(state().fight.enemies[0].skill===9&&state().fight.enemies[0].stamina===12&&state().character.elapsed===120,'pirate preset stats/time');
+      check(state().fight.enemies[0].skill===9&&state().fight.enemies[0].stamina===12&&state().character.elapsed===0,'pirate preset stats preserve the manual story clock');
       check(el('saveCharacter').disabled&&el('encounter').disabled,'pirate active setup locked');
       el('round').click();
       check(state().fight.pendingDoubles&&!el('doubles').hidden&&el('round').disabled,'pirate simultaneous doubles requires manual choice');
       el('player').click();
-      check(state().fight.outcome==='win'&&state().fight.destination===11&&state().character.elapsed===130,'pirate manual victory/time');
+      check(state().fight.outcome==='win'&&state().fight.destination===11&&state().character.elapsed===0,'pirate manual victory leaves the story clock unchanged');
+      check(el('time').textContent.includes('10')&&!el('time').textContent.includes('3600'),'pirate reports time for this combat round only');
       check(state().history.length===1,'pirate history recorded once');
       el('encounter').value='0';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
       name.value='Ръчен противник';editor.querySelector('[data-stat="skill"]').value=0;editor.querySelector('[data-stat="stamina"]').value=2;
       el('start').click();el('round').click();
       check(state().fight.outcome==='win'&&state().fight.config.stun===false&&state().history.length===2,'pirate editable ordinary custom fight');
-      const core=await import('REPO/public/js/battlesim/books/797/combat.js'),player={...core.medicalStation(core.newCharacter(()=>6)),stamina:13,elapsed:3470};
+      const core=await import('REPO/public/js/battlesim/books/797/combat.js'),player={...core.medicalStation(core.newCharacter(()=>6)),stamina:13,elapsed:3600};
       const fight=core.startFight(27,player);fight.rounds=4;fight.enemies[0].stamina=7;fight.extension={keep:true};
       app.currentPlaythrough().sim797={...structuredClone(state()),fight:JSON.parse(JSON.stringify(fight)),character:structuredClone(fight.character)};
       const saved=JSON.stringify(state().fight);module.render();module.render();check(JSON.stringify(state().fight)===saved,'pirate saved clock renders without mutation');
       el('round').click();
-      check(state().fight.outcome==='timeout'&&state().fight.destination===33&&state().character.elapsed===3600&&state().fight.rounds===5&&state().fight.enemies[0].stamina===7&&state().fight.extension.keep&&!state().fight.pendingDoubles,'pirate database clock timeout wins over simultaneous doubles without losing wounds');
+      check(state().fight.outcome===null&&state().fight.destination===null&&state().character.elapsed===3600&&state().fight.rounds===5&&state().fight.enemies[0].stamina===7&&state().fight.extension.keep&&state().fight.pendingDoubles,'pirate legacy clock cannot override saved wounds or simultaneous doubles');
       const pending=core.startFight(27,{...player,elapsed:0});pending.pendingDoubles=true;pending.rounds=4;pending.character.elapsed=1234;pending.enemies[0].stamina=7;pending.extension={keep:true};
       app.currentPlaythrough().sim797={...structuredClone(state()),fight:JSON.parse(JSON.stringify(pending)),character:structuredClone(pending.character)};module.render();el('player').click();
       check(state().fight.outcome==='win'&&state().character.elapsed===1234&&state().fight.rounds===4&&state().fight.enemies[0].stamina===7&&state().fight.extension.keep,'pirate saved doubles resolve without charging time twice');
+      state().character.extension={keep:true};
+      el('saveCharacter').click();
+      check(state().character.elapsed===1234&&state().character.extension.keep,'pirate editing combat stats preserves legacy clock and extension fields');
+      const normal=structuredClone(state()),legacy=structuredClone(normal);
+      legacy.fight={...pending,outcome:'timeout',destination:33,recorded:true};
+      legacy.fight.character.dead=true;legacy.character=structuredClone(legacy.fight.character);
+      legacy.history.push({enemy:'Legacy',outcome:'timeout',ts:Date.now()});
+      app.currentPlaythrough().sim797=legacy;
+      const legacySnapshot=JSON.stringify(legacy);module.render();module.render();
+      check(JSON.stringify(state())===legacySnapshot,'pirate rendering preserves historical timeout fights without migration');
+      app.currentPlaythrough().sim797=normal;module.render();
     }finally{Math.random=random;}
   }
   if(id===807){

@@ -1,6 +1,6 @@
 import { die, integer, rollDice } from '../../engines/sorcery/core.js';
 import { customFightingEncounter } from '../../engines/fighting-fantasy/opponents.js';
-import { encounterFor, RULES_REVISION, MISSION_RULES } from './definition.js';
+import { encounterFor, RULES_REVISION } from './definition.js';
 
 export { integer } from '../../engines/sorcery/core.js';
 
@@ -36,12 +36,11 @@ export function medicalStation(character) {
 function end(fight, outcome, destination) {
   fight.outcome = outcome;
   fight.destination = destination;
-  fight.character.dead = fight.character.stamina === 0 || outcome === 'timeout';
+  fight.character.dead = fight.character.stamina === 0;
   return fight;
 }
 
 function finish(fight) {
-  if (fight.character.elapsed >= MISSION_RULES.timeoutSeconds) return end(fight, 'timeout', MISSION_RULES.timeoutDestination);
   if (fight.character.stamina <= fight.config.threshold) return end(fight, 'loss', fight.config.loss);
   if (fight.enemies[0].stamina <= fight.config.threshold) return end(fight, 'win', fight.config.win);
   return fight;
@@ -59,7 +58,6 @@ export function startFight(section, character, options = {}) {
   if (!['ordinary', 'cleaver', 'sword'].includes(config.weapon)) throw new RangeError('Invalid weapon');
   const fight = { rulesRevision: RULES_REVISION, config, character: structuredClone(character),
     enemies: structuredClone(config.enemies), rounds: 0, pendingDoubles: false, events: [], outcome: null, destination: null };
-  fight.character.elapsed += config.seconds;
   return finish(fight);
 }
 
@@ -73,12 +71,10 @@ export function round(input, random) {
   if (input.pendingDoubles) throw new RangeError('Resolve simultaneous doubles first');
   const fight = structuredClone(input), playerDice = [die(random), die(random)], enemyDice = [die(random), die(random)];
   fight.rounds++;
-  fight.character.elapsed += MISSION_RULES.roundSeconds;
   const playerAttack = playerDice[0] + playerDice[1] + fight.character.skill + fight.character.attackModifier
     + (fight.config.weapon === 'sword' ? 2 : 0);
   const enemyAttack = enemyDice[0] + enemyDice[1] + fight.enemies[0].skill;
   fight.events = [{ kind: 'attack', playerDice, enemyDice, playerAttack, enemyAttack }];
-  if (fight.character.elapsed >= MISSION_RULES.timeoutSeconds) return end(fight, 'timeout', MISSION_RULES.timeoutDestination);
   const playerDouble = playerDice[0] === playerDice[1], enemyDouble = enemyDice[0] === enemyDice[1];
   if (fight.config.stun && (playerDouble || enemyDouble)) {
     if (playerDouble && enemyDouble) { fight.pendingDoubles = true; return fight; }

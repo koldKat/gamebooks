@@ -26,7 +26,7 @@ export function copySourceSheet(node, document, imagePath, { sectionLinks = true
   if (background !== null && background !== 'transparent') throw new Error('Invalid source sheet background');
   const width = number(node.getAttribute('data-source-width'));
   const height = number(node.getAttribute('data-source-height'));
-  if (width < 100 || width > 4000 || height < 100 || height > 4000) throw new Error('Invalid source sheet dimensions');
+  if (width < 100 || width > 4000 || height < 8 || height > 4000) throw new Error('Invalid source sheet dimensions');
   const figure = document.createElement('figure');
   figure.className = 'reading-source-sheet';
   figure.setAttribute('style', `position:relative;width:100%;max-width:${width}px;aspect-ratio:${width}/${height};container-type:inline-size;overflow:hidden;background:${background || '#fff'};margin:1em auto`);

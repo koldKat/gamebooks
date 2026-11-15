@@ -32,13 +32,12 @@ function handleImportComplete(req, res, bookId) {
 function handleReadingMatterUpdated(req, res, bookId) {
   if (!requireLocalhost(req, res)) return;
   const book = db.prepare(`SELECT b.has_live_reading, b.is_container, c.frontmatter_done,
-    f.book_id IS NOT NULL AS has_matter_record,
     EXISTS(SELECT 1 FROM book_sections s WHERE s.book_id=b.id) AS has_sections
     FROM books b LEFT JOIN book_import_checklist c ON c.book_id=b.id
-    LEFT JOIN book_frontmatter f ON f.book_id=b.id WHERE b.id=?`).get(bookId);
+    WHERE b.id=?`).get(bookId);
   if (!book) return send(res, 404, { error: 'Book not found' });
   if (book.is_container || !book.has_live_reading || !book.has_sections
-      || book.frontmatter_done !== 1 || !book.has_matter_record) {
+      || book.frontmatter_done !== 1) {
     return send(res, 409, { error: 'Book reading matter is not ready' });
   }
   publicCatalogPush({ type: 'public_catalog_changed', entity: 'book', id: bookId, action: 'matter_updated' });

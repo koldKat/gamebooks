@@ -3,6 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
+import readingSectionCounts from '../../../server/db/reading-section-counts.js';
 import * as combat from '../../../public/js/battlesim/books/769/combat.js';
 import * as effects from '../../../public/js/battlesim/books/769/effects.js';
 import { ENCOUNTERS, DUNGEON_RULES } from '../../../public/js/battlesim/books/769/definition.js';
@@ -157,8 +158,10 @@ test('backend XP accepts new wins/losses exactly once, excluding narrative conti
   const registry = source.slice(source.indexOf('const SIM_HISTORY_KEYS ='), source.indexOf('function processStateXp('));
   const processor = source.slice(source.indexOf('function processStateXp('), source.indexOf('function migrateXpForUser('));
   const awards = [], ledger = new Set();
-  const context = { db: { prepare: sql => ({ get: () => sql.includes('FROM books') ? {} : { n: 100 } }) },
-    isCleanRun: () => false, awardCoins() {}, getXpAmount: () => 50,
+  const context = { ...readingSectionCounts,
+    db: { prepare: sql => ({ get: () => sql.includes('FROM books') ? {} : { n: 100 }, all: () => [] }) },
+    isCleanRun: () => false, isImpersonatingContext: () => false,
+    awardCoins() {}, getXpAmount: () => 50,
     _discoveredSet: () => new Set(), _visitedSet: () => new Set(), _mappedSet: () => new Set(),
     _checkGroupWonAll() {}, _xpRefSeq: 0,
     awardXp(_user, event, ref) {

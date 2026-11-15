@@ -1,4 +1,4 @@
-import { definition, ENCOUNTERS, encounterFor } from './definition.js';
+import { definition, ENCOUNTERS, encounterFor, MISSION_RULES } from './definition.js';
 import * as combat from './combat.js';
 import { createState } from './state.js';
 import { createOpponentEditor } from '../../opponents.js';
@@ -10,7 +10,7 @@ import { t } from '../../../i18n.js';
 
 const ID = definition.stateKey;
 const SCORES = ['skill', 'stamina', 'luck'];
-const FIELDS = [...SCORES, ...SCORES.map(key => key + 'Initial'), 'attackModifier', 'elapsed'];
+const FIELDS = [...SCORES, ...SCORES.map(key => key + 'Initial'), 'attackModifier'];
 const escape = value => String(value).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 const active = fight => Boolean(fight && !fight.outcome);
 
@@ -19,7 +19,7 @@ export function createWrongTurnPanel({document, t, getRun, getBookId, saveState,
   const el = key => document.getElementById(ID + '-' + key);
   const store = createState(() => ({currentBookId: getBookId(), currentPlaythrough: getRun, saveState}));
   const button = key => `<button type="button" class="inv-add-btn bsim-action-btn" id="${ID}-${key}">${escape(tk(key))}</button>`;
-  const input = key => `<label class="inv-edit-row"><span>${escape(tk(key))}</span><input class="inv-edit-input" id="${ID}-${key}" type="number" min="${key === 'attackModifier' ? -1000 : key.endsWith('Initial') ? 1 : 0}" max="${key === 'elapsed' ? 1000000 : 10000}" step="1" required></label>`;
+  const input = key => `<label class="inv-edit-row"><span>${escape(tk(key))}</span><input class="inv-edit-input" id="${ID}-${key}" type="number" min="${key === 'attackModifier' ? -1000 : key.endsWith('Initial') ? 1 : 0}" max="10000" step="1" required></label>`;
   let shownRun, rendered, editor, editorRun;
   function close() { el('overlay')?.classList.remove('active'); rendered = null; }
   function change(update) {
@@ -57,7 +57,7 @@ export function createWrongTurnPanel({document, t, getRun, getBookId, saveState,
     editor.lock(locked); editor.fixCount(true);
     for (const key of FIELDS) { el(key).value = c?.[key] ?? ''; el(key).disabled = locked; }
     for (const key of ['encounter', 'weapon', 'newCharacter', 'saveCharacter']) el(key).disabled = locked;
-    for (const key of ['medicalStation', 'testLuck']) el(key).disabled = locked || !alive;
+    el('medicalStation').disabled = locked || !alive;
     el('start').disabled = locked || !alive;
     el('round').disabled = !locked || fight.pendingDoubles;
     el('cancel').disabled = !locked;
@@ -65,7 +65,10 @@ export function createWrongTurnPanel({document, t, getRun, getBookId, saveState,
     el('status').textContent = tk('status.' + (fight?.outcome ?? (fight ? 'active' : 'ready')));
     el('destination').textContent = fight?.destination ? tk('destination', {section: fight.destination}) : '';
     el('opponents').textContent = fight ? tk('enemyLine', {...fight.enemies[0], name: fight.enemies[0].displayName || tk('opponent')}) : '';
-    el('time').textContent = c ? tk('time', {seconds: c.elapsed, rounds: fight?.rounds ?? 0}) : '';
+    el('time').textContent = c ? tk('time', {
+      seconds: (fight?.rounds ?? 0) * MISSION_RULES.roundSeconds,
+      rounds: fight?.rounds ?? 0,
+    }) : '';
     el('log').innerHTML = data.log.slice(-80).map(line => '<div>' + escape(line) + '</div>').join('');
     el('history').innerHTML = data.history.slice(-40).reverse().map(row => '<div>' + escape(row.enemy + ': ' + tk('status.' + row.outcome)) + '</div>').join('');
   }
@@ -78,7 +81,7 @@ export function createWrongTurnPanel({document, t, getRun, getBookId, saveState,
   function init() {
     if (el('overlay')) return;
     const overlay = document.createElement('div'); overlay.id = ID + '-overlay'; overlay.className = 'inv-overlay';
-    overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form" role="dialog" aria-modal="true" aria-labelledby="${ID}-title"><div class="inv-modal-hdr"><span class="inv-modal-title" id="${ID}-title">${escape(tk('title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div class="bsim-side"><div class="bsim-side-title">${escape(tk('character'))}</div>${SCORES.map(input).join('')}<details><summary>${escape(tk('initialScores'))}</summary>${SCORES.map(key => input(key + 'Initial')).join('')}</details>${input('attackModifier')}${input('elapsed')}<div class="bsim-btn-row">${button('newCharacter')}${button('saveCharacter')}${button('medicalStation')}${button('testLuck')}</div></div><label class="inv-edit-row"><span>${escape(tk('encounter'))}</span><select class="inv-edit-input" id="${ID}-encounter"><option value="0">${escape(tk('custom'))}</option>${ENCOUNTERS.map(e => `<option value="${e.section}">${escape(e.name)} (${e.section})</option>`).join('')}</select></label><div id="${ID}-editor"></div><label class="inv-edit-row"><span>${escape(tk('weapon'))}</span><select class="inv-edit-input" id="${ID}-weapon">${['ordinary', 'cleaver', 'sword'].map(key => `<option value="${key}">${escape(tk(key))}</option>`).join('')}</select></label><p>${escape(tk('combatNote'))}</p><div class="bsim-btn-row">${button('start')}${button('round')}${button('cancel')}</div><div id="${ID}-doubles" hidden><p>${escape(tk('doublesNote'))}</p><div class="bsim-btn-row">${button('player')}${button('enemy')}</div></div></div><div class="bsim-col bsim-col-right"><div class="bsim-status" role="status" aria-live="polite" id="${ID}-status"></div><p id="${ID}-destination"></p><p id="${ID}-time"></p><div class="bsim-status" id="${ID}-opponents"></div><div class="bsim-log" id="${ID}-log"></div><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details></div></div></div>`;
+    overlay.innerHTML = `<div class="inv-modal bsim-modal bsim-compact-form" role="dialog" aria-modal="true" aria-labelledby="${ID}-title"><div class="inv-modal-hdr"><span class="inv-modal-title" id="${ID}-title">${escape(tk('title'))}</span><button type="button" class="inv-close-btn" id="${ID}-close" aria-label="${escape(t('btn.close'))}">&times;</button></div><div class="bsim-body"><div class="bsim-col bsim-col-left"><p>${escape(tk('note'))}</p><div class="bsim-side"><div class="bsim-side-title">${escape(tk('character'))}</div>${SCORES.map(input).join('')}<details><summary>${escape(tk('initialScores'))}</summary>${SCORES.map(key => input(key + 'Initial')).join('')}</details>${input('attackModifier')}<div class="bsim-btn-row">${button('newCharacter')}${button('saveCharacter')}${button('medicalStation')}</div></div><label class="inv-edit-row"><span>${escape(tk('encounter'))}</span><select class="inv-edit-input" id="${ID}-encounter"><option value="0">${escape(tk('custom'))}</option>${ENCOUNTERS.map(e => `<option value="${e.section}">${escape(e.name)} (${e.section})</option>`).join('')}</select></label><div id="${ID}-editor"></div><label class="inv-edit-row"><span>${escape(tk('weapon'))}</span><select class="inv-edit-input" id="${ID}-weapon">${['ordinary', 'cleaver', 'sword'].map(key => `<option value="${key}">${escape(tk(key))}</option>`).join('')}</select></label><p>${escape(tk('combatNote'))}</p><div class="bsim-btn-row">${button('start')}${button('round')}${button('cancel')}</div><div id="${ID}-doubles" hidden><p>${escape(tk('doublesNote'))}</p><div class="bsim-btn-row">${button('player')}${button('enemy')}</div></div></div><div class="bsim-col bsim-col-right"><div class="bsim-status" role="status" aria-live="polite" id="${ID}-status"></div><p id="${ID}-destination"></p><p id="${ID}-time"></p><div class="bsim-status" id="${ID}-opponents"></div><div class="bsim-log" id="${ID}-log"></div><details class="bsim-history"><summary>${escape(tk('history'))}</summary><div class="bsim-history-list" id="${ID}-history"></div></details></div></div></div>`;
     document.body.appendChild(overlay);
     editor = createOpponentEditor({document, id: ID, t, language: 'bg', fields: [
       {key: 'skill', label: tk('skill'), max: 10000}, {key: 'stamina', label: tk('stamina'), min: 1, max: 10000},
@@ -103,20 +106,15 @@ export function createWrongTurnPanel({document, t, getRun, getBookId, saveState,
     });
     el('saveCharacter').addEventListener('click', () => change(data => {
       if (active(data.fight)) throw new RangeError('Fight active');
-      const c = Object.fromEntries(FIELDS.map(key => {
+      const c = { ...data.character, ...Object.fromEntries(FIELDS.map(key => {
         if (!el(key).value.trim()) throw new RangeError('Missing number');
         return [key, Number(el(key).value)];
-      }));
+      })), elapsed: data.character?.elapsed ?? 0 };
       c.dead = c.stamina === 0; combat.validateCharacter(c); data.fight = null; data.character = c;
     }));
     el('medicalStation').addEventListener('click', () => confirmed('medicalConfirm', data => {
       if (active(data.fight)) throw new RangeError('Fight active');
       data.character = combat.medicalStation(data.character); data.fight = null;
-    }));
-    el('testLuck').addEventListener('click', () => change(data => {
-      if (active(data.fight)) throw new RangeError('Fight active');
-      const result = combat.testLuck(data.character); data.character = result.character; data.fight = null;
-      data.log.push(tk('event.luck', {roll: result.roll, result: tk(result.lucky ? 'lucky' : 'unlucky')}));
     }));
     el('start').addEventListener('click', () => change(data => {
       if (active(data.fight)) throw new RangeError('Fight active');
