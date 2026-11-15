@@ -28,6 +28,22 @@ test('initial rolls use printed 0-9 plus10/20 without free equipment', () => {
   assert.equal(character.maxStamina, 29);
   assert.equal(character.potions, 0);
 });
+test('printed combat-table exception applies to new fights and preserves saved standard fights', () => {
+  const character = {...combat.newCharacter(() => 5), skill: 10, stamina: 100, maxStamina: 100};
+  for (const encounter of ENCOUNTERS) {
+    assert.deepEqual(encounter.combatTableOverrides, [
+      {pick: 5, ratioMin: -6, ratioMax: -5, enemyLoss: 4, playerLoss: 5},
+    ]);
+    const fight = combat.startFight(character, {...encounter, skill: encounter.unarmed ? 12 : 16, stamina: 100}, encounter.section);
+    assert.equal(fight.ratio, -6);
+    assert.equal(combat.round(fight, 5).character.stamina, 95);
+    const legacy = structuredClone(fight);
+    delete legacy.encounter.combatTableOverrides;
+    assert.equal(combat.round(legacy, 5).character.stamina, 96);
+    assert.equal(combat.round(fight, 4).character.stamina, 95);
+    assert.throws(() => combat.round(fight, 10));
+  }
+});
 test('roster, forced unarmed penalty and temporary Vigour match printed encounters', () => {
   assert.deepEqual(ENCOUNTERS.map(row => [row.section,row.skill,row.stamina]), [[44,18,18],[50,16,18],[64,21,28]]);
   const character = {...combat.newCharacter(() => 5), vigour: true};

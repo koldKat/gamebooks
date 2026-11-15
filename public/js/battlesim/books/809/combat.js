@@ -49,7 +49,11 @@ export function startFight(character, opponent, section) {
 }
 export function round(fight, pick = randomNumber()) {
   const next = fresh(fight);
-  const [enemyLoss, playerLoss] = combatLosses(next.ratio, pick);
+  const standardLosses = combatLosses(next.ratio, pick);
+  const printedCell = next.encounter.combatTableOverrides?.find(cell =>
+    cell.pick === pick && next.ratio >= cell.ratioMin && next.ratio <= cell.ratioMax);
+  const [enemyLoss, playerLoss] = printedCell
+    ? [printedCell.enemyLoss, printedCell.playerLoss] : standardLosses;
   next.rounds++;
   next.enemy.stamina = enemyLoss === 'K' ? 0 : Math.max(0, next.enemy.stamina - enemyLoss);
   next.character.stamina = playerLoss === 'K' ? 0 : Math.max(0, next.character.stamina - playerLoss);
