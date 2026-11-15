@@ -6,8 +6,9 @@ const { completionTarget, hasFullBookCoverage } = require('./book-section-covera
 
 function addBookProgress(totals, state, entry, book = {}, sectionIds = () => []) {
   const discovered = new Set(), visited = new Set();
+  const excluded = new Set([String(entry), ...JSON.parse(book.uncounted_sections || '[]').map(String)]);
   const valid = id => id != null && String(id).trim() !== ''
-    && !['0', '-1', String(entry)].includes(String(id)) && !isSupplementalSection(id);
+    && !['0', '-1'].includes(String(id)) && !excluded.has(String(id)) && !isSupplementalSection(id);
   const add = (set, id) => { if (valid(id)) set.add(String(id)); };
   for (const [id, node] of Object.entries(state?.graph || {})) {
     if (!node || typeof node !== 'object') continue;

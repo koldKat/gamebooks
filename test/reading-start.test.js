@@ -14,6 +14,7 @@ test('book state supplies the imported opening without replacing alternate start
     CREATE TABLE book_sections(book_id,section_id);
     INSERT INTO books VALUES(988,'Дугулите и вълшебното листо',34,34);
     INSERT INTO book_reading_entries VALUES(988,'opening',0,'opening');`);
+  require('../server/db/reading-section-counts').initializeReadingSupplements(db);
   const original = JSON.stringify({ graph:{opening:{choices:['1']}},playthroughs:[{path:['opening','1']}],notebook:'keep' });
   db.prepare('INSERT INTO user_books VALUES(1,988,?)').run(original);
   const source = fs.readFileSync('server/db/books.js','utf8');

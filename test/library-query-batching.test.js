@@ -13,8 +13,9 @@ function library() {
     CREATE TABLE user_books (user_id INTEGER, book_id INTEGER, state_data TEXT, created_at INTEGER, updated_at INTEGER, rating REAL, party_id INTEGER, bg_hidden INTEGER, bg_pos_y INTEGER);
     CREATE TABLE xp_events (user_id INTEGER, event TEXT, ref TEXT);
     CREATE TABLE book_reading_entries (book_id INTEGER PRIMARY KEY, section_id TEXT, counts_as_section INTEGER DEFAULT 1);
-    CREATE TABLE book_sections (book_id INTEGER, section_id TEXT);
+    CREATE TABLE book_sections (book_id INTEGER, section_id TEXT, PRIMARY KEY(book_id,section_id));
     CREATE TABLE book_anthology_memberships (book_id INTEGER, anthology_id INTEGER, book_order INTEGER);`);
+  require('../server/db/reading-section-counts').initializeReadingSupplements(raw);
   let queries = 0;
   const db = { prepare(sql) { queries++; return raw.prepare(sql); } };
   const context = vm.createContext({ module: { exports: {} }, require(name) {
@@ -57,6 +58,22 @@ test('batched summaries preserve progress, global ratings, anthology order and a
     assert.equal(books[1].voteCount, 0);
     assert.equal(h.getBooks(8)[0].visited, 1, 'visit history belongs to the requested account');
   } finally { h.raw.close(); }
+});
+
+test('multiple numeric introduction pages are excluded from charts and permanent visits in one batched lookup', () => {
+  const h=library();
+  try {
+    h.raw.exec(`INSERT INTO books(id,name,total_sections) VALUES(1,'Page-based story',2),(2,'Other story',2);
+      INSERT INTO book_sections VALUES(1,'1'),(1,'2'),(1,'3'),(1,'4'),(2,'1'),(2,'2');
+      INSERT INTO book_reading_supplements VALUES(1,'1'),(1,'2');
+      INSERT INTO user_books(user_id,book_id,state_data) VALUES
+        (7,1,'{"graph":{"1":{},"2":{},"3":{}}}'),(7,2,'{"graph":{"1":{},"2":{}}}');
+      INSERT INTO xp_events VALUES(7,'visit_node','1:1'),(7,'visit_node','1:2'),(7,'visit_node','1:3');`);
+    assert.deepEqual(h.getBooks(7).map(book=>book.visited),[1,2]);
+    assert.equal(h.queries(),5);
+    h.raw.exec("UPDATE user_books SET state_data='{}' WHERE book_id=1");
+    assert.equal(h.getBooks(7)[0].visited,1);
+  } finally {h.raw.close();}
 });
 
 test('large libraries use a constant number of queries and tolerate malformed saved state', () => {

@@ -2,12 +2,13 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const Database = require('better-sqlite3');
-const { isSupplementalSection, supplementalSectionSql, uncountedReadingSections } = require('../server/db/reading-section-counts');
+const { isSupplementalSection, supplementalSectionSql, uncountedReadingSections, initializeReadingSupplements } = require('../server/db/reading-section-counts');
 const { hasFullBookCoverage } = require('../server/db/book-section-coverage');
 
 test('supplemental prose is excluded consistently while actual numbered and lettered sections stay counted', t => {
   const db = new Database(':memory:');t.after(() => db.close());
   db.exec('CREATE TABLE book_sections(book_id,section_id)');
+  initializeReadingSupplements(db);
   const ignored = ['intro','Intro','introduction','prolog','prologue','opening','opening-prologue',
     'epilog','epilogue','epilog-won','epilogue-loss','sleep','Sleep','bonanza','Bonanza',
     'original-maps','Original-Maps','K-map','k-MAP','reference-43','Reference-101'];
@@ -20,6 +21,24 @@ test('supplemental prose is excluded consistently while actual numbered and lett
   assert.deepEqual(uncountedReadingSections(db,1),ignored);
   assert.deepEqual(uncountedReadingSections(db,1,'entry'),[...ignored,'entry']);
   assert.equal(db.prepare(`SELECT COUNT(*) n FROM book_sections WHERE ${supplementalSectionSql('section_id')}`).get().n,ignored.length);
+});
+
+test('several printed introductory pages are excluded only in their own book without renaming them', t => {
+  const db = new Database(':memory:'); t.after(() => db.close());
+  db.exec('CREATE TABLE book_sections(book_id INTEGER,section_id TEXT,PRIMARY KEY(book_id,section_id))');
+  initializeReadingSupplements(db);
+  db.exec(`INSERT INTO book_sections VALUES(1,'1'),(1,'2'),(1,'3'),(2,'1'),(2,'2');
+    INSERT INTO book_reading_supplements VALUES(1,'1'),(1,'2');`);
+  assert.deepEqual(uncountedReadingSections(db,1),['1','2']);
+  assert.deepEqual(uncountedReadingSections(db,2),[]);
+  const actual = db.prepare(`SELECT section_id FROM book_sections WHERE book_id=?
+    AND NOT ${supplementalSectionSql('book_sections.section_id','book_sections.book_id')}`);
+  assert.deepEqual(actual.all(1).map(row => row.section_id),['3']);
+  assert.deepEqual(actual.all(2).map(row => row.section_id),['1','2']);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM book_sections WHERE book_id=1').get().n,3);
+  db.prepare("DELETE FROM book_sections WHERE book_id=1 AND section_id='2'").run();
+  assert.deepEqual(uncountedReadingSections(db,1),['1']);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM book_reading_supplements').get().n,1);
 });
 
 test('read-only copies and original maps cannot block completion of all actual sections', () => {

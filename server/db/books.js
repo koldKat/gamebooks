@@ -68,7 +68,7 @@ function getBooks(userId) {
       AND NOT EXISTS (SELECT 1 FROM book_reading_entries e
         WHERE e.book_id = CAST(substr(x.ref, 1, instr(x.ref, ':') - 1) AS INTEGER) AND e.counts_as_section = 0
         AND x.ref = e.book_id || ':' || e.section_id)
-      AND NOT ${supplementalSectionSql("substr(x.ref,instr(x.ref,':')+1)")}
+      AND NOT ${supplementalSectionSql("substr(x.ref,instr(x.ref,':')+1)", "CAST(substr(x.ref,1,instr(x.ref,':')-1) AS INTEGER)")}
     GROUP BY book_id
   `).all(userId).map(row => [row.book_id, row.n]));
   const ratings = new Map(db.prepare(`
@@ -80,7 +80,7 @@ function getBooks(userId) {
   const extraAnthologyIds = {};
   const supplementalByBook = new Map();
   for (const { book_id, section_id } of db.prepare(`SELECT book_id,section_id FROM book_sections
-    WHERE book_id IN (SELECT book_id FROM user_books WHERE user_id=?) AND ${supplementalSectionSql('section_id')}`).all(userId)) {
+    WHERE book_id IN (SELECT book_id FROM user_books WHERE user_id=?) AND ${supplementalSectionSql('book_sections.section_id', 'book_sections.book_id')}`).all(userId)) {
     if (!supplementalByBook.has(book_id)) supplementalByBook.set(book_id, []);
     supplementalByBook.get(book_id).push(section_id);
   }

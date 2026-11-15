@@ -28,7 +28,8 @@ test('unnumbered entry cannot award node XP or trigger an early completion miles
     awardCoins: (_user, event, ref) => coins.push([event, ref]),
     _checkGroupMilestone() {}, SIM_HISTORY_KEYS: [], _xpRefSeq: 0,
     _permanentVisitedCount: () => 0,
-    isImpersonatingContext: () => false, createRubyCompletionChecker: () => () => 0, _rubyCompletionChecker: null,
+    isImpersonatingContext: () => false, createRubyCompletionChecker: () => () => 0,
+    _rubyCompletionChecker: null, _discoveryRubyChecker: null, CUSTOM_NODE_SHAPES: new Set(),
   };
   runInNewContext(helpers, context);
   runInNewContext(source.slice(source.indexOf('function processStateXp('), source.indexOf('function migrateXpForUser(')), context);
@@ -40,5 +41,5 @@ test('unnumbered entry cannot award node XP or trigger an early completion miles
   context.processStateXp(1, 534, state, next, 2);
   assert.equal(awards.some(([event]) => event === 'discover_all'), true);
   assert.equal(awards.some(([event]) => event === 'visit_all'), true);
-  assert.deepEqual(coins, [['book_completed', 534]]);
+  assert.deepEqual(coins, [], 'completion gold has been retired');
 });

@@ -10,8 +10,8 @@ export const definition = Object.freeze({
 export const LOOKUP_ROWS = Object.freeze([".-...","-..+.","..-.+","..+--",".+-.-","+..-.","-.--.","..+..","++-.-",".-.-+"]);
 
 export const SOURCE_IMAGES = Object.freeze({
-  "lookup": "/api/books/903/reading-images/943bdf6bbbc1c6a0b054cdab7c8e9b5e4a22946d3752689575e948eee1a5dd5b.png",
-  "legend": "/api/books/903/reading-images/d4dbf1f83143fe2c4d6fb69e3069adbc07fd074f81d87fa2d67fd68e13d000e7.png"
+  "lookup": "/api/books/903/reading-images/3b3518d3d2fb307517945d6a11f18b0a119c3e2f02e230ce4ce6a0af224adbb2.jpg",
+  "legend": "/api/books/903/reading-images/59d8fe9632825c488ac0682c5b0e5a439f8220bba8a74289e69158fa9c3ebae5.png"
 });
 
 export let ENCOUNTERS = Object.freeze([]);

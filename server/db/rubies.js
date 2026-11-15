@@ -1,6 +1,6 @@
 'use strict';
 
-const { isSupplementalSection, supplementalSectionSql, isMappedGraphNode } = require('./reading-section-counts');
+const { isSupplementalSection, supplementalSectionSql, isMappedGraphNode, initializeReadingSupplements } = require('./reading-section-counts');
 const { hasFullBookCoverage } = require('./book-section-coverage');
 
 // Completion rewards are permanent, independent of the mutable runs and catalog.
@@ -47,10 +47,12 @@ function initializeRubies(db) {
 }
 
 function createRubyCompletionChecker(db, { discovery = false } = {}) {
+  initializeReadingSupplements(db);
   const user = db.prepare('SELECT is_squire FROM users WHERE id=?');
   const book = db.prepare(`SELECT b.*, e.section_id AS uncounted_entry FROM books b
     LEFT JOIN book_reading_entries e ON e.book_id=b.id AND e.counts_as_section=0 WHERE b.id=?`);
-  const sections = db.prepare('SELECT section_id FROM book_sections WHERE book_id=?');
+  const sections = db.prepare(`SELECT section_id FROM book_sections WHERE book_id=?
+    AND NOT ${supplementalSectionSql('book_sections.section_id', 'book_sections.book_id')}`);
   const state = db.prepare('SELECT state_data FROM user_books WHERE user_id=? AND book_id=?');
   const visits = db.prepare(`SELECT ref FROM xp_events WHERE user_id=? AND event IN
     (${discovery ? "'discover_node','visit_node'" : "'visit_node'"}) AND ref LIKE ?`);

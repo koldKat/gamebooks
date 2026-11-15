@@ -1018,7 +1018,8 @@ function getPublicProfile(username) {
 
   const bookRows = db.prepare(`
     SELECT b.id, b.name, b.created_by, b.parent_book_id, b.is_container, b.total_sections,
-      b.discoverable_sections, b.max_section_number, e.section_id AS uncounted_entry, ub.state_data
+      b.discoverable_sections, b.max_section_number, e.section_id AS uncounted_entry, ub.state_data,
+      (SELECT json_group_array(section_id) FROM book_reading_supplements WHERE book_id=b.id) AS uncounted_sections
     FROM user_books ub JOIN books b ON b.id = ub.book_id
     LEFT JOIN book_reading_entries e ON e.book_id=b.id AND e.counts_as_section=0
     WHERE ub.user_id = ?
@@ -1096,7 +1097,8 @@ function getPublicProfile(username) {
 function getProfileStats(userId) {
   const bookRows = db.prepare(`
     SELECT b.id, b.created_by, b.parent_book_id, b.is_container, b.total_sections,
-      b.discoverable_sections, b.max_section_number, e.section_id AS uncounted_entry, ub.state_data
+      b.discoverable_sections, b.max_section_number, e.section_id AS uncounted_entry, ub.state_data,
+      (SELECT json_group_array(section_id) FROM book_reading_supplements WHERE book_id=b.id) AS uncounted_sections
     FROM user_books ub JOIN books b ON b.id = ub.book_id
     LEFT JOIN book_reading_entries e ON e.book_id=b.id AND e.counts_as_section=0
     WHERE ub.user_id = ?

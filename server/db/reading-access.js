@@ -6,6 +6,7 @@ const DEFAULT_READING_THRESHOLD = 482;
 const READING_THRESHOLD_KEY = 'reading_paid_user_threshold';
 
 function createReadingAccess(db) {
+  require('./reading-section-counts').initializeReadingSupplements(db);
   db.exec(`
     CREATE TABLE IF NOT EXISTS reading_unlocks (
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

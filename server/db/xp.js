@@ -645,7 +645,7 @@ function _permanentVisitedCount(userId, bookId) {
   return db.prepare(`SELECT COUNT(*) AS n FROM xp_events x WHERE user_id = ? AND event = 'visit_node' AND ref LIKE ?
     AND NOT EXISTS (SELECT 1 FROM book_reading_entries e WHERE e.book_id = ? AND e.counts_as_section = 0
       AND x.ref = e.book_id || ':' || e.section_id)
-    AND NOT ${supplementalSectionSql("substr(x.ref,instr(x.ref,':')+1)")}`)
+    AND NOT ${supplementalSectionSql("substr(x.ref,instr(x.ref,':')+1)", "CAST(substr(x.ref,1,instr(x.ref,':')-1) AS INTEGER)")}`)
     .get(userId, `${bookId}:%`, bookId).n;
 }
 

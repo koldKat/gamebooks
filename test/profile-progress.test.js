@@ -77,3 +77,13 @@ test('unplayed profiles never load canonical sections for every book in a large 
   });
   assert.equal(totals.booksFullyDiscovered, 0);
 });
+
+test('numeric introductory pages do not inflate profile sections or block complete books', () => {
+  const totals = { sectionsDiscovered:0, sectionsVisited:0, booksWon:0,
+    booksFullyDiscovered:0, booksFullyMapped:0 };
+  const book = { id:1,total_sections:2,max_section_number:4,uncounted_sections:'["1","2"]' };
+  const state = {graph:{1:{},2:{},3:{},4:{}},playthroughs:[{path:[1,2,3,4]}]};
+  addBookProgress(totals,state,null,book,()=>['1','2','3','4']);
+  assert.deepEqual(totals,{sectionsDiscovered:2,sectionsVisited:2,booksWon:0,
+    booksFullyDiscovered:1,booksFullyMapped:1});
+});

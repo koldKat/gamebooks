@@ -45,6 +45,23 @@ function fixture(t) {
 }
 const range=(start,end)=>Array.from({length:end-start+1},(_,i)=>start+i);
 
+test('numeric introductory pages neither block mapping rewards nor replace a missing story page',t=>{
+  const f=fixture(t);f.db.exec('CREATE UNIQUE INDEX test_section_ids ON book_sections(book_id,section_id)');
+  const add=f.db.prepare('INSERT INTO book_sections VALUES(?,?)');
+  for(const id of [10,11]){
+    f.addBook(id,50);
+    for(const section of range(1,52))add.run(id,String(section));
+    f.db.prepare('INSERT INTO book_reading_supplements VALUES(?,?)').run(id,'1');
+    f.db.prepare('INSERT INTO book_reading_supplements VALUES(?,?)').run(id,'2');
+  }
+  f.save(2,10,[range(3,52)]);f.save(2,11,[range(1,51)]);
+  const before=f.db.prepare('SELECT * FROM user_books').all();
+  assert.equal(f.check(2,10),1);
+  assert.equal(f.check(2,10),0);
+  assert.equal(f.check(2,11),0);
+  assert.deepEqual(f.db.prepare('SELECT * FROM user_books').all(),before);
+});
+
 for (const reference of ['sleep','bonanza']) test(`${reference} references cannot block a completed book reward or make an incomplete book qualify`,t=>{
   const f=fixture(t);const add=f.db.prepare('INSERT INTO book_sections VALUES(?,?)');
   for(const id of [10,11]){

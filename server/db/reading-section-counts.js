@@ -8,17 +8,28 @@ const isMappedGraphNode = node => !!node && (!node.discovered
   || (node.choices || []).some(choice => Number(choice) !== 0 && Number(choice) !== -1)
   || (node.portals || []).length > 0);
 const names = ['intro', 'introduction', 'prolog', 'prologue', 'epilog', 'epilogue', 'opening'];
-const supplementalSectionSql = column => '(' + names.map(name =>
+const supplementalSectionSql = (column, bookColumn) => '(' + names.map(name =>
   `(lower(${column})='${name}' OR lower(${column}) GLOB '${name}[-_]*')`).concat(
     `lower(${column}) IN ('sleep','bonanza','original-maps','k-map')`,
     `(lower(${column}) GLOB 'reference-[1-9]*' AND substr(${column},11) NOT GLOB '*[^0-9]*')`
-  ).join(' OR ') + ')';
+  ).concat(bookColumn ? [`EXISTS (SELECT 1 FROM book_reading_supplements reading_supplement
+    WHERE reading_supplement.book_id=${bookColumn} AND reading_supplement.section_id=${column})`] : []).join(' OR ') + ')';
+
+// Printed page IDs can span several introductory pages; keep their saved IDs intact.
+function initializeReadingSupplements(db) {
+  db.exec(`CREATE TABLE IF NOT EXISTS book_reading_supplements (
+    book_id INTEGER NOT NULL,
+    section_id TEXT NOT NULL,
+    PRIMARY KEY (book_id, section_id),
+    FOREIGN KEY (book_id, section_id) REFERENCES book_sections(book_id, section_id) ON DELETE CASCADE
+  )`);
+}
 
 function uncountedReadingSections(db, bookId, entry) {
-  const ids = db.prepare(`SELECT section_id FROM book_sections WHERE book_id=? AND ${supplementalSectionSql('section_id')}`)
+  const ids = db.prepare(`SELECT section_id FROM book_sections WHERE book_id=? AND ${supplementalSectionSql('book_sections.section_id', 'book_sections.book_id')}`)
     .all(bookId).map(row => row.section_id);
   if (entry != null && !ids.includes(entry)) ids.push(entry);
   return ids;
 }
 
-module.exports = { isSupplementalSection, supplementalSectionSql, uncountedReadingSections, isMappedGraphNode };
+module.exports = { isSupplementalSection, supplementalSectionSql, uncountedReadingSections, isMappedGraphNode, initializeReadingSupplements };
