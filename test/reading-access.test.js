@@ -37,7 +37,9 @@ test('admin pays real coins before 482 users, while ordinary players and short b
   assert.equal(access.unlock(1,263,4).newBalance,1);
   assert.equal(access.unlock(1,263,4).alreadyUnlocked,true);
   assert.equal(db.prepare('SELECT coins_spent FROM users WHERE id=1').get().coins_spent,4);
+  assert.equal(db.prepare('SELECT received FROM admin_reading_gold').get().received,4);
   assert.equal(createReadingAccess(db).getAccess(1,263).locked,false);
+  assert.equal(db.prepare('SELECT received FROM admin_reading_gold').get().received,4);
   db.close();
 });
 
@@ -116,6 +118,22 @@ test('failed coin update rolls back unlock; initial-node historical runs are ret
   const paid = createReadingAccess(db);
   assert.throws(() => paid.unlock(1, 263, 4), /failed/);
   assert.equal(paid.getAccess(1, 263).purchased, false);
+  assert.equal(db.prepare('SELECT received FROM admin_reading_gold').get().received,0);
+  db.close();
+});
+
+test('past paid unlocks credit the pool once and survive book deletion', () => {
+  const { db, access } = fixture();
+  access.unlock(1,263,4);
+  db.exec('DROP TRIGGER reading_purchase_admin_gold; DROP TABLE admin_reading_gold');
+  createReadingAccess(db);
+  assert.equal(db.prepare('SELECT received FROM admin_reading_gold').get().received,4);
+  createReadingAccess(db);
+  assert.equal(db.prepare('SELECT received FROM admin_reading_gold').get().received,4);
+  db.exec('DELETE FROM book_frontmatter WHERE book_id=263; DELETE FROM books WHERE id=263');
+  assert.equal(db.prepare('SELECT count(*) n FROM reading_unlocks WHERE book_id=263').get().n,0);
+  assert.equal(db.prepare('SELECT received FROM admin_reading_gold').get().received,4);
+  assert.equal(db.prepare('SELECT coins_spent FROM users WHERE id=1').get().coins_spent,4);
   db.close();
 });
 

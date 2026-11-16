@@ -5,7 +5,7 @@ import { _scheduleAnthologyCardCoverFlows, _queueBookCovers } from './covers.js'
 import { lazyState, _materializeLazyGroup } from './lazy.js';
 import { createBookSearchIndex } from './search-data.js';
 import { _applyBooksSearchFilter } from './search.js';
-import { _bookItemHtml } from './markup.js';
+import { _bookItemHtml, _starsHtml, _personalStarLabelHtml } from './markup.js';
 import { _containerIdsFor, _sortChildrenMap, _sortBooks, _sortSeriesBooks, _aggregateProgress } from './groups.js';
 import { _wireRenderedContent } from './actions.js';
 import { naturalCompare } from '../core/sort.js';
@@ -205,6 +205,8 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
     for (const b of topInSeries) if (b.is_container) _registerContainerBuilder(b, activeChildrenMap, context);
     lazyState.builders.set(context, ({ incremental = false } = {}) => {
       const items = (function* () {
+        yield `<div class="series-summary">` +
+          `<div class="book-rating-row star-rating" data-series-id="${s.id}" data-user-rating="${s.userRating ?? ''}">${_starsHtml(s.userRating)}<span class="star-label">${_personalStarLabelHtml(s.userRating, 'series')}</span></div></div>`;
         if (activeBooks.length) {
           for (const b of topInSeries) yield b.is_container
             ? _renderContainerItem(b, activeChildrenMap, context, incremental)

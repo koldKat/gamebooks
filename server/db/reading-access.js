@@ -24,6 +24,7 @@ function createReadingAccess(db) {
         (length(trim(start_section_id)) > 0 AND trim(start_section_id) NOT IN ('0', '-1')))
     );
   `);
+  require('./reading-purchase-gold').initializeReadingPurchaseGold(db);
   if (!db.prepare('PRAGMA table_info(book_reading_entries)').all().some(column => column.name === 'counts_as_section')) {
     db.exec('ALTER TABLE book_reading_entries ADD COLUMN counts_as_section INTEGER NOT NULL DEFAULT 1 CHECK(counts_as_section IN (0, 1))');
   }

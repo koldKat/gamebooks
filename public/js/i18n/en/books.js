@@ -10,6 +10,7 @@ export default {
     'books.empty':        'No books yet. Create one below.',
     'books.open':         'Open',
     'books.rate':         'Rate this book',
+    'books.rate_series':  'Rate this series',
     'books.sections':     '{n} sections',
     'books.has_pdf':      'PDF available',
 

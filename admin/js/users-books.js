@@ -366,7 +366,7 @@ function renderUserRow(tbody, u) {
 
     const luckyCell = tr.insertCell();
     if (u.luckyClaimed > 0) {
-      luckyCell.innerHTML = `<span style="color:#f59e0b;font-variant-numeric:tabular-nums">${u.luckyClaimed.toLocaleString()}</span>`;
+      luckyCell.innerHTML = `<span style="color:#f59e0b;font-variant-numeric:tabular-nums">${u.luckyClaimed.toLocaleString('en-US')}</span>`;
     } else {
       luckyCell.textContent = '-';
       luckyCell.className = 'muted';

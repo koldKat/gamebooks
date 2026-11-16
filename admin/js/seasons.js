@@ -8,6 +8,36 @@ import { loadSeasonReports } from './season-reports.js';
 let bound = false;
 let stopPreviews=()=>{};
 let renderedDay = null;
+async function loadOverlapChoice() {
+  const target = document.getElementById('seasons-overlap');
+  const response = await apiFetch('/api/admin/seasons/selection');
+  if (!response.ok) throw Error('Could not load overlapping events.');
+  const state = await response.json();
+  target.replaceChildren(); target.hidden = state.candidates.length < 2;
+  if (target.hidden) return;
+  const heading = document.createElement('h3'); heading.textContent = 'Events overlap. Which one should run?';
+  const detail = document.createElement('p');
+  detail.textContent = state.chosen ? 'Your choice controls the live event and its rewards for everyone during this overlap.'
+    : 'Choose the live event for everyone. Until you choose, the event closest to its main date runs. Friday the 13th always yields to other events.';
+  target.append(heading, detail);
+  for (const event of state.candidates) {
+    const button = document.createElement('button');
+    button.className = 'btn-warn'; button.textContent = event.title.replace(/ event active$/, '');
+    button.disabled = state.chosen === event.id;
+    button.addEventListener('click', async () => {
+      for (const sibling of target.querySelectorAll('button')) sibling.disabled = true;
+      try {
+        const saved = await apiFetch('/api/admin/seasons/selection', { method: 'PATCH', body: JSON.stringify({ seasonId: event.id, key: state.key }) });
+        if (!saved.ok) throw Error((await saved.json()).error || 'Could not choose the live event.');
+        await loadSeasons();
+      } catch (error) {
+        detail.textContent = error.message;
+        for (const sibling of target.querySelectorAll('button')) sibling.disabled = false;
+      }
+    });
+    target.append(button);
+  }
+}
 function renderSeasonCards(preview = null, canTest = false) {
   const target = document.getElementById('seasons-list');
   stopPreviews(); target.replaceChildren();
@@ -33,6 +63,7 @@ function renderSeasonCards(preview = null, canTest = false) {
 }
 export async function loadSeasons() {
   void loadSeasonReports();
+  void loadOverlapChoice().catch(error => { document.getElementById('seasons-status').textContent = error.message; });
   const refresh = document.getElementById('season-payout-refresh');
   refresh.onclick = loadSeasonReports;
   const target = document.getElementById('seasons-list'), status = document.getElementById('seasons-status');

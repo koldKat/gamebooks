@@ -109,16 +109,44 @@ export function renderPublicProfile(profile) {
     return;
   }
 
-  profile._expandedBookIds = profile._expandedBookIds || new Set();
+  profile._expandedRunGroups ||= new Set();
+  const roots = [], seriesGroups = new Map();
   for (const book of profile.books) {
-    const collapsedCls = profile._expandedBookIds.has(book.id) ? '' : ' pub-book-collapsed';
-    html += `<div class="pub-book${collapsedCls}" data-book-group-id="${book.id}">
+    let group = { ...book, key: `book:${book.id}` };
+    if (book.isContainer || book.runs.some(run => run.chapterName)) {
+      const children = new Map();
+      for (const run of book.runs) {
+        const id = run.bookId || book.id;
+        if (!children.has(id)) children.set(id, { id, key: `anthology:${book.id}:book:${id}`,
+          name: run.chapterName || book.name, bookOrder: run.bookOrder, runs: [] });
+        children.get(id).runs.push({ ...run, chapterName: null });
+      }
+      group = { ...group, kind: 'anthology', children: [...children.values()]
+        .sort((a, b) => (a.bookOrder ?? Infinity) - (b.bookOrder ?? Infinity)) };
+    }
+    if (book.seriesId && book.seriesName) {
+      if (!seriesGroups.has(book.seriesId)) {
+        const series = { key: `series:${book.seriesId}`, name: book.seriesName, kind: 'series', children: [], runs: [] };
+        seriesGroups.set(book.seriesId, series); roots.push(series);
+      }
+      const series = seriesGroups.get(book.seriesId);
+      series.children.push(group); series.runs.push(...book.runs);
+    } else roots.push(group);
+  }
+  function renderRunGroup(book) {
+    const collapsedCls = profile._expandedRunGroups.has(book.key) ? '' : ' pub-book-collapsed';
+    html += `<div class="pub-book${book.kind ? ` pub-book--${book.kind}` : ''}${collapsedCls}" data-book-group-id="${book.key}">
       <div class="pub-book-name">
         <span class="pub-book-toggle">▸</span>
         <span class="pub-book-title">${escapeHtml(book.name)}</span>
         <span class="pub-book-count">${t('pub.run_count', { n: book.runs.length, s: book.runs.length === 1 ? '' : 's' })}</span>
       </div>
       <div class="pub-book-runs">`;
+    if (book.children) {
+      for (const child of book.children) renderRunGroup(child);
+      html += '</div></div>';
+      return;
+    }
     for (const run of book.runs) {
       const isWin    = run.result === 'success';
       const isBattle = run.result === 'battle';
@@ -145,14 +173,15 @@ export function renderPublicProfile(profile) {
     }
     html += `</div></div>`;
   }
+  for (const group of roots) renderRunGroup(group);
   body.innerHTML = html;
   body.querySelectorAll('.pub-book-name').forEach(el => {
     el.addEventListener('click', () => {
       const bookEl  = el.closest('.pub-book');
       const expanded = bookEl.classList.toggle('pub-book-collapsed') === false;
-      const groupId  = +bookEl.dataset.bookGroupId;
-      if (expanded) profile._expandedBookIds.add(groupId);
-      else          profile._expandedBookIds.delete(groupId);
+      const groupId = bookEl.dataset.bookGroupId;
+      if (expanded) profile._expandedRunGroups.add(groupId);
+      else          profile._expandedRunGroups.delete(groupId);
     });
   });
   body.querySelectorAll('.pub-run-btn').forEach(btn => {

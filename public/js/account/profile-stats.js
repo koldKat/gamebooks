@@ -9,10 +9,9 @@ export function profileStatsHtml(data) {
   const group = (title, rows) => `<section class="profile-stat-group"><h4>${escapeHtml(title)}</h4>${rows.join('')}</section>`;
   const titles = [['admin', data.isAdmin], ['author', data.isAuthor], ['contributor', data.isContributor],
     ['moderator', data.isModerator], ['squire', data.isSquire]].filter(([, earned]) => earned);
-  const titleSection = titles.length ? `<section class="profile-titles"><h4>${escapeHtml(t('profile.stats.titles'))}</h4>${titles.map(([role]) =>
+  const titleSection = titles.length ? `<section class="profile-titles"><h4>${escapeHtml(t('profile.stats.titles'))}:</h4>${titles.map(([role]) =>
     `<div class="profile-title-row">${renderRoleBadge(role)}<span>${escapeHtml(roleBadgeLabel(role))}</span></div>`).join('')}</section>` : '';
-  return [
-    titleSection,
+  const stats = [
     group(t('profile.stats.library'), [
       row(t('pub.stat.books_suffix'), data.totalBooks),
       row(t('pub.stat.created_suffix'), data.createdBooks ?? 0),
@@ -43,4 +42,5 @@ export function profileStatsHtml(data) {
       row(t('profile.stats.visited'), data.sectionsVisited ?? 0),
     ]) + '</div>',
   ].join('');
+  return titleSection + `<details class="profile-stats-toggle"><summary>${escapeHtml(t('profile.stats.heading'))}</summary><div class="profile-stats-grid">${stats}</div></details>`;
 }

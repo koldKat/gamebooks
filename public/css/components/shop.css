@@ -642,6 +642,18 @@
   white-space: nowrap;
 }
 
+@media (max-width: 1366px) {
+  #books-screen :is(#books-xp-hb-rate, #books-xp-boost, #app-xp-hb-rate, #app-xp-boost,
+    #avg-lvl-users, #avg-lvl-range, #books-job-xp-next-ruby, #books-job-xp-ruby-cost,
+    #app-job-xp-next-ruby, #app-job-xp-ruby-cost) {
+    display: none;
+  }
+
+  #books-screen :is(#books-xp-text, #app-xp-text, #avg-lvl-text, .job-xp-sub-row) {
+    white-space: normal;
+  }
+}
+
 /* App-wide XP uses the player-level text palette and a violet progress fill. */
 #app-xp-summary {
   display: flex;

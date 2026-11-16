@@ -1,4 +1,9 @@
 /* ── Series header row ──────────────────────────────────────────── */
+.series-summary {
+  padding: 0.35rem 0.6rem;
+  border-bottom: 1px solid rgba(245, 166, 35, 0.18);
+}
+
 .series-header-row {
   display: flex;
   align-items: center;

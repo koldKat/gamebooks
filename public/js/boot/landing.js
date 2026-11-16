@@ -1,4 +1,5 @@
 import { bootState } from './state.js';
+import { beginLibraryScrollRestore } from './library-scroll.js';
 import { setSeasonPreviewUser } from '../seasonal-events/preview.js';
 import { state, setViewingPt, getToken, setUsername, apiFetch, setCurrentBookId, setCurrentUserLevel, setBonusUndos, setBonusFastTravels } from '../core/state.js';
 import { destroyNetwork } from '../graph.js';
@@ -149,6 +150,7 @@ export async function showBooks() {
   document.getElementById('legend').style.display          = 'none';
   document.getElementById('login-screen').style.display    = 'none';
   document.getElementById('books-screen').style.display    = 'flex';
+  const restoreLibraryScroll = beginLibraryScrollRestore();
   window._syncScrollTopBtns?.();
   setBooksRevealedAt(Date.now());
   setDiscoverableLimit(null);
@@ -198,6 +200,7 @@ export async function showBooks() {
   }
 
   // Cached content is usable immediately; initial routing still waits for refresh.
+  restoreLibraryScroll();
   if (getCachedBooks()) window.appStartup?.ready();
 
   try {
@@ -221,5 +224,8 @@ export async function showBooks() {
     if (!Array.isArray(books) || !Array.isArray(allSeries) || !Array.isArray(stashes)) return;
     renderBooksList(books, allSeries, stashes);
     setBooksDataFresh(true);
-  } catch (_) {}
+  } catch (_) {
+  } finally {
+    restoreLibraryScroll(true);
+  }
 }

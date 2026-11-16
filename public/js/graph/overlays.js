@@ -4,7 +4,7 @@ import { GRID_SIZE } from './viewport.js';
 import { _NOTE_FONT, _NOTE_PAD_X, _NOTE_PAD_Y, _NOTE_LINE_H } from './overlay-cache.js';
 
 // Use a fixed world-space radius for node grid halos.
-const FOG_RADIUS = 125;
+const FOG_RADIUS = 150;
 
 // Drawn on 'beforeDrawing' (under nodes/edges), in world coordinates so it
 // pans/zooms with the graph instead of sitting fixed on screen.

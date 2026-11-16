@@ -260,7 +260,10 @@ export function _wireRenderedContent(list) {
   {
     _findRenderedContent(list, '.book-rating-row').forEach(row => {
       const bookId = +row.dataset.bookId;
-      const cached = () => booksState._cachedBooks?.find(b => b.id === bookId);
+      const seriesId = +row.dataset.seriesId;
+      const cached = () => seriesId
+        ? booksState._cachedAllSeries?.find(s => s.id === seriesId)
+        : booksState._cachedBooks?.find(b => b.id === bookId);
       let myRating = parseFloat(row.dataset.userRating) || null;
       const stars  = row.querySelectorAll('.star');
       const lbl    = row.querySelector('.star-label');
@@ -275,7 +278,7 @@ export function _wireRenderedContent(list) {
         });
         lbl.innerHTML = hoverVal !== null
           ? `<span class="star-avg">${hoverVal % 1 === 0 ? hoverVal.toFixed(1) : hoverVal}</span>`
-          : _personalStarLabelHtml(myRating);
+          : _personalStarLabelHtml(myRating, seriesId ? 'series' : 'book');
       };
 
       stars.forEach(star => {
@@ -289,7 +292,7 @@ export function _wireRenderedContent(list) {
           row.dataset.userRating = toSave ?? '';
           updateStars(null);
           try {
-            const res = await apiFetch(`/api/books/${bookId}/rating`, { method: 'PATCH', body: JSON.stringify({ rating: toSave }) });
+            const res = await apiFetch(seriesId ? `/api/series/${seriesId}/rating` : `/api/books/${bookId}/rating`, { method: 'PATCH', body: JSON.stringify({ rating: toSave }) });
             if (res.ok) {
               const data = await res.json();
               const c = cached(); if (c) { c.userRating = toSave; c.avgRating = data.avgRating; c.voteCount = data.voteCount; }
@@ -299,7 +302,7 @@ export function _wireRenderedContent(list) {
               myRating = prevRating; row.dataset.userRating = prevRating ?? '';
               updateStars(null);
               const errData = await res.json().catch(() => ({}));
-              _flashRatingGate(row, errData.error || (res.status === 403 ? 'Complete a run first to rate' : t('err.save')));
+              _flashRatingGate(row, errData.error || (res.status === 403 ? (seriesId ? 'Complete all books first to rate' : 'Complete a run first to rate') : t('err.save')));
             }
           } catch {
             myRating = prevRating; row.dataset.userRating = prevRating ?? '';

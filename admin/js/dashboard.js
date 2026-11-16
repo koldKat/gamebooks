@@ -38,8 +38,8 @@ function applyStats(d) {
   document.getElementById('s-coins-avail').textContent  = fmtN(d.totalCoinsAvailable);
   document.getElementById('s-coins-spent').textContent   = fmtN(d.totalCoinsSpent);
   document.getElementById('s-shop-purchases').textContent = fmtN(d.totalUpgrades);
-  document.getElementById('s-lucky-gc-generated').textContent = fmtN(d.luckyGcGenerated);
-  document.getElementById('s-lucky-gc-claimed').textContent   = fmtN(d.luckyGcClaimed);
+  document.getElementById('s-lucky-gc-generated').textContent = (Number(d.luckyGcGenerated) || 0).toLocaleString('en-US');
+  document.getElementById('s-lucky-gc-claimed').textContent   = (Number(d.luckyGcClaimed) || 0).toLocaleString('en-US');
   const extraMetrics = {
     's-online': d.onlineUsers, 's-active-1h': d.activeUsers1h, 's-active-24h': d.activeUsers24h, 's-new-7d': d.newUsers7d, 's-new-30d': d.newUsers30d,
     's-playable-books': d.playableBooks, 's-reading-books': d.readingBooks,
@@ -53,6 +53,7 @@ function applyStats(d) {
     's-rubies-earned': d.rubiesEarned, 's-rubies-avail': d.rubiesAvailable,
     's-rubies-sold': d.rubiesSold, 's-rubies-bought': d.rubiesBought,
     's-ruby-stock': d.marketRubies, 's-rubies-generated': d.marketRubiesGenerated, 's-ruby-rate': d.rubyRate,
+    's-lucky-rubies': d.luckyRubiesEarned,
     's-market-diamonds-mined': d.marketDiamondsMined,
   };
   for (const [id, value] of Object.entries(extraMetrics)) document.getElementById(id).textContent = value == null ? '-' : fmtN(value);
@@ -74,6 +75,7 @@ export async function loadAdminGc() {
     const s = await api('GET', '/api/admin/gc-supply');
     document.getElementById('s-admin-gc-earned').textContent = fmtN(s.earned);
     document.getElementById('s-admin-gc-avail').textContent  = fmtN(s.available);
+    document.getElementById('s-reading-gold').textContent = fmtN(s.readingPurchases);
   } catch (e) { console.error('Admin GC:', e); }
 }
 

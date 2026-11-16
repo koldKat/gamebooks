@@ -147,13 +147,18 @@ test('each annual occurrence has its own day count and permanent settlement', t 
   assert.equal(paid.results.length, 1); assert.equal(paid.results[0].startsOn, '2027-10-28'); assert.equal(f.gifted(), 1);
 });
 
-test('future calendar events and overlapping qualifying events require no payout-specific code', t => {
+test('future calendar events use the selected overlap without awarding both festivals', t => {
   events.push({ id: 'future-festival', title: 'Future Festival event active', start: 1030, end: 1102,
     xpMultiplier: 2, xpEvents: ['death_run'] });
   t.after(() => events.pop());
+  const { activeSeasons, seasonOverlapKey } = require('../public/js/seasonal-events/schedule');
+  const { setSeasonChoiceReader } = require('../server/season-selection');
+  const key = seasonOverlapKey(activeSeasons(events, new Date('2026-10-31T12:00:00Z')));
+  setSeasonChoiceReader(() => ({ [key]: 'future-festival' }));
+  t.after(() => setSeasonChoiceReader(() => ({})));
   const f = fixture(t); f.record(1, 'death_run', '2026-10-31T12:00:00Z');
   const paid = f.settle('2026-11-04T00:00:00Z');
-  assert.equal(paid.results.length, 2); assert.equal(f.gifted(), 2);
+  assert.equal(paid.results.length, 1); assert.equal(f.gifted(), 1);
   assert.equal(f.notifications()[0].payload.message, 'Thank you for participating in the Future Festival event!');
 });
 

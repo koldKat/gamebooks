@@ -1,8 +1,9 @@
 // Annual seasonal calendar and automatic day changes, using the server's Sofia date.
 import events from './calendar.json' with { type: 'json' };
-import { activeSeasons, nextSeason, seasonWindow } from './schedule.js';
+import { selectActiveSeasons, nextSeason, seasonWindow } from './schedule.js';
 export { seasonWindow, availableSeasonWindows } from './schedule.js';
 export const seasonalEvents = events;
+let overlapChoices = {};
 export async function reloadSeasonalCalendar() {
   const response = await fetch(new URL('./calendar.json', import.meta.url), { cache: 'no-cache' });
   if (!response.ok) throw new Error('Seasonal calendar unavailable');
@@ -21,6 +22,8 @@ export async function reloadSeasonalCalendar() {
     throw new Error('Invalid seasonal calendar');
   }
   seasonalEvents.splice(0, seasonalEvents.length, ...next);
+  const selection = await fetch('/api/seasons/selection', { cache: 'no-store' });
+  if (selection.ok) overlapChoices = (await selection.json()).choices || {};
 }
 const calendar = new Intl.DateTimeFormat('en-US', {
   timeZone: 'Europe/Sofia', year: 'numeric', month: 'numeric', day: 'numeric',
@@ -46,5 +49,5 @@ export function nextSeasonalRefreshDelay(date = new Date()) {
 export function activeSeasonalEvent(date = new Date()) {
   return activeSeasonalEvents(date)[0] || null;
 }
-export function activeSeasonalEvents(date = new Date()) { return activeSeasons(seasonalEvents, date); }
+export function activeSeasonalEvents(date = new Date()) { return selectActiveSeasons(seasonalEvents, date, overlapChoices); }
 export function nextSeasonalEvent(date = new Date()) { return nextSeason(seasonalEvents, date); }

@@ -8,16 +8,16 @@ const markup = readFileSync(new URL('../../../public/js/books/markup.js', import
 const actions = readFileSync(new URL('../../../public/js/books/actions.js', import.meta.url), 'utf8')
   .replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
 
-function setup(rating, response = { ok: true, avgRating: 1, voteCount: 99 }) {
+function setup(rating, response = { ok: true, avgRating: 1, voteCount: 99 }, series = false) {
   const book = { id: 42, name: 'Shared', total_sections: 100, visited: 0,
     userRating: rating, avgRating: 1, voteCount: 99 };
   const label = { innerHTML: '' }, requests = [], errors = [], handlers = {};
   const stars = Array.from({ length: 5 }, (_, i) => ({ dataset: { pos: String(i + 1) }, offsetWidth: 20,
     addEventListener(type, callback) { this[type] = callback; } }));
-  const row = { dataset: { bookId: '42', userRating: rating ?? '' },
+  const row = { dataset: { [series ? 'seriesId' : 'bookId']: '42', userRating: rating ?? '' },
     querySelectorAll: () => stars, querySelector: () => label,
     addEventListener(type, callback) { handlers[type] = callback; } };
-  const context = { booksState: { _cachedBooks: [book], _activeSeriesRuns: [], _hooks: {}, _currentUserId: 7 },
+  const context = { booksState: { _cachedBooks: series ? [] : [book], _cachedAllSeries: series ? [book] : [], _activeSeriesRuns: [], _hooks: {}, _currentUserId: 7 },
     _isMobile: () => false, escapeHtml: String, t: key => key,
     refreshCoinsDisplay() {},
     apiFetch: async (url, options) => {
@@ -71,3 +71,15 @@ for (const response of [{ ok: false, status: 403 }, { ok: false, status: 500 }, 
     assert.equal(app.errors.length, 1);
   });
 }
+
+test('expanded series save and clear personal ratings through the series API', async () => {
+  const app = setup(null, { ok: true, avgRating: 1, voteCount: 99 }, true);
+  await app.stars[3].click({ offsetX: 15 });
+  assert.equal(app.book.userRating, 4);
+  await app.stars[3].click({ offsetX: 15 });
+  assert.equal(app.book.userRating, null);
+  assert.match(app.label.innerHTML, /books.rate_series/);
+  app.handlers.mouseleave();
+  assert.match(app.label.innerHTML, /books.rate_series/);
+  assert.deepEqual(app.requests, [['/api/series/42/rating', { rating: 4 }], ['/api/series/42/rating', { rating: null }]]);
+});

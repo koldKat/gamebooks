@@ -157,6 +157,7 @@ const {
 const {
   handleAdminStats, startAppSizeStats,
   handleAdminSeasonPayouts,
+  handleSeasonSelection, handleAdminSeasonSelection,
   handleAdminGetUser,
   handleAdminGetBookStats,
   handleAdminGetUsers,
@@ -515,6 +516,8 @@ const _routeRequest = async (req, res) => {
     if ((m = urlPath.match(/^\/admin\/js\/([a-zA-Z0-9_-]+\.js)$/)) && method === 'GET')
       return serveAdminFile(req, res, `js/${m[1]}`);
     if (method === 'GET'  && urlPath === '/api/admin/stats')  return await handleAdminStats(req, res);
+    if (method === 'GET' && urlPath === '/api/seasons/selection') return handleSeasonSelection(req, res);
+    if (['GET', 'PATCH'].includes(method) && urlPath === '/api/admin/seasons/selection') return await handleAdminSeasonSelection(req, res);
     if (method === 'GET' && urlPath === '/api/admin/seasons/payouts') return await handleAdminSeasonPayouts(req, res);
     if (method === 'GET'  && urlPath === '/api/admin/users')  return await handleAdminGetUsers(req, res);
     if (method === 'GET'  && urlPath === '/api/admin/books')  return await handleAdminGetBooks(req, res);

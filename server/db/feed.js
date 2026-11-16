@@ -56,12 +56,13 @@ function getFeed() {
     _cascadeAdds.add(`${sr.user_id}:${sr.seriesId}:${sr.added_at}`);
   }
 
-  // Keep the first-rating date even if a rating is changed, cleared and restored.
+  // Display the current rating at its last saved date; XP remains a one-time award.
   const ratedBookRows = db.prepare(
-    `SELECT xe.created_at, ub.rating,
+    `SELECT COALESCE(ub.rated_at, xe.created_at) AS created_at, ub.rating,
             b.id AS bookId, b.name AS bookName, b.is_container AS bookIsContainer,
-            b.is_public, b.cover_path, b.series_id AS seriesId,
-            s.name AS seriesName, b.series_number AS seriesNumber, s.is_public AS seriesIsPublic,
+            b.is_public, b.cover_path, COALESCE(s.id, ps.id) AS seriesId,
+            COALESCE(s.name, ps.name) AS seriesName, COALESCE(b.series_number, p.series_number) AS seriesNumber,
+            COALESCE(s.is_public, ps.is_public, 0) AS seriesIsPublic,
             p.id AS parentBookId, p.name AS parentBookName, p.is_public AS parentIsPublic, p.cover_path AS parentCoverPath,
             u.username, u.public_profile, u.avatar_path, u.hide_from_feed, u.xp,
             u.is_author, u.is_contributor, u.is_moderator, u.is_squire, u.display_name
@@ -71,7 +72,8 @@ function getFeed() {
      JOIN users u       ON u.id = xe.user_id
      LEFT JOIN series s ON s.id = b.series_id
      LEFT JOIN books p  ON p.id = b.parent_book_id
-     WHERE xe.event = 'rate_book' AND xe.created_at >= ?
+     LEFT JOIN series ps ON ps.id = p.series_id
+     WHERE xe.event = 'rate_book' AND COALESCE(ub.rated_at, xe.created_at) >= ?
        AND b.is_public = 1 AND COALESCE(u.hide_from_feed, 0) = 0 AND ub.rating IS NOT NULL`
   ).all(cutoffSec);
   for (const row of ratedBookRows) {
@@ -96,14 +98,14 @@ function getFeed() {
   }
 
   const ratedSeriesRows = db.prepare(
-    `SELECT xe.created_at, us.rating, s.id AS seriesId, s.name AS seriesName,
+    `SELECT COALESCE(us.rated_at, xe.created_at) AS created_at, us.rating, s.id AS seriesId, s.name AS seriesName,
             u.username, u.public_profile, u.avatar_path, u.hide_from_feed, u.xp,
             u.is_author, u.is_contributor, u.is_moderator, u.is_squire, u.display_name
      FROM xp_events xe
      JOIN series s        ON s.id = CAST(xe.ref AS INTEGER)
      JOIN user_series us  ON us.user_id = xe.user_id AND us.series_id = s.id
      JOIN users u         ON u.id = xe.user_id
-     WHERE xe.event = 'rate_series' AND xe.created_at >= ? AND s.is_public = 1
+     WHERE xe.event = 'rate_series' AND COALESCE(us.rated_at, xe.created_at) >= ? AND s.is_public = 1
        AND COALESCE(u.hide_from_feed, 0) = 0 AND us.rating IS NOT NULL`
   ).all(cutoffSec);
   for (const row of ratedSeriesRows) {
@@ -166,6 +168,7 @@ function getFeed() {
      JOIN users  u ON u.id = sr.user_id
      WHERE s.is_open_world = 1 AND s.is_public = 1`
   ).all();
+  const recordedSeriesRuns = new Set(seriesRunRows.map(sr => `${sr.userId}:${sr.seriesId}:${sr.run_index}`));
   for (const sr of seriesRunRows) {
     if (sr.hide_from_feed) continue;
     const pub = sr.public_profile === 1;
@@ -174,6 +177,7 @@ function getFeed() {
       userId:            sr.userId,
       seriesId:          sr.seriesId,
       seriesName:        sr.seriesName,
+      seriesIsPublic:    sr.seriesIsPublic === 1,
       runIndex:          sr.run_index,
       userPublicProfile: pub,
       isAuthor:          sr.is_author === 1,
@@ -289,10 +293,11 @@ function getFeed() {
     if (!bookIsPublic) {
       // Still allow explicitly public runs through even for private books
       // (but not for open world - series_run_completed handles those)
-      if (!seriesIsOpenWorld) {
+      {
         const fallbackTs2 = (row.updated_at || 0) * 1000;
         for (let i = 0; i < (state.playthroughs || []).length; i++) {
           const pt = state.playthroughs[i];
+          if (seriesIsOpenWorld && recordedSeriesRuns.has(`${row.userId}:${seriesId}:${i}`)) continue;
           if (pt.startedAt && pt.startedAt >= cutoffMs && !(row.hide_from_feed && !pt.isPublic)) {
             entries.push({ type: 'run_started', username: row.username, bookName: row.bookName,
               bookId: row.bookId, runIndex: i, completedAt: pt.startedAt, userPublicProfile: pub, bookIsPublic: false,
@@ -350,7 +355,8 @@ function getFeed() {
 
       // Run started - skip placeholder runs (startedAt null) and open-world books
       // (series run start is recorded once via series_run_started, not per-book)
-      if (pt.startedAt && pt.startedAt >= cutoffMs && !seriesIsOpenWorld) {
+      const representedBySeries = seriesIsOpenWorld && recordedSeriesRuns.has(`${row.userId}:${seriesId}:${i}`);
+      if (pt.startedAt && pt.startedAt >= cutoffMs && !representedBySeries) {
         if (!row.hide_from_feed) entries.push({ type: 'run_started', username: row.username, bookName: row.bookName,
           bookId: row.bookId, runIndex: i, completedAt: pt.startedAt, userPublicProfile: pub, bookIsPublic,
           userLevel: computeLevel(row.xp || 0), userTitle: getTitleForLevel(computeLevel(row.xp || 0)),
@@ -363,7 +369,7 @@ function getFeed() {
       // Run completed - suppress per-book event for open world (series_run_completed handles it)
       if (!pt.completed) continue;
       if (pt.result !== 'death' && pt.result !== 'success' && pt.result !== 'battle') continue;
-      if (seriesIsOpenWorld) continue;
+      if (representedBySeries) continue;
       const ts = pt.completedAt || fallbackTs;
       if (ts < cutoffMs) continue;
       if (!row.hide_from_feed || pt.isPublic) entries.push({ type: 'run_completed', username: row.username, bookName: row.bookName,
@@ -621,13 +627,16 @@ function getFeed() {
              u.is_author, u.is_contributor, u.is_moderator, u.is_squire, u.display_name,
              b.name AS bookName, b.cover_path, b.is_public,
              p.id AS parentBookId, p.name AS parentBookName, p.cover_path AS parentCoverPath,
-             s.id AS seriesId, s.name AS seriesName, s.is_public AS seriesIsPublic,
-             b.series_number, ub.party_id, ub.state_data
+             COALESCE(s.id, ps.id) AS seriesId, COALESCE(s.name, ps.name) AS seriesName,
+             COALESCE(s.is_public, ps.is_public, 0) AS seriesIsPublic,
+             COALESCE(b.series_number, p.series_number) AS series_number, ub.party_id, ub.state_data,
+             p.is_public AS parentIsPublic
       FROM xp_events e
       JOIN users u ON e.user_id = u.id
       JOIN books b ON b.id = CAST(e.ref AS INTEGER)
       LEFT JOIN books p       ON p.id  = b.parent_book_id
       LEFT JOIN series s      ON s.id  = b.series_id
+      LEFT JOIN series ps     ON ps.id = p.series_id
       LEFT JOIN user_books ub ON ub.user_id = e.user_id AND ub.book_id = CAST(e.ref AS INTEGER)
       WHERE e.event = ? AND e.created_at > ? AND u.hide_from_feed = 0
     `).all(type, cutoffSec);
@@ -661,7 +670,7 @@ function getFeed() {
         parentBookId: row.parentBookId || null, parentBookName: row.parentBookName || null,
         parentCoverUrl: row.parentCoverPath ? `/covers/${row.parentCoverPath}` : null,
         seriesId: row.seriesId || null, seriesName: row.seriesName || null, seriesNumber: row.series_number || null,
-        seriesIsPublic: row.seriesIsPublic === 1,
+        seriesIsPublic: row.seriesIsPublic === 1, parentBookIsPublic: row.parentIsPublic === 1,
         avatarUrl: row.avatar_path ? `/avatars/${row.avatar_path}` : null,
         coverUrl:  row.cover_path  ? `/covers/${row.cover_path}`  : null,
         partyId: row.party_id || null });
@@ -700,7 +709,7 @@ function getFeed() {
   `).all(cutoffSec);
   for (const row of wonAllAnthRows) {
     entries.push({ type: 'won_all_anthology', username: row.username,
-      bookId: parseInt(row.anthologyId, 10), bookName: row.bookName,
+      bookId: parseInt(row.anthologyId, 10), bookName: row.bookName, isContainer: true,
       bookIsPublic: row.is_public === 1, completedAt: row.created_at * 1000,
       userPublicProfile: row.public_profile === 1,
       isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, isModerator: row.is_moderator === 1, isSquire: row.is_squire === 1, displayName: row.display_name || null,
@@ -742,7 +751,7 @@ function getFeed() {
     `).all(event, cutoffSec);
     for (const row of rows) {
       entries.push({ type, username: row.username,
-        bookId: parseInt(row.anthologyId, 10), bookName: row.bookName,
+        bookId: parseInt(row.anthologyId, 10), bookName: row.bookName, isContainer: true,
         bookIsPublic: row.is_public === 1, completedAt: row.created_at * 1000,
         userPublicProfile: row.public_profile === 1,
         isAuthor: row.is_author === 1, isContributor: row.is_contributor === 1, isModerator: row.is_moderator === 1, isSquire: row.is_squire === 1, displayName: row.display_name || null,
@@ -821,6 +830,26 @@ function getFeed() {
   for (const row of annRows) {
     entries.push({ type: 'announcement', id: row.id, title: row.title, body: row.body,
       completedAt: row.published_at * 1000, updatedAt: row.updated_at });
+  }
+
+  // Resolve collection context consistently for every book-scoped activity.
+  const bookContext = new Map(rows.map(row => [row.bookId, row]));
+  for (const entry of entries) {
+    const context = bookContext.get(entry.bookId);
+    if (!context) continue;
+    if (context.bookIsContainer) entry.isContainer = true;
+    if (!entry.seriesId && context.seriesId) {
+      entry.seriesId = context.seriesId;
+      entry.seriesName = context.seriesName;
+      entry.seriesNumber = context.series_number || null;
+      entry.seriesIsPublic = context.seriesIsPublic === 1;
+    }
+    if (!entry.parentBookId && context.parentBookId) {
+      entry.parentBookId = context.parentBookId;
+      entry.parentBookName = context.parentBookName;
+      entry.parentCoverUrl = context.parentCoverPath ? `/covers/${context.parentCoverPath}` : null;
+    }
+    if (entry.parentBookId === context.parentBookId) entry.parentBookIsPublic = context.parentIsPublic === 1;
   }
 
   // Collection milestones inherit the party only from a matching book milestone.
@@ -937,7 +966,8 @@ function getFeedVersion() {
   ).get();
   const jobs = db.prepare('SELECT COUNT(*) AS n, COALESCE(MAX(created_at),0) AS m FROM job_level_events').get();
   const us = db.prepare(
-    `SELECT COUNT(*) AS n, COALESCE(MAX(us.added_at), 0) AS m, COALESCE(MAX(s.published_at), 0) AS p
+    `SELECT COUNT(*) AS n, COALESCE(MAX(us.added_at), 0) AS m, COALESCE(MAX(s.published_at), 0) AS p,
+            COALESCE(SUM(us.rated_at),0) AS r, COUNT(us.rating) AS v, COALESCE(SUM(us.rating),0) AS scores
      FROM user_series us JOIN series s ON s.id = us.series_id
      WHERE s.is_public = 1`
   ).get();
@@ -947,7 +977,7 @@ function getFeedVersion() {
      WHERE s.is_open_world = 1 AND s.is_public = 1`
   ).get();
   const ub = db.prepare(
-    'SELECT COUNT(*) AS n, COALESCE(MAX(created_at), 0) AS m FROM user_books'
+    'SELECT COUNT(*) AS n, COALESCE(MAX(created_at), 0) AS m, COALESCE(SUM(rated_at),0) AS r, COUNT(rating) AS v, COALESCE(SUM(rating),0) AS scores FROM user_books'
   ).get();
   const uu = db.prepare(
     'SELECT COUNT(*) AS n, COALESCE(MAX(created_at), 0) AS m FROM users'
@@ -961,9 +991,9 @@ function getFeedVersion() {
   // Include the date in the fingerprint so Today/Yesterday labels refresh after midnight.
   return [
     jobs.n, jobs.m, xe.n, xe.m, us.n, us.m, us.p, sr.n, sr.s, sr.c,
-    ub.n, ub.m, uu.n, uu.m, an.n, an.m, an.u, pin?.id ?? 0,
+    ub.n, ub.m, ub.r, ub.v, ub.scores, us.r, us.v, us.scores, uu.n, uu.m, an.n, an.m, an.u, pin?.id ?? 0,
     // Invalidate cached feeds when this grouping format first becomes available.
-    new Date().toISOString().slice(0, 10), _squireRevision, 'party-collections-1',
+    new Date().toISOString().slice(0, 10), _squireRevision, 'collection-context-2',
   ].join(':');
 }
 
@@ -1018,9 +1048,12 @@ function getPublicProfile(username) {
 
   const bookRows = db.prepare(`
     SELECT b.id, b.name, b.created_by, b.parent_book_id, b.is_container, b.total_sections,
+      s.id AS profileSeriesId, s.name AS profileSeriesName, b.book_order,
       b.discoverable_sections, b.max_section_number, e.section_id AS uncounted_entry, ub.state_data,
       (SELECT json_group_array(section_id) FROM book_reading_supplements WHERE book_id=b.id) AS uncounted_sections
     FROM user_books ub JOIN books b ON b.id = ub.book_id
+    LEFT JOIN books p ON p.id=b.parent_book_id
+    LEFT JOIN series s ON s.id=COALESCE(b.series_id,p.series_id) AND s.is_public=1
     LEFT JOIN book_reading_entries e ON e.book_id=b.id AND e.counts_as_section=0
     WHERE ub.user_id = ?
   `).all(user.id);
@@ -1051,6 +1084,7 @@ function getPublicProfile(username) {
       index:       i,
       bookId:      row.id,
       chapterName: row.parent_book_id ? row.name : null,
+      bookOrder:   row.book_order,
       result:      pt.result,
       completedAt: pt.completedAt || null,
       isPublic:    pt.isPublic || false,
@@ -1066,7 +1100,9 @@ function getPublicProfile(username) {
     if (!runs.length) continue;
     const groupId   = row.parent_book_id || row.id;
     const groupName = row.parent_book_id ? (parentNames.get(row.parent_book_id) || row.name) : row.name;
-    if (!groupMap.has(groupId)) groupMap.set(groupId, { id: groupId, name: groupName, runs: [] });
+    if (!groupMap.has(groupId)) groupMap.set(groupId, { id: groupId, name: groupName,
+      isContainer: !!row.parent_book_id, seriesId: row.profileSeriesId || null,
+      seriesName: row.profileSeriesName || null, runs: [] });
     groupMap.get(groupId).runs.push(...runs);
   }
 

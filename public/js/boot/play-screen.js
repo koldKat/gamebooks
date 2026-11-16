@@ -21,6 +21,7 @@ import { setCurrentBookCover, resetBgState, hideCtxMenu, _updateSidebarBookInfo,
 import { _loadingGraphSvg, _refreshInvDisplay, setDiceRollerVisible, setGuideVisible, _isMobile, _revealLanding } from './helpers.js';
 import { _pushNav, _lockView } from './navigation.js';
 import { showBooks } from './landing.js';
+import { captureLibraryScroll } from './library-scroll.js';
 
 export async function showMain(bookId, isbn = null, issn = null, asin = null, cover = null, pdfPath = null, pages = null, authors = null, description = null, discoverableSections = null, isPublic = false, isCreator = true, seriesName = null, seriesNumber = null, isContainer = false, parentBookId = null, bookOrder = null) {
   if (_isMobile()) { showBooks(); return false; }
@@ -31,6 +32,7 @@ export async function showMain(bookId, isbn = null, issn = null, asin = null, co
   document.body.classList.remove('promo-active');
   const _pvi2 = document.getElementById('login-promo-video-iframe');
   if (_pvi2) _pvi2.src = '';
+  captureLibraryScroll();
   document.getElementById('landing-wrapper').style.display = 'none';
   // Hide the sibling landing background layers and stop rotation while playing.
   _stopLandingCoverRotation();

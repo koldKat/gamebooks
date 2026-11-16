@@ -6,7 +6,8 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 
 function feedFor({ publicRun = true, publicBook = true, hideFirst = true, firstOutcome = null,
-  differentStarts = false, reverseMilestones = false, milestoneOnlyFirst = false, milestoneIndex = 3 } = {}) {
+  differentStarts = false, reverseMilestones = false, milestoneOnlyFirst = false, milestoneIndex = 3,
+  openWorld = false, container = false } = {}) {
   const now = Date.now();
   const result = firstOutcome === 'first_loss' ? 'death' : firstOutcome === 'first_battle_death' ? 'battle' : 'success';
   const runs = Array.from({length:firstOutcome ? milestoneIndex + 1 : 1}, (_,index) => ({
@@ -20,7 +21,8 @@ function feedFor({ publicRun = true, publicBook = true, hideFirst = true, firstO
       startedAt:run.startedAt + (differentStarts && index === 1 ? 500 : 0)}))}),
     created_at:Math.floor((now - 10000 + milestoneIndex * 1000) / 1000),
     bookId: 868, bookName: 'Party book', is_public: publicBook ? 1 : 0,
-    bookIsContainer: 0, created_by: 99,
+    bookIsContainer: container ? 1 : 0, created_by: 99,
+    seriesId: 12, seriesName: 'Series', series_number: 1, seriesIsPublic: 1, seriesIsOpenWorld: openWorld,
   }));
   const deps = {
     './connection': { db: { prepare: sql => ({
@@ -58,6 +60,25 @@ test('public-book party starts respect hide-feed settings while shared completio
   assert.equal(completions.length, 1);
   assert.equal(completions[0].partyId, 13);
   assert.equal(completions[0].usernames.map(u => u.username).sort().join(','), 'koldKat,sashii');
+});
+
+test('open-world book runs without a corresponding series journey remain visible', () => {
+  const entries = feedFor({ openWorld: true, hideFirst: false });
+  for (const type of ['run_started', 'run_completed']) {
+    const matches = entries.filter(entry => entry.type === type);
+    assert.equal(matches.length, 1);
+    assert.equal(matches[0].seriesId, 12);
+    assert.equal(matches[0].seriesIsPublic, true);
+  }
+});
+
+test('first wins, losses and battle deaths retain anthology and series context', () => {
+  for (const firstOutcome of ['first_win', 'first_loss', 'first_battle_death']) {
+    const entry = feedFor({ firstOutcome, container: true, hideFirst: false }).find(e => e.type === firstOutcome);
+    assert.equal(entry.isContainer, true);
+    assert.equal(entry.seriesId, 12);
+    assert.equal(entry.seriesIsPublic, true);
+  }
 });
 
 test('hiding feed activity still excludes a hidden player from private party runs', () => {

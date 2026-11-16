@@ -336,6 +336,10 @@ function _connectFeedSSE() {
         }
         if (payload.type === 'config_changed') {
           _setHeaderVersion(payload.version);
+          if (payload.seasonSelection) {
+            _signalConfigChange();
+            _broadcastLiveEvent('config_reconcile');
+          }
           _broadcastLiveEvent('config_changed', { version: payload.version });
           return;
         }

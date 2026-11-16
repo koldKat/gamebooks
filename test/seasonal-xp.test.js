@@ -51,11 +51,20 @@ test('Diwali doubles normal and simulator wins only within its moving Sofia date
     assert.equal(seasonalXpMultiplier(event,new Date('2026-11-08T12:00:00Z')),1);
   }
   for (const event of ['win_run','battlesim_win','death_run','battlesim_loss']) {
-    assert.equal(seasonalXpMultiplier(event,new Date('2027-10-31T12:00:00Z')),2);
+    assert.equal(seasonalXpMultiplier(event,new Date('2027-10-31T12:00:00Z')),event.includes('win') ? 1 : 2,
+      'only the selected overlapping festival applies; Halloween is closest on October 31');
   }
 });
 
-test('Halloween loss bonuses use inclusive Sofia dates and exclude unrelated rewards', () => {
+test('Halloween loss bonuses use inclusive Sofia dates and exclude unrelated rewards', t => {
+  const { activeSeasons, seasonOverlapKey } = require('../public/js/seasonal-events/schedule');
+  const { setSeasonChoiceReader } = require('../server/season-selection');
+  const events = require('../public/js/seasonal-events/calendar.json'), choices = {};
+  for (const year of [2026, 2027, 2028]) for (const stamp of [`${year}-10-28T00:00:00+03:00`, `${year}-11-03T21:59:59Z`]) {
+    choices[seasonOverlapKey(activeSeasons(events, new Date(stamp)))] = 'halloween';
+  }
+  setSeasonChoiceReader(() => choices);
+  t.after(() => setSeasonChoiceReader(() => ({})));
   for (const year of [2026, 2027, 2028]) {
     for (const event of ['death_run','battle_run','first_loss','first_battle_death','first_loss_ow','first_battle_death_ow','battlesim_loss','idle_heartbeat']) {
       const offset = year === 2026 ? '+02:00' : '+03:00';

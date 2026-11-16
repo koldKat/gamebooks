@@ -18,6 +18,24 @@ const {
 
 // This module lives at server/routes/admin.js - the project root is two levels up.
 const PROJECT_ROOT = path.join(__dirname, '..', '..');
+const { getSeasonChoices, seasonOverlapStatus } = require('../season-selection');
+
+function handleSeasonSelection(req, res) {
+  send(res, 200, { choices: getSeasonChoices() });
+}
+async function handleAdminSeasonSelection(req, res) {
+  if (!requireLocalhost(req, res)) return;
+  if (req.method === 'PATCH') {
+    const { seasonId, key } = await readBody(req);
+    const status = seasonOverlapStatus();
+    if (status.candidates.length < 2 || key !== status.key || !status.candidates.some(event => event.id === seasonId)) {
+      return send(res, 409, { error: 'The overlapping events changed. Reload Seasons and choose again.' });
+    }
+    db.setAdminSetting('season_overlap_choices', JSON.stringify({ ...getSeasonChoices(), [key]: seasonId }));
+    feedPush({ type: 'config_changed', seasonSelection: true, version: db.getAdminSetting('app_version') });
+  }
+  send(res, 200, seasonOverlapStatus());
+}
 const readAppSize = require('../directory-size').createDirectorySizeReader(PROJECT_ROOT, {
   loadCached: () => db.getAdminSetting('app_size_bytes'),
   loadCheckedAt: () => db.getAdminSetting('app_size_checked_at'),
@@ -597,6 +615,7 @@ module.exports = {
   handleAdminDeleteSeries,
   handleAdminStats,
   handleAdminSeasonPayouts,
+  handleSeasonSelection, handleAdminSeasonSelection,
   handleAdminGetUser,
   handleAdminGetBookStats,
   handleAdminGetUsers,

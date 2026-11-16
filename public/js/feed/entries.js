@@ -48,7 +48,8 @@ export function renderEntry(e) {
       : '';
     const tags = collectionTag + seriesTag;
     // Use the anthology title itself as the colored pill.
-    const pillClass = e.isContainer ? ' feed-anthology-pill' : '';
+    const isAnthology = e.isContainer || e.type.endsWith('_anthology');
+    const pillClass = isAnthology ? ' feed-anthology-pill' : '';
     if (!e.bookIsPublic) return `<span class="feed-book${pillClass}">${escapeHtml(name)}</span>${tags}`;
     const effectiveCover = e.coverUrl || e.parentCoverUrl || null;
     const cover = effectiveCover ? ` data-cover="${escapeHtml(effectiveCover)}"` : '';

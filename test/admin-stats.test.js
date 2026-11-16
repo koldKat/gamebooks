@@ -31,7 +31,7 @@ function fixture(t) {
     INSERT INTO books (id,total_sections,is_container) VALUES (2,999,1);
     INSERT INTO books (id,total_sections,parent_book_id) VALUES (3,200,2);
   `);
-  db.exec('CREATE TABLE user_rubies(rubies_earned INTEGER,rubies_bought INTEGER,rubies_spent INTEGER); CREATE TABLE ruby_market(id INTEGER,rubies INTEGER,rubies_generated INTEGER,completions INTEGER); INSERT INTO ruby_market VALUES(1,0,0,0)');
+  db.exec('CREATE TABLE user_rubies(rubies_earned INTEGER,rubies_bought INTEGER,rubies_spent INTEGER,rubies_lucky_coins INTEGER DEFAULT 0); CREATE TABLE ruby_market(id INTEGER,rubies INTEGER,rubies_generated INTEGER,completions INTEGER); INSERT INTO ruby_market VALUES(1,0,0,0)');
   const source = fs.readFileSync(require.resolve('../server/db/admin'), 'utf8');
   const xp = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
   const keys = vm.runInNewContext(xp.slice(xp.indexOf('const SIM_HISTORY_KEYS ='), xp.indexOf('function processStateXp(')) + '\n({SIM_HISTORY_KEYS,RETIRED_SIM_HISTORY_KEYS})');
@@ -148,6 +148,7 @@ test('dashboard catalog and currency totals retain child books, rewards, trades 
     UPDATE books SET pdf_path='book.pdf' WHERE id=1;
     UPDATE books SET pdf_path='' WHERE id=3;
     INSERT INTO user_diamonds VALUES(1,12,3,8,2),(2,4,2,1,1);
+    INSERT INTO user_rubies VALUES(9,0,2,4),(12,1,3,7);
     INSERT INTO user_heartbeat_coins VALUES(1,10123),(2,456);
     INSERT INTO diamond_market VALUES(1,7,9);`);
   const changes=db.prepare('SELECT total_changes() n').get().n,s=stats();
@@ -155,6 +156,7 @@ test('dashboard catalog and currency totals retain child books, rewards, trades 
   assert.equal(s.playableBooks,2);assert.equal(s.readingBooks,1);assert.equal(s.battleSims,1);
   assert.equal(s.diamondsEarned,16);assert.equal(s.diamondsAvailable,12);
   assert.equal(s.diamondsSold,9);assert.equal(s.diamondsBought,5);assert.equal(s.luckyDiamondsEarned,3);
+  assert.equal(s.luckyRubiesEarned,11);
   assert.equal(s.bronzeAvailable,79);assert.equal(s.silverAvailable,5);
   assert.equal(s.marketDiamonds,7);assert.equal(s.marketDiamondsMined,9);
   assert.equal(db.prepare('SELECT total_changes() n').get().n,changes,'statistics never write data');
@@ -184,4 +186,26 @@ test('dashboard distinguishes missing metrics from a real zero', () => {
   assert.equal(elements.get('s-new-30d').textContent, '-');
   applyStats({ newUsers30d: 0 });
   assert.equal(elements.get('s-new-30d').textContent, '0');
+  applyStats({ luckyGcGenerated: 123456, luckyGcClaimed: 12345, luckyRubiesEarned: 18 });
+  assert.equal(elements.get('s-lucky-gc-generated').textContent, '123,456');
+  assert.equal(elements.get('s-lucky-gc-claimed').textContent, '12,345');
+  assert.equal(elements.get('s-lucky-rubies').textContent, '18');
+});
+
+test('party statistics count multiplayer membership rather than pending invitations', t => {
+  const db = new Database(':memory:');
+  t.after(() => db.close());
+  db.exec(`CREATE TABLE book_parties(id INTEGER,book_id INTEGER);
+    CREATE TABLE user_books(user_id INTEGER,book_id INTEGER,party_id INTEGER);
+    CREATE TABLE party_invites(status TEXT);
+    INSERT INTO book_parties VALUES(1,10),(2,20),(3,30),(4,40);
+    INSERT INTO user_books VALUES(1,10,1),(2,10,1),(1,20,2),(2,20,2),(3,30,3),(4,50,99);
+    INSERT INTO party_invites VALUES('accepted'),('accepted'),('pending');`);
+  const source = fs.readFileSync(require.resolve('../server/db/admin'), 'utf8');
+  const read = vm.runInNewContext('(function(){' + source.slice(source.indexOf('  // Parties\n'), source.indexOf('  // Open world\n'))
+    + '\nreturn {partyTotal,partyActive,partyUsersTotal,partyInvites,partyInvitesAccepted,partyInvitesDeclined};})', {db});
+  assert.deepEqual(JSON.parse(JSON.stringify(read())), {partyTotal:4,partyActive:2,partyUsersTotal:2,partyInvites:3,partyInvitesAccepted:2,partyInvitesDeclined:0});
+  db.exec('DELETE FROM user_books WHERE user_id=2');
+  assert.equal(read().partyActive,0);
+  assert.equal(read().partyUsersTotal,0);
 });

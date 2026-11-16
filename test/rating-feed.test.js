@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const Database = require('better-sqlite3');
 
-test('rating changes and clear/re-rate cycles retain the first feed date and respect privacy', t => {
+test('current book, anthology and series ratings use their saved date and respect privacy', t => {
   const db = new Database(':memory:');
   t.after(() => db.close());
   db.exec(`CREATE TABLE users(id,username,public_profile,avatar_path,hide_from_feed,xp,
@@ -26,6 +26,7 @@ test('rating changes and clear/re-rate cycles retain the first feed date and res
     db.prepare("INSERT INTO xp_events VALUES(17,'rate_book',?,?)").run(String(id),old);
   }
   db.prepare('INSERT INTO user_series VALUES(17,1,4,?)').run(now);
+  db.exec('UPDATE books SET series_id=1,series_number=7 WHERE id=869; UPDATE books SET parent_book_id=869 WHERE id=868');
   db.prepare("INSERT INTO xp_events VALUES(17,'rate_series','1',?)").run(old);
   const context = {module:{exports:{}},require(name) {
     return {'./connection':{db:{prepare(sql) {
@@ -36,13 +37,19 @@ test('rating changes and clear/re-rate cycles retain the first feed date and res
   }};
   vm.runInNewContext(fs.readFileSync(require.resolve('../server/db/feed'),'utf8'),context);
   const feed = () => context.module.exports.getFeed();
-  assert.equal(feed().length,0,'recent re-ratings cannot revive events older than 30 days');
+  assert.equal(feed().length,3,'a recent rating is visible even when its one-time XP award is old');
   db.prepare('UPDATE xp_events SET created_at=?').run(now - 86400);
   let entries = feed();
   assert.equal(entries.length,3);
-  assert.ok(entries.every(e => e.completedAt === (now - 86400) * 1000 && e.isSquire));
+  assert.ok(entries.every(e => e.completedAt === now * 1000 && e.isSquire));
   assert.equal(entries.filter(e => e.isContainer).length,1);
   assert.equal(entries.filter(e => e.type === 'series_rated').length,1);
+  const child = entries.find(e => e.bookId === 868);
+  assert.equal(child.seriesId, 1);
+  assert.equal(child.seriesName, 'Series');
+  assert.equal(child.seriesNumber, 7);
+  assert.equal(child.seriesIsPublic, true);
+  assert.equal(child.parentBookIsPublic, true);
   assert.equal(db.prepare('SELECT count(*) n FROM xp_events').get().n,3);
   db.exec('UPDATE users SET hide_from_feed=1');
   assert.equal(feed().length,0);
@@ -54,9 +61,12 @@ test('rating changes and clear/re-rate cycles retain the first feed date and res
   db.prepare('UPDATE user_series SET rating=4, rated_at=?').run(now);
   entries=feed();
   assert.equal(entries.length,3);
-  assert.ok(entries.every(e => e.completedAt === (now - 86400) * 1000),'restored ratings stay at their original position');
+  assert.ok(entries.every(e => e.completedAt === now * 1000),'restored ratings use their current save date');
   db.prepare('UPDATE xp_events SET created_at=?').run(old);
-  assert.equal(feed().length,0,'restored old ratings remain outside the feed window');
+  assert.equal(feed().length,3,'old XP dates do not hide newly saved ratings');
+  db.prepare('UPDATE user_books SET rated_at=?').run(old);
+  db.prepare('UPDATE user_series SET rated_at=?').run(old);
+  assert.equal(feed().length,0,'ratings not changed recently remain outside the feed window');
   // The first award date also supports legacy ratings without a timestamp.
   db.exec('UPDATE user_books SET rated_at=NULL; UPDATE user_series SET rated_at=NULL');
   db.prepare('UPDATE xp_events SET created_at=?').run(now);

@@ -45,11 +45,15 @@ export function initSeasonalEvents({ now = () => new Date(), random = Math.rando
   function storage(event) {
     if (event.key === 'seasonal-events' || isSeasonPreviewStorageKey(event.key)) refresh();
   }
+  function visibility() {
+    refresh();
+    if (!document.hidden) reconcileCalendar();
+  }
   window.addEventListener('seasonal-events-change', refresh);
   window.addEventListener('seasonal-preview-change', refresh);
   window.addEventListener('app-config-changed', reconcileCalendar);
   window.addEventListener('storage', storage);
-  document.addEventListener('visibilitychange', refresh);
+  document.addEventListener('visibilitychange', visibility);
   pointer.addEventListener('change', refresh);
   const landing = document.getElementById('landing-wrapper');
   const landingChanges = new MutationObserver(refresh);
@@ -64,11 +68,12 @@ export function initSeasonalEvents({ now = () => new Date(), random = Math.rando
     window.removeEventListener('seasonal-preview-change', refresh);
     window.removeEventListener('app-config-changed', reconcileCalendar);
     window.removeEventListener('storage', storage);
-    document.removeEventListener('visibilitychange', refresh);
+    document.removeEventListener('visibilitychange', visibility);
     pointer.removeEventListener('change', refresh);
     stopCurrent = null;
   };
   refresh();
+  reconcileCalendar();
   return stopCurrent;
 }
 

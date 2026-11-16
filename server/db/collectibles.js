@@ -2,8 +2,7 @@
 
 // Persist account collections and serialize their item claims.
 const items = require('../../public/js/seasonal-events/collectible-items.json');
-const calendar = require('../../public/js/seasonal-events/calendar.json');
-const { activeSeasons } = require('../../public/js/seasonal-events/schedule');
+const { liveSeasons } = require('../season-selection');
 const { isImpersonatingContext } = require('../impersonation-context');
 
 function initializeCollectibles(db) {
@@ -37,7 +36,7 @@ function createCollectibles(db, { now = Date.now } = {}) {
     if (!Object.hasOwn(items,itemId)) return false;
     const user = account.get(userId);
     if (!user) return false;
-    const season = activeSeasons(calendar,new Date(now()))[0]?.id;
+    const season = liveSeasons(new Date(now()))[0]?.id;
     if (user.is_admin !== 1 && items[itemId] !== season) return false;
     return seen.run(userId,itemId,now()).changes === 1;
   }

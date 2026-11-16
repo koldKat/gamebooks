@@ -363,7 +363,7 @@ function getSeriesAutocomplete(userId = null) {
 function getAllSeries(userId, seriesId = null) {
   if (userId) {
     return db.prepare(`
-      SELECT s.id, s.name, s.description, s.is_public, s.is_open_world,
+      SELECT s.id, s.name, s.description, s.is_public, s.is_open_world, us.rating AS userRating,
              CASE WHEN s.created_by = ? THEN 1 ELSE 0 END AS is_owner
       FROM series s
       JOIN user_series us ON us.series_id = s.id AND us.user_id = ?

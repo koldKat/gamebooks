@@ -20,9 +20,9 @@ export function _starLabelHtml(avgRating, voteCount, noun = 'book') {
   return `<span class="star-avg">${avg}</span><span class="star-votes"> (${voteCount} vote${voteCount !== 1 ? 's' : ''})</span>`;
 }
 
-export function _personalStarLabelHtml(rating) {
+export function _personalStarLabelHtml(rating, noun = 'book') {
   return rating == null
-    ? `<span class="star-avg-none">${t('books.rate')}</span>`
+    ? `<span class="star-avg-none">${t(noun === 'series' ? 'books.rate_series' : 'books.rate')}</span>`
     : `<span class="star-avg">${Number(rating).toFixed(1)}</span>`;
 }
 

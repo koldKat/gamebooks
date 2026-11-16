@@ -754,7 +754,8 @@ function adminGetStats(gameplayExtras) {
     COALESCE(SUM(lucky_diamonds_earned),0) AS luckyDiamondsEarned FROM user_diamonds`).get();
   const rubies = db.prepare(`SELECT COALESCE(SUM(rubies_earned),0) AS rubiesEarned,
     COALESCE(SUM(rubies_earned+rubies_bought-rubies_spent),0) AS rubiesAvailable,
-    COALESCE(SUM(rubies_spent),0) AS rubiesSold,COALESCE(SUM(rubies_bought),0) AS rubiesBought FROM user_rubies`).get();
+    COALESCE(SUM(rubies_spent),0) AS rubiesSold,COALESCE(SUM(rubies_bought),0) AS rubiesBought,
+    COALESCE(SUM(rubies_lucky_coins),0) AS luckyRubiesEarned FROM user_rubies`).get();
   const rubyMarket = db.prepare('SELECT rubies,rubies_generated,completions FROM ruby_market WHERE id=1').get();
   const metals = db.prepare(`SELECT COALESCE(SUM(heartbeat_count%100),0) AS bronzeAvailable,
     COALESCE(SUM((heartbeat_count/100)%100),0) AS silverAvailable FROM user_heartbeat_coins`).get();
@@ -890,12 +891,19 @@ function getSiteStats() {
 
   // Parties
   const partyTotal    = db.prepare('SELECT COUNT(*) AS n FROM book_parties').get().n;
-  const partyActive   = db.prepare('SELECT COUNT(DISTINCT party_id) AS n FROM user_books WHERE party_id IS NOT NULL').get().n;
+  const activePartyRow = db.prepare(`WITH active_parties AS (
+    SELECT ub.party_id FROM user_books ub
+    JOIN book_parties p ON p.id=ub.party_id AND p.book_id=ub.book_id
+    GROUP BY ub.party_id HAVING COUNT(DISTINCT ub.user_id)>=2
+  ) SELECT COUNT(*) AS parties,
+    (SELECT COUNT(DISTINCT user_id) FROM user_books WHERE party_id IN (SELECT party_id FROM active_parties)) AS players
+    FROM active_parties`).get();
+  const partyActive = activePartyRow.parties;
   const partyInviteRow = db.prepare("SELECT COUNT(*) AS total, SUM(CASE WHEN status='accepted' THEN 1 ELSE 0 END) AS accepted, SUM(CASE WHEN status='declined' THEN 1 ELSE 0 END) AS declined FROM party_invites").get();
   const partyInvites          = partyInviteRow?.total    || 0;
   const partyInvitesAccepted  = partyInviteRow?.accepted || 0;
   const partyInvitesDeclined  = partyInviteRow?.declined || 0;
-  const partyUsersTotal = db.prepare('SELECT COUNT(DISTINCT user_id) AS n FROM user_books WHERE party_id IS NOT NULL').get().n;
+  const partyUsersTotal = activePartyRow.players;
 
   // Open world
   const owSeries       = db.prepare('SELECT COUNT(*) AS n FROM series WHERE is_open_world = 1').get().n;

@@ -19,6 +19,8 @@ function fixture(t) {
     CREATE TABLE admin_settings (key TEXT PRIMARY KEY, value TEXT);
     CREATE TABLE admin_crystal_gold (id INTEGER PRIMARY KEY, generated INTEGER);
     INSERT INTO admin_crystal_gold VALUES (1,0);
+    CREATE TABLE admin_reading_gold (id INTEGER PRIMARY KEY, received INTEGER);
+    INSERT INTO admin_reading_gold VALUES (1,0);
     INSERT INTO books (id, pdf_path) VALUES (1, 'existing.pdf');
     INSERT INTO books (id, is_container) VALUES (2, 1);
     INSERT INTO books (id, parent_book_id) VALUES (3, 2);
@@ -28,7 +30,12 @@ function fixture(t) {
   const context = vm.createContext({ db });
   vm.runInContext(source.slice(source.indexOf('function getAdminGcSupply('), source.indexOf('function adminGiftGc(')), context);
   const appBirthAt = Math.floor(Date.now() / 1000);
-  return { db, supply: () => JSON.parse(JSON.stringify(context.getAdminGcSupply(appBirthAt))) };
+  return { db, supply: () => {
+    const result = JSON.parse(JSON.stringify(context.getAdminGcSupply(appBirthAt)));
+    assert.equal(result.readingPurchases, db.prepare('SELECT received FROM admin_reading_gold').get().received);
+    const { readingPurchases, ...totals } = result;
+    return totals;
+  } };
 }
 
 test('PDF attachments contribute alongside books and anthologies', t => {
@@ -68,4 +75,11 @@ test('generated crystals contribute to the pool without changing gifted gold', t
   const f = fixture(t);
   f.db.exec('UPDATE admin_crystal_gold SET generated=27 WHERE id=1');
   assert.deepEqual(f.supply(), { earned: 30, gifted: 1, available: 29 });
+});
+
+test('reading purchases contribute their full price without changing gifted gold', t => {
+  const f = fixture(t);
+  f.db.exec('UPDATE admin_reading_gold SET received=2 WHERE id=1');
+  assert.deepEqual(f.supply(), { earned: 5, gifted: 1, available: 4 });
+  assert.deepEqual(f.supply(), { earned: 5, gifted: 1, available: 4 });
 });

@@ -1,8 +1,8 @@
 'use strict';
 
 // Retain distinct days of seasonal XP earnings independently of reward-log cleanup.
-const events = require('../../public/js/seasonal-events/calendar.json');
-const { activeSeasons, seasonalDay } = require('../../public/js/seasonal-events/schedule.js');
+const { seasonalDay } = require('../../public/js/seasonal-events/schedule.js');
+const { liveSeasons } = require('../season-selection');
 const { seasonalXpSeasons } = require('../seasonal-events');
 const { ensureJobSeasonEligibility } = require('./seasonal-contributions');
 const dayKey = date => new Date(seasonalDay(date)).toISOString().slice(0, 10);
@@ -47,7 +47,7 @@ function initializeSeasonParticipation(db, now = new Date()) {
     db.prepare('INSERT INTO seasonal_participation_policy VALUES(1,?)').run(dayKey(now));
     // Include already logged participation in festivals active at first deployment.
     // Older, finished festivals are not paid retroactively.
-    for (const season of activeSeasons(events, now).filter(s => s.xpMultiplier > 1)) {
+    for (const season of liveSeasons(now).filter(s => s.xpMultiplier > 1)) {
       const floor = Date.parse(season.window.start + 'T00:00:00Z') / 1000 - 86400;
       const names = season.xpEvents;
       const filter = names.includes('*') ? '' : ` AND event IN (${names.map(() => '?').join(',')})`;

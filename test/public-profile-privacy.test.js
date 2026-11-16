@@ -79,4 +79,16 @@ test('public profile renderer never displays job progression from a stale respon
   ] }] });
   assert.match(nodes.get('pub-modal-body').innerHTML, /Pub.stat.books_played<\/span><span class="pub-stat-val">2</,
     'anthology chapters count as individual played books, with repeat runs deduplicated');
+  context.renderPublicProfile({ username: 'Reader', totalBooks: 1, userId: 7, books: [{ id: 10, name: 'Anthology',
+    isContainer: true, seriesId: 20, seriesName: 'Series', runs: [
+      { bookId: 11, chapterName: 'First book', index: -1, result: 'success', isPublic: true },
+      { bookId: 12, chapterName: 'Second book', index: 0, result: 'death' },
+    ] }] });
+  const grouped = nodes.get('pub-modal-body').innerHTML;
+  assert.match(grouped, /pub-book--series/);
+  assert.match(grouped, /pub-book--anthology/);
+  assert.ok(grouped.indexOf('>Series</span>') < grouped.indexOf('>Anthology</span>'));
+  assert.ok(grouped.indexOf('>Anthology</span>') < grouped.indexOf('>First book</span>'));
+  assert.match(grouped, /data-book-id="11" data-user-id="7" data-run-index="-1"/);
+  assert.equal((grouped.match(/class="pub-run-btn /g) || []).length, 1, 'locked runs remain locked');
 });

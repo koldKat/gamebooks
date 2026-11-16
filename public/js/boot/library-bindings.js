@@ -7,9 +7,11 @@ import { setCoversPrefsState, resetFeedDisplayPrefsForLogout } from '../covers.j
 import { clearBooksCache, _applySavedBookResponse } from '../books.js';
 import { getCurrentBookCover, _updateSidebarBookInfo } from '../play/bg.js';
 import { showLogin, showBooks } from './screens.js';
+import { initLibraryCurrencyLayout } from './library-currencies.js';
 import { loadFeed } from '../feed.js';
 
 export function initLibraryBindings() {
+  initLibraryCurrencyLayout();
   // ── Books screen ──────────────────────────────────────────────────
   document.getElementById('logout-btn').addEventListener('click', async () => {
     await apiFetch('/api/logout', { method: 'POST' }).catch(() => {});

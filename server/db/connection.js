@@ -10,6 +10,10 @@ const db = new Database(path.join(__dirname, '..', '..', 'database.sqlite'));
 
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
+require('../season-selection').setSeasonChoiceReader(() => {
+  const row = db.prepare("SELECT value FROM admin_settings WHERE key='season_overlap_choices'").get();
+  return row?.value ? JSON.parse(row.value) : {};
+});
 
 function hasColumn(tableName, columnName) {
   try {

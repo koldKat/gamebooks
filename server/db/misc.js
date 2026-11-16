@@ -85,9 +85,10 @@ function getAdminGcSupply(appBirthAt) {
   const pdfs              = db.prepare("SELECT COUNT(*) AS n FROM books WHERE pdf_path IS NOT NULL").get().n;
   const days              = Math.floor((Math.floor(Date.now() / 1000) - appBirthAt) / 86400);
   const crystals         = db.prepare('SELECT generated FROM admin_crystal_gold WHERE id=1').get()?.generated || 0;
-  const earned            = users + books + series + anthologies + levelUps + authors + pdfs + days + crystals;
+  const readingPurchases = db.prepare('SELECT received FROM admin_reading_gold WHERE id=1').get()?.received || 0;
+  const earned            = users + books + series + anthologies + levelUps + authors + pdfs + days + crystals + readingPurchases;
   const gifted      = parseInt(db.prepare("SELECT value FROM admin_settings WHERE key='admin_gc_gifted'").get()?.value || '0');
-  return { earned, gifted, available: Math.max(0, earned - gifted) };
+  return { earned, gifted, available: Math.max(0, earned - gifted), readingPurchases };
 }
 
 function adminGiftGc(userId, amount, message) {

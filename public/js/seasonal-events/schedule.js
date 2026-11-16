@@ -54,6 +54,17 @@ export function activeSeasons(events, date = new Date()) {
   }).sort((a, b) => Math.abs(Date.parse(a.window.center) - today) - Math.abs(Date.parse(b.window.center) - today));
 }
 
+// Scope an administrator's choice to these exact overlapping occurrences.
+export function seasonOverlapKey(candidates) {
+  return candidates.map(event => `${event.id}:${event.window.start}:${event.window.end}`).sort().join('|');
+}
+export function selectActiveSeasons(events, date = new Date(), choices = {}) {
+  const candidates = activeSeasons(events, date);
+  if (candidates.length <= 1) return candidates;
+  const chosen = choices[seasonOverlapKey(candidates)];
+  return [candidates.find(event => event.id === chosen) || candidates[0]];
+}
+
 // Find the next activation window from calendar data, without event-specific rules.
 export function nextSeason(events, date = new Date()) {
   const today = seasonalDay(date), key = iso(today), year = new Date(today).getUTCFullYear();
