@@ -344,23 +344,20 @@ function startAppSizeStats() {
   setInterval(refresh, 60 * 60 * 1000).unref();
 }
 
-const BACKUP_DIR_NAME = path.basename(require('../backup').BACKUP_DIR);
+const { BACKUP_DIR } = require('../backup');
 
-function findBackupFiles(dir, ignorePatterns) {
+function isDatabaseBackup(fullPath) {
+  return path.dirname(fullPath) === BACKUP_DIR &&
+    /^backup-\d{4}-\d{2}-\d{2}(?:_\d{2}h)?\.zip$/.test(path.basename(fullPath));
+}
+
+function findBackupFiles() {
   const results = [];
   let entries;
-  try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return results; }
+  try { entries = fs.readdirSync(BACKUP_DIR, { withFileTypes: true }); } catch { return results; }
   for (const entry of entries) {
-    // Never apply app-size ignore patterns to the actual backups directory.
-    if (entry.isDirectory() && entry.name === BACKUP_DIR_NAME && dir === PROJECT_ROOT) {
-      results.push(...findBackupFiles(path.join(dir, entry.name), ignorePatterns));
-      continue;
-    }
-    if (ignorePatterns.some(p => globMatch(entry.name, p))) continue;
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      results.push(...findBackupFiles(fullPath, ignorePatterns));
-    } else if (entry.isFile() && globMatch(entry.name, '*backup*')) {
+    const fullPath = path.join(BACKUP_DIR, entry.name);
+    if (entry.isFile() && isDatabaseBackup(fullPath)) {
       try {
         const stat = fs.statSync(fullPath);
         results.push({ rel: path.relative(PROJECT_ROOT, fullPath), name: entry.name, size: stat.size, mtime: stat.mtimeMs });
@@ -372,10 +369,7 @@ function findBackupFiles(dir, ignorePatterns) {
 
 async function handleAdminListBackups(req, res) {
   if (!requireLocalhost(req, res)) return;
-  const raw      = db.getAdminSetting('size_ignore_patterns') ?? SIZE_IGNORE_DEFAULTS;
-  // Exclude the *backup* pattern itself so backup files aren't skipped
-  const patterns = raw.split('\n').map(l => l.trim()).filter(l => l && l !== '*backup*');
-  const backups  = findBackupFiles(PROJECT_ROOT, patterns);
+  const backups = findBackupFiles();
   backups.sort((a, b) => b.mtime - a.mtime);
   send(res, 200, backups);
 }
@@ -384,14 +378,16 @@ async function handleAdminDeleteBackups(req, res) {
   if (!requireLocalhost(req, res)) return;
   const { paths } = await readBody(req);
   if (!Array.isArray(paths)) return send(res, 400, { error: 'paths array required' });
-  const appRoot = PROJECT_ROOT.endsWith(path.sep) ? PROJECT_ROOT : PROJECT_ROOT + path.sep;
   const deleted = [], errors = [];
   for (const rel of paths) {
     if (typeof rel !== 'string') continue;
     const full = path.resolve(PROJECT_ROOT, rel);
-    if (!full.startsWith(appRoot)) { errors.push({ rel, error: 'Outside app directory' }); continue; }
-    if (!globMatch(path.basename(full), '*backup*')) { errors.push({ rel, error: 'Not a backup file' }); continue; }
-    try { fs.unlinkSync(full); deleted.push(rel); }
+    if (!isDatabaseBackup(full)) { errors.push({ rel, error: 'Not a database backup archive' }); continue; }
+    try {
+      if (!fs.lstatSync(full).isFile()) throw new Error('Not a regular backup file');
+      fs.unlinkSync(full);
+      deleted.push(rel);
+    }
     catch (e) { errors.push({ rel, error: e.message }); }
   }
   send(res, 200, { deleted, errors });
