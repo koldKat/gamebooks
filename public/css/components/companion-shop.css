@@ -1,0 +1,113 @@
+/* Companion market: currency shortcut and compact trade previews. */
+#companions-shop-btn {
+  color: #b5a7c5;
+}
+#companions-shop-btn[hidden] {
+  display: none;
+}
+#companion-shop-dialog {
+  width: min(540px, calc(100vw - 24px));
+  max-height: calc(100dvh - 40px);
+  box-sizing: border-box;
+  margin: auto;
+  padding: 12px;
+  border: 1px solid #46505d;
+  border-radius: 10px;
+  background: #19212c;
+  color: #d8d7d1;
+  color-scheme: dark;
+  overflow: auto;
+}
+#companion-shop-dialog::backdrop {
+  background: #0009;
+}
+#companion-shop-dialog header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+#companion-shop-dialog h2 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+#companion-shop-dialog .companion-shop-balance {
+  margin-left: auto;
+  color: #c8aa68;
+  font-size: 0.8rem;
+}
+#companion-shop-dialog [data-dialog-close] {
+  padding: 2px 4px;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+#companion-shop-dialog .shop-tabs {
+  display: flex;
+  gap: 4px;
+}
+#companion-shop-dialog [role="tab"] {
+  flex: 1;
+  padding: 5px 8px;
+  border: 1px solid #46505d;
+  border-radius: 4px;
+  background: #202b3a;
+  color: #aaa;
+  cursor: pointer;
+}
+#companion-shop-dialog [role="tab"][aria-selected="true"] {
+  color: #d3bf91;
+  border-color: #9b885e;
+}
+.companion-shop-note,
+#companion-shop-dialog [role="status"],
+.companion-shop-empty {
+  margin: 8px 0;
+  font-size: 0.75rem;
+  color: #aaaeb8;
+}
+#companion-shop-dialog .season-cursor-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+  gap: 6px;
+}
+.companion-shop-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  padding: 6px;
+  border: 1px solid #354152;
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+#companion-shop-dialog .season-cursor-preview {
+  width: 68px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  contain: layout style paint;
+  overflow: hidden;
+}
+#companion-shop-dialog
+  .seasonal-inline-preview
+  :is(.seasonal-pumpkin, .seasonal-diya, .seasonal-companion) {
+  position: relative !important;
+  inset: auto !important;
+  transform: none !important;
+  width: 44px !important;
+  height: 44px !important;
+  z-index: auto !important;
+}
+.companion-shop-item .shop-buy-btn {
+  width: 100%;
+  padding: 4px;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+.companion-shop-item .shop-buy-btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+}

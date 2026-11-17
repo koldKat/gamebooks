@@ -5,12 +5,13 @@ import { seasonalThemes } from './themes.js';
 import { seasonPreview, isSeasonPreviewStorageKey } from './preview.js';
 import { renderSeasonalNotice } from './notice.js';
 import { recordSeenCompanion } from './collectibles.js';
+import { orderedSeasonOccurrences } from './schedule.js';
 
 let stopCurrent;
 export function initSeasonalEvents({ now = () => new Date(), random = Math.random, getPreview = seasonPreview } = {}) {
   if (stopCurrent) return stopCurrent;
   const pointer = matchMedia('(any-pointer: fine)');
-  let decoration, midnight, countdown, themeId;
+  let decoration, midnight, countdown, themeId, collectionOccurrence;
   let stopped = false, calendarRequest;
   function reconcileCalendar() {
     if (calendarRequest) return;
@@ -28,6 +29,9 @@ export function initSeasonalEvents({ now = () => new Date(), random = Math.rando
       && seasonalEvents.some(event => event.id === override)) ? override : null;
     const events = preview ? seasonalEvents.filter(event => event.id === preview) : activeSeasonalEvents(date);
     const event = events[0];
+    const collectionWindow = event?.window || (preview && orderedSeasonOccurrences(seasonalEvents,date)
+      .find(entry=>entry.event.id===event?.id)?.window);
+    collectionOccurrence = collectionWindow ? `${event.id}:${collectionWindow.center}` : '';
     const upcoming = !preview && !events.length ? nextSeasonalEvent(date) : null;
     renderSeasonalNotice(events, preview, date, upcoming);
     if(!preview&&!document.hidden&&(upcoming||events.some(event=>event.window?.end)))countdown=setTimeout(refresh,60000-date.getTime()%60000+50);
@@ -37,7 +41,7 @@ export function initSeasonalEvents({ now = () => new Date(), random = Math.rando
     const active = seasonalEventsEnabled() && visible && !!seasonalThemes[event?.id];
     const nextTheme = active ? event.id : null;
     if (themeId !== nextTheme) { decoration?.(); decoration = null; themeId = nextTheme; }
-    if (active && pointer.matches && !decoration) decoration = seasonalThemes[event.id].cursor({ random, preview:!!preview, onSeen:recordSeenCompanion });
+    if (active && pointer.matches && !decoration) decoration = seasonalThemes[event.id].cursor({ random, preview:!!preview, onSeen:id=>recordSeenCompanion(id,collectionOccurrence) });
     if ((!active || !pointer.matches) && decoration) { decoration(); decoration = null; }
     syncSeasonalEventSetting();
     midnight = setTimeout(refresh, nextSeasonalRefreshDelay(date));

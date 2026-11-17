@@ -82,6 +82,17 @@ const snapshots = [];
 async function snapshot(entries, pinned = null) { payload = { entries, pinned }; await api.loadFeed(); snapshots.push(feed.innerHTML); }
 const base = { username: 'A <player>', userId: 7, userPublicProfile: true, userLevel: 5, userTitle: 'Ranger', avatarUrl: '/avatar.jpg', bookId: 1, bookName: 'Book <title>', bookIsPublic: true, coverUrl: '/cover.jpg', parentBookId: 2, parentBookName: 'Anthology', parentBookIsPublic: true, seriesId: 3, seriesName: 'Series', seriesIsPublic: true, seriesNumber: '2', runIndex: 0, runIsPublic: true, completedAt: '2026-10-02T10:00:00Z', pathLength: 10, lastSection: 20, rating: 4, title: 'News', body: '**Bold** [Book](/book/1)', level: 5, levelTitle: 'Ranger' };
 const types = ['run_completed', 'book_created', 'book_added', 'series_created', 'series_added', 'series_run_started', 'series_run_completed', 'run_started', 'user_joined', 'level_up', 'all_visited', 'all_discovered', 'first_win', 'first_loss', 'first_battle_death', 'won_all_series', 'won_all_anthology', 'visit_all_series', 'discover_all_series', 'visit_all_anthology', 'discover_all_anthology', 'party_formed', 'book_rated', 'series_rated', 'announcement'];
+const { renderEntry } = moduleAt(resolve(root, 'feed/entries.js')).namespace;
+for (const type of ['run_started', 'run_completed', 'book_rated', 'all_visited', 'anthology_books_created']) {
+  const anthologyLink = renderEntry({ ...base, type, parentCoverUrl: '/covers/anthology&cover.jpg' }).html
+    .match(/<a\b[^>]*class="feed-anthology-tag"[^>]*>/)?.[0];
+  assert.ok(anthologyLink?.includes('data-cover="/covers/anthology&amp;cover.jpg"'), type + ' previews the anthology cover');
+  assert.ok(!anthologyLink.includes('/cover.jpg'), 'anthology preview never uses the child cover');
+  const privateHtml = renderEntry({ ...base, type, parentBookIsPublic: false, parentCoverUrl: '/covers/private-parent.jpg' }).html;
+  assert.ok(!privateHtml.includes('/covers/private-parent.jpg'), 'private anthology cover stays hidden');
+  const noCoverLink = renderEntry({ ...base, type }).html.match(/<a\b[^>]*class="feed-anthology-tag"[^>]*>/)?.[0];
+  assert.ok(noCoverLink && !noCoverLink.includes('data-cover='), 'missing anthology cover does not use the child cover');
+}
 for (const type of types) await snapshot([{ ...base, type }]);
 for (const result of ['success', 'battle', 'death']) await snapshot([{ ...base, type: 'run_completed', result, runIndex: -2 }]);
 await snapshot([{ ...base, type: 'book_created', isContainer: true }]);

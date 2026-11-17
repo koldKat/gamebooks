@@ -1024,6 +1024,7 @@ module.exports = {
 // Run after catalog, reading and XP migrations. The backfill is transactional and runs once.
 require('./db/rubies').initializeRubies(db);
 require('./db/collectibles').initializeCollectibles(db);
+require('./db/companion-market').initializeCompanionMarket(db);
 require('./db/gem-notifications').initializeGemNotifications(db);
 require('./db/lucky-coin-diamonds').initializeLuckyCoinDiamonds(db);
 require('./db/vote-gems').initializeVoteGems(db);

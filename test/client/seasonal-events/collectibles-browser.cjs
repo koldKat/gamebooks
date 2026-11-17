@@ -10,7 +10,8 @@ const db=new Database(':memory:');
 db.exec(`CREATE TABLE users(id INTEGER PRIMARY KEY,is_admin INTEGER DEFAULT 0,ui_prefs TEXT);
 INSERT INTO users VALUES(1,1,'{}'),(2,0,'{}');`);
 initializeRubies(db);initializeCollectibles(db);
-const store=createCollectibles(db,{now:()=>Date.parse('2026-10-31T14:30:42Z')});
+let timestamp=Date.parse('2026-10-31T14:30:42Z');
+const store=createCollectibles(db,{now:()=>timestamp});
 let pushes=0;
 const route={exports:{}};
 vm.runInNewContext(fs.readFileSync('server/routes/collectibles.js','utf8'),{module:route,require(name){
@@ -69,6 +70,7 @@ check(getComputedStyle(document.querySelector('[data-open-collectibles]')).color
 document.body.classList.remove('reduce-motion');
 check(getComputedStyle(document.querySelector('[data-open-collectibles]')).animationDuration==='4s','reenabling animations restores the shared pulse');
 document.querySelector('[data-open-collectibles]').click();await until(()=>document.querySelectorAll('.collectible-item').length===2);
+check([...document.querySelectorAll('.collectible-quantity')].length===2&&[...document.querySelectorAll('.collectible-quantity')].every(el=>el.textContent==='x1'),'admin sees single-copy counts');
 check(!document.querySelector('[data-open-collectibles]').classList.contains('collectibles-btn--new'),'opening stops the pulse');
 await until(()=>getComputedStyle(document.querySelector('[data-open-collectibles]')).color===settingsStyle.color);
 check(document.querySelectorAll('.collectible-item--new').length===2,'new items have pulsing borders throughout this opening');
@@ -88,17 +90,31 @@ const tip=document.getElementById('app-tooltip');check(tip.closest('dialog')&&ge
 await until(()=>document.querySelectorAll('.season-cursor-preview > *').length===2);
 document.querySelector('.collectible-item').click();document.querySelector('.collectible-item').click();
 await until(()=>document.getElementById('rubies-display').textContent.trim()==='1');
-await until(()=>document.querySelectorAll('dialog .reward-float--rubies').length===1);
-await delay(200);check(Number(getComputedStyle(document.querySelector('dialog .reward-float--rubies')).opacity)>0,'confirmed diamond has a visible top-layer floater');
-document.querySelector('.collectible-item').click();await delay(60);check(document.querySelectorAll('dialog .reward-float--rubies').length===1,'cooldown click creates no additional diamond floater');
+await delay(200);check(!document.querySelector('dialog .reward-float--rubies'),'diamonds remain silent');
+document.querySelector('.collectible-item').click();await delay(60);check(!document.querySelector('dialog .reward-float--rubies'),'cooldown click stays silent');
 const balance=await fetch('/api/profile',{headers:{Authorization:'Bearer one'}}).then(r=>r.json());check(balance.rubiesBalance===1,'single blue diamond for repeated interaction');
+await fetch('/advance/2027',{method:'POST'});
+await recordSeenCompanion('pumpkin','halloween:2027-10-31');
+await until(()=>document.querySelector('[data-cursor-preview="pumpkin"]')?.parentElement.querySelector('.collectible-quantity')?.textContent==='x2');
+check((await api()).quantities.pumpkin===2,'next occurrence is collected without reloading the tab');
+await fetch('/api/collectibles/pumpkin/claim',{method:'POST',headers:{Authorization:'Bearer one'}});
+check((await fetch('/api/profile',{headers:{Authorization:'Bearer one'}}).then(r=>r.json())).rubiesBalance===1,'extra stock does not reset the rolling diamond cooldown');
 let hidden=true;Object.defineProperty(document,'hidden',{configurable:true,get:()=>hidden});document.dispatchEvent(new Event('visibilitychange'));
 check(!document.querySelector('.season-cursor-preview > *'),'hidden dialog previews stop');hidden=false;document.dispatchEvent(new Event('visibilitychange'));await until(()=>document.querySelectorAll('.season-cursor-preview > *').length===2);
 setToken('two');check(!document.querySelector('dialog').open&&!document.querySelector('.season-cursor-preview > *'),'account switch closes and disposes collection');
 await openCollectibles();check(!document.querySelector('.collectible-item'),'other player sees empty collection');
 const empty=document.querySelector('.collectibles-body [role="status"]');
-check(empty?.textContent==='You have no collectibles yet.'&&empty.getBoundingClientRect().height>0,'empty collection has a visible message');
+check(empty?.textContent==='You have no companions yet.'&&empty.getBoundingClientRect().height>0,'empty collection has a visible message');
 check(!document.querySelector('dialog .season-cursor-gallery')&&activePreviewObservers===0,'empty collection creates no preview work');
+await recordSeenCompanion('pumpkin','halloween:2027-10-31');
+await until(()=>document.querySelector('.collectible-item'));
+check(!document.querySelector('.collectible-quantity'),'regular player has no x1 badge');
+await fetch('/advance/2028',{method:'POST'});
+await recordSeenCompanion('pumpkin','halloween:2028-10-31');
+await until(()=>document.querySelector('.collectible-quantity')?.textContent==='x2');
+const badge=document.querySelector('.collectible-quantity'),card=badge.closest('.collectible-item');
+check(getComputedStyle(badge).position==='absolute'&&getComputedStyle(badge).pointerEvents==='none','quantity badge adds no click hint');
+check(badge.getBoundingClientRect().right<=card.getBoundingClientRect().right&&Math.abs(badge.getBoundingClientRect().top-card.getBoundingClientRect().top)<=4,'quantity fits at the top-right of the card');
 clearToken();check(!document.querySelector('dialog').open,'logout closes collection');
 setToken('one');await fetch('/seed',{method:'POST'});await openCollectibles();await until(()=>document.querySelectorAll('.season-cursor-preview > *').length>=6);
 check(document.querySelectorAll('.collectible-item').length===${Object.keys(items).length},'all registered items can be collected');
@@ -114,15 +130,17 @@ collectiblePumpkin.classList.remove('is-clacking');document.body.classList.remov
 const columns=getComputedStyle(document.querySelector('.season-cursor-gallery')).gridTemplateColumns.split(' ').length;
 check(columns>=(innerWidth>600?6:3)&&columns<=6,'compact item grid');
 check(document.querySelector('dialog').getBoundingClientRect().right<=innerWidth,'dialog fits viewport');
-document.querySelector('.collectible-item:nth-child(3)').click();await until(()=>document.querySelector('dialog .reward-float--rubies'));
+document.querySelector('.collectible-item:nth-child(3)').click();await until(async()=> (await fetch('/api/profile',{headers:{Authorization:'Bearer one'}}).then(r=>r.json())).rubiesBalance>=2);
 document.querySelector('[data-dialog-close]').click();check(!document.querySelector('.collectible-item,.season-cursor-preview > *')&&activePreviewObservers===0&&scheduledTimers.size===0,'close immediately unloads every item, timer and observer');
 await openCollectibles();await until(()=>document.querySelectorAll('.season-cursor-preview > *').length>=6);
-document.querySelector('.collectible-item:nth-child(4)').click();await until(()=>document.querySelector('dialog .reward-float--rubies'));await delay(250);
-document.body.dataset.test=JSON.stringify({hiddenNotCollected:true,mouseDiscovery:true,reformationDiscovery:true,privateAccounts:true,rollingClaims:true,animatedCollection:true,cleanup:true,noHints:true,newBadges:true,items:${Object.keys(items).length},width:innerWidth});
+document.querySelector('.collectible-item:nth-child(4)').click();await until(async()=> (await fetch('/api/profile',{headers:{Authorization:'Bearer one'}}).then(r=>r.json())).rubiesBalance>=3);await delay(250);
+document.body.dataset.test=JSON.stringify({hiddenNotCollected:true,mouseDiscovery:true,reformationDiscovery:true,privateAccounts:true,rollingClaims:true,animatedCollection:true,cleanup:true,noHints:true,newBadges:true,occurrenceQuantities:true,adminSingleCounts:true,regularSingleCountsHidden:true,items:${Object.keys(items).length},width:innerWidth});
 </script>`;
 const server=http.createServer(async(req,res)=>{
  try{
   if(req.url==='/')return res.end(html);
+  const advance=req.url.match(/^\/advance\/(2027|2028)$/);
+  if(advance){timestamp=Date.parse(advance[1]+'-10-31T12:00:00Z');return res.end('{}');}
   if(req.url==='/seed'){let order=0;for(const [id,season]of Object.entries(items)){db.prepare('UPDATE users SET ui_prefs=? WHERE id=1').run(JSON.stringify({seasonPreview:season}));store.discover(1,id);db.prepare('UPDATE user_collectibles SET seen_at=? WHERE user_id=1 AND item_id=?').run(Date.parse('2026-10-31T14:30:42Z')+(++order)*1000,id);}return res.end('{}');}
   if(req.url==='/api/profile')return send(res,200,rubyInfoForUser(db,1));
   const match=req.url.match(/^\/api\/collectibles\/([a-z-]+)\/(seen|claim)$/);

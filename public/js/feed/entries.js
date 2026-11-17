@@ -36,7 +36,7 @@ export function renderEntry(e) {
   }
   const anthologyTag = () => e.parentBookName
       ? (e.parentBookIsPublic
-          ? ` <a href="/anthology/${e.parentBookId}" class="feed-anthology-tag" data-anthology-id="${e.parentBookId}" data-anthology-name="${escapeHtml(e.parentBookName)}">${escapeHtml(e.parentBookName)}</a>`
+          ? ` <a href="/anthology/${e.parentBookId}" class="feed-anthology-tag" data-anthology-id="${e.parentBookId}" data-anthology-name="${escapeHtml(e.parentBookName)}"${e.parentCoverUrl ? ` data-cover="${escapeHtml(e.parentCoverUrl)}"` : ''}>${escapeHtml(e.parentBookName)}</a>`
           : ` <span class="feed-anthology-tag">${escapeHtml(e.parentBookName)}</span>`)
       : '';
   const bookBtn = (id, name) => {

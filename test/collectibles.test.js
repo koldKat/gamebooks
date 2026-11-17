@@ -68,3 +68,78 @@ test('all nine new companions register during their live event and remain accoun
  for(const [date,items] of groups){time(date);for(const item of items)assert.equal(store.discover(1,item),true);assert.equal(store.discover(1,'pumpkin'),false);}
  assert.equal(store.list(1).length,9);assert.deepEqual(store.list(2),[]);
 });
+
+test('one copy per annual occurrence, with an independent per-type diamond anniversary',t=>{
+ const {db,store,time,wallet}=fixture(t);
+ assert.equal(store.discover(1,'pumpkin'),true);
+ assert.equal(store.claim(1,'pumpkin'),true);
+ time('2026-11-03T12:00:00Z');
+ for(let i=0;i<10;i++)assert.equal(store.discover(1,'pumpkin'),false);
+ assert.equal(store.quantities(1).pumpkin,1);
+ time('2027-10-31T12:00:00Z');
+ assert.equal(store.discover(1,'pumpkin'),true);
+ assert.equal(store.quantities(1).pumpkin,2);
+ assert.equal(store.collectedAt(1).pumpkin,Date.parse('2027-10-31T12:00:00Z'));
+ assert.equal(store.claim(1,'pumpkin'),false,'another copy does not reset the diamond cooldown');
+ assert.equal(wallet(1).rubiesBalance,1,'acquiring a copy awards no diamond');
+ time('2027-10-31T14:30:42Z');
+ assert.equal(store.claim(1,'pumpkin'),true);
+ assert.equal(store.claim(1,'pumpkin'),false,'copies cannot each award a diamond');
+ assert.equal(wallet(1).rubiesBalance,2);
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM user_collectible_occurrences').get().n,2);
+ assert.deepEqual(store.list(1),['pumpkin'],'the list remains grouped by companion type');
+});
+
+test('separate Friday the 13th occurrences each add a copy within the same year',t=>{
+ const {store,time,wallet}=fixture(t);
+ for(const [i,date]of ['2026-02-12T12:00:00Z','2026-03-12T12:00:00Z','2026-11-12T12:00:00Z'].entries()){
+  time(date);
+  assert.equal(store.discover(1,'black-cat'),true);
+  assert.equal(store.discover(1,'black-cat'),false);
+  assert.equal(store.quantities(1)['black-cat'],i+1);
+  assert.equal(store.claim(1,'black-cat'),i===0);
+ }
+ assert.equal(wallet(1).rubiesBalance,1);
+ assert.deepEqual(store.quantities(2),{});
+});
+
+test('an event spanning December and January remains one occurrence',t=>{
+ const {store,time}=fixture(t);
+ time('2026-12-30T12:00:00Z');assert.equal(store.discover(1,'star'),true);
+ time('2027-01-03T12:00:00Z');assert.equal(store.discover(1,'star'),false);
+ time('2027-12-30T12:00:00Z');assert.equal(store.discover(1,'star'),true);
+ assert.equal(store.quantities(1).star,2);
+});
+
+test('legacy collections migrate once without changing previous claims or granting another current-event copy',t=>{
+ const db=new Database(':memory:');t.after(()=>db.close());db.pragma('foreign_keys=ON');
+ db.exec(`CREATE TABLE users(id INTEGER PRIMARY KEY,is_admin INTEGER DEFAULT 0);
+ INSERT INTO users VALUES(1,0);
+ CREATE TABLE user_collectibles(user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+ item_id TEXT NOT NULL,seen_at INTEGER NOT NULL,claimed_at INTEGER,claims INTEGER NOT NULL DEFAULT 0,
+ PRIMARY KEY(user_id,item_id));`);
+ const timestamp=Date.parse('2026-10-31T14:30:42Z');
+ db.prepare('INSERT INTO user_collectibles VALUES(1,?,?,?,4)').run('pumpkin',timestamp,timestamp);
+ initializeRubies(db);initializeCollectibles(db);initializeCollectibles(db);
+ const store=createCollectibles(db,{now:()=>timestamp});
+ assert.equal(store.quantities(1).pumpkin,1);
+ assert.equal(store.discover(1,'pumpkin'),false);
+ assert.equal(store.claim(1,'pumpkin'),false);
+ assert.deepEqual(db.prepare('SELECT claimed_at,claims FROM user_collectibles').get(),{claimed_at:timestamp,claims:4});
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM user_collectible_occurrences').get().n,1);
+ assert.equal(rubyInfoForUser(db,1).rubiesBalance,0);
+ db.prepare('DELETE FROM users WHERE id=1').run();
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM user_collectible_occurrences').get().n,0);
+});
+
+test('an acquisition failure rolls back its occurrence and quantity together',t=>{
+ const {db,store}=fixture(t);
+ db.exec("CREATE TRIGGER fail_quantity BEFORE UPDATE OF quantity ON user_collectibles BEGIN SELECT RAISE(ABORT,'quantity failure');END;");
+ assert.throws(()=>store.discover(1,'pumpkin'),/quantity failure/);
+ assert.deepEqual(store.list(1),[]);
+ assert.equal(db.prepare('SELECT COUNT(*) AS n FROM user_collectible_occurrences').get().n,0);
+ db.exec('DROP TRIGGER fail_quantity');
+ assert.equal(store.discover(1,'pumpkin'),true);
+ assert.equal(store.quantities(1).pumpkin,1);
+ assert.equal(store.isAdmin(1),false);assert.equal(store.isAdmin(3),true);
+});

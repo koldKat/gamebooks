@@ -7,6 +7,7 @@ import {seasonalEvents} from './calendar.js';
 import {updateRubiesDisplay} from '../progression/rubies.js';
 import {initTooltip} from '../ui-helpers/tooltip.js';
 import '../ui-helpers/dialog-escape.js';
+import { updateCompanionShopButton } from '../progression/companion-shop.js';
 
 let identity=getToken(),seen=new Set(),pending=new Set(),retryAt=new Map(),dialog,stopPreviews,request=0;
 let collectionKey=null;
@@ -23,6 +24,7 @@ function saveFresh(){
  updatePulse();
 }
 function acceptCollection(data,newId){
+ updateCompanionShopButton(data);
  if(data.userId!=null){collectionKey='gamebook_collectibles_new_'+data.userId;readFresh();}
  if(newId&&data.newlyCollected)fresh.add(newId);
  if(dialog?.open){for(const id of fresh)displayedNew.add(id);fresh.clear();}
@@ -36,6 +38,7 @@ function unloadItems(){
 }
 function closeCollectibles(){unloadItems();displayedNew.clear();dialog?.close();updatePulse();}
 function reset(){
+ updateCompanionShopButton(null);
  identity=getToken();seen.clear();pending.clear();retryAt.clear();++request;
  collectionKey=null;fresh.clear();displayedNew.clear();
  closeCollectibles();
@@ -51,21 +54,22 @@ async function refreshCollection(){
  }catch{}
 }
 
-export async function recordSeenCompanion(id){
+export async function recordSeenCompanion(id,occurrence=''){
  const token=checkIdentity();
- if(!token||seen.has(id)||pending.has(id)||(retryAt.get(id)||0)>Date.now())return;
- pending.add(id);
+ const key=occurrence+':'+id;
+ if(!token||seen.has(key)||pending.has(key)||(retryAt.get(key)||0)>Date.now())return;
+ pending.add(key);
  try{
   const response=await apiFetch(`/api/collectibles/${id}/seen`,{method:'POST'});
   if(!response.ok)throw Error();
   const data=await response.json();
   if(getToken()!==token)return;
   acceptCollection(data,id);
-  for(const item of data.items||[])seen.add(item);
-  if(!seen.has(id))retryAt.set(id,Date.now()+5000);
+  if(data.collectedForOccurrence)seen.add(key);
+  if(!seen.has(key))retryAt.set(key,Date.now()+5000);
   else {changed();if(dialog?.open)openCollectibles();}
- }catch{if(getToken()===token)retryAt.set(id,Date.now()+5000);}
- finally{if(getToken()===token)pending.delete(id);}
+ }catch{if(getToken()===token)retryAt.set(key,Date.now()+5000);}
+ finally{if(getToken()===token)pending.delete(key);}
 }
 
 export async function openCollectibles(){
@@ -74,7 +78,7 @@ export async function openCollectibles(){
  if(!dialog){
   dialog=document.createElement('dialog');dialog.id='collectibles-dialog';
   dialog.setAttribute('aria-labelledby','collectibles-title');
-  dialog.innerHTML='<header><h2 id="collectibles-title">Collectibles</h2><button type="button" data-dialog-close aria-label="Close">×</button></header><div class="collectibles-body"></div>';
+  dialog.innerHTML='<header><h2 id="collectibles-title">Companions</h2><button type="button" data-dialog-close aria-label="Close">×</button></header><div class="collectibles-body"></div>';
   dialog.querySelector('[data-dialog-close]').addEventListener('click',closeCollectibles);
   dialog.addEventListener('cancel',unloadItems);
   dialog.addEventListener('close',()=>{if(!dialog.open){unloadItems();displayedNew.clear();updatePulse();}});
@@ -96,7 +100,7 @@ export async function openCollectibles(){
   body.replaceChildren();
   if(!collected.length){
    const empty=document.createElement('p');empty.className='collectibles-empty';
-   empty.textContent='You have no collectibles yet.';empty.setAttribute('role','status');
+   empty.textContent='You have no companions yet.';empty.setAttribute('role','status');
    body.append(empty);return;
   }
   const dateFormat=new Intl.DateTimeFormat(undefined,{dateStyle:'medium',timeZone:'Europe/Sofia'});
@@ -106,8 +110,13 @@ export async function openCollectibles(){
    const timestamp=data.collectedAt?.[id];
    return event+(Number.isFinite(timestamp)?'\nClaimed: '+dateFormat.format(new Date(timestamp)):'');
   });
-  for(const host of body.querySelectorAll('[data-cursor-preview]'))if(displayedNew.has(host.dataset.cursorPreview)){
-   host.parentElement.classList.add('collectible-item--new');
+  for(const host of body.querySelectorAll('[data-cursor-preview]')){
+   const id=host.dataset.cursorPreview,quantity=data.quantities?.[id]??1;
+   if(displayedNew.has(id))host.parentElement.classList.add('collectible-item--new');
+   if(quantity>1||data.showSingleQuantity){
+    const badge=document.createElement('span');badge.className='collectible-quantity';
+    badge.textContent='x'+quantity.toLocaleString();host.parentElement.append(badge);
+   }
   }
  }catch{if(sequence===request&&token===getToken()&&dialog.open)body.textContent='Unable to load. Close and try again.';}
 }
@@ -133,4 +142,5 @@ window.addEventListener('auth-token-change',reset);
 window.addEventListener('auth-expired',reset);
 window.addEventListener('storage',event=>{if(event.key===null||event.key==='gamebook_auth_token')reset();else if(event.key===collectionKey){readFresh();if(dialog?.open)openCollectibles();else updatePulse();}});
 channel?.addEventListener('message',()=>{if(dialog?.open)openCollectibles();else refreshCollection();});
+window.addEventListener('companions-changed',()=>{if(dialog?.open)openCollectibles();else refreshCollection();});
 if(identity)refreshCollection();

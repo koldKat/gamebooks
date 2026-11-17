@@ -97,5 +97,5 @@ export default {
     'header.tip.feedback': 'Send feedback',
     'header.tip.inbox': 'Your messages',
     'header.tip.notifications': 'Notifications',
-    'header.tip.collectibles': 'Your collectibles',
+    'header.tip.collectibles': 'Your companions',
 };

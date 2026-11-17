@@ -276,6 +276,10 @@ function _applyFollowerLiveEvent(type, payload = null) {
     }
     return;
   }
+  if (type === 'companions_changed') {
+    window.dispatchEvent(new Event('companion-market-updated'));
+    return;
+  }
   if (type === 'coins_changed') {
     _coinsDirty = true;
     if (document.visibilityState === 'visible' && getToken()) {
@@ -367,7 +371,15 @@ export function _disconnectUserBadgeSSE() {
 export function _connectUserBadgeSSE() {
   if (!_isLiveLeader || _userBadgeSource || typeof EventSource === 'undefined' || !getToken()) return;
   try {
-    const refresh = () => {
+    const refresh = event => {
+      if (event?.data) {
+        try {
+          if (JSON.parse(event.data).companions) {
+            window.dispatchEvent(new Event('companion-market-updated'));
+            _broadcastLiveEvent('companions_changed');
+          }
+        } catch (_) {}
+      }
       _hooks.scheduleLiveUiRefresh?.({ inbox: true, notif: true, forum: true, reward: true, party: true, prefs: true }, 120);
       _broadcastLiveEvent('badges_changed');
     };
