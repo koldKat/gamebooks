@@ -45,7 +45,9 @@ test('reopening after reader discovery does not walk into an unmapped destinatio
     setTimeout: fn => scheduled.push(fn), clearTimeout() {},
     network: null, playContext: {}, render() {}, showAlert() {}, endPlaythrough() {},
     maxUndos: () => 3, maxFastTravels: () => 3, renderPathTrail() {},
-    computeOutcomes: () => ({}), escapeHtml: String, sectionLabel: value => value,
+    nodeColor: () => ({ background: '#606060', border: '#404040' }),
+    computeOutcomes: () => ({}),
+    escapeHtml: String, sectionLabel: value => value,
     currentBookId: 1, CHOICES_PULSE_THRESHOLD: 3, t: key => key,
   });
   const load = file => vm.runInContext(readFileSync(new URL(`../../../public/js/${file}.js`, import.meta.url), 'utf8')

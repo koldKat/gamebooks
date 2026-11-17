@@ -33,8 +33,7 @@
 }
 #companion-shop-dialog .companion-shop-balance {
   margin-left: auto;
-  color: #c8aa68;
-  font-size: 0.8rem;
+  white-space: nowrap;
 }
 #companion-shop-dialog [data-dialog-close] {
   padding: 2px 4px;

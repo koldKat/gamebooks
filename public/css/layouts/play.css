@@ -1209,6 +1209,16 @@ body {
   border-color: #6b7280;
 }
 
+.choice-btn.choice-node-color {
+  background: var(--choice-fill);
+  border-color: var(--choice-border);
+  color: var(--choice-text);
+}
+
+.choice-btn.choice-node-color:hover {
+  filter: brightness(1.15);
+}
+
 .death-btn {
   background: #7f1d1d;
   border-color: #991b1b;

@@ -3,6 +3,7 @@
 import { state, viewingPt, viewingPtIndex, isTerminal, currentPlaythrough, currentSection, currentBookId } from '../core/state.js';
 import { sectionLabel } from '../core/section-labels.js';
 import { network, computeOutcomes } from '../graph.js';
+import { nodeColor } from '../graph/appearance.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../core/util.js';
 import { playContext } from './context.js';
@@ -89,18 +90,23 @@ export function renderPanelMarkup(pt, sec) {
         if (b >= 1) return 1;
         return a - b;
       });
-      // Resolve outcomes once so choice pills match graph edges, including branching paths.
       const outcomes = computeOutcomes();
-      const choiceOutcomeClass = c => {
-        if (c === -1) return 'death-btn';
-        if (c === 0) return 'win-btn';
-        const outcome = outcomes[c] ?? null;
-        return outcome === 'death' ? 'death-btn' : outcome === 'win' ? 'win-btn' : '';
-      };
       html += sortedChoices.map(c => {
-        const extra = choiceOutcomeClass(c);
+        const outcome = c === -1 ? 'death' : c === 0 ? 'win' : outcomes[c];
+        const extra = outcome === 'death' ? 'death-btn' : outcome === 'win' ? 'win-btn' : 'choice-node-color';
+        let style = '';
+        if (extra === 'choice-node-color') {
+          const { background, border } = nodeColor(c);
+          // Node fills include custom colors, so choose readable text for each fill.
+          const fill = /^#[\da-f]{6}$/i.test(background) ? background : '#606060';
+          const outline = /^#[\da-f]{6}$/i.test(border) ? border : '#404040';
+          const channels = fill.slice(1).match(/../g).map(hex => parseInt(hex, 16) / 255)
+            .map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+          const luminance = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+          style = ` style="--choice-fill:${fill};--choice-border:${outline};--choice-text:${luminance > 0.179 ? '#000000' : '#ffffff'}"`;
+        }
         const lbl   = c === -1 ? t('runs.death') : c === 0 ? t('runs.victory') : escapeHtml(sectionLabel(c, currentBookId));
-        return `<button class="choice-btn ${extra}" data-choice="${c}">${lbl}</button>`;
+        return `<button class="choice-btn ${extra}" data-choice="${c}"${style}>${lbl}</button>`;
       }).join('');
       html += `</div>`;
     }

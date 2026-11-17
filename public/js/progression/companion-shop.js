@@ -49,7 +49,9 @@ function actionButton(label, handler, disabled = false) {
 function render() {
   dispose();
   const holder = dialog.querySelector('.companion-shop-items'); holder.replaceChildren();
-  dialog.querySelector('.companion-shop-balance').innerHTML = COIN_SVG + ' ' + data.coinsBalance.toLocaleString();
+  const balance = dialog.querySelector('.companion-shop-balance');
+  balance.classList.add('shop-modal-balance');
+  balance.innerHTML = COIN_SVG + ' ' + data.coinsBalance.toLocaleString();
   for (const button of dialog.querySelectorAll('[role="tab"]')) {
     const selected = button.dataset.tab === tab;
     button.setAttribute('aria-selected', String(selected)); button.tabIndex = selected ? 0 : -1;
@@ -57,7 +59,7 @@ function render() {
   holder.setAttribute('aria-labelledby', 'companion-shop-' + tab);
   dialog.querySelector('.companion-shop-note').textContent = tab === 'buy'
     ? data.price < 1 ? 'Reach player level 1 to buy companions.' : 'Each companion costs your current player level in gold coins.'
-    : 'List spare copies for other players. You receive gold when someone buys; remove a listing to take it back.';
+    : 'Sell spare companions for gold. Cancel listings anytime.';
   const rows = tab === 'buy' ? data.buying : [...data.sellable, ...data.listings];
   if (!rows.length) {
     const empty = document.createElement('p'); empty.className = 'companion-shop-empty';

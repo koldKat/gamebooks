@@ -643,14 +643,21 @@
 }
 
 @media (max-width: 1366px) {
-  #books-screen :is(#books-xp-hb-rate, #books-xp-boost, #app-xp-hb-rate, #app-xp-boost,
-    #avg-lvl-users, #avg-lvl-range, #books-job-xp-next-ruby, #books-job-xp-ruby-cost,
-    #app-job-xp-next-ruby, #app-job-xp-ruby-cost) {
-    display: none;
+  #books-screen .books-xp-body {
+    container-name: books-xp;
+    container-type: inline-size;
   }
 
-  #books-screen :is(#books-xp-text, #app-xp-text, #avg-lvl-text, .job-xp-sub-row) {
-    white-space: normal;
+  @container books-xp (width < 440px) {
+    #books-screen :is(#books-xp-hb-rate, #books-xp-boost, #app-xp-hb-rate, #app-xp-boost,
+      #avg-lvl-users, #avg-lvl-range, #books-job-xp-next-ruby, #books-job-xp-ruby-cost,
+      #app-job-xp-next-ruby, #app-job-xp-ruby-cost) {
+      display: none;
+    }
+
+    #books-screen :is(#books-xp-text, #app-xp-text, #avg-lvl-text, .job-xp-sub-row) {
+      white-space: normal;
+    }
   }
 }
 
