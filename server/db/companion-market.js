@@ -3,6 +3,7 @@
 // Hold spare companions in escrow and transfer ownership and gold atomically.
 const items = require('../../public/js/seasonal-events/collectible-items.json');
 const { isImpersonatingContext } = require('../impersonation-context');
+const { canTestCompanions } = require('../companion-access');
 
 function initializeCompanionMarket(db) {
   db.exec(`CREATE TABLE IF NOT EXISTS companion_listings (
@@ -21,7 +22,7 @@ function initializeCompanionMarket(db) {
 
 function createCompanionMarket(db, { computeLevel, coinBalance, awardCoins, now = Date.now }) {
   const user = db.prepare('SELECT * FROM users WHERE id=?');
-  const authorized = id => user.get(id)?.is_admin === 1 && !isImpersonatingContext();
+  const authorized = id => canTestCompanions(user.get(id)) && !isImpersonatingContext();
   const quantities = db.prepare('SELECT item_id,quantity FROM user_collectibles WHERE user_id=? AND quantity>0');
   const listing = db.prepare('SELECT * FROM companion_listings WHERE id=?');
   const fail = error => ({ error });

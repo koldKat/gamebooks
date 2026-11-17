@@ -4,6 +4,7 @@
 const items = require('../../public/js/seasonal-events/collectible-items.json');
 const { liveSeasons } = require('../season-selection');
 const { isImpersonatingContext } = require('../impersonation-context');
+const { canTestCompanions } = require('../companion-access');
 const events = require('../../public/js/seasonal-events/calendar.json');
 const { availableSeasonWindows, seasonalDay } = require('../../public/js/seasonal-events/schedule');
 
@@ -59,7 +60,7 @@ function nextAnniversary(timestamp) {
 
 function createCollectibles(db, { now = Date.now } = {}) {
   const list = db.prepare('SELECT item_id,seen_at,quantity FROM user_collectibles WHERE user_id=? AND quantity>0 ORDER BY seen_at,item_id');
-  const account = db.prepare('SELECT is_admin FROM users WHERE id=?');
+  const account = db.prepare('SELECT * FROM users WHERE id=?');
   const seen = db.prepare('INSERT OR IGNORE INTO user_collectibles(user_id,item_id,seen_at,quantity) VALUES(?,?,?,0)');
   const acquired = db.prepare('INSERT OR IGNORE INTO user_collectible_occurrences(user_id,item_id,occurrence,collected_at) VALUES(?,?,?,?)');
   const occurrenceSeen = db.prepare('SELECT 1 FROM user_collectible_occurrences WHERE user_id=? AND item_id=? AND occurrence=?');
@@ -96,6 +97,7 @@ function createCollectibles(db, { now = Date.now } = {}) {
     collectedAt: userId=>Object.fromEntries(list.all(userId).map(row=>[row.item_id,row.seen_at])),
     quantities: userId=>Object.fromEntries(list.all(userId).map(row=>[row.item_id,row.quantity])),
     isAdmin: userId=>account.get(userId)?.is_admin === 1,
+    canTestCompanions: userId=>canTestCompanions(account.get(userId)),
     collectedForOccurrence: (userId,itemId)=>Object.hasOwn(items,itemId)
       && !!occurrenceSeen.get(userId,itemId,collectibleOccurrence(items[itemId],now())),
     discover: (userId,itemId)=>discover.immediate(userId,itemId),

@@ -1,4 +1,4 @@
-// Present the admin companion marketplace and dispose previews when it closes.
+// Present the companion marketplace for testing accounts and dispose previews when it closes.
 import { apiFetch, getToken } from '../core/state.js';
 import { COIN_SVG } from '../ui-helpers/coin-icon.js';
 import { updateCoinsDisplay } from './shop.js';

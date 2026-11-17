@@ -758,7 +758,7 @@ export async function loadUserDetail(userId, edit = false) {
       return wrap;
     }
     for (const [currency, title, prefix, rewards] of [
-      ['rubies', 'Diamonds', 'ruby', user.rubyRewards || []],
+      ['rubies', 'Diamonds', 'ruby', user.diamondWalletRewards || []],
       ['diamonds', 'Rubies', 'diamond', user.diamondRewards || []],
     ]) {
       const column = el('div', `user-currency-column user-currency-column--${currency}`);
@@ -767,17 +767,33 @@ export async function loadUserDetail(userId, edit = false) {
         ['Balance', 'Earned', 'Exchanged', 'Bought', 'ExchangeRate'].map(key =>
           Number(user[`${key === 'ExchangeRate' ? prefix : currency}${key}`] || 0).toLocaleString()),
       ]));
+      const sources = user.crystalRewardSources?.[title.toLowerCase()];
+      if (sources) {
+        column.appendChild(el('div', 'label', 'Lifetime reward sources'));
+        column.appendChild(currencyTable(['Source', 'Earned'], sources.map(reward =>
+          [reward.source, Number(reward.amount).toLocaleString('en-US')])));
+      }
       const history = el('div', 'user-currency-rewards');
-      history.appendChild(el('div', 'label', currency === 'rubies' ? 'Recent completion rewards' : 'Recent rewards'));
+      const identified = user.crystalRewardHistory?.[title.toLowerCase()] || [];
+      history.appendChild(el('div', 'label', 'Recent identified rewards'));
+      if (identified.length) {
+        history.appendChild(currencyTable(['Source', 'Item', 'Date'], identified.map(reward =>
+          [reward.source, reward.name, new Date(reward.timestamp).toLocaleString()])));
+      } else {
+        history.appendChild(el('p', 'user-trade-empty', 'No identified rewards yet.'));
+      }
+      if (currency === 'rubies') {
+        history.appendChild(el('p', 'user-trade-empty', 'Companions show the latest claim per type. Earlier repeat-claim dates were not retained.'));
+      }
+      history.appendChild(el('div', 'label', 'Recent wallet gains'));
       if (rewards.length) {
         const rows = rewards.map(reward => {
           const date = new Date(reward.created_at * 1000).toLocaleString();
-          if (currency === 'rubies') return [reward.name || `Deleted book #${reward.book_id}`, reward.kind, date];
           let gain = {};
           try { gain = JSON.parse(reward.payload); } catch (_) {}
           return [Number(gain.amount || 0).toLocaleString(), Number(gain.balance || 0).toLocaleString(), date];
         });
-        history.appendChild(currencyTable(currency === 'rubies' ? ['Book / anthology', 'Type', 'Date'] : ['Earned', 'Balance after', 'Date'], rows));
+        history.appendChild(currencyTable(['Earned', 'Balance after', 'Date'], rows));
       } else {
         history.appendChild(el('p', 'user-trade-empty', 'No recorded rewards yet.'));
       }

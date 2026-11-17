@@ -1,6 +1,6 @@
 // Cooperative parties and live book progress across players, tabs and devices.
 
-import { state, viewingPt, currentBookId, apiFetch, getToken, bookClientId, loadState, setViewingPt } from '../core/state.js';
+import { state, viewingPt, currentPlaythrough, currentBookId, apiFetch, getToken, bookClientId, loadState, setViewingPt } from '../core/state.js';
 import { connectEventStream } from '../core/event-stream.js';
 import { network, visNodes } from '../graph.js';
 import { graphRuntime } from '../graph/runtime.js';
@@ -62,6 +62,8 @@ export async function connectPartySSE(bookId) {
           const preserve = keepPositions;
           keepPositions = true;
           const displayedRun = viewingPt || state.playthroughs[state.activePtIndex];
+          const displayedSection = displayedRun?.path.at(-1);
+          const activeRunStartedAt = currentPlaythrough()?.startedAt;
           suppressAutoNav(true);
           try {
             await loadState(bookId, { strict: true, isCurrent, preservePositions: preserve, protectLocalChanges: true });
@@ -73,8 +75,19 @@ export async function connectPartySSE(bookId) {
             // loadState replaces run objects, including the one a completed-run view holds.
             const updatedRun = displayedRun?.startedAt == null ? null
               : state.playthroughs.find(pt => pt.startedAt === displayedRun.startedAt);
-            setViewingPt(updatedRun?.completed ? updatedRun : null);
+            const activeRun = currentPlaythrough();
+            const newActiveRun = activeRun && activeRun.startedAt !== activeRunStartedAt;
+            // A new shared run replaces the finished-run view on every open chart.
+            setViewingPt(!newActiveRun && updatedRun?.completed ? updatedRun : null, true);
             render();
+            const nextDisplayedRun = viewingPt || activeRun;
+            const nextSection = nextDisplayedRun?.path.at(-1);
+            // Follow actual shared progress, not metadata-only refreshes or position hints.
+            if (network && visNodes?.get(nextSection) &&
+                (nextDisplayedRun?.startedAt !== displayedRun?.startedAt || nextSection !== displayedSection)) {
+              network.focus(nextSection, { scale: Math.max(network.getScale(), 1.2),
+                animation: { duration: 400, easingFunction: 'easeInOutQuad' } });
+            }
             network?.redraw();
             failures = 0;
             _hooks.scheduleRewardProfileRefresh?.();

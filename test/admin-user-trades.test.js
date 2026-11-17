@@ -31,6 +31,8 @@ test('account trade histories stay private, newest first, bounded and read-only'
   db.exec("INSERT INTO notifications(user_id,type,payload,created_at) VALUES(1,'ruby_gain','{}',101)");
   const get = vm.runInNewContext(fn + '\nadminGetUser;', { db,
     getUserXpInfo: () => ({}), rubyInfoForUser: () => ({}),
+    getAdminCrystalRewardSources: () => ({ rubies: [], diamonds: [] }),
+    getAdminCrystalRewardHistory: () => ({ rubies: [], diamonds: [] }),
     getShopRefundRows: () => [], getShopItems: () => [], computeLevel: () => 0 });
   const before = db.prepare('SELECT total_changes() n').get().n;
   const user = get(1);

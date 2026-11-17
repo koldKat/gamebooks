@@ -120,11 +120,12 @@
   {
     "id": "christmas",
     "title": "Christmas event active",
-    "description": "double XP for wins, sim battle wins, new runs, discovering or mapping whole books, and heartbeats.",
+    "description": "double XP for wins, sim battle wins, new runs, discovering or mapping whole books, heartbeats, and all party activities.",
     "start": 1222,
     "end": 1228,
     "day": 1225,
     "xpMultiplier": 2,
+    "partyXpEvents": true,
     "xpEvents": [
       "win_run",
       "first_win",

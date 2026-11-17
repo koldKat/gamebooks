@@ -315,12 +315,15 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
       const previousPt = viewingPt || previous.playthroughs[previous.activePtIndex];
       const before = previousPt?.path?.at(-1);
       const updated = previousPt?.startedAt == null ? null : state.playthroughs.find(pt => pt.startedAt === previousPt.startedAt);
-      setViewingPt(updated?.completed ? updated : null);
+      const activeRun = currentPlaythrough();
+      const previousActiveRun = previous.playthroughs[previous.activePtIndex];
+      const newActiveRun = activeRun && activeRun.startedAt !== previousActiveRun?.startedAt;
+      setViewingPt(!newActiveRun && updated?.completed ? updated : null, true);
       const sec = currentSection();
       if (!currentPlaythrough() && updated?.completed) {
         ++_showToken;
         refreshGraph(); _updateRunControls(); _showEndScreen(updated.result);
-      } else if (sec !== before && sec != null) await _showSection(sec, { remote: true });
+      } else if ((newActiveRun || sec !== before) && sec != null) await _showSection(sec, { remote: true });
       else { refreshGraph(); _updateRunControls(); }
     },
   });

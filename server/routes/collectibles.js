@@ -10,7 +10,7 @@ async function handleCollectibles(req,res,itemId,action) {
   const userId=await authenticate(req,res);
   if (userId === null) return;
   store ||= createCollectibles(db);
-  const collection=()=>({userId,items:store.list(userId),collectedAt:store.collectedAt(userId),quantities:store.quantities(userId),showSingleQuantity:store.isAdmin(userId),companionShopEnabled:store.isAdmin(userId)&&!isRequestImpersonating(req)});
+  const collection=()=>({userId,items:store.list(userId),collectedAt:store.collectedAt(userId),quantities:store.quantities(userId),showSingleQuantity:store.canTestCompanions(userId),companionShopEnabled:store.canTestCompanions(userId)&&!isRequestImpersonating(req)});
   res.setHeader('Cache-Control','no-store');
   if (!action) return send(res,200,collection());
   if (isRequestImpersonating(req)) return send(res,403,{error:'Not available'});

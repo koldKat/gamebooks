@@ -8,6 +8,7 @@ test('book streams isolate accounts/books and exclude only the originating page'
   const context = vm.createContext({ module: { exports: {} }, require: name => {
     if (name === './db') return { setXpFeedHook() {}, setAppXpHook() {} };
     if (name === './sse-transport') return { writeEvent: (res, data) => res.push(JSON.parse(data.slice(6))) };
+    if (name === './feed-response') return { invalidateFeedResponse() {} };
     throw Error(name);
   } });
   vm.runInContext(fs.readFileSync(require.resolve('../server/sse'), 'utf8'), context);

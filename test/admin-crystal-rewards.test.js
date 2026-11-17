@@ -1,0 +1,78 @@
+'use strict';
+
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const Database = require('better-sqlite3');
+const { getAdminCrystalRewardSources, getAdminCrystalRewardHistory } = require('../server/db/admin-crystal-rewards');
+
+test('lifetime sources reconcile both wallets, including silent rewards and deleted catalog items', t => {
+  const db = new Database(':memory:');
+  t.after(() => db.close());
+  db.exec(`CREATE TABLE user_diamonds(user_id INTEGER,diamonds_earned INTEGER,lucky_diamonds_earned INTEGER);
+    CREATE TABLE user_rubies(user_id INTEGER,rubies_earned INTEGER,rubies_lucky_coins INTEGER,rubies_collectibles INTEGER);
+    CREATE TABLE book_discovery_ruby_rewards(user_id INTEGER);
+    CREATE TABLE collection_completion_gems(user_id INTEGER,kind TEXT,milestone TEXT);
+    CREATE TABLE job_level_ruby_rewards(user_id INTEGER);
+    CREATE TABLE ruby_rewards(user_id INTEGER,kind TEXT);
+    CREATE TABLE completed_run_gem_totals(user_id INTEGER,runs INTEGER);
+    CREATE TABLE vote_gem_totals(user_id INTEGER,votes INTEGER);
+    CREATE TABLE sim_battle_gem_totals(user_id INTEGER,battles INTEGER);
+    INSERT INTO user_diamonds VALUES(1,25,2),(2,999,999);
+    INSERT INTO user_rubies VALUES(1,15,2,3),(2,999,999,0);
+    INSERT INTO book_discovery_ruby_rewards VALUES(1),(2);
+    INSERT INTO job_level_ruby_rewards VALUES(1),(1),(2);
+    INSERT INTO collection_completion_gems VALUES(1,'series','discovery'),(1,'anthology','discovery'),(1,'series','mapping');
+    INSERT INTO ruby_rewards VALUES(1,'book'),(1,'anthology'),(2,'book');
+    INSERT INTO completed_run_gem_totals VALUES(1,250);
+    INSERT INTO vote_gem_totals VALUES(1,150);
+    INSERT INTO sim_battle_gem_totals VALUES(1,350);`);
+  const before = db.prepare('SELECT total_changes() AS n').get().n;
+  const result = getAdminCrystalRewardSources(db, 1);
+  const ruby = Object.fromEntries(result.rubies.map(row => [row.source, row.amount]));
+  const diamond = Object.fromEntries(result.diamonds.map(row => [row.source, row.amount]));
+  assert.equal(ruby['Book discovery'], 1);
+  assert.equal(ruby['Job levels'], 2);
+  assert.equal(ruby['Rating milestones'], 2);
+  assert.equal(ruby['Completed-run milestones'], 3);
+  assert.equal(ruby['Simulator battle milestones'], 4);
+  assert.equal(ruby['Digging / historical adjustments'], 9);
+  assert.equal(diamond['Companions'], 3);
+  assert.equal(diamond['Series mapping'], 1);
+  assert.equal(diamond['Historical adjustments'], 1);
+  assert.equal(result.rubies.reduce((n, row) => n + row.amount, 0), 25);
+  assert.equal(result.diamonds.reduce((n, row) => n + row.amount, 0), 15);
+  assert.equal(getAdminCrystalRewardSources(db, 3).rubies.every(row => row.amount === 0), true);
+  assert.equal(db.prepare('SELECT total_changes() AS n').get().n, before);
+  // Keep negative historical corrections visible instead of inventing earnings.
+  db.exec('UPDATE user_rubies SET rubies_earned=1 WHERE user_id=1');
+  assert.equal(getAdminCrystalRewardSources(db, 1).diamonds.at(-1).amount, -13);
+});
+
+test('identified history includes latest companion clicks with exact millisecond dates and collection rewards', t => {
+  const db = new Database(':memory:');
+  t.after(() => db.close());
+  db.exec(`CREATE TABLE books(id INTEGER,name TEXT);
+    CREATE TABLE series(id INTEGER,name TEXT);
+    CREATE TABLE ruby_rewards(user_id INTEGER,book_id INTEGER,kind TEXT,created_at INTEGER);
+    CREATE TABLE book_discovery_ruby_rewards(user_id INTEGER,book_id INTEGER,created_at INTEGER);
+    CREATE TABLE collection_completion_gems(user_id INTEGER,collection_id INTEGER,kind TEXT,milestone TEXT,created_at INTEGER);
+    CREATE TABLE job_level_ruby_rewards(user_id INTEGER,level INTEGER,created_at INTEGER);
+    CREATE TABLE user_collectibles(user_id INTEGER,item_id TEXT,claimed_at INTEGER,claims INTEGER);
+    INSERT INTO books VALUES(1,'Book'),(2,'Anthology');
+    INSERT INTO series VALUES(3,'Series');
+    INSERT INTO ruby_rewards VALUES(1,1,'book',100),(1,2,'anthology',110);
+    INSERT INTO book_discovery_ruby_rewards VALUES(1,1,90);
+    INSERT INTO collection_completion_gems VALUES(1,3,'series','mapping',120),(1,2,'anthology','discovery',80),(1,2,'anthology','mapping',110);
+    INSERT INTO job_level_ruby_rewards VALUES(1,5,70);
+    INSERT INTO user_collectibles VALUES(1,'black-cat',130123,2),(1,'pumpkin',NULL,0),(2,'pumpkin',999999,1);`);
+  const before = db.prepare('SELECT total_changes() AS n').get().n;
+  const history = getAdminCrystalRewardHistory(db, 1);
+  assert.deepEqual(history.diamonds.map(row => row.source), ['Companion claim','Series mapping','Anthology mapping','Book mapping']);
+  assert.equal(history.diamonds[0].timestamp, 130123);
+  assert.equal(history.diamonds[0].name, 'Black Cat');
+  assert.equal(history.diamonds[0].amount, 1, 'two lifetime claims do not invent two claims at the latest date');
+  assert.equal(history.diamonds[1].timestamp, 120000, 'second-based ledgers normalized to milliseconds');
+  assert.equal(history.rubies.at(-1).name, 'Level 5');
+  assert.deepEqual(getAdminCrystalRewardHistory(db, 3), { rubies: [], diamonds: [] });
+  assert.equal(db.prepare('SELECT total_changes() AS n').get().n, before);
+});

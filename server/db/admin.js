@@ -7,6 +7,7 @@ const { db, _naturalCompareByName, _getPdfSize } = require('./connection');
 const { computeLevel, getTitleForLevel, getUserXpInfo, getAllUsersXpInfo, getXpAmount, awardXp, processStateXp, coinBalance, _insertNotif, SIM_HISTORY_KEYS, RETIRED_SIM_HISTORY_KEYS = [] } = require('./xp');
 const { purgeExpiredSessions } = require('./auth');
 const { rubyInfoForUser } = require('./rubies');
+const { getAdminCrystalRewardSources, getAdminCrystalRewardHistory } = require('./admin-crystal-rewards');
 const { getJobTitle } = require('./job-xp');
 const { seasonalXpMultiplier } = require('../seasonal-events');
 const { hasDiamondAccess } = require('./diamonds');
@@ -625,8 +626,12 @@ function adminGetUser(userId) {
   `).get(userId);
   if (!row) return null;
   return { ...row, ...getUserXpInfo(userId), ...rubyInfoForUser(db,userId),
+    crystalRewardSources: getAdminCrystalRewardSources(db, userId),
+    crystalRewardHistory: getAdminCrystalRewardHistory(db, userId),
     diamondRewards: db.prepare(`SELECT payload,created_at FROM notifications
       WHERE user_id=? AND type='diamond_gain' ORDER BY created_at DESC,id DESC LIMIT 20`).all(userId),
+    diamondWalletRewards: db.prepare(`SELECT payload,created_at FROM notifications
+      WHERE user_id=? AND type='ruby_gain' ORDER BY created_at DESC,id DESC LIMIT 20`).all(userId),
     rubyRewards: db.prepare(`SELECT r.book_id,r.kind,r.created_at,b.name FROM ruby_rewards r
       LEFT JOIN books b ON b.id=r.book_id WHERE r.user_id=? ORDER BY r.created_at DESC,r.book_id DESC LIMIT 20`).all(userId),
     rubyTrades: db.prepare(`SELECT rubies,rate,gold_coins,direction,created_at FROM ruby_exchanges

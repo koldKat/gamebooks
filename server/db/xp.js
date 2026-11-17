@@ -441,6 +441,11 @@ function awardXp(userId, event, ref, amountOverride = null) {
     COALESCE((SELECT xp FROM users WHERE id=?),0) AS normalXp`).get(userId, userId, userId, userId);
   const before = (_xpFeedHook || (_appXpHook && event !== 'idle_heartbeat')) ? snapshot() : null;
   const awarded = _awardXpTx(userId, event, String(ref), amount, seasonalContributionEligible(db, event, ref));
+  // These milestones appear in the feed without starting or ending a run.
+  // Notify immediately even when neither player nor Job Level changes.
+  if (awarded && /^(discover_all|visit_all)(_(series|anthology))?$/.test(event)) {
+    try { _xpFeedHook?.({ type: 'feed_changed', entity: 'book', action: event, id: ref }); } catch (_) {}
+  }
   if (awarded && before) {
     const after = snapshot();
     if (event !== 'idle_heartbeat' && after.normalXp === before.normalXp) {

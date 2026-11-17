@@ -1,0 +1,148 @@
+/* Shared title typography and compact header spacing for app dialogs. */
+:root {
+  --dialog-title-color: #d1d5db;
+  --dialog-title-size: 0.9rem;
+  --dialog-title-weight: 700;
+  --dialog-header-control-size: 22px;
+  --dialog-header-inset: 10px;
+}
+
+/* Root specificity keeps component and mobile rules from diverging. */
+:root :is(
+  .modal-title,
+  .shop-modal-title,
+  .inv-modal-title,
+  .inv-edit-title,
+  .ft-dialog-title,
+  .cover-tooltip-settings-heading,
+  #edit-modal-title,
+  #portal-modal-title,
+  #note-modal-title,
+  #stats-modal-title,
+  #notebook-modal-title,
+  #pub-modal-title,
+  #party-modal-title,
+  #guide-modal-hdr > span,
+  #forum-modal-hdr > span,
+  #shortcuts-modal-hdr > span,
+  .cs-modal-hdr > span:first-child,
+  .m-notebook-hdr > span:first-child,
+  #collectibles-dialog h2,
+  #companion-shop-dialog h2,
+  .reading-unlock-dialog > h2
+) {
+  margin: var(--dialog-title-margin, 0);
+  font-family: inherit;
+  font-size: var(--dialog-title-size);
+  font-weight: var(--dialog-title-weight);
+  line-height: 1.3;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--dialog-title-color);
+}
+
+/* Edge-to-edge headers supply their own inset. */
+:root :is(
+  .shop-modal-header,
+  .inv-modal-hdr,
+  .cs-modal-hdr,
+  .pub-modal-hdr,
+  .m-notebook-hdr,
+  #stats-modal-header,
+  #guide-modal-hdr,
+  #forum-modal-hdr
+) {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  padding: 4px var(--dialog-header-inset);
+  flex-shrink: 0;
+}
+
+/* Inset dialogs already provide the same outer padding. */
+:root :is(
+  #collectibles-dialog,
+  #companion-shop-dialog,
+  .reading-unlock-dialog,
+  .modal-inner,
+  #feedback-modal,
+  #inbox-modal,
+  #profile-modal,
+  #edit-book-modal,
+  #cover-tooltip-settings,
+  #add-node-modal,
+  #start-node-modal,
+  #alt-start-modal,
+  #ft-dialog,
+  #edit-modal,
+  #portal-modal,
+  #note-modal,
+  #party-modal,
+  #notebook-modal,
+  #shortcuts-modal
+) {
+  padding: 8px var(--dialog-header-inset);
+  gap: 8px;
+}
+
+:root :is(
+  .modal-title-row,
+  #party-modal-hdr,
+  #notebook-modal-hdr,
+  #shortcuts-modal-hdr,
+  #collectibles-dialog > header,
+  #companion-shop-dialog > header
+) {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--dialog-header-control-size);
+  padding: 0;
+  margin: 0;
+}
+
+:root :is(
+  .modal-close-btn,
+  .inv-close-btn,
+  .pub-close-btn,
+  .shop-close-btn,
+  .m-notebook-hdr > button:last-child,
+  #stats-modal-close,
+  #party-modal-close,
+  #guide-modal-close,
+  #forum-modal-close,
+  #shortcuts-modal-close,
+  #notebook-modal-close,
+  #cs-modal-close,
+  #collectibles-dialog [data-dialog-close],
+  #companion-shop-dialog [data-dialog-close]
+) {
+  box-sizing: border-box;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: var(--dialog-header-control-size);
+  height: var(--dialog-header-control-size);
+  padding: 0;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  color: #9ca3af;
+  cursor: pointer;
+}
+
+.reading-unlock-dialog {
+  --dialog-title-margin: 0 0 8px;
+}
+
+:root :is(#collectibles-dialog, #companion-shop-dialog) > header,
+:root #shortcuts-modal-hdr {
+  margin-bottom: 8px;
+}
+
+#collectibles-dialog .collectibles-body {
+  padding-top: 0;
+}

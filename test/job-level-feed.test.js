@@ -77,6 +77,34 @@ test('live feed pushes only real Job Level crossings, including a legitimate mai
   assert.equal(db.prepare('SELECT xp FROM user_job_xp WHERE user_id=1').get().xp,3000);
 });
 
+test('discovery and mapping milestones notify the live feed without waiting for another activity', t => {
+  const db = fixture(t), feed = [];
+  const insert = db.prepare('INSERT OR IGNORE INTO xp_events VALUES(?,?,?)');
+  let impersonating = false;
+  const context = vm.createContext({ db, computeLevel,
+    isImpersonatingContext: () => impersonating, getXpAmount: () => 0,
+    seasonalContributionEligible: require('../server/db/seasonal-contributions').seasonalContributionEligible,
+    seasonalXpMultiplier: () => 1,
+    _xpFeedHook: event => feed.push(JSON.parse(JSON.stringify(event))), _appXpHook: null,
+    _awardXpTx: (user, event, ref) => insert.run(user, event, ref).changes > 0 });
+  const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
+  vm.runInContext(source.slice(source.indexOf('function awardXp('), source.indexOf('function awardIdleHeartbeatXp(')), context);
+  for (const event of ['discover_all', 'visit_all', 'discover_all_series', 'visit_all_series',
+    'discover_all_anthology', 'visit_all_anthology']) {
+    const before = feed.length;
+    assert.equal(context.awardXp(1, event, 42), true);
+    assert.deepEqual(feed.slice(before), [{ type: 'feed_changed', entity: 'book', action: event, id: 42 }]);
+    assert.equal(context.awardXp(1, event, 42), false);
+    assert.equal(feed.length, before + 1, 'retries do not send another notification');
+  }
+  context.awardXp(1, 'discover_node', '42:1');
+  context.awardXp(1, 'visit_node', '42:1');
+  assert.equal(feed.length, 6, 'ordinary navigation does not flood the feed');
+  impersonating = true;
+  assert.equal(context.awardXp(1, 'discover_all', 43), false);
+  assert.equal(feed.length, 6, 'impersonation does not create a milestone');
+});
+
 test('admin Job Level cells show the trade title and independent progress for level zero and higher', () => {
   const source=fs.readFileSync(require.resolve('../admin/js/core.js'),'utf8');
   const context=vm.createContext({document:{createElement:()=>({style:{}})}});

@@ -10,8 +10,9 @@ const { runInImpersonationContext } = require('../server/impersonation-context')
 
 function fixture(t) {
   const db = new Database(':memory:'); t.after(() => db.close()); db.pragma('foreign_keys=ON');
-  db.exec(`CREATE TABLE users(id INTEGER PRIMARY KEY,is_admin INTEGER,xp INTEGER,bonus_coins INTEGER DEFAULT 100,coins_spent INTEGER DEFAULT 0);
+  db.exec(`CREATE TABLE users(id INTEGER PRIMARY KEY,username TEXT,is_admin INTEGER,xp INTEGER,bonus_coins INTEGER DEFAULT 100,coins_spent INTEGER DEFAULT 0);
     INSERT INTO users(id,is_admin,xp) VALUES(1,1,40),(2,1,23),(3,1,0),(4,0,23),(5,1,17);
+    INSERT INTO users(id,username,is_admin,xp) VALUES(6,'sashii',0,23);
     CREATE TABLE sale_rewards(user_id INTEGER,event TEXT,ref TEXT,amount INTEGER,UNIQUE(event,ref));`);
   initializeCollectibles(db); initializeCompanionMarket(db);
   db.prepare('INSERT INTO user_collectibles(user_id,item_id,seen_at,claimed_at,claims,quantity) VALUES(?,?,?,?,?,?)')
@@ -29,6 +30,29 @@ function fixture(t) {
   return { db, market: createCompanionMarket(db, options), options,
     quantity: id => db.prepare("SELECT quantity FROM user_collectibles WHERE user_id=? AND item_id='pumpkin'").get(id)?.quantity || 0 };
 }
+
+test('sashii can test trading and single-copy counts without administrator privileges', t => {
+  const { db, market, quantity } = fixture(t);
+  initializeRubies(db);
+  const collection = createCollectibles(db);
+  assert.equal(collection.canTestCompanions(6), true);
+  assert.equal(collection.isAdmin(6), false);
+  assert.equal(collection.canTestCompanions(4), false);
+  const { listingId } = market.sell(1, 'pumpkin', 'sashii_listing_12345');
+  assert.equal(market.buy(6, listingId, 23).ok, true);
+  assert.equal(quantity(6), 1);
+  assert.equal(market.sell(6, 'pumpkin', 'sashii_last_copy_123').error, 'last_copy');
+  db.prepare("UPDATE user_collectibles SET quantity=2 WHERE user_id=6 AND item_id='pumpkin'").run();
+  const spare = market.sell(6, 'pumpkin', 'sashii_spare_copy_123');
+  assert.equal(spare.ok, true);
+  assert.equal(quantity(6), 1);
+  assert.equal(market.cancel(6, spare.listingId).ok, true);
+  assert.equal(quantity(6), 2);
+  runInImpersonationContext(true, () => assert.equal(market.snapshot(6).error, 'unavailable'));
+  db.prepare('UPDATE users SET xp=0 WHERE id=6').run();
+  const another = market.sell(1, 'pumpkin', 'sashii_level_zero_123');
+  assert.equal(market.buy(6, another.listingId, 0).error, 'level_zero');
+});
 
 test('listing escrows only spare copies; withdrawal returns exactly one; retries are idempotent', t => {
   const { db, market, quantity } = fixture(t);

@@ -14,7 +14,7 @@ function setup({ party = { members: [] } } = {}) {
   let saved = initial();
   const clients = [];
   function client() {
-    const streams = [], timers = new Map(), frames = [];
+    const streams = [], timers = new Map(), frames = [], focuses = [];
     let delay = null, fail = false, reads = 0, depth = 0, redraws = 0;
     const button = { classList: { add() {}, remove() {} }, innerHTML: '' };
     const storage = new Map([['gamebook_auth_token', String(clients.length + 1)]]);
@@ -45,11 +45,12 @@ function setup({ party = { members: [] } } = {}) {
       },
       render: () => frames.push(JSON.parse(vm.runInContext('JSON.stringify({ state, viewingPt })', context))),
       suppressAutoNav: enabled => { depth += enabled ? 1 : -1; },
-      network: { redraw() { redraws++; } }, shortcutLabel: x => x, t: x => x,
-      visNodes: { get: () => null }, graphRuntime: { _dragNodeIds: new Set() },
+      network: { redraw() { redraws++; }, getScale: () => 1.5,
+        focus: (section, options) => focuses.push({ section, options, frame: frames.at(-1) }) }, shortcutLabel: x => x, t: x => x,
+      visNodes: { get: id => id == null ? null : { id } }, graphRuntime: { _dragNodeIds: new Set() },
     });
     vm.runInContext(source('core/state.js') + source('core/event-stream.js') + source('play/party.js'), context);
-    const c = { context, streams, frames, timers,
+    const c = { context, streams, frames, timers, focuses,
       run: code => vm.runInContext(code, context),
       emit: () => streams.at(-1)?.onmessage?.({ data: JSON.stringify({ type: 'state_updated', bookId: 1 }) }),
       async open() { await this.run('loadState(1)'); await this.run('connectPartySSE(1)'); streams.at(-1).onopen(); await tick(); },
@@ -85,6 +86,51 @@ test('a move by either party client updates the other graph and run without navi
   assert.deepEqual(a.frames.at(-1).state.playthroughs[0].path, [1, 2, 4]);
   assert.equal(a.redraws, a.frames.length); assert.equal(b.redraws, b.frames.length);
   assert.equal(a.depth, 0); assert.equal(b.depth, 0);
+});
+
+test('all open charts center after remote movement, but not after unrelated edits', async () => {
+  const s = setup(), a = s.client(), b = s.client(), c = s.client();
+  await a.open(); await b.open(); await c.open();
+  assert.equal(b.focuses.length, 0, 'opening an unchanged state preserves the camera');
+  await a.run('state.playthroughs[0].path.push(2); saveState()'); await tick();
+  for (const follower of [b, c]) {
+    assert.equal(follower.focuses.at(-1).section, 2);
+    assert.equal(follower.focuses.at(-1).options.scale, 1.5, 'preserve closer zoom');
+    assert.deepEqual(follower.focuses.at(-1).frame.state.playthroughs[0].path, [1, 2], 'render before centering');
+  }
+  await a.run('state.graph[1].note = "A note"; saveState()'); await tick();
+  assert.equal(b.focuses.length, 1); assert.equal(c.focuses.length, 1);
+  await a.run('state.playthroughs[0].path.pop(); saveState()'); await tick();
+  assert.equal(b.focuses.at(-1).section, 1, 'remote undo also centers');
+});
+
+test('a new shared run clears the completed view and its saved selection on every chart', async () => {
+  const s = setup(), a = s.client(), b = s.client(), c = s.client();
+  await a.open(); await b.open(); await c.open();
+  await a.run('state.playthroughs[0].completed = true; state.activePtIndex = null; saveState()'); await tick();
+  for (const follower of [b, c]) assert.equal(follower.run('viewingPt === state.playthroughs[0]'), true);
+  await a.run('state.playthroughs.push({ startedAt: 456, path: [1], completed: false }); state.activePtIndex = 1; saveState()'); await tick();
+  for (const follower of [b, c]) {
+    assert.equal(follower.run('viewingPt'), null);
+    assert.equal(follower.run('viewingPtIndex'), -1);
+    assert.equal(follower.run('localStorage.getItem("vw_1")'), null);
+    assert.equal(follower.run('currentPlaythrough().startedAt'), 456);
+    assert.equal(follower.focuses.at(-1).section, 1, 'new run centers even at the same section');
+    assert.equal(follower.focuses.at(-1).frame.viewingPt, null);
+  }
+  await a.run('state.playthroughs[1].path.push(3); saveState()'); await tick();
+  assert.equal(b.focuses.at(-1).section, 3);
+  assert.equal(c.focuses.at(-1).section, 3);
+});
+
+test('a deliberate historical-run view survives unrelated updates to the active run', async () => {
+  const s = setup(), a = s.client(), b = s.client();
+  await a.open(); await b.open();
+  await a.run('state.playthroughs.push({ startedAt: 456, path: [1], completed: true }); saveState()'); await tick();
+  b.run('setViewingPt(state.playthroughs[1])');
+  await a.run('state.playthroughs[0].path.push(2); saveState()'); await tick();
+  assert.equal(b.run('viewingPt.startedAt'), 456);
+  assert.equal(b.focuses.length, 0, 'do not interrupt a historical view');
 });
 
 test('opening/reconnecting catches moves missed while the stream was disconnected', async () => {

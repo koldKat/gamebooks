@@ -25,6 +25,7 @@ vm.runInNewContext(fs.readFileSync('server/routes/companion-market.js', 'utf8'),
   if (name === '../db/connection') return { db };
   if (name === '../db/xp') return options;
   if (name === '../db/companion-market') return { createCompanionMarket: () => market };
+  if (name === '../companion-access') return require('../../../server/companion-access');
   if (name === '../sse') return { userBadgePush() {} };
   throw Error(name);
 } });

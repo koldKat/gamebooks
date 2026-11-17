@@ -112,17 +112,19 @@ export function renderPublicProfile(profile) {
   profile._expandedRunGroups ||= new Set();
   const roots = [], seriesGroups = new Map();
   for (const book of profile.books) {
-    let group = { ...book, key: `book:${book.id}` };
+    let group = { ...book, key: `book:${book.id}`,
+      lastRecordedAt: book.runs.reduce((latest, run) => Math.max(latest, run.completedAt || 0), 0) };
     if (book.isContainer || book.runs.some(run => run.chapterName)) {
       const children = new Map();
       for (const run of book.runs) {
         const id = run.bookId || book.id;
         if (!children.has(id)) children.set(id, { id, key: `anthology:${book.id}:book:${id}`,
-          name: run.chapterName || book.name, bookOrder: run.bookOrder, runs: [] });
-        children.get(id).runs.push({ ...run, chapterName: null });
+          name: run.chapterName || book.name, lastRecordedAt: 0, runs: [] });
+        const child = children.get(id);
+        child.runs.push({ ...run, chapterName: null });
+        child.lastRecordedAt = Math.max(child.lastRecordedAt, run.completedAt || 0);
       }
-      group = { ...group, kind: 'anthology', children: [...children.values()]
-        .sort((a, b) => (a.bookOrder ?? Infinity) - (b.bookOrder ?? Infinity)) };
+      group = { ...group, kind: 'anthology', children: [...children.values()] };
     }
     if (book.seriesId && book.seriesName) {
       if (!seriesGroups.has(book.seriesId)) {
@@ -143,7 +145,7 @@ export function renderPublicProfile(profile) {
       </div>
       <div class="pub-book-runs">`;
     if (book.children) {
-      for (const child of book.children) renderRunGroup(child);
+      for (const child of [...book.children].sort((a, b) => b.lastRecordedAt - a.lastRecordedAt)) renderRunGroup(child);
       html += '</div></div>';
       return;
     }

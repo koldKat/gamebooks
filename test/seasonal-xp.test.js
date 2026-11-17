@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const Database = require('better-sqlite3');
-const { seasonalXpMultiplier } = require('../server/seasonal-events');
+const { seasonalXpMultiplier, seasonalXpSeasons } = require('../server/seasonal-events');
 const { initializeSeasonParticipation, recordSeasonParticipation } = require('../server/db/season-participation');
 const { withPartyXpContext } = require('../server/seasonal-party-context');
 
@@ -219,7 +219,7 @@ test('a fully capped award with no XP gain does not create a participation day',
   assert.equal(f.db.prepare('SELECT COUNT(*) n FROM seasonal_participation_days').get().n, 0);
 });
 
-test('Christmas doubles wins, new runs, full-book milestones and heartbeats only', t => {
+test('Christmas doubles wins, new runs, full-book milestones and heartbeats outside parties', t => {
   const f=fixture(t);f.date('2026-12-25T12:00:00Z');
   for(const event of ['win_run','battlesim_win','first_win','first_win_ow','run_depth','discover_all','visit_all','discover_all_series','visit_all_series','discover_all_anthology','visit_all_anthology','won_all_series','won_all_anthology','idle_heartbeat']) {
     const before=f.xp();assert.equal(f.award(event,event,10),true);assert.equal(f.xp()-before,20,event);
@@ -227,6 +227,33 @@ test('Christmas doubles wins, new runs, full-book milestones and heartbeats only
   }
   for(const event of ['death_run','visit_node','discover_node','add_note','rate_book']) {
     const before=f.xp();f.award(event,event,10);assert.equal(f.xp()-before,10,event);
+  }
+});
+
+test('Christmas doubles all party activities without stacking existing bonuses', t => {
+  const f = fixture(t), date = new Date('2026-12-25T12:00:00Z');
+  f.date(date);
+  f.db.exec(`CREATE TABLE user_books(user_id INTEGER,book_id INTEGER,party_id INTEGER);
+    INSERT INTO user_books VALUES(1,10,7),(2,10,7),(1,20,NULL),(1,30,8);`);
+  for (const event of ['visit_node', 'discover_node', 'add_note', 'death_run',
+    'battlesim_loss', 'share_run', 'rate_book', 'rate_series', 'future_party_action', 'win_run']) {
+    const before = f.xp();
+    withPartyXpContext(f.db, 1, 10, () => {
+      assert.equal(f.award(event, 'christmas-party:' + event, 10), true);
+      assert.equal(f.award(event, 'christmas-party:' + event, 10), false);
+    }, date);
+    assert.equal(f.xp() - before, 20, event);
+  }
+  for (const book of [20, 30]) {
+    assert.equal(withPartyXpContext(f.db, 1, book,
+      () => seasonalXpMultiplier('visit_node', date), date), 1, 'solo or lone-member party');
+  }
+  assert.equal(seasonalXpMultiplier('visit_node', date), 1, 'party context cleared');
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM seasonal_participation_days WHERE season_id='christmas'").get().n, 1);
+  for (const stamp of ['2026-12-21T21:59:59Z', '2026-12-28T22:00:00Z']) {
+    const outside = new Date(stamp);
+    assert.equal(withPartyXpContext(f.db, 1, 10,
+      () => seasonalXpSeasons('visit_node', outside).some(season => season.id === 'christmas'), outside), false);
   }
 });
 

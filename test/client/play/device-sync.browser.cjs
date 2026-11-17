@@ -60,7 +60,7 @@ client.ready=true;
 `;
 const html = `<!doctype html><body><script>
 window.clients=[{},{}];window.saves=0;window.fail=e=>document.body.dataset.failure=e;
-window.saved={bookName:'Device fixture',totalSections:20,startSection:1,positions:{1:{x:0,y:0},2:{x:400,y:200},3:{x:-200,y:200},4:{x:700,y:400},5:{x:400,y:400},6:{x:600,y:600},7:{x:800,y:600}},graph:{1:{choices:[2,3]},2:{choices:[4,5]},3:{choices:[]},4:{choices:[6,7]},5:{choices:[]},6:{choices:[]},7:{choices:[]}},playthroughs:[{startedAt:123,path:[1],mVisited:[1],completed:false,charSheet:{fields:[]}}],activePtIndex:0};
+window.saved={bookName:'Device fixture',totalSections:20,startSection:1,positions:{1:{x:0,y:0},2:{x:400,y:200},3:{x:-200,y:200},4:{x:700,y:400},5:{x:400,y:400},6:{x:600,y:600},7:{x:800,y:600}},graph:{1:{choices:[2,3]},2:{choices:[4,5]},3:{choices:[]},4:{choices:[6,7]},5:{choices:[]},6:{choices:[7,5]},7:{choices:[]}},playthroughs:[{startedAt:123,path:[1],mVisited:[1],completed:false,charSheet:{fields:[]}}],activePtIndex:0};
 const shell=${JSON.stringify(shell)},child=${JSON.stringify(child)};
 for(let id=0;id<2;id++){
  const frame=document.createElement('iframe');frame.width=id===0?800:390;frame.height=750;
@@ -156,6 +156,17 @@ for(let id=0;id<2;id++){
   const p=desktop.graph.network.getViewPosition();check(Math.hypot(p.x-center.x,p.y-center.y)<.01,'Mouse redraw cannot replay an old camera animation');
  }
  const before=saves;await wait(150);const stableSaves=window.saves;await wait(300);check(window.saves===stableSaves,'No update loop');
+ desktop.play.endPlaythrough('battle');await wait(150);
+ check(mobile.data.viewingPt?.completed&&mobile.document.querySelector('.m-end-achievement'),'Remote completion shows the finished run');
+ desktop.play.startPlaythrough(6);await wait(200);
+ check(mobile.data.currentPlaythrough()?.startedAt===desktop.data.currentPlaythrough()?.startedAt,'Mobile switches to the next shared run');
+ check(mobile.data.viewingPt===null&&!mobile.document.querySelector('.m-end-achievement'),'New run clears mobile completed-run view even at the same section');
+ check(mobile.document.getElementById('m-top').textContent.includes('Section 6'),'New run reloads prose at the same section');
+ mobile.document.querySelector('#m-top a[href="#section-7"]').click();await wait(250);
+ check(desktop.data.currentSection()===7&&desktop.data.viewingPt===null,'Desktop follows movement in the new shared run');
+ for(let i=0;i<40;i++){desktop.graph.network.body.emitter.emit('initRedraw');await wait(5);}
+ const remoteCenter=desktop.graph.network.getViewPosition(),remoteTarget=desktop.graph.network.getPositions([7])[7];
+ check(Math.hypot(remoteCenter.x-remoteTarget.x,remoteCenter.y-remoteTarget.y)<10,'Remote move centers the actual desktop camera');
  desktop.party.disconnectPartySSE();desktop.graph.destroyNetwork();
  mobile.data.state.playthroughs[0].completed=true;mobile.data.setCurrentBookId(null);
  document.body.dataset.test=JSON.stringify({soloAccount:true,actualDesktopAndMobile:true,nodeShapes:true,allSixShapes:true,trapezoid:true,customShapeUpdates:true,shapeHitTesting:true,battleOutlines:true,portalDiamondsReserved:true,shapeChoiceEditing:true,bidirectionalProgress:true,readerProse:true,chartPathAndCurrentNode:true,coordinatePatches:true,noSaveEcho:true,reopenLatestProgress:true,overlappingCameraAnimations:true,mouseRedrawStable:true,productionWrites:0});
