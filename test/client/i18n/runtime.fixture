@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import { createContext, SourceTextModule, runInNewContext } from 'node:vm';
@@ -69,10 +69,17 @@ function walk(dir) {
   }
 }
 walk(resolve(root, 'i18n/en'));
+// Some source-language simulators intentionally have no duplicate English table.
+for (const name of readdirSync(resolve(root,'i18n/bg/battlesim'))) {
+  if (/^battlesim\d+\.js$/.test(name) && !existsSync(resolve(root,'i18n/en/battlesim',name))) {
+    paths.push(resolve(root,'i18n/bg/battlesim',name));
+  }
+}
 for(const name of Object.keys(baseline.tables))assert.ok(paths.includes(resolve(root,'i18n/en',name)),'baseline table remains present: '+name);
 const lazy = await en.load('i18n/battlesim.js');
 const simulatorIds = [];
 const keys = new Set();
+const values = new Map();
 for (const path of paths) {
   const source = readFileSync(path, 'utf8');
   const simulatorId = path.match(/battlesim(\d+)\.js$/)?.[1];
@@ -80,12 +87,19 @@ for (const path of paths) {
   if (rosterTables.has(simulatorId)) {
     const roster = '../../../battlesim/engines/grailquest/'+rosterTables.get(simulatorId)+'-roster.js';
     assert.deepEqual([...source.matchAll(/\bfrom\s+'([^']+)'/g)].map(match => match[1]), [roster], 'names share only their own static encounter roster');
-    assert.doesNotMatch(readFileSync(resolve(dirname(path), roster), 'utf8'), /^import |\b(?:document|localStorage|fetch)\s*[.(]/m, 'shared roster is data-only');
+    const adapter = readFileSync(resolve(dirname(path), roster), 'utf8');
+    assert.doesNotMatch(adapter, /\b(?:document|localStorage|fetch)\s*[.(]/m, 'roster adapter does not load data or access DOM during translation import');
+    assert.deepEqual([...adapter.matchAll(/\bfrom\s+'([^']+)'/g)].map(match=>match[1]), ['../../roster-data.js'], 'roster adapter uses the shared deferred loader');
   }
   verifyLiteralKeys(parserContext.exports.parse(source,{ecmaVersion:'latest',sourceType:'module'}),path);
   const table = (await en.load(path)).default;
   const snapshot=baseline.tables[path.slice(resolve(root,'i18n/en').length+1)];
   if(snapshot){assert.equal(Object.keys(table).length,snapshot.keys,path);assert.equal(hash(sorted(table)),snapshot.sha256,'exact reviewed Unicode/string values: '+path);}
+  if (path.endsWith('/battlesim/d20.js')) {
+    // Unprefixed family labels are namespaced by each book adapter, not registered directly.
+    assert.ok(Object.values(table).every(value=>typeof value==='string'));
+    continue;
+  }
   if (simulatorId) {
     simulatorIds.push(Number(simulatorId));
     await lazy.loadBattleSimTranslations(simulatorId);
@@ -98,7 +112,8 @@ for (const path of paths) {
     for (const entry of entries) assert.equal(table['battlesim'+simulatorId+'.enemy_names.' + id(entry)], entry.name);
   }
   for (const key of Object.keys(table)) {
-    assert.equal(keys.has(key), false, 'no duplicate key across tables: ' + key);
+    if (values.has(key)) assert.equal(table[key], values.get(key), 'shared inherited keys cannot conflict: ' + key);
+    values.set(key, table[key]);
     keys.add(key);
     assert.equal(typeof table[key], 'string');
     const localizedPath = simulatorId && resolve(root, 'i18n/bg/battlesim/battlesim' + simulatorId + '.js');
@@ -107,12 +122,64 @@ for (const path of paths) {
   }
   if (simulatorId) {
     for (const key of Object.keys(table)) {
-      const id = Number(key.match(/^battlesim(\d+)\./)?.[1]);
-      assert.equal(id, Number(simulatorId), 'string belongs to its simulator: ' + key);
+      const match = key.match(/^battlesim(\d+)\./);
+      if (match) {
+        const inheritedFrom = [...source.matchAll(/from\s+['"]\.\/battlesim(\d+)\.js['"]/g)].map(m=>Number(m[1]));
+        assert.ok([Number(simulatorId), ...inheritedFrom].includes(Number(match[1])), 'string belongs to its simulator or imported base: ' + key);
+      }
+      else {
+        // Shared engine labels remain lazy with their source-book adapters.
+        const families = {1476:'fatemaster',1483:'knightmare',1587:'superEndless',1591:'martial',1592:'procedural'};
+        const inheritedFrom = [...source.matchAll(/from\s+['"]\.\/battlesim(\d+)\.js['"]/g)].map(m=>Number(m[1]));
+        const family = families[simulatorId] || inheritedFrom.map(id=>families[id]).find(Boolean);
+        assert.ok(family, 'known lazy engine namespace');
+        assert.ok(key.startsWith('battlesim.'+family+'.'), 'string belongs to its engine: '+key);
+      }
     }
   }
 }
 assert.equal(keys.size, Object.keys(en.table).length, 'aggregator includes every table exactly once');
+// Keep literal UI lookups and HTML bindings covered as features add strings.
+function referencedKeys(node) {
+  if (!node) return [];
+  if (node.type === 'Literal' && typeof node.value === 'string') return [node.value];
+  if (node.type === 'TemplateLiteral' && !node.expressions.length) return [node.quasis[0].value.cooked];
+  if (node.type === 'ConditionalExpression') return [...referencedKeys(node.consequent), ...referencedKeys(node.alternate)];
+  return [];
+}
+function checkLookups(node, file) {
+  if (!node || typeof node !== 'object') return;
+  if (node.type === 'CallExpression' && node.callee.type === 'Identifier' && node.callee.name === 't') {
+    for (const key of referencedKeys(node.arguments[0])) assert.ok(keys.has(key), 'missing translation '+key+' in '+file);
+  }
+  for (const value of Object.values(node)) {
+    if (Array.isArray(value)) value.forEach(child => checkLookups(child, file));
+    else if (value && typeof value === 'object') checkLookups(value, file);
+  }
+}
+function checkSourceDirectory(directory) {
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    if (['vendor', 'i18n'].includes(entry.name)) continue;
+    const file = resolve(directory, entry.name);
+    if (entry.isDirectory()) checkSourceDirectory(file);
+    else if (entry.name.endsWith('.js')) {
+      const ast=parserContext.exports.parse(readFileSync(file,'utf8'), {
+        ecmaVersion:'latest', sourceType:'module', allowReturnOutsideFunction:true,
+      });
+      const importsGlobalLookup=ast.body.some(node=>node.type==='ImportDeclaration'
+        && /\/i18n(?:\/runtime)?\.js$/.test(node.source.value)
+        && node.specifiers.some(specifier=>specifier.type==='ImportSpecifier'
+          && specifier.local.name==='t' && specifier.imported.name==='t'));
+      if (importsGlobalLookup) checkLookups(ast, file);
+    }
+  }
+}
+checkSourceDirectory(resolve(root, '..'));
+for (const file of [resolve(root,'../index.html'), resolve(root,'../mobile/index.html')]) {
+  for (const match of readFileSync(file,'utf8').matchAll(/data-i18n(?:-placeholder|-title|-tooltip)?=["']([^"']+)["']/g)) {
+    assert.ok(keys.has(match[1]), 'missing HTML translation '+match[1]+' in '+file);
+  }
+}
 const simulatorRuleUpdates = JSON.parse(readFileSync(resolve(root, '../../test/client/i18n/simulator-rules-updates.json'), 'utf8'));
 for (const [key, value] of Object.entries(simulatorRuleUpdates.added)) assert.equal(en.api.t(key), value);
 for (const [key, [, value]] of Object.entries(simulatorRuleUpdates.changed)) assert.equal(en.api.t(key), value);

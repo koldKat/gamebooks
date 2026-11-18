@@ -16,7 +16,8 @@
 }
 #app-tooltip.tip-wrap {
   white-space: normal;
-  max-width: 260px;
+  max-width: min(260px, calc(100vw - 40px));
+  overflow-wrap: anywhere;
   line-height: 1.6;
 }
 .tooltip-country-list {

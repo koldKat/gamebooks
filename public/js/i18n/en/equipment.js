@@ -43,6 +43,9 @@ export default {
     'inv.picker_loading':  'Loading…',
     'inv.picker_empty':    'No items found.',
     'eq.inventory_full':  'Inventory is full. Free a slot before unequipping this item.',
+    'inv.full': 'Inventory is full.',
+    'inv.remove_drop_hint': 'Drag an item here to remove it from inventory.',
+    'eq.return_drop_hint': 'Drag equipped gear here to return it to inventory.',
 
     'eq.slot.head':    'Head',
     'eq.slot.neck':    'Neck',

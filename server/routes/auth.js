@@ -5,7 +5,7 @@
 const geoip = require('../geoip');
 const db    = require('../db');
 const { getClientIp, isRateLimited, recordAuthFailure, send, readBody, tokenFromReq } = require('../request-helpers');
-const { getTransporter } = require('../email');
+const { getTransporter, sendLoggedMail } = require('../email');
 const { feedPush } = require('../sse');
 
 async function handleRegister(req, res) {
@@ -66,25 +66,23 @@ async function handleForgotPassword(req, res) {
   const result = db.createPasswordResetToken(identifier.trim());
   if (result?.noEmail) return send(res, 200, { noEmail: true });
   const transporter = getTransporter();
-  if (result?.token && transporter) {
+  if (result?.token) {
     // Do not build emailed reset links from attacker-controlled Host headers.
     const appUrl = db.getAdminSetting('app_url') || 'https://pathmap.net';
     const resetLink = `${appUrl}/?reset_token=${result.token}`;
     const fromAddr = db.getAdminSetting('smtp_from') || db.getAdminSetting('smtp_user') || process.env.SMTP_FROM || process.env.SMTP_USER;
     const from = fromAddr ? `Gamebook Tracker <${fromAddr}>` : undefined;
     try {
-      await transporter.sendMail({
+      await sendLoggedMail(transporter, {
         from,
         to: result.userEmail,
         subject: 'Reset your Gamebook Tracker password',
         text: `You requested a password reset.\n\nClick the link below to set a new password (valid for 1 hour):\n\n${resetLink}\n\nIf you didn't request this, you can ignore this email.`,
         html: `<p>You requested a password reset.</p><p><a href="${resetLink}">Click here to set a new password</a> (link valid for 1 hour).</p><p style="color:#6b7280;font-size:0.9em">If you didn't request this, you can ignore this email.</p>`,
-      });
+      }, 'password-reset');
     } catch (e) {
-      console.error('[reset-email] failed to send:', e.message);
+      console.error('[reset-email] failed to send:', e.code || e.name);
     }
-  } else if (result?.token && !transporter) {
-    console.warn('[reset-email] SMTP not configured - reset link not sent for user');
   }
   send(res, 200, { ok: true });
 }

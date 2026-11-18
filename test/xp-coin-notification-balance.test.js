@@ -19,6 +19,9 @@ function fixture({ xp = 495999, purchased = 16, bonus = 393, spent = 899 } = {})
     CREATE TABLE coin_events (id INTEGER PRIMARY KEY, user_id INTEGER, event TEXT, ref TEXT, amount INTEGER,
       UNIQUE(user_id,event,ref));
     CREATE TABLE level_up_templates (id INTEGER PRIMARY KEY, active INTEGER);`);
+  db.exec(`CREATE TABLE user_job_xp(user_id INTEGER PRIMARY KEY,xp INTEGER DEFAULT 0);
+    CREATE TABLE job_xp_policy(id INTEGER PRIMARY KEY,user_count INTEGER);
+    INSERT INTO job_xp_policy VALUES(1,1);`);
   db.exec(`CREATE TABLE user_rubies(user_id INTEGER PRIMARY KEY,rubies_earned INTEGER DEFAULT 0,
     rubies_bought INTEGER DEFAULT 0,rubies_spent INTEGER DEFAULT 0);`);
   db.prepare('INSERT INTO users(id,xp,bonus_gc_mint_purchased,bonus_coins,coins_spent) VALUES(1,?,?,?,?)')
@@ -28,6 +31,7 @@ function fixture({ xp = 495999, purchased = 16, bonus = 393, spent = 899 } = {})
     require: name => require('../server/db/' + name),
     isImpersonatingContext: () => false, seasonalContributionEligible:require('../server/db/seasonal-contributions').seasonalContributionEligible,seasonalXpMultiplier: () => 1,
     recordSeasonParticipation: () => {},
+    recordCappedActivityGems: require('../server/db/capped-activity-gems').recordCappedActivityGems,
     _insertNotif: db.prepare('INSERT INTO notifications(user_id,type,payload) VALUES(?,?,?)'),
     _appXpHook: null, _xpFeedHook: null, getTitleForLevel: level => 'Level ' + level });
   const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
@@ -159,17 +163,18 @@ test('admin hooks report committed mining and Job EV changes, never duplicate or
  assert.equal(f.context.awardXp(1,'visit_node','diamond-test',0),true);assert.deepEqual(events,[{userId:1,jobXpDelta:1},{userId:1,diamondDelta:1}]);
  assert.equal(f.context.awardXp(1,'visit_node','diamond-test',0),false);assert.equal(events.length,2);
  f.db.exec('UPDATE user_job_xp SET xp=999 WHERE user_id=1; UPDATE user_diamonds SET dig_progress=0 WHERE user_id=1');
- assert.equal(f.context.awardXp(1,'visit_node','job-capped',0),true);
+ assert.equal(f.context.awardXp(1,'visit_node','job-capped',0),false);
  assert.equal(f.db.prepare('SELECT xp FROM user_job_xp WHERE user_id=1').get().xp,999);
- assert.deepEqual(events.at(-1),{userId:1,jobXpDelta:0});
+ assert.equal(events.length,2);
+ f.db.exec('UPDATE user_job_xp SET xp=998 WHERE user_id=1');
  f.db.exec("CREATE TRIGGER reject_xp BEFORE INSERT ON xp_events BEGIN SELECT RAISE(ABORT,'fail xp');END");
- assert.throws(()=>f.context.awardXp(1,'visit_node','diamond-fail',0),/fail xp/);assert.equal(events.length,3);
+ assert.throws(()=>f.context.awardXp(1,'visit_node','diamond-fail',0),/fail xp/);assert.equal(events.length,2);
 });
 
 test('a new completed-run diamond reaches the normal reward hook exactly once',t=>{
   const f=fixture();t.after(()=>f.db.close());
   require('../server/db/diamonds').initializeDiamondBalances(f.db);
-  f.db.exec('CREATE TABLE user_job_xp(user_id INTEGER PRIMARY KEY,xp INTEGER);INSERT INTO user_job_xp VALUES(1,0)');
+  f.db.exec('INSERT INTO user_job_xp VALUES(1,0)');
   const insert=f.db.prepare("INSERT INTO xp_events(user_id,event,ref) VALUES(1,'win_run',?)");
   for(let n=1;n<=99;n++)insert.run('book:'+n);
   require('../server/db/completed-run-gems').initializeCompletedRunGems(f.db);
@@ -180,4 +185,95 @@ test('a new completed-run diamond reaches the normal reward hook exactly once',t
   assert.deepEqual(events.filter(event=>event.rubyDelta),[{userId:1,rubyDelta:1}]);
   const count=events.length;
   assert.equal(f.context.awardXp(1,'win_run','book:100',0),false);assert.equal(events.length,count);
+});
+
+test('full buffers stop XP events and hooks; each stream resumes independently when its cap rises', t => {
+  const f = fixture({ xp: 2999, purchased: 0, bonus: 0, spent: 0 });
+  t.after(() => f.db.close());
+  require('../server/db/diamonds').initializeDiamondBalances(f.db);
+  require('../server/db/job-xp').initializeJobXp(f.db);
+  f.db.exec('UPDATE user_job_xp SET xp=998 WHERE user_id=1');
+  f.context._liveUserCount = () => f.db.prepare('SELECT user_count FROM job_xp_policy').get().user_count;
+  const hooks = [];
+  f.context._appXpHook = event => hooks.push(JSON.parse(JSON.stringify(event)));
+  const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
+  vm.runInContext(source.slice(source.indexOf('function awardXp('), source.indexOf('function awardIdleHeartbeatXp(')), f.context);
+  const award = ref => f.context.awardXp(1, 'visit_node', ref, 10);
+  assert.equal(award('job-only'), true);
+  assert.equal(f.db.prepare('SELECT xp FROM users WHERE id=1').get().xp, 2999);
+  assert.equal(f.db.prepare('SELECT xp FROM user_job_xp WHERE user_id=1').get().xp, 999);
+  assert.deepEqual(hooks, [{ userId: 1, jobXpDelta: 1 }]);
+  const mining = f.db.prepare('SELECT * FROM user_diamonds WHERE user_id=1').get();
+  assert.equal(award('both-full'), false);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM xp_events WHERE ref='both-full'").get().n, 0);
+  assert.deepEqual(f.db.prepare('SELECT * FROM user_diamonds WHERE user_id=1').get(), mining);
+  assert.equal(hooks.length, 1);
+  f.db.exec('INSERT INTO users(id,xp) VALUES(2,0)');
+  assert.equal(award('normal-resumes'), true);
+  assert.equal(f.db.prepare('SELECT xp FROM users WHERE id=1').get().xp, 3009);
+  assert.equal(f.db.prepare('SELECT xp FROM user_job_xp WHERE user_id=1').get().xp, 999);
+  assert.deepEqual(hooks.find(event => event.xpDelta), { userId: 1, xpDelta: 10 });
+  assert.equal(hooks.filter(event => 'jobXpDelta' in event).length, 1, 'normal XP does not emit a capped Job XP update');
+  assert.deepEqual(f.db.prepare('SELECT * FROM user_diamonds WHERE user_id=1').get(), mining);
+  for (let id=3; id<=10; id++) f.db.prepare('INSERT INTO users(id,xp) VALUES(?,0)').run(id);
+  assert.equal(award('job-resumes'), true);
+  assert.equal(f.db.prepare('SELECT xp FROM user_job_xp WHERE user_id=1').get().xp, 1000);
+  assert.equal(f.db.prepare("SELECT COUNT(*) n FROM xp_events WHERE ref='both-full'").get().n, 0, 'discarded activity is not replayed on cap changes');
+  const after = f.db.prepare('SELECT xp FROM users WHERE id=1').get().xp;
+  assert.equal(award('job-resumes'), false);
+  assert.equal(f.db.prepare('SELECT xp FROM users WHERE id=1').get().xp, after);
+});
+
+test('an award approaching the player cap fills only the buffer and a full heartbeat adds no event or XP hook', t => {
+  const f = fixture({ xp: 998, purchased: 0, bonus: 0, spent: 0 });
+  t.after(() => f.db.close());
+  f.context._liveUserCount = () => 1;
+  const hooks=[];
+  f.context._appXpHook = event => hooks.push(JSON.parse(JSON.stringify(event)));
+  assert.equal(f.award(100000), true);
+  assert.equal(f.db.prepare('SELECT xp FROM users WHERE id=1').get().xp, 2999);
+  const count=f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n;
+  const emitted=hooks.length;
+  assert.equal(f.award(1, 'full-heartbeat'), false);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n, count);
+  assert.equal(hooks.length, emitted);
+});
+
+test('fully capped players still earn other activity crystals without XP records, digging or XP floaties', t => {
+  const f=fixture({xp:2999,purchased:0,bonus:0,spent:0});
+  t.after(()=>f.db.close());
+  require('../server/db/diamonds').initializeDiamondBalances(f.db);
+  require('../server/db/job-xp').initializeJobXp(f.db);
+  f.db.exec(`UPDATE user_job_xp SET xp=999 WHERE user_id=1;
+    ALTER TABLE xp_events ADD COLUMN created_at INTEGER DEFAULT 0;
+    CREATE TABLE books(id INTEGER PRIMARY KEY,series_id INTEGER,parent_book_id INTEGER);
+    CREATE TABLE user_books(user_id INTEGER,book_id INTEGER,state_data TEXT,rating REAL);
+    CREATE TABLE user_series(user_id INTEGER,series_id INTEGER,rating REAL);
+    CREATE TABLE series_runs(user_id INTEGER,series_id INTEGER,started_at INTEGER,is_public INTEGER);`);
+  require('../server/db/completed-run-gems').initializeCompletedRunGems(f.db);
+  require('../server/db/sim-battle-gems').initializeSimBattleGems(f.db);
+  require('../server/db/shared-run-gems').initializeSharedRunGems(f.db);
+  const votes=require('../server/db/vote-gems');votes.initializeVoteGems(f.db);
+  for(let n=1;n<=49;n++) {
+    f.db.prepare('INSERT INTO completed_run_gem_runs VALUES(1,?)').run('run:'+n);
+    f.db.prepare("INSERT INTO sim_battle_gem_battles VALUES(1,?,'win')").run('sim1:'+n);
+    f.db.prepare('INSERT INTO shared_run_gem_runs(user_id,ref) VALUES(1,?)').run('share:'+n);
+    votes.awardRatingVote(f.db,1,'book',n);
+  }
+  f.context._liveUserCount=()=>1;
+  const hooks=[];f.context._appXpHook=event=>hooks.push(JSON.parse(JSON.stringify(event)));
+  const source=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');
+  vm.runInContext(source.slice(source.indexOf('function awardXp('),source.indexOf('function awardIdleHeartbeatXp(')),f.context);
+  for(const [event,ref]of [['win_run','run:50'],['battlesim_loss','sim1:50'],['share_run','share:50']]) {
+    assert.equal(f.context.awardXp(1,event,ref,20),false);
+    assert.equal(f.context.awardXp(1,event,ref,20),false,'replayed activity earns nothing extra');
+  }
+  votes.awardRatingVote(f.db,1,'book',50);
+  assert.equal(f.db.prepare('SELECT diamonds_earned FROM user_diamonds WHERE user_id=1').get().diamonds_earned,4);
+  assert.equal(hooks.filter(event=>event.diamondDelta===1).length,3,'activity crystal hooks still reach admin');
+  assert.equal(hooks.some(event=>event.xpDelta || 'jobXpDelta' in event),false);
+  assert.equal(f.db.prepare('SELECT COUNT(*) n FROM xp_events').get().n,0);
+  assert.equal(f.db.prepare('SELECT qualifying_events FROM user_diamonds WHERE user_id=1').get().qualifying_events,0);
+  assert.equal(f.db.prepare('SELECT xp FROM users WHERE id=1').get().xp,2999);
+  assert.equal(f.db.prepare('SELECT xp FROM user_job_xp WHERE user_id=1').get().xp,999);
 });

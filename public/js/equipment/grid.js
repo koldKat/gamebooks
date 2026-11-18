@@ -22,7 +22,7 @@ export function _slotHtml(slot, eq, ro, positioned) {
   const removeBtn = item && !ro ? `<button class="eq-slot-remove" data-key="${slot.key}" draggable="false" aria-label="${t('eq.unequip')}">✕</button>` : '';
   const roClass = !ro ? ' eq-slot--editable' : '';
   const style = positioned ? ` style="left:${slot.x}%;top:${slot.y}%"` : '';
-  return `<div class="eq-slot${filledClass}${roClass}" data-key="${slot.key}"${style}>
+  return `<div class="eq-slot${filledClass}${roClass}" data-key="${slot.key}"${item ? ` data-tooltip="${name}" data-tooltip-wrap="true"` : ''}${style}>
     ${removeBtn}
     ${svg}
     <div class="eq-slot-name">${name}</div>

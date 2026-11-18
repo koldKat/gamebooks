@@ -11,7 +11,7 @@ const {
 } = require('../request-helpers');
 const { feedPush, userBadgePush, publicCatalogPush } = require('../sse');
 const { serveNotFoundPage, isDocumentNavigation } = require('../not-found');
-const { reinitTransporter, getTransporter } = require('../email');
+const { reinitTransporter, getTransporter, logEmailEvent, sendLoggedMail } = require('../email');
 const {
   setMaintenanceMode, getTrafficStats, getAppBirthAt,
 } = require('../runtime-state');
@@ -448,13 +448,16 @@ async function handleAdminSetXpAmount(req, res) {
 async function handleAdminSmtpTest(req, res) {
   if (!requireLocalhost(req, res)) return;
   const transporter = getTransporter();
-  if (!transporter) return send(res, 400, { error: 'SMTP not configured or credentials missing.' });
+  if (!transporter) {
+    await logEmailEvent({ event: 'skipped', kind: 'smtp-test', reason: 'SMTP unavailable' });
+    return send(res, 400, { error: 'SMTP not configured or credentials missing.' });
+  }
   const to      = db.getAdminSetting('smtp_user') || process.env.SMTP_USER;
   const fromAddr = db.getAdminSetting('smtp_from') || to;
   const from    = fromAddr ? `Gamebook Tracker <${fromAddr}>` : undefined;
   if (!to) return send(res, 400, { error: 'No SMTP user set.' });
   try {
-    await transporter.sendMail({ from, to, subject: 'Gamebook Tracker - SMTP test', text: 'SMTP is configured correctly.' });
+    await sendLoggedMail(transporter, { from, to, subject: 'Gamebook Tracker - SMTP test', text: 'SMTP is configured correctly.' }, 'smtp-test');
     send(res, 200, { ok: true });
   } catch (e) { send(res, 500, { error: e.message }); }
 }
@@ -527,7 +530,10 @@ async function handleGetItem(req, res, id) {
 
 async function handleAdminGetItems(req, res) {
   if (!requireLocalhost(req, res)) return;
-  send(res, 200, db.getAllItemsAdmin());
+  const params = new URL(req.url, 'http://localhost').searchParams;
+  const ids = params.has('ids') ? [...new Set(params.get('ids').split(',').map(Number).filter(id => Number.isSafeInteger(id) && id > 0))] : null;
+  if (ids && ids.length > 100) return send(res, 400, { error: 'Too many item IDs.' });
+  send(res, 200, db.getAllItemsAdmin({ meta: params.get('meta') === '1', ids }));
 }
 
 async function handleAdminCreateItem(req, res) {

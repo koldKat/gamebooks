@@ -68,7 +68,7 @@ export function _renderPicker(query) {
   grid.innerHTML = items.map(it => {
     const displayName = it.label?.trim() || it.item.name;
     const qtyHtml = it.qty > 1 ? ` <span class="inv-line-qty">×${it.qty}</span>` : '';
-    return `<div class="inv-pick-item" data-idx="${it.idx}">
+    return `<div class="inv-pick-item" data-idx="${it.idx}" data-tooltip="${escapeHtml(displayName)}" data-tooltip-wrap="true">
        <div class="inv-pick-svg">${it.item.svg_data}</div>
        <div class="inv-pick-name">${escapeHtml(displayName)}${qtyHtml}</div>
      </div>`;

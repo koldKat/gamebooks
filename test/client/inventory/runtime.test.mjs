@@ -13,6 +13,6 @@ test('inventory preserves grid, picker, transfers, metadata, templates and read-
   const { cases, exports, digest } = JSON.parse(result.stdout);
   assert.equal(cases, 17);
   assert.equal(exports, 9);
-  // Captured from d97de3b's unsplit inventory controller with the same fixture.
-  assert.equal(digest, 'c3a7382433749d6480eb4f5ac81e8e0fbe7e7a0ed762b45c56200eae58e3cc6d');
+  // Lazy picker markup and escaped full-name tooltip attributes are intentional.
+  assert.equal(digest, 'e6ad4d7edc9afa6a378ca5cdc91da31b57d6807e9cf113a4a7e7d31015562d15');
 });

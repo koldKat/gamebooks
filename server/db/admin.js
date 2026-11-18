@@ -536,8 +536,13 @@ function deleteLevelUpTemplate(id) {
 
 // ── Items ─────────────────────────────────────────────────────────────────────
 
-function getAllItemsAdmin() {
-  return db.prepare('SELECT id, name, type, svg_data, description, active, created_at FROM items ORDER BY type, name').all();
+function getAllItemsAdmin({ meta = false, ids = null } = {}) {
+  const columns = meta ? 'id, name, type, description, active, created_at' : 'id, name, type, svg_data, description, active, created_at';
+  if (ids) {
+    if (!ids.length) return [];
+    return db.prepare(`SELECT ${columns} FROM items WHERE id IN (${ids.map(() => '?').join(',')}) ORDER BY type, name`).all(...ids);
+  }
+  return db.prepare(`SELECT ${columns} FROM items ORDER BY type, name`).all();
 }
 
 function getActiveItems() {

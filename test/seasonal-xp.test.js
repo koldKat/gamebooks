@@ -95,10 +95,13 @@ function fixture(t) {
     CREATE TABLE coin_events(user_id INTEGER,event TEXT,ref TEXT,amount INTEGER,UNIQUE(user_id,event,ref));
     CREATE TABLE notifications(user_id INTEGER,type TEXT,payload TEXT);
     CREATE TABLE level_up_templates(id INTEGER,active INTEGER);
-    CREATE TABLE user_job_xp(user_id INTEGER PRIMARY KEY,xp INTEGER DEFAULT 0);`);
+    CREATE TABLE user_job_xp(user_id INTEGER PRIMARY KEY,xp INTEGER DEFAULT 0);
+    CREATE TABLE job_xp_policy(id INTEGER PRIMARY KEY,user_count INTEGER);
+    INSERT INTO job_xp_policy VALUES(1,1);`);
   initializeSeasonParticipation(db, new Date('2026-02-01T12:00:00Z'));
   let date = new Date('2026-10-31T12:00:00Z'), impersonating = false;
   const context = vm.createContext({db, Math, _appXpHook:null, _xpFeedHook:null,
+    recordCappedActivityGems:require('../server/db/capped-activity-gems').recordCappedActivityGems,
     recordSeasonParticipation:(db,id,event,_date,ref)=>recordSeasonParticipation(db,id,event,date,ref),
     _insertNotif:db.prepare('INSERT INTO notifications VALUES(?,?,?)'),
     isImpersonatingContext:()=>impersonating,

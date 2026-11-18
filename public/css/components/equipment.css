@@ -1,3 +1,5 @@
+@import url('./lazy-icon-grid.css');
+
 /* Shared shortcut-letter styling for all play-area panel buttons. */
 .shortcut-hint-letter {
   color: #93c5fd;
@@ -662,7 +664,7 @@
   border: 1px solid #374151;
   border-radius: 5px;
   color: #d1d5db;
-  padding: 0.3rem 0.6rem;
+  padding: 3px 6px;
   font-size: 0.8rem;
   font-family: inherit;
   outline: none;

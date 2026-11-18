@@ -20,6 +20,10 @@ function emailModule() {
     './db': { getAdminSetting: k => settings[k] },
     './html-escape': require('../server/html-escape'),
     './paths': { ATTACHMENTS_DIR: '/att' },
+    './email-delivery': {
+      logEmailEvent: async () => {},
+      sendLoggedMail: async (transporter, mail) => transporter?.sendMail(mail),
+    },
     nodemailer,
   });
   return { email, getSent: () => sent };

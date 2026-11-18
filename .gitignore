@@ -27,6 +27,7 @@ public/attachments/
 .claude/settings.local.json
 memory/
 info/
+logs/
 
 # Local assistant instructions and one-off extraction helper
 AGENTS.md

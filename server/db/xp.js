@@ -12,6 +12,7 @@ let _rubyCompletionChecker;
 let _discoveryRubyChecker;
 const { getJobTitle } = require('./job-xp');
 const { advanceHeartbeatCoins } = require('./heartbeat-coins');
+const { recordCappedActivityGems } = require('./capped-activity-gems');
 const { seasonalXpMultiplier } = require('../seasonal-events');
 const { withPartyXpContext } = require('../seasonal-party-context');
 const { recordSeasonParticipation } = require('./season-participation');
@@ -225,12 +226,9 @@ function computeLevel(xp) {
   return Math.floor((-1 + Math.sqrt(1 + 8 * xp / 1000)) / 2);
 }
 
-// Dynamic level cap = live registered user count. Cached briefly to avoid a COUNT per XP event.
-let _userCount = { n: 0, at: 0 };
+// The maintained singleton count lifts caps immediately without scanning users.
 function _liveUserCount() {
-  const now = Date.now();
-  if (now - _userCount.at > 30_000) _userCount = { n: db.prepare('SELECT COUNT(*) AS n FROM users').get().n, at: now };
-  return _userCount.n;
+  return db.prepare('SELECT user_count FROM job_xp_policy WHERE id=1').get()?.user_count ?? 0;
 }
 
 function xpForLevel(n) {
@@ -369,19 +367,34 @@ const _awardXpTx = db.transaction((userId, event, ref, amount, seasonalEligible 
     created_at=strftime('%s','now') WHERE user_id=? AND event='visit_all_pending' AND ref=?
     AND NOT EXISTS (SELECT 1 FROM xp_events WHERE user_id=? AND event='visit_all' AND ref=?)`)
     .run(userId, ref, userId, ref).changes) return true;
-  if (!seasonalEligible) {
-    db.prepare('INSERT OR IGNORE INTO user_job_xp(user_id) VALUES(?)').run(userId);
-    db.prepare('UPDATE user_job_xp SET seasonal_bonus_eligible=0 WHERE user_id=?').run(userId);
-  }
-  const before      = db.prepare('SELECT xp, xp_boost_pct, xp_boost_carry, coins_spent, bonus_coins, pending_bonus_gc, bonus_gc_chance_purchased, bonus_gc_mint_purchased FROM users WHERE id = ?').get(userId);
+  const before      = db.prepare(`SELECT xp, xp_boost_pct, xp_boost_carry, coins_spent,
+    bonus_coins, pending_bonus_gc, bonus_gc_chance_purchased, bonus_gc_mint_purchased,
+    COALESCE((SELECT xp FROM user_job_xp WHERE user_id=users.id),0) AS job_xp,
+    COALESCE((SELECT user_count FROM job_xp_policy WHERE id=1),0) AS user_count
+    FROM users WHERE id = ?`).get(userId);
+  if (!before) return false;
   const beforeXp    = before?.xp ?? 0;
   const boost       = before?.xp_boost_pct ?? 0;
   const carry       = before?.xp_boost_carry ?? 0;
   // At the dynamic cap, XP buffers up to one below the next level and never crosses it: award plain
   // XP (no boost/carry) clamped to the room remaining, so a later signup lifts the cap and the next
-  // XP tick levels up. The event insert + Lucky Coin roll below still fire regardless.
+  // XP tick levels up. Keep the two streams independent, but do not log an award
+  // when neither stream has room. Skipped events are not banked for a later cap.
   const level       = computeLevel(beforeXp);
-  const frozen      = _liveUserCount() <= level;
+  const userCount   = _liveUserCount();
+  const frozen      = userCount <= level;
+  const normalRoom  = Math.max(0, xpForLevel(Math.max(level, userCount) + 1) - 1 - beforeXp);
+  const jobLevel    = computeLevel(before.job_xp);
+  const jobRoom     = Math.max(0, xpForLevel(Math.max(jobLevel, Math.floor(before.user_count / 10)) + 1) - 1 - before.job_xp);
+  if (!(normalRoom > 0 && (amount > 0 || event === 'idle_heartbeat'))
+    && !(event !== 'idle_heartbeat' && jobRoom > 0)) {
+    recordCappedActivityGems(db, userId, event, ref);
+    return false;
+  }
+  if (!seasonalEligible) {
+    db.prepare('INSERT OR IGNORE INTO user_job_xp(user_id) VALUES(?)').run(userId);
+    db.prepare('UPDATE user_job_xp SET seasonal_bonus_eligible=0 WHERE user_id=?').run(userId);
+  }
   const baseAmount  = Math.max(0, Number(amount) || 0);
   const baseWhole   = Math.floor(baseAmount);
   const rawExtra    = baseAmount > 0 ? baseAmount * (boost / 1000) : 0;
@@ -393,6 +406,10 @@ const _awardXpTx = db.transaction((userId, event, ref, amount, seasonalEligible 
     boosted    = Math.min(baseWhole, Math.max(0, xpForLevel(level + 1) - 1 - beforeXp));
     extraWhole = 0;
     newCarry   = carry;
+  } else if (boosted > normalRoom) {
+    boosted = normalRoom;
+    extraWhole = Math.min(extraWhole, Math.max(0, boosted - baseWhole));
+    newCarry = carry;
   }
   const r = db.prepare(
     'INSERT OR IGNORE INTO xp_events (user_id, event, ref) VALUES (?, ?, ?)'
@@ -452,9 +469,9 @@ function awardXp(userId, event, ref, amountOverride = null) {
   if (awarded && /^(discover_all|visit_all)(_(series|anthology))?$/.test(event)) {
     try { _xpFeedHook?.({ type: 'feed_changed', entity: 'book', action: event, id: ref }); } catch (_) {}
   }
-  if (awarded && before) {
+  if (before) {
     const after = snapshot();
-    if (event !== 'idle_heartbeat' && after.normalXp === before.normalXp) {
+    if (event !== 'idle_heartbeat' && after.normalXp === before.normalXp && after.jobXp > before.jobXp) {
       try { _appXpHook?.({ userId, jobXpDelta: after.jobXp - before.jobXp }); } catch (_) {}
     }
     if (after.earned > before.earned) {

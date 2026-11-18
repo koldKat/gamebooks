@@ -21,28 +21,19 @@ An author's rating shows its vote count beside the average. Both are derived fro
 - **Sort** - Latest (default), Oldest, A–Z, Z–A, or Random
 - **Filter** - All, Books, Anthologies, Series, or Favorites
 - **Search** - searches titles, authors, series names, and child book names; type `anthology` or `series` to filter by type
-- **Favorites** - while logged in, hover a cover and click the ★ to save it as a favorite; your first favorite earns **5 XP**
+- **Favorites** - while logged in, hover a cover and click the ★ to save it as a favorite
 - The wall refreshes automatically whenever books are added or changed
 - For players with PDF access, an anthology's file badges also show when one of its public stories has that file format.
 
 Open the ⚙ settings button or press **Ctrl+Y** to adjust cover titles, background options, animation preferences, seasonal sprites, and feed appearance.
 
+**Hide Cyrillic covers** and **Hide NSFW covers** control the cover wall. They do not remove books from your library or filter activity-feed entries. NSFW covers are hidden by default, including for signed-out visitors.
+
 ### Seasonal events
 
-The notice above the activity feed shows the active event, its XP bonuses, and the time remaining. Between events, it shows the next event and its countdown.
+Seasonal events bring themed mouse companions and temporary bonuses. The notice above the activity feed explains the current event or shows what is coming next. It updates automatically in open tabs.
 
-| Event | Window | Double XP |
-|-------|--------|-----------|
-| Halloween | October 28-November 3 | Losses, battle deaths, and simulator losses |
-| Diwali | Three days before through three days after its main day | Wins and simulator wins |
-| Christmas | December 22-28 | Wins, simulator wins, new runs, whole-book discovery or mapping, and heartbeats |
-| New Year | December 29-January 4 | All XP awards, including job XP |
-
-Dates follow Europe/Sofia time. Diwali's date changes each year. Event activation and ending update automatically in open tabs.
-
-Seasonal mouse companions appear only on the main app page. Enable **Disable seasonal sprites** in Ctrl+Y settings to hide them. **Reduce animations** does not control these companions. Hiding companions does not disable event bonuses.
-
-After an event, participation can earn one gold coin for each day you earned qualifying double XP. Multiple actions on the same day count once. The reward is issued only if the admin pool can cover every participant in full; otherwise that event's payout is skipped. Recipients receive a thank-you notification.
+Use **Disable seasonal sprites** in Settings to hide the companions. This changes the visuals only; event bonuses are independent of that preference.
 
 ### Center - Activity feed
 
@@ -118,6 +109,8 @@ Click **Stats** in the header (visible to everyone) to see live numbers for the 
 | **Server** | CPU model/cores/age/clock/architecture, total RAM |
 | **The App** | App age, server uptime and uptime %, total downtime, lines of code, code/database size, JS module count, network traffic, live session averages (CPU, heap, RSS) |
 | **Open World** | Open world series (public split), books in them, portal nodes, series runs (completed/public), pre-series runs |
+
+Hover or tap the registered-player total to see the country breakdown, with flags and country names in alphabetical order.
 
 ---
 
@@ -207,7 +200,7 @@ The screen has two areas:
 | Legend | **▾** button in the legend header |
 | Player XP panel | **▾** button in the panel header |
 
-The Player XP panel shows your level, title, XP bar, and active boosts. On the level row, your **heartbeat XP rate** is shown on the right in aqua - for example **+6.7 heartbeat XP/min** - so you can see at a glance how much passive XP you're earning while the tracker is open. The same rate appears on the books screen and in your profile.
+The Player XP panel shows your current account progress. Expand it to view the details available for your screen size. The same account bars appear in **My Books** and your profile.
 
 **Keyboard shortcuts (play area):**
 
@@ -287,18 +280,7 @@ Press **Record & Choose** (or Enter), then click the button for the path you act
 
 ### Undoing a step
 
-The **Undo** button takes you back to the last real decision point. If several sections in a row only had one possible destination, they're all skipped in a single undo instead of clicking through them one at a time. Each undo earns **1 XP**. Each playthrough gets a limited number of undos based on your level (you can buy more in the shop):
-
-| Level | Undos available |
-|-------|-----------|
-| 1–30 | 3 |
-| 31–40 | 4 |
-| 41–50 | 5 |
-| 51–60 | 6 |
-| 61–70 | 7 |
-| 71–80 | 8 |
-| 81–90 | 9 |
-| 91–100 | 10 |
+The **Undo** button takes you back to the last real decision point. If several sections in a row only had one possible destination, they are skipped together. The remaining allowance is shown in the tracker; extra uses can be purchased in the shop.
 
 ### Ending a run
 
@@ -324,6 +306,8 @@ The **Runs** panel in the sidebar lists every playthrough, newest first.
 | **✕** | Delete this playthrough permanently (asks for confirmation) |
 
 You can have several playthroughs going at once; only one is active at a time.
+
+Public-run viewers start with the run path and legend collapsed. Expand either when you need it.
 
 ---
 
@@ -378,6 +362,7 @@ Right-clicking a dot opens a menu with these options:
 - **Fast Travel** - jump directly to that section mid-playthrough (see below)
 - **Toggle battle ⚔** - mark or unmark this section as a battle location
 - **Color 🎨** - apply one of 16 colors to the dot
+- **Shape** - choose a circle, rounded square, hexagon, triangle, octagon, or trapezoid; outcome and battle outlines remain visible
 - **Delete node** - remove this dot and any dead-end descendants (asks for confirmation)
 
 ### Fast Travel
@@ -391,7 +376,7 @@ Jump directly to a section you've already visited, skipping everything in betwee
 | Normal | Avoids both high- and low-priority sections |
 | Low priority | Prefers sections you've marked as low priority |
 
-Each playthrough gets a limited number of Fast Travels (same level table as undos, and you can buy more in the shop). Each Fast Travel earns **2 XP** for the jump itself, plus the usual mapping XP for any section along the route you hadn't visited yet. You can also click the **Fast Travel** button in the sidebar to type a section number directly.
+The tracker shows your remaining Fast Travels, and the shop offers extra uses. You can also click **Fast Travel** in the sidebar to enter a section number directly.
 
 ### Section notes
 
@@ -469,13 +454,17 @@ An edit, rename or removal applies only to the original item in the original run
 
 Click **+ Add Item**, then browse or search the list of available items. Click any item to add it. You can also type a short label on it - useful if you want to note a quantity or a specific version of an item.
 
+Search includes the full item catalog, including items you have not scrolled to yet. Hover an item to see its full name in a themed tooltip.
+
+On mobile, **Inventory** and **Equipment** are beside **Notebook** and **Simulator**. You can add and rearrange items, but renaming and on-screen overlays are available on desktop only.
+
 ### Changing the order
 
 Drag items around to arrange them however you like. The new order is saved automatically.
 
 ### Removing an item
 
-Right-click an item to remove it.
+Right-click an item to remove it. On mobile, drag it onto the trash button. Confirming removes the item; canceling keeps it in your inventory.
 
 ### Showing an item on screen
 
@@ -496,6 +485,8 @@ Like the inventory, equipment is **per playthrough**. When viewing a finished ru
 ### Equipping and unequipping
 
 Click an empty slot to open a picker of items currently in your inventory, then pick one to equip it. Click the **✕** on an equipped item to send it back to your inventory.
+
+On mobile, tap an empty silhouette slot to choose an item from your inventory. Drag gear between slots to rearrange it, or onto the trash button to return it to inventory. Returning equipped gear does not delete it.
 
 If all 40 inventory slots are full, an item stays equipped unless its whole stack can merge into a matching inventory stack. Free a slot and try again; a failed unequip never discards the item.
 
@@ -537,64 +528,19 @@ Click your avatar circle on the Books screen.
 
 Your current level, title, and progress toward the next level are also shown here.
 
----
-
-## Levels
-
-You earn XP naturally - playing books, mapping sections, completing playthroughs, sharing books publicly, organizing series, uploading avatars, and more.
-
-**Clean run:** complete a run with a victory or loss (including battle death) without using Undo or Fast Travel to earn **50 base XP**, plus your normal boost. Awarded once per book, not separately for each outcome. In open-world series, usage in other books during that series run also counts.
-
-Rewards appear as floating notices at the bottom-right of the screen:
-- `+50 XP` pill for XP gains
-- Coin icon for Gold Coin gains
-- Orange **LEVEL UP!** pill with your new level and title
-
-Every level you gain adds a permanent **+0.1% XP boost** to all future XP. Shop purchases stack on top.
-
-Your XP bars show fractional progress. Fractional heartbeat XP accumulates between awards, and the displayed heartbeat rate includes current boosts.
-
-Your XP bar also shows your **heartbeat XP rate** (the passive XP you earn just for having the tracker open) in aqua on the right of the level row - e.g. **+6.7 heartbeat XP/min**. If you've bought XP boosts in the shop, the boost percentage shows in aqua too, with the total bonus XP shown beside it.
+Public and private profiles show earned roles above a collapsible statistics section. Expand **Statistics** for reading progress, discoveries, mapping, ratings, and simulator battles fought, won, and lost. Public runs are grouped into expandable series, anthologies, and books, with the most recent runs first.
 
 ---
 
-## Gold Coins & Shop
+## XP display and shops
 
-You earn **1 Gold Coin (GC) for every 1,000 XP**. You can also earn bonus coins:
+Your XP bars show your current level, title, and progress. Expand a bar for the details available in that view.
 
-| Milestone | Reward |
-|-----------|--------|
-| Visit every section of a book | 1 GC |
-| 24 tracked play hours | 1 GC |
-| Visit every section of every book in a series | 1 GC per book in the series |
-| Visit every section of every book in an anthology | 1 GC per book in the anthology |
+Reward floaties provide optional feedback while you use the app. Use **Disable floaties** in Settings to hide them throughout the app; your account still receives its rewards.
 
-Completed book runs earn alternating gems across all books: **1 ruby at 50, 150, 250…** and **1 diamond at 100, 200, 300…**. Wins, losses, and battle deaths count once per run; standalone simulator fights do not count.
+Click a currency balance in **My Books** to open its available shop. The dialog shows current prices, your balance, and any purchase restrictions before you confirm. Unavailable purchases are disabled.
 
-Click **GC** in the books screen header to open the shop.
-
-| Item | Cost | Effect | Cap |
-|------|------|--------|-----|
-| **XP Boost** | 1, 2, 3… GC (goes up each time) | +0.1% to all future XP, permanently | Level × 0.1% |
-| **Heartbeat XP** | 1, 2, 3… GC (goes up each time) | +0.1 base XP per minute per purchase | Purchases limited by your level |
-| **Extra Undo** | 3, 6, 9… GC (escalates per purchase) | +1 undo per playthrough, permanently | 1 per 10 levels |
-| **Fast Travel** | 5, 10, 15… GC (escalates per purchase) | +1 Fast Travel per playthrough, permanently | 1 per 10 levels |
-| **Lucky Coin Chance** | 1, 2, 3… GC (goes up each time) | +0.01% chance per XP event of a lucky gold coin appearing | Level × 0.01% |
-| **Coin Mint** | 1, 2, 3… GC (goes up each time) | +0.1% more gold coins minted from your XP, permanently (you already get a free Level × 0.1% to start) | Level × 0.1% |
-
-The shop header shows your current balance next to a **"N spent"** pill, so you can see your lifetime total spent at a glance alongside what you have left.
-
-Coins are spent permanently - no refunds. Boosts only apply to XP earned after you buy them.
-
-### Lucky gold coin
-
-Every level gives you a small passive chance (0.01% per level) of a lucky gold coin appearing, checked each time you earn XP. Buying **Lucky Coin Chance** in the shop adds more, up to a cap that matches your level's own free chance.
-
-When you get lucky, a small coin icon in the books screen header (just left of the **F1** button) lights up with a golden glow - click it to claim the coin. It stays dim and unclickable the rest of the time, and only one can ever be waiting at once, so there's no rush once it appears.
-
-Claiming lucky coins also earns alternating milestone gifts: a ruby at 50, 150, 250 and so on, and a diamond at 100, 200, 300 and so on. Each milestone gives one gem. Previous claims count too.
-
-Players' combined lucky coin claims also replenish the shared market: one ruby for every 500 claimed coins and one diamond for every 1,000. At each 1,000-coin milestone, both gems are mined.
+When the Lucky Coin button lights up, click it to claim the waiting coin.
 
 ---
 
@@ -607,7 +553,7 @@ Rate any book, anthology, or series with 0.5–5 stars (half-star increments).
 - **Anthology** - complete at least one playthrough of every book inside it
 - **Series** - meet the above requirement for every item in the series
 
-The star widget appears in the book's detail window and the Edit Book dialog when you own the item. Click your current rating to clear it. Rating a book for the first time earns **25 XP**; changing or clearing your rating doesn't.
+The star widget appears in the book's detail window and the Edit Book dialog when you own the item. Click your current rating to clear it.
 
 Once you've rated something, your stars turn **aqua** to tell them apart from the amber preview you see while hovering.
 
@@ -625,11 +571,11 @@ Identifiers (ISBN, ASIN, ISSN) appear next to the section count in the books lis
 
 ### Discoverable sections
 
-When you've explored everything you can find - every section you know about is fully mapped, but the total is still below the book's printed section count - the edit dialog shows a **Discoverable Sections** field. Set this to the true number of reachable sections to correct the progress bar and the XP targets for everyone tracking the book.
+When you've explored everything you can find - every section you know about is fully mapped, but the total is still below the book's printed section count - the edit dialog shows a **Discoverable Sections** field. Set this to the true number of reachable sections to correct the progress bar for everyone tracking the book.
 
 ### Book cover
 
-Upload a cover in the Create Book window or the edit dialog. Images are resized proportionally to at most 900 pixels on the longest edge and compressed toward a 512 KB limit. Uploads over 512 KB are rejected. The cover appears on the public wall once uploaded.
+Upload a cover in the Create Book window or the edit dialog. The upload control resizes and compresses the image to meet the 512 KB cover limit while preserving its proportions. Public books show their cover on the covers wall; private books remain private.
 
 ### Make public
 
@@ -646,9 +592,10 @@ When you open a public book, signed-in players see **+ Add to my library**, or *
 Create a series with **Create Series**. Add a book to a series via the **Series** dropdown in the Edit Book dialog. Books in the same series group together under a collapsible amber header. Suggestions include public series and your own series. A private series belonging only to another account stays hidden; you can create a separate series with the same name.
 
 - Only the creator can edit a series; other players can add a public series to their own library
-- The creator earns **150 XP** each time another player adds their series
 - **Delete Series** - removes only your series (books stay as standalone items)
 - **Delete Series & Contents** - removes the series and its books from your library
+
+Expand a series in **My Books** to rate it directly. The same rating requirements apply as in its detail dialog.
 
 ### Anthologies
 
@@ -786,7 +733,9 @@ Clicking a graph section does not open or reopen Live Reading. Unvisited section
 
 Map-driven passages can include the original map and a marker field. Follow the map's connections, enter your chosen marker, and continue. Your selected connections are saved. The tracker does not solve the map or choose a route; marker entry is disabled while previewing an earlier passage.
 
-Reading availability is shown for each book. A saved unlock remains valid when retrying a failed reader load.
+Reading availability is shown for books and anthology stories. If an unlock is required, a themed dialog shows the cover, description, and gold price before purchase. **Unlock book** is disabled when you cannot afford it. A permanent unlock survives resets, deleted runs, and later reader loads. Free books open without a purchase prompt.
+
+Click reader artwork to open the image viewer. Zoom in or out in 25% steps and drag a zoomed image to pan it.
 
 ---
 
@@ -863,10 +812,11 @@ The **bell 🔔** turns solid green when you have unseen notifications. Click it
 
 | Notification | When it appears |
 |--------------|----------------|
-| **Level up** | Each time you gain a level |
-| **Gold Coin earned** | XP milestone, level-up reward, 24h playtime, book completed, series/anthology fully completed |
 | **Gold Coin gifted** | When a Gamemaster sends you coins directly |
 | **Role assigned** | When a Gamemaster gives you the Lorekeeper, Pathmaker or Fateweaver role |
+| **Refund or account adjustment** | When an administrator refunds a purchase or applies a currency adjustment |
+
+Ordinary reward feedback uses floaties rather than adding an inbox notification for every gain.
 
 ### Inbox
 

@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const Database = require('better-sqlite3');
+const authRequire = require('node:module').createRequire(require.resolve('../server/db/auth'));
 
 function setup(t, username, email = null) {
   const db = new Database(':memory:');
@@ -13,7 +14,7 @@ function setup(t, username, email = null) {
   db.prepare('INSERT INTO users VALUES (1, ?, ?)').run(username, email);
   const context = vm.createContext({ module: { exports: {} }, Date,
     require: name => name === './connection' ? { db }
-      : name === './bookkeeping' ? { tryBookkeepingWrite: write => write() } : require(name),
+      : name === './bookkeeping' ? { tryBookkeepingWrite: write => write() } : authRequire(name),
   });
   vm.runInContext(fs.readFileSync(require.resolve('../server/db/auth'), 'utf8'), context);
   return { auth: context.module.exports, db };
@@ -68,7 +69,10 @@ test('forgot-password route sends the reset to the fallback mailbox', async t =>
   const deps = {
     '../geoip': {}, '../db': { createPasswordResetToken: auth.createPasswordResetToken, getAdminSetting: () => null },
     '../paths': {}, '../sse': {},
-    '../email': { getTransporter: () => ({ sendMail: async message => sent.push(message) }) },
+    '../email': {
+      getTransporter: () => ({ sendMail: async message => sent.push(message) }),
+      sendLoggedMail: (transporter, message) => transporter.sendMail(message),
+    },
     '../request-helpers': { getClientIp: () => '127.0.0.1', isRateLimited: () => false,
       readBody: async () => ({ identifier: 'reader@example.com' }), send: (_, status, body) => responses.push({ status, body }),
     },

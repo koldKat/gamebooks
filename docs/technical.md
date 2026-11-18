@@ -190,6 +190,8 @@ Static stylesheet blocks belong in CSS files, formatted with two-space indentati
 
 Dialogs share modal chrome, focus handling, close controls, and backdrop behavior. Escape dismisses autocomplete before the containing dialog. Saving can temporarily disable dismissal. Closing a top dialog must not also close one underneath it.
 
+Item pickers share `ui-helpers/lazy-icon-grid.js`: searchable metadata loads separately from bounded SVG batches, with offscreen unloading and a limited icon cache. Mobile item dialogs live under `public/mobile/js/items/` and share saved run data with desktop.
+
 Character-sheet edits use a local draft until Save. Inventory and equipment operations belong to the original run and item. Finished runs remain visible but read-only. Failed transfers, including an unequip into a full inventory, must preserve the item.
 
 UI preferences are account-scoped where supported. Feature-specific settings take precedence where a feature intentionally has its own visibility control.
@@ -205,7 +207,7 @@ UI preferences are account-scoped where supported. Feature-specific settings tak
 | `reading/map-entry.js` | Explicit map-marker navigation |
 | `reading/previous-entry.js` | Previous-entry behavior |
 | `reading/source-flipbook.js` | Source-image page presentation |
-| `reading/source-sheet.js` | Responsive source sheets with protected native image layers, independent luminance masks, and bounded PDF transforms |
+| `reading/source-sheet.js` | Responsive presentation of source sheets and compatibility rendering for legacy layered artwork |
 
 The mobile reader uses the same access and content rules with its own shell. Opening a readable book resumes the active run or starts one when allowed. A failed progress load must not create an empty replacement run.
 
@@ -219,11 +221,11 @@ Marker-entry forms require an active matching book, run, section, and render. Pr
 
 Reading policy is owned by `server/db/reading-access.js`. Access checks apply to matter, sections, and images. Unlocks are durable and must survive retries and normal library changes. Locked previews do not create runs before access is granted.
 
-Artwork is stored in `reading-images/<book-id>/<hash>.<format>`, not database blobs or public bypass routes. Each illustration uses one file, targeting at most 512,000 bytes; rare larger lossless images are supported up to the 8 MiB delivery limit. PNG, JPEG, GIF and WebP originals retain their bytes without automatic resizing or palette conversion. Per-book ownership and content hashes are validated before delivery. The image endpoint checks reading permission, unlock status, and that the image is referenced by that book.
+Artwork is stored in `reading-images/<book-id>/<hash>.jpg`. The current asset contract is one opaque JPEG per complete illustration, targeting 256,000 bytes with a maximum of 512,000 bytes. Preserve aspect ratio, artwork, lettering, borders, and labels; flatten transparent layers onto an appropriate background. Per-book ownership and content hashes are validated before delivery. The image endpoint checks reading permission, unlock status, and that the image is referenced by that book.
 
 Image elements authenticate through a scoped HttpOnly session cookie rather than session tokens embedded in image URLs. Protected responses use `private, no-store`.
 
-The storage API is `storeImage(format, base64, bookId)` and `externalizeImages(html, bookId)`. Reading artwork uses one file per illustration, targeting at most 512,000 bytes while preserving native pixels, dimensions and encoded bytes where possible. Rare larger files are allowed when faithful lossless compression cannot meet that target. Never split illustrations into bands or tiles.
+The storage API is `storeImage(format, base64, bookId)` and `externalizeImages(html, bookId)`. It retains legacy image-format support during the catalog migration and enforces a separate 32 MiB transport ceiling. That compatibility ceiling does not replace the JPEG asset contract. New artwork is flattened and encoded before storage; illustrations must not be split into strips or tiles.
 
 ## Battle simulator architecture
 
@@ -245,63 +247,15 @@ public/js/battlesim/
 
 `definition.js` and `panel.js` are required. Other book modules exist only when they own behavior that the shared family does not already provide. Every entry exports `definition`, `init`, `render`, and `setVisible`, retaining required compatibility exports.
 
-The Viking duel family shares numerical combat helpers and dialog lifecycle. Book adapters retain their printed formulas, injury outcomes and explicit handling of ambiguous source conditions.
-
 Desktop and mobile load simulator modules and translations lazily. Launcher registration, the database availability flag, and XP-history registration must agree. `scripts/check-battlesim-registration.js` checks installed registration.
 
-`layout.js` applies shared control placement and custom themed dropdowns to every loaded simulator. Menus retain the underlying select values and events for existing book rules. Combat-control observation runs only while the dialog is open; closing it disconnects observation and clears open menus. `battlesim.css` owns the common text scale, compact controls, normal capitalization and semantic log colors.
+Shared engine families live under `engines/`. Engines own combat calculations, phases, actions, validation, and reusable panel behavior. Book adapters supply identity, application wiring, source-language strings, and declarative options. Opponents, charts, encounter exceptions, and printed combat notes remain in the database.
 
-The Way of the Tiger engine separates attack rolls, damage rolls, blocking, throws, and follow-up attacks. Database encounter profiles supply printed defenses, counterattacks, round limits, nonlethal outcomes, and explicit combat exceptions such as gripping opponents or untargetable counterattacks. Profiles can also declare exhaustion, protection, fixed damage, opening counterattacks, a single automatic opening shuriken, and hit, casualty or disarm objectives that return control to the reader without recording a win. A separate mirror resolver handles a duplicate's copied combat values, automatic blocks and matching attacks. Switching a round profile preserves current Endurance and pending follow-up bonuses; scripted story outcomes remain in the reader.
+Extend an existing family when its combat model fits. Add family behavior through explicit options or encounter metadata rather than checks for a particular book ID. Separate setup values, captured encounter rules, mutable combat state, and confirmed outcomes. Undefined source values require explicit player input; rendering must not invent them.
 
-Shared engines accept declarative rules rather than branching on book IDs. Fighting Fantasy combat accepts database-defined weapon damage, doubles, opponent traits, limited poison and item charges, active opponent limits and printed stopping thresholds. These rules affect only an entered combat encounter and its saved combat resources. Panels own DOM and lifecycle; state and combat modules receive live application context through callbacks. Pending actions must reject stale account, book, or run contexts.
+`layout.js` supplies common control placement and themed dropdowns while retaining underlying select values and events. Its observers exist only while the dialog is open. `battlesim.css` owns the common text scale, compact controls, and semantic log colors. Controls and setup use the left column; results and bounded history use the right.
 
-The Dungeons to Dominions engine resolves two-dice attack values, armor, shield hit points, missiles, escape, poison and declarative encounter effects. Combined enemy profiles remain single combatants, while sequential encounters prevent replacement opponents from gaining a free attack. Combat resources and history belong to the initiating run; the engine does not perform story actions or move the reader.
-
-Craven Manor combat uses six-round scoring rows, time-point adjustments after rolls, optional time abilities and explicit encounter exceptions from the database. Flat rewind checkpoints and bounded logs prevent saved fights from growing recursively. Outcomes remain provisional until the player confirms them, so rewinding a final round cannot record duplicate victories. Its gunfight procedure tracks each opponent's wounds and individual dodge rolls separately from ordinary combat rows.
-
-Savage Realms combat resolves opposed single-die totals and separate damage rolls, with sequential opponents, explicit stopping thresholds and optional combat items. Allied rounds expose all totals and require manual hit allocation where the printed rules leave that allocation unspecified. The shared encounter state store guards run identity and records confirmed outcomes once; flat logs remain bounded. One-fight modifiers expire after the encounter, and supplemental puzzle solutions remain outside combat and completion counts.
-
-The Usborne adventure engine resolves chosen attack thresholds and independent opponent round limits. Book adapters explicitly configure available attacks, armor and encounter exceptions while preserving legacy fight formats. Archery and companion-defense adapters remain encounter-local; they do not navigate the story or modify campaign inventory. Presets load from the database, and run-identity and revision guards reject stale actions.
-
-The finite round-check engine resolves mixed dice pools, explicit stat formulas, threshold-derived penalties, capped opposed rolls and bonuses from earlier rounds. Database presets declare the round rules and combat consequences. Its shared panel supports editable custom rounds, combat-local consumables and explicit result confirmation where the source gives no overall victory condition. Stat changes apply at the printed point in combat; the player's campaign inventory, story choices and character sheet remain separate. Saved fights use revision and run-identity guards, and confirmed outcomes enter history once.
-
-Round presets can also declare automatic wins, consumable eligibility and costs, round-start effects, and conditional result destinations. The shared panel configures item controls per book and preserves combat-local parameter expiry without editing campaign inventory. These optional rules preserve earlier saved fight formats; rendering never reapplies a round-start effect or consumes an item.
-
-The opposed-roll comic engine accepts database encounter metadata for alternating or sequential opponent groups, with separate HP and one outcome for the whole encounter. Optional incoming damage and a player-selected protection control affect combat only. Existing saved fights retain their captured rules; rendering never upgrades or resets a fight.
-
-The Grey Star engine shares combat, character state, recovery, and panel behavior across editions. Book wrappers supply identity, translations, starting scores, potion strength, encounter rules, and the edition's combat table. Existing saved fights retain their captured settings; new configurations can enable per-round staff spending and lock setup during combat. Encounter rules can specify weapon restrictions, companion bonuses, optional protection, conditional passing damage, evasion windows, and round-dependent continuations. Combat outcomes and printed story continuations remain separate, including encounters whose final round stops before a victory can be recorded. Printed continuation gaps remain unresolved, and the tool never navigates the story.
-
-The percentile solo-combat engine tracks explicit attacks, opposed defenses, wounds, and combat conditions using database encounter profiles. It preserves the shared units die for advantage and disadvantage, supports optional coin checks, and keeps simultaneous wounds separate until the round ends. Combat phases retain casualties and current stats. Unprinted defensive values remain unavailable; abstract defeat thresholds do not appear as invented hit points. Travel, campaign clocks, narrative choices, and scripted outcomes remain in the reader.
-
-The Shinté engine resolves separate CS-versus-DS attacks through database-backed combat charts. Encounter adapters supply initiative, modifiers and the recipient of damage. Undefined chart results wait for explicit manual resolution without advancing the turn.
-
-The Horror Classic engine resolves dice-based strikes, combat powers and explicitly completed rounds. Its presets and encounter exceptions come from the database. Effects with undefined timing require an explicit ruling; separate fatal-shot encounters do not invent ordinary combat stats. Flight and healing preserve distinct printed rule profiles without automating travel. The same database rule profile supplies panel options and created combat allies.
-
-The Lost Jedi engine resolves one-hit combat through explicit turns and pending die rolls. Players confirm Jedi Point adjustments before a roll takes effect. Database presets supply allies, reinforcement timing and combat phase limits; a phase ending does not generate a victory. Shared encounter controls expose printed combat actions and optional setup modifiers. Combat continuations preserve casualties and spent resources, while story destinations return to the reader. Pending rolls and spent resources persist with the current run.
-
-The Super Endless Quest engine resolves single-hit encounters, declared book experience and optional precombat saves. An explicit staged mode supports successive combat checks with one or two dice, skill and equipment modifiers, opening damage acknowledgment and combat continuations confirmed by the player. Database presets supply targets, damage, HP restrictions, combat steps and printed exit options. Intermediate checks keep the encounter in progress and award no battle outcome. Saved actions are validated by replay without generating dice; story destinations and noncombat checks remain manual. Existing saved single-hit fights retain their original rules.
-
-The martial quest engine resolves database-defined combat procedures using one die, current skills and experience declared before rolling. Separate damage instructions, HP gates, tactical choices and terminal outcomes require explicit actions. Training defeat preserves the distinction between unconsciousness and death. Saved fights are validated by replay, and the shared encounter state store accepts the family validator while preserving run identity checks. Panels accept custom opponent names without requiring a preset; they do not advance the reader or manage story progression.
-
-The Kingfisher engine resolves alternating two-dice attacks with database-defined opponent profiles and encounter exceptions. Groups and reinforcements use compact counters, missing numeric stats require player input, and source-defined single-hit opponents use a hit counter without displaying invented Life Points. Encounter data selects weapon sequences, lethal hits, fixed damage, capture thresholds and round limits. Optional combat tools track current charges, healing and weapon cooldowns. Bounded combat logs and revision checks keep long encounters small and reject stale actions; equipment acquisition, puzzles and story progression remain in the reader.
-
-The d20 engine separates dice, typed damage, conditions, encounter rules, spell resources, and panel controls. Opponent profiles and encounter parameters come from database datasets. Source-defined attack checks handle visibility, cover, and opportunity attacks; separate effect modules resolve ongoing damage, environmental hazards, and escape sequences. Printed spell tactics and reflection reactions use explicit database features, including their resource and timing limits. Prepared spells spend slots before resolution; explicitly adjudicated effects commit together, and only unresolved casts can be canceled for a refund. Character forms support companions and editable custom opponents. Positioning and class-feature decisions remain manual. The shared run-state boundary rejects stale controls and delayed confirmations after book or run changes, while bounded logs retain combat results.
-
-The procedural quest engine resolves database-defined combat actions with one or two dice, current stats, resource counters and conditional combat options. Each roll, stat adjustment, continuation and outcome requires an explicit action. Expressions use a bounded arithmetic vocabulary; they cannot execute code. Saved fights are validated by replay, and damage, casualties and drain effects remain separate where the rules require separate actions. Neutral encounter completion does not count as a win or loss. The shared state store can retain unused combat fields when switching between procedures; existing families keep their original behavior. Custom opponent groups use database-owned templates and produce one result after the group is resolved. Hidden panels skip rendering, while unchanged updates retain manual dice. Database rules can disable book experience, hiding its spending controls and counters while retaining the same validated combat core. Individual combat rolls can also cap experience spending; the controls and replay validation enforce the same limit. The engine does not navigate the reader or manage campaign progression.
-
-The first-hit engine alternates two-dice attacks against the target's current skill. The first successful attack ends the encounter; it does not introduce HP or opposed attack-strength modifiers. Database profiles supply opponent skills and printed combat notes. Custom opponents use the same editable setup. The shared run-state boundary rejects stale actions and records each result once; narrative wounds, rescues and story progression stay manual.
-
-The Altimer engine resolves alternating BODY/SPIRIT attacks with sequential opponents, explicit combat modifiers and temporary BODY-draining encounters. Declarative options support area attacks, damage from surviving opponents and combat equipment, including fractional SPIRIT after damage halving. It reuses the shared forms, editable opponent controls and guarded run-state storage. Presets and printed combat notes load from the database. Noncombat tests, equipment ownership, puzzles and story progression remain manual.
-
-The Golden Dragon engine resolves each combat round from a database-defined two-dice chart. It tracks chosen targets, wounds, psychic losses, venom, paralysis and permitted escapes, including explicit failed-escape damage. Encounter rules can require a separate saved PSI roll after a wound, enforce sequential opponents or retain defeated profiles during a continuation. Optional combat setup supports net modifiers, a first-round modifier, progressive round bonuses and replacement wound damage. Modified totals outside the printed chart require an explicit recorded ruling. Other declarative rules support surrender after wounding hits, victory when one opponent falls, defeat below a health threshold and printed immediate wins or pauses without invented damage. Group and round limits pause an encounter without recording a full victory, retaining the remaining combat stats for manual continuations. Source presets retain fixed group sizes and can require current opponent health; custom encounters use editable opponents and a compact ordinary combat chart. Setup remains in the left column, with results and bounded history on the right.
-
-The Magnakai encounter engine uses database-owned combat charts and presets with shared combat, run-state, and panel modules. Book definitions select discipline controls, numeric combat modifiers, ENDURANCE precision, elapsed-round setup and optional tournament controls. Stable encounter keys distinguish opponents sharing a printed section and link consecutive opponents with their own modifiers. Psychic costs and pre-round damage, conditional psychic bonuses and damage, fixed combat scores, temporary equipment restrictions, timed modifiers, evasion windows, consecutive opponents, nonfatal ENDURANCE thresholds, and nonfatal round limits resolve inside the encounter. Captured rank profiles can change psychic bonuses, costs and minimum ENDURANCE. Definitions can add distinct psychic powers with their own costs, thresholds, immunities and damage draws, choose starting-stat rolls, and make evasion depend on remaining enemy ENDURANCE. Weapon flames add damage only on successful weapon rounds. Alternative weapon effects share one multiplier instead of stacking. Captured weapon choices can select a victory route or return the player to the reader before combat, without recording a fight outcome. Encounter data can restrict opening-round weapon damage and make later wounds permanent; equipment ENDURANCE bonuses remain separate when checking basic-ENDURANCE death. Optional combat healing consumes an explicit readiness flag; calendar eligibility stays with the player. Temporary combat boosts expire once when an encounter ends, preserving permanent losses and never reviving a defeated character. Full-round ENDURANCE protection remains distinct from table-only damage protection. Round limits carry across consecutive opponents. Single-round limits can compare actual ENDURANCE lost by both sides, including combat costs, with separate continuations for greater, lesser and equal losses. Printed gaps in continuation rules remain unspecified. Tournament target points remain separate from character ENDURANCE. Nonfatal reader continuations do not become killing victories; an explicit automatic-kill continuation can record a victory separately. Story choices and travel remain manual.
-
-Encounter metadata can fix the Combat Ratio and derive an opponent's starting ENDURANCE from the player's current score. Derived setup fields remain unavailable until combat starts. Noncombat table challenges do not record battle outcomes.
-
-An explicit combat continuation preserves remaining ENDURANCE, elapsed rounds, captured effects and unconsumed recovery instead of starting a new fight. Round-specific enemy adjustments apply once and persist with that fight. Definitions can configure opening costs, first-round weapon costs, conditional wound multipliers and psychic-mode restrictions. Equipment and psychic damage both respect a printed prohibition on injuring the opponent.
-
-Psychic powers can deal fixed damage and have a once-per-fight limit. Their consumed uses persist in the saved fight and reset only when a new encounter starts. Definitions may allow changing psychic attacks between rounds; only the selected attack applies, and an evasive round does not consume a limited attack. Encounter vulnerabilities can multiply selected psychic attacks without multiplying weapon bonuses.
+Pending actions validate account, book, run identity, and state revision before saving. Combat resources belong to that encounter or its explicit continuation. Campaign travel, narrative choices, and story inventory stay outside the combat engine.
 
 Saved fights retain their rule version, turn, participants, resources, pending decisions, and history. Rendering does not migrate or reset them. Each completed outcome is recorded once; canceled or incomplete encounters must not be reported as victories.
 
@@ -311,19 +265,13 @@ Controls and setup remain in the left column; results and history remain in the 
 
 Family-specific file layout is documented by each module's responsibility header. Dispatchers select shared combat modules from declarative encounter metadata; book adapters supply identity and application wiring.
 
-## XP, currencies, and seasonal events
+## Accounting and seasonal services
 
-The database owns XP awards, level calculations, shop validation, currency balances, and reward uniqueness. Browser bars and floaters display server results; they do not authorize awards.
+Database modules own account balances, purchase validation, award authorization, and uniqueness. Browser bars and floaters display server results. Purchases and awards use transactions and durable receipts so duplicate requests cannot repeat a financial operation.
 
-`server/db/xp.js` processes saved-state achievements and heartbeat XP. Fractional heartbeat carry persists between ticks. Reward caps and impersonation rules are enforced centrally. Changes to future rates must not silently recalculate already-earned XP.
+Purchased, earned, spent, and shared-market balances remain distinct. Some internal gem identifiers retain legacy names for compatibility; player-facing labels come from the interface translation tables. Existing migration markers and accounting receipts must be retained across deployments.
 
-Currency mutations use transactional accounting and retry protection. Purchased, earned, spent, and shared-market balances remain distinct. Some internal gem identifiers retain legacy names for compatibility; use the current player-facing labels rather than renaming stored fields or historical records.
-
-Job XP and its level events have their own storage and progression rules. Event templates are assigned when earned rather than chosen during feed rendering. Current prices and reward amounts belong in the relevant database modules and configuration, with player explanations in the Guide.
-
-Season definitions supply calendar windows and reward eligibility. Live activation uses Europe/Sofia dates and updates connected clients at event boundaries. Account-specific previews affect presentation only; actual rewards continue to follow the server calendar.
-
-Participation records and payout reports are persisted. End-of-event payouts debit the admin pool atomically only when the complete payout can be funded. A permanently skipped payout must not be retried as a later partial payment. Reports retain the processed recipients and amounts.
+Seasonal calendar data and the shared scheduling module resolve live presentation. The server supplies the authoritative selection; account preview overrides affect presentation only. Boundary notifications synchronize connected clients. Participation records and processed payout reports are persisted separately from presentation.
 
 ## Open-world series
 
@@ -341,13 +289,15 @@ Feedback threads and attachments have independent visibility for each side. Dele
 
 Forum modules separate HTTP handlers, database operations, and server-rendered pages. Posting and moderation checks remain server-side. Attachment validation and escaping apply to both user and operator content.
 
-`server/email.js` owns transport configuration and feedback emails. Saved SMTP settings override environment defaults. A blank password save retains the existing secret. Delivery failures must not discard the stored feedback message.
+`server/email.js` owns transport configuration and feedback emails. `server/email-delivery.js` records delivery outcomes in the ignored `logs/` directory using bounded rotation and restricted file permissions. Logs omit message content, attachments, passwords, and authentication tokens. Saved SMTP settings override environment defaults. A blank password save retains the existing secret. Delivery failures must not discard the stored feedback message.
 
 ## Exports, backups, and restoration
 
 Player exports are generated by `server/export.js`. Full exports contain account-owned JSON data and readable per-book HTML, with graph snapshots where available. Per-book exports are restricted to that account's copy. Filenames are sanitized before archive creation.
 
 `server/backup.js` creates a consistent SQLite snapshot daily at server-local midnight and catches up at startup if that day's archive is missing. It compresses snapshots and retains 30 days of automatic archives. Successful compression removes the temporary raw snapshot. Failed creation preserves earlier recovery archives.
+
+The admin backup list accepts database backup ZIPs only, excluding source and test files.
 
 Automatic ZIPs contain the database only. A full restoration also requires protected reading images, covers, avatars, book attachments, and feedback attachments from the corresponding filesystem backup. Preserve configuration separately. A player export is not a replacement for a server backup.
 
@@ -362,7 +312,7 @@ Use SQLite's backup facility for a live database rather than copying only the ma
 | `admin_settings.app_version` and `VERSION` | Release version; keep synchronized |
 | `admin_settings.app_url` | Trusted public URL for generated account links |
 | SMTP settings | Mail transport; saved values override environment defaults |
-| `size_ignore_patterns` | Admin application-size and backup-file listing exclusions |
+| `size_ignore_patterns` | Paths excluded from informational app-size scans |
 | `xp_config` | Configurable XP event amounts |
 | Migration markers | Once-only schema/data operations; not ordinary editable settings |
 
@@ -374,7 +324,7 @@ Admin tools expose version, notes, SMTP, XP configuration, backups, and maintena
 
 Simulator translations load separately through `i18n/battlesim.js`. Preserve established translation keys and source-language behavior when extracting modules. The admin interface is English-only.
 
-Add new user-facing strings to the appropriate domain table and use the shared translation functions. Keep source-book text unchanged rather than translating or rewriting it as interface copy.
+Add new user-facing strings to the appropriate domain table and use the shared translation functions. Update reviewed translation snapshots with intentional copy changes; integrity checks cover duplicate keys, missing lookups, interpolation, lazy loading, and DOM bindings. Keep source-book text unchanged rather than translating or rewriting it as interface copy.
 
 ## Tests and documentation
 
@@ -390,8 +340,6 @@ node scripts/check-battlesim-registration.js
 `npm test` runs the configured unit and persistence tests. Standalone browser launchers run explicitly. Use the relevant desktop/mobile fixtures for DOM behavior, lazy loading, layout, and saved-state recovery.
 
 Generic combat tests use synthetic values. Roster checks use `test/helpers/roster-db.cjs`, which opens the installed catalog read-only without application initialization or migrations. `GAMEBOOKS_TEST_DATABASE` selects an alternative catalog for those checks. Persistence tests use isolated databases.
-
-Tests must distinguish data coverage, rendered browser coverage, and personal visual review. A passing helper does not prove source fidelity or live installation. Preserve saved-state compatibility and once-only outcomes when changing shared engines.
 
 The documentation sources and generated outputs are:
 

@@ -231,6 +231,16 @@
   max-width: 100%;
   height: auto;
 }
+/* Keep list markers inside narrow reader panels, including multi-digit numbers. */
+:is(.liveread-body, .m-top) :is(ol, ul) {
+  margin: 0 0 0.75rem;
+  padding-inline-start: 2.5em;
+  list-style-position: outside;
+}
+:is(.liveread-body, .m-top) ul {
+  padding-inline-start: 1.5em;
+}
+
 .reading-frontmatter--structured figure {
   margin: 0 0 1rem;
 }

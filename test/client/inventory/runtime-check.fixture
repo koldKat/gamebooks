@@ -21,7 +21,13 @@ class Element {
   set className(value) { this.classes = new Set(value.split(/\s+/).filter(Boolean)); } get className() { return [...this.classes].join(' '); }
   set textContent(value) { this.text = String(value); } get textContent() { return this.text + this.children.map(c => c.textContent).join(''); }
   appendChild(el) { if (el.parentNode) el.parentNode.children = el.parentNode.children.filter(c => c !== el); this.children.push(el); el.parentNode = this; return el; }
-  insertBefore(el, before) { this.children.splice(this.children.indexOf(before), 0, el); el.parentNode = this; return el; }
+  insertBefore(el, before) {
+    if (el.tag === '#fragment') { for (const child of [...el.children]) this.insertBefore(child, before); return el; }
+    this.children.splice(this.children.indexOf(before), 0, el); el.parentNode = this; return el;
+  }
+  replaceChildren(...children) { this.innerHTML = ''; for (const child of children) this.appendChild(child); }
+  get childNodes() { return this.children; }
+  setAttribute(name, value) { if (name.startsWith('data-')) this.dataset[name.slice(5).replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = value; }
   remove() {
     this.parentNode.children = this.parentNode.children.filter(c => c !== this);
     for (const el of [this, ...this.all()]) if (el.id && ids.get(el.id) === el) ids.delete(el.id);
@@ -57,13 +63,17 @@ class Element {
   querySelectorAll(selector) { return this.all().filter(el => el.matches(selector)); }
   querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
   addEventListener(type, fn) { const list = this.listeners.get(type) || []; list.push(fn); this.listeners.set(type, list); }
-  dispatch(type, extra = {}) { for (const fn of [...(this.listeners.get(type) || [])]) fn({ target: this, stopPropagation() {}, preventDefault() {}, ...extra }); }
+  dispatch(type, extra = {}) {
+    const event = { target: this, stopPropagation() {}, preventDefault() {}, ...extra };
+    for (const fn of [...(this.listeners.get(type) || [])]) fn(event);
+    if (type === 'click') for (let node = this; node; node = node.parentNode) node.onclick?.(event);
+  }
   click() { this.dispatch('click'); }
   focus() {} select() {}
   getBoundingClientRect() { return { width: 196, height: 120, right: 196, bottom: 120 }; }
 }
 const body = new Element(), row = body.appendChild(new Element()); row.id = 'play-btn-row';
-const document = { body, createElement: tag => new Element(tag), getElementById: id => ids.get(id) || null,
+const document = { body, createElement: tag => new Element(tag), createDocumentFragment: () => new Element('#fragment'), getElementById: id => ids.get(id) || null,
   querySelectorAll: selector => body.querySelectorAll(selector), addEventListener: (type, fn) => {
     const list = documentListeners.get(type) || []; list.push(fn); documentListeners.set(type, list);
   } };
@@ -82,9 +92,11 @@ let confirmAction = null;
 const saveState = () => effects.push(['save', JSON.parse(JSON.stringify(state))]);
 const apiFetch = async url => {
   effects.push(['api', url]);
-  return { ok: true, json: async () => url.includes('?meta=1') ? items.map(({ id, name }) => ({ id, name })) : items.find(i => i.id === +url.split('/').at(-1)) };
+  return { ok: true, json: async () => url.includes('?meta=1') ? items.map(({ id, name }) => ({ id, name }))
+    : url.includes('?ids=') ? items.filter(item => url.split('?ids=')[1].split(',').includes(String(item.id)))
+    : items.find(i => i.id === +url.split('/').at(-1)) };
 };
-const context = createContext({ console, document, IntersectionObserver, window: { innerWidth: 800, innerHeight: 600 } });
+const context = createContext({ console, document, IntersectionObserver, queueMicrotask, window: { innerWidth: 800, innerHeight: 600 } });
 function stub(file, exports) {
   const mod = new SyntheticModule(Object.keys(exports), function () { for (const [k, v] of Object.entries(exports)) this.setExport(k, v); }, { context });
   modules.set(resolve(root, file), mod); return mod;
@@ -137,6 +149,7 @@ async function action(idx, name) {
 }
 await action(0, 'rename'); el('inv-rename-input').value = 'Named <sword>'; await event(el('inv-rename-ok'));
 assert.equal(api.getInventorySlots()[0].label, 'Named <sword>'); snapshot('rename');
+assert.ok(el('inv-grid').innerHTML.includes('data-tooltip="Named &lt;sword&gt;"'), 'renamed items expose the escaped full name to the themed tooltip');
 await action(1, 'edit'); el('inv-edit-qty').value = '5'; await event(el('inv-edit-qty-inc')); await event(el('inv-edit-qty-dec'));
 el('inv-edit-note').value = 'Keep'; el('inv-edit-visible').checked = false; await event(el('inv-edit-done'));
 assert.equal(api.getInventorySlots()[1].qty, 5); snapshot('edit');
@@ -212,11 +225,11 @@ if (!baseline) {
   stateModule.setExport('apiFetch', apiFetch); await startRun([]); await event(el('inv-add-btn'));
   const oldObserver = observers.at(-1);
   stateModule.setExport('apiFetch', url => new Promise(resolve => pending.push({ url, resolve })));
-  oldObserver.reveal(); assert.equal(pending.length, 3);
+  oldObserver.reveal(); await settle(); assert.equal(pending.length, 1, 'visible icons share one batch request');
   const stalePickerRow = el('inv-picker-grid').querySelector('.inv-pick-item');
   api.setInventoryVisible(false); await event(stalePickerRow);
   assert.equal(state.playthroughs[0].inventory.length, 0, 'hidden picker rows must not add items');
-  for (const { url, resolve } of pending.splice(0)) resolve({ ok: true, json: async () => items.find(i => i.id === +url.split('/').at(-1)) });
+  for (const { resolve } of pending.splice(0)) resolve({ ok: true, json: async () => items });
   await settle();
   const runtime = modules.get(resolve(root, 'inventory/runtime.js')).namespace.inventoryRuntime;
   assert.equal(runtime._itemCache.size, 0, 'hidden inventory must not be repopulated by late SVG fetches');

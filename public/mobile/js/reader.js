@@ -13,6 +13,7 @@ import { showAlert, showConfirm } from '../../js/ui-helpers/confirm.js';
 import { initGraphView, refreshGraph, applyRemotePositions } from './graph-view.js';
 import { connectRunSync } from './run-sync.js';
 import { openNotebook } from './notebook.js';
+import { openMobileItems, closeMobileItems, refreshMobileItems } from './items/panel.js';
 import { hasSim, openSimForBook } from './battlesim-dispatch.js';
 import { showToast } from './toast.js';
 import { openNodeContextMenu, hideNodeContextMenu } from './context-menu.js';
@@ -180,11 +181,12 @@ function _prefetchChoices(choices) {
 }
 
 export async function renderReader(mount, book, onBack, { startAtOne = false } = {}) {
+  closeMobileItems();
   _stopRunSync?.(); _stopRunSync = null;
   ++_showToken;
   const session = ++_readerSession;
   const authToken = getToken();
-  const leave = () => { _stopRunSync?.(); _stopRunSync = null; ++_readerSession; ++_showToken; onBack(); };
+  const leave = () => { closeMobileItems(); _stopRunSync?.(); _stopRunSync = null; ++_readerSession; ++_showToken; onBack(); };
   mount.innerHTML = `<div class="m-topbar"><button type="button" id="m-access-back"></button></div><div class="m-top" id="m-access-body"></div>`;
   const back = mount.querySelector('#m-access-back');
   back.textContent = t('mobile.back_home');
@@ -234,9 +236,11 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
         <button id="m-loss-btn" class="m-tool-btn m-loss-btn">${t('runs.death')}</button>
         <button id="m-battledeath-btn" class="m-tool-btn m-battledeath-btn">${t('runs.battle_death')}</button>
       </div>
-      <div class="m-tool-row">
+      <div class="m-tool-row" id="m-items-tools">
         <button id="m-notebook-btn" class="m-tool-btn">${t('notes.notebook_title')}</button>
         <button id="m-battlesim-btn" class="m-tool-btn" style="display:none">${t('battlesim.title')}</button>
+        <button id="m-equipment-btn" class="m-tool-btn">${t('eq.title')}</button>
+        <button id="m-inventory-btn" class="m-tool-btn">${t('inv.title')}</button>
       </div>
       <div id="m-graph-wrap" class="m-graph-wrap">
         <div id="m-graph" class="m-graph"></div>
@@ -247,6 +251,8 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
   document.getElementById('m-reading-menu-btn').addEventListener('click', e => _openReadingMenu(e.currentTarget));
   _initReadingMenu(book.id, isCurrent);
   document.getElementById('m-notebook-btn').addEventListener('click', () => openNotebook(book.id));
+  document.getElementById('m-inventory-btn').addEventListener('click', () => openMobileItems('inventory'));
+  document.getElementById('m-equipment-btn').addEventListener('click', () => openMobileItems('equipment'));
   document.getElementById('m-undo-btn').addEventListener('click', _undoRun);
   document.getElementById('m-fasttravel-btn').addEventListener('click', () => openFastTravelDialog(_doFastTravel));
   document.getElementById('m-win-btn').addEventListener('click', () =>
@@ -312,6 +318,7 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
     isCurrent,
     onPositions: applyRemotePositions,
     onState: async previous => {
+      refreshMobileItems();
       const previousPt = viewingPt || previous.playthroughs[previous.activePtIndex];
       const before = previousPt?.path?.at(-1);
       const updated = previousPt?.startedAt == null ? null : state.playthroughs.find(pt => pt.startedAt === previousPt.startedAt);

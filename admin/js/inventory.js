@@ -1,36 +1,36 @@
 import { loadingHtml } from '/js/ui-helpers/loading.js';
-// Inventory catalog, responsive row-based pagination, and item editing.
+// Inventory catalog with lazy icon loading, immediate search and item editing.
 
-import { api, el, mkBtn, mkEditBtn, _esc, showConfirm, showAlert, matchesQuery, renderPaged, _pageState } from './core.js';
+import { api, el, mkBtn, mkEditBtn, _esc, showConfirm, showAlert, matchesQuery } from './core.js';
 import { editFields } from './editor.js';
+import { mountLazyIconGrid } from '/js/ui-helpers/lazy-icon-grid.js';
 
 let _allItems = [];
+let _lazyGrid = null;
+let _loadRevision = 0;
 
-function _renderInventoryEdit(it) {
+async function _renderInventoryEdit(it) {
+  let full;
+  try {
+    [full] = await api('GET', `/api/admin/items?ids=${it.id}`);
+    if (!full) throw new Error('Item not found.');
+  } catch (error) { showAlert(error.message); return; }
   editFields({
     title: `Edit Item: ${it.name}`,
     fields: [
       { key: 'name', label: 'Name', value: it.name, required: true },
       { key: 'description', label: 'Description', type: 'textarea', value: it.description },
       { key: 'type', label: 'Type', options: ['weapon', 'armor', 'consumable', 'tool', 'jewelry', 'miscellaneous'], value: it.type },
-      { key: 'svg_data', label: 'SVG markup', type: 'textarea', code: true, value: it.svg_data, required: true, rows: 8 },
+      { key: 'svg_data', label: 'SVG markup', type: 'textarea', code: true, value: full.svg_data, required: true, rows: 8 },
     ],
     save: async payload => {
       if (!payload.name || !payload.svg_data) throw new Error('Name and SVG markup are required.');
       await api('PATCH', `/api/admin/items/${it.id}`, payload);
       Object.assign(it, payload, { description: payload.description || null });
+      delete it.svg_data;
     },
     afterSave: () => _renderInventory(false),
   });
-}
-
-const INV_ROWS_PER_PAGE = 10;
-
-// Read the rendered grid's column count; CSS determines page size.
-function _inventoryColumnsPerRow() {
-  const grid = document.getElementById('inv-grid');
-  const cols = getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length;
-  return cols || 1;
 }
 
 function _renderInventory(resetPage = true) {
@@ -43,18 +43,23 @@ function _renderInventory(resetPage = true) {
     (!query   || matchesQuery(it.name, query) || matchesQuery(it.description, query))
   );
   document.getElementById('inv-count').textContent = `${items.length} item${items.length !== 1 ? 's' : ''}`;
-  if (resetPage && _pageState['inventory']) _pageState['inventory'].page = 0;
-  renderPaged('inventory', items, renderInventoryGrid, _inventoryColumnsPerRow() * INV_ROWS_PER_PAGE);
+  renderInventoryGrid(items);
 }
 
 function renderInventoryGrid(items) {
   const grid = document.getElementById('inv-grid');
+  _lazyGrid?.disconnect();
+  _lazyGrid = null;
   if (!items.length) { grid.innerHTML = '<div style="color:#6b7280;font-size:0.85rem;grid-column:1/-1">No items match the current filter.</div>'; return; }
-  grid.innerHTML = '';
-  for (const it of items) {
+  _lazyGrid = mountLazyIconGrid({
+    grid, items, root: null,
+    loadItems: ids => api('GET', `/api/admin/items?ids=${ids.join(',')}`),
+    renderItem(it) {
     const card = el('div', `inv-card${it.active ? '' : ' inactive'}`);
+    card.dataset.tooltip = it.name;
+    card.dataset.tooltipWrap = 'true';
     const svgBox = el('div', 'inv-card-svg');
-    svgBox.innerHTML = it.svg_data;
+    svgBox.dataset.lazyIcon = '';
     card.appendChild(svgBox);
     const nameEl = el('div', 'inv-card-name');
     nameEl.textContent = it.name;
@@ -92,29 +97,30 @@ function renderInventoryGrid(items) {
     actions.appendChild(toggleLabel);
     actions.appendChild(delBtn);
     card.appendChild(actions);
-    grid.appendChild(card);
-  }
+    return card;
+    },
+  });
 }
 
 export async function loadInventory() {
+  const revision = ++_loadRevision;
   const grid = document.getElementById('inv-grid');
+  _lazyGrid?.disconnect();
+  _lazyGrid = null;
   grid.innerHTML = loadingHtml();
   try {
-    _allItems = await api('GET', '/api/admin/items');
+    const items = await api('GET', '/api/admin/items?meta=1');
+    if (revision !== _loadRevision) return;
+    _allItems = items;
     _renderInventory(false);
   } catch (e) {
+    if (revision !== _loadRevision) return;
     grid.innerHTML = `<div style="color:#f87171;grid-column:1/-1">${_esc(e.message)}</div>`;
   }
 }
 
 document.getElementById('inv-type-filter').addEventListener('change', () => _renderInventory());
 document.getElementById('inv-active-filter').addEventListener('change', () => _renderInventory());
-let _invResizeTimer = null;
-window.addEventListener('resize', () => {
-  if (!document.getElementById('tab-inventory').classList.contains('active')) return;
-  clearTimeout(_invResizeTimer);
-  _invResizeTimer = setTimeout(() => _renderInventory(false), 150);
-});
 {
   const invSearchInput = document.getElementById('inv-search');
   const invSearchClear = document.getElementById('inv-search-clear');

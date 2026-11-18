@@ -1,10 +1,10 @@
 {
   "sourceCommit": "695fc8cf95d1c2393b30b3b6234660494025a35f",
-  "coreKeys": 738,
+  "coreKeys": 851,
   "tables": {
     "account.js": {
-      "keys": 62,
-      "sha256": "136b99b5b730a5853c292e8a8b0d896da44a8c51ad1044c8a0f021931d9b6773"
+      "keys": 86,
+      "sha256": "5bcf439f67001af4acac4a1c3382b3e6d97f96c6d8dd3bc1182cbbf177983818"
     },
     "battlesim/battlesim107.js": {
       "keys": 36,
@@ -24,7 +24,7 @@
     },
     "battlesim/battlesim118.js": {
       "keys": 35,
-      "sha256": "02f00a745c51114e3618b68747d2181e8433f6df113f5ad0e11380dbcd695d44"
+      "sha256": "5aa669eab3d5dcb4955f5e69c001153cb9a0c65e88500f60777013770f50c701"
     },
     "battlesim/battlesim122.js": {
       "keys": 32,
@@ -34,325 +34,685 @@
       "keys": 25,
       "sha256": "6b59903c5cb3b4201c6890e526946f866f7061b2d1cfdee1399098424beebaf6"
     },
+    "battlesim/battlesim1285.js": {
+      "keys": 189,
+      "sha256": "8ac11d1b8ef3e84a499c74e618ecfb002af8b225d40fbfa687869fdeb236f4b5"
+    },
+    "battlesim/battlesim1286.js": {
+      "keys": 235,
+      "sha256": "7c05a3279a3265c730796a0211c4c73842074c0accddadf5c5cdc76867b32f1e"
+    },
+    "battlesim/battlesim1287.js": {
+      "keys": 255,
+      "sha256": "9119076875d263c9bc36f295e2b24083e138aec7b4f9f80c6a046a6152e05866"
+    },
+    "battlesim/battlesim1288.js": {
+      "keys": 285,
+      "sha256": "253a953f17dec70d718a63cbe17458efdc3a7f0b76f7b3afa65b35671d413489"
+    },
+    "battlesim/battlesim1290.js": {
+      "keys": 114,
+      "sha256": "05791183edb06b3950ad71ddaa3a215908e13ee8f15696140c7c31632551593b"
+    },
+    "battlesim/battlesim1291.js": {
+      "keys": 114,
+      "sha256": "19830cec8f83929fb022518db989da57596deb5549861707b8775943a5df7d46"
+    },
+    "battlesim/battlesim1292.js": {
+      "keys": 114,
+      "sha256": "824f070160783457206304e7c64d205abeb35f7baa2dfa6ca2e83e17e72a15b6"
+    },
+    "battlesim/battlesim1293.js": {
+      "keys": 114,
+      "sha256": "282c7b2b220aceab5143c9dd36abdced49f15bcf9bb78def090f6cf3af1103ca"
+    },
+    "battlesim/battlesim1294.js": {
+      "keys": 114,
+      "sha256": "13f8cda825a6f574e8a4cbae4bfeb66f8e31817c8215f672943d3a805bd05b4f"
+    },
+    "battlesim/battlesim1295.js": {
+      "keys": 114,
+      "sha256": "d848686df2b90b33eea5732c22430384050a7894e77121ac661b0643ecfd1c4b"
+    },
+    "battlesim/battlesim1296.js": {
+      "keys": 114,
+      "sha256": "67b7be65e8781eeb63d9525f2079adc3bc20c543c01ad0d83af9398091b58ef0"
+    },
+    "battlesim/battlesim1297.js": {
+      "keys": 120,
+      "sha256": "c5566252a91f761e8b2fcfc7bbcd40fc29534b69ba70c1fbbce5cb20aa2822d9"
+    },
+    "battlesim/battlesim1298.js": {
+      "keys": 116,
+      "sha256": "1d7688ad30466d311e3a7c18090911525060c75244587af248167f6e53df1aea"
+    },
+    "battlesim/battlesim1299.js": {
+      "keys": 114,
+      "sha256": "0c53063359497617ada4c0efd1499035d6f890b84e631de25b4ca9894ec55b58"
+    },
     "battlesim/battlesim130.js": {
       "keys": 28,
       "sha256": "5c54a44c0fc6a678d61d324dbc1f037235d33d131fa87e27149b13d5001d7085"
+    },
+    "battlesim/battlesim1300.js": {
+      "keys": 114,
+      "sha256": "177c1eb243643c938bdfed8720aa9d935c07ec12b07f7ee3582b3038b634996f"
+    },
+    "battlesim/battlesim1301.js": {
+      "keys": 114,
+      "sha256": "34a9cdcf4e2492b250a9ae8c63143f3bd6dd41a747435d14594e0253517c1986"
+    },
+    "battlesim/battlesim1302.js": {
+      "keys": 122,
+      "sha256": "9db470416bb9ad085097d3ca22ddd684b5c760c3f7ed8630c1f23e6c88aeccaf"
+    },
+    "battlesim/battlesim1303.js": {
+      "keys": 118,
+      "sha256": "598fd8391b2f8943d7c36a698aeb43810adef166449fbc71a8fd1a70d16a3087"
     },
     "battlesim/battlesim135.js": {
       "keys": 36,
       "sha256": "e8fee7a4e53d0b67a090b8d7db9f16cb8475697cac453ff9580d686458fa73eb"
     },
+    "battlesim/battlesim1362.js": {
+      "keys": 63,
+      "sha256": "12e8f108d35e94aac666c5bea2d3ec95ac2fa92a7cd19319905a022aabdda8d6"
+    },
+    "battlesim/battlesim1436.js": {
+      "keys": 170,
+      "sha256": "2057298dcce6dbd49b151de36ca6e38b87a26c6df554605d7c5ae5f9847fdd96"
+    },
+    "battlesim/battlesim1437.js": {
+      "keys": 173,
+      "sha256": "d5ed3d174cd303c0e81c694e707257077fe7daa3ec795887b33cce3a952dd0e6"
+    },
+    "battlesim/battlesim1438.js": {
+      "keys": 178,
+      "sha256": "cacf6f868d0c2844b39db0dba0ce2eaf18af8db358172b92bfd845eab54dfe4f"
+    },
+    "battlesim/battlesim1439.js": {
+      "keys": 179,
+      "sha256": "da172f915a1f792bed76a28203c1ae003656a7c44cc692f58fd95db97856a13c"
+    },
+    "battlesim/battlesim1440.js": {
+      "keys": 176,
+      "sha256": "d61071c6143df51e97e7ec92cd2c6e1329d8ec0b5399bc19d7e0e745d3618735"
+    },
+    "battlesim/battlesim1441.js": {
+      "keys": 180,
+      "sha256": "019849cda13c24ab3c8d310ab16b2462e78784ac3e753b9eb83ea0d8faa2289f"
+    },
+    "battlesim/battlesim1442.js": {
+      "keys": 1,
+      "sha256": "3f2f0c9fbed446118cc06f57705090f5e3d3bd0a21190a155affd8cd6a2fa77e"
+    },
+    "battlesim/battlesim1444.js": {
+      "keys": 1,
+      "sha256": "f4fb435b06a0941e08a9fcb2e4a1f1b20523d66493e32b146a5ce93784472c09"
+    },
+    "battlesim/battlesim1445.js": {
+      "keys": 1,
+      "sha256": "252fd6b64bf07b03e416ecd4dda34aa3322e914170231f03634affab6a8fea59"
+    },
+    "battlesim/battlesim1449.js": {
+      "keys": 1,
+      "sha256": "fbe1abe5dcaf298aa724294caeba1c449f55e76ad3339fa5bc8ea13a931f61fe"
+    },
+    "battlesim/battlesim1453.js": {
+      "keys": 1,
+      "sha256": "21e8872e8b2075e99edbf582d6958d47208de9bb3b6ef030a2a77bb347dabd22"
+    },
+    "battlesim/battlesim1454.js": {
+      "keys": 1,
+      "sha256": "434dc15ab8e70937d786c89cb375254add3c65a2e79c5f3b23b5f3f60ba71410"
+    },
+    "battlesim/battlesim1455.js": {
+      "keys": 1,
+      "sha256": "e97adf50f91ae4cb675438bf7f9fbc9917da2acdca686c788361ecd8f30dc35b"
+    },
+    "battlesim/battlesim1456.js": {
+      "keys": 1,
+      "sha256": "418be01d1a92f7681a3429bf60444de527027f0d1ec64b9942ed8bdd51aa700f"
+    },
+    "battlesim/battlesim1457.js": {
+      "keys": 75,
+      "sha256": "881f971ec532ffce2729d2c8df5e1ee3c346e7acb6b469187d998f5466cf26a1"
+    },
+    "battlesim/battlesim1467.js": {
+      "keys": 1,
+      "sha256": "965ac0f8cba5096bc37bc9db1dd14b372c2daf5cb5bcf85990e387e9c6941852"
+    },
+    "battlesim/battlesim1468.js": {
+      "keys": 1,
+      "sha256": "b2d2679e2b6373f4e884991bfe9a4044056c637946739c2cbe63616aafe69ca1"
+    },
+    "battlesim/battlesim1469.js": {
+      "keys": 1,
+      "sha256": "3b977f0ab620f6049b47d0db725d90583225e49fa9c3571f6ae52c96406266f6"
+    },
+    "battlesim/battlesim1470.js": {
+      "keys": 1,
+      "sha256": "4b8cd345a7da8187abe6562484b7ca2e8f0ee3cb3accaa3fee095f1a3dc62e2d"
+    },
+    "battlesim/battlesim1471.js": {
+      "keys": 1,
+      "sha256": "50c41c9f6ebdd86cd6f20ddb3f4e1eda10b83c228d00ca096a9c8d52af3f19e7"
+    },
+    "battlesim/battlesim1472.js": {
+      "keys": 1,
+      "sha256": "acf0d01c34d9419496eed632fb39355fa51bac6c516d4c91c8926663082c0c64"
+    },
+    "battlesim/battlesim1473.js": {
+      "keys": 1,
+      "sha256": "ffd5ee675c3ace193a47267b63ebbed34678d0e7d6e70f5cf5203f75f80dc3d2"
+    },
+    "battlesim/battlesim1474.js": {
+      "keys": 1,
+      "sha256": "b4725a1d48869287cd556cb44bcdf2e0f2c4900314d6dddb735f303dc628857f"
+    },
+    "battlesim/battlesim1475.js": {
+      "keys": 1,
+      "sha256": "7830c1429badcbfddc83d7e64a3aa8b7a7351f0ea29166c105837f92665aafe7"
+    },
+    "battlesim/battlesim1476.js": {
+      "keys": 167,
+      "sha256": "5982f97b6fe8f1695d3fd83ba319242ba4157cd1bf9b3d3bde8ae7bdfc96611c"
+    },
+    "battlesim/battlesim1477.js": {
+      "keys": 168,
+      "sha256": "61a9e714a8387ec977b1fda54aa0f4e7ec848cd7adbc50e3ff216539d6e555f6"
+    },
+    "battlesim/battlesim1483.js": {
+      "keys": 32,
+      "sha256": "7d04eb02189e08b41925a091a77256a62ab9c57a9eb88bee53ffdfaf0b19858b"
+    },
+    "battlesim/battlesim1525.js": {
+      "keys": 1,
+      "sha256": "6f9eca7124ba8208955b5dd065926adb4976d8f726b7a744fd373654a1bbb79c"
+    },
+    "battlesim/battlesim1527.js": {
+      "keys": 1,
+      "sha256": "57afbdc941afb0ad2c6070801ad0b53731d2c697b5a42c5a3d7ab9f62873bc2b"
+    },
+    "battlesim/battlesim1533.js": {
+      "keys": 1,
+      "sha256": "653bcfb3da965cba2d635c288167714ab01b32fd29e09d071906add41087dd30"
+    },
+    "battlesim/battlesim1534.js": {
+      "keys": 1,
+      "sha256": "2e386f9584c73ad5a99e7b7a5e134435c4ba936f7ea915acdebec7b65e274864"
+    },
+    "battlesim/battlesim1535.js": {
+      "keys": 1,
+      "sha256": "4c5931676204428a46e6eb68dc33fb122ba1642bc11d6f01ff5de95d714d95af"
+    },
+    "battlesim/battlesim1536.js": {
+      "keys": 1,
+      "sha256": "f5b5fd0346795637f0bcad6cf8663ddde9611ce0297658d8f1190444adcd99cc"
+    },
+    "battlesim/battlesim1537.js": {
+      "keys": 1,
+      "sha256": "f7470320480d04dd86315a0cb1a949f0c900612d5235c5c937f3c02363dc1dbb"
+    },
+    "battlesim/battlesim1539.js": {
+      "keys": 1,
+      "sha256": "10fec0045781d0d2111b3cdec768eddcd8c30ab685f393996a1199f79fb9d283"
+    },
+    "battlesim/battlesim1540.js": {
+      "keys": 1,
+      "sha256": "7b651f3be5deddcbf4519d9e81028eafe1b6acb16a6542be7891d9b1c6bdcae4"
+    },
+    "battlesim/battlesim1541.js": {
+      "keys": 1,
+      "sha256": "c18a092416785d67d7cc33188bcbb753e92350b7ec28269a5d47120cee2b2276"
+    },
+    "battlesim/battlesim1542.js": {
+      "keys": 1,
+      "sha256": "c0c9569209b7343ef56821b75b1a80198903bc5df67d1ecda02a4d0180c0b422"
+    },
+    "battlesim/battlesim1543.js": {
+      "keys": 1,
+      "sha256": "ec09ddf6d6ff6f818f4d358ede482abeedd0e7471fd5660ed014d368c27a21ec"
+    },
+    "battlesim/battlesim1544.js": {
+      "keys": 1,
+      "sha256": "8311a9612388b04c83542a4c58929e6dd7a437289ea3ffa12ffaa3b8186de280"
+    },
+    "battlesim/battlesim1555.js": {
+      "keys": 39,
+      "sha256": "8c2c2c0549fa4b09aaad76ef16f21f8285a6fea03538e7074122e6c72c104347"
+    },
+    "battlesim/battlesim1566.js": {
+      "keys": 85,
+      "sha256": "9ba87e58747e41c0879aac56953c6279e5cc995765623c4eb2846b0e93fb8bc7"
+    },
+    "battlesim/battlesim1575.js": {
+      "keys": 214,
+      "sha256": "dd60cb9ea274ff7d87fa422ff3f2ba6acab0e9610fd86d174def066a39c63d10"
+    },
+    "battlesim/battlesim1576.js": {
+      "keys": 214,
+      "sha256": "f4291de0341a2c23b89e1bc651a173411a10f2174d012ff9fc289aeccd4054fc"
+    },
+    "battlesim/battlesim1577.js": {
+      "keys": 94,
+      "sha256": "549a92a3c4a9753944a11a6f6c163e7d960a748bc27698c39031cb785800a84c"
+    },
+    "battlesim/battlesim1578.js": {
+      "keys": 94,
+      "sha256": "fa16b254ea7bb84a020730ec9ecd97c3e6acc03f22e9749aac9c78ae9993ed2a"
+    },
+    "battlesim/battlesim1587.js": {
+      "keys": 40,
+      "sha256": "04dcba936ec4ade9e4346a31c27710e2951ac8d61fd18c0b6c877341033be216"
+    },
+    "battlesim/battlesim1589.js": {
+      "keys": 52,
+      "sha256": "f3ab4504cf4921929b547ca8c1b5ab0fbd719b534b5a6f4c3cb24519eb95dc0c"
+    },
+    "battlesim/battlesim1591.js": {
+      "keys": 44,
+      "sha256": "45f04b70b4a35a7bc4b1e01a47c9db98bf6d25fd88f647d0680d31ef13b1ccd9"
+    },
+    "battlesim/battlesim1592.js": {
+      "keys": 33,
+      "sha256": "c1714a80aa6332762b03b984eed5b9f9fb2af469d2841d66534e9a9bd48f6196"
+    },
+    "battlesim/battlesim1596.js": {
+      "keys": 34,
+      "sha256": "85a10df14b1fa367cbba8a8de839fab3c173a8757ba22de9486316c15008860d"
+    },
+    "battlesim/battlesim1597.js": {
+      "keys": 34,
+      "sha256": "962fa1ccfc34f9e517157e994caed2c8e23d40e3b44846c47763b90f90904ecb"
+    },
+    "battlesim/battlesim1598.js": {
+      "keys": 34,
+      "sha256": "13fa2f110172fa319a90947c595b58c2bc1d6e0fb9dc129abbc54946e006a491"
+    },
+    "battlesim/battlesim1607.js": {
+      "keys": 79,
+      "sha256": "17540ecdb808cb2bc158f9f41e2774691df139fff906b1df8c6fb07c3ab8fdd4"
+    },
+    "battlesim/battlesim1608.js": {
+      "keys": 102,
+      "sha256": "9246301371dc49ce67234f987253704c20604bdaec4277b54c1cb15823c11e3f"
+    },
     "battlesim/battlesim161.js": {
       "keys": 47,
-      "sha256": "3a56637ecd8f64ab14e1af828fe10866fd80c27ef93333b1872cff2479421cc9"
+      "sha256": "3219fbf30e3d802e8eb4e86497b06585c45b22ef5c304888ffdc29f4192eefad"
+    },
+    "battlesim/battlesim1620.js": {
+      "keys": 269,
+      "sha256": "a612b21be63db5001e4fed58b51f76867dcb4e179770f8221816ba18025d1d82"
+    },
+    "battlesim/battlesim1621.js": {
+      "keys": 269,
+      "sha256": "b428522071c4699408084a45fd1ef211be7d02a2381a6dee3daa37eaca4195bf"
+    },
+    "battlesim/battlesim1622.js": {
+      "keys": 27,
+      "sha256": "62a90d29e8bf78ed67217f9a82794c92fea860b403ddc3fc6b14de83cd2082ec"
+    },
+    "battlesim/battlesim1649.js": {
+      "keys": 110,
+      "sha256": "95a0b231fe4924afd046b3055b86e8ab22326237c07d116c255ba9dcdcb1d6c8"
     },
     "battlesim/battlesim186.js": {
       "keys": 98,
-      "sha256": "c4447babea0df1ca7d7812fc31823b10466a1d6909ab8a6cbd28b8501d08a78a"
+      "sha256": "c2139e4b006014e4b4003dcd461bd8869e93cb76ce3ca26543572164488c42b4"
     },
     "battlesim/battlesim193.js": {
       "keys": 35,
-      "sha256": "a18b792154309f53fc7e4ac15b27cb8d585a3d683fbb0f61a2bd578921335cba"
+      "sha256": "6a6158a2584372e3d63f2efbaafb9dcc781d6b2a429a75f4b90dac419ecaecce"
     },
     "battlesim/battlesim198.js": {
       "keys": 70,
-      "sha256": "4911ca682931a08d11f9e94af607f5c249c520af7f639056291009134bd752ee"
+      "sha256": "54732b77fd35e889a203c0ea17ba8ba7434d9184bd5024b5112121bc201a18de"
     },
     "battlesim/battlesim199.js": {
       "keys": 71,
-      "sha256": "d8f86884aa2f80ba43fb95a0e7c54d5f4830109e7760bc808d76efaa5598b8e3"
+      "sha256": "1c9ec9fa905e66e9e45434fc51183c8f80be9214ef24df8405fddae797ae0dd6"
     },
     "battlesim/battlesim200.js": {
       "keys": 67,
-      "sha256": "4d73edcd3416de2d6a94e543cc02c9a8013fec88dee427ea8a21b2fd048df83c"
+      "sha256": "b19343f8ca7aaf6c454086a581bad25854121bd80da27edf3e18c9bbc63389f2"
     },
     "battlesim/battlesim201.js": {
       "keys": 83,
-      "sha256": "b90202635fc8f493d31679d667b6172065593415b90c714ca3ea2d09ae7abf4a"
+      "sha256": "1dd88800ba802a15383284dc682920c0c5c210bbb6b74fd92475e525323d9502"
     },
     "battlesim/battlesim202.js": {
       "keys": 80,
-      "sha256": "b3950932103d9d660f4db57d38da45ddd80700788655c7ad75e9534bae2bcb70"
+      "sha256": "6508f744a6387db9e7eb0c4c0286800627395a40fd18d4ff0c735e3d47c55479"
     },
     "battlesim/battlesim203.js": {
       "keys": 82,
-      "sha256": "3121964ce8669f5dd803a574cf561d1f6c9c006ef66e8f12cd91dac583a15e68"
+      "sha256": "d276256812bd1dd93c99866d808d24a12bc186c9f8069541b7128500634b20c5"
     },
     "battlesim/battlesim204.js": {
       "keys": 67,
-      "sha256": "bc48365fd9fe1565199f41d19132403698c81c4491c4328292fb94601027281d"
+      "sha256": "4adeffc8e86a1bd26026487721522c09df3c524a10aa541036170df01808d7a0"
     },
     "battlesim/battlesim205.js": {
       "keys": 89,
-      "sha256": "4511d5c0f01b1518551c0958b862b65239ef6b01732226bdf74d5affd208ec00"
+      "sha256": "81736cd73e03163f865a65580861ed440a8b288f57d2d1226fa6bc904d7604fc"
     },
     "battlesim/battlesim206.js": {
       "keys": 67,
-      "sha256": "4f310a2009a6f4058e97c1b0420d5cc0fce7c7358266c4f8139202a8a728d7f3"
+      "sha256": "4eed0d7f8b5c6162f14e5fac86cd359372538bc3de1d36c7af61019b5c727769"
     },
     "battlesim/battlesim207.js": {
       "keys": 75,
-      "sha256": "d5f732129beb99fdfc1be62247771b3cfad60ee1d71187a367055713fee43192"
+      "sha256": "cb94f498dbf05964f97740cbe6e5ce828da68798132f7d40d99921fcc9890280"
     },
     "battlesim/battlesim208.js": {
       "keys": 58,
-      "sha256": "4e293bf54b5714735455e664b0fc2df6ade63e32fee81abcc63aefa07f04ff3d"
+      "sha256": "8f33a359318109cb8c055c6284394483b289f798f94aee6a1b47a55dfdad0b8b"
     },
     "battlesim/battlesim209.js": {
       "keys": 63,
-      "sha256": "50f6796b5e23e1d011b6e155de4b80d855602ae2ca4c73c27b18531b702634f6"
+      "sha256": "0d00f59139d79f2ec0511614cd2fda0b80556f4ff52e1efcc0d053a610ea76e7"
     },
     "battlesim/battlesim210.js": {
       "keys": 56,
-      "sha256": "72b668559b86b5e3904f291ad92e712b43fd40eb21eca182c3542829a9a81d6d"
+      "sha256": "7a11adea70998bf011a473e43c390d2fc8e323136360e0657153bf748d58421b"
     },
     "battlesim/battlesim211.js": {
       "keys": 55,
-      "sha256": "df53120dff346f2718f2b7f834703eecdd7209a93fdfe6338f1fecfb7cc74c6c"
+      "sha256": "7bdac40aff8118f8d9925010601ccb216ce8fec9208c006ffd5a99c4d2105214"
     },
     "battlesim/battlesim212.js": {
       "keys": 46,
-      "sha256": "03c083701ad407407258c4cc09fb6f4110362404f3b3f1364b645c395251c7ed"
+      "sha256": "b343d880fa625f95f3ed7518edd602e854e5cbc84bdf14880fb2b32c60e155ff"
     },
     "battlesim/battlesim213.js": {
       "keys": 66,
-      "sha256": "fa13879ce0b0982790c66c3ace6d77921d6bab7be51f0f613e46bca852cee7c1"
+      "sha256": "0f7879c6f44100122ad5d5c330edc33d82f6eb101cb41cd8ec5e3631182c8edb"
     },
     "battlesim/battlesim214.js": {
       "keys": 45,
-      "sha256": "38b4d1c0d0363e33749fccf0a1c65c90a83b5e72bf80215efb0b72067d104e07"
+      "sha256": "cf920bbf91ec29d845b3c21c62d9e17fc44ab358d4b88fc520ab73d0ef1a82b2"
     },
     "battlesim/battlesim215.js": {
       "keys": 44,
-      "sha256": "ef81febb18cbfb21f9328ec3698d77b1fde9a56ce095f3058b78b13e711b9414"
+      "sha256": "027619ec265ac63288f6e65380c05f50f3ae835728826e84751c148456ddc510"
     },
     "battlesim/battlesim216.js": {
       "keys": 64,
-      "sha256": "0a12f5c265efdd940f3ef49a4cb7eb14873e996c4cf9d5968bc6c7a6036b48ac"
+      "sha256": "b9bcfcedeec5ec0828b9b2353d708a20a463cf1ffb444c1a227c420257178cde"
     },
     "battlesim/battlesim217.js": {
       "keys": 42,
-      "sha256": "e0c59be4c453b45ea53d54620ad944be065ede6cbcdb95b8296931e0cb98cd95"
+      "sha256": "6f97f8127871e595fbfb35ab1a749ee90775a4be41f841f97d3aaaa218051b5e"
     },
     "battlesim/battlesim218.js": {
       "keys": 61,
-      "sha256": "403013db22afdb7674a73bd2b7c065ac03401f9a7b473dc9a44b5e0981cc2589"
+      "sha256": "d6d862a82efec31887be18f052679152f6f7ffd496b13168c3aa5d32cae39ecc"
     },
     "battlesim/battlesim219.js": {
       "keys": 61,
-      "sha256": "84b02906bc3e74747061cd525d6a8016f545ffef9b786c292deabd1305d35112"
+      "sha256": "04d05efac45fe96b389cef140d7b6aaf06c974dbc961f0ce607096402dd5d45c"
     },
     "battlesim/battlesim220.js": {
       "keys": 50,
-      "sha256": "6bf6bf652010e363d51bcb23ffdaaa9d9c8f007b39ade1771db96ba3b0294498"
+      "sha256": "72bd6234ff49a41588e1917cce9cf1615f90e706e4f643b02b5aa4f76292badd"
     },
     "battlesim/battlesim221.js": {
       "keys": 45,
-      "sha256": "33e796c381d65ada6f92ebee4cfd61e59a66353fef59f4c0c1d79dc106dcb353"
+      "sha256": "b5f1f912f3d3e6946e18b3068796636507bd2885751e18173ed6d013919d1aa9"
     },
     "battlesim/battlesim222.js": {
       "keys": 49,
-      "sha256": "c229ed8dacf9291d3bfb656fb028f3326c5391c857e6091bc32a441d754e26ef"
+      "sha256": "faa97de4c7b2e486ba32871496c47cfde31def46f6937dc40289907f905972ec"
     },
     "battlesim/battlesim223.js": {
       "keys": 49,
-      "sha256": "5475c8c466e6c312df74df73d4a41248ef61446c1cfbe64a6e0ee76a9cef8135"
+      "sha256": "b39d2160c998cc7ec1572447b756aa1a8b0bf099e13950cd130f6fb5adb08b4a"
     },
     "battlesim/battlesim224.js": {
       "keys": 49,
-      "sha256": "268e6f8d59519477b6861f70d86537d604dec7ef8ff89740b063ef89244d3c74"
+      "sha256": "dfcfa4173e181e84c65ed6c140f5a3cdf678a1029ea0716ecd4b99b39771defd"
     },
     "battlesim/battlesim225.js": {
       "keys": 49,
-      "sha256": "33c0920b417dc2fa4184c04f05d5ab39f35f014150b83561d563fc90c3cf8069"
+      "sha256": "282952e0c3c2b69e3de5f3c6aa10d0804679f6866f5d509233b9a28f89b9f792"
     },
     "battlesim/battlesim226.js": {
       "keys": 58,
-      "sha256": "abace5485fd55220f0fc42b9182c0ee4182c333f5591623b06593713c94f29d8"
+      "sha256": "8f35086fd4055afe858b991e0e411fc418efbf7e617516c55908624b74c56b3a"
     },
     "battlesim/battlesim227.js": {
       "keys": 54,
-      "sha256": "b61f86d9b9ca490a95aabb9d538dbaabfcf19f3c0e38e032c9648982e663275f"
+      "sha256": "1f91250f259da8214bfa3a1d45b4c2dc0a9d4455518b5275236f30504e789ae1"
     },
     "battlesim/battlesim228.js": {
       "keys": 49,
-      "sha256": "21225533bcfc017f65d7f32567b8c3db7d68040407bd57e1da0e5fe5ac48b9cb"
+      "sha256": "859edc000eb5d1f0c85e28252bf4f9dcbaf32e098d366748a2343a0241f898d0"
     },
     "battlesim/battlesim229.js": {
       "keys": 40,
-      "sha256": "a69c9991a1098226486859dfc192c23e00d364b2bce0ee78954db37011fd2038"
+      "sha256": "efd7ee5a012a30fd9511eaeb47bc1b4de6480526d90e4f12a82a5f7d9d776ce7"
     },
     "battlesim/battlesim230.js": {
       "keys": 55,
-      "sha256": "53671d4b2566299058a608d031706ed554d41bc7777f7c9bcb30d37a5ed4323b"
+      "sha256": "88328cf5e4170207be11592d46606b7f1c7df353c9a44f957d7edbe94815e575"
     },
     "battlesim/battlesim231.js": {
       "keys": 74,
-      "sha256": "e403e78fb71a74a723e1d2f134fb40d6230956fd5426119f36a3555ea94deac5"
+      "sha256": "06bb358b328c5f8e0185ff9b144908b572e5a920118c19a115227cb105ab60b8"
     },
     "battlesim/battlesim232.js": {
       "keys": 60,
-      "sha256": "5a8ae3d8b0a67d898e0d994023d57942a479480a3eb13fb47bb7e7b1131e7529"
+      "sha256": "e5288e01e45e0abc6e686f43c322eb31338e501cb6120577d8ca727957708947"
     },
     "battlesim/battlesim233.js": {
-      "keys": 50,
-      "sha256": "2668c2d1cac2a8eb393b11d6739d8379d311be220ca5fa880096c51ce2b277bc"
+      "keys": 52,
+      "sha256": "49d5c0dfa2319e25bd9d94800f3926c76d4628e9479534358d09ba8b9e2fa6fd"
     },
     "battlesim/battlesim234.js": {
       "keys": 64,
-      "sha256": "4b7e09e5b2667cadddd6b1179b14eb48ebe4b2b601453270cc7dc3ae6e3e44ff"
+      "sha256": "f939b953123c5cf3063bb902d293686e47086d4192f9f3926dd56892c4e51db4"
     },
     "battlesim/battlesim235.js": {
       "keys": 44,
-      "sha256": "c0f4316e6395d1f1cc3a173d4f700af5b8a6bf67235a9d2134d5cbcdfa505fdc"
+      "sha256": "cbb4831e6670f8862fae8bca58a4490ed0231530e7843647944ef6f083242d78"
     },
     "battlesim/battlesim236.js": {
       "keys": 48,
-      "sha256": "1dabb0cfdaea770e2daf6b8aed586a4aa0160d87a09cd3f4526a9109d67a3d30"
+      "sha256": "045e31ecd70447f868174fba7f3498422820019a854b382001cec0dc347dab50"
     },
     "battlesim/battlesim237.js": {
       "keys": 46,
-      "sha256": "4a8d2c4746e87973604fc745c1edd074f3a08032a0f839500934256cff011746"
+      "sha256": "2c6b8de228e57170b5f22ea1b5f5c75500fabda83685314ba98473336c803ce2"
     },
     "battlesim/battlesim238.js": {
       "keys": 49,
-      "sha256": "a26ba2654d94e70d12d0ff9f2f099741cafeefb97856158e99bc3543081026da"
+      "sha256": "556bb0432f44afbef5c67d9350656a1cf11d2bc47568e1032787bf7fbb255730"
     },
     "battlesim/battlesim239.js": {
       "keys": 45,
-      "sha256": "55f1b6d28f6584c8694579613063fd534823543dc6f1dc967ba9e00a9dfeacec"
+      "sha256": "06659c9c833415665cb7354e103951840db68211e25ad292e04e606e06854e0c"
     },
     "battlesim/battlesim240.js": {
       "keys": 81,
-      "sha256": "780f83b86c3a5415f8e42814edb136bcd38b4f71447771565f31cb6a627280ba"
+      "sha256": "7334ccf557fff5ed1a57f344a71dc4d1e86b6a99fb310051fe060853f35c4507"
     },
     "battlesim/battlesim241.js": {
       "keys": 42,
-      "sha256": "92ad4d7959d980100dba2bca247a3ae1fb22c9a7f929c205cd4ecf0babdecfd2"
+      "sha256": "9cf9fd8f9558a295ade6688f1ab9375655ffe1f5b650f410ba9ecafa6490eb4a"
     },
     "battlesim/battlesim242.js": {
       "keys": 42,
-      "sha256": "a80a5d87ab9998cd411acee51f8fec016cc51d1b5cbabc924d32ed6087c391cc"
+      "sha256": "2c57e3f4ff725308bf48d308795c9d10e870b850382a58b8ef9d05245915cac6"
     },
     "battlesim/battlesim243.js": {
       "keys": 42,
-      "sha256": "e8af513beff1cc68bf26ece74d9b39cbd963a8678da153f704fcdb5c842949a8"
+      "sha256": "60d388bd5d72440a502e6127a6e3f434b0e7ed84c0a726d8f291f35a011796e0"
     },
     "battlesim/battlesim244.js": {
       "keys": 42,
-      "sha256": "f0ce43a3a041b23f6bbead914b9b7b3776dee7553318cbb0a1231c2eabb5ceab"
+      "sha256": "57052238ae9fea3e686d5af931a3faeb393b36f450e3149e037e1edc94abb821"
     },
     "battlesim/battlesim245.js": {
       "keys": 42,
-      "sha256": "4fb04b99ee36f7178329ee00a943c83b732d44992dc1be7811442b8d0f55583f"
+      "sha256": "9d731b3f8793584e7bc376f60cc95a48595180574c56711bbc7976557f42df1b"
     },
     "battlesim/battlesim246.js": {
       "keys": 44,
-      "sha256": "c13da15983a1279860a4cd1cc1aa72e897bf05f646654acd1736b471c81bdc53"
+      "sha256": "872a63f96b9e50f79555a9188bdd827215c225c6e843182c04c9d66ad8f124d1"
     },
     "battlesim/battlesim247.js": {
       "keys": 42,
-      "sha256": "1af06d7d208767ddbc732bebec1dbffe4c82031f547d8ef910dd9d91597d1946"
+      "sha256": "6ae28df030f98beb890ec178f1d9b8d565e3d06fb277483a0ffe6d0824e36230"
     },
     "battlesim/battlesim248.js": {
       "keys": 42,
-      "sha256": "2f781e298713501d3dba60ee24bb0af0ce1f9e5ff6b601f9f908ba0e75e0af27"
+      "sha256": "f6ad49e97d1e5c53c97bf30b77e5ddbe671ceb1321e8430ec84cb92aab8641d7"
     },
     "battlesim/battlesim249.js": {
       "keys": 42,
-      "sha256": "b93d3574678e775d18b4331f4e5ddd13a5792a26dd3a0d687095876308475356"
+      "sha256": "9070a8d1da7f7170675e8946a919627a1c174f15bc23a0ff2c8987e4926a4a17"
     },
     "battlesim/battlesim250.js": {
       "keys": 42,
-      "sha256": "355307b4ccc583ae4a3a7502b7b3a220479cde049e982b70f3121bf93ff03548"
+      "sha256": "d263941d90d17d0b9f33590ea523e921a4aa7409b52a2d896058b1411034e3c3"
     },
     "battlesim/battlesim251.js": {
       "keys": 42,
-      "sha256": "535a63e637fa6895460b2049cbae5d5faf9b671c495ba61dcf2900541cabdf54"
+      "sha256": "4ef748139b574a68b0ecb9f6bb19d0ef70bfded2c3ccb846d162fbf835dfd3f2"
     },
     "battlesim/battlesim252.js": {
       "keys": 42,
-      "sha256": "f959c4ddf4cbcb7fe19e5e48d92929011cbb171f039839c5e6ec83fa50fab5c3"
+      "sha256": "ba5a930603aeb738fac909d2355a0fe12a13099c2da36199c60b12027cae62e0"
     },
     "battlesim/battlesim253.js": {
       "keys": 42,
-      "sha256": "dcc9938715eb9225c6f47effaeede8d575750d8b7734fad9ca6425f84f427fa4"
+      "sha256": "2813f92586b4e2da07db213161ff08571d98151aa83d0c4460cb700e6b2098ea"
     },
     "battlesim/battlesim254.js": {
       "keys": 42,
-      "sha256": "3232dd39649ec93d4d9e9c45895bfa2eb0ffd06f8e5d53bdc7d930b28bb72e74"
+      "sha256": "390057251ccc64025c9ca025f6387e2a52a5e21a52efaf7dd24072063bcab859"
     },
     "battlesim/battlesim255.js": {
       "keys": 42,
-      "sha256": "409fd655ff6d912873ef4e57a21ceb407ec235c7f73c306e334df094f0d3cf1c"
+      "sha256": "c8e29b6804e57b29e53a8a17a5f4f234eae694fc7f3915c6c24e023cca59a05b"
     },
     "battlesim/battlesim256.js": {
       "keys": 42,
-      "sha256": "ff6ad3527530882ae6982affbffc9b385261549684ff9cb7b8b56ca321d571da"
+      "sha256": "c4f48cb5b11820d22c9032c09beecb19f1577009fc17f7de39cad907037cd770"
     },
     "battlesim/battlesim257.js": {
       "keys": 42,
-      "sha256": "e10897a4f283590d0d7ea688d20bb568e05388bda78e15c40038a638cda20dd2"
+      "sha256": "3bb9f03daad6c84bb93635fb580685370b051b0512ed2fb8bd1cc31d660fdb98"
     },
     "battlesim/battlesim258.js": {
       "keys": 42,
-      "sha256": "bda7485a0e304dc17f2e09a46508c26143bf0485601e59b040f6766029b6a56d"
+      "sha256": "51afbe38e40aeea1e269bb6a42d83caa10f73aedc390d96bb9570758a6b8ff33"
     },
     "battlesim/battlesim259.js": {
       "keys": 42,
-      "sha256": "ab81480e51278103ca11465927cd94d94cec483f72bc7a0bb70afb03e4620df7"
+      "sha256": "2c1e27f58a28f3f5d8a977ab8c26119a455504f6c5111cfa455ee826195d10c5"
     },
     "battlesim/battlesim260.js": {
       "keys": 43,
-      "sha256": "a835561e4484a2032b2d1aa1fd34063f303f7cb75b53f6913095f467e0201fb8"
+      "sha256": "3fb719b6ec5473d8d796b52d3f93e14275217358e0a117516e98f78fdfbd5e10"
+    },
+    "battlesim/battlesim261.js": {
+      "keys": 65,
+      "sha256": "33839f08c329ff3ac4ceb2f8a39b04a6d9075882220ba246066d44bdeabf4c3b"
+    },
+    "battlesim/battlesim262.js": {
+      "keys": 67,
+      "sha256": "81d82114f84399274fc7c1cbaf25e9a509d3e93ab60b1efc0af2797a52529875"
     },
     "battlesim/battlesim263.js": {
       "keys": 42,
-      "sha256": "66179f7aed122dc73720ec50ef755af0aa1140c67ea950fee9814ac7ac3abab9"
+      "sha256": "ab5a5ba11b735e0eab3ab6f14df4dfe62cbd5a1d360a3464208f88a7f3c036c4"
     },
     "battlesim/battlesim264.js": {
       "keys": 42,
-      "sha256": "5967fb766781e377df479279710e804e8cbc842f6bd6124497dd951a5ca5514e"
+      "sha256": "9bb4bae06a295196144473f975b9a2bb71ddfbed192e04e17dde26a9688725e1"
     },
     "battlesim/battlesim267.js": {
       "keys": 46,
-      "sha256": "2351f1befbf30c4a2f30affd40b08e953e72797535efa4d4ac75cb77518b4d81"
+      "sha256": "6f489b39199890668e28c69170eb58045082b2d70170349012dff9f11e200a93"
     },
     "battlesim/battlesim272.js": {
       "keys": 42,
-      "sha256": "cd2d9ef83e63a5176ff6bdd57853f962881130ae8c703005c7a1e954e05a3de4"
+      "sha256": "6200dc3413f76ee101a32bd7f1d8f0080224de3dda6987b62209a5cd8c44e764"
     },
     "battlesim/battlesim273.js": {
       "keys": 44,
-      "sha256": "265553406e66ef84351cccca89882d6d23d9b675dccae43953b617ba3517db4f"
+      "sha256": "908c33edc2b4e4a3bb0181065fb0241361d2d6361cc73b2e84dfa6a38b1f5c95"
     },
     "battlesim/battlesim274.js": {
       "keys": 42,
-      "sha256": "22940b228cb12fe2d78cfea956cb85791ad888495c3fb097e43e4cebe62f77d9"
+      "sha256": "efa9c20ebcd69b996ba35b6375393d4c5f5955b5c0d71f8d3bc15f553652e88c"
     },
     "battlesim/battlesim275.js": {
       "keys": 42,
-      "sha256": "2ffcf9bd865c00a55a8faef7ea1a1ba7ab75c3dab97f60f49b7e9c18e2183748"
+      "sha256": "3f27dcd81f33f888f6999074df7bb771e5c37554d2ee71b6b8a236c974d82610"
     },
     "battlesim/battlesim276.js": {
       "keys": 35,
-      "sha256": "f33b45d7fc6da9b667078aea70bbffc843fc49a93c521661d2a17688dbe15352"
+      "sha256": "6a025f9ca0eb7779fac51d7dcae746b0d5c7360d1648a18b646ce42725df5b9f"
     },
     "battlesim/battlesim278.js": {
       "keys": 35,
-      "sha256": "1a60ff1b3147b541b1668458a4847e7ed737dabb2a36db18e5e50b397ce3289a"
+      "sha256": "a5fc3814ac604ada347b25852d8703f10d0d847a7da66fff224e62e25361fd06"
     },
     "battlesim/battlesim279.js": {
       "keys": 35,
-      "sha256": "69247289ca421775ca09803ec110886c9c9507ff8fcdcca8e8c8c2b264edc55c"
+      "sha256": "ff0f89b6a8472b7ec889b8c0f486c31636b2d9fa39f9c39296333b5d7ab27812"
     },
     "battlesim/battlesim280.js": {
       "keys": 35,
-      "sha256": "2e18c906107bf99d495ec90d7b9344b404171649aa5a4092f614945b3f1d74f9"
+      "sha256": "3c13a162947aca87d5a7dee60999016e80e02ec427a66c3a434e039536052461"
+    },
+    "battlesim/battlesim281.js": {
+      "keys": 57,
+      "sha256": "443d4777f267398930e66fa59f606548ef8de861bdfdac767f58a3169f0e1f00"
+    },
+    "battlesim/battlesim282.js": {
+      "keys": 57,
+      "sha256": "953079cb72e251cadc8a00ef2517f7ac6362597eedceb065086dbcbef9f23a58"
+    },
+    "battlesim/battlesim283.js": {
+      "keys": 59,
+      "sha256": "9f25b5e5463f60abaf16c4f63628c01f75b533862bfca14507b7c087100f7573"
+    },
+    "battlesim/battlesim284.js": {
+      "keys": 58,
+      "sha256": "92bf9bc41bf4bf0b8fc2106d71bd79f00a9b7514959e05ab4f2f81f128b9902e"
     },
     "battlesim/battlesim286.js": {
-      "keys": 148,
-      "sha256": "7ecb52cd11f05df36fbc9091b75c13cde629b737b31d1f389c59fce812cef270"
+      "keys": 153,
+      "sha256": "b9250d58b0dff8ef5576e578eff9b97a38e122b5364b98f43b23696ea78794fc"
+    },
+    "battlesim/battlesim310.js": {
+      "keys": 2,
+      "sha256": "f372b882898622e82cc73d796163a1fdf348e95708e7f0eae19491211f84bf93"
+    },
+    "battlesim/battlesim311.js": {
+      "keys": 2,
+      "sha256": "a5b18c8f1b3957ae1512be2e801b1eca6eeb3364d7fd3e3ed9b33fbddbb55793"
+    },
+    "battlesim/battlesim312.js": {
+      "keys": 2,
+      "sha256": "91ad44bf77a0bef38e751aa80a271beea03bca2f4103227402c14e20d1f22d82"
+    },
+    "battlesim/battlesim313.js": {
+      "keys": 2,
+      "sha256": "41f0ef7820afed8021a5caf34555fabdaea2c6a284324688d538809dabf8afd6"
+    },
+    "battlesim/battlesim314.js": {
+      "keys": 2,
+      "sha256": "17a95ef404137fd55166d8e978f3d508c72e17610d9f9d7a69ce6f1f05ccd55a"
+    },
+    "battlesim/battlesim315.js": {
+      "keys": 2,
+      "sha256": "a7d98fde1d8c7157e4b4c8efaab718701babd0449d5724e37a7adcf5aac9c7d6"
     },
     "battlesim/battlesim317.js": {
       "keys": 36,
@@ -376,19 +736,115 @@
     },
     "battlesim/battlesim322.js": {
       "keys": 35,
-      "sha256": "f59ed28c43bb1e9f2543e9a4166caa1764b892c7f8a8c23db4e59cff81c38c05"
+      "sha256": "0d812801697620fe7c6eea96a3763d32a7196ad057b43eddbda65c37842831a7"
     },
     "battlesim/battlesim323.js": {
       "keys": 35,
-      "sha256": "ccbe910716cd8a57e76f56eca287052108273960e47cb995490b94c279c0d0df"
+      "sha256": "9b38f1b91d0b925e10960d65f69878f21bd157b5cc5e51c9502ffe2d21e4f0cc"
     },
     "battlesim/battlesim324.js": {
       "keys": 35,
-      "sha256": "cfede594a0c335b2b5ec3b6a2f05aa4ac43975ca4dca337180fd0c6c0b283b6a"
+      "sha256": "ec28198c060648b5cf444317425950c50a7f6d04cad523419a3509a126097dd0"
     },
     "battlesim/battlesim325.js": {
       "keys": 35,
-      "sha256": "c9b25dc539323df3291724e4c96ca19bf396eda6c3c4f9f508cb03279a760314"
+      "sha256": "baff4f267362e3fc4d5c9a1f39ea1dc6eb4d3535041fc283fdbcc5272ad8d4b8"
+    },
+    "battlesim/battlesim326.js": {
+      "keys": 58,
+      "sha256": "7fe0b18ab70e266e52007a0c64b1f52c0a26b58bc8a0a3b9c91c6a4b28c133b9"
+    },
+    "battlesim/battlesim327.js": {
+      "keys": 56,
+      "sha256": "1e626e8223653dd4efb95197c9fde753268de0e62cf483fd3dbd674c5e1514fe"
+    },
+    "battlesim/battlesim328.js": {
+      "keys": 60,
+      "sha256": "f4aca0b285c8356753a9bde810eb103405b1a44466c2d073507ffb0cb9c96ac5"
+    },
+    "battlesim/battlesim329.js": {
+      "keys": 56,
+      "sha256": "f0e55cc3edc15356671bea3f9153a606c55b1b858093e242a0de743090ac8e23"
+    },
+    "battlesim/battlesim330.js": {
+      "keys": 56,
+      "sha256": "ee4d6bab78c06de99e9b6d0ed889b33ecd7b98c9270504c68105787f53c86106"
+    },
+    "battlesim/battlesim331.js": {
+      "keys": 63,
+      "sha256": "9445f0baf2c7cd3b2242d954583c3d579d59e3196d4a1ea226721b247a28e916"
+    },
+    "battlesim/battlesim332.js": {
+      "keys": 71,
+      "sha256": "bad1aab735901d865f530cf0e5f26c2bc23f9570faed949710d4986c93ff0add"
+    },
+    "battlesim/battlesim333.js": {
+      "keys": 75,
+      "sha256": "f00bf7a589e3b0577d94e04f26f5d3f3a0d44fc149b7764fd199ae841e34c5e2"
+    },
+    "battlesim/battlesim334.js": {
+      "keys": 76,
+      "sha256": "9e63339711b76e5e2fea4ab7ae728ea852aa0b6b5fc87ceff1d8e8f3ae6827e3"
+    },
+    "battlesim/battlesim335.js": {
+      "keys": 79,
+      "sha256": "45e35da64e30f0c3e5b0358063104786c19bbdd18caf351b84c2410d8183859e"
+    },
+    "battlesim/battlesim336.js": {
+      "keys": 82,
+      "sha256": "5cc3b4962bcd32558a72f21213e4967050439f68f08de0f970c39fbe4923435a"
+    },
+    "battlesim/battlesim337.js": {
+      "keys": 85,
+      "sha256": "ea24508932d5121822eedae7a29ea09f42197aa781311e2e047e8e20f69fa07b"
+    },
+    "battlesim/battlesim338.js": {
+      "keys": 85,
+      "sha256": "680d6b6694c4e0fc45b266ea96a1b1e7202b8af8f3902ffda957a8e7e4a70f27"
+    },
+    "battlesim/battlesim339.js": {
+      "keys": 88,
+      "sha256": "13b922ceb7c8b36dd5835457d4f5052a7e66a668a417349f3b332c49b6a5484e"
+    },
+    "battlesim/battlesim340.js": {
+      "keys": 89,
+      "sha256": "d112c41da60c6b775df05c9632022f8f9a4201b3ab67559bb95d04fb1abc014d"
+    },
+    "battlesim/battlesim341.js": {
+      "keys": 75,
+      "sha256": "50f9d90849bcc794fe4a5f0b0accbb6b1e1173b1726468505fb2708c58395d81"
+    },
+    "battlesim/battlesim342.js": {
+      "keys": 77,
+      "sha256": "857bcba3d8af62d33a1c6029337a492d2230435aed15ba865fbade329fa63e11"
+    },
+    "battlesim/battlesim343.js": {
+      "keys": 75,
+      "sha256": "59193fd3098f1ecf1a615e5d84caef2f32cd4d6334f06a86257a0717c9a97040"
+    },
+    "battlesim/battlesim344.js": {
+      "keys": 76,
+      "sha256": "9b1000f40091790f91cd9c3f4a2f2e330a926285b462d6a3ce98e3e889034ce0"
+    },
+    "battlesim/battlesim345.js": {
+      "keys": 76,
+      "sha256": "b536a9949a06ca4ada3b19fba7318e1432f7957d1cfbd6229a37545cf8099d44"
+    },
+    "battlesim/battlesim346.js": {
+      "keys": 75,
+      "sha256": "54d91d50d84123b4cb63e5ccc0952cee8016e5f2219f7845e18b2508f52d4727"
+    },
+    "battlesim/battlesim347.js": {
+      "keys": 78,
+      "sha256": "e45f36fbfa2017a37df7b45b6079c682ffb1940e35e073a7a653e49b3ae61772"
+    },
+    "battlesim/battlesim348.js": {
+      "keys": 80,
+      "sha256": "a72e7e39cb100222262d1d68aa2c360cf6f69984e0d15c5a6b4e94a543f5fce2"
+    },
+    "battlesim/battlesim349.js": {
+      "keys": 89,
+      "sha256": "8169fa89b968d6a73e8c958fa127e77442cb85e4a58afbb030a412ef93cdd4b4"
     },
     "battlesim/battlesim370.js": {
       "keys": 55,
@@ -410,6 +866,18 @@
       "keys": 55,
       "sha256": "1340f9a51241ce671d0b5a7a7d854918db2d4361fea101978e67781d605103bf"
     },
+    "battlesim/battlesim388.js": {
+      "keys": 58,
+      "sha256": "596c2e0d10ddc0915af82a6db716deefd2ca975945648054f96a14174991c3ba"
+    },
+    "battlesim/battlesim390.js": {
+      "keys": 58,
+      "sha256": "64cb4a291663efeae6796bfab0a7ec33ad92a0f052d37ef5c7d556674f7aaa05"
+    },
+    "battlesim/battlesim391.js": {
+      "keys": 58,
+      "sha256": "4e5b1772c04d20400b58ac588c6c1998fac6ae3c53be5767c966aa170d0f8c1d"
+    },
     "battlesim/battlesim397.js": {
       "keys": 36,
       "sha256": "8fb89febf2b50b13bcb1c31f719eb3127ff96e1632c060ef8f85673c59d830bf"
@@ -420,23 +888,31 @@
     },
     "battlesim/battlesim399.js": {
       "keys": 42,
-      "sha256": "a23848ec57c9bf2bd17035f4a1b203c7331f27e3c53b1794cc6b103020e41cec"
+      "sha256": "2be5c7fb7072c5467db733f3b486bdca0cdce14a0c5d17abcbf8e191849c4de2"
     },
     "battlesim/battlesim400.js": {
       "keys": 48,
-      "sha256": "9b59593bbdee735518fbcf13dc0ab4f06b717ebc685bd229b8cbb132bc216205"
+      "sha256": "a6a76fd7302835fbf6bdf1a176ec504ce641d07a56bf814823d5517381f1f3ee"
     },
     "battlesim/battlesim401.js": {
       "keys": 50,
-      "sha256": "3d7cace59399335f14471393eebe1f16d4f158c702cc7d5298b2eeb573a6db12"
+      "sha256": "409093187159f2694be603ec1732e43060580cfec2ab3d123eee554959c34875"
     },
     "battlesim/battlesim402.js": {
       "keys": 50,
-      "sha256": "3708bae6dc42dc6f8417d97875f28f7fc1cea835191e531b2109790644537813"
+      "sha256": "7915fd05b66d015d957a9d9a71b2c0c8b43d3380301d81846ffe3f6d36a37a69"
+    },
+    "battlesim/battlesim409.js": {
+      "keys": 42,
+      "sha256": "2936483621acf2cef8774ab0d53cf321b04263750c686f33e0782827477feeaa"
+    },
+    "battlesim/battlesim410.js": {
+      "keys": 57,
+      "sha256": "1ca24b63d49a09b7b836c75d62fdcdaf23a904d7b3d8c87e96f993e47341aa3c"
     },
     "battlesim/battlesim412.js": {
-      "keys": 54,
-      "sha256": "06c3587fa6b22a10248076b7d5406dd1f1a799e79f35bad9a8b48e919037e673"
+      "keys": 57,
+      "sha256": "a20c57bfc8ee9762eb35552792f28425c9a77b1033e394f06c0685fad982451d"
     },
     "battlesim/battlesim414.js": {
       "keys": 24,
@@ -452,63 +928,63 @@
     },
     "battlesim/battlesim430.js": {
       "keys": 40,
-      "sha256": "6251ec0c97a58b1dcaf95ef3ef7900c31d572072934cb0225b1140d3f5c8de5a"
+      "sha256": "db0e861b53a79ac44a923db37bcf4f9c2f1823aaf3239bbd2ab5577630f39ecf"
     },
     "battlesim/battlesim431.js": {
       "keys": 40,
-      "sha256": "ae2218aa0ce6e7993c4a110511d13aff8a18e4aa7dbd7efa59ff3aeaad2a036b"
+      "sha256": "da06dc1ddb47e333d0a9661fefb0db80229e38da7f6a93a068e289882a794d2e"
     },
     "battlesim/battlesim432.js": {
       "keys": 39,
-      "sha256": "227aab23cde71141ffc816811aeb35c9b56facf40b3d6e6a473a179a5cafba1c"
+      "sha256": "86d667e4e330514112f784088a933cc95915aed1ba7037ec1b186e499d1a66f5"
     },
     "battlesim/battlesim433.js": {
       "keys": 46,
-      "sha256": "3e28a8976564158fe1cda64a84dc826600b260cc95f8ff3ad6fc9afce51c098b"
+      "sha256": "a86a2f8056f854b994d398574491c1d114a7ebac20de05c1faf0ef9d31bd3702"
     },
     "battlesim/battlesim434.js": {
       "keys": 52,
-      "sha256": "6e361597ca5fcbc2447bdf755ffa4578021295d5737dbb3be70372ef09d3e4f1"
+      "sha256": "864b15fc3d070ee7c0950961f802e68ca8b8e7e755e59d938abfdff0d3ba848d"
     },
     "battlesim/battlesim435.js": {
       "keys": 53,
-      "sha256": "d5fd07e9da4fd8cc16ae4b11066ce3f40a486963382c9fd51f53dfc8efa4c071"
+      "sha256": "84199beca6e59c0c99513e65c504e8427d0b67ac8abd4c514c8d9bd61817fcea"
     },
     "battlesim/battlesim436.js": {
       "keys": 54,
-      "sha256": "197d199f018aacaf734cf781ee92cec6ee7e1a287f6744be7b5579b8f9e94264"
+      "sha256": "23609b3c27d234809429b16ae01600e0668c59f71ac476fb286db8562c64438c"
     },
     "battlesim/battlesim437.js": {
       "keys": 52,
-      "sha256": "d422e04529e0b3b3254ed6713c6bfa5051a3277d8303aaa1217bd17984f96c36"
+      "sha256": "6fe64af3e91d56f2dba3c704afc0ce84c0bdc96dc17a0d5abb7849ce993c9810"
     },
     "battlesim/battlesim438.js": {
       "keys": 52,
-      "sha256": "6cd0afbde3fef47c6b5b93067348080db1f68bfe60150e8268880ed5a928960d"
+      "sha256": "ea677ca7a891b1a52aad7fdc0d31c4e04de43faa59386c31817ef31dcc3d5a1b"
     },
     "battlesim/battlesim439.js": {
       "keys": 57,
-      "sha256": "4b7ddcd63f49191b741241b0411d043aa6916e931df54e81dae319c4f8f14811"
+      "sha256": "3c2f79b1195bd6418462d54e3faaaafe41ee33680cc3efbfd5017beba27bed8f"
     },
     "battlesim/battlesim440.js": {
       "keys": 51,
-      "sha256": "c73df98bf4b70dcccd55adfff5b21e227e10c61c786ff20437af5be471ab6b34"
+      "sha256": "718f79d6c7f4c7cb0b90fd44bb1291d536d824a302063c9673669f2034af9f6d"
     },
     "battlesim/battlesim441.js": {
       "keys": 58,
-      "sha256": "6237f5440403707316712188cafec060b3e23770e9c4d4797aefe590423ff234"
+      "sha256": "31d8d5cfd911ea9e82597f5cf4b54231959e7e2be82c1ff8fb993f38db5d5bd2"
     },
     "battlesim/battlesim462.js": {
       "keys": 52,
-      "sha256": "d15ea8f86fbaccca8baecc07d01b844c1a64dbd733f09d2722aa57ab31030e78"
+      "sha256": "65c71f250a100f954784c4e7b1e14108178818103c7280565fe0acc1daf2688c"
     },
     "battlesim/battlesim463.js": {
       "keys": 27,
-      "sha256": "c70164a22d6861e426c2d70e1881dae55dc5a979ad7c83ebfc3a6c09f0202bc5"
+      "sha256": "462344c85ecdb1f97919a319428b595fb36580427d8d27854aade738f042daf0"
     },
     "battlesim/battlesim464.js": {
       "keys": 52,
-      "sha256": "4b47a8f439d7bcb24cd55ef692270bdd792f41773473452a849ae70f0a46bf7c"
+      "sha256": "e7d762c066157ae525462ad9843f1fd80c380787b3559f3ce4fead792d63a0a0"
     },
     "battlesim/battlesim465.js": {
       "keys": 26,
@@ -516,79 +992,79 @@
     },
     "battlesim/battlesim468.js": {
       "keys": 48,
-      "sha256": "d149e8ed4243d322a47030c12136a4a0f64b1149f72c9085b28a0a1dcf198d94"
+      "sha256": "119673b46e90b9cc8557bfeba364c613674b521edeb10ca3586d4b9294cc9e75"
     },
     "battlesim/battlesim481.js": {
       "keys": 24,
-      "sha256": "ebddd17ce72dc56f38e139c378abfec0243390ca0bd31bab32f2c405f74c32cd"
+      "sha256": "842497b17855b2b319aff4057d010c258223190cd35498d160aa58e0b6956849"
     },
     "battlesim/battlesim486.js": {
       "keys": 24,
-      "sha256": "64ba39906dba7b7b3716155b0dfc47e40051df15ac5fee77630b006180383032"
+      "sha256": "32cfc59f8d9c866a603d685543b45e9e128c118fb6850d317ad9f8cf01132aed"
     },
     "battlesim/battlesim491.js": {
       "keys": 24,
-      "sha256": "2604db3bbe851d8b3a88b8f75377abdc3fb8e6cad7df615fe43bf466f81979d5"
+      "sha256": "0fb8343da66bdd70ca40e00ea819c94efae643f381141b680dfaa2a4b50d978f"
     },
     "battlesim/battlesim521.js": {
       "keys": 48,
-      "sha256": "91a33754c9d1227310239651a34ea368f1203d8c9ae069706372071cf07a52b4"
+      "sha256": "4c871939eed4860817322fe0c43f5db8966c9b6a4504159cab2da729a060d50e"
     },
     "battlesim/battlesim522.js": {
       "keys": 61,
-      "sha256": "e192c4a61ab8c489a7d33f32b0f1d3c015f57cfd50572ab74322c6fc1207341f"
+      "sha256": "15f0bb8e308c3ee97d74e950236d2fc85083c2f453186102e8d9d8e3b99fdc67"
     },
     "battlesim/battlesim523.js": {
       "keys": 49,
-      "sha256": "a2b1407bb6876546333b4d4178f925ed1e04e77b3695b208159d8483c2db6b99"
+      "sha256": "ee5e86e2f5281ee20b1ff93ee951a709cd468f96331ed5c31d27c8068c8bb5c5"
     },
     "battlesim/battlesim524.js": {
       "keys": 66,
-      "sha256": "84c4f1a24788e931decc67b7837d07d75429043406fce308958ea66e2781f505"
+      "sha256": "9fb3a00cd711d0ae36891789eaadd271b4c1833f8c8a671bc7951701a5da17f2"
     },
     "battlesim/battlesim526.js": {
       "keys": 34,
-      "sha256": "4d44ee688c20188ec6af0cb8a5e23e224b7ebe7ce3b198aebff7cc843aa0230a"
+      "sha256": "8b5e3a5d0263fde085e4953751d0ba97cbfaba5e2ca5a8dbb3485da529bfdc2b"
     },
     "battlesim/battlesim527.js": {
       "keys": 116,
-      "sha256": "96cda2d023714209d25f60d5e4b94c1f3a883b2db62bff41f784c3209fc861ab"
+      "sha256": "659768270d62e02becbda067df45ecef07ce4e59941f0d6661762188b65cf836"
     },
     "battlesim/battlesim528.js": {
-      "keys": 183,
-      "sha256": "6924231c5fbd0cc77a21ffa982ee93c76d3ff966c70e6822b9374ff1eaacd4d5"
+      "keys": 129,
+      "sha256": "9b3df2313a4ac52c04a995c5e7169db21fe7d1c0775ce9f69d52087f4cbca640"
     },
     "battlesim/battlesim529.js": {
-      "keys": 195,
-      "sha256": "7860c4390ee42187a8ecef7fdaca277eac197c07d110787b49d006f61af97744"
+      "keys": 155,
+      "sha256": "e18c4313bfdadc26ab3062c30add622287175ff84b028034ba3802fa2bb3aaea"
     },
     "battlesim/battlesim530.js": {
-      "keys": 251,
-      "sha256": "4104f1288b0c055cd63ebe755e1ff52daeafc0ccadf40f1203b5ce253354b4ac"
+      "keys": 215,
+      "sha256": "f5ec4af9b0529e0506e10759e2c9a2f9ae3746d77bc484c4bd470f590e12c40e"
     },
     "battlesim/battlesim531.js": {
-      "keys": 159,
-      "sha256": "30707df923b7164154c431db89663d0975a75a4d6e0c92b63caf7fde78cf6c8f"
+      "keys": 129,
+      "sha256": "20eaa1971d552a80a518992992f43e35598b7a3542f39ef9db2038c5a05be6b4"
     },
     "battlesim/battlesim532.js": {
-      "keys": 201,
-      "sha256": "d6e607ebcab9c7c6748150b814253cb1ec9a47081b025863c187f8bc28d2a2ce"
+      "keys": 173,
+      "sha256": "69499809feaf377b0400e4d4e0d7d1a7330f2df3fc0ae4dbee442ae881fc8f9f"
     },
     "battlesim/battlesim533.js": {
-      "keys": 199,
-      "sha256": "0072a1876edc8270142340d6c87efe0ab86b57023f65d0b00e3f59a01578b3fb"
+      "keys": 171,
+      "sha256": "77e0be1163b186bfbcfb3de6483c97dacdba6e251692a7bba99319960a7e4d57"
     },
     "battlesim/battlesim534.js": {
       "keys": 94,
-      "sha256": "0be0564dcd98bf939078d4361dffd4aaa6a58686481a328cf41ece7e897c2afa"
+      "sha256": "aea11a132b9d1b03db88e1b292416d954f778c605793313b71120c343c9ed7a6"
     },
     "battlesim/battlesim535.js": {
       "keys": 110,
-      "sha256": "7a871147d0fa64516b01c8ecca72c1c09cb56a3c50553adbbbceb8183ee5c3e0"
+      "sha256": "c027847c0c3039e062eccd5329050cdd8ba6f6091f4e81ec5fb4ca83692d8ab0"
     },
     "battlesim/battlesim536.js": {
       "keys": 105,
-      "sha256": "4eb9978abbc2efc4af2e7d6e0912fd61653c48db3b94adfa1c438bf86c323db1"
+      "sha256": "14f6e3ca1b15568f07ca3e3e04bce554a645937ec79a07a82112bc1d7ba94074"
     },
     "battlesim/battlesim537.js": {
       "keys": 96,
@@ -596,11 +1072,11 @@
     },
     "battlesim/battlesim539.js": {
       "keys": 109,
-      "sha256": "bec6cb2f1dc1160d75acec58309a9cf04cea8264f6028e7438af618c595e5eac"
+      "sha256": "77b84bb016d2c9b666c3637cb7a70c046e82cb6e800926989ba9f65821d0a7f3"
     },
     "battlesim/battlesim541.js": {
       "keys": 36,
-      "sha256": "35691213bb472dffd809df088238883689122dce081ac7c5d1bf3724d731f580"
+      "sha256": "856aa1d1427dc797199b3ad01ee940247d521b28e42abd8d7310f7612ab433ff"
     },
     "battlesim/battlesim548.js": {
       "keys": 65,
@@ -608,7 +1084,11 @@
     },
     "battlesim/battlesim550.js": {
       "keys": 156,
-      "sha256": "c7491eb2adae3f1b168d86df50d8938ad43c485e7dea866ba1602036f30c3d5c"
+      "sha256": "6c1c6c3b64074a09f4b5f1ed58081f923549a2436c515b54f42360fd9212a3b3"
+    },
+    "battlesim/battlesim551.js": {
+      "keys": 82,
+      "sha256": "f749f748fcab10ff43624c8143d46c4736a06d14d4112e543f1fbe1b18db46f4"
     },
     "battlesim/battlesim555.js": {
       "keys": 61,
@@ -616,11 +1096,35 @@
     },
     "battlesim/battlesim557.js": {
       "keys": 64,
-      "sha256": "dbaec9097e96b8c6a013817496c311425fe3905cd807411d9479f608f0a665f6"
+      "sha256": "4c23d7a597d14b53d1af6bf0600d6219f4b3887d1d5863f2ebd211cce73b2bcf"
+    },
+    "battlesim/battlesim567.js": {
+      "keys": 83,
+      "sha256": "165b0148c9366d21848642869e29dd484a835744ba85261686525875343d1817"
     },
     "battlesim/battlesim570.js": {
       "keys": 141,
-      "sha256": "6fabc609fc2efba48022b6859516a12adda9ec2efbeea8f6babef604b03cf62b"
+      "sha256": "fd0a1c3f6ad6df71db75c7b25193922622756b9359849ebc954a5dc04766888a"
+    },
+    "battlesim/battlesim581.js": {
+      "keys": 69,
+      "sha256": "e207935118efce80055a751dfa10b2a98e0e72315a0bbdead253c4a6b14cad6e"
+    },
+    "battlesim/battlesim592.js": {
+      "keys": 64,
+      "sha256": "d729ba0b73d8be7466e0da15e219dde00ff39dc20c70c59b261be712cba2ad9f"
+    },
+    "battlesim/battlesim601.js": {
+      "keys": 65,
+      "sha256": "f9e30c4c21238c563e7f8281461d2bbba3a77bf62b6e1ada6f980a7afd50b6a8"
+    },
+    "battlesim/battlesim602.js": {
+      "keys": 76,
+      "sha256": "f3c34254653e54f5061cf1428b4e4e850a7d01e3ab14b1a7cfbe4e5bd6dcddd8"
+    },
+    "battlesim/battlesim603.js": {
+      "keys": 64,
+      "sha256": "ca59770adaba0fc6a10f8a30a55b62f56838969ed4af0bc5d66e110cf9947ed0"
     },
     "battlesim/battlesim636.js": {
       "keys": 73,
@@ -628,7 +1132,7 @@
     },
     "battlesim/battlesim644.js": {
       "keys": 41,
-      "sha256": "35c909332a83fbb4936a2438fdd53abc29a12767cb013fdb330a3fb07ed2ca9d"
+      "sha256": "69e3655c46ca5e8ed912a4d8afee8c39d0f3e6d6cd62e1af75a5815a625c2ccf"
     },
     "battlesim/battlesim648.js": {
       "keys": 97,
@@ -640,71 +1144,111 @@
     },
     "battlesim/battlesim658.js": {
       "keys": 108,
-      "sha256": "74571d6a8f06e68a5e2ea527d400c6a54330695491eef487c4ba219ba66c992a"
+      "sha256": "d52e62542263909c40b6f082cfa4248b4075eec51f85c510f2c9cbca108386e2"
     },
     "battlesim/battlesim661.js": {
       "keys": 25,
-      "sha256": "199706ccfb9185fd9725e58bd99185417a80fd933cb798741ef884ebd7e0793d"
+      "sha256": "811b150d74ba971fd245dc5466df53c2a3a6133026be30d4adf178ea23764d92"
     },
     "battlesim/battlesim663.js": {
       "keys": 126,
-      "sha256": "936c6a5f9579aeb68d41d5872edc7993268e406da32f19ea44459a692f03da1b"
+      "sha256": "8846c597369adc4a74fb9aa15299fe62479e5796fcf28f4790f5eccb0c12cdf5"
     },
     "battlesim/battlesim665.js": {
       "keys": 167,
-      "sha256": "b00c26f64e55b11c4f96739ff17ce8c1c2f4c69459fe1455601e1a5324650c4a"
+      "sha256": "fa4ecfb7c405a04984d7a2c6fac3d9624e15cafcb0842aeb22b4b9ca34dd1e28"
     },
     "battlesim/battlesim671.js": {
       "keys": 171,
-      "sha256": "6d60e32ad4c3e37a9e0e71be6853afe38953e370dc9182a6dcaf27a6c1c37d39"
+      "sha256": "b5cbc8419d2f74586598fd5a425c09816109981f8b98824466b174e40e9aed97"
     },
     "battlesim/battlesim672.js": {
       "keys": 161,
-      "sha256": "7e61ccbc3905b64150ba553090ba2ef8a2233931b818a40b433f132b98db40b3"
+      "sha256": "9603871f4a3422dc1522c59e5c0eeecb126ca29e95da76e4ee464a562570c3ee"
     },
     "battlesim/battlesim674.js": {
       "keys": 152,
-      "sha256": "aedd4e54bc93398515c7502da759a8d70832d9e8f2da877cabe5d13de2a64f0e"
+      "sha256": "2d3fcf80c59acc6a66f4bde888d629e56e27cd26986427f2509c024279482412"
     },
     "battlesim/battlesim675.js": {
       "keys": 146,
-      "sha256": "9347d961a0d80b254d81761e6072069843f3200797995a208969ea89c84f0994"
+      "sha256": "7383cd7d07ed955698567dda5a9a65a67305b5aaa7c335a800c4cd8701f74420"
     },
     "battlesim/battlesim676.js": {
       "keys": 147,
-      "sha256": "3098f53c01f0a5cdb4aeef2973f431d4b19c405683be7c09d24b393564251faf"
+      "sha256": "09101c13c66385e92be6071496ae6e460648aca6a354c830018c6d473414d758"
     },
     "battlesim/battlesim677.js": {
       "keys": 141,
-      "sha256": "7ec9df7cd8a4254a1838be8e59c753c7ef2dff923c1d7620ba17d593df4ebc66"
+      "sha256": "1254862185b4e844cd9b4f19b6667ec572a7a3a1736e8522f0ee16698538e4dc"
     },
     "battlesim/battlesim678.js": {
       "keys": 152,
-      "sha256": "6d04baa5af591824fbfadaf0af5337477476eb40e993c29ca1a03c8bb38c21a6"
+      "sha256": "8af792925e1c8c74ed97df20d645663451a9eb1f70b2d91f7a22a46c2175da26"
     },
     "battlesim/battlesim679.js": {
       "keys": 179,
-      "sha256": "94f98f37fb5cab1a04fdb20266ab292a5ba0f1d79a088b27a3adc0297b8a5c31"
+      "sha256": "6d77941d7d0c249aac7607dbce4fb4bb8e7c280442bc26f20594f38b91ab6a70"
     },
     "battlesim/battlesim680.js": {
       "keys": 224,
-      "sha256": "71f65fb80ec71609bdb520740adb0ae25fec40b346fd7b91c51760204875fe95"
+      "sha256": "7bf6ab3be289407e2cc1a4495d5ad197ecfc61ad0cccdbfde8fb21b05b20d26a"
     },
     "battlesim/battlesim689.js": {
       "keys": 200,
       "sha256": "fc2db9444f98343179e40cb42ad5c357bad4c56c8e17946f9ab2d600a942bc20"
     },
+    "battlesim/battlesim690.js": {
+      "keys": 352,
+      "sha256": "a7eb7c5da74f1b3b6de6eca534b13413ef35b7f7617ac2424e0cf7190a4bc9d9"
+    },
     "battlesim/battlesim696.js": {
       "keys": 30,
       "sha256": "b481804b2dab326a56d119d82e4015e291adf643d7a635e03639266eee8cce95"
     },
+    "battlesim/battlesim700.js": {
+      "keys": 215,
+      "sha256": "a58968418d5df377dd7c2bf214720509c9f3d3d90a85c115b906b24e41867e76"
+    },
+    "battlesim/battlesim706.js": {
+      "keys": 51,
+      "sha256": "33ed36bb0231ea56316e6927add0517d2d846e4e89537a5cd9cf052a12f4183d"
+    },
+    "battlesim/battlesim710.js": {
+      "keys": 166,
+      "sha256": "d7489ea70cd1036a6d2aba96284dd2b264d81751d5a9e8adc8b48b2600b6c769"
+    },
     "battlesim/battlesim716.js": {
       "keys": 38,
-      "sha256": "8495c3f0faf60dfdf14cb24ea59bff4b60655a815d26511a231ac6834a2952a3"
+      "sha256": "f0ee12adf583ff8d846dd0d41fd566a2a9fa7ad510ded6af45212501f3789041"
+    },
+    "battlesim/battlesim718.js": {
+      "keys": 188,
+      "sha256": "3490710dbb69cf99025f3f7613a0781b1d742a46d96c4b48b70b6c591f562299"
+    },
+    "battlesim/battlesim722.js": {
+      "keys": 262,
+      "sha256": "acef431c7420739d8cf86bdb955d6067e7bbac487cbeead8205a2e5568222656"
+    },
+    "battlesim/battlesim723.js": {
+      "keys": 246,
+      "sha256": "2a86fc6a7fd0420444c37f7e4d15637e9039d71d2a2f32432c608f16434c9215"
+    },
+    "battlesim/battlesim724.js": {
+      "keys": 272,
+      "sha256": "3387cde03a28946876e62cebe4f93749a82a452fd902b742d6245e5999e76183"
+    },
+    "battlesim/battlesim728.js": {
+      "keys": 93,
+      "sha256": "4ceadb75739d94dd4caa48fa5d7744c62b9581576766d8006e26416eb33642b5"
     },
     "battlesim/battlesim734.js": {
       "keys": 63,
-      "sha256": "0144f51e30223eb104aaa1a9a2a3d71bbc4d2ab178d0b28871bc58ba82766f65"
+      "sha256": "c19acc45ba99825da93166f0bcc8f4c50798439c8a2a0c09374ece21b22196a9"
+    },
+    "battlesim/battlesim735.js": {
+      "keys": 134,
+      "sha256": "a3632a21b7046983b696184f78a0e24965e97c30a909a1f1478fe8980ae0a66d"
     },
     "battlesim/battlesim739.js": {
       "keys": 25,
@@ -716,15 +1260,31 @@
     },
     "battlesim/battlesim753.js": {
       "keys": 31,
-      "sha256": "64bf66a1f4e5954a59ec7ea1effd27d8a69f1e473b9b45b6df105392f4abe106"
+      "sha256": "19f6d1f00ce4a3ff5985f5d81a8fa4a1d1a0c81b3212ec0e5742718c805ffaea"
+    },
+    "battlesim/battlesim757.js": {
+      "keys": 82,
+      "sha256": "93a3c90493893a0aadd0c21f873d18b3b03f38b8a87cb33513a8a33bd213dc2a"
     },
     "battlesim/battlesim760.js": {
       "keys": 25,
-      "sha256": "0dda7bd8ced5808ae334d5b5b9e3a76d91bec79c552ab7fbc28dfd000c35f51b"
+      "sha256": "fd3d4d8a5b3a5ee9072d286191e1911c74de3917dd7c40974bc646b73793576f"
+    },
+    "battlesim/battlesim768.js": {
+      "keys": 93,
+      "sha256": "4657daee1323fb6310f4c441b7a1428c9289f49814b897b8dea6df031af89126"
+    },
+    "battlesim/battlesim769.js": {
+      "keys": 88,
+      "sha256": "1e440e45e968d9ed966a36d5a099cbe16778ebef416775c79a35014e8ea85805"
     },
     "battlesim/battlesim772.js": {
       "keys": 49,
       "sha256": "2fb31ef06dc87e5e08004780f1bc299d4133d30f8740ad3bfbbf6e1612cad4e6"
+    },
+    "battlesim/battlesim773.js": {
+      "keys": 73,
+      "sha256": "049b59b8af3dc402b8a34aeb1d1636729d54a9a864ac73e2e92752d35d30758d"
     },
     "battlesim/battlesim78.js": {
       "keys": 36,
@@ -734,13 +1294,45 @@
       "keys": 36,
       "sha256": "762ec22e489d1725eb2d0bb5541af835fec542c62da6e51546c2cd83836d1c3b"
     },
+    "battlesim/battlesim783.js": {
+      "keys": 43,
+      "sha256": "fd7a46c93292ced4c4f471a6acf264aa5530890bdb49582f4bceaf1f06ef0cad"
+    },
+    "battlesim/battlesim797.js": {
+      "keys": 52,
+      "sha256": "b60898a322b02f2bc81c70d3e7b3e08c25e826b3db8b05106bc16a7e3934b1f1"
+    },
     "battlesim/battlesim8.js": {
-      "keys": 45,
-      "sha256": "3b3e8ce99114ae5069766098d23df2bdc6fde2f1c38ab69716872f0b96ac6c32"
+      "keys": 62,
+      "sha256": "422bd6ed283f692707e961ae21c918333823611c224996df7dca7e346c39c279"
     },
     "battlesim/battlesim80.js": {
       "keys": 29,
       "sha256": "4fae8c1bc5797266a26a86ed6b5fb61cbc0147a56f67886b30f594a16f4d1507"
+    },
+    "battlesim/battlesim807.js": {
+      "keys": 34,
+      "sha256": "0955c7f23564c28c5f6b4813caf9d50b3324f060da95c3b1a149c477329eacf9"
+    },
+    "battlesim/battlesim808.js": {
+      "keys": 76,
+      "sha256": "30aad9cb2136b36cf9e469b80e1b47e998ad72afb6fee9b5336c2f617c0846b3"
+    },
+    "battlesim/battlesim809.js": {
+      "keys": 48,
+      "sha256": "04002e64737d07e8f545f71d84b31f09792adebfd4306f9c5987531932f878b8"
+    },
+    "battlesim/battlesim810.js": {
+      "keys": 48,
+      "sha256": "16f992cba61f275ba4e92359ec91a091f598eb19f2b77c021fae49f2d427edca"
+    },
+    "battlesim/battlesim812.js": {
+      "keys": 59,
+      "sha256": "47c6b3209527c99604457c4df9308fe7f302f5d0d4dc1c09c9b188f2cdec6661"
+    },
+    "battlesim/battlesim817.js": {
+      "keys": 46,
+      "sha256": "18186fd719e3953d42b818ad2175a02619d0a9474f760ad51e5a3634d3a5e3e5"
     },
     "battlesim/battlesim82.js": {
       "keys": 33,
@@ -748,35 +1340,87 @@
     },
     "battlesim/battlesim829.js": {
       "keys": 124,
-      "sha256": "5cf2d0800dbcc644978c4bf5cd9d23d94d640c35bd2049d1fb0ad1cc68a579e8"
+      "sha256": "8cb3fe3316acb5f3fd7bb977a4e2b82d021a171cc661e7c83dccec4953893012"
     },
     "battlesim/battlesim83.js": {
       "keys": 30,
       "sha256": "467d6730c0ebd4f32be58d55193ff1e0c859d9edd685090ecd75607939165fcc"
     },
+    "battlesim/battlesim832.js": {
+      "keys": 71,
+      "sha256": "9a6acca51e4106b510ad63b8f895686408c4397c0bcd7fb627c843dcf93a0047"
+    },
+    "battlesim/battlesim833.js": {
+      "keys": 62,
+      "sha256": "9ff43579047ed093ea4dfbac03a4d5ae6ee6d520a10008037d72a1177359753d"
+    },
+    "battlesim/battlesim838.js": {
+      "keys": 57,
+      "sha256": "0dc408be1fc8a095ef214bd89e0fae9ddd5fef21a8d8d195ebcc58c7ecc83e91"
+    },
+    "battlesim/battlesim856.js": {
+      "keys": 77,
+      "sha256": "c1ba83ce7d3f277d8b5a12fdfcefb827fada2d714d78842a6dd972f7bd302795"
+    },
+    "battlesim/battlesim857.js": {
+      "keys": 51,
+      "sha256": "648b36dfc7937d97f92bcd54ca58c511f7ceafd5b74b2d2a72f2070a1403d233"
+    },
     "battlesim/battlesim86.js": {
       "keys": 28,
       "sha256": "3de2947be628876b7928d7d9d28a19aa559fc0be39dd7c9fc86ff1f7c4df5a66"
     },
+    "battlesim/battlesim860.js": {
+      "keys": 37,
+      "sha256": "9aeab677f109c4ce63da6aea97a342022cb7ea86b26c0f65b85349d9f367c8ab"
+    },
     "battlesim/battlesim869.js": {
       "keys": 235,
-      "sha256": "8d59d0f6b96ad2f76a43369e8c2b042dedd9545ff727ce68c98e2b49cc94f1f4"
+      "sha256": "496ebd9eb2dab535bac5d0b877f5db932caef12ebe14706253238968b25571d3"
     },
     "battlesim/battlesim871.js": {
       "keys": 55,
-      "sha256": "b96c9b69f4bf11cf7e1ad76b0ccf5b27bda7074025aabca0781770b43713b609"
+      "sha256": "7aafaac87e62941da485e7f49727ebcba4bc29ffd42d63ee20e998d1fa2c39e0"
+    },
+    "battlesim/battlesim873.js": {
+      "keys": 41,
+      "sha256": "a441d4f7d2d034a2de75e112ea06f50f64c3436f8a473a9a525da26e667d3011"
     },
     "battlesim/battlesim877.js": {
       "keys": 68,
-      "sha256": "bf240edea354f2c32c33c675959eac2028dc8f6ad30b3c5361f8ca332fc3510a"
+      "sha256": "93137343d1c47567d92d853839ab367f531a2ff52c1129285b68d515860b7440"
     },
     "battlesim/battlesim881.js": {
       "keys": 77,
-      "sha256": "dd5771dd917278a21effc046d040054043d399f15d1c2474eb3daceb5cced362"
+      "sha256": "973f770b2e32289431a1ff5e5e9a0959beadac1af19007cbb7bfdb4db16ac704"
     },
     "battlesim/battlesim882.js": {
       "keys": 103,
       "sha256": "b8e8158583925cbef32a17d86efde0ae5629e48169e4ea9b9f786845766fc4b4"
+    },
+    "battlesim/battlesim891.js": {
+      "keys": 73,
+      "sha256": "8843e709fd07d18f5e0cd629521d961f02f3bf6ae7ab6022fab8f02d731afb32"
+    },
+    "battlesim/battlesim895.js": {
+      "keys": 73,
+      "sha256": "dfdacb6d4e8c2d93b84eb2ca70b91b1b7fc1c57695264925465791cbfd1a729a"
+    },
+    "battlesim/battlesim896.js": {
+      "keys": 41,
+      "sha256": "ba50aa7bd86230519a44367306d430dd017ebc35f287f37b92dd1c8215110ed1"
+    },
+    "battlesim/battlesim903.js": {
+      "keys": 34,
+      "sha256": "3f32a8faa0dde1111cf0d147879d55ff751cd0cb61baca2eaa5bcf2508a61bfc"
+    },
+    "battlesim/battlesim904.js": {
+      "keys": 60,
+      "sha256": "7f60dc9ef722d7c7057e567404f5a24a4f19cbf2579d8ca2b35f1d83ff6e56a8"
+    },
+    "battlesim/battlesim906.js": {
+      "keys": 110,
+      "sha256": "96a00d6f1712e8a3f547012505198e6e3472e24bfc989e3c08240d0886be07d5"
     },
     "battlesim/battlesim92.js": {
       "keys": 28,
@@ -786,41 +1430,47 @@
       "keys": 27,
       "sha256": "341e89ff2913acb795dfa6f81e788955880890b4839a21fc0df1c09dcb5dcdb6"
     },
+    "battlesim/d20.js": {
+      "keys": 269,
+      "sha256": "a2a443a72ef34328d1256f907c185fb939e9698ba513a4715a9a84b7cc5fd0da"
+    },
     "books.js": {
-      "keys": 76,
-      "sha256": "e7133f46a1c37b3e9016667570e0812239e818237b1bd07013bab625cad91c95"
+      "keys": 72,
+      "sha256": "8a3acd163dff6e573ac32c96d0da8ded38c2f82253523a2531064729b09ed012"
     },
     "common.js": {
-      "keys": 79,
-      "sha256": "66e060f5f37a918c1f0dabd7d26d4b741ad153a1ae4f39b74c4584c859a644d0"
+      "keys": 108,
+      "sha256": "2837e9382b93c5a9297aa954153a6d35ef7f0d02954e723814c6b9058cd0606c"
     },
     "community.js": {
-      "keys": 77,
-      "sha256": "3a7e2636a7e2c1ab19e19e2ece6b104523820312e7b6e823b34f977a431d61fc"
+      "keys": 84,
+      "sha256": "844a2df8535527521c9874de1bd8c111129267b53306ea9485aa93a28312a9dd"
     },
     "covers.js": {
-      "keys": 33,
-      "sha256": "fe5a675a524c0422b9b98929e470a2757559849ef0d709eb6cf6067c0a389a0b"
+      "keys": 35,
+      "sha256": "e1087057d9cc5e9cb26c9130bd07052be93c352a15485c42adb3df554aa1d3da"
     },
     "equipment.js": {
-      "keys": 63,
-      "sha256": "faefdafe93a094a986837fc9d51c107df2b188fadc1840e67273d8e8f98c7b1f"
+      "keys": 71,
+      "sha256": "567d389b102951ee12618fbe0d6f83640b6ace1cd92224d9aa43d918aa184ee2"
     },
     "mobile.js": {
       "keys": 20,
       "sha256": "059777c07d24f182197b5aeea1c1a5c36e8213d1b86fff27f35f5c752de85b5c"
     },
     "play.js": {
-      "keys": 143,
-      "sha256": "6df6fd57e05d734dce8cf79836fda20b47812581eb815389dd8950d8881e32ac"
+      "keys": 154,
+      "sha256": "4ae55e9a96e9315975b7bc6a86cc6922bf37e426a3af44b6c765f22bf55814d8"
     },
     "progression.js": {
-      "keys": 33,
-      "sha256": "437b985b88d3db9a18421cc4b7889bbf686e74dee26f5cba41f01e682d2afba2"
+      "keys": 63,
+      "sha256": "3b565076520fdcc53eb8a7caf98f50f302160b0827b73fec9df2b09c8dbee97e"
     },
     "stats.js": {
-      "keys": 125,
-      "sha256": "df1bf4064e1527973b7cfbc28e24a0a273ea4faf9e3b0e354fd60c433633c98d"
+      "keys": 131,
+      "sha256": "b84b4c291c511ebaadcba21a7ee50a92966c5a53c7f2a08887dfed87a3707852"
     }
-  }
+  },
+  "reviewedAt": "2026-11-18",
+  "review": "Current runtime tables verified for duplicate literals, all static player-app lookups and HTML bindings; intentional display-settings translations included."
 }

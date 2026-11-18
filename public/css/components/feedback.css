@@ -155,17 +155,8 @@
 .stats-rubies {
   color: #67e8f9;
 }
-.stats-val--gold {
-  color: #fbbf24;
-}
-.stats-section--xp-progression .stats-val {
-  color: #a18ab8;
-}
 .stats-val--players {
   color: #fdba74;
-}
-.stats-val--library {
-  color: #f3dfb3;
 }
 .stats-cpu-model {
   white-space: nowrap;
@@ -213,19 +204,10 @@
   padding-bottom: 0.15rem;
   border-bottom: 1px solid #263244;
 }
-.stats-rating-table td:nth-child(2) {
-  --rating-color: rgba(45, 153, 131, 0.22);
-}
-.stats-rating-table td:nth-child(3) {
-  --rating-color: rgba(176, 139, 83, 0.22);
-}
-.stats-rating-table td:nth-child(4) {
-  --rating-color: rgba(101, 133, 173, 0.22);
-}
 .stats-rating-table td[style] {
   background: linear-gradient(
     to left,
-    var(--rating-color) var(--rating-fill),
+    rgba(156, 163, 175, 0.15) var(--rating-fill),
     transparent var(--rating-fill)
   );
 }

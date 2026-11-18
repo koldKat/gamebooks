@@ -762,6 +762,11 @@ input {
   display: flex;
 }
 
+/* Confirmations must sit above mobile dialogs and their item pickers. */
+#confirm-overlay {
+  z-index: 3200;
+}
+
 .m-notebook-modal {
   background: #1f2937;
   border: 1px solid #374151;

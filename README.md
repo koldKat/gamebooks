@@ -20,7 +20,8 @@ The setup instructions below are for running your own installation.
 - **Organize your library:** browse covers, search and filter books, arrange stashes,
   and manage series, anthologies, ratings, and reading progress.
 - **Bring your character along:** use customizable character sheets, inventory,
-  equipment, item templates, and a notebook.
+  equipment, item templates, and a notebook. Mobile inventory and equipment support
+  adding items, arranging them, and transferring gear.
 - **Read and roll:** supported books offer section-by-section reading with linked
   choices and original artwork. Optional battle simulators handle encounters while
   you make the story decisions.
@@ -82,6 +83,8 @@ MAXMIND_ACCOUNT_ID=
 SMTP settings saved in the admin panel take precedence over environment defaults.
 Without SMTP, the app runs but cannot send password-reset emails. Set the trusted
 public app URL in admin settings when deploying so account links use the correct address.
+Delivery outcomes are recorded in the ignored `logs/email.log`, without message bodies
+or credentials. SMTP acceptance does not guarantee arrival in the recipient's inbox.
 
 ### Data and backups
 
@@ -126,6 +129,7 @@ use cache revalidation, so frontend edits do not require version query strings.
 | `admin/` | Local operator interface |
 | `test/` | Server, client, and browser checks |
 | `docs/` | Player, admin, and technical documentation sources |
+| `logs/` | Private rotating operational logs; excluded from Git |
 
 ## Documentation
 

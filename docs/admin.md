@@ -23,7 +23,7 @@ Editors support Save, Cancel, and Escape. Escape dismisses autocomplete before t
 | Players | Registered and active accounts, recent registrations, and sign-in sessions |
 | Catalog | Playable books, anthology containers, series, attachments, live reading, and simulators |
 | Activity | Mapping, playthroughs, outcomes, and simulator usage |
-| Gold and coins | Earned, available, and spent balances; upgrades; admin pool; lucky-coin activity |
+| Gold coins | Earned, available, and spent balances; upgrades; admin pool; lucky-coin activity; book-sale proceeds |
 | Rubies | Earned and held rubies, trades, and shared market supply |
 | Diamonds | Completion rewards, balances, trades, and shared market supply |
 | Server | Application/database size, memory, CPU, traffic, uptime, and downtime |
@@ -58,7 +58,7 @@ Impersonated activity does not earn XP or coins or update the player's presence.
 
 Lorekeepers can edit public-book, anthology, and series metadata and public covers without owning a library copy. They cannot edit another creator's private titles, unpublish that creator's public titles, upload restricted attachments, or change other players' progress. Removing a title from their own library affects only their memberships.
 
-Squire adds no permissions. It lowers the public-book or public-anthology completion threshold for diamond rewards to 25 sections, compared with the normal 50. Assignment checks eligible previous completions without revoking existing rewards.
+Squire adds no permissions. It lowers the public-book and collection minimum for discovery and mapping rewards to 25 sections, compared with the normal 50. Assignment checks eligible previous completions without revoking existing rewards.
 
 ## Books
 
@@ -75,7 +75,7 @@ The admin series selector searches the global catalog. Selecting **Part of antho
 - File uploads do not award XP.
 - Cover controls upload, replace, or remove the image.
 
-Book Access for downloads is separate from Live Reading availability. Tools lets you set the registered-user threshold for paid in-app reading (482 by default). Reading costs 1 GC per full 100 sections; shorter books stay free. Admin pays before the threshold. Existing runs with reading available are permanently unlocked when charging begins.
+Book Access for downloads is separate from Live Reading availability. Tools lets you set the registered-user threshold for paid in-app reading (482 by default). Reading costs 1 GC per full 100 sections; shorter books stay free. Gamemasters, Lorekeepers, and designated testers pay before the threshold. Existing runs with reading available are permanently unlocked when charging begins. Paid unlock proceeds enter the admin gold pool.
 
 ### Other actions
 
@@ -97,7 +97,7 @@ Open-world series share run identity and character possessions across books and 
 
 ## Seasons
 
-The Seasons tab shows event windows, live status, rewards, and animated companion previews.
+The Seasons tab shows event windows, live status, rewards, and animated companion previews, ordered by their current or next occurrence. When overlapping main dates need a live selection, choose the event in this tab. Preview overrides remain separate from that live selection.
 
 To test an event:
 
@@ -170,13 +170,15 @@ A bulk gift is applied in full or not at all. Changed recipients or levels requi
 | **XP Configuration** | Change future base XP amounts for event types; save changed values |
 | **App Version** | Update the displayed release version; coordinate with the release file |
 | **Notepad** | Keep private operator notes |
-| **Backups** | Inspect backup files and select files for deletion |
-| **Size Ignore Patterns** | Exclude matching paths from application-size and backup-file listings |
+| **Backups** | Inspect database backup ZIPs and select archives for deletion |
+| **Size Ignore Patterns** | Exclude matching paths from application-size scans |
 | **Vacuum** | Run the confirmed database-maintenance action |
 
 XP settings apply immediately. Failed saves retain unsaved changes for retry. Changing an amount does not recalculate previously earned XP.
 
 Automatic backup ZIPs contain the database only. Preserve uploaded files and protected reading artwork separately for a full server restore. The Technical Reference explains backup storage and restoration.
+
+Database backups run daily and retain 30 days. App-size figures are cached and refreshed hourly in the background.
 
 ## SMTP and email
 
@@ -188,3 +190,5 @@ SMTP settings take effect without restarting the server and override environment
 - **Test SMTP** sends a test message to the configured SMTP username.
 
 A failed email delivery does not remove the stored feedback reply. Check the displayed transport status and test result before relying on email notifications.
+
+For delivery troubleshooting, the app's private `logs/email.log` records attempts, accepted deliveries, failures, and skipped messages. It excludes message bodies, attachments, passwords, and authentication tokens. An accepted message was accepted by the SMTP server; that does not confirm delivery to the recipient's inbox.

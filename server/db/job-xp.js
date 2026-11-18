@@ -39,7 +39,12 @@ function initializeJobXp(db, { xpMultiplier = () => seasonalXpMultiplier('job_xp
       DROP TRIGGER IF EXISTS count_diamond_xp_event;
       DROP TRIGGER IF EXISTS award_job_xp_event;
       CREATE TRIGGER award_job_xp_event AFTER INSERT ON xp_events
-        WHEN NEW.event!='idle_heartbeat' BEGIN
+        WHEN NEW.event!='idle_heartbeat'
+          AND COALESCE((SELECT xp FROM user_job_xp WHERE user_id=NEW.user_id),0)
+            < (SELECT 1000*(ceiling+1)*(ceiling+2)/2-1 FROM (
+              SELECT MAX((SELECT user_count/10 FROM job_xp_policy WHERE id=1),
+                CAST((sqrt(1+8*COALESCE((SELECT xp FROM user_job_xp WHERE user_id=NEW.user_id),0)/1000.0)-1)/2 AS INTEGER)) AS ceiling))
+        BEGIN
         INSERT OR IGNORE INTO user_job_xp(user_id) VALUES(NEW.user_id);
         UPDATE user_job_xp SET xp=MIN(xp+CASE WHEN seasonal_bonus_eligible=1 THEN seasonal_job_xp_multiplier() ELSE 1 END,1000*(bounds.ceiling+1)*(bounds.ceiling+2)/2-1)
         FROM (SELECT MAX((SELECT user_count/10 FROM job_xp_policy WHERE id=1),

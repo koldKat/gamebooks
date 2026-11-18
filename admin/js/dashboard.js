@@ -46,7 +46,7 @@ function applyStats(d) {
     's-total-sections': d.totalSections, 's-battle-sims': d.battleSims,
     's-pts-finished': d.finishedPlaythroughs, 's-public-runs': d.publicRuns,
     's-battles-fought': d.battlesFought, 's-battles-won': d.battlesWon, 's-battles-lost': d.battlesLost,
-    's-bronze-avail': d.bronzeAvailable, 's-silver-avail': d.silverAvailable,
+    's-bronze-avail': d.bronzeAvailable, 's-silver-avail': d.silverAvailable, 's-gold-held': d.totalCoinsAvailable,
     's-diamonds-earned': d.diamondsEarned, 's-diamonds-avail': d.diamondsAvailable,
     's-diamonds-sold': d.diamondsSold, 's-diamonds-bought': d.diamondsBought,
     's-lucky-diamonds': d.luckyDiamondsEarned, 's-diamond-stock': d.marketDiamonds,

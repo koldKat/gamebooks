@@ -37,7 +37,7 @@ export async function _renderGrid() {
       const qtyBadge  = (slot.qty > 1) ? `<span class="inv-slot-qty">×${slot.qty}</span>` : '';
       const noteBadge = slot.note?.trim() ? `<div class="inv-slot-note-label">${escapeHtml(slot.note.trim())}</div>` : '';
       const eyeClass  = slot.visible ? ' inv-slot--visible' : '';
-      html += `<div class="inv-slot inv-slot--filled${eyeClass}" data-idx="${i}"${_isReadOnly() ? '' : ' draggable="true"'}>
+      html += `<div class="inv-slot inv-slot--filled${eyeClass}" data-idx="${i}" data-tooltip="${escapeHtml(displayName)}" data-tooltip-wrap="true"${_isReadOnly() ? '' : ' draggable="true"'}>
         ${qtyBadge}
         <div class="inv-slot-svg">${item.svg_data}</div>
         <div class="inv-slot-name">${escapeHtml(displayName)}</div>

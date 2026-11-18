@@ -6,6 +6,7 @@ const path = require('path');
 const db = require('./db');
 const { escapeHtml } = require('./html-escape');
 const { ATTACHMENTS_DIR } = require('./paths');
+const { logEmailEvent, sendLoggedMail } = require('./email-delivery');
 
 let _transporter = null;
 
@@ -48,9 +49,9 @@ function reinitTransporter() {
 reinitTransporter();
 
 async function sendAdminEmail(subject, text, bodyHtml, attachments = []) {
-  if (!_transporter) return;
+  if (!_transporter) return sendLoggedMail(null, { subject }, 'admin-notification');
   const adminAddr = db.getAdminSetting('smtp_user') || process.env.SMTP_USER;
-  if (!adminAddr) return;
+  if (!adminAddr) return logEmailEvent({ event: 'skipped', kind: 'admin-notification', subject, reason: 'Admin recipient unavailable' });
   const fromAddr = db.getAdminSetting('smtp_from') || adminAddr;
   const from = `Gamebook Tracker <${fromAddr}>`;
   const { mail: mailAtts, inlineHtml } = _buildMailAttachments(attachments);
@@ -80,11 +81,11 @@ async function sendAdminEmail(subject, text, bodyHtml, attachments = []) {
   </table>
 </body>
 </html>`;
-  await _transporter.sendMail({ from, to: adminAddr, subject, text, html, attachments: mailAtts }).catch(() => {});
+  await sendLoggedMail(_transporter, { from, to: adminAddr, subject, text, html, attachments: mailAtts }, 'admin-notification').catch(() => {});
 }
 
 async function sendReplyEmail(to, username, originalMessage, reply, attachments = []) {
-  if (!_transporter) return;
+  if (!_transporter) return sendLoggedMail(null, { to, subject: 'Reply to your feedback - Gamebook Tracker' }, 'feedback-reply');
   const { mail: mailAtts, inlineHtml } = _buildMailAttachments(attachments);
   const fromAddr = db.getAdminSetting('smtp_from') || db.getAdminSetting('smtp_user') || process.env.SMTP_FROM || process.env.SMTP_USER;
   const from = fromAddr ? `Gamebook Tracker <${fromAddr}>` : undefined;
@@ -131,16 +132,16 @@ async function sendReplyEmail(to, username, originalMessage, reply, attachments 
   </table>
 </body>
 </html>`;
-  await _transporter.sendMail({
+  await sendLoggedMail(_transporter, {
     from,
     to,
     subject: 'Reply to your feedback - Gamebook Tracker',
     text:    `Hi ${username},\n\nYour message:\n"${originalMessage}"\n\nReply:\n${reply}\n\nView the full conversation:\nhttps://pathmap.net`,
     html,
     attachments: mailAtts,
-  });
+  }, 'feedback-reply');
 }
 
 function getTransporter() { return _transporter; }
 
-module.exports = { reinitTransporter, sendAdminEmail, sendReplyEmail, getTransporter };
+module.exports = { reinitTransporter, sendAdminEmail, sendReplyEmail, getTransporter, logEmailEvent, sendLoggedMail };
