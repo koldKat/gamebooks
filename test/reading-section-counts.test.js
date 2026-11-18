@@ -5,6 +5,25 @@ const Database = require('better-sqlite3');
 const { isSupplementalSection, supplementalSectionSql, uncountedReadingSections, initializeReadingSupplements } = require('../server/db/reading-section-counts');
 const { hasFullBookCoverage } = require('../server/db/book-section-coverage');
 
+test('completed ending repairs only a matching, actually finished destination', () => {
+  const { restoreCompletedEndingMappings, isMappedGraphNode } = require('../server/db/reading-section-counts');
+  const state = { graph: {
+    4: { discovered: true, choices: [0] },
+    5: { discovered: true, choices: [-1] },
+    6: { discovered: true, choices: [0] },
+    7: { discovered: true, choices: [] },
+  }, playthroughs: [
+    { path: [1,4], completed: true, result: 'success' },
+    { path: [1,5], completed: false, result: null },
+    { path: [1,6], completed: true, result: 'battle' },
+    { path: [1,7], completed: true, result: 'death' },
+  ] };
+  restoreCompletedEndingMappings(state);
+  assert.equal(isMappedGraphNode(state.graph[4]), true);
+  for (const id of [5,6,7]) assert.equal(isMappedGraphNode(state.graph[id]), false);
+  assert.deepEqual(state.playthroughs[0].path, [1,4]);
+});
+
 test('supplemental prose is excluded consistently while actual numbered and lettered sections stay counted', t => {
   const db = new Database(':memory:');t.after(() => db.close());
   db.exec('CREATE TABLE book_sections(book_id,section_id)');

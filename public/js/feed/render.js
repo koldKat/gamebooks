@@ -30,17 +30,17 @@ export function renderFeedContents(entries, pinned, feedHeaderHtml, emptyMessage
   const activityTime = entry => entry.type === 'announcement' ? entry.updatedAt || entry.completedAt : entry.completedAt;
   for (const group of groups) group.items.sort((a, b) => activityTime(b) - activityTime(a));
 
-  // Use distinct public books for day-card covers; never expose private-book art.
+  // Aggregate shared anthology artwork so each distinct cover appears once per cycle.
   function _dayCovers(items) {
-    const counts = new Map(); // bookId -> { n, cover, firstIndex }
+    const counts = new Map(); // cover URL -> { n, cover, firstIndex }
     let order = 0;
     for (const e of items) {
       if (!e.bookId || !e.bookIsPublic) continue;
       const cover = e.coverUrl || e.parentCoverUrl;
       if (!cover) continue;
-      const cur = counts.get(e.bookId) || { n: 0, cover, firstIndex: order++ };
+      const cur = counts.get(cover) || { n: 0, cover, firstIndex: order++ };
       cur.n++;
-      counts.set(e.bookId, cur);
+      counts.set(cover, cur);
     }
     return [...counts.values()]
       .sort((a, b) => b.n - a.n || a.firstIndex - b.firstIndex)

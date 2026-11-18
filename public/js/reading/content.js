@@ -91,6 +91,8 @@ export function renderReadingMatter(mount, bookId, text, document, { sectionLink
     const target = document.createElement(node.tagName === 'A' && !sectionLinks ? 'span' : node.tagName.toLowerCase());
     for (const attr of node.attributes) {
       if (node.tagName === 'IMG' && ['src', 'alt', 'loading'].includes(attr.name)) continue;
+      // Legacy simulator image aliases are inert server metadata, not display attributes.
+      if (node.tagName === 'IMG' && attr.name === 'data-reading-image-alias' && imagePath.test(attr.value)) continue;
       if (node.tagName === 'A' && attr.name === 'href' && (attr.value === '#reading-previous-entry'
           || /^#map\d{1,6}$/.test(attr.value)
           || /^#section-(?:[1-9]\d{0,5}[a-zA-Z]?|[a-zA-Z][a-zA-Z0-9_-]{0,63})$/.test(attr.value))) {

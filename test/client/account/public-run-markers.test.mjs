@@ -5,11 +5,35 @@ import vm from 'node:vm';
 import {nodeShapeOptions, createNodeShapeRenderer} from '../../../public/js/graph/node-shapes.js';
 
 const source = readFileSync(new URL('../../../public/js/account/public-profile.js', import.meta.url), 'utf8');
+const stateSource = readFileSync(new URL('../../../public/js/core/state.js', import.meta.url), 'utf8');
+const sectionIds = vm.runInNewContext(stateSource.slice(stateSource.indexOf('export function isTerminal('),
+  stateSource.indexOf('export function currentPlaythrough(')).replaceAll('export ', '')
+  + '\n({ isValidSecId, parseSecId })');
 const build = vm.runInNewContext(source.slice(source.indexOf('function _buildPubSegNetwork(')) + '\n_buildPubSegNetwork', {
-  isValidSecId: id => Number.isSafeInteger(id) && id > 0,
+  ...sectionIds,
   nodeShapeOptions, createNodeShapeRenderer,
   vis: { DataSet: class { constructor(rows) { this.rows = rows; } },
     Network: class { constructor(_container, data) { this.data = data; } } },
+});
+
+test('public runs preserve named starts, their connectors and mixed numeric IDs', () => {
+  const chart = {
+    'Пролог': { choices: [7, '14', 'K1'] },
+    7: { choices: ['14'] }, 14: { choices: ['-1'] },
+  };
+  const net = build({}, chart, { 'Пролог': { x: 0, y: 0 } },
+    ['Пролог', '7', 14], 'death', ['7', 14], [], false, 'Пролог');
+  const nodes = new Map(net.data.nodes.rows.map(node => [node.id, node]));
+  assert.equal(nodes.size, 4);
+  assert.equal(nodes.get('Пролог').color.background, '#fde047');
+  assert.equal(nodes.get('Пролог').x, 0);
+  assert.ok(nodes.has('K1'), 'known destinations without mapped choices remain visible');
+  assert.equal(nodes.get(14).color.background, '#e74c3c');
+  const edges = net.data.edges.rows;
+  assert.ok(edges.some(edge => edge.from === 'Пролог' && edge.to === 14));
+  assert.ok(edges.some(edge => edge.from === 'Пролог' && edge.to === 7 && edge.width === 2.5));
+  assert.ok(edges.every(edge => nodes.has(edge.from) && nodes.has(edge.to)));
+  assert.ok(!nodes.has(-1) && !nodes.has(0));
 });
 const graph = { 1: { choices: [2, 3, 4] }, 2: { choices: [0] }, 3: { choices: [-1] },
   4: { choices: [0, -1] }, 5: { choices: [0], battle: true }, 6: { choices: [7] }, 7: { choices: [0] } };

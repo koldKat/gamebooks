@@ -2,7 +2,7 @@ import { loadingHtml } from '../ui-helpers/loading.js';
 import { ensureGraphLibrary } from '../core/graph-library.js';
 // Public profiles, runs, and series journeys.
 
-import { isValidSecId } from '../core/state.js';
+import { isValidSecId, parseSecId } from '../core/state.js';
 import { escapeHtml } from '../core/util.js';
 import { publicName } from '../core/public-name.js';
 import { t } from '../i18n.js';
@@ -277,8 +277,9 @@ function _pubRunPathHtml(pathNodes, className) {
 function _wirePathHover(trailEl, net) {
   if (!trailEl || !net) return;
   trailEl.querySelectorAll('.trail-node').forEach(span => {
-    const id = parseInt(span.textContent, 10);
-    if (!id || id < 1) return;
+    const id = parseSecId(span.textContent);
+    if (!isValidSecId(id) || span.classList.contains('trail-win')
+      || span.classList.contains('trail-battle') || span.classList.contains('trail-death')) return;
     span.style.cursor = 'pointer';
     span.addEventListener('mouseenter', () => net.selectNodes([id]));
     span.addEventListener('mouseleave', () => net.selectNodes([]));
@@ -287,7 +288,7 @@ function _wirePathHover(trailEl, net) {
 
 function _pubRunPathNodes(path, result) {
   if (!path?.length) return '';
-  const nodes = path.map(s => `<span class="trail-node">${s}</span>`);
+  const nodes = path.map(s => `<span class="trail-node">${escapeHtml(String(s))}</span>`);
   if (result === 'success') nodes.push('<span class="trail-node trail-win">★</span>');
   else if (result === 'battle') nodes.push('<span class="trail-node trail-battle">BTL</span>');
   else if (result === 'death') nodes.push('<span class="trail-node trail-death">✝</span>');
@@ -358,17 +359,22 @@ function renderPublicRun(data) {
 }
 
 function _buildPubSegNetwork(container, graph, positions, path, result, allVisited = [], endNodes = [], isPortalEntry = false, startSection = null) {
+  path = path.map(parseSecId).filter(isValidSecId);
   const finalId  = path.length ? path[path.length - 1] : null;
-  const startSec = isPortalEntry ? null : (isValidSecId(startSection) ? startSection : 1);
+  const startSec = isPortalEntry ? null : (isValidSecId(parseSecId(startSection)) ? parseSecId(startSection) : 1);
   const entrySec = isPortalEntry && path.length ? path[0] : null;
   const nodesArr = [];
   let network;
   const shapeRenderer = createNodeShapeRenderer(id => network?.body.nodes[id]?.shape, id => graph[id]?.shape);
   const edgesArr = [];
 
-  const allIds = new Set(path.filter(s => s >= 1));
-  Object.keys(graph).forEach(k => { const n = Number(k); if (n >= 1) allIds.add(n); });
-  (allVisited || []).forEach(n => { if (n >= 1) allIds.add(n); });
+  const allIds = new Set(path);
+  const addId = value => { const id = parseSecId(value); if (isValidSecId(id)) allIds.add(id); };
+  Object.entries(graph).forEach(([id, node]) => {
+    addId(id);
+    (node?.choices || []).forEach(addId);
+  });
+  (allVisited || []).forEach(addId);
 
   allIds.forEach(id => {
     const inPath   = path.includes(id);
@@ -376,7 +382,7 @@ function _buildPubSegNetwork(container, graph, positions, path, result, allVisit
     const isStart  = startSec !== null && id === startSec && !isFinal;
     const isEntry  = entrySec !== null && id === entrySec && !isFinal;
     const gNode    = graph[id];
-    const choices  = gNode?.choices || [];
+    const choices  = (gNode?.choices || []).map(parseSecId);
     const hasDeath = choices.includes(-1);
     const hasWin   = choices.includes(0);
     const isBattle = !!gNode?.battle;
@@ -435,12 +441,13 @@ function _buildPubSegNetwork(container, graph, positions, path, result, allVisit
   });
 
   function pubEdgeOutcome(destId, visited = new Set()) {
+    destId = parseSecId(destId);
     if (destId === -1) return 'death';
     if (destId === 0)  return 'win';
     if (visited.has(destId)) return null;
     visited.add(destId);
     const nd = graph[destId];
-    if (!nd || nd.choices.length !== 1) return null;
+    if (!nd || nd.choices?.length !== 1) return null;
     return pubEdgeOutcome(nd.choices[0], visited);
   }
 
@@ -448,16 +455,19 @@ function _buildPubSegNetwork(container, graph, positions, path, result, allVisit
   for (let i = 0; i < path.length - 1; i++) runEdges.add(`${path[i]}>${path[i + 1]}`);
 
   Object.entries(graph).forEach(([sec, d]) => {
-    (d.choices || []).forEach(dest => {
-      if (dest === -1 || dest === 0) return;
-      const eid       = `${sec}>${dest}`;
+    const from = parseSecId(sec);
+    if (!isValidSecId(from)) return;
+    (d.choices || []).forEach(choice => {
+      const dest = parseSecId(choice);
+      if (!isValidSecId(dest)) return;
+      const eid       = `${from}>${dest}`;
       const isRunEdge = runEdges.has(eid);
       const outcome   = pubEdgeOutcome(dest);
       const edgeColor = outcome === 'death' ? { color: '#e74c3c', opacity: 0.8, highlight: '#e74c3c' }
                       : outcome === 'win'   ? { color: '#27ae60', opacity: 0.8, highlight: '#27ae60' }
                       : isRunEdge           ? { color: '#f5a623', opacity: 1,   highlight: '#f5a623' }
                       :                       { color: '#4b5563', opacity: 0.7 };
-      edgesArr.push({ id: eid, from: Number(sec), to: dest,
+      edgesArr.push({ id: eid, from, to: dest,
         color: edgeColor,
         arrows: { to: { enabled: true, scaleFactor: 0.5 } },
         smooth: { type: 'curvedCW', roundness: 0.2 },

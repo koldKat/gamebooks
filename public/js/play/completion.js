@@ -16,6 +16,7 @@ export function endPlaythrough(result) {
   // A battle loss ends this run, not the section; do not mark it as a graph-wide dead end.
   if (result !== 'battle' && sec !== null && isValidSecId(sec)) {
     if (!state.graph[sec]) state.graph[sec] = { choices: [] };
+    delete state.graph[sec].discovered;
     const sentinel = (result === 'success') ? 0 : -1;
     if (!state.graph[sec].choices.includes(sentinel))
       state.graph[sec].choices.push(sentinel);

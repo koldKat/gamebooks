@@ -7,6 +7,18 @@ const isSupplementalSection = id => supplementalSection.test(String(id));
 const isMappedGraphNode = node => !!node && (!node.discovered
   || (node.choices || []).some(choice => Number(choice) !== 0 && Number(choice) !== -1)
   || (node.portals || []).length > 0);
+
+// Completing an ending proves it was read, even in older saves retaining a hint flag.
+function restoreCompletedEndingMappings(state) {
+  for (const run of state.playthroughs || []) {
+    if (!run.completed || !['success', 'death'].includes(run.result)) continue;
+    const node = state.graph?.[run.path?.at(-1)];
+    const ending = run.result === 'success' ? 0 : -1;
+    if (node?.discovered && node.choices?.some(choice => Number(choice) === ending)) {
+      delete node.discovered;
+    }
+  }
+}
 const names = ['intro', 'introduction', 'prolog', 'prologue', 'epilog', 'epilogue', 'opening'];
 const supplementalSectionSql = (column, bookColumn) => '(' + names.map(name =>
   `(lower(${column})='${name}' OR lower(${column}) GLOB '${name}[-_]*')`).concat(
@@ -32,4 +44,4 @@ function uncountedReadingSections(db, bookId, entry) {
   return ids;
 }
 
-module.exports = { isSupplementalSection, supplementalSectionSql, uncountedReadingSections, isMappedGraphNode, initializeReadingSupplements };
+module.exports = { isSupplementalSection, supplementalSectionSql, uncountedReadingSections, isMappedGraphNode, restoreCompletedEndingMappings, initializeReadingSupplements };

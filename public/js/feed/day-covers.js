@@ -62,7 +62,7 @@ export async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLis
     if (card.isConnected === false) return;
     _dayCoverResizeObserver?.observe(card); // no-op if already observed
     if (!_nearViewport(card)) { _clearCoverTiles(card); return; }
-    const covers = dayCoverLists[Number(card.dataset.dayIndex)];
+    const covers = [...new Set(dayCoverLists[Number(card.dataset.dayIndex)] || [])];
     const stack = card.querySelector('.feed-day-cover-stack');
     if (!covers?.length || !stack) return;
     if (card.offsetWidth <= 0 || card.offsetHeight <= 0) return;
@@ -74,7 +74,6 @@ export async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLis
     const cardW   = card.offsetWidth;
     const targetH = card.offsetHeight;
     if (cardW <= 0 || targetH <= 0) return;
-    const n = covers.length;
 
     // Tile at full card width and natural aspect ratio without cropping.
     const boxes = metas.map(m => (m?.width && m?.height)
@@ -84,12 +83,11 @@ export async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLis
     const tiles = []; // { top, cover, box }
     const pushTile = (top, idx) => { if (boxes[idx]) tiles.push({ top, cover: covers[idx], box: boxes[idx] }); };
 
-    // Center the most prominent loaded cover; advance other covers independently above and below.
+    // Center the most active cover, then cycle every distinct loaded cover evenly.
     const centerIdx = boxes[0] ? 0 : boxes.findIndex(b => b);
 
     const pool = [];
-    for (let k = 0; k < n; k++) if (k !== centerIdx) pool.push(k);
-    if (pool.length === 0) pool.push(centerIdx); // literally only one book all day - it repeats outward too
+    for (let k = 0; k < covers.length; k++) if (boxes[k]) pool.push(k);
 
     const anchorH = boxes[centerIdx]?.h || targetH;
     let topEdge    = Math.round(targetH / 2 - anchorH / 2);
@@ -97,8 +95,8 @@ export async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLis
     pushTile(topEdge, centerIdx);
     bottomEdge += anchorH;
 
-    let downPtr = 0;
-    let upPtr   = Math.floor(pool.length / 2);
+    let downPtr = 1;
+    let upPtr   = pool.length - 1;
     let guard   = 0;
     while ((topEdge > 0 || bottomEdge < targetH) && guard < 400) {
       if (bottomEdge < targetH) {
@@ -107,7 +105,7 @@ export async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLis
         if (box) { pushTile(bottomEdge, idx); bottomEdge += box.h; } else { bottomEdge += 1; }
       }
       if (topEdge > 0) {
-        const idx = pool[upPtr % pool.length]; upPtr++;
+        const idx = pool[upPtr]; upPtr = (upPtr + pool.length - 1) % pool.length;
         const box = boxes[idx];
         if (box) { topEdge -= box.h; pushTile(topEdge, idx); } else { topEdge -= 1; }
       }

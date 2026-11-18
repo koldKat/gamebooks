@@ -48,6 +48,19 @@ test('native single-file JPEG, PNG, GIF and WebP illustrations remain protected 
   }
 });
 
+test('legacy image aliases allow reference matter without exposing unsafe metadata', () => {
+  const src = `/api/books/735/reading-images/${'a'.repeat(64)}.jpg`;
+  const alias = `/api/books/735/reading-images/${'b'.repeat(64)}.png`;
+  const valid = setup([source('FIGURE', [source('IMG', [], { src, 'data-reading-image-alias': alias })])]);
+  assert.equal(renderReadingMatter(valid.mount, 735, '<figure></figure>', valid.document), true);
+  assert.equal(valid.mount.children[0].children[0].src, src);
+  assert.equal(valid.mount.children[0].children[0].getAttribute('data-reading-image-alias'), null);
+  for (const unsafe of [alias.replace('/735/', '/734/'), 'javascript:alert(1)', 'https://example.com/image.png']) {
+    const invalid = setup([source('FIGURE', [source('IMG', [], { src, 'data-reading-image-alias': unsafe })])]);
+    assert.equal(renderReadingMatter(invalid.mount, 735, '<figure></figure>', invalid.document), false);
+  }
+});
+
 test('printed time sheets preserve bounded empty spacers and manual checkpoint links', () => {
   const nodes = [source('TABLE', [source('TBODY', [source('TR', [
     source('TD', [], { class: 'reading-time-gap', colspan: '3' }),

@@ -4,11 +4,11 @@
 
 const { db, _foldForSearch, _naturalCompare, _naturalCompareByName, _getPdfSize } = require('./connection');
 const {
-  awardXp, awardCoins, reportGemReward, _discoveredSet, _visitedSet, _mappedSet, _permanentVisitedCount, _checkGroupMilestone,
+  awardXp, awardCoins, reportGemReward, _discoveredSet, _mappedSet, _checkGroupMilestone,
 } = require('./xp');
 const { awardRatingVote } = require('./vote-gems');
 const { leaveParty } = require('./parties');
-const { uncountedReadingSections, supplementalSectionSql } = require('./reading-section-counts');
+const { uncountedReadingSections, supplementalSectionSql, restoreCompletedEndingMappings } = require('./reading-section-counts');
 
 // Live reading is account-unrestricted; retain one gate for any future access policy.
 function _canLiveRead(_userId) {
@@ -61,16 +61,6 @@ function getBooks(userId) {
     WHERE ub.user_id = ?
     ORDER BY ub.created_at ASC
   `).all(userId);
-  // Fetch library-wide summaries once rather than scanning visit history per book.
-  const permanentVisits = new Map(db.prepare(`
-    SELECT substr(ref, 1, instr(ref, ':') - 1) AS book_id, COUNT(*) AS n
-    FROM xp_events x WHERE user_id = ? AND event = 'visit_node'
-      AND NOT EXISTS (SELECT 1 FROM book_reading_entries e
-        WHERE e.book_id = CAST(substr(x.ref, 1, instr(x.ref, ':') - 1) AS INTEGER) AND e.counts_as_section = 0
-        AND x.ref = e.book_id || ':' || e.section_id)
-      AND NOT ${supplementalSectionSql("substr(x.ref,instr(x.ref,':')+1)", "CAST(substr(x.ref,1,instr(x.ref,':')-1) AS INTEGER)")}
-    GROUP BY book_id
-  `).all(userId).map(row => [row.book_id, row.n]));
   const ratings = new Map(db.prepare(`
     SELECT book_id, AVG(rating) AS avg_rating, COUNT(rating) AS vote_count
     FROM user_books WHERE rating IS NOT NULL
@@ -95,10 +85,12 @@ function getBooks(userId) {
     let last_run_at = null;
     try {
       const s = JSON.parse(state_data || '{}');
+      restoreCompletedEndingMappings(s);
       const pts = s.playthroughs || [];
-      // Use normalized section sets so numeric/string IDs cannot inflate progress.
+      // Library completion represents the same mapped nodes as the play area.
+      // Run paths include newly entered destinations whose choices are still unknown.
       const excluded = [...(supplementalByBook.get(b.id) || []), ...(uncounted_entry == null ? [] : [uncounted_entry])];
-      const seen = new Set([..._visitedSet(pts, excluded), ..._mappedSet(s.graph || {}, excluded)]);
+      const mapped = _mappedSet(s.graph || {}, excluded);
       for (const pt of pts) {
         const ts = pt.completedAt || pt.lastActionAt || pt.startedAt || null;
         if (ts && (last_run_at === null || ts > last_run_at)) last_run_at = ts;
@@ -107,13 +99,7 @@ function getBooks(userId) {
       if (pts.length > 0 && last_run_at === null && ub_updated_at) {
         last_run_at = ub_updated_at * 1000; // SQLite epoch seconds → ms
       }
-      visited = seen.size;
-      // Include permanent visit history when deleted runs no longer provide it.
-      const effective = b.discoverable_sections ?? b.total_sections;
-      if (effective && visited < effective) {
-        const permanent = permanentVisits.get(String(b.id)) || 0;
-        if (permanent > visited) visited = permanent;
-      }
+      visited = mapped.size;
     } catch {}
     const rating = ratings.get(b.id);
     const avgRating = rating?.avg_rating ?? null;
@@ -864,6 +850,7 @@ function getBookState(userId, bookId) {
   if (!ub) return null;
   let s;
   try { s = JSON.parse(ub.state_data); } catch { s = {}; }
+  restoreCompletedEndingMappings(s);
   // Always use the authoritative values from the books table so that a stale
   // saveState() call cannot overwrite a newer updateBook() result.
   const book = db.prepare(`SELECT b.name, b.total_sections, b.max_section_number,
@@ -918,6 +905,7 @@ function getBookById(bookId) {
 
 // Impersonated saves preserve data but not activity timestamps.
 function saveBookState(userId, bookId, stateObj, { skipTimestamp = false } = {}) {
+  restoreCompletedEndingMappings(stateObj);
   // Deduplicate each playthrough's path (preserve first visit order) to guard
   // against unbounded growth if the user cycles through sections repeatedly.
   for (const pt of (stateObj.playthroughs || [])) {
@@ -1045,16 +1033,13 @@ function updateBook(userId, bookId, name, totalSections, isbn, issn, asin, pages
     for (const row of userRows) {
       let s = {}; try { s = JSON.parse(row.state_data || '{}'); } catch {}
       const disc = _discoveredSet(s.graph || {}, excluded);
-      const vis  = new Set([...(_visitedSet(s.playthroughs || [], excluded)), ...(_mappedSet(s.graph || {}, excluded))]);
+      const mapped = _mappedSet(s.graph || {}, excluded);
       if (disc.size >= discoverableSections) {
         awardXp(row.user_id, 'discover_all', bookId);
         _checkGroupMilestone(row.user_id, seriesId, parentBookId,
           'discover_all', 'discover_all_series', 'discover_all_anthology');
       }
-      const trulyVisited = vis.size >= discoverableSections
-        ? vis.size
-        : Math.max(vis.size, _permanentVisitedCount(row.user_id, bookId));
-      if (trulyVisited >= discoverableSections) {
+      if (mapped.size >= discoverableSections) {
         awardXp(row.user_id, 'visit_all', bookId);
         _checkGroupMilestone(row.user_id, seriesId, parentBookId,
           'visit_all', 'visit_all_series', 'visit_all_anthology', true);

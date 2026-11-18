@@ -363,6 +363,12 @@ function claimBonusGc(userId) {
 }
 
 const _awardXpTx = db.transaction((userId, event, ref, amount, seasonalEligible = true) => {
+  // A corrected premature announcement already received its XP and mining credit.
+  // Publish it when mapping actually finishes without paying for it a second time.
+  if (event === 'visit_all' && db.prepare(`UPDATE xp_events SET event='visit_all',
+    created_at=strftime('%s','now') WHERE user_id=? AND event='visit_all_pending' AND ref=?
+    AND NOT EXISTS (SELECT 1 FROM xp_events WHERE user_id=? AND event='visit_all' AND ref=?)`)
+    .run(userId, ref, userId, ref).changes) return true;
   if (!seasonalEligible) {
     db.prepare('INSERT OR IGNORE INTO user_job_xp(user_id) VALUES(?)').run(userId);
     db.prepare('UPDATE user_job_xp SET seasonal_bonus_eligible=0 WHERE user_id=?').run(userId);
@@ -842,11 +848,10 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
   const newVis = _visitedSet(newPts, excluded);
   for (const sec of newVis)
     if (!oldVis.has(sec)) awardXp(userId, 'visit_node', `${bookId}:${sec}`);
-  if (effective > 0 && oldVis.size < effective) {
-    // Include mapped/manual nodes so they can satisfy completion milestones.
-    const combined = new Set([...newVis, ...(_mappedSet(newGraph, excluded))]);
-    const trulyVisited = combined.size >= effective ? combined.size : Math.max(combined.size, _permanentVisitedCount(userId, bookId));
-    if (trulyVisited >= effective) {
+  if (effective > 0 && _mappedSet(oldGraph, excluded).size < effective) {
+    // Entering a destination is not mapping it. Match the visible mapped counter,
+    // including manually mapped and portal-only nodes, rather than run history.
+    if (_mappedSet(newGraph, excluded).size >= effective) {
       awardXp(userId, 'visit_all', bookId);
       _checkGroupMilestone(userId, bookRow?.series_id, bookRow?.parent_book_id,
         'visit_all', 'visit_all_series', 'visit_all_anthology', true);
@@ -1067,8 +1072,7 @@ function migrateXpForUser(userId) {
 
     const vis = _visitedSet(pts, excluded);
     for (const sec of vis) awardXp(userId, 'visit_node', `${bid}:${sec}`);
-    const visOrMapped = new Set([...vis, ...(_mappedSet(graph, excluded))]);
-    if (effective > 0 && visOrMapped.size >= effective) {
+    if (effective > 0 && _mappedSet(graph, excluded).size >= effective) {
       awardXp(userId, 'visit_all', bid);
     }
 

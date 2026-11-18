@@ -43,3 +43,35 @@ test('unnumbered entry cannot award node XP or trigger an early completion miles
   assert.equal(awards.some(([event]) => event === 'visit_all'), true);
   assert.deepEqual(coins, [], 'completion gold has been retired');
 });
+
+test('mapping completion waits for mapped nodes even when every destination was already visited', () => {
+  const awards = [];
+  const context = {
+    isMappedGraphNode: sectionCounts.isMappedGraphNode,
+    uncountedReadingSections: () => [],
+    db: { prepare: () => ({ get: () => ({}) }) },
+    awardXp: (_user, event, ref) => awards.push([event, ref]),
+    awardCoins() {}, _checkGroupMilestone() {}, SIM_HISTORY_KEYS: [], _xpRefSeq: 0,
+    _permanentVisitedCount: () => 999,
+    isImpersonatingContext: () => false, createRubyCompletionChecker: () => () => 0,
+    _rubyCompletionChecker: null, _discoveryRubyChecker: null, CUSTOM_NODE_SHAPES: new Set(),
+  };
+  runInNewContext(helpers, context);
+  runInNewContext(source.slice(source.indexOf('function processStateXp('), source.indexOf('function migrateXpForUser(')), context);
+  const state = { graph: {
+    1: { choices: [2, 3, 4] }, 2: { choices: [1] },
+    3: { discovered: true, choices: [0] },
+  }, playthroughs: [{ path: [1, 2, 3, 4] }] };
+  context.processStateXp(1, 1316, {}, state, 4);
+  assert.equal(awards.filter(([event]) => event === 'visit_node').length, 4);
+  assert.equal(awards.some(([event]) => event === 'visit_all'), false,
+    'run destinations, discovered ending hints and permanent visit history cannot finish mapping');
+  const mapped = structuredClone(state);
+  mapped.graph[3] = { manual: true, choices: [0] };
+  mapped.graph[4] = { discovered: true, choices: [], portals: [{ bookId: 42 }] };
+  context.processStateXp(1, 1316, state, mapped, 4);
+  assert.equal(awards.filter(([event]) => event === 'visit_all').length, 1,
+    'manual and portal-only mapping completes even when the old run already visited every node');
+  context.processStateXp(1, 1316, mapped, mapped, 4);
+  assert.equal(awards.filter(([event]) => event === 'visit_all').length, 1);
+});

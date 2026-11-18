@@ -24,7 +24,8 @@ function library() {
     if (name === './vote-gems' || name === './parties') return {};
     if (name === './xp') return {
       _visitedSet: (pts, excluded = []) => new Set(pts.flatMap(pt => pt.path || []).map(String).filter(sec => !excluded.includes(sec))),
-      _mappedSet: (graph, excluded = []) => new Set(Object.keys(graph).filter(sec => !excluded.includes(sec))),
+      _mappedSet: (graph, excluded = []) => new Set(Object.keys(graph).filter(sec => !excluded.includes(sec)
+        && require('../server/db/reading-section-counts').isMappedGraphNode(graph[sec]))),
     };
     throw Error(name);
   } });
@@ -32,6 +33,35 @@ function library() {
   vm.runInContext(source.slice(0, source.indexOf('function getStashes(')) + '\nmodule.exports = { getBooks };', context);
   return { raw, getBooks: userId => { queries = 0; return JSON.parse(JSON.stringify(context.module.exports.getBooks(userId))); }, queries: () => queries };
 }
+
+test('library completion waits for mapped nodes despite complete live and permanent visit history', () => {
+  const h = library();
+  try {
+    h.raw.exec(`INSERT INTO books(id,name,total_sections) VALUES(1316,'Interlude',3);
+      INSERT INTO user_books(user_id,book_id,state_data) VALUES
+        (1,1316,'{"graph":{"1":{"choices":[2,3]},"2":{"discovered":true,"choices":[0]}},"playthroughs":[{"path":[1,2,3]}]}');
+      INSERT INTO xp_events VALUES(1,'visit_node','1316:1'),(1,'visit_node','1316:2'),(1,'visit_node','1316:3');`);
+    assert.equal(h.getBooks(1)[0].visited, 1, 'entered destinations and ending hints are not mapped');
+    h.raw.prepare('UPDATE user_books SET state_data=?').run(JSON.stringify({
+      graph: { 1: { choices: [2,3] }, 2: { choices: [0] }, 3: { manual: true, choices: [] } },
+      playthroughs: [{ path: [1,2,3] }],
+    }));
+    assert.equal(h.getBooks(1)[0].visited, 3, 'manual and terminal mappings can complete the book');
+  } finally { h.raw.close(); }
+});
+
+test('library counts completed endings with stale discovery flags without counting unplayed hints', () => {
+  const h = library();
+  try {
+    h.raw.exec(`INSERT INTO books(id,name,total_sections) VALUES(1316,'Interlude',3);
+      INSERT INTO user_books(user_id,book_id,state_data) VALUES(1,1316,'{}');`);
+    h.raw.prepare('UPDATE user_books SET state_data=?').run(JSON.stringify({
+      graph: { 1: { choices: [2,3] }, 2: { discovered: true, choices: [0] }, 3: { discovered: true, choices: [-1] } },
+      playthroughs: [{ path: [1,2], completed: true, result: 'success' }],
+    }));
+    assert.equal(h.getBooks(1)[0].visited, 2);
+  } finally { h.raw.close(); }
+});
 
 test('batched summaries preserve progress, global ratings, anthology order and account isolation', () => {
   const h = library();
@@ -45,7 +75,7 @@ test('batched summaries preserve progress, global ratings, anthology order and a
       (8,'visit_node','1:4'),(7,'discover_node','1:4');
       INSERT INTO book_anthology_memberships VALUES (1,20,3);`);
     const books = h.getBooks(7);
-    assert.equal(books[0].visited, 3, 'deleted-run visit history is retained');
+    assert.equal(books[0].visited, 1, 'library completion uses mapped nodes, not run or permanent visit history');
     assert.equal(books[0].last_run_at, 100);
     assert.equal(books[0].userRating, 4);
     assert.equal(books[0].avgRating, 3, 'ratings include other owners');
@@ -56,7 +86,7 @@ test('batched summaries preserve progress, global ratings, anthology order and a
     assert.equal(books[1].visited, 2, 'already-complete graph keeps its original count');
     assert.equal(books[1].avgRating, null);
     assert.equal(books[1].voteCount, 0);
-    assert.equal(h.getBooks(8)[0].visited, 1, 'visit history belongs to the requested account');
+    assert.equal(h.getBooks(8)[0].visited, 0, 'another account has no mapped nodes');
   } finally { h.raw.close(); }
 });
 
@@ -70,9 +100,9 @@ test('multiple numeric introduction pages are excluded from charts and permanent
         (7,1,'{"graph":{"1":{},"2":{},"3":{}}}'),(7,2,'{"graph":{"1":{},"2":{}}}');
       INSERT INTO xp_events VALUES(7,'visit_node','1:1'),(7,'visit_node','1:2'),(7,'visit_node','1:3');`);
     assert.deepEqual(h.getBooks(7).map(book=>book.visited),[1,2]);
-    assert.equal(h.queries(),5);
+    assert.equal(h.queries(),4);
     h.raw.exec("UPDATE user_books SET state_data='{}' WHERE book_id=1");
-    assert.equal(h.getBooks(7)[0].visited,1);
+    assert.equal(h.getBooks(7)[0].visited,0);
   } finally {h.raw.close();}
 });
 
@@ -85,7 +115,7 @@ test('large libraries use a constant number of queries and tolerate malformed sa
     const books = h.getBooks(1);
     assert.equal(books.length, 1500);
     assert.equal(books[0].visited, 0);
-    assert.equal(h.queries(), 5);
+    assert.equal(h.queries(), 4);
     assert.deepEqual(h.getBooks(99), []);
   } finally { h.raw.close(); }
 });
@@ -99,9 +129,9 @@ test('opening entries are excluded from live and permanent library counts withou
         (7,534,'{"playthroughs":[{"path":["prologue",20]}],"graph":{"prologue":{},"20":{}}}');
       INSERT INTO xp_events VALUES (7,'visit_node','534:prologue'),(7,'visit_node','534:20');`);
     assert.equal(h.getBooks(7)[0].visited, 1);
-    assert.equal(h.queries(), 5);
+    assert.equal(h.queries(), 4);
     h.raw.exec("UPDATE user_books SET state_data = '{}'");
-    assert.equal(h.getBooks(7)[0].visited, 1);
+    assert.equal(h.getBooks(7)[0].visited, 0);
   } finally { h.raw.close(); }
 });
 
@@ -115,7 +145,7 @@ test('imported intros and epilogues are excluded from graph and historical libra
       INSERT INTO xp_events VALUES(7,'visit_node','1:intro'),(7,'visit_node','1:epilogue'),(7,'visit_node','1:1');`);
     assert.equal(h.getBooks(7)[0].visited,1);
     h.raw.exec("UPDATE user_books SET state_data='{}'");
-    assert.equal(h.getBooks(7)[0].visited,1);
-    assert.equal(h.queries(),5,'exclusions are batched, not fetched once per book');
+    assert.equal(h.getBooks(7)[0].visited,0);
+    assert.equal(h.queries(),4,'exclusions are batched, not fetched once per book');
   } finally {h.raw.close();}
 });

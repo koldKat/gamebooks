@@ -119,6 +119,25 @@ test('duplicate XP awards neither mint coins nor duplicate notifications', t => 
   assert.equal(f.balance(), balance);
 });
 
+test('publishing a corrected pending mapping milestone preserves its original reward credit', t => {
+  const f = fixture({ xp: 10000, purchased: 0, bonus: 0, spent: 0 });
+  t.after(() => f.db.close());
+  f.db.exec(`ALTER TABLE xp_events ADD COLUMN created_at INTEGER DEFAULT 0;
+    CREATE TABLE credits(n INTEGER); INSERT INTO credits VALUES(0);
+    CREATE TRIGGER count_credit AFTER INSERT ON xp_events BEGIN UPDATE credits SET n=n+1; END;`);
+  assert.equal(f.context.award(1, 'visit_all', '1316', 40), true);
+  const before = f.db.prepare('SELECT * FROM users WHERE id=1').get();
+  const id = f.db.prepare("SELECT id FROM xp_events WHERE event='visit_all'").get().id;
+  f.db.prepare("UPDATE xp_events SET event='visit_all_pending' WHERE id=?").run(id);
+  assert.equal(f.context.award(1, 'visit_all', '1316', 40), true);
+  assert.deepEqual(f.db.prepare('SELECT * FROM users WHERE id=1').get(), before);
+  assert.equal(f.db.prepare('SELECT n FROM credits').get().n, 1);
+  const event = f.db.prepare('SELECT * FROM xp_events WHERE id=?').get(id);
+  assert.equal(event.event, 'visit_all');
+  assert.ok(event.created_at > 0);
+  assert.equal(f.context.award(1, 'visit_all', '1316', 40), false);
+});
+
 test('notification failure rolls back XP and all same-tick level rewards', t => {
   const f = fixture(); t.after(() => f.db.close());
   const before = f.db.prepare('SELECT * FROM users WHERE id=1').get();
