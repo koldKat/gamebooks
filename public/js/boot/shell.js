@@ -57,6 +57,9 @@ export function initShell() {
     _footerYear > _footerStartYear ? `© ${_footerStartYear}-${_footerYear}` : `© ${_footerStartYear}`;
 
   // Load app version + admin username from server
+  document.getElementById('app-version').addEventListener('click', () => {
+    import('../feed/changelog.js').then(module => module.openChangelog());
+  });
   publicFetch('/api/config').then(r => r.ok ? r.json() : null).then(cfg => {
     if (cfg?.version)       document.getElementById('app-version').textContent = cfg.version;
     if (cfg?.adminUsername) setAdminUsername(cfg.adminUsername);

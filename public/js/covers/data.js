@@ -6,11 +6,32 @@ import { coversState } from './state.js';
 import { getToken } from '../core/state.js';
 import { naturalCompare } from '../core/sort.js';
 import { fetchPublic as publicFetch } from '../core/util.js';
+import { loadNsfwCatalog, filterNsfwPublicBooks, isHiddenNsfwCover, nsfwVisibilityKey } from '../content/nsfw.js';
 
 let _coversDataFingerprint = '';
 let _loadCoversInFlight  = false;
 let _loadCoversPending   = null;
 let _coversAutoRefreshPaused = false;
+let _catalogSource = null;
+
+function _applyCatalogVisibility(covers, publicBooks, publicSeries) {
+  coversState._allBooks = filterNsfwPublicBooks(publicBooks);
+  const openWorldIds = new Set(publicSeries.filter(s => s.is_open_world).map(s => s.id));
+  for (const book of coversState._allBooks) book.isOpenWorld = openWorldIds.has(book.seriesId);
+  coversState._allSeriesCovers = _buildSeriesCoverEntries(publicSeries, coversState._allBooks);
+  coversState._allCovers = covers.filter(c => !isHiddenNsfwCover(c.coverUrl));
+}
+
+// Visibility changes reuse the already loaded catalog, just like the Cyrillic filter.
+export function refreshNsfwCatalogDisplay() {
+  if (!_catalogSource) return false;
+  const { covers, books, series } = _catalogSource;
+  _applyCatalogVisibility(covers, books, series);
+  _coversDataFingerprint = _coversFingerprint(covers, books, series);
+  _refreshCoversDisplay();
+  _resetLandingCoverQueue();
+  return true;
+}
 
 // Pause refreshes during multi-step media mutations, then render the settled state once.
 export function pauseCoversAutoRefresh() { _coversAutoRefreshPaused = true; }
@@ -48,6 +69,7 @@ export function _coversFingerprint(covers, books, series) {
     return naturalCompare(String(a[1] ?? ''), String(b[1] ?? ''));
   });
   return JSON.stringify({
+    nsfw: nsfwVisibilityKey(),
     covers: sortRows((Array.isArray(covers) ? covers : []).map(c => [c.id, c.name, c.coverUrl || c.cover_path || '', c.createdAt || c.created_at || 0, c.isContainer ? 1 : 0])),
     books: sortRows((Array.isArray(books) ? books : []).map(b => [
       b.id, b.name, b.coverUrl || b.cover_path || '', b.createdAt || b.created_at || 0,
@@ -83,6 +105,7 @@ export async function loadCovers({ force = true } = {}) {
       publicFetch('/api/public/covers', noStore),
       publicFetch('/api/public/books', { ...noStore, ..._auth }),
       publicFetch('/api/public/series', noStore),
+      loadNsfwCatalog({ force: true }),
     ]);
     if (![coversRes, booksRes, seriesRes].every(res => res.ok)) throw new Error('Catalog request failed');
     const covers = await coversRes.json();
@@ -110,12 +133,8 @@ export async function loadCovers({ force = true } = {}) {
       return;
     }
     if (!_isLandingBooksViewVisible()) return;
-    coversState._allBooks    = publicBooks;
-    // Derive book open-world flags from their series.
-    const openWorldSeriesIds = new Set((Array.isArray(publicSeries) ? publicSeries : []).filter(s => s.is_open_world).map(s => s.id));
-    for (const b of coversState._allBooks) b.isOpenWorld = b.seriesId != null && openWorldSeriesIds.has(b.seriesId);
-    coversState._allSeriesCovers = _buildSeriesCoverEntries(Array.isArray(publicSeries) ? publicSeries : [], Array.isArray(coversState._allBooks) ? coversState._allBooks : []);
-    coversState._allCovers = covers;
+    _catalogSource = { covers, books: publicBooks, series: publicSeries };
+    _applyCatalogVisibility(covers, publicBooks, publicSeries);
     if (!covers.length && !coversState._allBooks.length && !coversState._allSeriesCovers.length) {
       _stopLazy();
       grid.innerHTML = '';

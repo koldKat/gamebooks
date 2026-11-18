@@ -6,8 +6,10 @@ import { getToken, apiFetch } from '../core/state.js';
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 import { publicEntryLinks, handlePublicEntryClick } from './helpers.js';
+import { filterNsfwPublicBooks } from '../content/nsfw.js';
 
 export function renderSeriesActivity(data) {
+  data = { ...data, books: filterNsfwPublicBooks(data.books) };
   const backBtn = document.getElementById('pub-back-btn');
   document.getElementById('pub-modal-title').innerHTML =
     escapeHtml(data.name) + ` <span class="pub-modal-type">${t('covers.series_label')}</span>`;

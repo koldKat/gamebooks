@@ -219,6 +219,8 @@ const {
   handleAdminPublishAnnouncement, handleAdminUnpublishAnnouncement, handleAdminDeleteAnnouncement,
   handleAdminPinAnnouncement, handleAdminUnpinAnnouncement,
 } = require('./server/routes/announcements');
+const { handleAnnouncementHistory } = require('./server/routes/announcement-history');
+const { handleNsfwCatalog, handleSetBookNsfw } = require('./server/routes/nsfw');
 
 const {
   handleForumLatest,
@@ -373,6 +375,7 @@ const _routeRequest = async (req, res) => {
     }
 
     if (method === 'GET' && urlPath === '/auth/impersonate') return handleImpersonateRedirect(req, res);
+    if (method === 'GET' && urlPath === '/api/announcements/history') return handleAnnouncementHistory(req, res);
     if (method === 'GET'    && urlPath === '/api/ping')      { addSecurityHeaders(res); res.writeHead(200, {'Content-Type':'text/plain','Cache-Control':'no-store'}); return res.end('ok'); }
     if (method === 'GET'    && urlPath === '/api/maintenance-message') { addSecurityHeaders(res); res.writeHead(200, {'Content-Type':'application/json','Cache-Control':'no-store'}); return res.end(JSON.stringify({ message: getMaintenanceMessage() })); }
     if (method === 'POST'   && urlPath === '/api/register')         return await handleRegister(req, res);
@@ -402,6 +405,8 @@ const _routeRequest = async (req, res) => {
     }
     if (method === 'GET'    && urlPath === '/api/feed/stream')   return await handleGetFeedStream(req, res);
     if (method === 'GET'    && urlPath === '/api/public/stream') return await handleGetPublicCatalogStream(req, res);
+    if (method === 'GET' && urlPath === '/api/public/nsfw') return handleNsfwCatalog(req, res);
+    if ((method === 'GET' || method === 'PATCH') && (m = urlPath.match(/^\/api\/books\/(\d+)\/nsfw$/))) return await handleSetBookNsfw(req, res, +m[1]);
     if (method === 'GET'    && urlPath === '/api/public/covers') return send(res, 200, db.getPublicCovers());
     if (method === 'GET'    && urlPath === '/api/public/books')       return send(res, 200, db.getAllPublicBooks(_requesterHasPdfAccess(req)));
     if (method === 'GET'    && urlPath === '/api/public/series')      return send(res, 200, db.getAllPublicSeries());

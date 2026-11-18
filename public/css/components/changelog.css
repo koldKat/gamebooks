@@ -1,0 +1,63 @@
+/* Compact announcement history, loaded only when opened. */
+#changelog-dialog {
+  box-sizing: border-box;
+  width: min(780px, calc(100vw - 24px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 8px 10px;
+  border: 1px solid #46505d;
+  border-radius: 10px;
+  background: #19212c;
+  color: #d8d7d1;
+  color-scheme: dark;
+  font-family: inherit;
+  font-size: 0.85rem;
+  overflow: auto;
+}
+#changelog-dialog::backdrop {
+  background: #0009;
+}
+#changelog-dialog > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+#changelog-dialog .modal-close-btn {
+  border: 0;
+  background: transparent;
+}
+.changelog-entry {
+  padding: 10px 0;
+  border-top: 1px solid #374151;
+  overflow-wrap: anywhere;
+}
+.changelog-entry h3 {
+  margin: 0 0 2px;
+  font-size: 0.9rem;
+  color: #c6ae7b;
+}
+.changelog-entry time {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+.changelog-entry .feed-ann-body {
+  white-space: pre-wrap;
+}
+.changelog-more {
+  display: block;
+  margin: 8px auto 0;
+  padding: 4px 10px;
+  border: 1px solid #46505d;
+  border-radius: 5px;
+  background: #1f2937;
+  color: #d1d5db;
+  font: inherit;
+  cursor: pointer;
+}
+.changelog-more[hidden] {
+  display: none;
+}

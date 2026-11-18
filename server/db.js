@@ -681,6 +681,7 @@ db.exec(`
 if (!db.prepare('PRAGMA table_info(announcements)').all().some(column => column.name === 'updated_at')) {
   db.exec('ALTER TABLE announcements ADD COLUMN updated_at INTEGER DEFAULT NULL');
 }
+require('./db/announcement-history').initializeAnnouncementHistory(db);
 // Release tools can edit content outside the admin route. Preserve the original
 // publication date while giving those edits the same feed ordering timestamp.
 db.exec(`
@@ -835,6 +836,8 @@ if (!hasColumn('sessions', 'is_impersonation')) {
 if (hasColumn('sessions', 'expires_at')) {
   db.exec(`UPDATE sessions SET expires_at = COALESCE(expires_at, created_at + 1209600, strftime('%s','now') + 1209600)`);
 }
+
+require('./db/nsfw').initializeNsfw(db);
 
 const {
   hashPassword, verifyPassword, generateToken,

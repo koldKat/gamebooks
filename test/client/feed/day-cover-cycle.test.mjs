@@ -9,7 +9,7 @@ function moduleSource(name) {
 }
 
 test('day cover ranking combines anthology children sharing the same artwork', () => {
-  const context = { escapeHtml: String, t: String, createDayRenderer: () => () => '', formatAnnBody: String };
+  const context = { escapeHtml: String, t: String, createDayRenderer: () => () => '', formatAnnBody: String, isHiddenNsfwCover: () => false };
   runInNewContext(moduleSource('render') + '\nthis.render = renderFeedContents;', context);
   const entry = (bookId, coverUrl, bookIsPublic = true) => ({ bookId, coverUrl, bookIsPublic, completedAt: 1700000000000 });
   const result = context.render([
@@ -27,7 +27,7 @@ test('expanded cards cycle distinct covers evenly while short cards prioritize t
     constructor() { this.naturalWidth = 100; this.naturalHeight = 150; }
     set src(url) { queueMicrotask(() => url === 'broken' ? this.onerror() : this.onload()); }
   }
-  const context = { Image, queueMicrotask, setTimeout, clearTimeout, escapeHtml: String,
+  const context = { Image, queueMicrotask, setTimeout, clearTimeout, escapeHtml: String, isHiddenNsfwCover: () => false,
     window: { addEventListener() {} },
     document: { addEventListener() {}, body: { classList: { contains: () => false } } } };
   runInNewContext(moduleSource('day-covers') + '\nthis.apply = _applyDayCoverFlows;', context);

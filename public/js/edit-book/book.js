@@ -58,6 +58,25 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
   }
 
   const isAdmin    = !!editState._hooks.resolveIsAdmin?.();
+  const nsfwRow = document.getElementById('edit-book-nsfw-row');
+  const nsfwToggle = document.getElementById('edit-book-nsfw-toggle');
+  if (nsfwRow && nsfwToggle) {
+    nsfwRow.style.display = isAdmin ? '' : 'none';
+    nsfwToggle.checked = false;
+    nsfwToggle.disabled = true;
+    delete nsfwToggle.dataset.original;
+    if (isAdmin) {
+      const session = editState._bookSession;
+      apiFetch(`/api/books/${bookId}/nsfw`).then(async res => {
+        if (!res.ok) return;
+        const data = await res.json();
+        if (session !== editState._bookSession) return;
+        nsfwToggle.checked = !!data.isNsfw;
+        nsfwToggle.dataset.original = data.isNsfw ? '1' : '0';
+        nsfwToggle.disabled = false;
+      }).catch(() => {});
+    }
+  }
   const pdfRow     = document.getElementById('edit-book-pdf-row');
   const pdfCurrent = document.getElementById('edit-book-pdf-current');
   const pdfLink    = document.getElementById('edit-book-pdf-link');

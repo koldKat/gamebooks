@@ -6,6 +6,7 @@ import { t } from '../i18n.js';
 import { applySeasonalEventsPreference } from '../seasonal-events/preferences.js';
 import { applySeasonPreviewPreference } from '../seasonal-events/preview.js';
 import { applyFloatiesPreference } from '../progression/floaties.js';
+import { applyNsfwPreference } from '../content/nsfw.js';
 
 // ── Cover settings ─────────────────────────────────────────────────────────────
 export function _applyCoverTooltipTitlePrefs() {
@@ -131,6 +132,7 @@ export function _toggleCoverTooltipSettings(open) {
 
 // Restore guest cover/glass defaults instead of inheriting the previous account's preferences.
 export function resetFeedDisplayPrefsForLogout() {
+  applyNsfwPreference('1');
   coversState._feedDayCovers = true;
   coversState._feedGlassCards = true;
   coversState._reduceMotion = false;
@@ -144,6 +146,7 @@ export function resetFeedDisplayPrefsForLogout() {
 
 // ── Prefs state setter (called from applyPrefs in main.js) ────────────────────
 export function setCoversPrefsState(p) {
+  applyNsfwPreference(p.hideNsfwBooks ?? '1');
   if ('disableFloaties' in p) applyFloatiesPreference(p.disableFloaties);
   if ('seasonPreview' in p) applySeasonPreviewPreference(p.seasonPreview);
   if ('seasonalEvents' in p) applySeasonalEventsPreference(p.seasonalEvents);

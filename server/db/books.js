@@ -735,7 +735,9 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false, userId = null) {
   ).all(seriesId);
   const childrenStmt = db.prepare(
     `SELECT id, name, total_sections, max_section_number, cover_path, isbn, issn, pages, authors, has_battle_sim, has_live_reading, pdf_path
-     FROM books WHERE parent_book_id = ? AND is_public = 1
+     FROM books WHERE (parent_book_id = ? OR id IN (
+       SELECT book_id FROM book_anthology_memberships WHERE anthology_id = ?
+     )) AND is_public = 1
      ORDER BY COALESCE(book_order, id)`
   );
   books.sort((a, b) => {
@@ -761,7 +763,7 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false, userId = null) {
     books: books.map(b => {
       const isContainer = b.is_container === 1;
       const children = isContainer
-        ? childrenStmt.all(b.id).map(c => ({
+        ? childrenStmt.all(b.id, b.id).map(c => ({
             id:            c.id,
             name:          c.name,
             totalSections: c.total_sections,
@@ -784,12 +786,12 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false, userId = null) {
         coverUrl:      b.cover_path ? `/covers/${b.cover_path}` : null,
         isContainer,
         seriesNumber:  b.series_number || null,
-        childCount:    b.child_count || 0,
+        childCount:    children.length,
         isbn:          b.isbn || null,
         issn:          b.issn || null,
         pages:         b.pages || null,
         authors:       b.authors || null,
-        hasBattleSim:  !!b.has_battle_sim || !!b.child_has_battle_sim,
+        hasBattleSim:  !!b.has_battle_sim || children.some(c => c.hasBattleSim),
         hasLiveReading: !!b.has_live_reading || children.some(c => c.hasLiveReading),
         pdfPath:       hasPdfAccess ? (b.pdf_path || null) : null,
         children,

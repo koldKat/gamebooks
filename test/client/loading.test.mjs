@@ -18,7 +18,7 @@ test('book activity starts its rating request alongside activity and retains rat
   const requests=[],nodes=new Map(),renders=[];
   const get=id=>{if(!nodes.has(id))nodes.set(id,{style:{},dataset:{}});return nodes.get(id);};
   const context=vm.createContext({document:{getElementById:get},getToken:()=> 'owner',
-    openPublicModal(){},loadingHtml,t:x=>x,
+    openPublicModal(){},loadingHtml,t:x=>x,loadNsfwCatalog:async()=>{},
     apiFetch:url=>new Promise(resolve=>requests.push({url,resolve})),
     coversState:{renderCoverActivity:(...args)=>renders.push(args)}});
   const code=readFileSync(new URL('../../public/js/covers/activity.js',import.meta.url),'utf8');

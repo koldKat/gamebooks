@@ -135,6 +135,13 @@ export function bindBookActions({ pubTypeEl, minSections, minMaxSectionNumber, s
     _setButtonsDisabled(['edit-book-save', 'edit-book-cancel'], true);
     try {
       await onSave(name, sections, isbn, issn, asin, pages, authors, description, discoverableSections, isPublic, seriesName, seriesNumber, isContainer, parentId, bookOrder, maxSectionNumber);
+      const nsfw = document.getElementById('edit-book-nsfw-toggle');
+      if (editState._hooks.resolveIsAdmin?.() && nsfw && !nsfw.disabled && nsfw.dataset.original !== (nsfw.checked ? '1' : '0')) {
+        const response = await apiFetch(`/api/books/${bookId}/nsfw`, {
+          method: 'PATCH', body: JSON.stringify({ isNsfw: nsfw.checked }),
+        });
+        if (!response.ok) throw new Error('Could not save NSFW classification');
+      }
     } catch (error) {
       if (isCurrent()) errEl.textContent = error?.message || t('err.save');
       return;

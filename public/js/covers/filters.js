@@ -1,6 +1,7 @@
 import { _sortedByName, _isMobile, _shuffle } from './helpers.js';
 import { coversState } from './state.js';
 import { getToken } from '../core/state.js';
+import { isHiddenNsfwBook } from '../content/nsfw.js';
 
 // ── Favorites management ───────────────────────────────────────────────────────
 export function _setCoverFavoritesFromPrefs(p = {}) {
@@ -70,6 +71,7 @@ export function _isNotInMyBooks(item) {
 
 export function _visibleCoverItems() {
   const base = [...coversState._allBooks, ...coversState._allSeriesCovers].filter(item =>
+    !isHiddenNsfwBook(item) &&
     (item.isSeries || !!item.coverUrl?.trim()) &&
     (!coversState._hideCyrillicCovers || !_hasCyrillic(item.name)));
   const mode = _effectiveCoversKindMode();

@@ -19,6 +19,7 @@ function activity(primary, secondary = []) {
       },
     }) } },
     './xp': {}, './job-xp': require('../server/db/job-xp'), './content': {}, './rating-stats': {},
+    './gameplay-stats': {}, './profile-progress': {},
     './books': {
       getAnthologyExtraMembers: (id, publicOnly) => {
         assert.equal(id, 448);

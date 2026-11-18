@@ -7,6 +7,7 @@ import { bindFeedInteractions } from './bindings.js';
 import { bindFeedPreviews, _hideFeedPreview } from './previews.js';
 import { updateFeedContents } from './update.js';
 import { FEED_FILTERS, filterFeedEntries, feedHeaderHtml, bindFeedFilters } from './filters.js';
+import { loadNsfwCatalog } from '../content/nsfw.js';
 
 // Reuse the in-flight feed refresh to avoid duplicate requests and DOM rebuilds.
 let _loadFeedInFlight = null;
@@ -100,7 +101,10 @@ async function _loadFeedImpl(token, generation) {
     </div>`;
   }
   try {
-    const res              = token ? await apiFetch('/api/feed') : await _hooks.publicFetch?.('/api/feed');
+    const [res] = await Promise.all([
+      token ? apiFetch('/api/feed') : _hooks.publicFetch?.('/api/feed'),
+      loadNsfwCatalog({ force: true }),
+    ]);
     if (!isCurrent()) return;
     if (!res?.ok) throw new Error('Feed request failed');
     const { entries, pinned } = await res.json();

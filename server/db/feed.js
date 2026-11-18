@@ -1408,8 +1408,21 @@ function getBookActivity(bookId, userId = null) {
   ).get(bookId);
   if (!book) return null;
 
-  // Group by book_id directly (all users tracking this book), or expand to ISBN/ISSN siblings
-  const ubRows = book.isbn
+  // Anthology activity lives in its public children, including secondary memberships.
+  // Individual books also include editions sharing their ISBN/ISSN.
+  const ubRows = book.is_container
+    ? db.prepare(
+        `SELECT ub.state_data, ub.book_id AS id, b.name,
+                u.id AS userId, u.username, u.avatar_path, u.public_profile
+         FROM user_books ub
+         JOIN books b ON b.id = ub.book_id
+         JOIN users u ON u.id = ub.user_id
+         WHERE b.is_public = 1 AND (b.parent_book_id = ? OR EXISTS (
+           SELECT 1 FROM book_anthology_memberships m
+           WHERE m.book_id = b.id AND m.anthology_id = ?
+         ))`
+      ).all(bookId, bookId)
+    : book.isbn
     ? db.prepare(
         `SELECT ub.state_data, ub.book_id AS id, b.name,
                 u.id AS userId, u.username, u.avatar_path, u.public_profile

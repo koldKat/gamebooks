@@ -44,3 +44,35 @@ test('private anthology metadata does not leak through its public child', () => 
     assert.equal(activity.parentCoverUrl,null);assert.equal(activity.parentDescription,null);assert.equal(activity.parentId,null);
   } finally {db.close();}
 });
+
+test('anthology activity includes public primary and secondary children, newest first', () => {
+  const {db,context} = fixture();
+  try {
+    db.exec(`UPDATE books SET isbn='anthology-isbn' WHERE id=7;
+      INSERT INTO books(id,name,is_public,parent_book_id) VALUES
+        (43,'Secondary',1,NULL),(44,'Private primary',0,7),
+        (45,'Private secondary',0,NULL),(46,'Unrelated',1,NULL);
+      INSERT INTO book_anthology_memberships(book_id,anthology_id) VALUES
+        (42,7),(43,7),(45,7);
+      INSERT INTO users(id,username,public_profile) VALUES(1,'Reader',1);`);
+    const add = db.prepare('INSERT INTO user_books(book_id,user_id,state_data) VALUES(?,1,?)');
+    add.run(42,JSON.stringify({playthroughs:[
+      {completed:true,isPublic:true,result:'success',completedAt:100},
+      {completed:true,isPublic:false,result:'death',completedAt:900},
+      {completed:false,isPublic:true,completedAt:1000},
+    ]}));
+    add.run(43,JSON.stringify({playthroughs:[
+      {completed:true,isPublic:true,result:'battle',completedAt:300},
+    ],preSeriesRuns:[{completed:true,isPublic:true,result:'success',completedAt:200}]}));
+    for (const id of [44,45,46]) add.run(id,JSON.stringify({playthroughs:[
+      {completed:true,isPublic:true,result:'success',completedAt:800},
+    ]}));
+    const entries = context.getBookActivity(7).entries;
+    assert.deepEqual(Array.from(entries,e=>e.bookId),[43,42]);
+    assert.deepEqual(Array.from(entries[0].runs,r=>r.runIndex),[0,-1]);
+    assert.equal(entries[1].runs.length,1,'private and unfinished runs stay excluded');
+    assert.equal(entries[0].bookName,'Secondary');
+    assert.deepEqual(Array.from(context.getBookActivity(42).entries,e=>e.bookId),[42],
+      'individual book activity stays scoped to that book');
+  } finally {db.close();}
+});

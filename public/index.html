@@ -1195,7 +1195,11 @@
       </label>
       <label class="cover-tooltip-settings-row">
         <input type="checkbox" id="cover-tooltip-hide-cyrillic-cb">
-        <span>Hide Cyrillic covers</span>
+        <span>Hide Cyrillic books</span>
+      </label>
+      <label class="cover-tooltip-settings-row">
+        <input type="checkbox" id="hide-nsfw-books-cb" checked>
+        <span>Hide NSFW books</span>
       </label>
       <div id="cover-tooltip-settings-preview-frame">
         <div id="cover-tooltip-settings-preview">Preview Title</div>
@@ -1965,6 +1969,10 @@
         </div>
       </div>
       <div class="input-group create-public-row" id="edit-book-public-row">
+        <label id="edit-book-nsfw-row" class="checkbox-label" style="display:none">
+          <input type="checkbox" id="edit-book-nsfw-toggle" disabled>
+          <span>NSFW</span>
+        </label>
         <label class="checkbox-label">
           <input type="checkbox" id="edit-book-public-toggle">
           <span>Make public</span>

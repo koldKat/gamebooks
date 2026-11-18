@@ -8,6 +8,7 @@ import { publicName } from '../core/public-name.js';
 import { t } from '../i18n.js';
 import { profileStatsHtml } from './profile-stats.js';
 import { nodeShapeOptions, createNodeShapeRenderer } from '../graph/node-shapes.js';
+import { loadNsfwCatalog, isHiddenNsfwBook } from '../content/nsfw.js';
 
 // Callbacks wired in by main.js at boot
 let _hooks = {};
@@ -54,7 +55,9 @@ export async function openPublicProfile(username) {
   document.getElementById('pub-back-btn').style.display = 'none';
   document.getElementById('pub-modal-body').innerHTML = loadingHtml(t('pub.loading'), 'pub-loading');
   try {
-    const res = await _hooks.publicFetch(`/api/public/user/${encodeURIComponent(username)}`);
+    const [res] = await Promise.all([
+      _hooks.publicFetch(`/api/public/user/${encodeURIComponent(username)}`), loadNsfwCatalog(),
+    ]);
     if (!res.ok) throw new Error();
     const profile = await res.json();
     renderPublicProfile(profile);
@@ -103,7 +106,10 @@ export function renderPublicProfile(profile) {
       </div>
     </div>`;
 
-  if (!profile.books.length) {
+  const visibleBooks = profile.books.filter(book => !isHiddenNsfwBook(book)).map(book => ({
+    ...book, runs: book.runs.filter(run => !isHiddenNsfwBook(run.bookId ?? book.id)),
+  })).filter(book => book.runs.length);
+  if (!visibleBooks.length) {
     html += `<p class="pub-empty">${t('pub.no_runs')}</p>`;
     body.innerHTML = html;
     return;
@@ -111,7 +117,7 @@ export function renderPublicProfile(profile) {
 
   profile._expandedRunGroups ||= new Set();
   const roots = [], seriesGroups = new Map();
-  for (const book of profile.books) {
+  for (const book of visibleBooks) {
     let group = { ...book, key: `book:${book.id}`,
       lastRecordedAt: book.runs.reduce((latest, run) => Math.max(latest, run.completedAt || 0), 0) };
     if (book.isContainer || book.runs.some(run => run.chapterName)) {
