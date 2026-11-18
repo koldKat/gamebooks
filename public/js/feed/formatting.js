@@ -43,10 +43,9 @@ export function formatAnnBody(str, bookCovers = {}) {
     .replace(/\{color:(red|orange|amber|green|teal|blue|purple|pink)\}(.+?)\{\/color\}/g,
       (_, color, text) => `<span style="color:${ANN_COLORS[color]}">${text}</span>`)
     .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+|\/book\/\d+|\/series\/\d+)\)/g, (_, label, target) => {
-      const cover = bookCovers[target] && !isHiddenNsfwCover(bookCovers[target]) ? ` data-cover="${escapeHtml(bookCovers[target])}"` : '';
+      const cover = bookCovers[target] ? ` data-cover="${escapeHtml(bookCovers[target])}"` : '';
       return target.startsWith('/')
         ? `<a href="${target}"${cover}>${label}</a>`
         : `<a href="${target}" target="_blank" rel="noopener noreferrer"${cover}>${label}</a>`;
     });
 }
-import { isHiddenNsfwCover } from '../content/nsfw.js';

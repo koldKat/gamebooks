@@ -5,7 +5,6 @@ import { getCachedBooks } from '../books.js';
 import { naturalCompare, naturalCompareByName, matchesSearch } from '../core/sort.js';
 import { escapeHtml, fetchPublic as _fetchPublic } from '../core/util.js';
 import { t } from '../i18n.js';
-import { loadNsfwCatalog, isHiddenNsfwBook } from '../content/nsfw.js';
 
 function _sortedByName(items) { return [...items].sort(naturalCompareByName); }
 
@@ -21,12 +20,10 @@ export function invalidateAutocompleteCaches() {
   _allSeriesAutocomplete = null;
 }
 
-document.addEventListener('nsfw-preference-changed', invalidateAutocompleteCaches);
 
 // ── Data loaders ──────────────────────────────────────────────────────────────
 
 async function _loadPublicBooks() {
-  await loadNsfwCatalog();
   if (_allPublicBooks) return _allPublicBooks;
   try { const r = await _fetchPublic('/api/public/books'); _allPublicBooks = r.ok ? await r.json() : []; }
   catch (_) { _allPublicBooks = []; }
@@ -56,7 +53,7 @@ export async function _loadAutocompleteBooks() {
       seriesNumber: b.series_number || null,
     });
   });
-  return [...byId.values()].filter(book => !isHiddenNsfwBook(book));
+  return [...byId.values()];
 }
 
 async function _loadAuthorNames() {
@@ -118,7 +115,7 @@ export function _setupNameAutocomplete(inputId, dropdownId, saveBtnId, filterFn,
   function _renderDropdown(q) {
     if (!q || !_allPublicBooks) { dropdown.classList.remove('open'); return; }
     const _owned = getCachedBooks() || [];
-    const _eligible = _allPublicBooks.filter(b => !isHiddenNsfwBook(b) && filterFn(b));
+    const _eligible = _allPublicBooks.filter(b => filterFn(b));
     const _nameMatches = _eligible.filter(b => matchesSearch(b.name, q));
     _matches = _sortedByName(_nameMatches);
     if (!_matches.length) { dropdown.classList.remove('open'); return; }

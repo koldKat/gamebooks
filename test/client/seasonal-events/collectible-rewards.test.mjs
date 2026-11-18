@@ -44,33 +44,33 @@ test('disabled personal floaties skip preparation and geometry while reward bala
  assert.equal(delta.xpDelta,100);assert.equal(coins,2);assert.equal(summary,2);
 });
 
-test('personal currency and level rewards skip floatie preparation while balances update',()=>{
- const noop=()=>{},floaters=[];
+test('personal currency and level rewards show feedback after the initial baseline',()=>{
+ const noop=()=>{},floaters=[],gains=[];
  const context=vm.createContext({rewardFloaterTypeEnabled,window:{addEventListener:noop},waitForCameraIdle:()=>false,floatiesEnabled:()=>true,getUsername:()=> 'player',getToken:()=> 'token',
   updateShopSnapshot:noop,updateCoinsDisplay:noop,updateHeartbeatCoinsDisplay:noop,renderBooksXpSummary:noop,saveRewardCache:noop,
-  _broadcastLiveEvent:noop,_scheduleLiveUiRefresh:noop,RUBY_SVG:'diamond',DIAMOND_SVG:'ruby',
+  _broadcastLiveEvent:noop,_scheduleLiveUiRefresh:noop,RUBY_SVG:'ruby',DIAMOND_SVG:'diamond',escapeHtml:s=>s,
   clearRewardCache:noop,closeBlackMarket:noop,updateRubiesDisplay:noop,updateDiamondsDisplay:noop,
   setTimeout(){throw Error('Currency-only reward scheduled a floatie timer');}});
  vm.runInContext(fs.readFileSync('public/js/progression/rewards.js','utf8').replace(/^import .*;\n/gm,'').replace(/^export /gm,''),context);
  context._spawnRewardFloater=(kind,html)=>floaters.push({kind,html});
+ context._queueRewardFloater=(xp,coins)=>gains.push({xp,coins});
  const base={xp:100,coinsBalance:10,level:1,rubiesEarned:2,rubiesCollectibleEarned:0,diamondsEarned:0};
  context._processRewardSnapshot(base);
- context._processRewardSnapshot({...base,rubiesEarned:3,rubiesCollectibleEarned:1});
  assert.equal(floaters.length,0);
- context._processRewardSnapshot({...base,rubiesEarned:5,rubiesCollectibleEarned:2});
- assert.equal(floaters.length,0);
- context._processRewardSnapshot({...base,rubiesEarned:5,rubiesCollectibleEarned:2});
- assert.equal(floaters.length,0);
- context._processRewardSnapshot({...base,coinsBalance:20,coinsEarned:20,diamondsEarned:5,level:2,
-  title:{toString(){throw Error('Level floatie HTML prepared');}}});
- assert.equal(floaters.length,0);
+ const next={...base,coinsBalance:11,rubiesEarned:3,diamondsEarned:1,level:2,title:'Adventurer'};
+ context._processRewardSnapshot(next);
+ assert.deepEqual(floaters.map(f=>f.kind),['rubies','diamonds','level']);
+ assert.match(floaters[2].html,/Lvl 2/);
+ assert.deepEqual(gains,[{xp:0,coins:1}]);
+ context._processRewardSnapshot(next);
+ assert.equal(floaters.length,3,'duplicate snapshots do not replay rewards');
  context.clearRewardFloaters=()=>{};
  context._resetRewardSnapshotState();
  context._processRewardSnapshot({...base,rubiesEarned:1,rubiesCollectibleEarned:1});
- assert.equal(floaters.length,0);
+ assert.equal(floaters.length,3,'new baseline does not replay history');
 });
 
-test('mint gains update balances without scheduling personal coin feedback',()=>{
+test('mint gains show coin feedback even when the balance decreases after a purchase',()=>{
  const noop=()=>{},gains=[];
  const context=vm.createContext({rewardFloaterTypeEnabled,window:{addEventListener:noop},waitForCameraIdle:()=>false,floatiesEnabled:()=>true,getUsername:()=> 'player',getToken:()=> 'token',
   updateShopSnapshot:noop,updateCoinsDisplay:noop,updateHeartbeatCoinsDisplay:noop,renderBooksXpSummary:noop,saveRewardCache:noop,
@@ -80,9 +80,9 @@ test('mint gains update balances without scheduling personal coin feedback',()=>
  const base={xp:100000,coinsBalance:100,coinsEarned:150,level:10};
  context._processRewardSnapshot(base);
  context._processRewardSnapshot({...base,coinsBalance:91,coinsEarned:151});
- assert.deepEqual(gains,[]);
+ assert.deepEqual(gains,[{xp:0,coins:1}]);
  context._processRewardSnapshot({...base,coinsBalance:81,coinsEarned:151});
- assert.equal(gains.length,0);
+ assert.equal(gains.length,1);
  context._processRewardSnapshot({...base,coinsBalance:82,coinsEarned:152,heartbeatGoldEarned:1});
- assert.equal(gains.length,0);
+ assert.equal(gains.length,1,'passive heartbeat gold remains excluded from coin feedback');
 });

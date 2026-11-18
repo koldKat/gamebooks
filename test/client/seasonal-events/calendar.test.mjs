@@ -7,7 +7,7 @@ test('Halloween runs from October 28 through November 3, inclusive, every year',
   for (const year of [2026, 2027, 2028]) {
     assert.equal(activeSeasonalEvents(new Date(`${year}-10-27T20:59:00Z`)).some(event => event.id === 'halloween'), false);
     for (const [month, day] of [[9,28],[9,29],[9,30],[9,31],[10,1],[10,2],[10,3]]) {
-      assert.ok(activeSeasons(seasonalEvents, new Date(Date.UTC(year, month, day, 12))).some(event => event.id === 'halloween'));
+      assert.ok(activeSeasons(seasonalEvents.filter(e=>e.id==='halloween'), new Date(Date.UTC(year, month, day, 12))).some(event => event.id === 'halloween'));
     }
     assert.equal(activeSeasonalEvent(new Date(`${year}-11-03T21:59:00Z`))?.id, 'halloween');
     assert.equal(activeSeasonalEvent(new Date(`${year}-11-03T22:00:00Z`)), null);
@@ -32,7 +32,7 @@ test('Diwali has an inclusive seven-day window around each year’s moving date'
   for (const center of Object.values(diwali.dates)) {
     const day = Date.parse(center + 'T10:00:00Z');
     for (let offset = -4; offset <= 4; offset++) {
-      assert.equal(activeSeasons(seasonalEvents, new Date(day + offset * 86400000)).some(event => event.id === 'diwali'), Math.abs(offset)<=3);
+      assert.equal(activeSeasons([diwali], new Date(day + offset * 86400000)).some(event => event.id === 'diwali'), Math.abs(offset)<=3);
     }
   }
   assert.equal(activeSeasonalEvent(new Date('2026-11-04T21:59:59Z')),null);
@@ -46,7 +46,7 @@ test('overlapping calendar windows select the nearest festival by default', () =
   assert.equal(activeSeasonalEvent(new Date('2027-10-29T12:00:00Z'))?.id,'diwali');
   assert.equal(activeSeasonalEvent(new Date('2027-10-31T12:00:00Z'))?.id,'halloween');
   const date = new Date('2027-10-31T12:00:00Z');
-  assert.deepEqual(activeSeasons(seasonalEvents, date).map(event=>event.id),['halloween','diwali']);
+  assert.deepEqual(activeSeasons(seasonalEvents, date).map(event=>event.id),['halloween']);
   assert.deepEqual(activeSeasonalEvents(date).map(event=>event.id),['halloween']);
 });
 

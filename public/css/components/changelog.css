@@ -17,13 +17,6 @@
 #changelog-dialog::backdrop {
   background: #0009;
 }
-#changelog-dialog > header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 8px;
-}
 #changelog-dialog .modal-close-btn {
   border: 0;
   background: transparent;

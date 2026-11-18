@@ -1038,6 +1038,7 @@ require('./db/rubies').backfillRubies(db);
 require('./db/job-level-rubies').initializeJobLevelRubies(db);
 require('./db/completed-run-gems').initializeCompletedRunGems(db);
 require('./db/sim-battle-gems').initializeSimBattleGems(db);
+require('./db/shared-run-gems').initializeSharedRunGems(db);
 require('./db/admin-crystal-gold').initializeAdminCrystalGold(db);
 require('./db/player-level-market-gems').initializePlayerLevelMarketGems(db);
 require('./db/not-found-templates').initializeNotFoundTemplates(db);

@@ -74,10 +74,13 @@ test('disabling floaties clears active chips, queued rewards and timers', () => 
   assert.equal(f.chips.length, 1, 'disabled feedback creates no nodes');
 });
 
-test('personal non-XP types never reach the camera queue, DOM or timers; admin keeps them', () => {
+test('personal and admin currency and level rewards use the shared queue', () => {
   const f = fixture();
-  for (const type of ['coins', 'rubies', 'diamonds', 'level']) f.enqueue('personal', type, 'hidden');
-  assert.equal(f.chips.length, 0); assert.equal(f.timers.size, 0);
+  for (const type of ['coins', 'rubies', 'diamonds', 'level']) {
+    f.enqueue('personal', type, type);
+    assert.equal(f.visible()[0].innerHTML, type);
+    f.expire();
+  }
   for (const type of ['coins', 'rubies', 'diamonds', 'level']) {
     f.enqueue('admin', type, type);
     assert.equal(f.visible()[0].innerHTML, type);

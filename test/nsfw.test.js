@@ -42,8 +42,9 @@ test('public labels include all-adult collections while preserving mixed series 
   } finally { db.close(); }
 });
 
-function client(saved = null) {
+function client(saved = null, signedIn = true) {
   const storage = new Map(saved === null ? [] : [['hide-nsfw-books',saved]]);
+  if (signedIn) storage.set('gamebook_auth_token','test-account');
   const events = [];
   const checkbox = { checked:false };
   const context = vm.createContext({
@@ -56,7 +57,7 @@ function client(saved = null) {
   return {context,storage,events,checkbox};
 }
 
-test('visibility defaults on, filters nested public browsing, and can be disabled without mutating data', async () => {
+test('cover visibility defaults on and filtering does not mutate book data', async () => {
   const {context:c,storage,events,checkbox} = client();
   assert.equal(c.hideNsfwBooks(),true);
   assert.equal(c.isHiddenNsfwCover('/covers/unknown.jpg'),true,'no first-load artwork leak');
@@ -81,31 +82,35 @@ test('visibility defaults on, filters nested public browsing, and can be disable
 
 test('an explicitly saved off preference survives reloading', () => {
   assert.equal(client('0').context.hideNsfwBooks(),false);
+  assert.equal(client('0',false).context.hideNsfwBooks(),true,'guests start hidden even after an account opted out');
 });
 
 test('switching NSFW visibility reuses cached catalog data without network requests', async () => {
   const {context:c} = client();
   await c.loadNsfwCatalog();
-  let requests=0,redraws=0;
+  let requests=0,redraws=0,builds=0;
   Object.assign(c,{
     coversState:{},naturalCompare:(a,b)=>String(a).localeCompare(String(b)),
-    _buildSeriesCoverEntries:()=>[],_refreshCoversDisplay:()=>redraws++,
+    _buildSeriesCoverEntries:(_series,books)=>{builds++;return books.map(b=>({id:b.id}));},_refreshCoversDisplay:()=>redraws++,
     _resetLandingCoverQueue(){},publicFetch:()=>{requests++;throw Error('Unnecessary network request');},
   });
   const source=readFileSync('public/js/covers/data.js','utf8').replace(/^import .*;\n/gm,'').replaceAll('export ','');
   vm.runInContext(source,c);
-  vm.runInContext(`_catalogSource={covers:[{id:22,coverUrl:'/covers/adult.jpg'},{id:23,coverUrl:'/covers/safe.jpg'}],
-    books:[{id:22,name:'Adult'},{id:23,name:'Safe'}],series:[]}`,c);
+  vm.runInContext(`_applyCatalogVisibility([{id:22,coverUrl:'/covers/adult.jpg'},{id:23,coverUrl:'/covers/safe.jpg'}],
+    [{id:22,name:'Adult'},{id:23,name:'Safe'}],[])`,c);
+  const originalBooks=c.coversState._allBooks;
+  builds=0;
   assert.equal(c.refreshNsfwCatalogDisplay(),true);
-  assert.deepEqual(Array.from(c.coversState._allBooks,b=>b.id),[23]);
+  assert.deepEqual(Array.from(c.coversState._allSeriesCovers,b=>b.id),[23]);
   c.applyNsfwPreference('0');c.refreshNsfwCatalogDisplay();
-  assert.deepEqual(Array.from(c.coversState._allBooks,b=>b.id),[22,23]);
+  assert.deepEqual(Array.from(c.coversState._allSeriesCovers,b=>b.id),[22,23]);
   c.applyNsfwPreference('1');c.refreshNsfwCatalogDisplay();
-  assert.deepEqual(Array.from(c.coversState._allBooks,b=>b.id),[23]);
-  assert.equal(requests,0);assert.equal(redraws,3);
+  assert.deepEqual(Array.from(c.coversState._allSeriesCovers,b=>b.id),[23]);
+  assert.strictEqual(c.coversState._allBooks,originalBooks,'the book catalog is never rebuilt or filtered');
+  assert.equal(requests,0);assert.equal(redraws,3);assert.equal(builds,0);
 });
 
-test('feed artwork filtering keeps activity while omitting NSFW cover URLs', async () => {
+test('cover preferences do not filter or alter the feed', async () => {
   const {context:c} = client();
   await c.loadNsfwCatalog();
   Object.assign(c,{escapeHtml:String,t:String,createDayRenderer:()=>items=>items.map(e=>e.bookId).join(','),formatAnnBody:String});
@@ -114,10 +119,10 @@ test('feed artwork filtering keeps activity while omitting NSFW cover URLs', asy
   const entries=[{bookId:22,bookIsPublic:true,coverUrl:'/covers/adult.jpg',completedAt:1700000000000},
     {bookId:23,bookIsPublic:true,coverUrl:'/covers/safe.jpg',completedAt:1700000000000}];
   const result=c.renderFeedContents(entries,null,'');
-  assert.deepEqual(Array.from(result.dayCoverLists[0]),['/covers/safe.jpg']);
+  assert.deepEqual(Array.from(result.dayCoverLists[0]),['/covers/adult.jpg','/covers/safe.jpg']);
   assert.match(result.html,/22,23/,'activity text is retained');
   c.applyNsfwPreference('0');
-  assert.deepEqual(Array.from(c.renderFeedContents(entries,null,'').dayCoverLists[0]),['/covers/adult.jpg','/covers/safe.jpg']);
+  assert.equal(c.renderFeedContents(entries,null,'').html,result.html);
 });
 
 test('classification endpoint rejects non-admins and invalid values before writing', async () => {

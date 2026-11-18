@@ -9,7 +9,6 @@ import { initSeasonalEventSettings } from '../seasonal-events/preferences.js';
 import { initFloatiesSettings } from '../progression/floaties.js';
 import { initNsfwSettings } from '../content/nsfw.js';
 import { loadCovers, refreshNsfwCatalogDisplay } from './data.js';
-import { refreshFeedFilters } from '../feed/loader.js';
 import { refreshNsfwLandingCover } from './background.js';
 
 export function _initCoverSettings() {
@@ -17,8 +16,6 @@ export function _initCoverSettings() {
   document.addEventListener('nsfw-preference-changed', () => {
     if (!refreshNsfwCatalogDisplay()) loadCovers({ force: true });
     refreshNsfwLandingCover();
-    coversState._hooks.refreshDayCovers?.();
-    refreshFeedFilters();
   });
   initSeasonalEventSettings(patch => coversState._hooks.savePrefs?.(patch));
   initFloatiesSettings(patch => coversState._hooks.savePrefs?.(patch));

@@ -10,11 +10,8 @@ import { refreshCoinsDisplay } from '../progression/shop.js';
 import { escapeHtml, fetchPublic as publicFetch } from '../core/util.js';
 import { t } from '../i18n.js';
 import { publicName } from '../core/public-name.js';
-import { filterNsfwPublicBooks, isHiddenNsfwCover, isHiddenNsfwBook } from '../content/nsfw.js';
 
 export function renderCoverActivity(bookId, bookName, entries, userRating, bookMeta, userLoggedIn, userOwnsBook, userCanRate = true) {
-  if (bookMeta?.children) bookMeta = { ...bookMeta, children: filterNsfwPublicBooks(bookMeta.children) };
-  if (bookMeta?.isContainer) entries = entries.filter(e => !isHiddenNsfwBook(e.bookId));
   _destroyPubNetworks();
   document.getElementById('public-modal').classList.remove('pub-modal--run');
   const backBtn = document.getElementById('pub-back-btn');
@@ -29,7 +26,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
   let headerHtml = '<div class="book-modal-header">';
   const displayCover = bookMeta?.coverUrl || bookMeta?.parentCoverUrl;
   const displayDescription = bookMeta?.description || bookMeta?.parentDescription;
-  if (displayCover && !isHiddenNsfwCover(displayCover)) {
+  if (displayCover) {
     const coverBadges = _seriesRowBadges(bookMeta);
     headerHtml += `<div class="book-modal-cover-col">` +
       `<img class="book-modal-cover" src="${escapeHtml(displayCover)}" alt="${escapeHtml(bookName)}">` +

@@ -52,7 +52,7 @@ export function renderEntry(e) {
     const pillClass = isAnthology ? ' feed-anthology-pill' : '';
     if (!e.bookIsPublic) return `<span class="feed-book${pillClass}">${escapeHtml(name)}</span>${tags}`;
     const effectiveCover = e.coverUrl || e.parentCoverUrl || null;
-    const cover = effectiveCover && !isHiddenNsfwCover(effectiveCover) ? ` data-cover="${escapeHtml(effectiveCover)}"` : '';
+    const cover = effectiveCover ? ` data-cover="${escapeHtml(effectiveCover)}"` : '';
     const parentAttrs = e.parentBookId
       ? ` data-parent-id="${e.parentBookId}" data-parent-name="${escapeHtml(e.parentBookName)}"`
       : '';
@@ -176,4 +176,3 @@ export function renderEntry(e) {
   if (isParty && html && e.type !== 'party_formed') html += ` <span class="feed-party-badge">${t('feed.party_badge')}</span>`;
   return { html, isParty, extraClass };
 }
-import { isHiddenNsfwCover } from '../content/nsfw.js';

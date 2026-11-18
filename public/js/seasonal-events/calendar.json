@@ -70,7 +70,7 @@
   {
     "id": "st-nicholas",
     "title": "St. Nicholas event active",
-    "description": "double XP for book contributions.",
+    "description": "double XP for book contributions, inventory, equipment and character sheets.",
     "start": 1203,
     "end": 1209,
     "day": 1206,
@@ -95,7 +95,14 @@
       "make_series_public",
       "series_open_world",
       "book_added_by_other",
-      "series_added_by_other"
+      "series_added_by_other",
+      "inventory_started",
+      "add_item",
+      "equipment_started",
+      "equip_item",
+      "charsheet_run",
+      "charsheet_saved",
+      "add_charsheet_field"
     ]
   },
   {

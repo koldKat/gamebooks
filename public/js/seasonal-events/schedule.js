@@ -40,10 +40,22 @@ export function seasonWindows(season, year) {
 }
 export function availableSeasonWindows(events, event, year) {
   const windows = seasonWindows(event, year);
-  if (!event.skipOverlaps) return windows;
   const others = events.filter(other => other.id !== event.id).flatMap(other =>
     [year-1,year,year+1].flatMap(y => seasonWindows(other,y)));
-  return windows.filter(window => !others.some(other => window.start <= other.end && other.start <= window.end));
+  // Keep the earlier celebration until the later main day, unless its own
+  // window ends sooner. Equal main dates remain an administrator's choice.
+  return windows.map(window => {
+    let { start, end } = window;
+    for (const other of others) {
+      if (window.start > other.end || other.start > window.end || window.center === other.center) continue;
+      const earlier = window.center < other.center ? window : other;
+      const later = earlier === window ? other : window;
+      const handoff = Math.min(Date.parse(later.center), Date.parse(earlier.end) + DAY);
+      if (earlier === window) end = end < iso(handoff - DAY) ? end : iso(handoff - DAY);
+      else start = start > iso(handoff) ? start : iso(handoff);
+    }
+    return { ...window, start, end };
+  });
 }
 export function activeSeasons(events, date = new Date()) {
   const today = seasonalDay(date), key = iso(today), year = new Date(today).getUTCFullYear();

@@ -28,6 +28,8 @@ const _rewardAccumSurvival = new Map();
 const survivalPhrases = ['Surviving', 'Running', 'Hiding', 'Escaping', 'Fleeing', 'Sneaking', 'Dodging', 'Cowering', 'Trembling', 'Scrambling'];
 let _lastDiamondsEarned  = null;
 let _lastRubiesEarned = null;
+let _lastDiamondsBought = null;
+let _lastRubiesBought = null;
 let _lastCollectibleRubies = null;
 let _lastRewardUserKey   = null;
 let _rewardAccumXp       = 0;
@@ -185,12 +187,14 @@ export function _resetRewardSnapshotState() {
   closeBlackMarket();
   updateRubiesDisplay(null);
   _lastRubiesEarned = null;
+  _lastRubiesBought = null;
   _lastCollectibleRubies = null;
   updateDiamondsDisplay(null);
   updateHeartbeatCoinsDisplay(null);
   _lastHeartbeatGold = null;
   _lastHeartbeatXp = null; _rewardAccumSurvival.clear();
   _lastDiamondsEarned = null;
+  _lastDiamondsBought = null;
   _lastRewardXp = null; _lastRewardCoins = null; _lastRewardLevel = null;
   _lastCoinsEarned = null;
   _lastRewardUserKey = null; _rewardAccumXp = 0; _rewardAccumCoins = 0;
@@ -226,15 +230,25 @@ export function _processRewardSnapshot(data, opts = {}) {
   const heartbeatDelta = _lastHeartbeatXp === null ? 0 : Math.max(0, heartbeatXp - _lastHeartbeatXp);
   _lastHeartbeatXp = heartbeatXp;
   const rubiesEarned = data.rubiesEarned;
+  const rubiesBought = data.rubiesBought;
+  const rubyPurchases = Number.isSafeInteger(rubiesBought) && _lastRubiesBought !== null
+    ? Math.max(0, rubiesBought - _lastRubiesBought) : 0;
+  if (Number.isSafeInteger(rubiesBought)) _lastRubiesBought = rubiesBought;
   const collectibleRubies = Number(data.rubiesCollectibleEarned) || 0;
   const silentRubies = _lastCollectibleRubies === null ? 0 : Math.max(0,collectibleRubies-_lastCollectibleRubies);
   _lastCollectibleRubies = collectibleRubies;
-  const rubyDelta = rewardFloaterTypeEnabled('personal', 'rubies') && Number.isSafeInteger(rubiesEarned) && _lastRubiesEarned !== null
-    ? Math.max(0, rubiesEarned - _lastRubiesEarned - silentRubies) : 0;
+  const rubyDelta = rewardFloaterTypeEnabled('personal', 'rubies')
+    ? rubyPurchases + (Number.isSafeInteger(rubiesEarned) && _lastRubiesEarned !== null
+      ? Math.max(0, rubiesEarned - _lastRubiesEarned - silentRubies) : 0) : 0;
   _lastRubiesEarned = Number.isSafeInteger(rubiesEarned) ? rubiesEarned : null;
   const diamondsEarned = data.diamondsEarned;
-  const diamondDelta = rewardFloaterTypeEnabled('personal', 'diamonds') && Number.isSafeInteger(diamondsEarned) && _lastDiamondsEarned !== null
-    ? Math.max(0, diamondsEarned - _lastDiamondsEarned) : 0;
+  const diamondsBought = data.diamondsBought;
+  const diamondPurchases = Number.isSafeInteger(diamondsBought) && _lastDiamondsBought !== null
+    ? Math.max(0, diamondsBought - _lastDiamondsBought) : 0;
+  if (Number.isSafeInteger(diamondsBought)) _lastDiamondsBought = diamondsBought;
+  const diamondDelta = rewardFloaterTypeEnabled('personal', 'diamonds')
+    ? diamondPurchases + (Number.isSafeInteger(diamondsEarned) && _lastDiamondsEarned !== null
+      ? Math.max(0, diamondsEarned - _lastDiamondsEarned) : 0) : 0;
   if (Number.isSafeInteger(diamondsEarned)) _lastDiamondsEarned = diamondsEarned;
   if (cache) saveRewardCache(data);
   const prevXp = _lastRewardXp;

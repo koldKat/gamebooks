@@ -9,6 +9,7 @@ import { initTooltip } from '../ui-helpers/tooltip.js';
 import '../ui-helpers/dialog-escape.js';
 
 const designs = Object.values(cursorDesigns).flat();
+const SHOP_BUTTON_VISIBLE = false;
 const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('companion-market') : null;
 let allowedToken = null, dialog, data, stopPreviews, generation = 0, tab = 'buy', busy = false;
 const pendingSales = new Map();
@@ -24,7 +25,7 @@ const messages = {
 
 export function updateCompanionShopButton(collection) {
   const button = document.getElementById('companions-shop-btn');
-  const enabled = collection?.companionShopEnabled === true;
+  const enabled = SHOP_BUTTON_VISIBLE && collection?.companionShopEnabled === true;
   allowedToken = enabled ? getToken() : null;
   if (!button) return;
   button.hidden = !enabled;
@@ -74,9 +75,11 @@ function render() {
     card.classList.add('companion-shop-item');
     if (tab === 'buy') {
       const row = data.buying.find(row => row.itemId === id);
-      const button = actionButton('Buy ', () => trade('buy', { listingId: row.listingId, expectedPrice: data.price }), data.price < 1 || data.coinsBalance < data.price);
-      button.append(document.createTextNode(data.price.toLocaleString() + ' '));
-      const coin = document.createElement('span'); coin.innerHTML = COIN_SVG; button.append(coin);
+      const button = actionButton(row.owned ? 'Owned' : 'Buy ', () => trade('buy', { listingId: row.listingId, expectedPrice: data.price }), row.owned || data.price < 1 || data.coinsBalance < data.price);
+      if (!row.owned) {
+        button.append(document.createTextNode(data.price.toLocaleString() + ' '));
+        const coin = document.createElement('span'); coin.innerHTML = COIN_SVG; button.append(coin);
+      }
       card.append(button);
     } else {
       const spare = data.sellable.find(row => row.itemId === id);

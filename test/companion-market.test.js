@@ -88,7 +88,7 @@ test('buyer pays their own current level, seller receives that gold, one listing
   assert.equal(db.prepare('SELECT COUNT(*) n FROM sale_rewards').get().n, 1);
 });
 
-test('level zero, non-admins and impersonation cannot trade; owned types never appear for purchase', t => {
+test('level zero, non-admins and impersonation cannot trade; owned listings remain visible but cannot be bought', t => {
   const { db, market, quantity } = fixture(t);
   const a = market.sell(1, 'pumpkin', 'first_listing_12345');
   assert.equal(market.buy(3, a.listingId, 0).error, 'level_zero');
@@ -101,7 +101,8 @@ test('level zero, non-admins and impersonation cannot trade; owned types never a
   });
   market.buy(2, a.listingId, 23);
   const b = market.sell(1, 'pumpkin', 'second_listing_1234');
-  assert.equal(market.snapshot(2).buying.length, 0);
+  assert.equal(market.snapshot(2).buying.length, 1);
+  assert.equal(market.snapshot(2).buying[0].owned, true);
   assert.equal(market.buy(2, b.listingId, 23).error, 'already_owned');
   db.prepare('UPDATE users SET bonus_coins=0 WHERE id=5').run();
   assert.equal(market.buy(5, b.listingId, 17).error, 'insufficient_coins');

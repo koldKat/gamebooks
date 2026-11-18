@@ -62,9 +62,14 @@
 }
 
 /* Inset dialogs already provide the same outer padding. */
+:root .modal-title-row {
+  justify-content: space-between;
+}
+
 :root :is(
   #collectibles-dialog,
   #companion-shop-dialog,
+  #changelog-dialog,
   .reading-unlock-dialog,
   .modal-inner,
   #feedback-modal,
@@ -93,7 +98,8 @@
   #notebook-modal-hdr,
   #shortcuts-modal-hdr,
   #collectibles-dialog > header,
-  #companion-shop-dialog > header
+  #companion-shop-dialog > header,
+  #changelog-dialog > header
 ) {
   box-sizing: border-box;
   display: flex;
@@ -138,7 +144,7 @@
   --dialog-title-margin: 0 0 8px;
 }
 
-:root :is(#collectibles-dialog, #companion-shop-dialog) > header,
+:root :is(#collectibles-dialog, #companion-shop-dialog, #changelog-dialog) > header,
 :root #shortcuts-modal-hdr {
   margin-bottom: 8px;
 }

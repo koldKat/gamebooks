@@ -4,7 +4,6 @@ import { getToken, apiFetch } from '../core/state.js';
 import { openPublicModal } from '../account/public-profile.js';
 import { fetchPublic as publicFetch } from '../core/util.js';
 import { t } from '../i18n.js';
-import { loadNsfwCatalog } from '../content/nsfw.js';
 
 // ── Cover/series activity modals ───────────────────────────────────────────────
 export async function openCoverActivity(bookId, bookName) {
@@ -21,7 +20,6 @@ export async function openCoverActivity(bookId, bookName) {
       userLoggedIn ? apiFetch(`/api/public/book/${bookId}/activity`) : publicFetch(`/api/public/book/${bookId}/activity`),
       userLoggedIn ? apiFetch(`/api/books/${bookId}/rating`)
         .then(r => r.ok ? r.json() : null).catch(() => null) : null,
-      loadNsfwCatalog(),
     ]);
     if (!res.ok) throw new Error();
     const data = await res.json();
@@ -53,10 +51,7 @@ export async function openSeriesActivity(seriesId, seriesName) {
   try {
     // Include optional auth so the server can filter per-user PDF metadata.
     const token = getToken();
-    const [res] = await Promise.all([
-      publicFetch(`/api/public/series/${seriesId}`, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined),
-      loadNsfwCatalog(),
-    ]);
+    const res = await publicFetch(`/api/public/series/${seriesId}`, token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
     if (!res.ok) throw new Error();
     const data = await res.json();
     coversState.renderSeriesActivity(data);

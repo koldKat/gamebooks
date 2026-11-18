@@ -1,7 +1,7 @@
-// Gate reward types before preparing personal feedback; admin monitoring keeps every type.
+// Allow personal reward feedback; the shared floaties preference controls display.
 const personalTypes = Object.freeze({
   xp:true, survival:true, 'survival-green':true,
-  coins:false, rubies:false, diamonds:false, level:false,
+  coins:true, rubies:true, diamonds:true, level:true,
 });
 
 export function rewardFloaterTypeEnabled(channel, type) {

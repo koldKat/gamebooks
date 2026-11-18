@@ -67,9 +67,12 @@ test('Halloween loss bonuses use inclusive Sofia dates and exclude unrelated rew
   t.after(() => setSeasonChoiceReader(() => ({})));
   for (const year of [2026, 2027, 2028]) {
     for (const event of ['death_run','battle_run','first_loss','first_battle_death','first_loss_ow','first_battle_death_ow','battlesim_loss','idle_heartbeat']) {
-      const offset = year === 2026 ? '+02:00' : '+03:00';
-      assert.equal(seasonalXpMultiplier(event, new Date(`${year}-10-27T23:59:59${offset}`)), 1);
-      assert.equal(seasonalXpMultiplier(event, new Date(`${year}-10-28T00:00:00${offset}`)), 2);
+      const {availableSeasonWindows,seasonalDay}=require('../public/js/seasonal-events/schedule');
+      const start=availableSeasonWindows(events,events.find(e=>e.id==='halloween'),year)[0].start;
+      const day=Date.parse(start+'T00:00:00Z');
+      const midnight=[4,3,2,1,0].map(h=>day-h*3600000).find(time=>seasonalDay(new Date(time))===day);
+      assert.equal(seasonalXpMultiplier(event, new Date(midnight-1000)), 1);
+      assert.equal(seasonalXpMultiplier(event, new Date(midnight)), 2);
       assert.equal(seasonalXpMultiplier(event, new Date(`${year}-11-03T21:59:59Z`)), 2);
       assert.equal(seasonalXpMultiplier(event, new Date(`${year}-11-03T22:00:00Z`)), 1);
     }
@@ -88,7 +91,7 @@ function fixture(t) {
     bonus_heartbeat_xp INTEGER DEFAULT 0,heartbeat_carry REAL DEFAULT 0,heartbeat_minutes_banked INTEGER DEFAULT 0,
     heartbeat_xp_earned INTEGER NOT NULL DEFAULT 0);
     INSERT INTO users(id) VALUES(1);
-    CREATE TABLE xp_events(user_id INTEGER,event TEXT,ref TEXT,template_id INTEGER,UNIQUE(user_id,event,ref));
+    CREATE TABLE xp_events(user_id INTEGER,event TEXT,ref TEXT,template_id INTEGER,created_at INTEGER DEFAULT (strftime('%s','now')),UNIQUE(user_id,event,ref));
     CREATE TABLE coin_events(user_id INTEGER,event TEXT,ref TEXT,amount INTEGER,UNIQUE(user_id,event,ref));
     CREATE TABLE notifications(user_id INTEGER,type TEXT,payload TEXT);
     CREATE TABLE level_up_templates(id INTEGER,active INTEGER);
@@ -573,7 +576,26 @@ test('formation saved outcomes award seasonal XP once and include opening-shot l
 });
 
 
-test('new festivals double only their agreed XP actions, including unlisted attachment rewards',()=>{
+test('St. Nicholas doubles preparation activities only during its calendar window', t => {
+ const events=['inventory_started','add_item','equipment_started','equip_item','charsheet_run','charsheet_saved','add_charsheet_field'];
+ const f=fixture(t); f.date('2026-12-06T12:00:00Z');
+ for(const event of events){
+  assert.equal(seasonalXpMultiplier(event,new Date('2026-12-02T21:59:59Z')),1,event+' before');
+  assert.equal(seasonalXpMultiplier(event,new Date('2026-12-02T22:00:00Z')),2,event+' starts');
+  assert.equal(seasonalXpMultiplier(event,new Date('2026-12-09T21:59:59Z')),2,event+' final second');
+  assert.equal(seasonalXpMultiplier(event,new Date('2026-12-09T22:00:00Z')),1,event+' ends');
+  const before=f.xp();
+  assert.equal(f.award(event,'preparation:'+event,10),true);
+  assert.equal(f.xp()-before,20,event+' actual award');
+  assert.equal(f.award(event,'preparation:'+event,10),false,'duplicates stay blocked');
+  assert.equal(f.xp()-before,20,'no duplicate bonus');
+ }
+ assert.equal(f.db.prepare("SELECT COUNT(*) n FROM seasonal_participation_days WHERE season_id='st-nicholas'").get().n,1);
+ for(const event of ['share_run','rate_book','rate_series','win_run','idle_heartbeat'])
+  assert.equal(seasonalXpMultiplier(event,new Date('2026-12-06T12:00:00Z')),1,event+' remains ordinary');
+});
+
+test('new festivals double only their agreed XP actions',()=>{
  const groups=[
   ['2026-11-26T12:00:00Z',['share_run','rate_book','rate_series','create_party','join_party'],['win_run','visit_node']],
   ['2026-12-06T12:00:00Z',['add_book','add_description','add_isbn','add_authors','upload_cover','make_book_public','create_series','make_series_public'],['share_run','win_run','idle_heartbeat']],

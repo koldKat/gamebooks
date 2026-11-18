@@ -15,10 +15,10 @@ async function loadOverlapChoice() {
   const state = await response.json();
   target.replaceChildren(); target.hidden = state.candidates.length < 2;
   if (target.hidden) return;
-  const heading = document.createElement('h3'); heading.textContent = 'Events overlap. Which one should run?';
+  const heading = document.createElement('h3'); heading.textContent = 'Events share a main date. Which one should run?';
   const detail = document.createElement('p');
   detail.textContent = state.chosen ? 'Your choice controls the live event and its rewards for everyone during this overlap.'
-    : 'Choose the live event for everyone. Until you choose, the event closest to its main date runs. Friday the 13th always yields to other events.';
+    : 'Choose the live event for everyone. Events with different main dates hand over automatically.';
   target.append(heading, detail);
   for (const event of state.candidates) {
     const button = document.createElement('button');
@@ -50,7 +50,7 @@ function renderSeasonCards(preview = null, canTest = false) {
     const dates = document.createElement('p');
     dates.textContent = window ? `${window.start} – ${window.end} · Europe/Sofia · automatic every year`
       : 'The next festival date needs adding to the calendar.';
-    if (event.skipOverlaps) dates.textContent = `${window ? window.start+' – '+window.end+' · ' : ''}Every Friday the 13th, ±1 day; overlapping occurrences skipped.`;
+    if (event.skipOverlaps) dates.textContent = `${window ? window.start+' – '+window.end+' · ' : ''}Every Friday the 13th, ±1 day; automatic event handoffs.`;
     const detail = document.createElement('p'); detail.textContent = event.description;
     const test = document.createElement('button'); test.className = 'btn-warn'; test.textContent = 'Test season';
     test.disabled = !canTest || preview === event.id; test.dataset.seasonTest = event.id;

@@ -19,7 +19,7 @@ export function openChangelog() {
   dialog = current;
   current.id = 'changelog-dialog';
   current.setAttribute('aria-labelledby', 'changelog-title');
-  current.innerHTML = '<header><h2 id="changelog-title" class="modal-title">Changelog</h2><button type="button" class="modal-close-btn" data-dialog-close aria-label="Close">×</button></header><div class="changelog-body"></div><button type="button" class="changelog-more">Earlier announcements</button>';
+  current.innerHTML = '<header class="modal-title-row"><h2 id="changelog-title" class="modal-title">Changelog</h2><button type="button" class="modal-close-btn" data-dialog-close aria-label="Close">✕</button></header><div class="changelog-body"></div><button type="button" class="changelog-more">Earlier announcements</button>';
   const body = current.querySelector('.changelog-body');
   const more = current.querySelector('.changelog-more');
   let cursor = null, loading = false, controller;

@@ -95,6 +95,12 @@ const server = http.createServer(async (req,res) => {
     if (match) return await route.exports.handleCompanionMarket(req,res,match[1]);
     const file=path.join(project,'public',req.url.split('?')[0]);
     if (!file.startsWith(path.join(project,'public')+path.sep)) return send(res,404,{});
+    // Keep exercising the future trading UI in this disposable fixture while
+    // the production shortcut is deliberately hidden for every account.
+    if (req.url === '/js/progression/companion-shop.js') {
+      res.setHeader('Content-Type','text/javascript');
+      return res.end(fs.readFileSync(file,'utf8').replace('const SHOP_BUTTON_VISIBLE = false;','const SHOP_BUTTON_VISIBLE = true;'));
+    }
     res.setHeader('Content-Type',file.endsWith('.js')?'text/javascript':file.endsWith('.json')?'application/json':file.endsWith('.css')?'text/css':'text/html');res.end(fs.readFileSync(file));
   } catch(error) { send(res,500,{error:error.message}); }
 });

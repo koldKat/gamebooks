@@ -140,11 +140,25 @@ test('Diwali moving dates, Christmas heartbeat awards and New Year crossing year
   assert.deepEqual(f.balances(), [4, 0, 0]);
 });
 
+test('handoff settles the earlier festival immediately and keeps later participation separate', t => {
+  const f = fixture(t);
+  f.record(1, 'win_run', '2027-10-30T12:00:00Z');
+  assert.equal(f.settle('2027-10-30T20:59:59Z').results.length, 0);
+  const paid = f.settle('2027-10-30T21:00:00Z');
+  assert.equal(paid.results[0].seasonId, 'diwali');
+  assert.equal(f.notifications()[0].payload.message, 'Thank you for participating in the Diwali event!');
+  f.record(1, 'death_run', '2027-10-31T12:00:00Z');
+  assert.equal(f.settle('2027-11-03T21:59:59Z').results.length, 0);
+  assert.equal(f.settle('2027-11-03T22:00:00Z').results[0].seasonId, 'halloween');
+  assert.deepEqual(f.balances(), [2, 0, 0]);
+  assert.equal(f.settle('2027-11-04T12:00:00Z').results.length, 0);
+});
+
 test('each annual occurrence has its own day count and permanent settlement', t => {
   const f = fixture(t); halloween(f); f.supply(0); f.settle('2026-11-04T00:00:00Z');
   f.supply(100); f.record(1, 'death_run', '2027-10-31T12:00:00Z');
   const paid = f.settle('2027-11-04T00:00:00Z');
-  assert.equal(paid.results.length, 1); assert.equal(paid.results[0].startsOn, '2027-10-28'); assert.equal(f.gifted(), 1);
+  assert.equal(paid.results.length, 1); assert.equal(paid.results[0].startsOn, '2027-10-31'); assert.equal(f.gifted(), 1);
 });
 
 test('future calendar events use the selected overlap without awarding both festivals', t => {

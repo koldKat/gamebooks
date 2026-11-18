@@ -2,7 +2,6 @@ import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 import { formatAnnBody } from './formatting.js';
 import { createDayRenderer } from './groups.js';
-import { isHiddenNsfwCover } from '../content/nsfw.js';
 
 export function renderFeedContents(entries, pinned, feedHeaderHtml, emptyMessage = t('feed.empty')) {
   const renderDayItems = createDayRenderer();
@@ -38,7 +37,7 @@ export function renderFeedContents(entries, pinned, feedHeaderHtml, emptyMessage
     for (const e of items) {
       if (!e.bookId || !e.bookIsPublic) continue;
       const cover = e.coverUrl || e.parentCoverUrl;
-      if (!cover || isHiddenNsfwCover(cover)) continue;
+      if (!cover) continue;
       const cur = counts.get(cover) || { n: 0, cover, firstIndex: order++ };
       cur.n++;
       counts.set(cover, cur);

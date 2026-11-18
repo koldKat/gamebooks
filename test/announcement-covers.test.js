@@ -47,11 +47,10 @@ test('announcement previews omit private, missing, coverless and external books'
 
 test('announcement formatting adds the same hover attribute used by regular feed book links', () => {
   const escapeHtml = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  const context = vm.createContext({ escapeHtml, t: key => key, isHiddenNsfwCover: url => url === '/covers/hidden.jpg' });
+  const context = vm.createContext({ escapeHtml, t: key => key });
   vm.runInContext(fs.readFileSync(require.resolve('../public/js/feed/formatting.js'), 'utf8').replace(/^import .*;$/gm, '').replace(/^export /gm, ''), context);
   const html = context.formatAnnBody('[**Book**](/book/1) [Other](https://example.com/book/1)', { '/book/1': '/covers/a"b.jpg' });
   assert.ok(html.includes('<a href="/book/1" data-cover="/covers/a&quot;b.jpg"><strong>Book</strong></a>'));
   assert.ok(html.includes('<a href="https://example.com/book/1" target="_blank" rel="noopener noreferrer">Other</a>'));
   assert.equal(context.formatAnnBody('[No cover](/book/7)'), '<a href="/book/7">No cover</a>');
-  assert.equal(context.formatAnnBody('[Hidden cover](/book/8)', { '/book/8': '/covers/hidden.jpg' }), '<a href="/book/8">Hidden cover</a>');
 });

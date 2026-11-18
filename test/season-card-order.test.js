@@ -13,7 +13,7 @@ test('admin cards show active and next occurrences, moving past Halloween to nex
   assert.equal(result[0].event.id, 'friday-13');
   assert.equal(result[0].window.start, '2026-11-12');
   assert.equal(result[1].event.id, 'thanksgiving');
-  assert.equal(result.find(row => row.event.id === 'halloween').window.start, '2027-10-28');
+  assert.equal(result.find(row => row.event.id === 'halloween').window.start, '2027-10-31');
   const dates = Array.from(result, row => row.window?.start ?? '9999-12-31');
   assert.deepEqual(dates, [...dates].sort());
   assert.equal(result.length, events.length);
@@ -28,12 +28,12 @@ test('cross-year active events remain first and unknown dates stay last', () => 
   assert.equal(result.at(-1).window, null);
 });
 
-test('date ordering retains overlap exclusions and supports future calendar entries', () => {
+test('date ordering retains same-main-date choices and supports future calendar entries', () => {
   const friday = events.find(event => event.id === 'friday-13');
   const holiday = { id: 'holiday', start: 1112, end: 1114, day: 1113 };
   const future = { id: 'future', dates: { 2031: '2031-01-01' }, daysAround: 0 };
   const result = schedule.orderedSeasonOccurrences([friday, holiday, future], new Date('2026-11-12T12:00:00Z'));
-  assert.notEqual(result.find(row => row.event.id === 'friday-13').window.center, '2026-11-13');
+  assert.equal(result.find(row => row.event.id === 'friday-13').window.center, '2026-11-13');
   assert.equal(result.find(row => row.event.id === 'future').window.start, '2031-01-01');
 });
 
@@ -60,5 +60,5 @@ test('admin cards render in occurrence order and display the next Halloween date
   assert.equal(cards.length, events.length);
   assert.equal(cards[0].children[3].dataset.seasonTest, 'friday-13');
   const halloween = cards.find(card => card.children[3].dataset.seasonTest === 'halloween');
-  assert.match(halloween.children[1].textContent, /^2027-10-28/);
+  assert.match(halloween.children[1].textContent, /^2027-10-31/);
 });

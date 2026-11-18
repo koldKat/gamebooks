@@ -33,11 +33,12 @@ function createCompanionMarket(db, { computeLevel, coinBalance, awardCoins, now 
       price, coinsBalance: coinBalance(account),
       sellable: quantities.all(userId).filter(row => row.quantity > 1)
         .map(row => ({ itemId: row.item_id, quantity: row.quantity - 1 })),
-      buying: db.prepare(`SELECT item_id AS itemId,MIN(id) AS listingId,COUNT(*) AS quantity
+      buying: db.prepare(`SELECT item_id AS itemId,MIN(id) AS listingId,COUNT(*) AS quantity,
+        EXISTS(SELECT 1 FROM user_collectibles c
+          WHERE c.user_id=? AND c.item_id=l.item_id AND c.quantity>0) AS owned
         FROM companion_listings l WHERE status='open' AND seller_id!=?
-        AND NOT EXISTS(SELECT 1 FROM user_collectibles c
-          WHERE c.user_id=? AND c.item_id=l.item_id AND c.quantity>0)
-        GROUP BY item_id ORDER BY MIN(id)`).all(userId, userId),
+        GROUP BY item_id ORDER BY MIN(id)`).all(userId, userId)
+        .map(row => ({...row, owned:!!row.owned})),
       listings: db.prepare(`SELECT id,item_id AS itemId,created_at AS listedAt
         FROM companion_listings WHERE seller_id=? AND status='open' ORDER BY id DESC`).all(userId),
     };

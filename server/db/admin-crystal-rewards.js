@@ -14,6 +14,7 @@ function getAdminCrystalRewardSources(db, userId) {
   const runs = milestone('completed_run_gem_totals', 'runs');
   const votes = milestone('vote_gem_totals', 'votes');
   const battles = milestone('sim_battle_gem_totals', 'battles');
+  const shares = milestone('shared_run_gem_totals', 'runs');
   const row = (source, amount) => ({ source, amount });
   const rubies = [
     row('Book discovery', count('book_discovery_ruby_rewards')),
@@ -23,6 +24,7 @@ function getAdminCrystalRewardSources(db, userId) {
     row('Rating milestones', Math.floor((votes + 50) / 100)),
     row('Completed-run milestones', Math.floor((runs + 50) / 100)),
     row('Simulator battle milestones', Math.floor((battles + 50) / 100)),
+    row('Public-share milestones', Math.floor((shares + 50) / 100)),
     row('Lucky Coins', ruby.lucky_diamonds_earned || 0),
   ];
   const diamonds = [
@@ -32,6 +34,7 @@ function getAdminCrystalRewardSources(db, userId) {
     row('Rating milestones', Math.floor(votes / 100)),
     row('Completed-run milestones', Math.floor(runs / 100)),
     row('Simulator battle milestones', Math.floor(battles / 100)),
+    row('Public-share milestones', Math.floor(shares / 100)),
     row('Lucky Coins', diamond.rubies_lucky_coins || 0),
     row('Companions', diamond.rubies_collectibles || 0),
   ];
@@ -68,6 +71,9 @@ function getAdminCrystalRewardHistory(db, userId) {
     UNION ALL
     SELECT 'diamonds','Companion claim',item_id,claimed_at FROM user_collectibles
       WHERE user_id=@userId AND claimed_at IS NOT NULL AND claims>0
+    UNION ALL
+    SELECT currency,'Public-share milestone',milestone || ' shared runs',created_at * 1000
+      FROM shared_run_gem_rewards WHERE user_id=@userId
     ORDER BY timestamp DESC,source,name
   `).all({ userId });
   const result = { rubies: [], diamonds: [] };

@@ -1,5 +1,4 @@
 import { escapeHtml } from '../core/util.js';
-import { isHiddenNsfwCover } from '../content/nsfw.js';
 
 // Cache natural cover dimensions with bounded FIFO eviction.
 const _dayCoverMetaCache = new Map();
@@ -63,9 +62,9 @@ export async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLis
     if (card.isConnected === false) return;
     _dayCoverResizeObserver?.observe(card); // no-op if already observed
     if (!_nearViewport(card)) { _clearCoverTiles(card); return; }
-    const covers = [...new Set(dayCoverLists[Number(card.dataset.dayIndex)] || [])].filter(url => !isHiddenNsfwCover(url));
+    const covers = [...new Set(dayCoverLists[Number(card.dataset.dayIndex)] || [])];
     const stack = card.querySelector('.feed-day-cover-stack');
-    if (!covers?.length || !stack) { _clearCoverTiles(card); return; }
+    if (!covers?.length || !stack) return;
     if (card.offsetWidth <= 0 || card.offsetHeight <= 0) return;
     const metas = await Promise.all(covers.map(_loadDayCoverMeta));
     if (generation !== _coverGeneration) return;

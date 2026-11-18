@@ -1,5 +1,5 @@
-// Apply the player's NSFW visibility preference to public browsing and artwork.
-let hidden = localStorage.getItem('hide-nsfw-books') !== '0';
+// Apply the player's NSFW cover preference to the cover panel and wallpaper.
+let hidden = !localStorage.getItem('gamebook_auth_token') || localStorage.getItem('hide-nsfw-books') !== '0';
 let catalog = null;
 let pending = null;
 let bookIds = new Set();
@@ -7,7 +7,7 @@ let seriesIds = new Set();
 let coverUrls = new Set();
 
 export function hideNsfwBooks() { return hidden; }
-export function nsfwVisibilityKey() { return JSON.stringify([hidden, catalog]); }
+export function nsfwVisibilityKey() { return JSON.stringify(catalog); }
 
 export async function loadNsfwCatalog({ force = false } = {}) {
   if (pending) return pending;
@@ -31,25 +31,26 @@ export async function loadNsfwCatalog({ force = false } = {}) {
   return pending;
 }
 
-export function isHiddenNsfwBook(item) {
-  if (!hidden) return false;
+function isNsfwBook(item) {
   if (!catalog) return true;
   return item?.isSeries
     ? seriesIds.has(Number(item.entityId ?? item.id))
     : bookIds.has(Number(typeof item === 'object' ? item.id : item));
 }
 
+export function isHiddenNsfwBook(item) { return hidden && isNsfwBook(item); }
+
 export function isHiddenNsfwCover(url) {
   return hidden && (!catalog || coverUrls.has(url));
 }
 
-export function filterNsfwPublicBooks(items = []) {
-  return items.filter(item => !isHiddenNsfwBook(item)).map(item => {
+export function filterNsfwPublicBooks(items = [], hide = hidden) {
+  return items.filter(item => !hide || !isNsfwBook(item)).map(item => {
     const next = { ...item };
-    if (Array.isArray(item.children)) next.children = filterNsfwPublicBooks(item.children);
+    if (Array.isArray(item.children)) next.children = filterNsfwPublicBooks(item.children, hide);
     if (Array.isArray(item.childIds)) {
-      next.childIds = item.childIds.filter(id => !isHiddenNsfwBook(id));
-      next.childNames = (item.childNames || []).filter((_, i) => !isHiddenNsfwBook(item.childIds[i]));
+      next.childIds = item.childIds.filter(id => !hide || !isNsfwBook(id));
+      next.childNames = (item.childNames || []).filter((_, i) => !hide || !isNsfwBook(item.childIds[i]));
     }
     return next;
   });

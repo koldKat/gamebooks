@@ -6,7 +6,7 @@ import { coversState } from './state.js';
 import { getToken } from '../core/state.js';
 import { naturalCompare } from '../core/sort.js';
 import { fetchPublic as publicFetch } from '../core/util.js';
-import { loadNsfwCatalog, filterNsfwPublicBooks, isHiddenNsfwCover, nsfwVisibilityKey } from '../content/nsfw.js';
+import { loadNsfwCatalog, filterNsfwPublicBooks, hideNsfwBooks, nsfwVisibilityKey } from '../content/nsfw.js';
 
 let _coversDataFingerprint = '';
 let _loadCoversInFlight  = false;
@@ -15,19 +15,21 @@ let _coversAutoRefreshPaused = false;
 let _catalogSource = null;
 
 function _applyCatalogVisibility(covers, publicBooks, publicSeries) {
-  coversState._allBooks = filterNsfwPublicBooks(publicBooks);
+  coversState._allBooks = publicBooks;
   const openWorldIds = new Set(publicSeries.filter(s => s.is_open_world).map(s => s.id));
   for (const book of coversState._allBooks) book.isOpenWorld = openWorldIds.has(book.seriesId);
-  coversState._allSeriesCovers = _buildSeriesCoverEntries(publicSeries, coversState._allBooks);
-  coversState._allCovers = covers.filter(c => !isHiddenNsfwCover(c.coverUrl));
+  _catalogSource = {
+    allSeriesCovers: _buildSeriesCoverEntries(publicSeries, publicBooks),
+    safeSeriesCovers: _buildSeriesCoverEntries(publicSeries, filterNsfwPublicBooks(publicBooks, true)),
+  };
+  coversState._allSeriesCovers = hideNsfwBooks() ? _catalogSource.safeSeriesCovers : _catalogSource.allSeriesCovers;
+  coversState._allCovers = covers;
 }
 
 // Visibility changes reuse the already loaded catalog, just like the Cyrillic filter.
 export function refreshNsfwCatalogDisplay() {
   if (!_catalogSource) return false;
-  const { covers, books, series } = _catalogSource;
-  _applyCatalogVisibility(covers, books, series);
-  _coversDataFingerprint = _coversFingerprint(covers, books, series);
+  coversState._allSeriesCovers = hideNsfwBooks() ? _catalogSource.safeSeriesCovers : _catalogSource.allSeriesCovers;
   _refreshCoversDisplay();
   _resetLandingCoverQueue();
   return true;
@@ -133,7 +135,6 @@ export async function loadCovers({ force = true } = {}) {
       return;
     }
     if (!_isLandingBooksViewVisible()) return;
-    _catalogSource = { covers, books: publicBooks, series: publicSeries };
     _applyCatalogVisibility(covers, publicBooks, publicSeries);
     if (!covers.length && !coversState._allBooks.length && !coversState._allSeriesCovers.length) {
       _stopLazy();

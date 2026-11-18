@@ -450,6 +450,11 @@ function completeSeriesRun(userId, seriesId, runIndex, result) {
 function updateSeriesRunPublic(userId, seriesId, runIndex, isPublic) {
   db.prepare(`UPDATE series_runs SET is_public = ? WHERE user_id = ? AND series_id = ? AND run_index = ?`)
     .run(isPublic ? 1 : 0, userId, seriesId, runIndex);
+  if (isPublic) {
+    const run = db.prepare('SELECT started_at FROM series_runs WHERE user_id=? AND series_id=? AND run_index=?')
+      .get(userId,seriesId,runIndex);
+    if (run) reportGemReward(userId, require('./shared-run-gems').awardSharedRun(db,userId,`series:${seriesId}:${run.started_at*1000}`));
+  }
 }
 
 // When a series is first marked open world, migrate all existing standalone runs
