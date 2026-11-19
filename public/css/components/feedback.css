@@ -135,6 +135,9 @@
   padding-right: 0.5rem;
   overflow-wrap: anywhere;
 }
+.stats-row--child .stats-key {
+  padding-left: 0.8rem;
+}
 .stats-val,
 .stats-rating-table td {
   font-size: 0.82rem;

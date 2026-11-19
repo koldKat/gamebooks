@@ -29,6 +29,7 @@ async function handleGetSiteStats(req, res) {
     ...siteStats,
     ..._serverHardwareInfo(),
     linesOfCode: codeStats.linesOfCode,
+    linesOfCodeBreakdown: codeStats.linesOfCodeBreakdown,
     codeBytes:   codeStats.codeBytes,
     jsModules:   codeStats.jsModules,
     appAgeDays:  totalTracked / 86400,

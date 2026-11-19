@@ -14,7 +14,9 @@ test('scans wait for startup, run off the request thread, and exclude tests and 
     'public/mobile/js/example.js', 'public/css/example.css', 'public/mobile/css/example.css',
     'public/css/components/nested/example.css', 'public/css/mobile/app.css',
     'server/styles/pages/maintenance.css', 'docs/styles/documentation.css',
-    'public/index.html', 'public/mobile/index.html', 'admin/index.html'];
+    'public/index.html', 'public/mobile/index.html', 'admin/index.html',
+    'public/js/battlesim/engines/example.js', 'public/js/i18n/bg/battlesim/example.js',
+    'public/js/i18n/battlesim.js', 'public/css/components/battlesim.css'];
   const excluded = ['server/tests/ignored.js', 'server/test/ignored.js', 'server/__tests__/ignored.js',
     'server/example.test.js', 'public/js/example.spec.mjs', 'public/guide.html', 'admin/admin-guide.html', 'admin/technical.html'];
   for (const file of [...included, ...excluded]) {
@@ -28,7 +30,9 @@ test('scans wait for startup, run off the request thread, and exclude tests and 
   assert.equal(finished, false);
   background.start();
   const result = await pending;
-  assert.deepEqual(result, { linesOfCode: included.length * 2, codeBytes: included.length * 11, jsModules: 5 });
+  assert.deepEqual(result, { linesOfCode: included.length * 2, codeBytes: included.length * 11, jsModules: 8,
+    linesOfCodeBreakdown: { frontend: 22, backend: 6, battleSims: 8 } });
+  assert.equal(Object.values(result.linesOfCodeBreakdown).reduce((sum, lines) => sum + lines, 0), result.linesOfCode);
   assert.equal(os.getPriority(0), oldPriority, 'worker priority must not change the request thread');
 });
 
@@ -38,11 +42,11 @@ test('cached stats remain available during refresh, persist, and survive failed 
   const gate = new Promise(resolve => { release = resolve; });
   const stats = createCodeStats({ root: 'unused', loadCached: () => JSON.stringify(saved), saveCached: value => { stored = value; },
     scan: async () => { calls++; await gate; return { ...saved, codeBytes: 30 }; } });
-  assert.deepEqual(stats.get(), saved);
+  assert.deepEqual(stats.get(), { ...saved, linesOfCodeBreakdown: null });
   const first = stats.refresh(), second = stats.refresh();
   await Promise.resolve();
   assert.equal(calls, 1);
-  assert.deepEqual(stats.get(), saved);
+  assert.deepEqual(stats.get(), { ...saved, linesOfCodeBreakdown: null });
   release(); await Promise.all([first, second]);
   assert.equal(JSON.parse(stored).codeBytes, 30);
   const failed = createCodeStats({ root: 'unused', loadCached: () => stored, saveCached() {}, scan: async () => { throw new Error('disk failed'); } });

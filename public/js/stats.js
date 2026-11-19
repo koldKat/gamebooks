@@ -235,6 +235,12 @@ export async function openStatsModal() {
           [t('stats.uptime_pct'), s.uptimePct != null ? `${Number(s.uptimePct).toFixed(2)}%` : na],
           [t('stats.total_downtime'), s.totalDowntimeS != null ? fmtUptime(s.totalDowntimeS) : na],
           [t('stats.lines_of_code'), s.linesOfCode ? fmt(s.linesOfCode) : na],
+          ...[
+            ['frontend', 'stats.code_frontend'],
+            ['backend', 'stats.code_backend'],
+            ['battleSims', 'stats.code_battle_sims'],
+          ].map(([area, key]) => [t(key), s.linesOfCodeBreakdown?.[area] != null
+            ? fmt(s.linesOfCodeBreakdown[area]) : na, null, true]),
           [t('stats.code_size'), kb(s.codeBytes || 0)],
           [t('stats.db_size'), kb(s.dbSize || 0)],
           [t('stats.js_modules'), fmt(s.jsModules)],
@@ -275,15 +281,15 @@ export async function openStatsModal() {
       <div class="stats-section stats-section--${sec.cls}">
         <div class="stats-section-label">${escapeHtml(sec.label)}</div>
         <table class="stats-table">
-          ${sec.rows.map(([k, v, tone]) => `<tr><td class="stats-key">${escapeHtml(k)}</td><td class="stats-val${tone ? ` stats-val--${tone}` : ''}">${v}</td></tr>`).join('')}
+          ${sec.rows.map(([k, v, tone, child]) => `<tr${child ? ' class="stats-row--child"' : ''}><td class="stats-key">${escapeHtml(k)}</td><td class="stats-val${tone ? ` stats-val--${tone}` : ''}">${v}</td></tr>`).join('')}
         </table>
         ${sec.html || ''}
       </div>`;
     const byClass = new Map(sections.map(sec => [sec.cls, sec]));
     const columns = [
-      ['players', 'xp-progression', 'the-app', 'server', 'crystals'],
+      ['players', 'xp-progression', 'the-app', 'server'],
       ['ratings', 'gameplay', 'battle-sims', 'open-world', 'forum'],
-      ['books', 'gold-coins-shop', 'parties'],
+      ['books', 'gold-coins-shop', 'parties', 'crystals'],
     ];
     body.innerHTML = `<div class="stats-layout">${columns.map(column => `<div class="stats-column">${column.map(cls =>
       renderSection(byClass.get(cls))).join('')}</div>`).join('')}</div>`;

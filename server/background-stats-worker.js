@@ -44,7 +44,8 @@ function directorySize() {
   return bytes;
 }
 function codeStats() {
-  const stats = { linesOfCode: 0, codeBytes: 0, jsModules: 0 };
+  const stats = { linesOfCode: 0, codeBytes: 0, jsModules: 0,
+    linesOfCodeBreakdown: { frontend: 0, backend: 0, battleSims: 0 } };
   const buffer = Buffer.alloc(16 * 1024);
   function count(file) {
     let fd;
@@ -60,6 +61,13 @@ function codeStats() {
       }
     } finally { fs.closeSync(fd); }
     stats.linesOfCode += lines; stats.codeBytes += bytes;
+    const relative = path.relative(workerData.root, file).split(path.sep).join('/');
+    const simulator = /^public\/(?:mobile\/)?js\/battlesim\//.test(relative)
+      || /^public\/js\/i18n\/(?:[^/]+\/)?battlesim(?:\/|\.m?js$)/.test(relative)
+      || relative === 'public/css/components/battlesim.css';
+    const area = simulator ? 'battleSims'
+      : relative === 'server.js' || relative.startsWith('server/') ? 'backend' : 'frontend';
+    stats.linesOfCodeBreakdown[area] += lines;
     if (/\.(?:m?js)$/.test(file)) stats.jsModules++;
   }
   for (const dir of ['server', 'public/js', 'admin/js', 'public/mobile/js']) {

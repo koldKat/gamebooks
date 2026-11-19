@@ -12,7 +12,8 @@ function createCodeStats({ root, loadCached, saveCached, scan = scanCodeStats })
   } catch (_) {}
   let pending;
   return {
-    get: () => ({ ...cached }),
+    get: () => ({ ...cached,
+      linesOfCodeBreakdown: cached.linesOfCodeBreakdown ? { ...cached.linesOfCodeBreakdown } : null }),
     refresh() {
       if (!pending) pending = Promise.resolve().then(() => scan(root)).then(stats => {
         saveCached(JSON.stringify(stats));

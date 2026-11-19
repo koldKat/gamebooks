@@ -67,6 +67,8 @@ The server uses Node.js and `better-sqlite3`. Browser code uses ES modules witho
 
 Informational source and app-size scans use persisted cached results. Scanning begins after the HTTP listener is ready, through one shared worker at nice 15 or an inherited lower priority, with a small heap, streamed file reads and pauses between batches. Scans run sequentially outside the request thread; requests keep receiving cached values while a refresh runs. App size is checked hourly; the visible admin card reads the shared cache every minute.
 
+Source line totals include an exclusive frontend, backend, and battle-simulator breakdown from the same scan. Simulator modules, translations, and shared simulator styles belong to the simulator count; server source and styles belong to the backend, and remaining counted app source belongs to the frontend. The three counts sum to the total. Older cached totals remain available while their breakdown awaits the next background scan.
+
 ### Data ownership
 
 - `books` holds shared bibliographic and reading metadata.
