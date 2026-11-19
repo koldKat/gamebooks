@@ -701,7 +701,7 @@ function removeSeriesFromLibrary(userId, seriesId, { onPartyChanged } = {}) {
   for (const book of deletedBooks) _removeUnreferencedBookFiles(book);
 }
 
-function createSeries(name, description, userId, isPublic = false) {
+function createSeries(name, description, userId, isPublic = false, isNsfw = false) {
   const trimmed = (name || '').trim();
   if (!trimmed) return null;
   const folded = _foldForSearch(trimmed);
@@ -714,9 +714,9 @@ function createSeries(name, description, userId, isPublic = false) {
     return { id: existing.id, name: existing.name, existed: true, createdByUsername: existing.created_by_username || null };
   }
   const id = db.prepare(`
-    INSERT INTO series (name, description, created_by, is_public, published_at)
-    VALUES (?, ?, ?, ?, CASE WHEN ? THEN strftime('%s','now') ELSE NULL END)
-  `).run(trimmed, description?.trim() || null, userId, isPublic ? 1 : 0, isPublic ? 1 : 0).lastInsertRowid;
+    INSERT INTO series (name, description, created_by, is_public, published_at, is_nsfw)
+    VALUES (?, ?, ?, ?, CASE WHEN ? THEN strftime('%s','now') ELSE NULL END, ?)
+  `).run(trimmed, description?.trim() || null, userId, isPublic ? 1 : 0, isPublic ? 1 : 0, isNsfw ? 1 : 0).lastInsertRowid;
   if (userId) db.prepare('INSERT OR IGNORE INTO user_series (user_id, series_id) VALUES (?, ?)').run(userId, id);
   return { id, name: trimmed, existed: false };
 }
@@ -814,7 +814,7 @@ function normalizeAuthors(raw) {
   return parts.join(', ');
 }
 
-function createBook(userId, name, totalSections, isbn, issn, asin, pages, authors, description, seriesId, seriesNumber, isContainer, parentBookId, bookOrder, isPublic = false, maxSectionNumber = null) {
+function createBook(userId, name, totalSections, isbn, issn, asin, pages, authors, description, seriesId, seriesNumber, isContainer, parentBookId, bookOrder, isPublic = false, maxSectionNumber = null, isNsfw = false) {
   maxSectionNumber = isContainer ? null : (maxSectionNumber ?? totalSections);
   const initialState = JSON.stringify({
     bookName: name,
@@ -828,9 +828,9 @@ function createBook(userId, name, totalSections, isbn, issn, asin, pages, author
   const bookResult = db.prepare(
     `INSERT INTO books (
       name, total_sections, max_section_number, isbn, issn, asin, pages, authors, description, created_by,
-      series_id, series_number, is_container, parent_book_id, book_order, is_public, published_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? THEN strftime('%s','now') ELSE NULL END)`
-  ).run(name, totalSections, maxSectionNumber, isbn || null, issn || null, asin || null, pages || null, normalizeAuthors(authors), description || null, userId, seriesId || null, seriesNumber || null, isContainer ? 1 : 0, parentBookId || null, bookOrder ?? null, isPublic ? 1 : 0, isPublic ? 1 : 0);
+      series_id, series_number, is_container, parent_book_id, book_order, is_public, published_at, is_nsfw
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? THEN strftime('%s','now') ELSE NULL END, ?)`
+  ).run(name, totalSections, maxSectionNumber, isbn || null, issn || null, asin || null, pages || null, normalizeAuthors(authors), description || null, userId, seriesId || null, seriesNumber || null, isContainer ? 1 : 0, parentBookId || null, bookOrder ?? null, isPublic ? 1 : 0, isPublic ? 1 : 0, isNsfw ? 1 : 0);
   const bookId = bookResult.lastInsertRowid;
   db.prepare(
     'INSERT INTO user_books (user_id, book_id, state_data) VALUES (?, ?, ?)'

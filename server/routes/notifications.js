@@ -32,6 +32,7 @@ async function handleGetSiteStats(req, res) {
     linesOfCodeBreakdown: codeStats.linesOfCodeBreakdown,
     codeBytes:   codeStats.codeBytes,
     jsModules:   codeStats.jsModules,
+    jsModulesBreakdown: codeStats.jsModulesBreakdown,
     appAgeDays:  totalTracked / 86400,
     uptimeSec,
     uptimePct:      Math.round(uptimePct * 100) / 100,

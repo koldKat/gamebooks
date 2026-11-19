@@ -371,10 +371,12 @@ function _buildPubSegNetwork(container, graph, positions, path, result, allVisit
   const allIds = new Set(path);
   const addId = value => { const id = parseSecId(value); if (isValidSecId(id)) allIds.add(id); };
   Object.entries(graph).forEach(([id, node]) => {
-    addId(id);
-    (node?.choices || []).forEach(addId);
+    // Match the tracker’s mapped-node rules; destination hints alone are not mapped.
+    if (node && (!node.discovered
+      || (node.choices || []).some(choice => isValidSecId(parseSecId(choice)))
+      || node.portals?.length > 0)) addId(id);
   });
-  (allVisited || []).forEach(addId);
+  // Other runs, including the active run, must not reveal unmapped sections here.
 
   allIds.forEach(id => {
     const inPath   = path.includes(id);
@@ -456,10 +458,10 @@ function _buildPubSegNetwork(container, graph, positions, path, result, allVisit
 
   Object.entries(graph).forEach(([sec, d]) => {
     const from = parseSecId(sec);
-    if (!isValidSecId(from)) return;
+    if (!allIds.has(from)) return;
     (d.choices || []).forEach(choice => {
       const dest = parseSecId(choice);
-      if (!isValidSecId(dest)) return;
+      if (!allIds.has(dest)) return;
       const eid       = `${from}>${dest}`;
       const isRunEdge = runEdges.has(eid);
       const outcome   = pubEdgeOutcome(dest);

@@ -22,6 +22,7 @@ test('stats renders all ten half-star bins for all categories in balanced column
       heartbeatMinutes: (365 + 2) * 1440 + 3 * 60 + 27,
       avgPlayMinutesPerPlayer: 2 * 1440 + 3 * 60 + 27,
       linesOfCode: 1001, linesOfCodeBreakdown: { frontend: 401, backend: 300, battleSims: 300 },
+      jsModules: 1500, jsModulesBreakdown: { frontend: 400, backend: 300, battleSims: 200, tests: 600 },
       ratingBreakdown: { books: group(4.5, 5), anthologies: group(3.5, 2), series: group(2, 3) },
       cpuModel: '<script>bad</script>', appTitle: 'Title', avgTitle: 'Title' }) }),
   });
@@ -29,6 +30,9 @@ test('stats renders all ten half-star bins for all categories in balanced column
   await context.openStatsModal();
   assert.ok(!body.innerHTML.includes('Failed to load'));
   assert.match(body.innerHTML, /id="stats-registered-users" class="country-count-tooltip"/);
+  assert.doesNotMatch(body.innerHTML, /stats-val--players/);
+  assert.match(body.innerHTML, /JS modules<\/td><td class="stats-val">1,500<\/td>/);
+  assert.match(body.innerHTML, /class="stats-row--child"><td class="stats-key">Tests<\/td><td class="stats-val">600<\/td>/);
   assert.equal((body.innerHTML.match(/class="stats-column"/g) || []).length, 3);
   const columns = body.innerHTML.split('<div class="stats-column">').slice(1);
   assert.ok(columns[1].includes('stats-section--battle-sims'));

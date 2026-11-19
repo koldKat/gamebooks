@@ -206,9 +206,11 @@ async function handleDeleteSeries(req, res, seriesId) {
 async function handleCreateSeries(req, res) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
-  const { name, description, is_public } = await readBody(req);
+  const { name, description, is_public, is_nsfw } = await readBody(req);
+  if (is_nsfw != null && typeof is_nsfw !== 'boolean') return send(res, 400, { error: 'is_nsfw must be a boolean' });
+  if (is_nsfw === true && !db.isUserAdmin(userId) && !db.isUserModerator(userId)) return send(res, 403, { error: 'Admin or Lorekeeper access required' });
   if (!name?.trim()) return send(res, 400, { error: 'name required' });
-  const result = db.createSeries(name.trim(), description, userId, !!is_public);
+  const result = db.createSeries(name.trim(), description, userId, !!is_public, is_nsfw === true);
   if (!result) return send(res, 400, { error: 'invalid name' });
   send(res, 200, { id: result.id, name: result.name, existed: result.existed });
   if (!result.existed) db.awardXp(userId, 'create_series', result.id);
@@ -342,7 +344,9 @@ async function handleCreateBook(req, res) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
   const { name, total_sections, max_section_number, isbn, issn, asin, pages, authors, description,
-          series_name, series_number, is_container, parent_book_id, book_order, is_public } = await readBody(req);
+          series_name, series_number, is_container, parent_book_id, book_order, is_public, is_nsfw } = await readBody(req);
+  if (is_nsfw != null && typeof is_nsfw !== 'boolean') return send(res, 400, { error: 'is_nsfw must be a boolean' });
+  if (is_nsfw === true && !db.isUserAdmin(userId) && !db.isUserModerator(userId)) return send(res, 403, { error: 'Admin or Lorekeeper access required' });
   const isContainer = !!is_container;
   const isPublic = is_public === true;
   if (!name?.trim() || (!isContainer && !(total_sections >= 5)))
@@ -352,7 +356,7 @@ async function handleCreateBook(req, res) {
   const seriesId = series_name ? db.getOrCreateSeries(series_name, userId, true) : null;
   const book = db.createBook(userId, name.trim(), isContainer ? 0 : (total_sections || 0),
     isbn || null, issn || null, asin || null, pages || null, authors || null, description || null,
-    seriesId, series_number || null, isContainer, parent_book_id || null, book_order ?? null, isPublic, isContainer ? null : (max_section_number ?? total_sections));
+    seriesId, series_number || null, isContainer, parent_book_id || null, book_order ?? null, isPublic, isContainer ? null : (max_section_number ?? total_sections), is_nsfw === true);
   send(res, 200, book);
   db.awardXp(userId, 'add_book',        book.id);
   if (isbn)        db.awardXp(userId, 'add_isbn',        book.id);

@@ -33,7 +33,9 @@ function setup() {
   const connection = { db, _foldForSearch: s => s.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase(),
     _naturalCompareByName: (a, b) => a.name.localeCompare(b.name), _naturalCompare: (a, b) => String(a).localeCompare(String(b)),
     _getPdfSize: () => null };
-  db.exec('CREATE TABLE IF NOT EXISTS book_sections(book_id INTEGER,section_id TEXT)');
+  db.exec('CREATE TABLE IF NOT EXISTS book_sections(book_id INTEGER,section_id TEXT,PRIMARY KEY(book_id,section_id))');
+  require('../server/db/reading-section-counts').initializeReadingSupplements(db);
+  require('../server/db/nsfw').initializeNsfw(db);
   function load(name, deps) {
     const context = vm.createContext({ module: { exports: {} }, require: name => name === './reading-section-counts' ? require('../server/db/reading-section-counts') : deps[name], Date, console,
       __dirname: require('node:path').resolve(__dirname, '../server/db') });
@@ -44,12 +46,62 @@ function setup() {
   }
   const parties = load('parties', { './connection': connection, './xp': { awardXp() {} } });
   const books = load('books', { './connection': connection, './xp': { awardXp() {} },
+    './completion-reward-conversion': { backfillCompletionGemsForBook: () => [] },
     './vote-gems': { awardRatingVote() {} }, './parties': parties,
     fs: { unlinkSync: filename => deletedFiles.push(filename) }, path: require('node:path') });
   const feed = load('feed', { './connection': connection, './xp': {}, './job-xp': { getJobTitle() {} }, './content': {}, './books': books,
-    './rating-stats': { getPlayerRatingStats() {} } });
+    './rating-stats': { getPlayerRatingStats() {} }, './gameplay-stats': { getSimulatorBattleStats() {} },
+    './profile-progress': { addBookProgress() {}, collectedCount() {} } });
   return { db, books, feed, deletedFiles };
 }
+
+test('new books, anthologies and series default to non-NSFW and preserve explicit classification', () => {
+  const { db, books } = setup();
+  try {
+    for (const isContainer of [false, true]) {
+      for (const flag of [undefined, true]) {
+        const result = books.createBook(1, `New ${isContainer} ${flag}`, isContainer ? 0 : 10,
+          null, null, null, null, null, null, null, null, isContainer, null, null, true, null, flag);
+        assert.equal(db.prepare('SELECT is_nsfw FROM books WHERE id=?').get(result.id).is_nsfw, flag ? 1 : 0);
+      }
+    }
+    for (const flag of [undefined, true]) {
+      const result = books.createSeries(`Series ${flag}`, null, 1, true, flag);
+      assert.equal(db.prepare('SELECT is_nsfw FROM series WHERE id=?').get(result.id).is_nsfw, flag ? 1 : 0);
+    }
+  } finally { db.close(); }
+});
+
+test('creation rejects unauthorized or invalid NSFW flags before any catalog writes', async () => {
+  let body, status, admin = false, moderator = false, writes = 0, savedFlag;
+  const context = vm.createContext({ module: { exports: {} }, require(name) {
+    if (name === '../db') return {
+      isUserAdmin: () => admin, isUserModerator: () => moderator,
+      createBook: (...args) => { writes++; savedFlag = args.at(-1); return { id: 1 }; },
+      createSeries: (...args) => { writes++; savedFlag = args.at(-1); return { id: 1 }; },
+      awardXp() {},
+    };
+    if (name === '../request-helpers') return { authenticate: async () => 1, readBody: async () => body, send: (_res, code) => { status = code; } };
+    if (name === '../sse') return { feedPush() {}, publicCatalogPush() {} };
+    return {};
+  } });
+  vm.runInContext(fs.readFileSync(require.resolve('../server/routes/books'), 'utf8'), context);
+  for (const handler of ['handleCreateBook', 'handleCreateSeries']) {
+    admin = false; moderator = false;
+    body = { name: 'New item', total_sections: 10, is_nsfw: true };
+    const before = writes;
+    await context.module.exports[handler]({}, {});
+    assert.equal(status, 403); assert.equal(writes, before);
+    body.is_nsfw = 'false';
+    await context.module.exports[handler]({}, {});
+    assert.equal(status, 400); assert.equal(writes, before);
+    for (const role of ['admin', 'moderator']) {
+      admin = role === 'admin'; moderator = role === 'moderator'; body.is_nsfw = true;
+      await context.module.exports[handler]({}, {});
+      assert.equal(status, 200); assert.equal(savedFlag, true);
+    }
+  }
+});
 
 test('series contents deletion prunes orphan books and attachments but preserves other readers', () => {
   const { db, books, deletedFiles } = setup();

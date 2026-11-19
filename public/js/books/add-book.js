@@ -1,6 +1,7 @@
 // add-book.js - Add Book, Add Anthology, and Add Series modals
 
 import { apiFetch } from '../core/state.js';
+import { resetNsfwToggle, readNsfwToggle } from '../content/nsfw-toggle.js';
 import { t } from '../i18n.js';
 import { publicName } from '../core/public-name.js';
 import { getCachedAllSeries, _refreshLibraryUi, setInvalidateAutocompleteCaches } from '../books.js';
@@ -51,6 +52,7 @@ export function openAddBook() {
   ['cb-name','cb-max-section','cb-sections','cb-pages','cb-isbn','cb-asin','cb-issn','cb-authors','cb-series','cb-series-num','cb-order'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('cb-description').value = '';
   document.getElementById('cb-public').checked = true;
+  resetNsfwToggle('cb', _hooks);
   document.getElementById('cb-error').textContent = '';
   document.getElementById('cb-pub-type').value = 'book';
   document.getElementById('cb-fields-book').style.display = '';
@@ -88,6 +90,7 @@ export function openAddComp() {
   ['cc-name','cc-isbn','cc-asin','cc-issn','cc-pages','cc-authors','cc-series','cc-series-num'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('cc-description').value = '';
   document.getElementById('cc-public').checked = true;
+  resetNsfwToggle('cc', _hooks);
   document.getElementById('cc-error').textContent = '';
   document.getElementById('cc-pub-type').value = 'book';
   document.getElementById('cc-fields-book').style.display = '';
@@ -157,6 +160,7 @@ export function openAddSeries() {
   document.getElementById('csr-description').value = '';
   document.getElementById('csr-description').disabled = false;
   document.getElementById('csr-public').checked = true;
+  resetNsfwToggle('csr', _hooks);
   document.getElementById('csr-error').textContent = '';
   _csrSelectedId = null;
   _csrSelectedOwned = false;
@@ -304,7 +308,7 @@ export function initAddBook(mousedownOnOverlayRef) {
     if (_cbPdf) _setModalUploadProgress('cb', 0);
     pauseCoversAutoRefresh();
     try {
-      const res  = await apiFetch('/api/books', { method: 'POST', body: JSON.stringify({ name, total_sections: sections, max_section_number: maxSectionNumber, isbn: isbn || null, issn: issn || null, asin: asin || null, pages, authors, description, is_public: isPublic, series_name: seriesName, series_number: seriesNum, parent_book_id: parentId, book_order: bookOrder }) });
+      const res  = await apiFetch('/api/books', { method: 'POST', body: JSON.stringify({ name, total_sections: sections, max_section_number: maxSectionNumber, isbn: isbn || null, issn: issn || null, asin: asin || null, pages, authors, description, is_public: isPublic, is_nsfw: readNsfwToggle('cb'), series_name: seriesName, series_number: seriesNum, parent_book_id: parentId, book_order: bookOrder }) });
       if (!res.ok) throw new Error();
       const book = await res.json();
       if (_cbCover) {
@@ -391,7 +395,7 @@ export function initAddBook(mousedownOnOverlayRef) {
     if (_ccPdf) _setModalUploadProgress('cc', 0);
     pauseCoversAutoRefresh();
     try {
-      const res  = await apiFetch('/api/books', { method: 'POST', body: JSON.stringify({ name, total_sections: 0, isbn: isbn || null, issn: issn || null, asin: asin || null, pages, authors, description, is_public: isPublic, series_name: seriesName, series_number: seriesNum, is_container: 1 }) });
+      const res  = await apiFetch('/api/books', { method: 'POST', body: JSON.stringify({ name, total_sections: 0, isbn: isbn || null, issn: issn || null, asin: asin || null, pages, authors, description, is_public: isPublic, is_nsfw: readNsfwToggle('cc'), series_name: seriesName, series_number: seriesNum, is_container: 1 }) });
       if (!res.ok) throw new Error();
       const book = await res.json();
       if (_ccCover) {
@@ -462,7 +466,7 @@ export function initAddBook(mousedownOnOverlayRef) {
       } else {
         const description = document.getElementById('csr-description').value.trim() || null;
         const is_public   = document.getElementById('csr-public').checked;
-        const res    = await apiFetch('/api/series', { method: 'POST', body: JSON.stringify({ name, description, is_public }) });
+        const res    = await apiFetch('/api/series', { method: 'POST', body: JSON.stringify({ name, description, is_public, is_nsfw: readNsfwToggle('csr') }) });
         const result = await res.json();
         if (result.existed) {
           await apiFetch(`/api/series/${result.id}/add?cascade=1`, { method: 'POST' });

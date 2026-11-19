@@ -13,6 +13,7 @@ function createCodeStats({ root, loadCached, saveCached, scan = scanCodeStats })
   let pending;
   return {
     get: () => ({ ...cached,
+      jsModulesBreakdown: cached.jsModulesBreakdown ? { ...cached.jsModulesBreakdown } : null,
       linesOfCodeBreakdown: cached.linesOfCodeBreakdown ? { ...cached.linesOfCodeBreakdown } : null }),
     refresh() {
       if (!pending) pending = Promise.resolve().then(() => scan(root)).then(stats => {

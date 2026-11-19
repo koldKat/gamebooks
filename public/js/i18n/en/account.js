@@ -57,7 +57,7 @@ export default {
     'pub.legend.can_win':       'Can win here',
     'pub.legend.battle':        'Battle here',
     'pub.legend.victory_ended': 'Victory ended here',
-    'pub.legend.death_ended':   'Death ended here',
+    'pub.legend.death_ended':   'Lost here',
     'pub.legend.battle_ended':  'Battle death ended here',
     'pub.legend.portal':        'Portal',
     'profile.avatar_alt': 'avatar',

@@ -33,7 +33,10 @@ export function bindFeedInteractions(el, _expandedKeys) {
     });
   });
   el.querySelectorAll('.feed-book-btn').forEach(btn => {
-    btn.addEventListener('click', () => openCoverActivity(+btn.dataset.bookId, btn.dataset.bookName));
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      openCoverActivity(+btn.dataset.bookId, btn.dataset.bookName);
+    });
   });
   el.querySelectorAll('.feed-anthology-tag').forEach(a => {
     if (!a.dataset.anthologyId) return;

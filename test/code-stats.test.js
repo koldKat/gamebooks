@@ -7,7 +7,7 @@ const path = require('node:path');
 const { createCodeStats, scanCodeStats } = require('../server/code-stats');
 const background = require('../server/background-stats');
 
-test('scans wait for startup, run off the request thread, and exclude tests and guides', async t => {
+test('scans wait for startup and count test modules separately from application code', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'code-stats-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
   const included = ['server.js', 'server/example.js', 'public/js/example.mjs', 'admin/js/example.js',
@@ -18,7 +18,8 @@ test('scans wait for startup, run off the request thread, and exclude tests and 
     'public/js/battlesim/engines/example.js', 'public/js/i18n/bg/battlesim/example.js',
     'public/js/i18n/battlesim.js', 'public/css/components/battlesim.css'];
   const excluded = ['server/tests/ignored.js', 'server/test/ignored.js', 'server/__tests__/ignored.js',
-    'server/example.test.js', 'public/js/example.spec.mjs', 'public/guide.html', 'admin/admin-guide.html', 'admin/technical.html'];
+    'server/example.test.js', 'public/js/example.spec.mjs', 'test/client/example.test.mjs', 'test/example.test.cjs',
+    'public/guide.html', 'admin/admin-guide.html', 'admin/technical.html'];
   for (const file of [...included, ...excluded]) {
     await fs.mkdir(path.dirname(path.join(root, file)), { recursive: true });
     await fs.writeFile(path.join(root, file), 'hello\nworld');
@@ -30,9 +31,11 @@ test('scans wait for startup, run off the request thread, and exclude tests and 
   assert.equal(finished, false);
   background.start();
   const result = await pending;
-  assert.deepEqual(result, { linesOfCode: included.length * 2, codeBytes: included.length * 11, jsModules: 8,
+  assert.deepEqual(result, { linesOfCode: included.length * 2, codeBytes: included.length * 11, jsModules: 15,
+    jsModulesBreakdown: { frontend: 3, backend: 2, battleSims: 3, tests: 7 },
     linesOfCodeBreakdown: { frontend: 22, backend: 6, battleSims: 8 } });
   assert.equal(Object.values(result.linesOfCodeBreakdown).reduce((sum, lines) => sum + lines, 0), result.linesOfCode);
+  assert.equal(Object.values(result.jsModulesBreakdown).reduce((sum, count) => sum + count, 0), result.jsModules);
   assert.equal(os.getPriority(0), oldPriority, 'worker priority must not change the request thread');
 });
 
@@ -42,11 +45,11 @@ test('cached stats remain available during refresh, persist, and survive failed 
   const gate = new Promise(resolve => { release = resolve; });
   const stats = createCodeStats({ root: 'unused', loadCached: () => JSON.stringify(saved), saveCached: value => { stored = value; },
     scan: async () => { calls++; await gate; return { ...saved, codeBytes: 30 }; } });
-  assert.deepEqual(stats.get(), { ...saved, linesOfCodeBreakdown: null });
+  assert.deepEqual(stats.get(), { ...saved, linesOfCodeBreakdown: null, jsModulesBreakdown: null });
   const first = stats.refresh(), second = stats.refresh();
   await Promise.resolve();
   assert.equal(calls, 1);
-  assert.deepEqual(stats.get(), { ...saved, linesOfCodeBreakdown: null });
+  assert.deepEqual(stats.get(), { ...saved, linesOfCodeBreakdown: null, jsModulesBreakdown: null });
   release(); await Promise.all([first, second]);
   assert.equal(JSON.parse(stored).codeBytes, 30);
   const failed = createCodeStats({ root: 'unused', loadCached: () => stored, saveCached() {}, scan: async () => { throw new Error('disk failed'); } });

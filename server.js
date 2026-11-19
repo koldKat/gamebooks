@@ -220,7 +220,7 @@ const {
   handleAdminPinAnnouncement, handleAdminUnpinAnnouncement,
 } = require('./server/routes/announcements');
 const { handleAnnouncementHistory } = require('./server/routes/announcement-history');
-const { handleNsfwCatalog, handleSetBookNsfw, handleAdminSetBookNsfw } = require('./server/routes/nsfw');
+const { handleNsfwCatalog, handleSetBookNsfw, handleSetSeriesNsfw, handleAdminSetBookNsfw } = require('./server/routes/nsfw');
 
 const {
   handleForumLatest,
@@ -407,6 +407,7 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET'    && urlPath === '/api/public/stream') return await handleGetPublicCatalogStream(req, res);
     if (method === 'GET' && urlPath === '/api/public/nsfw') return handleNsfwCatalog(req, res);
     if ((method === 'GET' || method === 'PATCH') && (m = urlPath.match(/^\/api\/books\/(\d+)\/nsfw$/))) return await handleSetBookNsfw(req, res, +m[1]);
+    if ((method === 'GET' || method === 'PATCH') && (m = urlPath.match(/^\/api\/series\/(\d+)\/nsfw$/))) return await handleSetSeriesNsfw(req, res, +m[1]);
     if (method === 'GET'    && urlPath === '/api/public/covers') return send(res, 200, db.getPublicCovers());
     if (method === 'GET'    && urlPath === '/api/public/books')       return send(res, 200, db.getAllPublicBooks(_requesterHasPdfAccess(req)));
     if (method === 'GET'    && urlPath === '/api/public/series')      return send(res, 200, db.getAllPublicSeries());

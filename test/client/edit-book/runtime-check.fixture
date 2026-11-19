@@ -74,6 +74,7 @@ const overrides = {
 const context = createContext({ document: { getElementById: el, createElement: () => new Element(), createDocumentFragment: () => Object.assign(new Element(), { isFragment: true }) }, window: { dispatchEvent: event => calls.push(['event', event.type]) }, Event: class { constructor(type) { this.type = type; } }, XMLHttpRequest: XHR, setTimeout: fn => timers.push(fn), console });
 sources.set(resolve(root, 'edit-book.js'), readFileSync(resolve(root, 'edit-book.js'), 'utf8'));
 sources.set(resolve(root, 'books/add-book.js'), readFileSync(resolve(root, 'books/add-book.js'), 'utf8'));
+sources.set(resolve(root, 'content/nsfw-toggle.js'), readFileSync(resolve(root, 'content/nsfw-toggle.js'), 'utf8'));
 if (existsSync(resolve(root, 'edit-book'))) for (const name of readdirSync(resolve(root, 'edit-book')).filter(n => n.endsWith('.js'))) sources.set(resolve(root, 'edit-book', name), readFileSync(resolve(root, 'edit-book', name), 'utf8'));
 const external = new Map();
 for (const [path, source] of sources) for (const match of source.matchAll(/import \{([^}]+)\} from '([^']+)';/g)) {
@@ -351,4 +352,26 @@ edit.openEditCompModal({ bookId: 2, initialName: 'Own private anthology', initia
 assert.equal(el('ecc-public').disabled, false);
 edit.openEditSeriesModal(10, 'Own private series', '', false, false);
 assert.equal(el('esr-public').disabled, false);
-console.log('Validation, PDF upload failures/retries/progress/auth, permissions, memberships, dialog saves and stash checks passed.');
+const nsfwControls = modules.get(resolve(root, 'content/nsfw-toggle.js')).namespace;
+for (const prefix of ['cb', 'cc', 'csr']) {
+  el(prefix + '-nsfw-toggle').checked = true;
+  nsfwControls.resetNsfwToggle(prefix, { resolveIsAdmin: () => true });
+  assert.equal(nsfwControls.readNsfwToggle(prefix), false, 'new items always start with NSFW off');
+  assert.equal(el(prefix + '-nsfw-toggle').disabled, false);
+  nsfwControls.resetNsfwToggle(prefix, {});
+  assert.equal(el(prefix + '-nsfw-row').style.display, 'none', 'ordinary players cannot classify');
+  assert.equal(el(prefix + '-nsfw-toggle').disabled, true);
+}
+for (const [prefix, entity] of [['edit-book', 'books'], ['ecc', 'books'], ['esr', 'series']]) {
+  apiHandler = (url, options) => ({ ok: true, json: async () => ({ isNsfw: true }) });
+  nsfwControls.resetNsfwToggle(prefix, { resolveIsModerator: () => true }, { entity, id: 7 });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(el(prefix + '-nsfw-toggle').checked, true, 'edit loads the saved classification');
+  assert.equal(el(prefix + '-nsfw-toggle').disabled, false);
+  el(prefix + '-nsfw-toggle').checked = false;
+  await nsfwControls.saveNsfwToggle(prefix, entity, 7);
+  const patch = calls.filter(c => c[0] === 'apiFetch' && c[1] === `/api/${entity}/7/nsfw` && c[2]?.method === 'PATCH').at(-1);
+  assert.deepEqual(JSON.parse(patch[2].body), { isNsfw: false });
+}
+apiHandler = null;
+console.log('Validation, uploads, permissions, memberships, saves, stashes and default-off NSFW controls passed.');

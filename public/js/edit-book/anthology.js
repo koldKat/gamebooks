@@ -1,5 +1,6 @@
 import { editState } from './state.js';
 import { apiFetch } from '../core/state.js';
+import { resetNsfwToggle, saveNsfwToggle } from '../content/nsfw-toggle.js';
 import { t } from '../i18n.js';
 import { showAlert, showConfirm } from '../play.js';
 import { compressImage, setPreviewImgBlob } from '../core/util.js';
@@ -20,6 +21,7 @@ export function openEditCompModal({ bookId, initialName, initialIsbn = '', initi
   document.getElementById('ecc-description').value = initialDescription || '';
   document.getElementById('ecc-series-num').value  = initialSeriesNumber || '';
   document.getElementById('ecc-public').checked    = !!initialIsPublic;
+  resetNsfwToggle('ecc', editState._hooks, { id: bookId, isCurrent });
   document.getElementById('ecc-public').disabled = !!editState._hooks.resolveIsModerator?.() && !editState._hooks.resolveIsAdmin?.() && !editState._hooks.isBookCreator?.(bookId);
   document.getElementById('ecc-error').textContent = '';
   document.getElementById('ecc-id-hint').textContent = '';
@@ -94,6 +96,7 @@ export function openEditCompModal({ bookId, initialName, initialIsbn = '', initi
     _setButtonsDisabled(['ecc-save', 'ecc-cancel'], true);
     try {
       await onSave(name, isbn, issn, asin, pages, authors, description, isPublic, seriesName, seriesNum);
+      if (isCurrent()) await saveNsfwToggle('ecc', 'books', bookId);
       if (isCurrent()) document.getElementById('edit-comp-overlay').classList.remove('active');
     } catch (error) {
       if (isCurrent()) errEl.textContent = error?.message || t('err.save');

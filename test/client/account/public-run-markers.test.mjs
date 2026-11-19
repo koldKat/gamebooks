@@ -24,16 +24,41 @@ test('public runs preserve named starts, their connectors and mixed numeric IDs'
   const net = build({}, chart, { 'Пролог': { x: 0, y: 0 } },
     ['Пролог', '7', 14], 'death', ['7', 14], [], false, 'Пролог');
   const nodes = new Map(net.data.nodes.rows.map(node => [node.id, node]));
-  assert.equal(nodes.size, 4);
+  assert.equal(nodes.size, 3);
   assert.equal(nodes.get('Пролог').color.background, '#fde047');
   assert.equal(nodes.get('Пролог').x, 0);
-  assert.ok(nodes.has('K1'), 'known destinations without mapped choices remain visible');
+  assert.ok(!nodes.has('K1'), 'unmapped destination hints stay hidden');
   assert.equal(nodes.get(14).color.background, '#e74c3c');
   const edges = net.data.edges.rows;
   assert.ok(edges.some(edge => edge.from === 'Пролог' && edge.to === 14));
   assert.ok(edges.some(edge => edge.from === 'Пролог' && edge.to === 7 && edge.width === 2.5));
   assert.ok(edges.every(edge => nodes.has(edge.from) && nodes.has(edge.to)));
   assert.ok(!nodes.has(-1) && !nodes.has(0));
+});
+
+test('public runs hide unmapped nodes from other runs while retaining mapped nodes', () => {
+  const chart = {
+    1: { choices: [2, 'hint', 'empty', 'mapped', 'portal', 'endhint'] },
+    2: { choices: [0] },
+    empty: { discovered: true, choices: [] },
+    mapped: { discovered: true, choices: ['otherhint'] },
+    portal: { discovered: true, choices: [], portals: [{ bookId: 2, section: 1 }] },
+    endhint: { discovered: true, choices: [-1] },
+  };
+  const net = build({}, chart, {}, [1, 2], 'success', ['oldvisit', 15]);
+  const nodes = new Set(net.data.nodes.rows.map(node => node.id));
+  assert.deepEqual([...nodes].sort(), [1, 2, 'mapped', 'portal'].sort());
+  assert.ok(net.data.edges.rows.some(edge => edge.from === 1 && edge.to === 2));
+  assert.ok(net.data.edges.rows.some(edge => edge.to === 'portal'));
+  assert.ok(net.data.edges.rows.every(edge => nodes.has(edge.from) && nodes.has(edge.to)));
+});
+
+test('the displayed run retains its own visited nodes even without mapped choices', () => {
+  const net = build({}, { 1: { choices: [15] } }, {}, [1, 15], 'death', [99]);
+  const nodes = new Set(net.data.nodes.rows.map(node => node.id));
+  assert.ok(nodes.has(15));
+  assert.ok(!nodes.has(99));
+  assert.ok(net.data.edges.rows.some(edge => edge.from === 1 && edge.to === 15));
 });
 const graph = { 1: { choices: [2, 3, 4] }, 2: { choices: [0] }, 3: { choices: [-1] },
   4: { choices: [0, -1] }, 5: { choices: [0], battle: true }, 6: { choices: [7] }, 7: { choices: [0] } };

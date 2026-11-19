@@ -1,15 +1,17 @@
 import { editState } from './state.js';
 import { apiFetch } from '../core/state.js';
+import { resetNsfwToggle, saveNsfwToggle } from '../content/nsfw-toggle.js';
 import { t } from '../i18n.js';
 import { _refreshLibraryUi } from '../books.js';
 
 export function openEditSeriesModal(seriesId, name, description, isPublic = false, isOpenWorld = false, onSaved = null) {
-  ++editState._seriesSession;
+  const session = ++editState._seriesSession;
   editState._esrSeriesId = seriesId;
   editState._esrOnSaved = onSaved;
   document.getElementById('esr-name').value         = name || '';
   document.getElementById('esr-description').value  = description || '';
   document.getElementById('esr-public').checked     = !!isPublic;
+  resetNsfwToggle('esr', editState._hooks, { entity: 'series', id: seriesId, isCurrent: () => session === editState._seriesSession });
   document.getElementById('esr-public').disabled = !!editState._hooks.resolveIsModerator?.() && !editState._hooks.resolveIsAdmin?.() && !editState._hooks.isSeriesCreator?.(seriesId);
   document.getElementById('esr-open-world').checked = !!isOpenWorld;
   document.getElementById('esr-error').textContent  = '';
@@ -39,6 +41,7 @@ export function initSeriesBindings(mousedownOnOverlayRef) {
     try {
       const r = await apiFetch(`/api/series/${editState._esrSeriesId}`, { method: 'PATCH', body: JSON.stringify({ name, description, is_public: isPublic, is_open_world: isOpenWorld }) });
       if (!r.ok) { const j = await r.json().catch(() => ({})); if (isCurrent()) errEl.textContent = j.error || t('editbook.failed'); return; }
+      if (isCurrent()) await saveNsfwToggle('esr', 'series', editState._esrSeriesId);
       if (isCurrent()) {
         _closeEsr();
         await onSaved?.(name);

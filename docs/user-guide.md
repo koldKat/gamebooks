@@ -70,7 +70,7 @@ Each day's card shows the covers of the public books played that day, faded behi
 **Clicking things in the feed:**
 - **A username** (if that player has a public profile) → see their books and completed playthroughs
 - **A book name** → opens that book's activity; if it belongs to a series, a series link appears too
-- **The result word** (won / lost / fell in battle / died, if the run is public) → opens a view of that playthrough's path on the graph, with a legend overlay in the top-right corner explaining the node colors
+- **The result word** (won / lost / fell in battle / died, if the run is public) → opens a view of that playthrough's path on the graph, with a legend explaining the node colors. Unmapped sections outside that run stay hidden, along with their connectors.
 
 ### Right - Login / Books
 
@@ -107,7 +107,7 @@ Click **Stats** in the header (visible to everyone) to see live numbers for the 
 | **Ratings** | Total votes; separate book, anthology and series vote counts and averages; exact half-star breakdowns from 0.5 to 5, with subtle bars showing each score's share |
 | **Forum** | Categories, threads, pinned threads, posts |
 | **Server** | CPU model/cores/age/clock/architecture, total RAM |
-| **The App** | App age, server uptime and uptime %, total downtime, lines of code, code/database size, JS module count, network traffic, live session averages (CPU, heap, RSS) |
+| **The App** | App age, server uptime and uptime %, total downtime, lines of code grouped into frontend, backend and battle simulators, code/database size, JS module count with those groups plus tests, network traffic, live session averages (CPU, heap, RSS) |
 | **Open World** | Open world series (public split), books in them, portal nodes, series runs (completed/public), pre-series runs |
 
 Hover or tap the registered-player total to see the country breakdown, with flags and country names in alphabetical order.

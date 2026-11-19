@@ -239,7 +239,7 @@ body.no-feed-glass-cards .feed-day-card--glass::before {
   color: #f5a623;
 }
 .feed-book {
-  font-weight: 600;
+  font-weight: 700;
   color: #e2e8f0;
 }
 .feed-run {
@@ -469,6 +469,9 @@ body.no-feed-glass-cards .feed-day-card--glass::before {
   padding-top: 0.1rem;
   padding-left: 0.5rem;
   margin-left: -0.5rem;
+}
+.feed-user-group--party > .feed-group-body {
+  border-left-color: transparent;
 }
 .feed-group-count {
   color: #9ca3af;

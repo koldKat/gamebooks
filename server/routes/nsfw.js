@@ -13,31 +13,40 @@ function handleNsfwCatalog(req, res) {
 }
 
 async function handleSetBookNsfw(req, res, bookId) {
+  return handleSetNsfw(req, res, 'book', bookId);
+}
+
+async function handleSetSeriesNsfw(req, res, seriesId) {
+  return handleSetNsfw(req, res, 'series', seriesId);
+}
+
+async function handleSetNsfw(req, res, entity, id) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
   if (!database.isUserAdmin(userId) && !database.isUserModerator(userId)) {
     return send(res, 403, { error: 'Admin or Lorekeeper access required' });
   }
-  return saveBookNsfw(req, res, bookId);
+  return saveNsfw(req, res, entity, id);
 }
 
 async function handleAdminSetBookNsfw(req, res, bookId) {
   if (!requireLocalhost(req, res)) return;
-  return saveBookNsfw(req, res, bookId);
+  return saveNsfw(req, res, 'book', bookId);
 }
 
-async function saveBookNsfw(req, res, bookId) {
+async function saveNsfw(req, res, entity, id) {
+  const table = entity === 'series' ? 'series' : 'books';
   if (req.method === 'GET') {
-    const book = db.prepare('SELECT is_nsfw FROM books WHERE id = ?').get(bookId);
+    const book = db.prepare(`SELECT is_nsfw FROM ${table} WHERE id = ?`).get(id);
     return book ? send(res, 200, { isNsfw: !!book.is_nsfw }) : send(res, 404, { error: 'Not found' });
   }
   const { isNsfw } = await readBody(req);
   if (typeof isNsfw !== 'boolean') return send(res, 400, { error: 'isNsfw must be a boolean' });
-  const result = db.prepare('UPDATE books SET is_nsfw = ? WHERE id = ?').run(isNsfw ? 1 : 0, bookId);
+  const result = db.prepare(`UPDATE ${table} SET is_nsfw = ? WHERE id = ?`).run(isNsfw ? 1 : 0, id);
   if (!result.changes) return send(res, 404, { error: 'Not found' });
-  publicCatalogPush({ type: 'public_catalog_changed', entity: 'book', id: bookId, action: 'update' });
-  feedPush({ type: 'feed_changed', entity: 'book', id: bookId, action: 'update' });
+  publicCatalogPush({ type: 'public_catalog_changed', entity, id, action: 'update' });
+  feedPush({ type: 'feed_changed', entity, id, action: 'update' });
   return send(res, 200, { ok: true, isNsfw });
 }
 
-module.exports = { handleNsfwCatalog, handleSetBookNsfw, handleAdminSetBookNsfw };
+module.exports = { handleNsfwCatalog, handleSetBookNsfw, handleSetSeriesNsfw, handleAdminSetBookNsfw };

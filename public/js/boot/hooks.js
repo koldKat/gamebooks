@@ -225,7 +225,7 @@ export function initFeatureHooks() {
     },
   });
   initEditBook(() => bootState._mousedownOnOverlay);
-  setAddBookHooks({ resolveIsAdmin: () => resolveIsAdmin(), scheduleRewardProfileRefresh: _scheduleRewardProfileRefresh });
+  setAddBookHooks({ resolveIsAdmin, resolveIsModerator, scheduleRewardProfileRefresh: _scheduleRewardProfileRefresh });
   initAddBook(() => bootState._mousedownOnOverlay);
   initBooksPanel();
   initInbox(() => bootState._mousedownOnOverlay);

@@ -1,5 +1,6 @@
 import { editState } from './state.js';
 import { state, apiFetch } from '../core/state.js';
+import { resetNsfwToggle } from '../content/nsfw-toggle.js';
 import { t } from '../i18n.js';
 import { getCachedBooks, _refreshBooksListOnly } from '../books.js';
 import { showAlert } from '../play.js';
@@ -58,26 +59,8 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
   }
 
   const isAdmin    = !!editState._hooks.resolveIsAdmin?.();
-  const canClassifyNsfw = isAdmin || !!editState._hooks.resolveIsModerator?.();
-  const nsfwRow = document.getElementById('edit-book-nsfw-row');
-  const nsfwToggle = document.getElementById('edit-book-nsfw-toggle');
-  if (nsfwRow && nsfwToggle) {
-    nsfwRow.style.display = canClassifyNsfw ? '' : 'none';
-    nsfwToggle.checked = false;
-    nsfwToggle.disabled = true;
-    delete nsfwToggle.dataset.original;
-    if (canClassifyNsfw) {
-      const session = editState._bookSession;
-      apiFetch(`/api/books/${bookId}/nsfw`).then(async res => {
-        if (!res.ok) return;
-        const data = await res.json();
-        if (session !== editState._bookSession) return;
-        nsfwToggle.checked = !!data.isNsfw;
-        nsfwToggle.dataset.original = data.isNsfw ? '1' : '0';
-        nsfwToggle.disabled = false;
-      }).catch(() => {});
-    }
-  }
+  const nsfwSession = editState._bookSession;
+  resetNsfwToggle('edit-book', editState._hooks, { id: bookId, isCurrent: () => nsfwSession === editState._bookSession });
   const pdfRow     = document.getElementById('edit-book-pdf-row');
   const pdfCurrent = document.getElementById('edit-book-pdf-current');
   const pdfLink    = document.getElementById('edit-book-pdf-link');

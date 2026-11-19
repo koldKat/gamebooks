@@ -15,11 +15,15 @@ const INITIAL_BOOKS = new Map([
 ]);
 
 function initializeNsfw(db) {
-  if (db.prepare('PRAGMA table_info(books)').all().some(c => c.name === 'is_nsfw')) return;
   db.transaction(() => {
-    db.exec('ALTER TABLE books ADD COLUMN is_nsfw INTEGER NOT NULL DEFAULT 0 CHECK(is_nsfw IN (0,1))');
-    const mark = db.prepare('UPDATE books SET is_nsfw = 1 WHERE id = ? AND name = ?');
-    for (const [id, name] of INITIAL_BOOKS) mark.run(id, name);
+    if (!db.prepare('PRAGMA table_info(books)').all().some(c => c.name === 'is_nsfw')) {
+      db.exec('ALTER TABLE books ADD COLUMN is_nsfw INTEGER NOT NULL DEFAULT 0 CHECK(is_nsfw IN (0,1))');
+      const mark = db.prepare('UPDATE books SET is_nsfw = 1 WHERE id = ? AND name = ?');
+      for (const [id, name] of INITIAL_BOOKS) mark.run(id, name);
+    }
+    if (!db.prepare('PRAGMA table_info(series)').all().some(c => c.name === 'is_nsfw')) {
+      db.exec('ALTER TABLE series ADD COLUMN is_nsfw INTEGER NOT NULL DEFAULT 0 CHECK(is_nsfw IN (0,1))');
+    }
   })();
 }
 
@@ -45,7 +49,8 @@ function getNsfwCatalog(db) {
       JOIN books a ON a.id=m.anthology_id JOIN books b ON b.id=m.book_id
       WHERE a.is_public=1 AND b.is_public=1
     )
-    SELECT series_id AS id FROM members WHERE series_id IS NOT NULL
+    SELECT s.id FROM series s WHERE s.is_public=1 AND s.is_nsfw=1
+    UNION SELECT series_id AS id FROM members WHERE series_id IS NOT NULL
     GROUP BY series_id HAVING MIN(is_nsfw)=1
   `).all();
   return {

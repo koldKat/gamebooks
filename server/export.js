@@ -167,7 +167,7 @@ function _exportLegendHtml() {
     [GRAPH_COLORS.bothOutline,    'Can die or win here'],
     [GRAPH_COLORS.battleOutline,  'Battle here'],
     [GRAPH_COLORS.victory,        'Victory ended here'],
-    [GRAPH_COLORS.death,          'Death ended here'],
+    [GRAPH_COLORS.death,          'Lost here'],
     [GRAPH_COLORS.battleDeath,    'Battle death ended here'],
   ];
   return `<div class="legend">${items.map(([c, label]) => `<span class="legend-item">${dot(c)}${label}</span>`).join('')}</div>`;

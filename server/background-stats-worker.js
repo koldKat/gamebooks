@@ -45,6 +45,7 @@ function directorySize() {
 }
 function codeStats() {
   const stats = { linesOfCode: 0, codeBytes: 0, jsModules: 0,
+    jsModulesBreakdown: { frontend: 0, backend: 0, battleSims: 0, tests: 0 },
     linesOfCodeBreakdown: { frontend: 0, backend: 0, battleSims: 0 } };
   const buffer = Buffer.alloc(16 * 1024);
   function count(file) {
@@ -68,13 +69,28 @@ function codeStats() {
     const area = simulator ? 'battleSims'
       : relative === 'server.js' || relative.startsWith('server/') ? 'backend' : 'frontend';
     stats.linesOfCodeBreakdown[area] += lines;
-    if (/\.(?:m?js)$/.test(file)) stats.jsModules++;
+    if (/\.(?:[cm]?js)$/.test(file)) {
+      stats.jsModules++;
+      stats.jsModulesBreakdown[area]++;
+    }
+  }
+  function countTest(file) {
+    if (!/\.(?:[cm]?js)$/.test(file)) return;
+    stats.jsModules++;
+    stats.jsModulesBreakdown.tests++;
+  }
+  function walkModules(dir, inTests = false) {
+    walk(dir, file => {
+      const relative = path.relative(dir, file).split(path.sep).join('/');
+      if (inTests || /(?:^|\/)(?:test|tests|__tests__)\//.test(relative)
+        || /\.(?:test|spec)\.(?:[cm]?js)$/.test(file)) countTest(file);
+      else if (/\.(?:[cm]?js)$/.test(file)) count(file);
+    });
   }
   for (const dir of ['server', 'public/js', 'admin/js', 'public/mobile/js']) {
-    walk(path.join(workerData.root, dir), file => {
-      if (/\.(?:m?js)$/.test(file) && !/\.(?:test|spec)\.(?:m?js)$/.test(file)) count(file);
-    }, name => ['test', 'tests', '__tests__'].includes(name));
+    walkModules(path.join(workerData.root, dir));
   }
+  for (const dir of ['test', 'tests', '__tests__']) walkModules(path.join(workerData.root, dir), true);
   for (const dir of ['public/css', 'public/mobile/css', 'server/styles', 'docs/styles']) {
     walk(path.join(workerData.root, dir), file => {
       if (file.endsWith('.css')) count(file);

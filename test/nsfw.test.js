@@ -9,12 +9,16 @@ const { initializeNsfw, getNsfwCatalog } = require('../server/db/nsfw');
 test('classification migration seeds known titles once and preserves later corrections', () => {
   const db = new Database(':memory:');
   try {
-    db.exec(`CREATE TABLE books(id INTEGER PRIMARY KEY,name);
+    db.exec(`CREATE TABLE series(id INTEGER PRIMARY KEY,is_public INTEGER DEFAULT 0);
+      CREATE TABLE books(id INTEGER PRIMARY KEY,name);
       INSERT INTO books VALUES(1283,'Night Shift'),(1801,'Different title'),(1,'Ordinary adventure');`);
     initializeNsfw(db);
+    assert.equal(db.prepare('PRAGMA table_info(series)').all().find(c => c.name === 'is_nsfw').dflt_value, '0');
+    db.exec('INSERT INTO series(id,is_nsfw) VALUES(1,1)');
     assert.deepEqual(db.prepare('SELECT id FROM books WHERE is_nsfw=1').all(),[{id:1283}]);
     db.exec('UPDATE books SET is_nsfw=0 WHERE id=1283');
     initializeNsfw(db);
+    assert.equal(db.prepare('SELECT is_nsfw FROM series WHERE id=1').get().is_nsfw, 1);
     assert.equal(db.prepare('SELECT COUNT(*) AS n FROM books WHERE is_nsfw=1').get().n,0);
   } finally { db.close(); }
 });
@@ -22,7 +26,9 @@ test('classification migration seeds known titles once and preserves later corre
 test('public labels include all-adult collections while preserving mixed series and private metadata', () => {
   const db = new Database(':memory:');
   try {
-    db.exec(`CREATE TABLE books(id INTEGER PRIMARY KEY,name,is_nsfw,is_public,is_container,parent_book_id,series_id,cover_path);
+    db.exec(`CREATE TABLE series(id INTEGER PRIMARY KEY,is_nsfw,is_public);
+      INSERT INTO series VALUES(10,0,1),(20,0,1),(30,0,1),(40,1,1),(50,1,0);
+      CREATE TABLE books(id INTEGER PRIMARY KEY,name,is_nsfw,is_public,is_container,parent_book_id,series_id,cover_path);
       CREATE TABLE book_anthology_memberships(book_id,anthology_id);
       INSERT INTO books VALUES
         (1,'Adult',1,1,0,NULL,10,'adult.jpg'),
@@ -35,7 +41,7 @@ test('public labels include all-adult collections while preserving mixed series 
       INSERT INTO book_anthology_memberships VALUES(1,5),(1,7),(3,7);`);
     const data = getNsfwCatalog(db);
     assert.deepEqual(data.bookIds.sort((a,b)=>a-b),[1,4,5,6]);
-    assert.deepEqual(data.seriesIds.sort((a,b)=>a-b),[10,30]);
+    assert.deepEqual(data.seriesIds.sort((a,b)=>a-b),[10,30,40]);
     assert.ok(!data.coverUrls.includes('/covers/private.jpg'));
     assert.ok(data.coverUrls.includes('/covers/anthology.jpg'));
     assert.ok(!data.coverUrls.includes('/covers/mixed-anthology.jpg'));
@@ -137,6 +143,8 @@ test('classification endpoint allows only admins and Lorekeepers and validates b
   const c=vm.createContext({module:{exports:{}},require:name=>dependencies[name]});
   vm.runInContext(readFileSync('server/routes/nsfw.js','utf8'),c);
   const update=c.module.exports.handleSetBookNsfw;
+  const updateSeries=c.module.exports.handleSetSeriesNsfw;
+  assert.equal((await updateSeries({method:'PATCH'},{},9)).status,403);
   assert.equal((await update({method:'PATCH'},{},22)).status,403);
   assert.equal((await update({method:'GET'},{},22)).status,403);
   assert.equal(writes,0);
@@ -144,6 +152,7 @@ test('classification endpoint allows only admins and Lorekeepers and validates b
   assert.equal((await update({method:'PATCH'},{},22)).status,400);
   assert.equal(writes,0);
   body={isNsfw:false};
+  assert.equal((await updateSeries({method:'GET'},{},9)).status,200);
   assert.equal((await update({method:'PATCH'},{},22)).status,200);
   assert.equal(writes,1);assert.equal(pushes,1);
   admin=false;moderator=true;
@@ -156,4 +165,6 @@ test('classification endpoint allows only admins and Lorekeepers and validates b
   local=true;
   assert.equal((await adminUpdate({method:'PATCH'},{},22)).status,200);
   assert.equal(writes,3);assert.equal(pushes,3);
+  assert.equal((await updateSeries({method:'PATCH'},{},9)).status,200);
+  assert.equal(writes,4);assert.equal(pushes,4);
 });

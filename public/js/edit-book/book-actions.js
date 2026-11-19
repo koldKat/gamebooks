@@ -1,5 +1,6 @@
 import { editState } from './state.js';
 import { apiFetch } from '../core/state.js';
+import { saveNsfwToggle } from '../content/nsfw-toggle.js';
 import { t } from '../i18n.js';
 import { pauseCoversAutoRefresh, resumeCoversAutoRefresh } from '../covers.js';
 import { _setButtonsDisabled, _uploadPdfWithProgress } from './uploads.js';
@@ -135,13 +136,7 @@ export function bindBookActions({ pubTypeEl, minSections, minMaxSectionNumber, s
     _setButtonsDisabled(['edit-book-save', 'edit-book-cancel'], true);
     try {
       await onSave(name, sections, isbn, issn, asin, pages, authors, description, discoverableSections, isPublic, seriesName, seriesNumber, isContainer, parentId, bookOrder, maxSectionNumber);
-      const nsfw = document.getElementById('edit-book-nsfw-toggle');
-      if ((editState._hooks.resolveIsAdmin?.() || editState._hooks.resolveIsModerator?.()) && nsfw && !nsfw.disabled && nsfw.dataset.original !== (nsfw.checked ? '1' : '0')) {
-        const response = await apiFetch(`/api/books/${bookId}/nsfw`, {
-          method: 'PATCH', body: JSON.stringify({ isNsfw: nsfw.checked }),
-        });
-        if (!response.ok) throw new Error('Could not save NSFW classification');
-      }
+      if (isCurrent()) await saveNsfwToggle('edit-book', 'books', bookId);
     } catch (error) {
       if (isCurrent()) errEl.textContent = error?.message || t('err.save');
       return;

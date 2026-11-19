@@ -863,7 +863,7 @@
         <div class="legend-item"><div class="legend-dot" style="background:#606060;border-color:#404040"></div><span data-i18n="legend.discovered">Discovered</span></div>
         <div class="legend-item"><div class="legend-dot" style="background:#0f172a;border-color:#e74c3c;border-width:3px"></div><span data-i18n="legend.candie">Can die here</span></div>
         <div class="legend-item"><div class="legend-dot" style="background:#0f172a;border-color:#27ae60;border-width:3px"></div><span data-i18n="legend.canwin">Can win here</span></div>
-        <div class="legend-item"><div class="legend-dot" style="background:#e74c3c;border-color:#c0392b"></div><span data-i18n="legend.deathrun">Death run ended here</span></div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e74c3c;border-color:#c0392b"></div><span data-i18n="legend.deathrun">Lost here</span></div>
         <div class="legend-item"><div class="legend-dot" style="background:#27ae60;border-color:#1e8449"></div><span data-i18n="legend.winrun">Victory run ended here</span></div>
         <div class="legend-item"><div class="legend-dot" style="background:#431407;border-color:#f97316;border-width:3px"></div><span data-i18n="legend.battle">Battle here</span></div>
         <div class="legend-item"><div class="legend-dot" style="background:#c2410c;border-color:#9a3412"></div><span data-i18n="legend.battlerun">Battle death ended here</span></div>
@@ -1508,6 +1508,9 @@
           <input type="checkbox" id="cb-public">
           <span>Make public</span>
         </label>
+        <label id="cb-nsfw-row" class="checkbox-label catalog-nsfw-toggle" style="display:none">
+          <input type="checkbox" id="cb-nsfw-toggle"><span>NSFW</span>
+        </label>
         <small class="field-hint">Other players can find and add this book to their library</small>
       </div>
       <div class="input-group" id="cb-pdf-row" style="display:none">
@@ -1596,6 +1599,9 @@
           <input type="checkbox" id="cc-public">
           <span>Make public</span>
         </label>
+        <label id="cc-nsfw-row" class="checkbox-label catalog-nsfw-toggle" style="display:none">
+          <input type="checkbox" id="cc-nsfw-toggle"><span>NSFW</span>
+        </label>
         <small class="field-hint">Other players can find and add this book to their library</small>
       </div>
       <div class="input-group" id="cc-pdf-row" style="display:none">
@@ -1633,6 +1639,9 @@
         <label class="checkbox-label">
           <input type="checkbox" id="csr-public">
           <span>Make public</span>
+        </label>
+        <label id="csr-nsfw-row" class="checkbox-label catalog-nsfw-toggle" style="display:none">
+          <input type="checkbox" id="csr-nsfw-toggle"><span>NSFW</span>
         </label>
         <small class="field-hint">Other players can find and browse this series</small>
       </div>
@@ -1764,6 +1773,9 @@
         <label class="checkbox-label">
           <input type="checkbox" id="ecc-public"><span>Make public</span>
         </label>
+        <label id="ecc-nsfw-row" class="checkbox-label catalog-nsfw-toggle" style="display:none">
+          <input type="checkbox" id="ecc-nsfw-toggle" disabled><span>NSFW</span>
+        </label>
         <small class="field-hint">Other players can find and add this book to their library</small>
       </div>
       <div class="input-group" id="ecc-pdf-row" style="display:none">
@@ -1805,6 +1817,9 @@
         <label class="checkbox-label">
           <input type="checkbox" id="esr-public">
           <span>Make public</span>
+        </label>
+        <label id="esr-nsfw-row" class="checkbox-label catalog-nsfw-toggle" style="display:none">
+          <input type="checkbox" id="esr-nsfw-toggle" disabled><span>NSFW</span>
         </label>
         <small class="field-hint">Other players can find and browse this series</small>
       </div>
@@ -1969,14 +1984,16 @@
         </div>
       </div>
       <div class="input-group create-public-row" id="edit-book-public-row">
-        <label id="edit-book-nsfw-row" class="checkbox-label" style="display:none">
-          <input type="checkbox" id="edit-book-nsfw-toggle" disabled>
-          <span>NSFW</span>
-        </label>
-        <label class="checkbox-label">
-          <input type="checkbox" id="edit-book-public-toggle">
-          <span>Make public</span>
-        </label>
+        <div class="edit-book-visibility-toggles">
+          <label class="checkbox-label">
+            <input type="checkbox" id="edit-book-public-toggle">
+            <span>Make public</span>
+          </label>
+          <label id="edit-book-nsfw-row" class="checkbox-label" style="display:none">
+            <input type="checkbox" id="edit-book-nsfw-toggle" disabled>
+            <span>NSFW</span>
+          </label>
+        </div>
         <small class="field-hint">Other players can find and add this book to their library</small>
       </div>
       <div class="input-group" id="edit-book-pdf-row" style="display:none">

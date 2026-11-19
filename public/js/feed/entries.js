@@ -56,7 +56,7 @@ export function renderEntry(e) {
     const parentAttrs = e.parentBookId
       ? ` data-parent-id="${e.parentBookId}" data-parent-name="${escapeHtml(e.parentBookName)}"`
       : '';
-    return `<button class="feed-book feed-book-btn${pillClass}" data-book-id="${id}" data-book-name="${escapeHtml(name)}"${cover}${parentAttrs}>${escapeHtml(name)}</button>${tags}`;
+    return `<a href="/book/${id}" class="feed-book feed-book-btn${pillClass}" data-book-id="${id}" data-book-name="${escapeHtml(name)}"${cover}${parentAttrs}>${escapeHtml(name)}</a>${tags}`;
   };
   const verbLabel = cls => cls === 'won' ? t('feed.verb.won') : cls === 'died' ? t('feed.verb.died') : t('feed.verb.lost');
   const nounLabel = isContainer => isContainer ? t('feed.noun.anthology') : t('feed.noun.book');

@@ -131,6 +131,7 @@ export default {
     'stats.code_frontend':           'Frontend',
     'stats.code_backend':            'Backend',
     'stats.code_battle_sims':        'Battle simulators',
+    'stats.code_tests':              'Tests',
     'stats.code_size':               'Code size',
     'stats.db_size':                 'DB size',
     'stats.js_modules':              'JS modules',

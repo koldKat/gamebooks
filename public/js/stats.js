@@ -99,7 +99,7 @@ export async function openStatsModal() {
       {
         cls: 'players', label: t('stats.sec.players'),
         rows: [
-          [t('stats.registered'), `<span id="stats-registered-users" class="country-count-tooltip">${fmt(s.users)}</span>`, 'players'],
+          [t('stats.registered'), `<span id="stats-registered-users" class="country-count-tooltip">${fmt(s.users)}</span>`],
           [t('stats.admins'), fmt(s.admins)],
           [t('stats.moderators'), fmt(s.moderators)],
           [t('stats.squires'), fmt(s.squires)],
@@ -244,6 +244,13 @@ export async function openStatsModal() {
           [t('stats.code_size'), kb(s.codeBytes || 0)],
           [t('stats.db_size'), kb(s.dbSize || 0)],
           [t('stats.js_modules'), fmt(s.jsModules)],
+          ...[
+            ['frontend', 'stats.code_frontend'],
+            ['backend', 'stats.code_backend'],
+            ['battleSims', 'stats.code_battle_sims'],
+            ['tests', 'stats.code_tests'],
+          ].map(([area, key]) => [t(key), s.jsModulesBreakdown?.[area] != null
+            ? fmt(s.jsModulesBreakdown[area]) : na, null, true]),
           [t('stats.traffic_in'), fmtBytes(s.trafficIn || 0)],
           [t('stats.traffic_out'), fmtBytes(s.trafficOut || 0)],
           ...(s.avgSamples > 0 ? [

@@ -58,7 +58,7 @@ Impersonated activity does not earn XP or coins or update the player's presence.
 
 Lorekeepers can edit public-book, anthology, and series metadata and public covers without owning a library copy. They cannot edit another creator's private titles, unpublish that creator's public titles, upload restricted attachments, or change other players' progress. Removing a title from their own library affects only their memberships.
 
-Admins and Lorekeepers can mark a book **NSFW** in the main app's book editor, beside **Make public** below the rating. Save the book to apply the classification. Other players cannot view or change this editing control.
+Admins and Lorekeepers can mark books, anthologies and series **NSFW** in their create and edit dialogs, on the right of **Make public**. New items default to NSFW off; editing loads the saved classification. Save to apply a change. Other players cannot view or change these controls.
 
 The admin panel also has an **NSFW** checkbox beside **Make public** in **Books → Edit**.
 
