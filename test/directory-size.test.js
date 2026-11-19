@@ -5,6 +5,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
+const { promisify } = require('node:util');
+const execFile = promisify(require('node:child_process').execFile);
 const { createDirectorySizeReader } = require('../server/directory-size');
 require('../server/background-stats').start();
 
@@ -25,6 +27,19 @@ test('size preserves glob exclusions, nested files, and skips symbolic links', a
   await fs.writeFile(path.join(root, 'node_modules', 'ignored.js'), '12345');
   await fs.symlink(root, path.join(root, 'cycle'));
   assert.equal(await createDirectorySizeReader(root).refresh(['node_modules', '*backup*', 'literal[1].txt']), 8);
+});
+
+test('size scan works when the server already runs at nice 19', async t => {
+  if (process.platform !== 'linux') return t.skip('Linux nice inheritance');
+  const root = await fixture(t);
+  await fs.writeFile(path.join(root, 'book.jpg'), '12345');
+  const modulePath = require.resolve('../server/directory-size');
+  const schedulerPath = require.resolve('../server/background-stats');
+  const script = `require(${JSON.stringify(schedulerPath)}).start();
+    require(${JSON.stringify(modulePath)}).createDirectorySizeReader(process.argv[1]).refresh([])
+      .then(bytes => console.log(bytes)).catch(error => { console.error(error); process.exitCode = 1; });`;
+  const { stdout } = await execFile('nice', ['-n', '19', process.execPath, '--max-old-space-size=256', '-e', script, root]);
+  assert.equal(stdout.trim(), '5');
 });
 
 test('reads reuse an hourly result and persist its timestamp across restarts', async t => {

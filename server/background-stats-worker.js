@@ -7,12 +7,16 @@ const os = require('node:os');
 const { parentPort, workerData } = require('node:worker_threads');
 
 // On Linux pid 0 means this calling thread, leaving the request thread alone.
-os.setPriority(0, 15);
-if (os.getPriority(0) !== 15) throw new Error('Statistics worker must run at nice 15');
+// Keep an inherited lower priority. Raising nice 19 to 15 requires privileges.
+if (os.getPriority(0) < 15) os.setPriority(0, 15);
+if (os.getPriority(0) < 15) throw new Error('Statistics worker must run at nice 15 or lower priority');
 const sleeper = new Int32Array(new SharedArrayBuffer(4));
 let operations = 0;
+// Metadata-only size scans need small yields, not minutes of artificial delay.
+const pauseEvery = workerData.kind === 'size' ? 256 : 16;
+const pauseMs = workerData.kind === 'size' ? 5 : 50;
 function pause() {
-  if (++operations % 16 === 0) Atomics.wait(sleeper, 0, 0, 50);
+  if (++operations % pauseEvery === 0) Atomics.wait(sleeper, 0, 0, pauseMs);
 }
 function walk(dir, visit, ignore = () => false) {
   let handle;

@@ -2,14 +2,17 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 test('shared catalog filters and background preferences retain their behavior', async () => {
-  const saved = Object.fromEntries(['window', 'localStorage', 'document'].map(key => [key, globalThis[key]]));
+  const saved = Object.fromEntries(['window', 'localStorage', 'document', 'fetch'].map(key => [key, globalThis[key]]));
   const storage = new Map([['gamebook_auth_token', 'test']]);
   globalThis.localStorage = {
     getItem: key => storage.get(key) ?? null,
     setItem: (key, value) => storage.set(key, String(value)),
   };
   globalThis.window = { innerWidth: 1280, matchMedia: () => ({ matches: false }) };
+  globalThis.fetch = async () => ({ ok: true, json: async () => ({ bookIds: [], seriesIds: [], coverUrls: [] }) });
   try {
+    const { loadNsfwCatalog } = await import('../../../public/js/content/nsfw.js');
+    await loadNsfwCatalog();
     const { coversState } = await import('../../../public/js/covers/state.js');
     const { _visibleCoverItems, _sortedAllBooks, _setCoverFavoritesFromPrefs } = await import('../../../public/js/covers/filters.js');
     const { _landingCoverPool, _effectiveLandingCoverSource, _persistLandingCoverPos } = await import('../../../public/js/covers/background.js');
@@ -19,6 +22,7 @@ test('shared catalog filters and background preferences retain their behavior', 
         { id: 1, name: 'Owned', cover_path: 'owned.jpg' },
         { id: 2, name: 'Duplicate cover', cover_path: 'owned.jpg' },
         { id: 3, name: 'No cover' },
+        { id: 8, name: 'Книга', cover_path: 'cyrillic.jpg' },
       ],
       savePrefs: p => prefs.push(p),
     };
@@ -61,13 +65,18 @@ test('shared catalog filters and background preferences retain their behavior', 
     coversState._landingCoverSource = 'mine';
     assert.equal(_effectiveLandingCoverSource(), 'mine');
     assert.deepEqual(_landingCoverPool().map(b => b.coverUrl), ['/covers/owned.jpg']);
+    coversState._hideCyrillicCovers = false;
+    assert.deepEqual(_landingCoverPool().map(b => b.coverUrl), ['/covers/owned.jpg', '/covers/cyrillic.jpg']);
+    coversState._hideCyrillicCovers = true;
     coversState._landingBgCurrentKey = 'owned_1';
     coversState._landingBgPosY = 27.34;
     _persistLandingCoverPos();
     assert.deepEqual(prefs.at(-1), { landingCoverPos: { owned_1: 27.3 } });
     storage.delete('gamebook_auth_token');
-    coversState._allCovers = [{ id: 9, coverUrl: '/covers/public.jpg' }];
+    coversState._allCovers = [{ id: 9, name: 'Public', coverUrl: '/covers/public.jpg' }, { id: 10, name: 'Книга', coverUrl: '/covers/cyrillic.jpg' }];
     assert.equal(_effectiveLandingCoverSource(), 'public');
+    assert.deepEqual(_landingCoverPool().map(b => b.coverUrl), ['/covers/public.jpg']);
+    coversState._hideCyrillicCovers = false;
     assert.deepEqual(_landingCoverPool(), coversState._allCovers);
     _persistLandingCoverPos();
     assert.equal(prefs.length, 1, 'logged-out position changes are not saved to an account');

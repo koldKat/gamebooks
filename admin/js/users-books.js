@@ -1023,6 +1023,7 @@ function _populateBookEditForm(d) {
   document.getElementById('bef-authors').value        = d.authors || '';
   document.getElementById('bef-description').value    = d.description || '';
   document.getElementById('bef-public').checked       = !!d.is_public;
+  document.getElementById('bef-nsfw').checked         = !!d.is_nsfw;
   document.getElementById('bef-container').checked    = !!d.is_container;
   document.getElementById('bef-series').value         = d.series_name || '';
   document.getElementById('bef-series-num').value     = d.series_number || '';
@@ -1226,6 +1227,16 @@ document.getElementById('bef-save').addEventListener('click', async () => {
       }),
     });
     if (!r.ok) { const j = await r.json(); errEl.textContent = j.error || 'Save failed.'; return; }
+
+    if (document.getElementById('bef-nsfw').checked !== !!editor.data.is_nsfw) {
+      const response = await fetch(`/api/admin/books/${editor.bookId}/nsfw`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isNsfw: document.getElementById('bef-nsfw').checked }),
+      });
+      if (!response.ok) { errEl.textContent = 'Could not save NSFW classification.'; return; }
+      editor.data.is_nsfw = document.getElementById('bef-nsfw').checked;
+    }
 
     // Upload PDF if pending
     if (_pendingAdminPdf) {

@@ -20,7 +20,7 @@ test('restoring enabled feed covers redraws them without saving preferences agai
   const source = readFileSync(new URL('../../../public/js/covers/prefs.js', import.meta.url), 'utf8')
     .replace(/^import .*;$/gm, '').replace(/^export /gm, '');
   const classes = new Set(['no-feed-day-covers']);
-  let refreshes = 0, saves = 0;
+  let refreshes = 0, saves = 0, backgroundRefreshes = 0;
   const checkbox = { checked: false };
   const coversState = { _feedDayCovers: false, _coverTooltipTitlePct: 100,
     _hooks: { refreshDayCovers: () => refreshes++, savePrefs: () => saves++ } };
@@ -28,6 +28,8 @@ test('restoring enabled feed covers redraws them without saving preferences agai
     localStorage: { setItem() {} }, getToken: () => 'player',
     _setCoverFavoritesFromPrefs() {}, _effectiveLandingCoverSource: () => 'public',
     _landingCoverPool: () => [],
+    applyNsfwPreference() {},
+    refreshLandingCoverVisibility: () => backgroundRefreshes++,
     document: { body: { classList: { toggle: (name, on) => on ? classes.add(name) : classes.delete(name) } },
       documentElement: { style: { setProperty() {} } },
       getElementById: id => id === 'feed-day-covers-cb' ? checkbox : null },
@@ -38,6 +40,11 @@ test('restoring enabled feed covers redraws them without saving preferences agai
   assert.equal(checkbox.checked, true);
   assert.equal(refreshes, 1, 'restoring the enabled state must repopulate unloaded stacks');
   assert.equal(saves, 0);
+  context.setCoversPrefsState({ hideCyrillicCovers: '1' });
+  assert.equal(backgroundRefreshes, 1, 'a synced Cyrillic preference refreshes the wallpaper immediately');
+  context.setCoversPrefsState({ hideCyrillicCovers: '1' });
+  assert.equal(backgroundRefreshes, 1, 'an unchanged preference does not restart rotation');
+  assert.equal(saves, 0, 'synced preferences are not saved again');
   coversState._feedDayCovers = false;
   context._persistFeedDayCoversPref();
   assert.equal(classes.has('no-feed-day-covers'), true);

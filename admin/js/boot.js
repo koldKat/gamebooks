@@ -57,7 +57,8 @@ const pollVisible = callback => () => { if (!document.hidden) callback(); };
 setInterval(pollVisible(loadLive),    1000);
 setInterval(pollVisible(loadStats),  60000);
 setInterval(pollVisible(loadAdminGc), 60000);
-setInterval(pollVisible(loadAppSize), 3600000);
+// Read only the shared cache; the server owns the hourly disk scan.
+setInterval(pollVisible(loadAppSize), 60000);
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
   loadLive();

@@ -58,14 +58,15 @@ export function openEditBookModal({ bookId, initialName, initialSections, initia
   }
 
   const isAdmin    = !!editState._hooks.resolveIsAdmin?.();
+  const canClassifyNsfw = isAdmin || !!editState._hooks.resolveIsModerator?.();
   const nsfwRow = document.getElementById('edit-book-nsfw-row');
   const nsfwToggle = document.getElementById('edit-book-nsfw-toggle');
   if (nsfwRow && nsfwToggle) {
-    nsfwRow.style.display = isAdmin ? '' : 'none';
+    nsfwRow.style.display = canClassifyNsfw ? '' : 'none';
     nsfwToggle.checked = false;
     nsfwToggle.disabled = true;
     delete nsfwToggle.dataset.original;
-    if (isAdmin) {
+    if (canClassifyNsfw) {
       const session = editState._bookSession;
       apiFetch(`/api/books/${bookId}/nsfw`).then(async res => {
         if (!res.ok) return;

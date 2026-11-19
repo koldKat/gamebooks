@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 test('hide and restart cancel crossfades without resurrecting or blanking a background', async () => {
-  const keys = ['window', 'document', 'localStorage', 'Image', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'requestAnimationFrame'];
+  const keys = ['window', 'document', 'localStorage', 'Image', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'requestAnimationFrame', 'fetch'];
   const saved = Object.fromEntries(keys.map(key => [key, globalThis[key]]));
   const timers = new Map(), intervals = new Map(), frames = [];
   const images = [];
   let nextId = 1;
   globalThis.localStorage = { getItem: () => null, setItem() {} };
+  globalThis.fetch = async () => ({ ok: true, json: async () => ({ bookIds: [], seriesIds: [], coverUrls: [] }) });
   globalThis.window = { innerWidth: 1280, matchMedia: () => ({ matches: false }), addEventListener() {}, dispatchEvent() {} };
   globalThis.setTimeout = (fn, ms) => { const id = nextId++; timers.set(id, {fn, ms}); return id; };
   globalThis.clearTimeout = id => timers.delete(id);
@@ -38,8 +39,10 @@ test('hide and restart cancel crossfades without resurrecting or blanking a back
   const dialogs = {};
   globalThis.document = { documentElement: root, getElementById: id => ({ 'landing-bg-a': a, 'landing-bg-b': b, 'landing-wrapper': wrapper })[id] || dialogs[id] || null };
   try {
+    const { loadNsfwCatalog } = await import('../../../public/js/content/nsfw.js');
+    await loadNsfwCatalog();
     const { coversState } = await import('../../../public/js/covers/state.js');
-    const { _startLandingCoverRotation, _stopLandingCoverRotation, _rotateLandingCover } = await import('../../../public/js/covers/background.js');
+    const { _startLandingCoverRotation, _stopLandingCoverRotation, _rotateLandingCover, refreshLandingCoverVisibility } = await import('../../../public/js/covers/background.js');
     coversState._landingBgHidden = false;
     coversState._landingBgActive = 'a';
     coversState._allCovers = [1, 2, 3].map(id => ({id, coverUrl: `/cover${id}.jpg`}));
@@ -139,6 +142,25 @@ test('hide and restart cancel crossfades without resurrecting or blanking a back
     assert.equal(images.length, beforeSourceChange + 1, 'source change starts one cover request');
     images.at(-1).onload(); await settle(); fire(3300); fire(3400);
     assert.equal(images.length, beforeSourceChange + 1, 'starting rotation does not queue a second source-change cover');
+    _stopLandingCoverRotation();
+    coversState._allCovers = [{ id: 20, name: 'Книга', coverUrl: '/cyrillic.jpg' }, { id: 21, name: 'Book', coverUrl: '/latin.jpg' }];
+    coversState._hideCyrillicCovers = false;
+    coversState._landingBgQueue = [...coversState._allCovers];
+    coversState._landingBgQueueIdx = 0;
+    _startLandingCoverRotation();
+    const pendingCyrillic = images.at(-1).onload;
+    pendingCyrillic(); await settle();
+    assert.equal(vars.get('--landing-cover-url'), 'url(/cyrillic.jpg)');
+    coversState._hideCyrillicCovers = true;
+    refreshLandingCoverVisibility();
+    assert.equal(vars.get('--landing-cover-url'), '', 'hidden cover is immediately removed from copied glass artwork');
+    assert.equal(a.style.opacity, '0');
+    assert.equal(b.style.opacity, '0');
+    assert.equal(images.at(-1).src, '/latin.jpg');
+    pendingCyrillic(); await settle();
+    assert.equal(vars.get('--landing-cover-url'), '', 'late hidden-cover load cannot repaint');
+    images.at(-1).onload(); await settle();
+    assert.equal(vars.get('--landing-cover-url'), 'url(/latin.jpg)');
     _stopLandingCoverRotation();
   } finally {
     for (const [key, value] of Object.entries(saved)) {

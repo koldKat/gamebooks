@@ -58,6 +58,10 @@ Impersonated activity does not earn XP or coins or update the player's presence.
 
 Lorekeepers can edit public-book, anthology, and series metadata and public covers without owning a library copy. They cannot edit another creator's private titles, unpublish that creator's public titles, upload restricted attachments, or change other players' progress. Removing a title from their own library affects only their memberships.
 
+Admins and Lorekeepers can mark a book **NSFW** in the main app's book editor, beside **Make public** below the rating. Save the book to apply the classification. Other players cannot view or change this editing control.
+
+The admin panel also has an **NSFW** checkbox beside **Make public** in **Books → Edit**.
+
 Squire adds no permissions. It lowers the public-book and collection minimum for discovery and mapping rewards to 25 sections, compared with the normal 50. Assignment checks eligible previous completions without revoking existing rewards.
 
 ## Books

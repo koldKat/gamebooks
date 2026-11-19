@@ -355,7 +355,7 @@ function startAppSizeStats() {
   appSizeScheduleStarted = true;
   const refresh = () => {
     const raw = db.getAdminSetting('size_ignore_patterns') ?? SIZE_IGNORE_DEFAULTS;
-    readAppSize(raw.split('\n').map(line => line.trim()).filter(Boolean))
+    readAppSize.refresh(raw.split('\n').map(line => line.trim()).filter(Boolean))
       .catch(error => console.error('[app-size] scan failed:', error));
   };
   setTimeout(refresh, 10_000).unref();

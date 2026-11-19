@@ -27,7 +27,7 @@ An author's rating shows its vote count beside the average. Both are derived fro
 
 Open the ⚙ settings button or press **Ctrl+Y** to adjust cover titles, background options, animation preferences, seasonal sprites, and feed appearance.
 
-**Hide Cyrillic covers** and **Hide NSFW covers** control the cover wall. They do not remove books from your library or filter activity-feed entries. NSFW covers are hidden by default, including for signed-out visitors.
+**Hide Cyrillic covers** and **Hide NSFW covers** control the cover wall and rotating background, including backgrounds drawn from My Books. They do not remove books from your library or filter activity-feed entries. NSFW covers are hidden by default, including for signed-out visitors.
 
 ### Seasonal events
 

@@ -125,19 +125,20 @@ test('cover preferences do not filter or alter the feed', async () => {
   assert.equal(c.renderFeedContents(entries,null,'').html,result.html);
 });
 
-test('classification endpoint rejects non-admins and invalid values before writing', async () => {
-  let admin=false, writes=0, pushes=0, body={isNsfw:true};
+test('classification endpoint allows only admins and Lorekeepers and validates before writing', async () => {
+  let admin=false, moderator=false, local=false, writes=0, pushes=0, body={isNsfw:true};
   const dependencies={
-    '../db': {isUserAdmin:()=>admin},
-    '../db/connection': {db:{prepare:()=>({run:()=>{writes++;return{changes:1};}})}},
+    '../db': {isUserAdmin:()=>admin,isUserModerator:()=>moderator},
+    '../db/connection': {db:{prepare:()=>({get:()=>({is_nsfw:0}),run:()=>{writes++;return{changes:1};}})}},
     '../db/nsfw': {getNsfwCatalog(){}},
-    '../request-helpers': {authenticate:async()=>1,readBody:async()=>body,send:(res,status,data)=>({status,data})},
+    '../request-helpers': {authenticate:async()=>1,requireLocalhost:()=>local,readBody:async()=>body,send:(res,status,data)=>({status,data})},
     '../sse': {publicCatalogPush:()=>pushes++,feedPush(){}},
   };
   const c=vm.createContext({module:{exports:{}},require:name=>dependencies[name]});
   vm.runInContext(readFileSync('server/routes/nsfw.js','utf8'),c);
   const update=c.module.exports.handleSetBookNsfw;
   assert.equal((await update({method:'PATCH'},{},22)).status,403);
+  assert.equal((await update({method:'GET'},{},22)).status,403);
   assert.equal(writes,0);
   admin=true;body={isNsfw:'false'};
   assert.equal((await update({method:'PATCH'},{},22)).status,400);
@@ -145,4 +146,14 @@ test('classification endpoint rejects non-admins and invalid values before writi
   body={isNsfw:false};
   assert.equal((await update({method:'PATCH'},{},22)).status,200);
   assert.equal(writes,1);assert.equal(pushes,1);
+  admin=false;moderator=true;
+  assert.equal((await update({method:'GET'},{},22)).status,200);
+  assert.equal((await update({method:'PATCH'},{},22)).status,200);
+  assert.equal(writes,2);assert.equal(pushes,2);
+  const adminUpdate=c.module.exports.handleAdminSetBookNsfw;
+  assert.equal(await adminUpdate({method:'PATCH'},{},22),undefined);
+  assert.equal(writes,2);
+  local=true;
+  assert.equal((await adminUpdate({method:'PATCH'},{},22)).status,200);
+  assert.equal(writes,3);assert.equal(pushes,3);
 });

@@ -73,7 +73,7 @@ test('anthology counts include distinct direct and secondary children without a 
 
 test('book metadata editing never reads saved gameplay and retains private anthology fields',()=>{
   const fs=require('node:fs'),vm=require('node:vm'),calls=[];
-  const book={id:10,name:'Private',is_public:0,is_container:1,series_id:9,parent_book_id:null,discoverable_sections:77,pdf_path:'book.pdf'};
+  const book={id:10,name:'Private',is_public:0,is_nsfw:1,is_container:1,series_id:9,parent_book_id:null,discoverable_sections:77,pdf_path:'book.pdf'};
   const db={prepare(sql){calls.push(sql);return{get:()=>book};}};
   const source=fs.readFileSync('server/db/admin.js','utf8');
   const get=vm.runInNewContext(source.slice(source.indexOf('function adminGetBookStats('),source.indexOf('function adminGetStats('))+'\nadminGetBookStats',{db,_getPdfSize:()=>123});

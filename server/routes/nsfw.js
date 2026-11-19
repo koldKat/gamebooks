@@ -1,10 +1,10 @@
 'use strict';
 
-// Serve public content classifications and let gamemasters maintain book labels.
+// Serve public content classifications and let admins and Lorekeepers maintain book labels.
 const database = require('../db');
 const { db } = require('../db/connection');
 const { getNsfwCatalog } = require('../db/nsfw');
-const { authenticate, send, readBody } = require('../request-helpers');
+const { authenticate, requireLocalhost, send, readBody } = require('../request-helpers');
 const { publicCatalogPush, feedPush } = require('../sse');
 
 function handleNsfwCatalog(req, res) {
@@ -15,7 +15,18 @@ function handleNsfwCatalog(req, res) {
 async function handleSetBookNsfw(req, res, bookId) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
-  if (!database.isUserAdmin(userId)) return send(res, 403, { error: 'Gamemaster access required' });
+  if (!database.isUserAdmin(userId) && !database.isUserModerator(userId)) {
+    return send(res, 403, { error: 'Admin or Lorekeeper access required' });
+  }
+  return saveBookNsfw(req, res, bookId);
+}
+
+async function handleAdminSetBookNsfw(req, res, bookId) {
+  if (!requireLocalhost(req, res)) return;
+  return saveBookNsfw(req, res, bookId);
+}
+
+async function saveBookNsfw(req, res, bookId) {
   if (req.method === 'GET') {
     const book = db.prepare('SELECT is_nsfw FROM books WHERE id = ?').get(bookId);
     return book ? send(res, 200, { isNsfw: !!book.is_nsfw }) : send(res, 404, { error: 'Not found' });
@@ -29,4 +40,4 @@ async function handleSetBookNsfw(req, res, bookId) {
   return send(res, 200, { ok: true, isNsfw });
 }
 
-module.exports = { handleNsfwCatalog, handleSetBookNsfw };
+module.exports = { handleNsfwCatalog, handleSetBookNsfw, handleAdminSetBookNsfw };

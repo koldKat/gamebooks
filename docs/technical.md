@@ -65,7 +65,7 @@ The server uses Node.js and `better-sqlite3`. Browser code uses ES modules witho
 
 `server/db/connection.js` owns the shared SQLite connection. `server/db.js` initializes schema and migrations and exports the domain operations. Schema definitions and migration guards in those modules are authoritative; this guide does not duplicate every table and column.
 
-Informational source and app-size scans use persisted cached results. Scanning begins after the HTTP listener is ready, through one shared worker at nice 15, with a small heap, streamed file reads and pauses between batches. Scans run sequentially outside the request thread; requests keep receiving cached values while a refresh runs. App size is checked hourly.
+Informational source and app-size scans use persisted cached results. Scanning begins after the HTTP listener is ready, through one shared worker at nice 15 or an inherited lower priority, with a small heap, streamed file reads and pauses between batches. Scans run sequentially outside the request thread; requests keep receiving cached values while a refresh runs. App size is checked hourly; the visible admin card reads the shared cache every minute.
 
 ### Data ownership
 

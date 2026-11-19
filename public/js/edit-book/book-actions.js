@@ -136,7 +136,7 @@ export function bindBookActions({ pubTypeEl, minSections, minMaxSectionNumber, s
     try {
       await onSave(name, sections, isbn, issn, asin, pages, authors, description, discoverableSections, isPublic, seriesName, seriesNumber, isContainer, parentId, bookOrder, maxSectionNumber);
       const nsfw = document.getElementById('edit-book-nsfw-toggle');
-      if (editState._hooks.resolveIsAdmin?.() && nsfw && !nsfw.disabled && nsfw.dataset.original !== (nsfw.checked ? '1' : '0')) {
+      if ((editState._hooks.resolveIsAdmin?.() || editState._hooks.resolveIsModerator?.()) && nsfw && !nsfw.disabled && nsfw.dataset.original !== (nsfw.checked ? '1' : '0')) {
         const response = await apiFetch(`/api/books/${bookId}/nsfw`, {
           method: 'PATCH', body: JSON.stringify({ isNsfw: nsfw.checked }),
         });

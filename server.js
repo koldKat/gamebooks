@@ -220,7 +220,7 @@ const {
   handleAdminPinAnnouncement, handleAdminUnpinAnnouncement,
 } = require('./server/routes/announcements');
 const { handleAnnouncementHistory } = require('./server/routes/announcement-history');
-const { handleNsfwCatalog, handleSetBookNsfw } = require('./server/routes/nsfw');
+const { handleNsfwCatalog, handleSetBookNsfw, handleAdminSetBookNsfw } = require('./server/routes/nsfw');
 
 const {
   handleForumLatest,
@@ -531,6 +531,7 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET'  && urlPath === '/api/admin/books')  return await handleAdminGetBooks(req, res);
     if (method === 'POST' && (m = urlPath.match(/^\/api\/admin\/books\/(\d+)\/import-complete$/))) return handleImportComplete(req, res, +m[1]);
     if (method === 'POST' && (m = urlPath.match(/^\/api\/admin\/books\/(\d+)\/reading-matter-updated$/))) return handleReadingMatterUpdated(req, res, +m[1]);
+    if (method === 'PATCH' && (m = urlPath.match(/^\/api\/admin\/books\/(\d+)\/nsfw$/))) return await handleAdminSetBookNsfw(req, res, +m[1]);
     if (method === 'GET'  && urlPath === '/api/admin/series') return await handleGetSeries(req, res);
     if ((m = urlPath.match(adminWatchStateRe)) && method === 'GET') return await handleWatchState(req, res, +m[1], +m[2]);
     if ((m = urlPath.match(adminUserSessRe))        && method === 'POST') return await handleAdminClearSessions(req, res, +m[1]);

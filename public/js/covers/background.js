@@ -1,6 +1,7 @@
 import { _isMobile, _shuffle } from './helpers.js';
 import { coversState } from './state.js';
 import { getToken } from '../core/state.js';
+import { _hasCyrillic } from './filters.js';
 
 // ── Landing bg ─────────────────────────────────────────────────────────────────
 export function _landingCoverKey(cover) {
@@ -22,6 +23,11 @@ export function _persistLandingCoverPos() {
 }
 
 import { isHiddenNsfwCover } from '../content/nsfw.js';
+
+function _isHiddenLandingCover(cover) {
+  return isHiddenNsfwCover(cover.coverUrl)
+    || (coversState._hideCyrillicCovers && _hasCyrillic(cover.name));
+}
 
 export function _effectiveLandingCoverSource() {
   return (coversState._landingCoverSource === 'mine' && getToken()) ? 'mine' : 'public';
@@ -46,14 +52,14 @@ export function _ownedLandingCoverPool() {
       coverUrl: `/covers/${b.cover_path}`,
     }))
     .filter(entry => {
-      if (!entry.coverUrl || isHiddenNsfwCover(entry.coverUrl) || seen.has(entry.coverUrl)) return false;
+      if (!entry.coverUrl || _isHiddenLandingCover(entry) || seen.has(entry.coverUrl)) return false;
       seen.add(entry.coverUrl);
       return true;
     });
 }
 
 export function _landingCoverPool() {
-  if (_effectiveLandingCoverSource() !== 'mine') return (coversState._allCovers || []).filter(c => c.coverUrl && !isHiddenNsfwCover(c.coverUrl));
+  if (_effectiveLandingCoverSource() !== 'mine') return (coversState._allCovers || []).filter(c => c.coverUrl && !_isHiddenLandingCover(c));
   return _ownedLandingCoverPool();
 }
 
@@ -158,21 +164,14 @@ export function _rotateLandingCover() {
   image.src = pick.coverUrl;
 }
 
-export function refreshNsfwLandingCover() {
-  _resetLandingCoverQueue();
-  for (const layer of ['a', 'b']) {
-    const element = document.getElementById(`landing-bg-${layer}`);
-    const url = element?.style.backgroundImage.match(/^url\(["']?(.*?)["']?\)$/)?.[1];
-    if (url && isHiddenNsfwCover(url)) {
-      element.style.backgroundImage = '';
-      element.style.opacity = '0';
-    }
-  }
-  _rotateLandingCover();
+export function refreshLandingCoverVisibility() {
+  // Cancel pending loads and clear copied glass-card artwork as well as both layers.
+  _stopLandingCoverRotation();
+  _startLandingCoverRotation();
 }
 
 function _paintLandingCover(pick, generation) {
-  if (isHiddenNsfwCover(pick.coverUrl)) { _finishLandingRotation(generation); return; }
+  if (_isHiddenLandingCover(pick)) { _finishLandingRotation(generation); return; }
   if (coversState._landingBgHidden || document.getElementById('landing-wrapper')?.style.display === 'none' || _coverEditDialogOpen()) {
     _finishLandingRotation(generation);
     return;

@@ -1,5 +1,5 @@
 import { _setCoverFavoritesFromPrefs, _coverTooltipTitlePercent } from './filters.js';
-import { _effectiveLandingCoverSource, _landingCoverPool, _resetLandingCoverQueue, _rotateLandingCover, _startLandingCoverRotation, _stopLandingCoverRotation } from './background.js';
+import { _effectiveLandingCoverSource, _landingCoverPool, _resetLandingCoverQueue, _rotateLandingCover, _startLandingCoverRotation, _stopLandingCoverRotation, refreshLandingCoverVisibility } from './background.js';
 import { coversState } from './state.js';
 import { getToken } from '../core/state.js';
 import { t } from '../i18n.js';
@@ -146,6 +146,7 @@ export function resetFeedDisplayPrefsForLogout() {
 
 // ── Prefs state setter (called from applyPrefs in main.js) ────────────────────
 export function setCoversPrefsState(p) {
+  const previousHideCyrillic = coversState._hideCyrillicCovers;
   applyNsfwPreference(p.hideNsfwBooks ?? '1');
   if ('disableFloaties' in p) applyFloatiesPreference(p.disableFloaties);
   if ('seasonPreview' in p) applySeasonPreviewPreference(p.seasonPreview);
@@ -189,6 +190,7 @@ export function setCoversPrefsState(p) {
   _applyLandingBgHiddenPref();
   _applyCoverTooltipTitlePrefs();
   _applyLandingCoverSourcePrefs();
+  if (previousHideCyrillic !== coversState._hideCyrillicCovers) refreshLandingCoverVisibility();
 }
 
 // ── DOM event wiring (called once from DOMContentLoaded) ──────────────────────

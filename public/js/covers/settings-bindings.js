@@ -9,13 +9,13 @@ import { initSeasonalEventSettings } from '../seasonal-events/preferences.js';
 import { initFloatiesSettings } from '../progression/floaties.js';
 import { initNsfwSettings } from '../content/nsfw.js';
 import { loadCovers, refreshNsfwCatalogDisplay } from './data.js';
-import { refreshNsfwLandingCover } from './background.js';
+import { refreshLandingCoverVisibility } from './background.js';
 
 export function _initCoverSettings() {
   initNsfwSettings(patch => coversState._hooks.savePrefs?.(patch));
   document.addEventListener('nsfw-preference-changed', () => {
     if (!refreshNsfwCatalogDisplay()) loadCovers({ force: true });
-    refreshNsfwLandingCover();
+    refreshLandingCoverVisibility();
   });
   initSeasonalEventSettings(patch => coversState._hooks.savePrefs?.(patch));
   initFloatiesSettings(patch => coversState._hooks.savePrefs?.(patch));
@@ -44,6 +44,7 @@ export function _initCoverSettings() {
     coversState._hideCyrillicCovers = !!e.target.checked;
     _persistCoverTooltipPrefs();
     _refreshCoversDisplay();
+    refreshLandingCoverVisibility();
   });
   document.getElementById('reduce-motion-cb')?.addEventListener('change', e => {
     coversState._reduceMotion = !!e.target.checked;
