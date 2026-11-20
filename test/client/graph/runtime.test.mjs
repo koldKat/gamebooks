@@ -11,6 +11,6 @@ test('graph preserves layout, drawing, live bindings, lifecycle and pathfinding'
   assert.ifError(result.error); assert.equal(result.status, 0, result.stdout + result.stderr);
   const { digest, cases } = JSON.parse(result.stdout);
   assert.equal(cases, 20);
-  // Captured from 3831baf's unsplit graph using the same isolated fixtures.
-  assert.equal(digest, 'a3f89286d6e2b6f12dfe25f2b20c94b1017568edac8eb4842e6a3fef46d65bb4');
+  // Original graph baseline, updated so chart deletion preserves completed-run history.
+  assert.equal(digest, '35d18aa461f38c54ce264d34bec0c6210254e6c45d689cdbba91cf7291e87f87');
 });

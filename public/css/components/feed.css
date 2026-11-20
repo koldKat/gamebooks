@@ -467,11 +467,31 @@ body.no-feed-glass-cards .feed-day-card--glass::before {
 .feed-group-body {
   border-left: 2px solid #374151;
   padding-top: 0.1rem;
-  padding-left: 0.5rem;
+  padding-left: calc(0.5rem - 2px);
   margin-left: -0.5rem;
+}
+.feed-entry--created + .feed-group-body,
+.feed-user-group--created > .feed-group-body {
+  border-left-color: #38bdf8;
 }
 .feed-user-group--party > .feed-group-body {
   border-left-color: transparent;
+}
+.feed-catalog-group {
+  border-left: 2px solid #38bdf8;
+  padding-left: 0.5rem;
+  margin-left: -0.5rem;
+}
+.feed-catalog-group .feed-entry--created,
+.feed-catalog-group .feed-catalog-group {
+  border-left: 0;
+  padding-left: 0;
+  margin-left: 0;
+}
+.feed-catalog-group .feed-group-body {
+  border-left: 0;
+  padding-left: 0.4rem;
+  margin-left: 0;
 }
 .feed-group-count {
   color: #9ca3af;

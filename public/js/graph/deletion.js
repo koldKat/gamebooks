@@ -61,8 +61,10 @@ export function deleteNodes(ids) {
     if (node.choices.length === 0 && !visited.has(parseSecId(sec)) && !hasMetadata)
       delete state.graph[sec];
   });
-  // Trim paths and reopen any affected run
+  // Finished runs are history, independent of later changes to the shared chart.
+  // Only an unfinished (or portal-paused) run can resume from a trimmed path.
   state.playthroughs.forEach((pt, i) => {
+    if (pt.completed && pt.result !== 'portal') return;
     const cutAt = pt.path.findIndex(s => ids.has(parseSecId(s)));
     if (cutAt !== -1) {
       pt.path      = pt.path.slice(0, cutAt);

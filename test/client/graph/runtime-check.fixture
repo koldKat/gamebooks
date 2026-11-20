@@ -158,8 +158,9 @@ if (!baseline) {
   api.deleteNodes(new Set(['2']));
   assert.equal(state.graph[2], undefined); assert.equal(state.positions[2], undefined);
   assert.deepEqual(state.graph[1].choices, [3], 'deletion removes string-typed incoming choices');
-  assert.deepEqual(state.playthroughs[0].path, ['1']); assert.equal(state.playthroughs[0].completed, false);
-  assert.equal(state.activePtIndex, null); assert.ok(state.graph[3], 'string-typed visited nodes survive orphan cleanup');
+  assert.deepEqual(state.playthroughs[0].path, ['1', '2', 0]); assert.equal(state.playthroughs[0].completed, true);
+  assert.equal(state.activePtIndex, 0, 'editing the chart preserves historical run selection');
+  assert.ok(state.graph[3], 'string-typed visited nodes survive orphan cleanup');
   reset({ graph: { 1: { choices: [2] }, 2: { choices: [0] } }, positions: { 1: { x: 0, y: 0 }, 2: { x: 130, y: 0 } } });
   api.initGraph(); api.syncGraph();
   api.network.emit('zoom'); api.network.emit('dragEnd', { nodes: [2] });

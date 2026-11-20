@@ -49,7 +49,7 @@ Each day's card shows the covers of the public books played that day, faded behi
 
 - A **tip bar** cycles through helpful hints every 15 seconds (the orange bar counts down)
 - Activity is grouped by day (Today / Yesterday / date)
-- New books in a series or anthology fold under its heading on the day those books were created. Expand it to see only that day’s new books; older announcements keep their original dates.
+- New books and anthologies fold under their series or anthology heading on the day they were created. Expand the heading to see that day’s additions, with an anthology’s stories nested beneath it. Older announcements keep their original dates.
 - Players with 5 or more entries on the same day are collapsed into one row - click it to expand
 - Pinned announcements from the Gamemaster appear at the top when **News** is enabled
 
@@ -365,7 +365,7 @@ Right-clicking a dot opens a menu with these options:
 - **Toggle battle ⚔** - mark or unmark this section as a battle location
 - **Color 🎨** - apply one of 16 colors to the dot
 - **Shape** - choose a circle, rounded square, hexagon, triangle, octagon, or trapezoid; outcome and battle outlines remain visible
-- **Delete node** - remove this dot and any dead-end descendants (asks for confirmation)
+- **Delete node** - remove this dot and any dead-end descendants (asks for confirmation). Finished run histories stay intact.
 
 ### Fast Travel
 

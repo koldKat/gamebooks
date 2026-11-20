@@ -49,6 +49,7 @@ export default {
     'feed.verb.lost': 'lost',
     'feed.verb.fell_in_battle': 'fell in battle',
     'feed.noun.anthology': 'anthology',
+    'feed.noun.anthologies': 'anthologies',
     'feed.noun.book':      'book',
     'feed.noun.books':     'books',
     'feed.first_time': 'for the first time',
@@ -92,6 +93,8 @@ export default {
     'feed.series_created_today': ' - {n} series created today',
     'feed.books_in_batch':   '{n} books',
     'feed.book_in_batch':    '{n} book',
+    'feed.anthology_in_batch': '{n} anthology',
+    'feed.anthologies_in_batch': '{n} anthologies',
     'feed.more_books_in_batch': '+{n} more',
     'feed.hover_level':      'Lvl {n}',
 };

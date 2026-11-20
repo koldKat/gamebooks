@@ -116,7 +116,21 @@ await snapshot([], { title: 'Pinned only', body: 'Text' });
 const digest = createHash('sha256').update(JSON.stringify(snapshots)).digest('hex');
 
 if (!baseline) {
-  for (const type of [...types, 'series_books_created', 'anthology_books_created']) {
+  {
+  const anthologyDay = modules.get(resolve(root, 'feed/groups.js')).namespace.createDayRenderer();
+  const anthology = { ...base, type: 'book_created', bookId: 400, bookName: 'Issue Seven', isContainer: true, parentBookId: null, parentBookName: null };
+  const child = { ...base, type: 'book_created', bookId: 401, bookName: 'Issue Story', parentBookId: 400, parentBookName: 'Issue Seven' };
+  const olderSeries = anthologyDay([anthology, child], 'older-anthology-series');
+  assert.ok(olderSeries.includes('feed.tmpl.created_in_series') && olderSeries.includes('|noun=feed.noun.anthology|series='), 'an anthology added to an older series gets the series heading');
+  assert.ok(olderSeries.includes('feed.anthology_in_batch|n=1'), 'series heading counts anthologies, not books');
+  assert.equal((olderSeries.match(/data-book-id="400"/g) || []).length, 1, 'anthology remains visible once');
+  assert.equal((olderSeries.match(/data-book-id="401"/g) || []).length, 1, 'nested anthology child remains visible once');
+  const multipleAnthologies = anthologyDay([anthology, { ...anthology, bookId: 402, bookName: 'Issue Eight' }], 'multiple-anthologies');
+  assert.ok(multipleAnthologies.includes('|noun=feed.noun.anthologies|series=') && multipleAnthologies.includes('feed.anthologies_in_batch|n=2'));
+  const freshAnthologySeries = anthologyDay([{ ...base, type: 'series_created' }, anthology, child], 'fresh-anthology-series');
+  assert.ok(!freshAnthologySeries.includes('|noun=feed.noun.anthology|series='), 'a same-day series is not labeled as an older series');
+  }
+  for (const type of [...types, 'series_books_created', 'series_anthologies_created', 'anthology_books_created']) {
     const flagged = renderEntry({...base,type,isNsfw:true,creationBookCount:2}).html;
     assert.equal((flagged.match(/class="feed-nsfw-tag"/g)||[]).length,1,type+' has one NSFW tag');
     assert.ok(!renderEntry({...base,type,creationBookCount:2}).html.includes('feed-nsfw-tag'),type+' safe entry stays untagged');
@@ -281,7 +295,7 @@ if (!baseline) {
   assert.ok(!standalone.includes('feed-group-toggle'), 'books without containers remain standalone');
   const anthologyChild = { ...newBook, parentBookId: 2, parentBookName: 'Anthology' };
   const anthology = render([{ ...base, type: 'book_created', isContainer: true, bookId: 2 }, anthologyChild], null, '').html;
-  assert.ok(!anthology.includes('feed.tmpl.created_in_series'), 'same-day anthology claims its child only once');
+  assert.equal((anthology.match(/feed.tmpl.created_in_series/g) || []).length, 1, 'new anthology gets one older-series heading while claiming its child once');
   assert.equal((anthology.match(/data-book-id="41"/g) || []).length, 1);
   const oldAnthology = { ...base, type: 'book_created', isContainer: true, bookId: 2, completedAt: '2026-10-01T09:00:00Z' };
   const anthologyDays = render([anthologyChild, { ...oldBook, parentBookId: 2 }, oldAnthology], null, '');

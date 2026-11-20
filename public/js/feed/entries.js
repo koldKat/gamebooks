@@ -76,8 +76,8 @@ export function renderEntry(e) {
     extraClass = 'feed-entry--created';
   } else if (e.type === 'book_added') {
     html = t('feed.tmpl.added', { user: userEl, noun: nounLabel(e.isContainer), book: bookBtn(e.bookId, e.bookName) });
-  } else if (e.type === 'series_books_created') {
-    html = t('feed.tmpl.created_in_series', { user: userEl, noun: t(e.creationBookCount === 1 ? 'feed.noun.book' : 'feed.noun.books'), series: _seriesTag(e) });
+  } else if (e.type === 'series_books_created' || e.type === 'series_anthologies_created') {
+    html = t('feed.tmpl.created_in_series', { user: userEl, noun: t(e.type === 'series_anthologies_created' ? (e.creationBookCount === 1 ? 'feed.noun.anthology' : 'feed.noun.anthologies') : (e.creationBookCount === 1 ? 'feed.noun.book' : 'feed.noun.books')), series: _seriesTag(e) });
     extraClass = 'feed-entry--created';
   } else if (e.type === 'anthology_books_created') {
     html = t('feed.tmpl.created_in_anthology', { user: userEl, noun: t(e.creationBookCount === 1 ? 'feed.noun.book' : 'feed.noun.books'), anthology: anthologyTag() });

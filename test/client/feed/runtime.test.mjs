@@ -13,5 +13,5 @@ test('feed preserves rendering, loading, interactions, previews and day covers',
   const { digest, cases } = JSON.parse(result.stdout);
   assert.equal(cases, 38);
   // Includes filter ordering and native fieldset/legend announcement borders.
-  assert.equal(digest, '114f5bf330518fca596c90a51b200e1693f935884056a145aad9ec31446e0d4e');
+  assert.equal(digest, '6155f489efcea63c94fde248db64872fcdda19a3df65c317789e401b201d8ed6');
 });
