@@ -71,7 +71,7 @@ export default {
     'legend.candie':     'Can lose here',
     'legend.canwin':     'Can win here',
     'legend.deathrun':   'Lost here',
-    'legend.winrun':     'Victory run ended here',
+    'legend.winrun':     'Won here',
     'legend.battle':     'Battle here',
     'legend.battlerun':  'Battle death ended here',
     'legend.portal':     'Portal',

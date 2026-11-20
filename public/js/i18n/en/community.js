@@ -56,6 +56,7 @@ export default {
     'feed.series_run_word': 'series run',
     'feed.together':   'together',
     'feed.party_badge': 'party',
+    'feed.nsfw': 'NSFW',
 
     'feed.tmpl.run_completed':        '{user} {verb} in {book} <span class="feed-run">run {n}</span>',
     'feed.tmpl.created':              '{user} <span class="feed-verb neutral">created {noun}</span> {book}',

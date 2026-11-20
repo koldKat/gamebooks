@@ -78,7 +78,7 @@ export async function openCollectibles(){
  if(!dialog){
   dialog=document.createElement('dialog');dialog.id='collectibles-dialog';
   dialog.setAttribute('aria-labelledby','collectibles-title');
-  dialog.innerHTML='<header><h2 id="collectibles-title">Companions</h2><button type="button" data-dialog-close aria-label="Close">×</button></header><div class="collectibles-body"></div>';
+  dialog.innerHTML='<header class="modal-title-row"><h2 id="collectibles-title" class="modal-title">Companions</h2><button class="modal-close-btn" type="button" data-dialog-close aria-label="Close">✕</button></header><div class="collectibles-body"></div>';
   dialog.querySelector('[data-dialog-close]').addEventListener('click',closeCollectibles);
   dialog.addEventListener('cancel',unloadItems);
   dialog.addEventListener('close',()=>{if(!dialog.open){unloadItems();displayedNew.clear();updatePulse();}});

@@ -1,6 +1,10 @@
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 
+export function nsfwTag(flagged) {
+  return flagged ? ` <span class="feed-nsfw-tag">${t('feed.nsfw')}</span>` : '';
+}
+
 // Build lightweight run-preview tooltips; create the graph only on click.
 export function _runTooltip(e) {
   const parts = [];

@@ -26,26 +26,9 @@
 #companion-shop-dialog::backdrop {
   background: #0009;
 }
-#companion-shop-dialog header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-#companion-shop-dialog h2 {
-  margin: 0;
-  font-size: 0.95rem;
-}
 #companion-shop-dialog .companion-shop-balance {
   margin-left: auto;
   white-space: nowrap;
-}
-#companion-shop-dialog [data-dialog-close] {
-  padding: 2px 4px;
-  border: 0;
-  background: none;
-  color: inherit;
-  cursor: pointer;
 }
 #companion-shop-dialog .shop-tabs {
   display: flex;

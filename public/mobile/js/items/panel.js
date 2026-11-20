@@ -168,7 +168,7 @@ export function openMobileItems(mode = 'inventory') {
   overlay = document.createElement('div');
   overlay.id = 'm-items-overlay'; overlay.className = 'm-overlay active';
   overlay.innerHTML = `<div class="m-items-modal" role="dialog" aria-modal="true" aria-label="${escapeHtml(t(mode === 'equipment' ? 'eq.title' : 'inv.title'))}">
-    <div class="m-items-header"><strong>${t(mode === 'equipment' ? 'eq.title' : 'inv.title')}</strong>
+    <div class="m-items-header"><strong class="modal-title">${t(mode === 'equipment' ? 'eq.title' : 'inv.title')}</strong>
       ${mode === 'inventory' ? '<span class="m-items-count" data-item-count></span>' : ''}
       <button class="m-icon-btn" data-dialog-close aria-label="${t('btn.close')}">✕</button></div>
     <div class="m-items-body"></div>
@@ -203,9 +203,9 @@ async function openPicker(slotKey = null) {
   const slot = ALL_SLOTS.find(slot => slot.key === slotKey);
   const title = slot ? t('eq.picker_title', { slot: slot.label() }) : t('inv.add_title');
   layer.innerHTML = `<div class="m-items-modal" role="dialog" aria-modal="true" aria-label="${escapeHtml(title)}">
-    <div class="m-items-picker-title"><strong>${escapeHtml(title)}</strong></div>
-    <div class="m-items-header"><input class="inv-search" autocomplete="off" type="search" placeholder="${escapeHtml(t('inv.search_placeholder'))}" aria-label="${escapeHtml(t('inv.search_placeholder'))}">
+    <div class="m-items-header"><strong class="modal-title">${escapeHtml(title)}</strong>
       <button class="m-icon-btn" data-dialog-close aria-label="${t('btn.close')}">✕</button></div>
+    <div class="m-items-search"><input class="inv-search" autocomplete="off" type="search" placeholder="${escapeHtml(t('inv.search_placeholder'))}" aria-label="${escapeHtml(t('inv.search_placeholder'))}"></div>
     <div class="inv-picker-grid">${loadingHtml()}</div></div>`;
   picker = layer; document.body.appendChild(layer);
   layer.querySelector('[data-dialog-close]').onclick = closePicker;

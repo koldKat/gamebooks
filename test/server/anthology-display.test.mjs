@@ -45,7 +45,7 @@ test('private anthology metadata does not leak through its public child', () => 
   } finally {db.close();}
 });
 
-test('anthology activity includes public primary and secondary children, newest first', () => {
+test('anthologies list books while run activity remains in each child', () => {
   const {db,context} = fixture();
   try {
     db.exec(`UPDATE books SET isbn='anthology-isbn' WHERE id=7;
@@ -68,10 +68,10 @@ test('anthology activity includes public primary and secondary children, newest 
       {completed:true,isPublic:true,result:'success',completedAt:800},
     ]}));
     const entries = context.getBookActivity(7).entries;
-    assert.deepEqual(Array.from(entries,e=>e.bookId),[43,42]);
-    assert.deepEqual(Array.from(entries[0].runs,r=>r.runIndex),[0,-1]);
-    assert.equal(entries[1].runs.length,1,'private and unfinished runs stay excluded');
-    assert.equal(entries[0].bookName,'Secondary');
+    assert.equal(entries.length,0,'anthology dialogs do not aggregate child runs');
+    const secondary = context.getBookActivity(43).entries;
+    assert.deepEqual(Array.from(secondary[0].runs,r=>r.runIndex),[0,-1]);
+    assert.equal(context.getBookActivity(42).entries[0].runs.length,1,'private and unfinished runs stay excluded');
     assert.deepEqual(Array.from(context.getBookActivity(42).entries,e=>e.bookId),[42],
       'individual book activity stays scoped to that book');
   } finally {db.close();}

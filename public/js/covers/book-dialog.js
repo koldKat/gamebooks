@@ -119,7 +119,9 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
   }
 
   let activityHtml = '';
-  if (!entries.length) {
+  if (bookMeta?.isContainer) {
+    activityHtml = '';
+  } else if (!entries.length) {
     activityHtml = `<p class="pub-empty">No public activity for this ${bookMeta?.isContainer ? 'anthology' : bookMeta?.issn ? 'magazine' : 'book'} yet.</p>`;
   } else {
     const multiBook = entries.some(e => e.bookName !== entries[0].bookName);

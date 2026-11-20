@@ -489,8 +489,8 @@ body.cover-tooltip-title-bold #cover-tooltip-settings-preview {
   top: 1rem;
   left: 50%;
   transform: translateX(-50%);
-  width: 680px;
-  max-width: min(94vw, 680px);
+  width: 520px;
+  max-width: min(94vw, 520px);
   background: rgba(17, 24, 39, 0.98);
   border: 1px solid #374151;
   border-radius: 8px;
@@ -525,20 +525,20 @@ body.cover-tooltip-title-bold #cover-tooltip-settings-preview {
 #shortcuts-modal-body {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.3rem;
 }
 .shortcuts-row {
   display: grid;
-  grid-template-columns: 92px 1fr;
-  gap: 0.65rem;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 0.45rem;
   align-items: center;
 }
 .shortcuts-key {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 1.6rem;
-  padding: 0.1rem 0.45rem;
+  min-height: 1.25rem;
+  padding: 0.05rem 0.3rem;
   border-radius: 5px;
   border: 1px solid #374151;
   background: rgba(31, 41, 55, 0.9);

@@ -60,4 +60,23 @@ function getNsfwCatalog(db) {
   };
 }
 
-module.exports = { initializeNsfw, getNsfwCatalog };
+// Classify feed references once per build, using the same collection rules as cover filtering.
+function markNsfwFeedEntries(db, entries) {
+  const catalog = getNsfwCatalog(db);
+  const books = new Set(catalog.bookIds);
+  const series = new Set(catalog.seriesIds);
+  for (const row of db.prepare('SELECT id FROM books WHERE is_nsfw=1').all()) books.add(row.id);
+  for (const row of db.prepare('SELECT id FROM series WHERE is_nsfw=1').all()) series.add(row.id);
+  for (const entry of entries) {
+    let flagged = books.has(Number(entry.bookId)) || books.has(Number(entry.parentBookId))
+      || series.has(Number(entry.seriesId));
+    if (entry.type === 'announcement') {
+      flagged ||= [...String(entry.body || '').matchAll(/\/(book|anthology|series)\/(\d+)/g)]
+        .some(([, kind, id]) => (kind === 'series' ? series : books).has(Number(id)));
+    }
+    if (flagged) entry.isNsfw = true;
+    else delete entry.isNsfw;
+  }
+}
+
+module.exports = { initializeNsfw, getNsfwCatalog, markNsfwFeedEntries };

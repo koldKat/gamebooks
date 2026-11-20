@@ -23,23 +23,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.85rem 1rem;
   border-bottom: 1px solid #374151;
   flex-shrink: 0;
 }
 .admin-editor-header h2 {
-  font-size: 0.95rem;
-  color: #f5a623;
   overflow-wrap: anywhere;
-}
-.admin-editor-close {
-  background: none;
-  border: 0;
-  color: #9ca3af;
-  font-size: 1.4rem;
-  cursor: pointer;
-  padding: 0 0.3rem;
 }
 .admin-editor-body {
   min-height: 0;
@@ -1122,11 +1110,6 @@ tr:hover td {
   flex-direction: column;
   gap: 1rem;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
-}
-#gift-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #f3f4f6;
 }
 #gift-book-name {
   font-size: 0.82rem;

@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const vm = require('node:vm');
 const Database = require('better-sqlite3');
-const { initializeNsfw, getNsfwCatalog } = require('../server/db/nsfw');
+const { initializeNsfw, getNsfwCatalog, markNsfwFeedEntries } = require('../server/db/nsfw');
 
 test('classification migration seeds known titles once and preserves later corrections', () => {
   const db = new Database(':memory:');
@@ -46,6 +46,35 @@ test('public labels include all-adult collections while preserving mixed series 
     assert.ok(data.coverUrls.includes('/covers/anthology.jpg'));
     assert.ok(!data.coverUrls.includes('/covers/mixed-anthology.jpg'));
   } finally { db.close(); }
+});
+
+test('feed flags cover every activity reference, collections, private titles and announcement links', () => {
+  const db = new Database(':memory:');
+  try {
+    db.exec(`CREATE TABLE series(id INTEGER PRIMARY KEY,is_nsfw,is_public);
+      INSERT INTO series VALUES(10,0,1),(20,1,1),(30,1,0);
+      CREATE TABLE books(id INTEGER PRIMARY KEY,is_nsfw,is_public,is_container,parent_book_id,series_id,cover_path);
+      CREATE TABLE book_anthology_memberships(book_id,anthology_id);
+      INSERT INTO books VALUES
+        (1,1,1,0,NULL,10,'adult.jpg'),(2,0,1,0,NULL,NULL,'safe.jpg'),
+        (3,1,0,0,NULL,NULL,'private.jpg'),(4,0,1,1,NULL,NULL,'anthology.jpg'),
+        (5,1,1,0,4,NULL,'child.jpg');`);
+    const types = ['book_created','book_added','run_started','run_completed','book_rated',
+      'all_discovered','all_visited','first_win','first_loss','first_battle_death','party_formed'];
+    const entries = types.map(type => ({type,bookId:1}));
+    entries.push({type:'series_created',seriesId:10},{type:'series_rated',seriesId:20},
+      {type:'won_all_anthology',bookId:4},{type:'run_started',bookId:2,parentBookId:4},
+      {type:'book_added',bookId:3},{type:'series_added',seriesId:30},
+      {type:'announcement',body:'[Adult](/book/1)'},
+      {type:'announcement',body:'[Series](/series/20)'},
+      {type:'book_added',bookId:2},{type:'user_joined'});
+    markNsfwFeedEntries(db,entries);
+    assert.ok(entries.slice(0,-2).every(entry=>entry.isNsfw===true));
+    assert.ok(entries.slice(-2).every(entry=>!entry.isNsfw));
+    db.exec('UPDATE books SET is_nsfw=0; UPDATE series SET is_nsfw=0;');
+    markNsfwFeedEntries(db,entries);
+    assert.ok(entries.every(entry=>!entry.isNsfw),'clearing classifications removes stale flags');
+  } finally {db.close();}
 });
 
 function client(saved = null, signedIn = true) {

@@ -116,6 +116,18 @@ await snapshot([], { title: 'Pinned only', body: 'Text' });
 const digest = createHash('sha256').update(JSON.stringify(snapshots)).digest('hex');
 
 if (!baseline) {
+  for (const type of [...types, 'series_books_created', 'anthology_books_created']) {
+    const flagged = renderEntry({...base,type,isNsfw:true,creationBookCount:2}).html;
+    assert.equal((flagged.match(/class="feed-nsfw-tag"/g)||[]).length,1,type+' has one NSFW tag');
+    assert.ok(!renderEntry({...base,type,creationBookCount:2}).html.includes('feed-nsfw-tag'),type+' safe entry stays untagged');
+  }
+  const nsfwDay = modules.get(resolve(root,'feed/groups.js')).namespace.createDayRenderer();
+  const mixedActions = Array.from({length:6},(_,i)=>({...base,type:'run_started',isNsfw:i===5}));
+  assert.match(nsfwDay(mixedActions,'nsfw-actions'),/feed-group-count[^<]*>[\s\S]*?feed-nsfw-tag[\s\S]*?<\/button>/,'collapsed actions warn before expanding');
+  const mixedCreations = Array.from({length:6},(_,i)=>({...base,type:'book_created',bookId:i+10,parentBookId:null,seriesId:null,isNsfw:i===5}));
+  assert.match(nsfwDay(mixedCreations,'nsfw-creations'),/feed-group-count[^<]*>[\s\S]*?feed-nsfw-tag[\s\S]*?<\/button>/,'collapsed creations warn before expanding');
+  const looseCreations = [{...base,type:'book_created',isNsfw:false},{...base,type:'book_created',bookId:2,isNsfw:true}];
+  assert.match(nsfwDay(looseCreations,'nsfw-loose'),/feed-entry--created[^>]*>[\s\S]*?feed-nsfw-tag[\s\S]*?feed-group-toggle--inline/,'mixed member batch warns on its visible heading');
   const jobEntry = { ...base, type: 'job_level_up', levelTitle: 'Sifter' };
   const jobHtml = modules.get(resolve(root, 'feed/render.js')).namespace.renderFeedContents([jobEntry], null, '').html;
   assert.ok(jobHtml.includes('feed-entry--joblevel') && jobHtml.includes('Sifter'));

@@ -18,10 +18,12 @@
   padding: 8px 10px;
   border-bottom: 1px solid #374151;
 }
-.m-items-header strong {
-  font-size: 0.9rem;
+.m-items-search {
+  display: flex;
+  padding: 6px 10px;
+  border-bottom: 1px solid #374151;
 }
-.m-items-header .inv-search {
+.m-items-search .inv-search {
   flex: 1;
   min-width: 0;
 }
@@ -212,10 +214,6 @@
 }
 .m-overlay.m-items-picker {
   z-index: 3100;
-}
-.m-items-picker-title {
-  padding: 8px 10px 0;
-  font-size: 0.85rem;
 }
 .m-items-picker .inv-picker-grid {
   grid-template-columns: repeat(5, minmax(0, 1fr));

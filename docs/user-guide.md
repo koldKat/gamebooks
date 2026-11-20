@@ -29,6 +29,8 @@ Open the ⚙ settings button or press **Ctrl+Y** to adjust cover titles, backgro
 
 **Hide Cyrillic covers** and **Hide NSFW covers** control the cover wall and rotating background, including backgrounds drawn from My Books. They do not remove books from your library or filter activity-feed entries. NSFW covers are hidden by default, including for signed-out visitors.
 
+Activity involving NSFW books, anthologies or series carries a red **NSFW** tag in the feed. Collapsed groups also show the tag when they contain such activity.
+
 ### Seasonal events
 
 Seasonal events bring themed mouse companions and temporary bonuses. The notice above the activity feed explains the current event or shows what is coming next. It updates automatically in open tabs.

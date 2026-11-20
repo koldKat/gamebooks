@@ -190,7 +190,7 @@ Stylesheets are grouped under `public/css/`: `base/` contains app defaults and p
 
 Static stylesheet blocks belong in CSS files, formatted with two-space indentation and one declaration per line. The CSS-only Prettier configuration is in `.prettierrc.json`. Documentation styles live in `docs/styles/`; the generator embeds them in the generated guides. Maintenance and export styles live in `server/styles/pages/` and `server/styles/exports/`; those pages embed the file contents so maintenance does not depend on blocked asset requests and exported HTML works offline.
 
-Dialogs share modal chrome, focus handling, close controls, and backdrop behavior. Escape dismisses autocomplete before the containing dialog. Saving can temporarily disable dismissal. Closing a top dialog must not also close one underneath it.
+Dialogs share modal chrome, focus handling, close controls, and backdrop behavior. `public/css/components/dialog-headers.css` owns title typography, header spacing and close-control sizing across desktop, mobile and admin dialogs; component styles retain their content layouts. Escape dismisses autocomplete before the containing dialog. Saving can temporarily disable dismissal. Closing a top dialog must not also close one underneath it.
 
 Item pickers share `ui-helpers/lazy-icon-grid.js`: searchable metadata loads separately from bounded SVG batches, with offscreen unloading and a limited icon cache. Mobile item dialogs live under `public/mobile/js/items/` and share saved run data with desktop.
 

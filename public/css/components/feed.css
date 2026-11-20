@@ -611,3 +611,16 @@ body.right-collapsed #landing-right {
 .feed-entry--joblevel .feed-title {
   color: #fb7185;
 }
+.feed-nsfw-tag {
+  display: inline-block;
+  padding: 0 4px;
+  border: 1px solid #86434b;
+  border-radius: 3px;
+  background: #6e29332e;
+  color: #eb929b;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.4;
+  vertical-align: baseline;
+  white-space: nowrap;
+}

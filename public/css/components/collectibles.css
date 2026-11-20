@@ -82,31 +82,6 @@ body.reduce-motion [data-open-collectibles].collectibles-btn--new {
 #collectibles-dialog::backdrop {
   background: #0009;
 }
-#collectibles-dialog header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 0;
-}
-#collectibles-dialog h2 {
-  font-size: 0.9rem;
-  line-height: 1.1;
-  margin: 0;
-}
-#collectibles-dialog header button {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  background: none;
-  color: inherit;
-  border: 0;
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-}
 .collectibles-body {
   padding-top: 4px;
   font-size: 0.85rem;

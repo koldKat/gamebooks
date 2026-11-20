@@ -10,6 +10,7 @@ const { _getAggregateRating, _getAuthorRatings, getAnthologyExtraMembers } = req
 const { getPlayerRatingStats } = require('./rating-stats');
 const { getSimulatorBattleStats } = require('./gameplay-stats');
 const { addBookProgress, collectedCount } = require('./profile-progress');
+const { markNsfwFeedEntries } = require('./nsfw');
 
 // ── Activity feed ─────────────────────────────────────────────────────────────
 
@@ -945,6 +946,7 @@ function getFeed() {
   }
 
   const merged = entries.filter(e => !toRemove.has(e));
+  markNsfwFeedEntries(db, merged);
   merged.sort((a, b) => b.completedAt - a.completedAt);
   return merged;
 }
@@ -993,7 +995,7 @@ function getFeedVersion() {
     jobs.n, jobs.m, xe.n, xe.m, us.n, us.m, us.p, sr.n, sr.s, sr.c,
     ub.n, ub.m, ub.r, ub.v, ub.scores, us.r, us.v, us.scores, uu.n, uu.m, an.n, an.m, an.u, pin?.id ?? 0,
     // Invalidate cached feeds when this grouping format first becomes available.
-    new Date().toISOString().slice(0, 10), _squireRevision, 'collection-context-2',
+    new Date().toISOString().slice(0, 10), _squireRevision, 'collection-context-nsfw-3',
   ].join(':');
 }
 
@@ -1408,20 +1410,10 @@ function getBookActivity(bookId, userId = null) {
   ).get(bookId);
   if (!book) return null;
 
-  // Anthology activity lives in its public children, including secondary memberships.
+  // Anthologies list their books; run activity belongs to each individual child.
   // Individual books also include editions sharing their ISBN/ISSN.
   const ubRows = book.is_container
-    ? db.prepare(
-        `SELECT ub.state_data, ub.book_id AS id, b.name,
-                u.id AS userId, u.username, u.avatar_path, u.public_profile
-         FROM user_books ub
-         JOIN books b ON b.id = ub.book_id
-         JOIN users u ON u.id = ub.user_id
-         WHERE b.is_public = 1 AND (b.parent_book_id = ? OR EXISTS (
-           SELECT 1 FROM book_anthology_memberships m
-           WHERE m.book_id = b.id AND m.anthology_id = ?
-         ))`
-      ).all(bookId, bookId)
+    ? []
     : book.isbn
     ? db.prepare(
         `SELECT ub.state_data, ub.book_id AS id, b.name,

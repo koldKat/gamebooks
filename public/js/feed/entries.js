@@ -2,7 +2,7 @@ import { feedHooks as _hooks } from './state.js';
 import { escapeHtml } from '../core/util.js';
 import { publicName } from '../core/public-name.js';
 import { t } from '../i18n.js';
-import { _runTooltip, _runN, _firstResultRunLabel, _seriesTag, formatAnnBody } from './formatting.js';
+import { _runTooltip, _runN, _firstResultRunLabel, _seriesTag, formatAnnBody, nsfwTag } from './formatting.js';
 
 export function _makeEntryHtml(x) {
   const { html: b, isParty, extraClass } = renderEntry(x);
@@ -171,8 +171,9 @@ export function renderEntry(e) {
     html = t('feed.tmpl.rated_series', { user: userEl, series: _seriesTag(e), stars: _hooks.starsHtml?.(e.rating) ?? '' });
     extraClass = 'feed-entry--rated';
   } else if (e.type === 'announcement') {
-    html = `<fieldset class="feed-announcement"><legend class="feed-ann-title">${escapeHtml(e.title)}</legend><div class="feed-ann-body">${formatAnnBody(e.body, e.bookCovers)}</div></fieldset>`;
+    html = `<fieldset class="feed-announcement"><legend class="feed-ann-title">${escapeHtml(e.title)}${nsfwTag(e.isNsfw)}</legend><div class="feed-ann-body">${formatAnnBody(e.body, e.bookCovers)}</div></fieldset>`;
   }
+  if (html && e.type !== 'announcement') html += nsfwTag(e.isNsfw);
   if (isParty && html && e.type !== 'party_formed') html += ` <span class="feed-party-badge">${t('feed.party_badge')}</span>`;
   return { html, isParty, extraClass };
 }

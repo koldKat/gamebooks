@@ -319,12 +319,6 @@ tbody tr:hover {
 .admin-editor {
   background: #1f2937;
 }
-.admin-editor-header h2 {
-  font-size: 0.95rem;
-}
-.admin-editor-header {
-  padding: 0.6rem 0.75rem;
-}
 .admin-editor-body {
   padding: 0.75rem;
 }

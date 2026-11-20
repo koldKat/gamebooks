@@ -6,7 +6,7 @@ import { runInNewContext } from 'node:vm';
 const source = readFileSync(new URL('../../../public/js/covers/book-dialog.js', import.meta.url), 'utf8')
   .replace(/^import .*;\n/gm, '').replace('export function ', 'function ');
 
-function dialog({ loggedIn = false, owned = false, mobile = true, admin = false, moderator = false, ok = true, meta = {} } = {}) {
+function dialog({ loggedIn = false, owned = false, mobile = true, admin = false, moderator = false, ok = true, meta = {}, entries = [] } = {}) {
   let editOptions;
   const events = [], requests = [], panels = new Set(['mobile-addbook-open']);
   const buttons = new Map();
@@ -41,6 +41,7 @@ function dialog({ loggedIn = false, owned = false, mobile = true, admin = false,
     _syncCoverLibraryMembership: () => events.push('membership'),
     closePublicModal: () => events.push('close'),
     escapeHtml: value => String(value),
+    publicName: value => value,
     t: (key, params) => key === 'covers.author_rating_votes' ? `${params.n} vote${params.s}` : key,
     _seriesRowBadges: book => book.hasLiveReading ? '<span class="reading-badge">Reading</span>' : '',
     coversState: { _hooks: {
@@ -58,11 +59,21 @@ function dialog({ loggedIn = false, owned = false, mobile = true, admin = false,
       return { ok, json: async () => ({ error: "Save rejected" }) };
     },
   };
-  runInNewContext(source + '\nrenderCoverActivity(42, "Book", [], null, bookMeta, loggedIn, owned);', {
-    ...context, bookMeta: { isPublic: true, ...meta }, loggedIn, owned,
+  runInNewContext(source + '\nrenderCoverActivity(42, "Book", entries, null, bookMeta, loggedIn, owned);', {
+    ...context, bookMeta: { isPublic: true, ...meta }, loggedIn, owned, entries,
   });
   return { body, buttons, events, requests, panels, window, get editOptions() { return editOptions; } };
 }
+
+test('anthology dialogs show child books without duplicate run cards or empty-activity notices', () => {
+  const entries = [{ username: 'Reader', publicProfile: true, bookName: 'Child', bookId: 1, userId: 7,
+    runs: [{ runIndex: 0, result: 'success' }] }];
+  const anthology = dialog({ entries, meta: { isContainer: true, children: [{ id: 1, name: 'Child' }] } });
+  assert.match(anthology.body.html, /child-row-name">Child/);
+  assert.doesNotMatch(anthology.body.html, /cover-act-entry|No public activity/);
+  assert.doesNotMatch(dialog({ meta: { isContainer: true } }).body.html, /No public activity/);
+  assert.match(dialog({ entries }).body.html, /cover-act-entry/);
+});
 
 test('books and anthologies distinguish creator edits from role overrides, not library membership', () => {
   for (const isContainer of [false, true]) for (const role of ['admin', 'moderator']) {

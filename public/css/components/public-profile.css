@@ -732,7 +732,7 @@ a.book-modal-child-row {
 .child-row-name {
   flex: 1;
   font-size: 0.88rem;
-  font-weight: 500;
+  font-weight: 700;
 }
 .child-row-badges {
   display: inline-flex;
@@ -1013,18 +1013,17 @@ a.book-modal-child-row {
 .cover-activity-view {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.4rem;
 }
-
 .cover-act-entry {
   background: #1f2937;
   border: 1px solid #374151;
   border-radius: 6px;
-  padding: 0.45rem 0.7rem;
+  padding: 0.3rem 0.5rem;
 }
 .cover-act-body {
   display: block;
-  padding-top: 0.45rem;
+  padding-top: 0.3rem;
 }
 .cover-act-entry--collapsed .cover-act-body {
   display: none;

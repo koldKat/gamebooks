@@ -19,7 +19,7 @@ export function openEditor({ title, content, onClose, focus, actions, isDirty })
   closeButton.type = 'button';
   closeButton.className = 'admin-editor-close';
   closeButton.setAttribute('aria-label', 'Close editor');
-  closeButton.textContent = '×';
+  closeButton.textContent = '✕';
   header.append(heading, closeButton);
   const body = document.createElement('div');
   body.className = 'admin-editor-body';
