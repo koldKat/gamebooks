@@ -1,5 +1,5 @@
 // Bind Star Bastards' combat panel to live application and playthrough dependencies.
-import {currentBookId, currentPlaythrough, saveState, apiFetch} from '../../../core/state.js';
+import {currentBookId, currentPlaythrough, saveState, apiFetch} from '../../run-context.js';
 import {getPlayBtnRow} from '../../../play/charsheet.js';
 import {showAlert, showConfirm} from '../../../ui-helpers/confirm.js';
 import {registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS} from '../../../core/util.js';

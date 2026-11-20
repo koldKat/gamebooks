@@ -1,7 +1,7 @@
 // Connect The Lord of Shadow Keep's encounter controls to the current application run.
 import {definition, ENCOUNTERS, loadRoster} from './definition.js';
 import {createDragonPanel} from '../../engines/golden-dragon/panel.js';
-import {currentBookId, currentPlaythrough, saveState, apiFetch} from '../../../core/state.js';
+import {currentBookId, currentPlaythrough, saveState, apiFetch} from '../../run-context.js';
 import {getPlayBtnRow} from '../../../play/charsheet.js';
 import {showAlert, showConfirm} from '../../../ui-helpers/confirm.js';
 import {registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS} from '../../../core/util.js';

@@ -11,7 +11,7 @@ const { _rival, _rivalNameById, _d6, _d2, _enemyName, _playerDead, _enemyDead, _
 // Player 2d6 > enemy target hits; enemy 2d6 < player target (6) hits; each costs 1 stamina.
 // Multi-enemy bonuses persist after the encounter; horse attacks resolve separately.
 
-import { currentPlaythrough, saveState } from "../../../core/state.js";
+import { currentPlaythrough, saveState } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

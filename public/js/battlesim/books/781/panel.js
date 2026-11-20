@@ -11,7 +11,7 @@ const { _weapon, _enemy, _defaultAmmo, _roll1d6, _enemyName, _playerWon, _player
 // Enter current journal stats; resolve the selected encounter's attack/defense rules.
 // No fixed starting build is assumed.
 
-import { currentPlaythrough, saveState } from "../../../core/state.js";
+import { currentPlaythrough, saveState } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

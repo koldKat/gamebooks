@@ -11,7 +11,7 @@ const { _pick, _enemyName, _enemyNameSafe, _runRound, _checkBattleEnd, _resetBat
 // Compare random pick + STRENGTH; higher deals 2 LIFE, ties miss.
 // LIFE starts at pick+20; fast boots let the player keep the higher of two picks.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

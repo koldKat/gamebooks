@@ -1,5 +1,5 @@
 // Connect Beyond the Nightmare Gate's database rules to the shared Grey Star combat panel.
-import {apiFetch} from '../../../core/state.js';
+import {apiFetch} from '../../run-context.js';
 import {createGreyStarPanel} from '../../engines/grey-star/panel.js';
 import {definition, getRules, loadRoster} from './definition.js';
 

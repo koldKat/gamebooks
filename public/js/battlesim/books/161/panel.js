@@ -13,7 +13,7 @@ const { _useMedkit } = createEffects(simulatorContext);
 // Weapon damage removes that many enemies; survivors each retaliate.
 // Start at 2d6+20 STAMINA; grenade kills and survivor damage are separate inputs.
 
-import { currentPlaythrough, saveState } from "../../../core/state.js";
+import { currentPlaythrough, saveState } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

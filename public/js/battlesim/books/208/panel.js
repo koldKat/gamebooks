@@ -11,7 +11,7 @@ const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _runHandToHandRound, _we
 // Hand-to-hand uses opposed rolls; gunfire uses independent roll-under-SKILL checks.
 // Incoming hits test ARMOUR, which decreases by 1 regardless of success; LUCK is narrative-only.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

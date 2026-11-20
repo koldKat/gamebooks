@@ -14,7 +14,7 @@ const { _usePotion } = createEffects(simulatorContext);
 // Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
 // 'K' means instant death. Skill bonuses and narrative effects are entered manually.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

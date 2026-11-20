@@ -15,7 +15,7 @@ const setup = createSetup(() => ({ ...simulatorContext(), _fightActive, _startEn
 // State stored in pt.sim8. Rules: roll N dice (N=Умение); 4-5→1 щ., 6→2 щ.
 // Ахрин attacks first in the opening duel; later opponents attack first.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

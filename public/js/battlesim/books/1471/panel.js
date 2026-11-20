@@ -1,5 +1,5 @@
 // Wire The Legion at War's optional fleet battle panel to the current playthrough.
-import { currentBookId, currentPlaythrough, saveState, apiFetch } from '../../../core/state.js';
+import { currentBookId, currentPlaythrough, saveState, apiFetch } from '../../run-context.js';
 import { getPlayBtnRow } from '../../../play/charsheet.js';
 import { showAlert } from '../../../ui-helpers/confirm.js';
 import { registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../../../core/util.js';

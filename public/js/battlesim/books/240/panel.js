@@ -15,7 +15,7 @@ const { _useSpearAutoWin, _eatProvisions } = createEffects(simulatorContext);
 // Weapon/armour choices alter damage; armour durability counts hits.
 // Disarming applies only to the chosen target; Luck totals are not reduced again by armour.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

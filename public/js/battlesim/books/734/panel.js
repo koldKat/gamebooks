@@ -11,7 +11,7 @@ const { _isRobot, _activeLife, _activeLifeInitial, _setActiveLife, _roll2d6, _en
 // Personal FF combat and separate robot ARMOUR combat, matching book 218.
 // Speed and robot damage bonuses apply only in robot mode.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

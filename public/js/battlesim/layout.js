@@ -1,5 +1,6 @@
 // Keep controls in the scrollable play column; the other column is for reports.
 import {createThemedSelect, normalSimulatorCase} from '../ui-helpers/themed-select.js';
+import {isReadOnlySimulator} from './run-context.js';
 
 const controlPanels = new WeakMap();
 function prepareControls(overlay) {
@@ -7,8 +8,27 @@ function prepareControls(overlay) {
   const modal = overlay.querySelector('.bsim-modal'), view = overlay.ownerDocument.defaultView;
   if (!modal || !view.MutationObserver) return;
   const menus = new Map();
+  const forcedDisabled = new Map();
+  const isClose = control => control.matches('.inv-close-btn, [id$="-close"]');
+  for (const type of ['click','input','change','keydown','submit']) overlay.addEventListener(type, event => {
+    const control = event.target.closest?.('input,select,textarea,button,[role="option"],[role="combobox"]');
+    if (isReadOnlySimulator() && control && !isClose(control)) {
+      event.preventDefault(); event.stopImmediatePropagation();
+    }
+  }, true);
   let queued = false;
   function sync() {
+    for (const control of forcedDisabled.keys()) if (!modal.contains(control)) forcedDisabled.delete(control);
+    if (isReadOnlySimulator()) {
+      for (const control of modal.querySelectorAll('input,select,textarea,button')) {
+        if (isClose(control)) continue;
+        if (!forcedDisabled.has(control)) forcedDisabled.set(control, control.disabled);
+        if (!control.disabled) control.disabled = true;
+      }
+    } else {
+      for (const [control, disabled] of forcedDisabled) control.disabled = disabled;
+      forcedDisabled.clear();
+    }
     // Older saved logs and database notes retain their original stored text.
     for (const prose of modal.querySelectorAll('p, [id$="-note"], [id$="-hint"], .bsim-log, .ac-sub')) {
       const walker = overlay.ownerDocument.createTreeWalker(prose, view.NodeFilter.SHOW_TEXT);

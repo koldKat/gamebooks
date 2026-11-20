@@ -14,7 +14,7 @@ const { _usePotion } = createEffects(simulatorContext);
 // Combat Ratio is fixed on enemy selection; a 0-9 pick selects simultaneous table losses.
 // Saved fights retain their rules; printed effects are captured for future fights.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

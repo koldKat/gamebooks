@@ -14,7 +14,7 @@ const { _usePsiPower } = createEffects(simulatorContext);
 // Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 // Surrender, killing, Hero Points, and round limits share the outcome resolver.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

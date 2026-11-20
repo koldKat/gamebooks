@@ -11,7 +11,7 @@ const { _roll2d6, _enemyName, _enemyNameSafe, _effectiveSkill, _resetEncounterKn
 // Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 // No reusable provisions system; healing events are narrative.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

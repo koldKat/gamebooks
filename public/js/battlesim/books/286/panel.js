@@ -10,7 +10,7 @@ const { _playerDefeated, _selectEncounter, _retreat, _techName, _techDesc, _load
 // Battle Simulator (В лабиринта на времето, book 286)
 // Weapon damage = max(0,2d6-minHit), with glove/tech bonuses; shields reduce incoming damage.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

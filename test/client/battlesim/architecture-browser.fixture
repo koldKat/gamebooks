@@ -83,6 +83,70 @@ for(const id of BOOK_IDS){
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
   }
+  if (id === 1307 && !PRESENTATION_ONLY) {
+    const run = app.currentPlaythrough();
+    const field = key => overlay.querySelector('[data-field="' + key + '"]');
+    const action = key => overlay.querySelector('[data-action="' + key + '"]');
+    const choose = text => {
+      const name = overlay.querySelector('input[role="combobox"]');
+      name.value = ''; name.dispatchEvent(new FocusEvent('focus'));
+      const options = [...name.parentElement.querySelectorAll('[role="option"]')];
+      check(options.length === 10, 'Mochila loads all ten photographed presets');
+      const selected = options.find(option => option.textContent.includes(text));
+      check(selected, 'Mochila preset ' + text);
+      selected.dispatchEvent(new PointerEvent('pointerdown', {bubbles:true}));
+    };
+    check(requestedRosters.has(id), 'Mochila roster uses real lazy loader');
+    check(overlay.querySelector('.inv-modal-title').textContent === 'Мочила', 'Mochila uses Bulgarian independently of app language');
+    check(field('ammo').value === '6' && field('reserve').value === '2', 'Mochila character-sheet ammunition defaults');
+    choose('Променена черна мечка'); action('start').click();
+    const bearRandom = Math.random;
+    try {
+      const values = [5,6,1,1]; Math.random = () => (values.shift() - .5) / 6;
+      action('attack').click(); action('resolve').click();
+      check(run.sim1307.fight.opponent.hp === 10 && overlay.querySelector('[data-live-hp]').value === '10',
+        'Mochila bear takes five damage and its Life field updates from fifteen to ten');
+      check(overlay.querySelector('[data-stat="hp"]').value === '15', 'Mochila starting Life retained separately');
+      Math.random = () => .99; action('attack').click(); action('resolve').click();
+      check(overlay.querySelector('[data-live-hp]').value === '0', 'Mochila bear Life reaches zero on victory');
+    } finally {Math.random = bearRandom;}
+    choose('Пума');
+    check(run.sim1307.fight.status === 'win', 'Mochila browsing presets does not start another combat');
+    action('start').click();
+    check(run.sim1307.fight.opponent.key === 'cougar-61', 'Mochila selected preset survives rendering');
+    check(field('hp').disabled, 'Mochila setup locked during combat');
+    const random = Math.random;
+    try {Math.random = () => .99; action('attack').click(); action('resolve').click();}
+    finally {Math.random = random;}
+    check(run.sim1307.history.length === 2 && run.sim1307.fight.status === 'win', 'Mochila instant victory records once');
+    check(overlay.querySelector('[data-live-hp]').value === '0', 'Mochila opponent Life field shows actual remaining Life');
+    check(field('ammo').value === '3', 'Mochila ammunition persisted after victory');
+    check(run.path.length === 1, 'Mochila never changes story progress');
+    field('weapon').value = 'silverGun';
+    field('weapon').dispatchEvent(new Event('change', {bubbles:true}));
+    field('silverAmmo').value = '6';
+    check(action('reload').disabled, 'Mochila normal reserves cannot reload silver ammunition');
+    choose('Конник на войната (§77)');
+    check(overlay.querySelector('[data-live-hp]').hidden && overlay.querySelector('[data-stat="hp"]').value === '18',
+      'Mochila new preset restores editable starting Life');
+    action('start').click();
+    check(overlay.querySelector('[data-live-hp]').value === '18', 'Mochila new fight starts with its full Life');
+    const silverRandom = Math.random;
+    try {
+      const values = [5,5,1,1]; Math.random = () => (values.shift() - .5) / 6;
+      action('attack').click(); action('resolve').click();
+      check(run.sim1307.fight.opponent.hp === 9 && overlay.querySelector('[data-live-hp]').value === '9',
+        'Mochila silver revolver deals nine damage through the real controls');
+      check(run.sim1307.fight.player.silverAmmo === 5 && run.sim1307.fight.player.ammo === 3,
+        'Mochila silver revolver consumes only its silver bullets');
+    } finally {Math.random = silverRandom;}
+    const stale = action('attack'), original = run.sim1307;
+    app.state.playthroughs = [{startedAt:2,path:[1]}];
+    stale.click();
+    check(!app.currentPlaythrough().sim1307 && run.sim1307 === original, 'Mochila stale action cannot change another run');
+    app.state.playthroughs = [run];
+    module.render();
+  }
   if (id === 732 && !PRESENTATION_ONLY) {
     const run = app.currentPlaythrough();
     const field = key => overlay.querySelector('[data-field="' + key + '"]');

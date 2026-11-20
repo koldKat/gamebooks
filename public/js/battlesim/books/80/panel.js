@@ -11,7 +11,7 @@ const { _roll1d6, _enemyName, _enemyNameSafe, _strike, _runRound, _checkBattleEn
 // Damage is max(0, offensive status + 1d6 - defensive status).
 // Initiative ties default to player-first because the source leaves them unspecified.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

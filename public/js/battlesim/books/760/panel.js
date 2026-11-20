@@ -11,7 +11,7 @@ const { _fighter, _roll1d6, _playerName, _enemyName, _playerWon, _playerLost, _s
 // Initiative uses interactive status + 1d6; a gap of 3+ grants two opening hits.
 // Alternate attacks dealing max(0,offensive status+1d6-defensive status); no bracket tracking.
 
-import { currentPlaythrough, saveState } from "../../../core/state.js";
+import { currentPlaythrough, saveState } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

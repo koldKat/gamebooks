@@ -3,7 +3,7 @@
 // Издръжливост (ties cost nothing); fight continues until either side's
 // Издръжливост reaches 0.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../../core/state.js';
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from '../run-context.js';
 import { showAlert } from '../../ui-helpers/confirm.js';
 import { getPlayBtnRow } from '../../play/charsheet.js';
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../../core/util.js';

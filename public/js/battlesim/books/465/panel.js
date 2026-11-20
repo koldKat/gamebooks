@@ -10,7 +10,7 @@ const { _roll2d6, _enemyName, _enemyNameSafe, _enemyDefeated, _hasEnemy, _runRou
 // Opposed 2d6 without skill: higher roll lands one hit, ties miss.
 // The player's 50-hit defensive field carries damage between fights.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

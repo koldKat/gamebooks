@@ -419,6 +419,7 @@ Click **Character Sheet** (bottom-right of the tracker) to track stats, items, a
 - Each playthrough has its own separate character sheet
 - While a playthrough is in progress, the sheet is fully editable
 - When looking back at a finished playthrough, you can see the sheet as it was - but you can't change it
+- Without an active playthrough, the sheet still opens for viewing with editing disabled.
 
 ### Field types
 
@@ -701,6 +702,8 @@ The ZIP is saved with the book's real name (e.g. `The Citadel of Chaos.zip`).
 Some books come with a built-in **Battle Simulator** that appears automatically when you open them. Use it to resolve an encounter while reading the adventure.
 
 Open its button in the play area, or press **S**. Enter your current character values and any relevant equipment before starting a fight.
+
+Without an active playthrough, the simulator opens for viewing with combat and editing controls disabled.
 
 On mobile, the simulator loads when you tap its button. If a network-error message appears, reconnect and tap the button again to retry.
 

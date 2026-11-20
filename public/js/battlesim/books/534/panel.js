@@ -12,7 +12,7 @@ const { data } = createState(simulatorContext);
 const { character, active, store, label, enemyLabel, append, hasNext, record, start, next, act } = createCombat(simulatorContext);
 const { cast, regentSpell } = createEffects(simulatorContext);
 // END SIMULATOR WIRING
-import { currentPlaythrough, currentBookId, saveState } from "../../../core/state.js";
+import { currentPlaythrough, currentBookId, saveState } from "../../run-context.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { showAlert, showConfirm } from "../../../ui-helpers/confirm.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

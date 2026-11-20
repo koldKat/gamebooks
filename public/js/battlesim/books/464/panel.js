@@ -12,7 +12,7 @@ const { _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _enemyDefeated, _resetEn
 // Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 // New encounters use the source's paired attacks and special damage rules.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

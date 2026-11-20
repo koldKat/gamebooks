@@ -117,7 +117,7 @@ function moduleAt(path) {
 const entry = moduleAt(resolve(root, 'inventory.js'));
 await entry.link((specifier, parent) => moduleAt(resolve(dirname(parent.identifier), specifier))); await entry.evaluate();
 const api = entry.namespace;
-assert.deepEqual(Object.keys(api).sort(), ['addItemToInventory', 'getInventorySlots', 'initInventory', 'preloadItems', 'refreshInventoryUI', 'removeAllFromInventoryAt', 'renderInventoryDisplay', 'setExtraDisplayItemsProvider', 'setInventoryVisible'].sort());
+assert.deepEqual(Object.keys(api).sort(), ['addItemToInventory', 'getCachedInventoryItem', 'getInventorySlots', 'initInventory', 'preloadItems', 'refreshInventoryUI', 'removeAllFromInventoryAt', 'renderInventoryDisplay', 'setExtraDisplayItemsProvider', 'setInventoryVisible'].sort());
 const plain = value => JSON.parse(JSON.stringify(value));
 const el = id => { const node = document.getElementById(id); assert.ok(node, id); return node; };
 const settle = async () => { for (let i = 0; i < 40; i++) await Promise.resolve(); };

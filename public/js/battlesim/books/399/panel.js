@@ -11,7 +11,7 @@ const { _captureStopRule, _applyEnemy, _emptySide, _roll1d6, _enemyName, _enemyN
 // Five combat modes can differ between player and enemy.
 // Damage uses the attacker's mode formula for both sides, not the defender's own mode.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

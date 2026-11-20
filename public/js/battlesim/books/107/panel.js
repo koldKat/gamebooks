@@ -14,7 +14,7 @@ const { _emptyEnemy, _roll1d6, _roll2d6, _roll3d6, _rollNd6, _enemyName, _enemyN
 // Psychic/team combat and encounter-specific attacks are not simulated; adjust manually.
 // Rank-16 defaults follow the prose, not the garbled rank table; some damage values are estimates.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

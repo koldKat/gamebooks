@@ -71,7 +71,7 @@ export function renderCharSheetDisplay() {
     el.style.display    = 'none';
     if (btn) {
       btn.style.display = '';
-      btn.disabled = true;
+      btn.disabled = false;
     }
     return;
   }
@@ -316,9 +316,8 @@ function wireRow(row, field) {
 
 function openModal() {
   const pt = currentPlaythrough() || viewingPt;
-  if (!pt) return;
   _readOnly = !currentPlaythrough();
-  _draft = deepCopy(pt.charSheet || { fields: [] });
+  _draft = deepCopy(pt?.charSheet || { fields: [] });
   renderModal();
   document.getElementById('charsheet-modal-overlay').classList.add('active');
 }

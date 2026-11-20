@@ -10,7 +10,7 @@ const simulatorContext = () => ({ customSetup, ALL_PANEL_OVERLAY_IDS, ID, INNSMO
 const { data } = createState(simulatorContext);
 const { log, record, update, start, action } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
-import { currentPlaythrough, saveState, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, currentBookId } from "../../run-context.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { showAlert, showConfirm } from "../../../ui-helpers/confirm.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

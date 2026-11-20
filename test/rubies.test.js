@@ -451,6 +451,29 @@ function discoveryFixture(t) {
     discoveryBalance:id=>f.db.prepare('SELECT diamonds_earned n FROM user_diamonds WHERE user_id=?').get(id)?.n||0};
 }
 
+test('named manual sections award both anthology and series gems once without requiring a nonexistent numbered section', t => {
+  const f = discoveryFixture(t);
+  f.db.exec('INSERT INTO series VALUES(7,1)');
+  f.addBook(100, 0, null, 1);
+  f.db.prepare('UPDATE books SET series_id=7 WHERE id=100').run();
+  f.addBook(10, 25, 100);
+  f.addBook(11, 25, 100);
+  const named = ['Пролог', ...range(1,24)];
+  const graph = Object.fromEntries(named.map(id => [id, { discovered: true, choices: [] }]));
+  f.save(2, 10, [], { alphanumericSections: true, graph });
+  f.save(2, 11, [range(1,25)]);
+  assert.equal(f.discover(2, 10), 2, 'anthology and series discovery rubies');
+  assert.equal(f.check(2, 10), 0, 'discovered nodes do not earn mapping diamonds');
+  f.save(2, 10, [named], { alphanumericSections: true, graph });
+  const states = f.db.prepare('SELECT * FROM user_books ORDER BY book_id').all();
+  assert.equal(f.check(2, 10), 2, 'anthology and series mapping diamonds');
+  assert.equal(f.check(2, 10), 0);
+  assert.equal(f.discover(2, 10), 0);
+  assert.equal(f.discoveryBalance(2), 2);
+  assert.equal(f.wallet(2).rubies_earned, 2);
+  assert.deepEqual(f.db.prepare('SELECT * FROM user_books ORDER BY book_id').all(), states);
+});
+
 test('discovery awards the displayed ruby for public books at 25 Squire / 50 normal sections, independently of mapping',t=>{
   const f=discoveryFixture(t);f.db.exec('UPDATE users SET is_squire=1 WHERE id=17');
   for(const total of [24,25,49,50]){

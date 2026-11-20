@@ -13,7 +13,7 @@ const { _enemy, _enemyName, _checkEnd, _startBattle, _strikeOnce, _strike, _auto
 // Battle Simulator (Принцът на Алкирия, book 412)
 // Шанс-table + life-tier engine; player Strength follows current Life Points.
 
-import { currentPlaythrough, saveState } from "../../../core/state.js";
+import { currentPlaythrough, saveState } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

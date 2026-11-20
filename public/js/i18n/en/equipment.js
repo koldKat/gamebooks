@@ -59,7 +59,7 @@ export default {
     'eq.slot.hands':   'Hands',
     'eq.slot.offhand': 'Off-hand',
     'eq.slot.back':    'Back',
-    'eq.slot.item':    'Item {n}',
+    'eq.slot.item':    'Belt {n}',
     'eq.unequip':          'Unequip',
     'eq.title':            'Equipment',
     'eq.picker_title_default': 'Equip',

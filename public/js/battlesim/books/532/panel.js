@@ -9,7 +9,7 @@ const simulatorContext = () => ({ customSetup, ALL_PANEL_OVERLAY_IDS, ID, TOMB_E
 const { data } = createState(simulatorContext);
 const { label, record, log, action, confirm, start, dream } = createCombat(simulatorContext);
 // END SIMULATOR WIRING
-import { currentPlaythrough, currentBookId, saveState } from "../../../core/state.js";
+import { currentPlaythrough, currentBookId, saveState } from "../../run-context.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { showAlert, showConfirm } from "../../../ui-helpers/confirm.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

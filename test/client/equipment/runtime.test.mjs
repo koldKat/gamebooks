@@ -13,5 +13,5 @@ test('equipment preserves stack transfers, slot rendering, metadata, templates, 
   const { cases, exports, digest } = JSON.parse(result.stdout);
   assert.equal(cases, 16); assert.equal(exports, 4);
   // The snapshot includes the equipment markup, including its mannequin artwork.
-  assert.equal(digest, '0e087fc396000ce50308a180513489bb13f1622620a704e412db0c1f19c4116c');
+  assert.equal(digest, 'd304e78d51057326cb07aef57fef77d967a4bd54f26011ba0cef5aafce3a492b');
 });

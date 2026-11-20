@@ -251,6 +251,8 @@ public/js/battlesim/
 
 Desktop and mobile load simulator modules and translations lazily. Launcher registration, the database availability flag, and XP-history registration must agree. `scripts/check-battlesim-registration.js` checks installed registration.
 
+Simulator panels access runs through `battlesim/run-context.js`. With no active run, it supplies an isolated display copy and blocks saves and mutating requests. The shared layout disables editing controls while preserving close controls and expandable reports.
+
 Shared engine families live under `engines/`. Engines own combat calculations, phases, actions, validation, and reusable panel behavior. Book adapters supply identity, application wiring, source-language strings, and declarative options. Opponents, charts, encounter exceptions, and printed combat notes remain in the database.
 
 Extend an existing family when its combat model fits. Add family behavior through explicit options or encounter metadata rather than checks for a particular book ID. Separate setup values, captured encounter rules, mutable combat state, and confirmed outcomes. Undefined source values require explicit player input; rendering must not invent them.

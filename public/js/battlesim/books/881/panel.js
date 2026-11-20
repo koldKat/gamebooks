@@ -11,7 +11,7 @@ const { _roll1d6, _encounter, _sword, _pickSword } = createCombat(simulatorConte
 // Compare player strength + 1d6 with fixed enemy strength; normal damage is 2, ties cost both 1.
 // Multiple enemies exchange blows in turn; encounter damage/tie overrides are explicit.
 
-import { currentPlaythrough, saveState } from "../../../core/state.js";
+import { currentPlaythrough, saveState } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

@@ -11,7 +11,7 @@ const { _pick, _enemyName, _enemyNameSafe, _playerStrike, _enemyStrike, _checkBa
 // Single-combat appendix: each side attacks using two random picks; wounds cost 2 ENDURANCE.
 // Player defense uses STRENGTH without a weapon bonus: an assumption where the source is silent.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

@@ -12,7 +12,7 @@ const { _levelFromLife, _playerStrength, _pick12, _enemyName, _enemyNameSafe, _r
 // Compare player strength + 1-12 pick with fixed enemy strength: damage 2; ties cost both 1.
 // Player-side early-stop thresholds are manual.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

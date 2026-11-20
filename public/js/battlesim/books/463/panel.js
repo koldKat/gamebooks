@@ -15,7 +15,7 @@ const { _log, _startFight, _record, _blow, _runBlow, _runToEnd, _newFight, _appl
 //   |diff| ≤ 1 → both lose 1 energy;
 //   your blow ≥ +2 → enemy loses 3; his blow ≥ +2 → you lose 3.
 // Repeat until one side's energy hits 0. Enemies come from book_enemies.
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

@@ -11,7 +11,7 @@ const { _freshCrewMember, _roll2d6, _roll1d6, _enemyName, _enemyNameSafe, _enemy
 // Separate hand-to-hand, phaser, and ship modes; LUCK is not a combat modifier.
 // Phasers end on the first roll-under-SKILL hit; crew/ship pools stay independent.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

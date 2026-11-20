@@ -12,7 +12,7 @@ const { _roll, _playerAtaka, _playerZashtita, _enemyName, _enemyNameSafe, _ready
 // Resolve both sides within one round as a convenience; endurance-10 fights are non-lethal.
 // The asymmetric final boss is outside this model.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

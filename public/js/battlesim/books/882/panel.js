@@ -12,7 +12,7 @@ const { _roll1d6, _encounter } = createCombat(simulatorContext);
 // Group exchanges reuse the winning roll for damage; duels use hit series and Trick interruptions.
 // Pistol quick-draw and narrative checks are outside the model.
 
-import { currentPlaythrough, saveState } from "../../../core/state.js";
+import { currentPlaythrough, saveState } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

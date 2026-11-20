@@ -12,7 +12,7 @@ const { _enemy, _defaultPlayerStats, _roll1d6, _enemyName, _hasWon, _playerWon, 
 // Victory/defeat requires two consecutive or three total round wins/losses.
 // Passive defense is once per fight; NPC defense does not use the player's stat-drain effect.
 
-import { currentPlaythrough, saveState } from "../../../core/state.js";
+import { currentPlaythrough, saveState } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

@@ -14,7 +14,7 @@ const { _eatProvisions, _usePotion } = createEffects(simulatorContext);
 // Luck modifies a landed hit; narrative bonuses and unmodeled effects are entered manually.
 // The printed Initial SKILL ceiling is player-managed, not enforced.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

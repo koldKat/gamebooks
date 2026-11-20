@@ -11,7 +11,7 @@ const { _rival, _rivalNameById, _d6, _dN, _shieldAbsorb, _freshEntity, _recomput
 // Each named rival has distinct first-round and later-round attack formulas.
 // Enter current player stats; narrative progression and unsupported gear effects remain manual.
 
-import { currentPlaythrough, saveState } from "../../../core/state.js";
+import { currentPlaythrough, saveState } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

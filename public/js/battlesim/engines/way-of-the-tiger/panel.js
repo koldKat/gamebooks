@@ -1,5 +1,5 @@
 // Present player-selected encounters and editable printed combat values without story automation.
-import { currentPlaythrough, currentBookId, saveState } from '../../../core/state.js';
+import { currentPlaythrough, currentBookId, saveState } from '../../run-context.js';
 import { getPlayBtnRow } from '../../../play/charsheet.js';
 import { escapeHtml, shortcutLabel, registerPanelShortcut, ALL_PANEL_OVERLAY_IDS } from '../../../core/util.js';
 import { showAlert } from '../../../ui-helpers/confirm.js';

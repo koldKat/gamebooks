@@ -12,7 +12,7 @@ const { _emptyEnemy, _roll1d6, _roll2d6, _roll3d6, _rollNd6, _enemyName, _enemyN
 // Defending skips the player's attack and makes the enemy roll 3d6 to hit.
 // Psychic/team combat and encounter-specific attacks are not simulated; adjust manually.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

@@ -1,7 +1,7 @@
 import {definition, DEFAULT_CHARACTER, ATTACKERS, SPELL_COSTS} from './definition.js';
 import {startFight, advanceRitual, advanceAttackers, advanceDuel, spendSpell} from './combat.js';
 import {createState} from './state.js';
-import {currentBookId, currentPlaythrough, saveState} from '../../../core/state.js';
+import {currentBookId, currentPlaythrough, saveState} from '../../run-context.js';
 import {getPlayBtnRow} from '../../../play/charsheet.js';
 import {showAlert} from '../../../ui-helpers/confirm.js';
 import {registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS} from '../../../core/util.js';

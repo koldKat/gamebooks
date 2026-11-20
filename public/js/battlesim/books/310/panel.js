@@ -1,5 +1,5 @@
 // Connect Avenger's reviewed database encounters to the shared combat panel.
-import { apiFetch } from '../../../core/state.js';
+import { apiFetch } from '../../run-context.js';
 import { createTigerPanel } from '../../engines/way-of-the-tiger/panel.js';
 import { definition, loadRoster, getEncounters } from './definition.js';
 

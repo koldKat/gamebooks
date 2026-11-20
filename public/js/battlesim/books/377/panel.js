@@ -13,7 +13,7 @@ const { _emptyEnemy, _roll2d6, _roll1d6, _rollNd6, _enemyName, _enemyNameSafe, _
 // Narrative and unsupported encounter exceptions remain manual.
 // Paralytic Strike is unmodeled and cannot combine with Inner Force.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

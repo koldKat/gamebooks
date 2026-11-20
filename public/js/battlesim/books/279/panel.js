@@ -13,7 +13,7 @@ const { _usePotion } = createEffects(simulatorContext);
 // Freeway Warrior: fixed Combat Ratio and 0-9 picks produce simultaneous table losses.
 // Use this series' table, not Lone Wolf's; 'K' means instant death.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

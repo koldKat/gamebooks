@@ -9,7 +9,7 @@ const { _pick, _enemyName, _enemyNameSafe, _runRound, _checkBattleEnd, _resetBat
 // Battle Simulator (Окото на дявола / Eye of the Devil, book 115)
 // Start at STRENGTH 12 / LIFE 32; opposed totals deal their difference as damage.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

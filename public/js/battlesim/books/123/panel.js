@@ -10,7 +10,7 @@ const { _pick, _enemyName, _enemyNameSafe, _runRound, _checkBattleEnd, _resetBat
 // Start at STRENGTH 10 / LIFE 30; opposed totals deal their difference as damage.
 // The three-way fight is not modeled; simulate its interleaved attacks manually.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

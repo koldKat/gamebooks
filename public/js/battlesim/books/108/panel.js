@@ -11,7 +11,7 @@ const { _levelCol, _chanceRow, _pick10, _enemyName, _enemyNameSafe, _effectiveSk
 // Skill difference selects one of seven columns; a 1-10 pick selects one of three rows.
 // Table entries apply losses to both sides, including instant death.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

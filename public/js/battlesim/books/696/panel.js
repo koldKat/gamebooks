@@ -11,7 +11,7 @@ const { _rollChance, _enemyName, _enemyNameSafe, _hasEnemy, _playerDefeated, _en
 // Strike uses Chance+Strength+Attack; defense uses Chance+Reflex+Defense.
 // Resolve minor/major damage separately; turn changes follow the source's exchange rules.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

@@ -4,7 +4,7 @@ import { CHECKS, MONEY_RULES, unarmedPresetOptions, definition, PLAYER_DEFAULTS,
 import { createState } from './state.js';
 import { startUnarmedFight, stepUnarmedFight, unarmedActions, startShootingFight,
   stepShootingFight, shootingActions, convertShootingToUnarmed, evaluateCheck } from './combat.js';
-import { currentBookId, currentPlaythrough, saveState } from '../../../core/state.js';
+import { currentBookId, currentPlaythrough, saveState } from '../../run-context.js';
 import { getPlayBtnRow } from '../../../play/charsheet.js';
 import { showAlert, showConfirm } from '../../../ui-helpers/confirm.js';
 import { registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from '../../../core/util.js';

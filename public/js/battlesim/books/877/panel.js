@@ -13,7 +13,7 @@ const { _roll1d6, _roll2d6, _roll3d6, _encounter, _fight, _rollSila, _rollZhivot
 // Use each encounter's own comparison/roll rules; there is no uniform combat engine.
 // Enter current Strength/Life/Esper; life below 3 ends play.
 
-import { currentPlaythrough, saveState } from "../../../core/state.js";
+import { currentPlaythrough, saveState } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

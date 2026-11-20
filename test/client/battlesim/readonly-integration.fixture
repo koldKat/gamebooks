@@ -1,0 +1,68 @@
+localStorage.setItem('gamebook_lang', 'LANGUAGE');
+const app = await import('REPO/public/js/core/state.js');
+const desktop = await import('REPO/public/js/battlesim/loader.js');
+const mobile = await import('REPO/public/mobile/js/battlesim-dispatch.js');
+const sheets = await import('REPO/public/js/play/charsheet.js');
+const check = (value, message) => {if (!value) throw Error(message);};
+const seeds = ROSTER_SEEDS;
+let writes = 0;
+window.fetch = async (url, options = {}) => {
+  if ((options.method ?? 'GET') !== 'GET') writes++;
+  const id = String(url).match(/\/api\/books\/(\d+)\/enemies$/)?.[1];
+  return new Response(JSON.stringify(id ? seeds[id] : {}), {headers:{'Content-Type':'application/json'}});
+};
+console.warn = (_message, error) => {if (error instanceof Error) throw error;};
+app.state.playthroughs = []; app.state.activePtIndex = null; app.setViewingPt(null);
+if ('MODE' === 'desktop') {
+sheets.initCharSheet(); sheets.renderCharSheetDisplay();
+const sheetButton = document.getElementById('charsheet-btn');
+check(sheetButton && !sheetButton.disabled, 'empty character sheet button remains usable');
+sheetButton.click();
+const sheet = document.getElementById('charsheet-modal-overlay');
+check(sheet.classList.contains('active'), 'empty character sheet opens');
+for (const id of ['cs-add-field','cs-save','cs-save-template']) check(document.getElementById(id).disabled, 'empty character sheet read-only: ' + id);
+document.getElementById('cs-cancel').click();
+check(!sheet.classList.contains('active'), 'read-only character sheet closes');
+}
+const results = [];
+for (const id of BOOK_IDS) {
+  app.setCurrentBookId(id);
+  for (const completed of [false, true]) {
+    const saved = {startedAt:1, path:[1], completed:true, charSheet:{fields:[{id:'hp',name:'Health',type:'number',value:9,visible:true}]}};
+    app.state.playthroughs = completed ? [saved] : [];
+    app.state.activePtIndex = null; app.setViewingPt(completed ? saved : null);
+    const before = JSON.stringify(app.state), beforeRun = JSON.stringify(saved), beforeWrites = writes;
+    if ('MODE' === 'mobile') await mobile.openSimForBook(id);
+    else await desktop.showBattleSimForBook(id);
+    const button = document.getElementById(id === 829 ? 'battlesim-btn' : 'sim' + id + '-btn');
+    if ('MODE' !== 'mobile') button.click();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    const overlay = document.getElementById(id === 829 ? 'bsim-overlay' : id === 8 ? 's8-overlay' : 'sim' + id + '-overlay');
+    check(overlay?.classList.contains('active'), 'read-only simulator opens ' + id);
+    for (const control of overlay.querySelectorAll('input,select,textarea,button')) {
+      if (control.matches('.inv-close-btn,[id$="-close"]')) continue;
+      check(control.disabled, 'read-only simulator control disabled ' + id + ':' + control.id);
+      control.dispatchEvent(new MouseEvent('click', {bubbles:true,cancelable:true}));
+    }
+    check(JSON.stringify(app.state) === before && JSON.stringify(saved) === beforeRun, 'preview preserves actual run/state ' + id);
+    check(writes === beforeWrites, 'read-only simulator performs no writes ' + id);
+    const close = overlay.querySelector('.inv-close-btn,[id$="-close"]');
+    check(close && !close.disabled, 'read-only close stays enabled ' + id); close.click();
+    check(!overlay.classList.contains('active'), 'read-only simulator closes ' + id);
+  }
+  const live = {startedAt:2, path:[1]};
+  app.state.playthroughs = [live]; app.state.activePtIndex = 0; app.setViewingPt(null);
+  if ('MODE' === 'mobile') await mobile.openSimForBook(id);
+  else {await desktop.showBattleSimForBook(id); document.getElementById(id === 829 ? 'battlesim-btn' : 'sim' + id + '-btn').click();}
+  await new Promise(resolve => setTimeout(resolve, 0));
+  const overlay = document.getElementById(id === 829 ? 'bsim-overlay' : id === 8 ? 's8-overlay' : 'sim' + id + '-overlay');
+  check([...overlay.querySelectorAll('input')].some(input => !input.disabled), 'active simulator inputs unlock ' + id);
+  const mod = await import('REPO/public/js/battlesim/battlesim' + id + '.js'); mod.setVisible(false);
+  results.push(id);
+}
+app.state.playthroughs = [{startedAt:3,path:[1]}]; app.state.activePtIndex = 0; app.setViewingPt(null);
+if ('MODE' === 'desktop') {
+sheets.renderCharSheetDisplay(); document.getElementById('charsheet-btn').click();
+check(!document.getElementById('cs-add-field').disabled && !document.getElementById('cs-save').disabled, 'active character sheet editing restored');
+}
+document.body.dataset.test = JSON.stringify({mode:'MODE',language:'LANGUAGE',width:innerWidth,books:results,writes,productionWrites:0});

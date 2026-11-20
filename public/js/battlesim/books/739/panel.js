@@ -10,7 +10,7 @@ const { _roll1d6, _enemyName, _enemyNameSafe, _runRound, _resetBattle } = create
 // Simulate the numbered dice duels only; narrative technique-choice fights remain outside the
 // model.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

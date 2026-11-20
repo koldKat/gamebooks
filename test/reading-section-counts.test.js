@@ -5,6 +5,16 @@ const Database = require('better-sqlite3');
 const { isSupplementalSection, supplementalSectionSql, uncountedReadingSections, initializeReadingSupplements } = require('../server/db/reading-section-counts');
 const { hasFullBookCoverage } = require('../server/db/book-section-coverage');
 
+test('manual named sections count only in explicit alphanumeric mode without imported canonical IDs', () => {
+  const covered = new Set(['Пролог', '1', '2', '0', '-1', 'intro', 'notes']);
+  const manual = { alphanumericSections: true, uncountedSections: ['notes'] };
+  assert.equal(hasFullBookCoverage({ total_sections: 3 }, covered, [], manual), true);
+  assert.equal(hasFullBookCoverage({ total_sections: 4 }, covered, [], manual), false);
+  assert.equal(hasFullBookCoverage({ total_sections: 3 }, covered, []), false);
+  assert.equal(hasFullBookCoverage({ total_sections: 3 }, covered, ['1', '2', '3'], manual), false);
+  assert.equal(hasFullBookCoverage({ total_sections: 3 }, covered, ['1', '2'], manual), false);
+});
+
 test('completed ending repairs only a matching, actually finished destination', () => {
   const { restoreCompletedEndingMappings, isMappedGraphNode } = require('../server/db/reading-section-counts');
   const state = { graph: {

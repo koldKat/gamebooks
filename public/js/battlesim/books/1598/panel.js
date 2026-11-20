@@ -1,7 +1,7 @@
 // Connect Curse of the Werewolf's optional combat procedures to the current application run.
 import {definition, ENCOUNTERS, RULES, loadRoster} from './definition.js';
 import {createProcedurePanel} from '../../engines/procedural-quest/panel.js';
-import {currentBookId, currentPlaythrough, saveState, apiFetch} from '../../../core/state.js';
+import {currentBookId, currentPlaythrough, saveState, apiFetch} from '../../run-context.js';
 import {getPlayBtnRow} from '../../../play/charsheet.js';
 import {showAlert, showConfirm} from '../../../ui-helpers/confirm.js';
 import {registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS} from '../../../core/util.js';

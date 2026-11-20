@@ -11,7 +11,7 @@ const { _roll2d6, _enemyName, _enemyNameSafe, _statusOf, _resolveAttack, _runRou
 // Independent 2d6 hit checks; damage is roll-6 plus weapon bonus, reduced by armour.
 // At <=5 life a fighter is unconscious; at 0, dead.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

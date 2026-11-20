@@ -86,7 +86,11 @@ function createRubyCompletionChecker(db, { discovery = false } = {}) {
       if (discovery || isMappedGraphNode(node)) visited.add(String(id));
       if (discovery) for (const choice of Array.isArray(node?.choices) ? node.choices : []) visited.add(String(choice));
     }
-    return { count: total, complete: hasFullBookCoverage(row, visited, canonical) };
+    return { count: total, complete: hasFullBookCoverage(row, visited, canonical, {
+      alphanumericSections: saved.alphanumericSections === true,
+      uncountedSections: [...(Array.isArray(saved.uncountedSections) ? saved.uncountedSections : []),
+        ...(row.uncounted_entry == null ? [] : [row.uncounted_entry])],
+    }) };
   }
 
   const checkCollections = require('./collection-completion-gems').createCollectionCompletionChecker(db, completion, discovery);

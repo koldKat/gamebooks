@@ -10,7 +10,7 @@ const { _rangedTypeLabel, _roll, _enemyName, _enemyNameSafe, _entryNote, _entryL
 // Battle Simulator (Пътят на пъдпъдъка, book 829)
 // Equipment/inventory are read-only inputs; simulator state belongs to the current run.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

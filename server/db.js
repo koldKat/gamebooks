@@ -235,6 +235,7 @@ try { db.exec(`ALTER TABLE series ADD COLUMN is_open_world INTEGER NOT NULL DEFA
 require('./db/series-schema').migrateSeriesNames(db);
 
 // Backfill simulator availability for books predating the flag.
+try { db.prepare('UPDATE books SET has_battle_sim = 1 WHERE id = 1307 AND has_battle_sim = 0').run(); } catch (_) {}
 {
   const done = db.prepare(`SELECT value FROM admin_settings WHERE key = 'has_battle_sim_migrated'`).get();
   if (!done) {

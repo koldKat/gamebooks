@@ -11,7 +11,7 @@ const { _roll2d6, _enemyName, _enemyNameSafe, _ready, _runRound, _checkBattleEnd
 // Systems 2/3 apply opposed 2d6-total differences to Endurance/Battle Code respectively.
 // Mode switches are allowed mid-fight; encounter-specific early stops are manual.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

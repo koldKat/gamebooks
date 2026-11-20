@@ -12,7 +12,7 @@ test('inventory preserves grid, picker, transfers, metadata, templates and read-
   assert.equal(result.status, 0, result.stdout + result.stderr);
   const { cases, exports, digest } = JSON.parse(result.stdout);
   assert.equal(cases, 17);
-  assert.equal(exports, 9);
+  assert.equal(exports, 10);
   // Lazy picker markup and escaped full-name tooltip attributes are intentional.
   assert.equal(digest, 'e6ad4d7edc9afa6a378ca5cdc91da31b57d6807e9cf113a4a7e7d31015562d15');
 });

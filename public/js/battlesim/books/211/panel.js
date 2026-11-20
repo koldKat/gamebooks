@@ -13,7 +13,7 @@ const { _useEnergyTablet } = createEffects(simulatorContext);
 // Hand-to-hand uses opposed rolls; blaster/ship combat uses independent threshold checks.
 // Person and ship pools reset independently; missiles replace the turn. LUCK is narrative-only.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

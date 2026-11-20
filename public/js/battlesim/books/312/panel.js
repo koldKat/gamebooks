@@ -1,5 +1,5 @@
 // Connect Usurper's database combat profiles to the shared encounter panel.
-import { apiFetch } from '../../../core/state.js';
+import { apiFetch } from '../../run-context.js';
 import { createTigerPanel } from '../../engines/way-of-the-tiger/panel.js';
 import { definition, loadRoster, getEncounters } from './definition.js';
 

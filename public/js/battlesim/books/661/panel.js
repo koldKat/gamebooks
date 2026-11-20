@@ -10,7 +10,7 @@ const { _beats, _enemyName, _enemyNameSafe, _formStat, _generalStat, _resolve, _
 // Battle Simulator (Сенките на мрака, book 661, Kung-Fu style book)
 // Encounter-specific totals stay manual, including matching forms.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";

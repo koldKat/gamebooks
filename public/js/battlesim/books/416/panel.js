@@ -9,7 +9,7 @@ const { _emptyEnemy, _rollTable, _enemyName, _enemyNameSafe, _applyEnemyDefeat, 
 // Battle Simulator (Древният враг, book 416)
 // New fights use the approved uniform 1-12 fallback; saved fights keep their range.
 
-import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../../core/state.js";
+import { currentPlaythrough, saveState, apiFetch, currentBookId } from "../../run-context.js";
 import { showAlert } from "../../../ui-helpers/confirm.js";
 import { getPlayBtnRow } from "../../../play/charsheet.js";
 import { escapeHtml, registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS } from "../../../core/util.js";
