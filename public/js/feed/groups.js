@@ -114,7 +114,7 @@ export function createDayRenderer() {
     const looseBatchHeads = new Map();
     for (const group of looseGroups.values()) {
       const [head, ...rest] = group;
-      looseBatchHeads.set(head, { ...head, type: head.isContainer ? 'series_anthologies_created' : head.parentBookId != null ? 'anthology_books_created' : 'series_books_created', creationBookCount: group.length, isNsfw: group.some(e => e.isNsfw) });
+      looseBatchHeads.set(head, { ...head, type: head.isContainer ? 'series_anthologies_created' : head.parentBookId != null ? 'anthology_books_created' : 'series_books_created', creationBookCount: group.length, isNsfw: group.every(e => e.isNsfw) });
       looseBatchChildren.set(head, group);
       rest.forEach(c => batchConsumedChildren.add(c));
     }
@@ -140,7 +140,7 @@ export function createDayRenderer() {
       const loose = !nested && looseBatchChildren.has(e);
       const children = loose ? looseBatchChildren.get(e) : batchChildrenByContainer.get(e);
       const entry = (loose && looseBatchHeads.get(e)) || e;
-      const { html: body, isParty, extraClass } = renderEntry(children?.some(child => child.isNsfw) ? { ...entry, isNsfw: true } : entry);
+      const { html: body, isParty, extraClass } = renderEntry(children?.length ? { ...entry, isNsfw: children.every(child => child.isNsfw) } : entry);
       if (!body) return '';
       let out = '';
       if (children) {
@@ -178,7 +178,7 @@ export function createDayRenderer() {
         out += '<div class="feed-user-group feed-user-group--created">';
         out += `<button class="feed-group-toggle" data-target="${id}" data-group-key="${escapeHtml(thisDayIndex + ':' + key)}" aria-expanded="false">`;
         out += `<span class="feed-group-chevron">▶</span>${renderGroupLabel(e, e.username)}<span class="feed-group-count">${t('feed.' + creationGroup.kind + '_created_today', { n: creationGroup.items.length })}</span>`;
-        out += nsfwTag(creationGroup.items.some(item => item.isNsfw));
+        out += nsfwTag(creationGroup.items.every(item => item.isNsfw));
         out += '</button>';
         out += `<div class="feed-group-body" id="${id}" hidden>${creationGroup.items.map(item => renderCatalogEntry(item)).join('')}</div></div>`;
         continue;
@@ -220,7 +220,7 @@ export function createDayRenderer() {
         const partyTag = isPartyGroup ? ' <span class="feed-party-badge">party</span>' : '';
         out += `<div class="feed-user-group${isPartyGroup ? ' feed-user-group--party' : ''}">`;
         out += `<button class="feed-group-toggle" data-target="${id}" data-group-key="${escapeHtml(thisDayIndex + ':user:' + k)}" aria-expanded="false">`;
-        out += `<span class="feed-group-chevron">▶</span>${label}<span class="feed-group-count">${t('feed.actions_today', { n: userItems.length })}</span>${partyTag}${nsfwTag(userItems.some(item => item.isNsfw))}`;
+        out += `<span class="feed-group-chevron">▶</span>${label}<span class="feed-group-count">${t('feed.actions_today', { n: userItems.length })}</span>${partyTag}${nsfwTag(userItems.every(item => item.isNsfw))}`;
         out += `</button>`;
         out += `<div class="feed-group-body" id="${id}" hidden>${preview}${rest}</div>`;
         out += `</div>`;

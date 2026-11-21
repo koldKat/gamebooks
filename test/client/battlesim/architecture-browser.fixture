@@ -16,6 +16,34 @@ window.fetch=async(url,options={})=>{
   return new Response(JSON.stringify(id?(rosterSeeds[id]||[]):{}),{headers:{'Content-Type':'application/json'}});
 };
 const results=[];
+// Shared steppers retain the original inputs and deliver the panel's native events.
+{
+  const {prepareSimulatorNumbers}=await import('REPO/public/js/battlesim/number-controls.js');
+  const modal=document.createElement('div');
+  modal.innerHTML='<input type="number" min="-2" max="2" step="0.5" value="1.5"><input type="number" value="3" disabled><input type="number" value="4" readonly><div class="inv-qty-wrap"><button>−</button><input type="text" inputmode="numeric"><button>+</button></div>';
+  document.body.append(modal);
+  const field=modal.querySelector('input'),legacy=modal.lastElementChild;
+  const events=[];
+  field.addEventListener('input',()=>events.push('input'));
+  field.addEventListener('change',()=>events.push('change'));
+  prepareSimulatorNumbers(modal);prepareSimulatorNumbers(modal);
+  check(modal.querySelector('input')===field,'numeric field identity retained');
+  check(field.parentElement.querySelectorAll('button').length===2,'no duplicate numeric buttons');
+  check(legacy.children.length===3,'legacy numeric handlers retained');
+  const buttons=field.parentElement.querySelectorAll('button');
+  buttons[1].click();check(field.value==='2','decimal step and maximum');
+  buttons[1].click();check(events.join(',')==='input,change','clamped step does not save again');
+  buttons[0].click();check(field.value==='1.5'&&events.join(',')==='input,change,input,change','numeric events reach panel');
+  field.value='-2';buttons[0].click();check(field.value==='-2','signed minimum retained');
+  for(const input of modal.querySelectorAll('input:disabled,input[readonly]'))
+    check([...input.parentElement.querySelectorAll('button')].every(button=>button.disabled),'locked numeric fields stay locked');
+  field.disabled=true;prepareSimulatorNumbers(modal);check(buttons[0].disabled&&buttons[1].disabled,'combat disables stepper');
+  field.disabled=false;prepareSimulatorNumbers(modal);check(!buttons[0].disabled&&!buttons[1].disabled,'combat unlock restores stepper');
+  const added=document.createElement('input');added.type='number';added.value='5';modal.append(added);
+  prepareSimulatorNumbers(modal);added.parentElement.lastElementChild.click();
+  check(added.value==='6','dynamically added opponent fields receive working controls');
+  modal.remove();
+}
 const missingTranslations=new Set();
 for(const id of BOOK_IDS){
   app.setCurrentBookId(id);app.state.playthroughs=[{startedAt:1,path:[1]}];app.state.activePtIndex=0;
@@ -33,6 +61,10 @@ for(const id of BOOK_IDS){
   check(overlay?.classList.contains('active'),'opens '+id);
   // Let shared controls enhance fields created by a panel's opening render.
   await Promise.resolve();
+  for(const input of overlay.querySelectorAll('input[type="number"],input[inputmode="numeric"],input[inputmode="decimal"]')){
+    if(!input.readOnly)check(input.closest('.inv-qty-wrap')?.querySelectorAll('.inv-qty-btn').length===2,'shared numeric stepper '+id+' '+input.id);
+    if(input.closest('.bsim-number-control'))check([...input.parentElement.querySelectorAll('button')].every(button=>!button.hidden&&button.disabled===(input.matches(':disabled')||input.readOnly)),'numeric control visibility and lock '+id+' '+input.id);
+  }
   if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817||id===832||id===833||id===838||id===1578||id===1587||id===1589||id===1591||id===1592||id===1596||id===1597||id===1598||id===1607||id===1608){
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
     check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
@@ -87,6 +119,15 @@ for(const id of BOOK_IDS){
     const run = app.currentPlaythrough();
     const field = key => overlay.querySelector('[data-field="' + key + '"]');
     const action = key => overlay.querySelector('[data-action="' + key + '"]');
+    check(action('psychicHeal').disabled,'Mochila healing starts unavailable without the power');
+    field('hp').value='9';field('hpInitial').value='15';field('powers').value='2';
+    field('hasPsychicHealing').checked=true;field('hasPsychicHealing').dispatchEvent(new Event('change',{bubbles:true}));
+    action('psychicHeal').click();
+    check(field('hp').value==='11'&&field('powers').value==='1','Mochila healing spends one Power for two Life');
+    module.render();
+    check(field('hp').value==='11'&&field('hasPsychicHealing').checked,'Mochila healing and ownership survive rendering');
+    field('hp').value='14';action('psychicHeal').click();
+    check(field('hp').value==='15'&&field('powers').value==='0'&&action('psychicHeal').disabled,'Mochila healing caps Life and cannot overspend');
     const choose = text => {
       const name = overlay.querySelector('input[role="combobox"]');
       name.value = ''; name.dispatchEvent(new FocusEvent('focus'));
@@ -100,6 +141,7 @@ for(const id of BOOK_IDS){
     check(overlay.querySelector('.inv-modal-title').textContent === 'Мочила', 'Mochila uses Bulgarian independently of app language');
     check(field('ammo').value === '6' && field('reserve').value === '2', 'Mochila character-sheet ammunition defaults');
     choose('Променена черна мечка'); action('start').click();
+    check(action('psychicHeal').disabled&&field('hasPsychicHealing').disabled,'Mochila healing and power ownership are locked during combat');
     const bearRandom = Math.random;
     try {
       const values = [5,6,1,1]; Math.random = () => (values.shift() - .5) / 6;
@@ -6910,6 +6952,55 @@ for(const id of BOOK_IDS){
       check(JSON.stringify(data())===saved,'Prospero stale reset ignored');app.setCurrentBookId(1295);button.click();
     }finally{Math.random=random;}
   }
+  if(id===266){
+    const el=key=>document.getElementById('sim266-'+key);
+    const data=()=>app.currentPlaythrough().sim266;
+    const {getRoster}=await import('REPO/public/js/battlesim/books/266/definition.js');
+    const run=app.currentPlaythrough();
+    run.inventory={sentinel:['shared-item']};run.equipment={sentinel:'shared-slot'};
+    const shared=JSON.stringify([run.inventory,run.equipment]);
+    const choose=section=>{el('encounter').value=String(section);el('encounter').dispatchEvent(new Event('change'));};
+    const scores=()=>{
+      for(const [key,value] of Object.entries({skill:12,skillInitial:12,stamina:24,staminaInitial:24,luck:12,luckInitial:12,gold:50,provisions:10,potionUses:1,attackModifier:0,nextFightPenalty:0}))el(key).value=value;
+      el('weapon').value='none';el('item-shield').checked=false;el('item-helmet').checked=false;
+      el('applyEntry').checked=false;
+    };
+    const cancel=()=>{if(data().fight?.status==='active'){el('cancel').click();document.getElementById('confirm-ok').click();}};
+    const random=Math.random;
+    try{
+      check(getRoster().length===31,'Giants installed encounter count');
+      check(data().character.provisions===10&&data().character.gold===50,'Giants starting supplies');
+      for(const entry of getRoster()){
+        choose(entry.section);scores();
+        if(entry.requiredItem)el('weapon').value=entry.requiredItem;
+        el('start').click();
+        check(data().fight.status==='active'&&data().fight.enemies.length===entry.enemies.length,'Giants preset '+entry.section);
+        check(el('encounter').disabled&&el('weapon').disabled,'Giants setup locked');cancel();
+      }
+      choose('custom');scores();
+      el('editor').querySelector('[role="combobox"]').value='Custom foe';
+      el('editor').querySelector('[data-stat="skill"]').value='1';el('editor').querySelector('[data-stat="stamina"]').value='2';
+      Math.random=()=>.5;el('start').click();el('round').click();el('acceptWound').click();
+      check(data().fight.status==='win'&&data().history.length===1,'Giants custom encounter without a preset');
+      choose('45');scores();el('start').click();
+      let dice=[.999,.999,0,0];Math.random=()=>dice.shift()??0;
+      el('round').click();el('acceptWound').click();
+      check(data().fight.character.skill===11&&data().fight.character.stamina===21,'Giants Snapperfish wound and Skill loss');
+      check(el('log').querySelector('.bsim-log-danger')&&el('log').textContent.includes('Skill'),'Giants colored Skill loss log');cancel();
+      choose('131');scores();el('skill').value=10;Math.random=()=>.5;el('start').click();el('round').click();
+      check(data().fight.enemies[0].stamina===9&&data().fight.round===1,'Giants Goose arrow on tied round');cancel();
+      choose('182');scores();el('start').click();
+      for(let round=0;round<3;round++){el('round').click();if(data().fight.pending)el('acceptWound').click();}
+      check(data().fight.status==='win'&&data().fight.destination==='168'&&data().character.luck===11,'Giants timed Gorgon Luck outcome');
+      choose('379');scores();el('start').click();
+      for(let round=0;round<2;round++){el('round').click();if(data().fight.pending)el('acceptWound').click();}
+      check(data().fight.status==='win'&&data().fight.destination==='201','Giants lamp-guided two-round fight');
+      choose('7');scores();el('start').click();
+      const saved=JSON.stringify(data());module.render();
+      check(JSON.stringify(data())===saved,'Giants render preserves active fight');
+      check(JSON.stringify([run.inventory,run.equipment])===shared,'Giants shared inventory and equipment preserved');
+    }finally{Math.random=random;}
+  }
   if(id===265){
     const el=key=>document.getElementById('sim265-'+key);
     const data=()=>app.currentPlaythrough().sim265;
@@ -8414,6 +8505,9 @@ for(const id of BOOK_IDS){
   }
   }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
+  await Promise.resolve();
+  for(const wrapper of overlay.querySelectorAll('.bsim-number-control'))
+    check([...wrapper.querySelectorAll('button')].every(button=>!button.hidden),'repeated render keeps both numeric buttons visible '+id);
   for(const key of overlay.textContent.match(/battlesim(?:\d+)?\.[\w.]+/g)??[])missingTranslations.add(key);
   check(JSON.stringify(app.currentPlaythrough())===before,'repeat render preserves state '+id);
   module.setVisible(false);overlay.classList.remove('active');

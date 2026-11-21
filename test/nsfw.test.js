@@ -6,6 +6,41 @@ const vm = require('node:vm');
 const Database = require('better-sqlite3');
 const { initializeNsfw, getNsfwCatalog, markNsfwFeedEntries } = require('../server/db/nsfw');
 
+test('collapsed feed headings are NSFW only when every grouped item is NSFW', () => {
+  const tag = flagged => flagged ? '<span class="feed-nsfw-tag">NSFW</span>' : '';
+  const renderEntry = e => ({ html: `${e.type}:${e.bookId || ''}${tag(e.isNsfw)}`, extraClass: 'feed-entry--created' });
+  const context = vm.createContext({
+    _hooks: {}, escapeHtml: String, publicName: String, t: String, nsfwTag: tag,
+    renderEntry, _makeEntryHtml: e => `<div>${renderEntry(e).html}</div>`,
+  });
+  vm.runInContext(readFileSync('public/js/feed/groups.js', 'utf8')
+    .replace(/^import .*;\n/gm, '').replace('export function', 'function'), context);
+  for (const type of ['book_created', 'run_started']) {
+    for (const adultCount of [0, 1, 6]) {
+      const items = Array.from({ length: 6 }, (_, i) => ({
+        type, username: 'reader', bookId: i + 1, isNsfw: i < adultCount,
+      }));
+      const html = context.createDayRenderer()(items, 'today');
+      const heading = html.slice(0, html.indexOf('</button>'));
+      assert.equal(heading.includes('feed-nsfw-tag'), adultCount === 6, `${type}: ${adultCount}/6`);
+      assert.equal((html.match(/feed-nsfw-tag/g) || []).length, adultCount + (adultCount === 6 ? 1 : 0));
+    }
+  }
+  for (const type of ['series_created', 'book_created']) {
+    const container = { type, username: 'reader', bookId: 10, seriesId: 20, isContainer: type === 'book_created' };
+    const children = [true, false].map((isNsfw, i) => ({
+      type: 'book_created', username: 'reader', bookId: i + 1,
+      seriesId: type === 'series_created' ? 20 : null,
+      parentBookId: type === 'book_created' ? 10 : null, isNsfw,
+    }));
+    for (const entries of [children, [container, ...children]]) {
+      const html = context.createDayRenderer()(entries, 'today');
+      assert.ok(!html.slice(0, html.indexOf('</button>')).includes('feed-nsfw-tag'));
+      assert.equal((html.match(/feed-nsfw-tag/g) || []).length, 1);
+    }
+  }
+});
+
 test('classification migration seeds known titles once and preserves later corrections', () => {
   const db = new Database(':memory:');
   try {

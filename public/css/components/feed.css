@@ -6,11 +6,7 @@
   display: flex;
   flex-direction: column;
   padding: 1.2rem 2rem;
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease,
-    max-height 0.25s ease,
-    padding 0.25s ease;
+  transition: opacity 0.2s ease;
 }
 
 #feed-header {
@@ -435,6 +431,17 @@ body.no-feed-glass-cards .feed-day-card--glass::before {
   padding-left: calc(0.5rem - 2px);
   margin: 0 0 0 -0.5rem;
 }
+.feed-user-group--created {
+  border-left: 2px solid #38bdf8;
+  padding-left: calc(0.5rem - 2px);
+  margin-left: -0.5rem;
+}
+.feed-user-group--created .feed-entry--created,
+.feed-user-group--created .feed-catalog-group {
+  border-left: 0;
+  padding-left: 0;
+  margin-left: 0;
+}
 .feed-group-toggle {
   display: flex;
   align-items: center;
@@ -470,9 +477,13 @@ body.no-feed-glass-cards .feed-day-card--glass::before {
   padding-left: calc(0.5rem - 2px);
   margin-left: -0.5rem;
 }
-.feed-entry--created + .feed-group-body,
-.feed-user-group--created > .feed-group-body {
+.feed-entry--created + .feed-group-body {
   border-left-color: #38bdf8;
+}
+.feed-user-group--created > .feed-group-body {
+  border-left: 0;
+  padding-left: 0;
+  margin-left: 0;
 }
 .feed-user-group--party > .feed-group-body {
   border-left-color: transparent;

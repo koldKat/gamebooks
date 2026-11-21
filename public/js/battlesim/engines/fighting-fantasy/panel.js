@@ -58,12 +58,13 @@ export function createFantasyPanel({document,definition,state,getRoster,getSetti
       if(event.kind==='luck')data.log.push(tk('luckResult',{n:event.total,result:tk(event.lucky?'lucky':'unlucky')}));
       if(event.kind==='damage')data.log.push(tk('damage',{name:event.target==='player'?tk('you'):event.target,n:event.damage}));
       if(event.kind==='extraDamage')data.log.push(tk('extraDamage',{n:event.damage}));
+      if(event.kind==='skillLoss')data.log.push(tk('skillLoss',{n:event.n}));
       if(event.kind==='entry')data.log.push(tk('entryResult',{n:event.damage,luck:event.luck,skillChange:event.skillChange??0}));
       if(event.kind==='outcome')data.log.push(tk('status.'+event.status)+(event.destination?' '+tk('destination',{n:event.destination}):''));
       if(data.log.length>before){
         const tone=event.kind==='outcome'?(event.status==='win'?'success':event.status==='loss'?'danger':'accent')
           :event.kind==='damage'?(event.target==='player'?'danger':'success')
-            :event.kind==='luck'?(event.lucky?'success':'danger'):'accent';
+          :event.kind==='skillLoss'?'danger':event.kind==='luck'?(event.lucky?'success':'danger'):'accent';
         data.logTones??=[];data.logTones.length=data.log.length;data.logTones[data.log.length-1]=tone;
       }
     }
@@ -160,7 +161,7 @@ export function createFantasyPanel({document,definition,state,getRoster,getSetti
     el('escape').addEventListener('click',()=>change(data=>report(data,combat.escapeFight(data.fight))));
     el('projectile').addEventListener('click',()=>change(data=>report(data,combat.useProjectile(data.fight,items().find(item=>item.damage)))));
     el('cancel').addEventListener('click',()=>confirm('cancelConfirm',data=>{if(!active(data.fight))return;data.fight.status='cancelled';data.fight.events=[];}));
-    for(const [key,method] of [['eat','provision'],['drink','potion']])el(key).addEventListener('click',()=>change(data=>{if(active(data.fight))return;data.character=combat.recover(readCharacter(),method);data.fight=null;}));
+    for(const [key,method] of [['eat','provision'],['drink','potion']])el(key).addEventListener('click',()=>change(data=>{if(active(data.fight))return;data.character=combat.recover(readCharacter(),method,getSettings().recoveryRules);data.fight=null;}));
     el('testLuck').addEventListener('click',()=>change(data=>{if(active(data.fight))return;const result=combat.testLuck(readCharacter());data.character=result.character;data.fight=null;data.log.push(tk('luckResult',{n:result.total,result:tk(result.lucky?'lucky':'unlucky')}));}));
     registerShortcut({button:trigger,overlay,open,close});
   }

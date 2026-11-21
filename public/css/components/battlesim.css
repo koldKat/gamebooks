@@ -1275,6 +1275,16 @@
 }
 
 /* Match stepper button/input heights and center glyphs without squashing padding. */
+.bsim-modal .bsim-number-control {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+.bsim-modal .bsim-number-control > input {
+  flex: 1;
+  min-width: 0;
+  width: 0;
+}
 .bsim-modal .inv-qty-input {
   line-height: 1;
   height: 22px;
@@ -1718,7 +1728,7 @@
 /* Give plain-text labels the same column as rows with a label span. */
 .bsim-modal
   label.inv-edit-row:has(
-    > :is(input.inv-edit-input, select.inv-edit-input, textarea.inv-edit-input):only-child
+    > :is(input.inv-edit-input, select.inv-edit-input, textarea.inv-edit-input, .bsim-number-control):only-child
   ) {
   display: grid;
   grid-template-columns: 9rem minmax(0, 1fr);

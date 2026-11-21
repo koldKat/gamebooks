@@ -194,18 +194,21 @@ export function _setLandingPanelCollapsed(prefKey, collapsed) {
     'feed-collapsed':   { cls: 'feed-collapsed',   btn: 'feed-toggle',   collapsedText: '▾', expandedText: '▴' },
   }[prefKey];
   if (!cfg) return;
-  // Restore scroll next frame after expanding the feed; collapse may have clamped scrollTop.
+  // Restore after changing the class, before the expanded feed's first paint.
+  let restoreFeedScroll = null;
   if (prefKey === 'feed-collapsed') {
     const wrapper = document.getElementById('landing-wrapper');
     const wasCollapsed = document.body.classList.contains(cfg.cls);
     if (collapsed && !wasCollapsed && wrapper) _feedScrollBeforeCollapse = wrapper.scrollTop;
     else if (!collapsed && wasCollapsed && wrapper && _feedScrollBeforeCollapse != null) {
-      const restore = _feedScrollBeforeCollapse;
+      restoreFeedScroll = _feedScrollBeforeCollapse;
       _feedScrollBeforeCollapse = null;
-      requestAnimationFrame(() => requestAnimationFrame(() => { wrapper.scrollTop = restore; }));
     }
   }
   document.body.classList.toggle(cfg.cls, collapsed);
+  if (restoreFeedScroll !== null) {
+    document.getElementById('landing-wrapper').scrollTop = restoreFeedScroll;
+  }
   document.getElementById(cfg.btn).textContent = collapsed ? cfg.collapsedText : cfg.expandedText;
   if (prefKey === 'feed-collapsed') {
     localStorage.removeItem('feed-collapsed');

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {startFight, combatAction as act, playCombatAction, parseRange} from '../../../public/js/battlesim/books/1307/combat.js';
+import {psychicHeal} from '../../../public/js/battlesim/books/1307/effects.js';
 import {createRequire} from 'node:module';
 const require = createRequire(import.meta.url);
 const {getRosterRows} = require('../../helpers/roster-db.cjs');
@@ -9,6 +10,18 @@ const enemy = key => roster.find(row => row.key === key);
 const player = overrides => ({hp:15, attackMin:7, ammo:6, reserve:2, weapon:'gun', ...overrides});
 const dice = (...values) => () => {assert.ok(values.length, 'Unexpected extra roll'); return values.shift();};
 const attack = (fight, values, enemyValues = []) => act(act(fight, 'attack', dice(...values)), 'resolve', dice(...enemyValues));
+
+test('Mochila psychic healing requires the power, spends one point, and restores up to two Life outside combat', () => {
+  const source = player({hp:9,hpInitial:15,powers:2,psychicHealing:true});
+  const before = structuredClone(source);
+  assert.deepEqual(psychicHeal(source,null), {...source,hp:11,powers:1});
+  assert.deepEqual(source,before,'healing never mutates its input');
+  assert.equal(psychicHeal({...source,hp:14},null).hp,15,'Life never exceeds the initial value');
+  assert.equal(psychicHeal(source,{status:'win'}).hp,11,'healing is available after combat');
+  for (const value of [{...source,psychicHealing:false},{...source,powers:0},{...source,powers:-1},
+    {...source,hp:15},{...source,hp:16},{...source,hpInitial:NaN}]) assert.throws(()=>psychicHeal(value,null));
+  assert.throws(()=>psychicHeal(source,{status:'fighting'}),'healing cannot bypass combat locks');
+});
 
 test('Mochila installed roster matches all ten photographed encounter variants', () => {
   assert.equal(roster.length, 10);

@@ -1,6 +1,7 @@
 // Connect Mochila's combat setup, saved fights and logs to the active playthrough.
 import {definition, encounters, loadRoster} from './definition.js';
 import {startFight, playCombatAction, canReroll, validateFight} from './combat.js';
+import {psychicHeal} from './effects.js';
 import {createQuestState} from '../../engines/super-endless-quest/state.js';
 import {createD20Forms} from '../../engines/d20/forms.js';
 import {createOpponentEditor} from '../../opponents.js';
@@ -12,15 +13,15 @@ import {registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS} from '../..
 import {t} from '../../../i18n.js';
 import {decorateOutcome} from '../../outcome.js';
 
-const defaults = {hp:15, attackMin:9, ammo:6, silverAmmo:0, reserve:2, weapon:'gun', fanning:false,
-  marksman:false, necklace:false, bandana:false, bandanaUsed:false};
+const defaults = {hp:15, hpInitial:15, attackMin:9, ammo:6, silverAmmo:0, reserve:2, weapon:'gun', fanning:false,
+  marksman:false, necklace:false, bandana:false, bandanaUsed:false, powers:0, psychicHealing:false};
 const enemyDefaults = {displayName:'', low:2, high:4, low2:7, high2:9, damage:4, hp:10};
 export function createMochilaPanel(getContext, document) {
   const ctx = () => getContext(), id = definition.stateKey;
   const ui = createD20Forms(document, id, key => ctx().t('battlesim1307.' + key));
   const store = createQuestState(() => ({...ctx(), definition}), {validateFight});
   const inputs = new Map(), menus = [];
-  let overlay, launch, right, controls, editor, notes, start, custom, reload, token, mountedRun, mountedOriginal, selected = null, previewingSetup = false;
+  let overlay, launch, right, controls, editor, notes, start, custom, reload, heal, token, mountedRun, mountedOriginal, selected = null, previewingSetup = false;
   const busy = () => token?.state.fight?.status === 'fighting';
   const close = () => {menus.forEach(menu => menu.close()); overlay?.classList.remove('active');};
   function presetRow(entry) {
@@ -54,6 +55,18 @@ export function createMochilaPanel(getContext, document) {
     return Object.fromEntries([...inputs].map(([key, input]) => [key,
       input.type === 'checkbox' ? input.checked : input.tagName === 'SELECT' ? input.value : ui.number(input)]));
   }
+  function saveIdlePlayer(state, player) {
+    player.bandanaUsed = Boolean(player.bandanaUsed || state.player?.bandanaUsed || state.fight?.player.bandanaUsed);
+    state.player = player;
+    // Keep the previous battle log and its recorded outcome while retaining
+    // post-battle recovery when the shared state layer copies combat stats.
+    if (state.fight) state.fight.player = structuredClone(player);
+    return state;
+  }
+  function syncHealing() {
+    heal.disabled = busy() || !inputs.get('psychicHealing').checked || Number(inputs.get('powers').value) < 1
+      || Number(inputs.get('hp').value) >= Number(inputs.get('hpInitial').value);
+  }
   function render() {
     if (!overlay) return;
     const snap = store.snapshot();
@@ -86,6 +99,7 @@ export function createMochilaPanel(getContext, document) {
     showOpponentLife(previewingSetup ? null : fight);
     start.disabled = custom.disabled = reload.disabled = locked;
     reload.disabled ||= inputs.get('weapon').value === 'silverGun';
+    syncHealing();
     controls.replaceChildren(); right.replaceChildren();
     const status = ui.text(right, ui.tr('status.' + (fight?.status ?? 'ready')));
     status.className = 'bsim-status'; decorateOutcome(status, fight?.status);
@@ -147,12 +161,22 @@ export function createMochilaPanel(getContext, document) {
     right = document.createElement('div'); right.className = 'bsim-report';
     overlay.querySelector('.bsim-col-right').append(right);
     ui.text(left, ui.tr('rules'));
-    for (const [key, min, max] of [['hp',1,1000000], ['attackMin',2,12], ['ammo',0,6], ['reserve',0,1000000], ['silverAmmo',0,6]]) {
+    for (const [key, min, max] of [['hp',1,1000000], ['hpInitial',1,1000000], ['powers',0,1000000], ['attackMin',2,12], ['ammo',0,6], ['reserve',0,1000000], ['silverAmmo',0,6]]) {
       inputs.set(key, ui.field(left, key, {type:'number', value:defaults[key], min, max}));
     }
     inputs.set('weapon', ui.field(left, 'weapon', {entries:[['gun',ui.tr('gun')],['silverGun',ui.tr('silverGun')],['knife',ui.tr('knife')]]}));
     const special = ui.group(left, 'special');
     for (const key of ['fanning','marksman','necklace','bandana','bandanaUsed']) inputs.set(key, ui.checkbox(special, key));
+    const healing = ui.group(left, 'psychicHealing', true);
+    inputs.set('psychicHealing', ui.checkbox(healing, 'hasPsychicHealing'));
+    ui.text(healing, ui.tr('psychicHealingRule'));
+    heal = ui.button(healing, 'psychicHeal', () => change(state =>
+      saveIdlePlayer(state, psychicHeal(playerInput(), state.fight))));
+    for (const key of ['psychicHealing','powers']) inputs.get(key).addEventListener('change', () => {
+      if (busy()) return;
+      change(state => state.fight?.status === 'fighting' ? null : saveIdlePlayer(state, playerInput()));
+    });
+    for (const key of ['powers','hp','hpInitial']) inputs.get(key).addEventListener('input', syncHealing);
     editor = createOpponentEditor({document, id, t:ctx().t, language:'bg', fields:[
       ...['low','high','low2','high2'].map(key => ({key,label:ui.tr(key),min:key.endsWith('2') ? 0 : 2,max:12})),
       {key:'hp',label:ui.tr('enemyHp'),min:1}, {key:'damage',label:ui.tr('damage'),min:0},

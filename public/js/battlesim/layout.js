@@ -1,6 +1,7 @@
 // Keep controls in the scrollable play column; the other column is for reports.
 import {createThemedSelect, normalSimulatorCase} from '../ui-helpers/themed-select.js';
 import {isReadOnlySimulator} from './run-context.js';
+import {prepareSimulatorNumbers} from './number-controls.js';
 
 const controlPanels = new WeakMap();
 function prepareControls(overlay) {
@@ -29,6 +30,7 @@ function prepareControls(overlay) {
       for (const [control, disabled] of forcedDisabled) control.disabled = disabled;
       forcedDisabled.clear();
     }
+    prepareSimulatorNumbers(modal);
     // Older saved logs and database notes retain their original stored text.
     for (const prose of modal.querySelectorAll('p, [id$="-note"], [id$="-hint"], .bsim-log, .ac-sub')) {
       const walker = overlay.ownerDocument.createTreeWalker(prose, view.NodeFilter.SHOW_TEXT);
@@ -61,7 +63,7 @@ function prepareControls(overlay) {
     if (overlay.classList.contains('active')) {
       sync();
       content.observe(modal, {subtree:true, childList:true, attributes:true,
-        attributeFilter:['disabled','hidden','style','selected','label','value']});
+        attributeFilter:['disabled','readonly','min','max','step','hidden','style','selected','label','value']});
     } else for (const menu of menus.values()) menu.close();
   }
   new view.MutationObserver(visibility).observe(overlay, {attributes:true, attributeFilter:['class']});

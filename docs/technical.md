@@ -260,6 +260,8 @@ Extend an existing family when its combat model fits. Add family behavior throug
 
 The Fighting Fantasy family accepts fixed starting scores, player Stamina stop conditions, wound amounts, and independent simultaneous attack rolls as explicit options. Its optional group-target control permits changes between rounds only; waiting opponents enter the active group as vacancies appear. Existing encounters retain their configured roll behavior.
 
+Encounter options also support Skill loss on wounds, ally damage and item costs at the end of a complete round, required combat equipment, and round-limited Luck outcomes. Recovery options can override the family’s default potion behavior without changing other books.
+
 `layout.js` supplies common control placement and themed dropdowns while retaining underlying select values and events. Its observers exist only while the dialog is open. `battlesim.css` owns the common text scale, compact controls, and semantic log colors. Controls and setup use the left column; results and bounded history use the right.
 
 Pending actions validate account, book, run identity, and state revision before saving. Combat resources belong to that encounter or its explicit continuation. Campaign travel, narrative choices, and story inventory stay outside the combat engine.
@@ -269,6 +271,8 @@ Saved fights retain their rule version, turn, participants, resources, pending d
 Custom encounters use the common opponent editor. Missing or derived source attributes remain explicitly unavailable until the appropriate engine resolves them; setup must not invent substitute values. Ordinary custom fights do not require a preset.
 
 Controls and setup remain in the left column; results and history remain in the right. Panels use shared button styles and `--bsim-text-size`. Verify both lazy loaders and the architecture browser fixture when adding a simulator.
+
+The shared layout applies `battlesim/number-controls.js` to numeric fields, including dynamically rendered opponents. It preserves input elements and their existing handlers, honors numeric bounds and steps, and leaves existing book-specific steppers in place. Editing locks also disable the shared stepper buttons.
 
 Family-specific file layout is documented by each module's responsibility header. Dispatchers select shared combat modules from declarative encounter metadata; book adapters supply identity and application wiring.
 

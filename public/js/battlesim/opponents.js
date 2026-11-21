@@ -47,10 +47,10 @@ export function createOpponentEditor({document, id, t, fields, presets = [], lan
       + fields.map(field => `<label class="inv-edit-row"><span>${escape(field.label)}</span>${field.options
         ? `<select class="inv-edit-input" data-stat="${escape(field.key)}">${field.options.map(option => `<option value="${escape(option.value ?? option)}">${escape(option.label ?? option)}</option>`).join('')}</select>`
         : `<input class="inv-edit-input" type="number" min="${field.min ?? 0}" max="${field.max ?? 1000000}" step="${field.step ?? 1}" data-stat="${escape(field.key)}" autocomplete="off" required>`}</label>`).join('')
-      + `<button type="button" class="bsim-action-btn">${escape(label('remove'))}</button>`;
+      + `<button type="button" class="bsim-action-btn bsim-opponent-remove">${escape(label('remove'))}</button>`;
     const name = row.querySelector('[role="combobox"]');
     const list = row.querySelector('[role="listbox"]');
-    const remove = row.querySelector('button');
+    const remove = row.querySelector('.bsim-opponent-remove');
     let current = {...source}, matches = [], selected = -1;
     function close() {
       list.classList.remove('open');
@@ -120,8 +120,8 @@ export function createOpponentEditor({document, id, t, fields, presets = [], lan
     add.hidden = fixedCount;
     for (const item of rows) {
       for (const control of item.row.querySelectorAll('input,select,button')) control.disabled = locked || control.dataset.unavailable === 'true';
-      item.row.querySelector('button').disabled = locked || fixedCount || rows.length < 2;
-      item.row.querySelector('button').hidden = fixedCount;
+      item.row.querySelector('.bsim-opponent-remove').disabled = locked || fixedCount || rows.length < 2;
+      item.row.querySelector('.bsim-opponent-remove').hidden = fixedCount;
       if (locked) {
         item.row.querySelector('.autocomplete-dropdown').classList.remove('open');
         item.row.querySelector('[role="combobox"]').setAttribute('aria-expanded', 'false');
