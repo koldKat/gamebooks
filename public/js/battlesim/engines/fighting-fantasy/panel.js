@@ -102,6 +102,14 @@ export function createFantasyPanel({document,definition,state,getRoster,getSetti
     el('pending').textContent=fight?.pending?tk('pending.'+fight.pending.direction,combat.pendingWoundValues(fight)):'';
     el('destination').textContent=fight?.destination?tk('destination',{n:fight.destination}):'';
     el('opponents').innerHTML=(fight?.enemies??[]).map((enemy,index)=>'<div>'+escape((index===fight.target&&locked?'› ':'')+tk('enemyStamina',{name:enemy.displayName||enemy.name,n:enemy.stamina,max:enemy.initialStamina}))+'</div>').join('');
+    el('targetRow').hidden = !getSettings().targetSelection || !locked || !fight?.config.simultaneous;
+    if (!el('targetRow').hidden) {
+      el('target').innerHTML = fight.enemies.flatMap((enemy, index) => enemy.stamina ? [{enemy, index}] : [])
+        .slice(0, fight.config.activeOpponents ?? fight.enemies.length)
+        .map(({enemy, index}) => `<option value="${index}">${escape(enemy.displayName || enemy.name)}</option>`).join('');
+      el('target').value = String(fight.target);
+      el('target').disabled = Boolean(fight.pending || fight.roundSequence?.length);
+    }
     el('log').innerHTML=data.log.slice(-80).map((line,index)=>{
       const tone=data.logTones?.[Math.max(0,data.log.length-80)+index];
       return '<div class="bsim-log-'+(['success','danger','accent','muted'].includes(tone)?tone:'muted')+'">'+escape(line)+'</div>';
@@ -126,6 +134,7 @@ export function createFantasyPanel({document,definition,state,getRoster,getSetti
       ${items().filter(item=>item.slot!=='weapon').map(item=>`<label class="bsim-checkbox"><input type="checkbox" id="${ID}-item-${escape(item.key)}">${escape(item.label)}</label>`).join('')}<p class="bsim-note">${escape(tk('itemNote'))}</p><div class="bsim-btn-row">${button('saveCharacter')}${button('newCharacter')}</div></details>
       <label class="inv-edit-row"><span>${escape(tk('encounter'))}</span><select class="inv-edit-input" id="${ID}-encounter"><option value="custom">${escape(tk('custom'))}</option>${getRoster().map(entry=>`<option value="${entry.section}">${escape(entry.label)}</option>`).join('')}</select></label><div id="${ID}-editor"></div>
       <details><summary>${escape(tk('sourceRules'))}</summary><p class="bsim-note" id="${ID}-notes"></p></details><label class="bsim-checkbox" id="${ID}-applyEntryRow"><input type="checkbox" id="${ID}-applyEntry">${escape(tk('applyEntry'))}</label><div class="bsim-btn-row">${button('start')}${button('bypass')}</div>
+      <label class="inv-edit-row" id="${ID}-targetRow" hidden><span>${escape(tk('target'))}</span><select class="inv-edit-input" id="${ID}-target"></select></label>
       <p class="bsim-note" id="${ID}-pending" role="status"></p><div class="bsim-btn-row">${button('round')}${button('acceptWound')}${button('useLuck')}</div><div class="bsim-btn-row">${button('escape')}${button('projectile')}${button('cancel')}</div>
       <div class="bsim-btn-row">${button('eat')}${button('drink')}${button('testLuck')}</div></div>
       <div class="bsim-col bsim-col-right"><p id="${ID}-status" role="status"></p><p id="${ID}-destination"></p><div id="${ID}-opponents"></div><h3 class="bsim-side-title">${escape(tk('log'))}</h3><div class="bsim-log" id="${ID}-log"></div><h3 class="bsim-side-title">${escape(tk('history'))}</h3><div class="bsim-history-list" id="${ID}-history"></div></div></div></div>`;
@@ -138,6 +147,9 @@ export function createFantasyPanel({document,definition,state,getRoster,getSetti
     el('encounter').addEventListener('change',()=>{if(active(state.read()?.fight))return;editor.set(preset()?.enemies??[{}]);editor.fixCount(Boolean(preset()));notes();saveSetup();});
     for(const event of ['input','change'])editor.element.addEventListener(event,saveSetup);
     el('applyEntry').addEventListener('change',saveSetup);
+    el('target').addEventListener('change',()=>change(data=>{
+      data.fight = combat.selectFightTarget(data.fight, Number(el('target').value));
+    }));
     el('saveCharacter').addEventListener('click',()=>change(data=>{if(active(data.fight))return;data.character=readCharacter();data.fight=null;}));
     el('newCharacter').addEventListener('click',()=>confirm('resetConfirm',data=>{if(active(data.fight))return;data.character=combat.newCharacter(getSettings().defaults);data.fight=null;}));
     el('start').addEventListener('click',()=>change(data=>{if(active(data.fight))return;data.setup=setup();report(data,combat.startFight(readCharacter(),preset(),{applyEntry:el('applyEntry').checked,opponents:editor.read(),items:items(),combatRules:getSettings().combatRules}));}));

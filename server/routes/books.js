@@ -735,14 +735,15 @@ async function handleSaveState(req, res, bookId) {
     }
     if (updatedIds.length) ssePush(party.partyId, userId, { type: 'state_updated', by: userId, bookId });
   }
-  // Only push when something feed-visible actually changed: a run starting or completing.
+  // Include removed/replaced runs and reverted completions, not just new activity.
   // Regular section navigation doesn't add feed entries, so pushing on every save floods SSE.
   const oldPts = oldState?.playthroughs || [];
   const newPts = stateObj.playthroughs || [];
-  const feedRelevant = newPts.some((pt, i) => {
+  const feedRelevant = oldPts.length !== newPts.length || newPts.some((pt, i) => {
     const op = oldPts[i];
-    return (pt.startedAt && !op?.startedAt)
-        || (pt.completed && !op?.completed)
+    return (pt.startedAt ?? null) !== (op?.startedAt ?? null)
+        || (!!pt.completed !== !!op?.completed)
+        || (pt.completed && (pt.result !== op?.result || pt.completedAt !== op?.completedAt))
         || (!!pt.isPublic !== !!op?.isPublic);
   });
   if (feedRelevant) feedPush({ type: 'feed_changed', entity: 'book', action: 'state_save', id: bookId });

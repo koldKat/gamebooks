@@ -3,7 +3,7 @@ const labels = {
   gold:'Gold',provisions:'Provisions',potionUses:'Potion measures left',attackModifier:'Other Attack Strength modifier',nextFightPenalty:'Next battle modifier',
   potion:'Starting potion','potion.skill':'Potion of Skill','potion.strength':'Potion of Strength','potion.fortune':'Potion of Fortune',
   weapon:'Weapon in use',ordinarySword:'Ordinary sword',itemNote:'Select only items you possess. These combat modifiers do not change your shared inventory or equipment. Enter permanent score losses directly above. The next-battle modifier is used once.',
-  saveCharacter:'Save scores',newCharacter:'Roll adventurer',encounter:'Encounter',custom:'Custom fight',sourceRules:'Printed encounter rules',
+  saveCharacter:'Save scores',newCharacter:'Roll adventurer',encounter:'Encounter',custom:'Custom fight',sourceRules:'Printed encounter rules',target:'Attack target',
   applyEntry:'Apply entry losses / consume entry potion (uncheck if already recorded)',start:'Start fight',bypass:'Skip encounter',
   round:'Attack round',acceptWound:'Accept wound',useLuck:'Test Luck',escape:'Escape',projectile:'Throw dart',cancel:'End fight',eat:'Eat provision',drink:'Drink potion',testLuck:'Test Luck outside combat',
   log:'Battle log',history:'Battle history',you:'You',invalid:'Check the scores, item selections and available actions.',

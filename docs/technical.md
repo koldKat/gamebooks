@@ -258,6 +258,8 @@ Shared engine families live under `engines/`. Engines own combat calculations, p
 
 Extend an existing family when its combat model fits. Add family behavior through explicit options or encounter metadata rather than checks for a particular book ID. Separate setup values, captured encounter rules, mutable combat state, and confirmed outcomes. Undefined source values require explicit player input; rendering must not invent them.
 
+The Fighting Fantasy family accepts fixed starting scores, player Stamina stop conditions, wound amounts, and independent simultaneous attack rolls as explicit options. Its optional group-target control permits changes between rounds only; waiting opponents enter the active group as vacancies appear. Existing encounters retain their configured roll behavior.
+
 `layout.js` supplies common control placement and themed dropdowns while retaining underlying select values and events. Its observers exist only while the dialog is open. `battlesim.css` owns the common text scale, compact controls, and semantic log colors. Controls and setup use the left column; results and bounded history use the right.
 
 Pending actions validate account, book, run identity, and state revision before saving. Combat resources belong to that encounter or its explicit continuation. Campaign travel, narrative choices, and story inventory stay outside the combat engine.

@@ -6910,6 +6910,25 @@ for(const id of BOOK_IDS){
       check(JSON.stringify(data())===saved,'Prospero stale reset ignored');app.setCurrentBookId(1295);button.click();
     }finally{Math.random=random;}
   }
+  if(id===265){
+    const el=key=>document.getElementById('sim265-'+key);
+    const data=()=>app.currentPlaythrough().sim265;
+    check(data().character.skill===6&&data().character.stamina===12&&data().character.luck===6,'Salamonis fixed scores');
+    check(data().character.provisions===0&&data().character.potionUses===0,'Salamonis no starting supplies');
+    el('encounter').value='44';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
+    check(data().setup.section==='44'&&data().setup.opponents.length===6,'Salamonis encounter selection persists');
+    el('start').click();
+    check(data().fight.config.activeOpponents===3,'Salamonis three active Grannits');
+    await Promise.resolve();
+    check(!el('targetRow').hidden&&el('target').options.length===3,'Salamonis active target choices');
+    check(el('target').classList.contains('themed-select-native'),'Salamonis custom target dropdown');
+    el('target').value='2';el('target').dispatchEvent(new Event('change',{bubbles:true}));
+    check(data().fight.target===2,'Salamonis chosen target persisted');
+    const saved=JSON.stringify(data());
+    module.render();
+    check(JSON.stringify(data())===saved,'Salamonis render preserves the active fight');
+    check(el('encounter').disabled,'Salamonis setup locked during combat');
+  }
   if(id===261){
     const el=key=>document.getElementById('sim261-'+key),data=()=>app.currentPlaythrough().sim261;
     const {getRoster}=await import('REPO/public/js/battlesim/books/261/definition.js');

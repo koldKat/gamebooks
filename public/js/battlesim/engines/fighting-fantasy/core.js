@@ -23,7 +23,9 @@ export function validateCharacter(character, alive = false) {
   return character;
 }
 export function newCharacter(defaults, roll) {
-  const skill = die(roll) + 6, stamina = rollDice(roll) + 12, luck = die(roll) + 6;
+  const skill = defaults.fixedScores ? integer(defaults.fixedScores.skill, 1) : die(roll) + 6;
+  const stamina = defaults.fixedScores ? integer(defaults.fixedScores.stamina, 1) : rollDice(roll) + 12;
+  const luck = defaults.fixedScores ? integer(defaults.fixedScores.luck, 1) : die(roll) + 6;
   return {skill, skillInitial:skill, stamina, staminaInitial:stamina, luck, luckInitial:luck,
     gold:defaults.gold, provisions:defaults.provisions, potion:'skill', potionUses:1,
     attackModifier:0, nextFightPenalty:0, items:{}, ...(defaults.extraStats ?? {}),
@@ -41,6 +43,9 @@ function settle(fight) {
   if (fight.pending) return;
   if (!fight.character.stamina) { finish(fight, 'loss', fight.config.loss ?? null); return; }
   const rule = fight.config;
+  if (rule.stopAtPlayerStamina && fight.character.stamina <= rule.stopAtPlayerStamina.value) {
+    finish(fight, 'routed', rule.stopAtPlayerStamina.destination); return;
+  }
   if (rule.stopAtEnemyStamina !== undefined && fight.enemies[fight.target]?.stamina <= rule.stopAtEnemyStamina) {
     finish(fight, 'win', rule.win); return;
   }
@@ -50,8 +55,8 @@ function settle(fight) {
   if (rule.surviveRounds && !fight.roundSequence?.length && fight.round >= rule.surviveRounds) {
     finish(fight, 'win', rule.win); return;
   }
-  while (fight.target < fight.enemies.length && !fight.enemies[fight.target].stamina) fight.target++;
-  if (fight.target === fight.enemies.length) {
+  if (!fight.enemies[fight.target]?.stamina) fight.target = fight.enemies.findIndex(enemy => enemy.stamina > 0);
+  if (fight.target < 0) {
     const destination = rule.cleanWin && !fight.roundsLost ? rule.cleanWin : rule.win;
     finish(fight, 'win', destination);
   }
@@ -88,6 +93,19 @@ export function startFight(character, entry, {applyEntry = true, opponents, item
     fight.events.push({kind:'entry', damage, luck:config.entry.luck ?? 0,skillChange:fight.character.skill-previousSkill});
   }
   settle(fight);
+  return fight;
+}
+export function selectFightTarget(previous, target) {
+  requireFight(previous);
+  integer(target, 0, previous.enemies.length - 1);
+  const available = previous.enemies.flatMap((enemy, index) => enemy.stamina ? [index] : [])
+    .slice(0, previous.config.activeOpponents ?? previous.enemies.length);
+  if (!previous.config.simultaneous || previous.pending || previous.roundSequence?.length || !available.includes(target)) {
+    throw new RangeError('Cannot change target during this attack');
+  }
+  const fight = copy(previous);
+  fight.target = target;
+  fight.events = [];
   return fight;
 }
 export function attackModifier(fight, items) {
@@ -142,7 +160,7 @@ export function roundFight(previous, items, roll) {
     fight.roundSequence = fight.config.simultaneous
       ? fight.enemies.flatMap((enemy,index) => enemy.stamina ? [index] : []).slice(0, fight.config.activeOpponents ?? fight.enemies.length)
       : Array(integer(fight.config.attacksPerRound ?? 1, 1, 2)).fill(fight.target);
-    if (fight.config.simultaneous) {
+    if (fight.config.simultaneous && !fight.config.independentPlayerAttacks) {
       const first = die(roll), second = die(roll);
       fight.roundPlayerDouble = first === second;
       fight.roundPlayerAttack = fight.character.skill + attackModifier(fight, items) + first + second;
@@ -180,7 +198,8 @@ export function roundFight(previous, items, roll) {
       if (fight.roundPlayerDouble && profile.doubleDamage !== undefined) damage = profile.doubleDamage;
     }
     const immune = direction === 'outgoing' && enemy.requiresMagic && !profile?.magical;
-    fight.pending = {direction, enemy:targetIndex, damage:direction === 'outgoing' ? damage : 2, immune};
+    fight.pending = {direction, enemy:targetIndex,
+      damage:direction === 'outgoing' ? damage : integer(fight.config.incomingDamage ?? 2, 1), immune};
   }
   else finishRound(fight, roll);
   return fight;
