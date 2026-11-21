@@ -1,5 +1,6 @@
 // Render the current combat result, original page draw and encounter history.
 import {vitalityNames, blackSunCombatValues, blackSunEnemyValues} from './combat.js';
+import {decorateOutcome} from '../../outcome.js';
 
 export function renderBlackSunReport(document, root, state) {
   root.replaceChildren();
@@ -9,7 +10,7 @@ export function renderBlackSunReport(document, root, state) {
   if (!f) text('Enter your current combat values and choose an opponent.', report);
   else {
     const player = blackSunCombatValues(f), enemy = blackSunEnemyValues(f);
-    text(`${f.encounter.label || 'Custom encounter'} · Round ${f.round} · ${f.status}`, report);
+    decorateOutcome(text(`${f.encounter.label || 'Custom encounter'} · Round ${f.round} · ${f.status}`, report), f.status);
     text(`Vitality: ${vitalityNames[f.player.vitality] || 'dead'} · Karma: ${f.player.karma}`, report);
     text(`Attack ${player.attack} · Defense ${player.defense}`, report);
     text(`Enemy Attack ${f.encounter.separatePartAttacks ? 'by limb' : enemy.attack} · Defense ${enemy.defense ?? '-'}`, report);
@@ -26,7 +27,8 @@ export function renderBlackSunReport(document, root, state) {
   if (state.page && f?.status === 'fighting') text(`Page ${state.page.sourcePdfPage}: Attack die ${state.page.attack} · Base die ${state.page.base} · Defense die ${state.page.defense} · ${state.page.moon} moon`, report);
   if (state.recoveryPage) text(`Printed combat result: ${state.recoveryPage.moon} moon.`, report);
   const log = document.createElement('div'); log.className = 'bsim-log'; root.append(log);
-  for (const round of [...(f?.log ?? [])].reverse()) text(`Round ${round.round}: Attack ${round.attackTotal}, Defense ${round.defenseTotal}; resistance lost ${round.enemyLoss ?? 0}, vitality lost ${round.playerLoss}.`, log);
+  for (const round of [...(f?.log ?? [])].reverse()) text(`Round ${round.round}: Attack ${round.attackTotal}, Defense ${round.defenseTotal}; resistance lost ${round.enemyLoss ?? 0}, vitality lost ${round.playerLoss}.`, log)
+    .className = 'bsim-log-' + (round.playerLoss ? 'danger' : round.enemyLoss ? 'success' : 'muted');
   const history = document.createElement('div'); history.className = 'bsim-history-list'; root.append(history);
-  for (const entry of [...state.history].reverse()) text(`${entry.enemy}: ${entry.outcome} (${entry.rounds} rounds)`, history);
+  for (const entry of [...state.history].reverse()) decorateOutcome(text(`${entry.enemy}: ${entry.outcome} (${entry.rounds} rounds)`, history), entry.outcome);
 }

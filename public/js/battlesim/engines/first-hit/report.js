@@ -1,7 +1,9 @@
 // Display first-hit outcomes, printed encounter notes and bounded combat history.
+import {decorateOutcome} from '../../outcome.js';
 export function renderFirstHitReport(parent,ui,state){
   parent.replaceChildren();const fight=state.fight;
-  ui.text(parent,ui.tr(fight?'status.'+fight.status:'ready'),'h4').className='bsim-side-title';
+  const status=ui.text(parent,ui.tr(fight?'status.'+fight.status:'ready'),'h4');
+  status.className='bsim-side-title';decorateOutcome(status,fight?.status);
   if(fight){
     ui.text(parent,fight.opponent.name+' · '+ui.tr('skill')+' '+fight.opponent.skill);
     ui.text(parent,ui.tr('playerSkill')+' '+fight.player.skill);
@@ -14,11 +16,11 @@ export function renderFirstHitReport(parent,ui,state){
     for(const event of fight.events.slice().reverse()){
       const text=event.kind==='cancel'?ui.tr('status.cancelled'):ui.tr('turn.'+event.actor)+' · ['+event.dice.join(', ')+'] = '+event.total
         +' · '+ui.tr('threshold')+' '+event.threshold+' · '+ui.tr(event.hit?'hit':'miss');
-      ui.text(log,text);
+      ui.text(log,text).className='bsim-log-'+(!event.hit?'muted':event.actor==='player'?'success':'danger');
     }
   }
   if(state.history.length){
     ui.text(parent,ui.tr('history'),'h4').className='bsim-side-title';
-    for(const row of state.history.slice(-30).reverse())ui.text(parent,row.enemy+' · '+ui.tr('status.'+row.outcome));
+    for(const row of state.history.slice(-30).reverse())decorateOutcome(ui.text(parent,row.enemy+' · '+ui.tr('status.'+row.outcome)),row.outcome);
   }
 }

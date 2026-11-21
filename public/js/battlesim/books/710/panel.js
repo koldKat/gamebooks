@@ -1,3 +1,4 @@
+import { decorateOutcome, renderHistory } from '../../outcome.js';
 import { definition, ENCOUNTERS, SPELLS, TEMPLE_RULES } from './definition.js';
 import * as rules from './combat.js';
 import * as effects from './effects.js';
@@ -128,7 +129,8 @@ export function createTemplePanel({ document, t, getRun, getBookId, saveState, s
     } else status.push(tk('ready'));
     el('status').textContent = status.join('\n');
     el('log').textContent = d.log.slice(-100).join('\n');
-    el('history').textContent = d.history.slice(-30).reverse().map(h => h.enemy + ': ' + tk('status.' + h.outcome)).join('\n');
+    renderHistory(el('history'), d.history.slice(-30).reverse(), h => h.enemy + ': ' + tk('status.' + h.outcome));
+    decorateOutcome(el('status'), fight?.outcome);
   }
   function open() {
     if (Number(getBookId()) !== definition.id || !getRun()) { showAlert(t('battlesim.no_active_playthrough')); return; }

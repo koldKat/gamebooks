@@ -5,6 +5,7 @@ import {expandActors} from './rounds.js';
 import {targetCategory} from './targeting.js';
 import {controls,escape,setupFields,eventText} from './view.js';
 import {createOpponentEditor} from '../../opponents.js';
+import {decorateOutcome} from '../../outcome.js';
 import {continueFight,confirmWeaponGrab,previewWeaponGrab} from './combat-phases.js';
 import {createEncounterControls} from './encounter-controls.js';
 
@@ -124,12 +125,16 @@ export function createLostJediPanel({definition,document,t,store,getRun,getBookI
     el('draw').disabled=!!fight?.player.ready || fight?.player.weapon==='unarmed';
     el('move').disabled=!!fight?.rules.rangeLocked;
     el('status').textContent=fight ? fight.outcome ? tk(fight.outcome) : tk('round',{round:fight.round}) : tk('notStarted');
+    el('status').classList.remove('bsim-log-success','bsim-log-danger');
+    decorateOutcome(el('status'),fight?.outcome);
     el('totals').textContent=fight ? tk('points',{current:fight.jediPoints,max:fight.maxJediPoints}) : '';
     el('actor').textContent=active ? tk('turn',{name:turn.actor.name}) : fight?.outcome==='phase'
       ? fight.readerSection ? tk('readerDestination',{section:fight.readerSection}) : tk('phaseNote') : '';
     el('opponents').innerHTML=fight ? fight.actors.map(actor=>`<p>${escape(actor.name)}: ${escape(tk(actor.defeated?'defeated':'standing'))}</p>`).join('') : '';
-    el('log').innerHTML=fight ? fight.events.map(event=>`<div>${escape(eventText(event,fight,tk))}</div>`).join('') : '';
+    el('log').innerHTML=fight ? fight.events.map(event=>'<div class="bsim-log-'+
+      (event.kind!=='strike'?'accent':!event.hit?'muted':event.target==='havet'?'danger':event.actor==='havet'?'success':'accent')+'">'+escape(eventText(event,fight,tk))+'</div>').join('') : '';
     el('history').innerHTML=data.history.slice().reverse().map(row=>`<div>${escape(row.enemy)}: ${escape(tk(row.outcome))}</div>`).join('');
+    for(const [index,row] of data.history.slice().reverse().entries())decorateOutcome(el('history').children[index],row.outcome);
     printed.render(fight,active,turn);
     if (!active) for (const key of ['jediPoints','weapon','ready','ammo']) {
       if (el(key).type==='checkbox') el(key).checked=Boolean(data.setup[key]);else el(key).value=data.setup[key] ?? '';

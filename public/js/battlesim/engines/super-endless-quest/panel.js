@@ -2,6 +2,7 @@
 import {createOpponentEditor} from '../../opponents.js';
 import {startQuestFight, questRoll, exitQuestFight} from './core.js';
 import {createQuestState} from './state.js';
+import {decorateOutcome} from '../../outcome.js';
 import {startStagedQuestFight, stagedQuestAction} from './steps.js';
 
 export function createQuestPanel({document, definition, t, getRoster, getRun, getBookId,
@@ -123,7 +124,8 @@ export function createQuestPanel({document, definition, t, getRoster, getRun, ge
       const node = document.createElement(tag); node.textContent = text; holder.append(node); return node;
     };
     const fight = state.fight;
-    add(right, tr(fight ? 'status.' + fight.status : 'ready'), 'h4').className = 'bsim-side-title';
+    const status = add(right, tr(fight ? 'status.' + fight.status : 'ready'), 'h4');
+    status.className = 'bsim-side-title'; decorateOutcome(status, fight?.status);
     if (fight) {
       add(right, fight.opponent.name);
       add(right, tr('totals', {hp:fight.player.hp, maxHp:fight.player.maxHp, experience:fight.player.experience}));
@@ -137,10 +139,11 @@ export function createQuestPanel({document, definition, t, getRoster, getRun, ge
       else if (event.kind === 'cancel') add(log, tr('status.cancelled'));
       else if (event.kind === 'continue' || event.kind === 'choice') add(log, tr('continueAt', {section:event.destination}));
       else add(log, tr('rollLog', {kind:tr(event.kind), dice:event.dice.join(' + '), spent:event.spent,
-        total:event.total, target:event.target, result:tr(event.success ? 'hit' : 'miss'), hp:event.hp}));
+        total:event.total, target:event.target, result:tr(event.success ? 'hit' : 'miss'), hp:event.hp}))
+        .className = 'bsim-log-' + (event.success ? 'success' : 'danger');
     }
     add(right, tr('history'), 'h4').className = 'bsim-side-title';
-    for (const item of state.history.slice(-30).reverse()) add(right, item.enemy + ' · ' + tr('status.' + item.outcome));
+    for (const item of state.history.slice(-30).reverse()) decorateOutcome(add(right, item.enemy + ' · ' + tr('status.' + item.outcome)), item.outcome);
   }
   function render() {
     if (!overlay) return;

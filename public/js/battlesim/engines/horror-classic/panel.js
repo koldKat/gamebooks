@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 // Present optional Horror Classic encounters, combat controls and source rulings.
 import {ATTRIBUTES, rollDice, naturalHealing} from './math.js';
 import {startFight, rollInitiative, strike, resolveStrike, advanceRound, stopFight} from './core.js';
@@ -214,8 +215,18 @@ export function createHorrorPanel({definition,document,t,store,getRun,getBookId,
     el('enemyTotals').textContent=(fight?.enemies || []).filter(enemy=>enemy.lifePoints!=null)
       .map(enemy=>tk('allyTotals',{name:enemy.name,life:enemy.lifePoints,psi:enemy.psi ?? tk('notSupplied')})).join(' · ');
     el('firstResult').textContent=fight?.first?tk('firstResult',{actor:tk(fight.first)}):'';
-    el('log').innerHTML=(fight?.events || []).slice(-80).map(event=>'<div>'+escape(describe(event,fight))+'</div>').join('');
+    el('log').innerHTML=(fight?.events || []).slice(-80).map(event=>{
+      let tone = 'accent';
+      if (['strike', 'machine-strike', 'fatal-strike'].includes(event.kind)) {
+        tone = event.kind !== 'fatal-strike' && !event.damage ? 'muted' : event.actor === 'enemy' ? 'danger' : 'success';
+      } else if (['poison', 'opening-damage', 'psi-payment', 'poisonous-blood', 'single-shot'].includes(event.kind)) {
+        tone = event.kind === 'single-shot' && !event.hit ? 'muted' : 'danger';
+      } else if (event.kind === 'missed-round' || event.kind === 'initiative') tone = 'muted';
+      return '<div class="bsim-log-' + tone + '">' + escape(describe(event,fight)) + '</div>';
+    }).join('');
     el('history').innerHTML=data.history.slice(-40).reverse().map(entry=>'<div>'+escape(entry.enemy+': '+tk('status.'+entry.outcome))+'</div>').join('');
+    decorateOutcome(el('status'), fight?.outcome);
+    decorateHistory(el('history'), data.history.slice(-40).reverse());
   }
   function open() {
     if (Number(getBookId())!==definition.id || !getRun()) {showAlert(t('battlesim.no_active_playthrough'));return;}

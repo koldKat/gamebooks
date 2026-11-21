@@ -1,4 +1,5 @@
 import { createCustomOpponentSetup } from '../../custom-setup.js';
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { newShamutantiCharacter, validateShamutantiCharacter, startShamutantiFight,
   shamutantiRound, resolveShamutantiLuck, canSpareShamutanti, spareShamutanti,
   shamutantiOtherSpell, healShamutantiCharacter, setShamutantiEnemySkill } from './core.js';
@@ -48,6 +49,7 @@ export function createShamutantiPanel({ document, t, getRun, getBookId, saveStat
         next.history.push({ enemy: (fight.config.custom ? fight.config.name : tk('context.' + fight.config.section)), outcome: fight.status,
           ts: Math.max(Date.now(), (next.history.at(-1)?.ts ?? 0) + 1) });
       }
+      if (Array.isArray(next.logTones)) {next.logTones.length=next.log.length;next.logTones=next.logTones.slice(-100);}
       next.log = next.log.slice(-100); next.history = next.history.slice(-30);
       run[ID] = next; saveState(); render();
     } catch (_) { showAlert(tk('invalid')); }
@@ -55,6 +57,7 @@ export function createShamutantiPanel({ document, t, getRun, getBookId, saveStat
   function report(game, fight) {
     game.fight = fight;
     for (const event of fight.events) {
+      const before = game.log.length;
       if (event.kind === 'attack') game.log.push(tk('attackRoll', { player: event.playerAttack, opponent: event.enemyAttack }));
       else if (event.kind === 'luck') game.log.push(tk('luckRoll', { roll: event.roll, result: tk(event.lucky ? 'lucky' : 'unlucky') }));
       else if (event.kind === 'damage') game.log.push(tk('damage', {
@@ -66,8 +69,16 @@ export function createShamutantiPanel({ document, t, getRun, getBookId, saveStat
       else if (event.kind === 'weaponRecovery') game.log.push(tk('recoveryRoll', { roll: event.roll, skill: event.skill }));
       else if (event.kind === 'carriedWounds') game.log.push(tk('carriedWounds', event));
       else if (event.kind === 'enemyOverride') game.log.push(event.skill === null ? tk('enemyOverrideCleared') : tk('enemyOverrideApplied', event));
+      if (game.log.length > before) {
+        game.logTones ??= []; game.logTones.length=game.log.length;
+        game.logTones[game.log.length-1]=event.kind === 'damage' ? event.direction === 'outgoing' ? 'success' : 'danger'
+          : event.kind === 'luck' ? event.lucky ? 'success' : 'danger' : 'accent';
+      }
     }
-    if (fight.status !== 'fighting') game.log.push(tk('status.' + fight.status));
+    if (fight.status !== 'fighting') {
+      game.log.push(tk('status.' + fight.status)); game.logTones ??= []; game.logTones.length=game.log.length;
+      game.logTones[game.log.length-1]=fight.status === 'win' ? 'success' : fight.status === 'loss' ? 'danger' : 'accent';
+    }
     if (fight.destination) game.log.push(tk('destination', { section: fight.destination }));
   }
   function contextChanged() {
@@ -125,10 +136,15 @@ export function createShamutantiPanel({ document, t, getRun, getBookId, saveStat
       ...fight.enemies.map(foe => `${enemyLabel(foe)}: ${tk('skill')} ${foe.skill}, ${tk('stamina')} ${foe.stamina}${foe.fled ? ' - ' + tk('fled') : ''}`),
       ...fight.allies.map((ally, index) => `${tk('ally')} ${index + 1}: ${enemyLabel(ally)} ${ally.stamina}`),
       ...(fight.destination ? [tk('destination', { section: fight.destination })] : [])].join('\n') : '';
+    decorateOutcome(el('status'), fight?.status);
     el('pending').textContent = fight?.pending ? tk('pending', { damage: fight.pending.damage }) : '';
     el('history').innerHTML = game.history.slice().reverse().map(item =>
       `<div>${escape(item.enemy)} - ${escape(tk('status.' + item.outcome))}</div>`).join('');
-    el('log').innerHTML = game.log.map(line => `<div>${escape(line)}</div>`).join('');
+    decorateHistory(el('history'), game.history.slice().reverse());
+    el('log').innerHTML = game.log.map((line,index) => {
+      const tone=game.logTones?.[index];
+      return '<div class="bsim-log-'+(['success','danger','accent','muted'].includes(tone)?tone:'muted')+'">'+escape(line)+'</div>';
+    }).join('');
     el('log').scrollTop = el('log').scrollHeight;
     contextChanged();
   }

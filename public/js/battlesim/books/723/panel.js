@@ -1,3 +1,4 @@
+import { decorateOutcome, renderHistory } from '../../outcome.js';
 import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { definition, ENCOUNTERS, SPELL_ENCOUNTERS, encounterFor } from './definition.js';
 import * as rules from './combat.js';
@@ -131,7 +132,8 @@ export function createSerpentsPanel({ document, t, getRun, getBookId, saveState,
       else if (pending) status.push(tk('pending', { target: fight.pending[0].kind === 'player-hit' ? enemyLabel(fight.enemies[fight.pending[0].enemy]) : tk('you'), damage: fight.pending[0].damage }));
     }
     el('status').textContent = status.join('\n'); el('log').textContent = data.log.join('\n');
-    el('history').textContent = data.history.slice(-30).reverse().map(item => item.enemy + ': ' + tk('status.' + item.outcome)).join('\n');
+    renderHistory(el('history'), data.history.slice(-30).reverse(), item => item.enemy + ': ' + tk('status.' + item.outcome));
+    decorateOutcome(el('status'), fight?.outcome);
   }
   function open() {
     if (Number(getBookId()) !== definition.id || !getRun()) { showAlert(t('battlesim.no_active_playthrough')); return; }

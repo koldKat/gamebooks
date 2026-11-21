@@ -1,3 +1,4 @@
+import { decorateOutcome } from '../../outcome.js';
 // Display current combat stats, dice, bounded logs and confirmed encounter history.
 import {roundTotals} from './combat.js';
 
@@ -5,6 +6,7 @@ export function renderReport(right, state, ui) {
   right.replaceChildren();
   const fight = state.fight;
   ui.text(right, ui.tr(fight ? 'status.' + (fight.result || fight.status) : 'ready'), 'h4').className = 'bsim-side-title';
+  decorateOutcome(right.lastElementChild, fight?.result || fight?.status);
   if (fight) {
     ui.text(right, fight.opponent.name);
     ui.text(right, ui.tr('player') + ': ' + fight.player.hp + ' / ' + fight.player.maxHp);
@@ -35,7 +37,7 @@ export function renderReport(right, state, ui) {
   }
   if (state.history.length) {
     ui.text(right, ui.tr('history'), 'h4').className = 'bsim-side-title';
-    for (const item of state.history.slice(-30).reverse()) ui.text(right, item.enemy + ' · ' + ui.tr('status.' + item.outcome));
+    for (const item of state.history.slice(-30).reverse()) decorateOutcome(ui.text(right, item.enemy + ' · ' + ui.tr('status.' + item.outcome)), item.outcome);
   }
   for (const child of right.children) child.classList.add('bsim-report');
 }

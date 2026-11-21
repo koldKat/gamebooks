@@ -28,6 +28,7 @@ export function createCrossroadsState(definition, getContext) {
           data.history.push({enemy:data.encounterName,outcome:fight.status,ts:Math.max(Date.now(),(data.history.at(-1)?.ts ?? 0)+1)});
         }
       }
+      if(Array.isArray(data.logTones)){data.logTones.length=data.log.length;data.logTones=data.logTones.slice(-100);}
       data.log = data.log.slice(-100);
       run[definition.stateKey] = data;
       context.saveState();

@@ -12,7 +12,7 @@ export async function checkKnightmarePanel({app,module,overlay,requestedRosters,
     app.state.playthroughs=[run];app.state.activePtIndex=0;module.render();
     check(run.sim1483===undefined,'render leaves saved state lazy');
     el('player-grade').value=player;
-    const name=overlay.querySelector('[role="combobox"]');name.value='Custom duel';
+    const name=overlay.querySelector('input[role="combobox"]');name.value='Custom duel';
     overlay.querySelector('[data-stat="lifeForce"]').value=enemy;
   }
   function preserve(){
@@ -29,14 +29,14 @@ export async function checkKnightmarePanel({app,module,overlay,requestedRosters,
   let completed=0;
   for(const player of ['GREEN','AMBER','RED'])for(const enemy of ['GREEN','AMBER','RED']){
     reset(player,enemy);start();check(el('player-grade').disabled&&el('luck').disabled&&el('start').disabled,'active setup locked');
-    check(overlay.querySelector('[role="combobox"]').disabled,'opponent locked');
+    check(overlay.querySelector('input[role="combobox"]').disabled,'opponent locked');
     const before=JSON.stringify(data());restore();check(JSON.stringify(data())===before,'reload does not reroll');
     let guard=0;while(data().fight.status==='fighting'&&guard++<3)roll(1);
     check(data().fight.status==='win'&&data().fight.player.lifeForce===player,'all current-grade wins resolve');
     check(data().history.length===1&&data().history[0].outcome==='win','victory recorded once');
     const saved=JSON.stringify(data());module.render();check(JSON.stringify(data())===saved,'completed render awards no duplicate');preserve();completed++;
   }
-  reset();const name=overlay.querySelector('[role="combobox"]');name.value='Aspen';
+  reset();const name=overlay.querySelector('input[role="combobox"]');name.value='Aspen';
   name.dispatchEvent(new FocusEvent('focus'));name.dispatchEvent(new Event('input',{bubbles:true}));
   const option=overlay.querySelector('[role="option"]');check(option?.textContent.includes(getRoster()[0].opponent.name),'preset suggested');
   option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));start();check(data().fight.opponent.name===getRoster()[0].opponent.name,'source preset selected');

@@ -8,6 +8,13 @@ import { setExpandedPrefs, renderBooksList, getCachedBooks, getCachedAllSeries, 
 let _hooks = {};
 export function setPrefsHooks(h) { _hooks = h || {}; }
 
+// Full account loads must not inherit another account's browser display values.
+const accountDisplayDefaults = {
+  coverTooltipTitlePct: '100', coverTooltipTitleBold: '0', hideCyrillicCovers: '0',
+  hideNsfwBooks: '1', feedDayCovers: '1', feedGlassCards: '1', landingCoverSource: 'public',
+  disableFloaties: '0', seasonalEvents: '1', reduceMotion: '0',
+};
+
 const booksXpPanels = {
   booksXpCollapsed: ['books-xp-summary', 'books-xp-toggle'],
   booksAppXpCollapsed: ['books-app-xp-panel', 'books-app-xp-toggle'],
@@ -151,9 +158,9 @@ export function restoreCachedPrefs() {
   try {
     const prefs = JSON.parse(localStorage.getItem(`ui_prefs_v1:${getUsername()}`) || 'null');
     if (prefs && typeof prefs === 'object' && !Array.isArray(prefs)) {
-      applyPrefs({ reduceMotion: '0', ...prefs }, { renderBooks: false });
-    } else setCoversPrefsState({ reduceMotion: '0' });
-  } catch { setCoversPrefsState({ reduceMotion: '0' }); }
+      applyPrefs({ ...accountDisplayDefaults, ...prefs }, { renderBooks: false });
+    } else setCoversPrefsState({ ...accountDisplayDefaults });
+  } catch { setCoversPrefsState({ ...accountDisplayDefaults }); }
 }
 
 export async function syncPrefs(options) {
@@ -172,7 +179,7 @@ export async function syncPrefs(options) {
     const serverPrefs = await r.json();
     if (getToken() !== sessionToken) return;
     // Protect clicks made during this GET, even if their PATCH already finished.
-    const prefs = sync.patches.reduce(mergePrefs, { reduceMotion: '0', ...serverPrefs });
+    const prefs = sync.patches.reduce(mergePrefs, { ...accountDisplayDefaults, ...serverPrefs });
     applyPrefs(prefs, options);
     try { localStorage.setItem(`ui_prefs_v1:${username}`, JSON.stringify(prefs)); } catch {}
   } catch {} finally {

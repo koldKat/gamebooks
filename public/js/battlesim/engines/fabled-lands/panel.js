@@ -4,6 +4,7 @@ import { startFabledFight, fabledRound, surrenderFabledFight, fleeFabledFight } 
 import { WAR_TORN_FIGHTS, WAR_TORN_RULES } from './roster.js';
 import { FABLED_SEA_CHECKS, fabledSeaCheck } from './navigation.js';
 import { createOpponentEditor } from '../../opponents.js';
+import { decorateOutcome } from '../../outcome.js';
 
 const defaultFields = [...FABLED_ABILITIES, 'rank', 'stamina', 'staminaInitial', 'armour', 'shards', 'ratPoison'];
 const flags = ['combatBlessing', 'luckBlessing', 'stormsBlessing'];
@@ -66,6 +67,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
         next.history.push({ enemy: encounterName(fight.config), outcome: fight.status,
           ts: Math.max(Date.now(), (next.history.at(-1)?.ts ?? 0) + 1) });
       }
+      if (Array.isArray(next.logTones)) {next.logTones.length=next.log.length;next.logTones=next.logTones.slice(-100);}
       next.log = next.log.slice(-100);
       run[ID] = next; saveState(); render();
     } catch (_) { showAlert(tk('invalid')); }
@@ -73,6 +75,7 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
   function report(game, fight, previousEvents = 0) {
     game.fight = fight;
     for (const event of fight.events.slice(previousEvents)) {
+      const before = game.log.length;
       if (event.kind === 'attack') game.log.push(tk('attack', { name: event.direction === 'player' ? tk('you') : event.enemyDisplayName || enemyName(event.enemy ?? fight.enemies[fight.target]),
         total: event.total, defence: event.defence, damage: event.damage }));
       else if (event.kind === 'entry') game.log.push(tk('entry', event));
@@ -88,9 +91,16 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
         const message = extension.eventMessage?.(event);
         if (message) game.log.push(message);
       }
+      if (game.log.length > before) {
+        game.logTones ??= []; game.logTones.length=game.log.length;
+        game.logTones[game.log.length-1]=event.kind === 'attack'
+          ? !event.damage ? 'muted' : event.direction === 'player' ? 'success' : 'danger' : 'accent';
+      }
     }
     if (fight.status !== 'fighting') {
       game.log.push(tk('status.' + fight.status));
+      game.logTones ??= []; game.logTones.length=game.log.length;
+      game.logTones[game.log.length-1]=fight.status === 'win' ? 'success' : fight.status === 'loss' ? 'danger' : 'accent';
       if (fight.destination) game.log.push(tk('destination', { section: fight.destination }));
       if (fight.wounded && fight.config.woundEffect && fight.status === 'win') game.log.push(tk('effect.' + fight.config.woundEffect));
     }
@@ -170,7 +180,13 @@ export function createFabledPanel({ document, t, getRun, getBookId, saveState,
       ...fight.enemies.map(foe => `${enemyName(foe)}: ${tk('combat')} ${foe.combat}, ${tk('defence')} ${foe.defence}, ${tk('stamina')} ${foe.stamina}`),
       ...(fight.destination ? [tk('destination', { section: fight.destination })] : [])].join('\n') : '';
     el('history').innerHTML = game.history.slice(-30).reverse().map(item => `<div>${escape(item.enemy)} - ${escape(tk('status.' + item.outcome))}</div>`).join('');
-    el('log').innerHTML = game.log.map(line => `<div>${escape(line)}</div>`).join('');
+    el('status').classList.remove('bsim-log-success','bsim-log-danger');
+    decorateOutcome(el('status'),fight?.status);
+    for (const [index,item] of game.history.slice(-30).reverse().entries()) decorateOutcome(el('history').children[index],item.outcome);
+    el('log').innerHTML = game.log.map((line,index) => {
+      const tone=game.logTones?.[index];
+      return '<div class="bsim-log-'+(['success','danger','accent','muted'].includes(tone)?tone:'muted')+'">'+escape(line)+'</div>';
+    }).join('');
     el('log').scrollTop = el('log').scrollHeight;
     contextChanged();
     extension.render?.(game, {busy, blocked});

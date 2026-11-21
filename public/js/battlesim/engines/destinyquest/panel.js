@@ -2,6 +2,7 @@ import {beginDestinyChallenge} from './challenges.js';
 import {createDestinyOpponent} from './core.js';
 import {reformDestinyOpponent, spawnDestinyRoundOpponents, advanceDestinyAspectCycle} from './round-events.js';
 import {createOpponentEditor} from '../../opponents.js';
+import {decorateOutcome, decorateHistory} from '../../outcome.js';
 import {createDestinySession, beginDestinySession, applyDestinySessionAction} from './session.js';
 import {DESTINY_ABILITIES, destinyAbilitySpec, destinyUnusedAbilities,destinyAbilitySacrificeOptions} from './abilities.js';
 import {hasDestinyAbility, isDestinyOpponentActive, destinyStat, destinyDamageAllowed,destinyDieLocked} from './effects.js';
@@ -354,14 +355,21 @@ export function createDestinyPanel({document, definition, state, getRoster, t, s
     }
     el('result').innerHTML=lines.map(line=>`<div>${escape(line)}</div>`).join('');
     if(f?.encounter?.iceLake){const lake=f.encounter.iceLake;el('combatants').innerHTML+=`<p>${escape(tk('icePosition',{position:lake.position,columns:lake.columns,cracked:lake.cracked}))}</p>`;}
-    el('log').innerHTML=(f?.history||[]).slice(-120).reverse().map(event=>`<div>${escape(eventText(event,f))}</div>`).join('');
+    el('log').innerHTML=(f?.history||[]).slice(-120).reverse().map(event=>{
+      const tone=event.type==='outcome'?(event.status==='win'?'success':event.status==='loss'?'danger':'accent')
+        :event.type==='damage'?(event.attacker==='hero'?'success':'danger')
+          :['ability-damage','passive'].includes(event.type)?event.target==='hero'?'danger':'success':'accent';
+      return `<div class="bsim-log-${tone}">${escape(eventText(event,f))}</div>`;
+    }).join('');
     if(d.challenge){
       const challenge=d.challenge;el('status').textContent=tk('challengeProgress',{name:challenge.name,turns:challenge.turns,total:challenge.rules.turns,failures:challenge.failures});
       el('combatants').textContent=tk('challengeTarget',{attribute:tk(challenge.rules.attribute),value:challenge.attribute,bonus:challenge.rules.rollBonus,target:challenge.rules.threshold});
       el('result').textContent=challenge.dice?tk('dice')+': '+challenge.dice.join(', '):'';
-      el('log').innerHTML=challenge.history.slice().reverse().map(entry=>`<div>${escape(tk(entry.success?'challengePassed':'challengeFailed',{total:entry.total}))}</div>`).join('');
+      el('log').innerHTML=challenge.history.slice().reverse().map(entry=>`<div class="bsim-log-${entry.success?'success':'danger'}">${escape(tk(entry.success?'challengePassed':'challengeFailed',{total:entry.total}))}</div>`).join('');
     }
     el('history').innerHTML=d.history.slice(-30).reverse().map(item=>`<div>${escape(item.opponents.join(', '))} · ${escape(tk(item.outcome))}</div>`).join('');
+    decorateOutcome(el('status'), f?.status);
+    decorateHistory(el('history'), d.history.slice(-30).reverse());
   }
   function close(){itemLossSelection=null;el('overlay')?.classList.remove('active');}
   function open(){if(!state.current()){showAlert(t('battlesim.no_active_playthrough'));return;}render();el('overlay').classList.add('active');}

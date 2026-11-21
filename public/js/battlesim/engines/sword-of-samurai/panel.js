@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { newSamuraiCharacter, validateSamuraiCharacter, eatSamuraiMeal, drinkSamuraiPotion,
   SAMURAI_ARTS, SAMURAI_ARROW_DAMAGE } from './character.js';
@@ -59,7 +60,7 @@ export function createSamuraiPanel({ document, t, getRun, getBookId, saveState,
   function encounterName(spec) {
     return [...new Set(spec.enemies.map(enemy => enemyLabel(enemy)))].join(' / ')
       + (spec.copies || spec.enemies.length > 1 ? ` ×${spec.copies || spec.enemies.length}` : '')
-      + (spec.continuation ? ' — ' + tk('continuation') : '');
+      + (spec.continuation ? ' · ' + tk('continuation') : '');
   }
   function report(game, fight) {
     game.fight = fight;
@@ -159,7 +160,9 @@ export function createSamuraiPanel({ document, t, getRun, getBookId, saveState,
     el('status').textContent = fight ? [tk('status.' + fight.status), tk('roundCount', { rounds: fight.rounds }),
       ...fight.enemies.map((foe, index) => `${index + 1}. ${enemyLabel(foe)}: ${tk('skill')} ${foe.skill}, ${tk('stamina')} ${foe.stamina}/${foe.staminaInitial}`),
       ...(fight.destination ? [tk('destination', { section: fight.destination })] : [])].join('\n') : '';
-    el('history').innerHTML = game.history.slice(-30).reverse().map(item => `<div>${escape(item.enemy)} — ${escape(tk('status.' + item.outcome))}</div>`).join('');
+    el('history').innerHTML = game.history.slice(-30).reverse().map(item => `<div>${escape(item.enemy)} · ${escape(tk('status.' + item.outcome))}</div>`).join('');
+    decorateOutcome(el('status'), fight?.status);
+    decorateHistory(el('history'), game.history.slice(-30).reverse());
     el('log').innerHTML = game.log.map(line => `<div>${escape(line)}</div>`).join('');
     el('log').scrollTop = el('log').scrollHeight;
     contextChanged();

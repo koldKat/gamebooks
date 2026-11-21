@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { definition, SHIPS, ARCS, DIAGRAMS, TACTICS, SHOT_LIMITS, PIRATES } from './definition.js';
 import * as combat from './combat.js';
 import { createState } from './state.js';
@@ -111,6 +112,8 @@ export function createGalleonPanel({ document, t, getRun, getBookId, saveState, 
     }
     el('log').innerHTML = (fight?.events ?? []).slice(-80).map(value => '<div>' + escape(eventText(value)) + '</div>').join('');
     el('history').innerHTML = data.history.slice(-40).reverse().map(value => '<div>' + escape(value.enemy + ': ' + tk('status.' + value.outcome)) + '</div>').join('');
+    decorateOutcome(el('status'), fight?.outcome);
+    decorateHistory(el('history'), data.history.slice(-40).reverse());
   }
   function open() {
     if (Number(getBookId()) !== definition.id || !getRun()) { showAlert(t('battlesim.no_active_playthrough')); return; }

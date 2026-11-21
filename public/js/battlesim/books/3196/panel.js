@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 // Render and wire the optional Goblin's Revenge combat panel.
 import {definition,ENCOUNTERS,encounterFor} from './definition.js';
 import {startFight,round} from './combat.js';
@@ -64,6 +65,8 @@ export function createGoblinPanel({document,t,getBookId,getRun,save,showAlert,sh
     el('opponents').innerHTML=fight?fight.enemies.map(e=>`<div>${escape(tk('enemyLine',{name:e.name,hp:e.hp,rounds:e.rounds}))}</div>`).join(''):'';
     el('log').innerHTML=d.log.map(line=>'<div>'+logLine(line)+'</div>').join('');
     el('history').innerHTML=d.history.slice(-40).reverse().map(row=>'<div>'+escape(row.enemy+': '+tk('status.'+row.outcome))+'</div>').join('');
+    decorateOutcome(el('status'), fight?.outcome);
+    decorateHistory(el('history'), d.history.slice(-40).reverse());
     menus.forEach(menu=>menu.sync());
   }
   function open(){

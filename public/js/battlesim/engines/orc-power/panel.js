@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { ORC_FIGURES } from './roster.js';
 import { newOrcGame, addOrcGameFigure, beginOrcEncounter, updateOrcEncounter,
   cancelOrcEncounter, adjustOrcGameFigure } from './game.js';
@@ -129,6 +130,8 @@ export function createOrcPowerPanel({ document, t, getRun, getBookId, saveState,
     }) : fight ? tk('status.' + fight.status) : tk('ready');
     el('log').innerHTML = game.log.slice(-100).reverse().map(line => `<div>${escape(line)}</div>`).join('');
     el('history').innerHTML = game.history.slice(-30).reverse().map(item => `<div>${escape(item.enemy.split(', ').map((id, index) => item.names?.[index] || tk('figure.' + id)).join(', '))} · ${escape(tk('status.' + item.outcome))}</div>`).join('');
+    decorateOutcome(el('status'), fight?.status);
+    decorateHistory(el('history'), game.history.slice(-30).reverse());
   }
   const input = (key, value = '') => `<label class="inv-edit-row">${escape(tk(key.startsWith('edit-') ? key.slice(5) : key))}<input class="inv-edit-input" id="${ID}-${key}" value="${escape(value)}" autocomplete="off"></label>`;
   const select = (key, values, prefix = '') => `<select class="inv-edit-input" id="${ID}-${key}" aria-label="${escape(tk(key))}">${values.map(value => `<option value="${escape(value)}">${escape(tk(prefix + value))}</option>`).join('')}</select>`;

@@ -1,8 +1,10 @@
 // Display finite-round combat results and their printed consequences without story automation.
+import {decorateOutcome} from '../../outcome.js';
 export function renderReport(right, state, ui, statKeys) {
   right.replaceChildren();
   const fight = state.fight;
-  ui.text(right, ui.tr(fight ? 'status.' + fight.status : 'ready'), 'h4').className = 'bsim-side-title';
+  const status = ui.text(right, ui.tr(fight ? 'status.' + fight.status : 'ready'), 'h4');
+  status.className = 'bsim-side-title'; decorateOutcome(status, fight?.result ?? fight?.status);
   if (fight) {
     ui.text(right, fight.opponent.name);
     ui.text(right, statKeys.map(key => ui.tr(key) + ': ' + fight.player[key]).join(' · '));
@@ -28,8 +30,8 @@ export function renderReport(right, state, ui, statKeys) {
   }
   if (state.history.length) {
     ui.text(right, ui.tr('history'), 'h4').className = 'bsim-side-title';
-    for (const item of state.history.slice(-30).reverse()) ui.text(right,
-      item.enemy + ' · ' + ui.tr('status.' + item.outcome));
+    for (const item of state.history.slice(-30).reverse()) decorateOutcome(ui.text(right,
+      item.enemy + ' · ' + ui.tr('status.' + item.outcome)), item.outcome);
   }
   for (const child of right.children) child.classList.add('bsim-report');
 }

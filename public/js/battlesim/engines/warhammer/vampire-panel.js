@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createOpponentEditor } from '../../opponents.js';
 import { vampireCharacter, vampireRecovery, vampireStats, startVampireFight, vampireRound, resumeVampireFight } from './vampire.js';
 
@@ -137,6 +138,8 @@ export function createVampirePanel({document,definition,getRoster,getPlayerDefau
     [...el('targets').querySelectorAll('select')].forEach((input,i)=>{if(living.some(e=>String(e.index)===previous[i]))input.value=previous[i];});
     el('log').innerHTML=state.log.slice().reverse().map(line=>'<div>'+escape(line)+'</div>').join('');
     el('history').innerHTML=state.history.slice(-30).reverse().map(item=>'<div>'+escape(item.enemy)+' · '+escape(tr(item.outcome))+'</div>').join('');
+    decorateOutcome(el('status'), fight?.status);
+    decorateHistory(el('history'), state.history.slice(-30).reverse());
   }
   const row=(label,control)=>'<label class="inv-edit-row"><span>'+escape(label)+'</span>'+control+'</label>';
   const input=(key,label,min=0,max=1000000,step=1)=>row(label,`<input class="inv-edit-input" id="${ID}-${key}" type="number" min="${min}" max="${max}" step="${step}" value="0">`);

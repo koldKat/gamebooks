@@ -1,5 +1,6 @@
 import {startCrossroadsFight, crossroadsRound, crossroadsAbilityCheck,encounterTargets} from './core.js';
 import {createOpponentEditor} from '../../opponents.js';
+import {decorateOutcome, decorateHistory} from '../../outcome.js';
 import {healingSpell,consumeHealing} from './resources.js';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -60,6 +61,7 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
   function logEvents(data,fight){
     data.fight=fight;
     for(const event of fight.events){
+      const before=data.log.length;
       if(event.kind==='attack')data.log.push(tk('attack',{name:event.side==='hero'?tk('hero'):event.name,
         dice:event.automatic?tk('automatic'):event.dice.join('+'),total:event.total,result:tk(event.hit?'hit':'miss'),damage:event.damage}));
       if(event.kind==='attack'&&event.recipient)data.log.push(tk('allyHits',{name:event.recipient,n:event.hits}));
@@ -91,6 +93,12 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
       if(event.kind==='misdirection')data.log.push(tk('misdirected',{name:event.name}));
       if(event.kind==='repulsion')data.log.push(tk('repulsionUsed'));
       if(event.kind==='outcome')data.log.push(tk('status.'+event.status)+(event.destination?' '+tk('destination',{n:event.destination}):''));
+      if(data.log.length>before){
+        const tone=event.kind==='outcome'?(event.status==='win'?'success':event.status==='loss'?'danger':'accent')
+          :event.kind==='attack'?(event.hit?event.side==='hero'?'success':'danger':'muted')
+            :event.kind==='healing'?'success':event.kind==='openingDamage'?'danger':'accent';
+        data.logTones??=[];data.logTones.length=data.log.length;data.logTones.fill(tone,before);
+      }
     }
   }
   function render(force=false){
@@ -172,8 +180,13 @@ export function createCrossroadsPanel({document,definition,state,getRoster,t,get
     el('destination').textContent=fight?.destination?tk('destination',{n:fight.destination}):'';
     el('opponents').innerHTML=fight?fight.enemies.map(enemy=>'<div>'+escape(enemy.hp===null?enemy.name:mechanics?.hitCounters?tk('enemyHits',{name:enemy.name,n:enemy.hitsTaken,max:mechanics.hitCounters.hitsToRetire})+(enemy.retired?' '+tk('retired'):''):tk('enemyHp',{name:enemy.name,n:enemy.hp,max:enemy.maxHp}))+'</div>').join(''):'';
     if(mechanics?.sequence)el('opponents').innerHTML+=(fight.encounter.allies??[]).filter(ally=>ally.hitsToLose).map(ally=>'<div>'+escape(tk('allyHitLimit',{name:ally.name,n:ally.hits,max:ally.hitsToLose}))+'</div>').join('');
-    el('log').innerHTML=data.log.slice(-80).map(line=>'<div>'+escape(line)+'</div>').join('');
+    el('log').innerHTML=data.log.slice(-80).map((line,index)=>{
+      const tone=data.logTones?.[Math.max(0,data.log.length-80)+index];
+      return '<div class="bsim-log-'+(['success','danger','accent','muted'].includes(tone)?tone:'muted')+'">'+escape(line)+'</div>';
+    }).join('');
     el('history').innerHTML=data.history.slice(-40).toReversed().map(row=>'<div>'+escape(row.enemy+': '+tk('status.'+row.outcome))+'</div>').join('');
+    decorateOutcome(el('status'),fight?.status);
+    decorateHistory(el('history'),data.history.slice(-40).toReversed());
     setupNotes();
   }
   function editorRows(enemies){return enemies.map(enemy=>({...structuredClone(enemy),displayName:enemy.name,...(preset()?.rules.mechanics?.sequence?{unavailableStats:[...(enemy.hp===null?['hp']:[]),...(enemy.toBeHit===null?['toBeHit']:[]),...(!enemy.attacks.length?['toHit','damageDice','damageAdd']:[])]}:{}),toHit:enemy.attacks[0]?.toHit??enemy.printedAttack,damageDice:enemy.attacks[0]?.damage?.dice,damageAdd:enemy.attacks[0]?.damage?.add}));}

@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 // Present optional Shinté encounters, current combat values and explicit chart decisions.
 import { definition, ENCOUNTERS, RULES, loadRoster } from './definition.js';
 import { startFight, attack, resolveK, chooseZeroColumn, switchWeapon, useNet, retreat, cancelFight, integer } from '../../engines/shinte/core.js';
@@ -128,6 +129,8 @@ export function createShintePanel({document, t, getRun, getBookId, saveState, sh
     el('log').innerHTML = data.log.slice(-80).map(text => '<div>' + escape(text) + '</div>').join('');
     el('history').innerHTML = data.history.slice(-40).reverse().map(entry => '<div>'
       + escape(entry.enemy + ': ' + tk('status.' + entry.outcome)) + '</div>').join('');
+    decorateOutcome(el('status'), fight?.outcome);
+    decorateHistory(el('history'), data.history.slice(-40).reverse());
   }
   function open() {
     if (Number(getBookId()) !== definition.id || !getRun()) { showAlert(t('battlesim.no_active_playthrough')); return; }

@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createOpponentEditor } from '../../opponents.js';
 import { dualHeroes, dualRings, dualHit, dualAbilityCheck, startDualFight, dualRound,
   dualChaosBurst, resolveDualChaos, dualChaosEncounter } from './dual.js';
@@ -170,6 +171,8 @@ export function createDualSonicPanel({ document, definition, getRoster, getPlaye
     el('destinations').textContent = fight?.status === 'win' && fight.config.winChoices?.length ? 'Continue with the book: ' + fight.config.winChoices.join(' / ') : '';
     el('log').innerHTML = state.log.slice().reverse().map(line => `<div>${escape(line)}</div>`).join('');
     el('history').innerHTML = state.history.slice(-30).reverse().map(item => `<div>${escape(item.enemy)} · ${escape(item.outcome)}</div>`).join('');
+    decorateOutcome(el('status'), fight?.status);
+    decorateHistory(el('history'), state.history.slice(-30).reverse());
     if (focused) document.getElementById(focused)?.focus();
   }
   const field = (key,label,control) => `<label class="inv-edit-row"${key ? ` id="${ID}-${key}Row"` : ''}><span>${escape(label)}</span>${control}</label>`;

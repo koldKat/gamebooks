@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 // Present player-selected encounters and editable printed combat values without story automation.
 import { currentPlaythrough, currentBookId, saveState } from '../../run-context.js';
 import { getPlayBtnRow } from '../../../play/charsheet.js';
@@ -123,7 +124,9 @@ export function createTigerPanel({ definition, getEncounters }) {
           : line.type === 'mirror-block' ? `Double blocks with ${line.roll}: ${line.blocked ? 'blocked' : 'failed'}.`
         : line.type === 'counter' ? `Counterattack${line.technique ? ` (${line.technique})` : ''}: ${line.roll}${line.modifier ? ` + ${line.modifier}` : ''} against ${line.defense}.`
         : line.block ? `Block ${line.roll}: ${line.blocked ? 'blocked' : `${line.damage} damage`}.` : `${line.damage} damage taken.`).join('\n');
-    el('history').textContent = d.history.slice(-30).reverse().map(row => `${row.enemy}: ${row.outcome}`).join('\n');
+    el('history').innerHTML = d.history.slice(-30).reverse().map(row => `<div>${escapeHtml(row.enemy)}: ${escapeHtml(row.outcome)}</div>`).join('');
+    decorateOutcome(el('status'), fight?.outcome);
+    decorateHistory(el('history'), d.history.slice(-30).reverse());
   }
   function init() {
     if (el('overlay')) return;

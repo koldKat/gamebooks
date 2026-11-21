@@ -1,3 +1,4 @@
+import { decorateOutcome, renderHistory } from '../../outcome.js';
 import {definition, DEFAULT_CHARACTER, ATTACKERS, SPELL_COSTS} from './definition.js';
 import {startFight, advanceRitual, advanceAttackers, advanceDuel, spendSpell} from './combat.js';
 import {createState} from './state.js';
@@ -73,7 +74,8 @@ export function createTrueMagicPanel({document, t, getRun, getBookId, saveState,
       if (fight.outcome) lines.push(tk('outcome.' + fight.outcome));
     } else lines.push(tk('ready'));
     el('result').textContent = lines.join('\n');
-    el('history').textContent = data.history.slice(-40).reverse().map(entry => entry.enemy + ': ' + tk('outcome.' + entry.outcome)).join('\n');
+    renderHistory(el('history'), data.history.slice(-40).reverse(), entry => entry.enemy + ': ' + tk('outcome.' + entry.outcome));
+    decorateOutcome(el('result'), fight?.outcome);
     mode();
   }
   function change(update) {

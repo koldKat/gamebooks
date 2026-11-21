@@ -1,6 +1,6 @@
 // Connect Mochila's combat setup, saved fights and logs to the active playthrough.
 import {definition, encounters, loadRoster} from './definition.js';
-import {startFight, combatAction, validateFight} from './combat.js';
+import {startFight, playCombatAction, canReroll, validateFight} from './combat.js';
 import {createQuestState} from '../../engines/super-endless-quest/state.js';
 import {createD20Forms} from '../../engines/d20/forms.js';
 import {createOpponentEditor} from '../../opponents.js';
@@ -10,6 +10,7 @@ import {getPlayBtnRow} from '../../../play/charsheet.js';
 import {showAlert, showConfirm} from '../../../ui-helpers/confirm.js';
 import {registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS} from '../../../core/util.js';
 import {t} from '../../../i18n.js';
+import {decorateOutcome} from '../../outcome.js';
 
 const defaults = {hp:15, attackMin:9, ammo:6, silverAmmo:0, reserve:2, weapon:'gun', fanning:false,
   marksman:false, necklace:false, bandana:false, bandanaUsed:false};
@@ -72,17 +73,27 @@ export function createMochilaPanel(getContext, document) {
     token = snap;
     const locked = busy();
     for (const input of inputs.values()) input.disabled = locked;
+    const weaponInput = inputs.get('weapon');
+    if (locked) {
+      weaponInput.value = fight.player.weapon;
+      weaponInput.disabled = !['attack', 'fan'].includes(fight.phase) || fight.opponent.knifeOnly;
+    }
+    for (const option of weaponInput.options) {
+      option.disabled = Boolean(locked && option.value !== 'knife'
+        && (fight.opponent.knifeOnly || !(option.value === 'silverGun' ? fight.player.silverAmmo : fight.player.ammo)));
+    }
     editor.lock(locked); editor.fixCount(true);
     showOpponentLife(previewingSetup ? null : fight);
     start.disabled = custom.disabled = reload.disabled = locked;
     reload.disabled ||= inputs.get('weapon').value === 'silverGun';
     controls.replaceChildren(); right.replaceChildren();
-    ui.text(right, ui.tr('status.' + (fight?.status ?? 'ready'))).className = 'bsim-status';
+    const status = ui.text(right, ui.tr('status.' + (fight?.status ?? 'ready')));
+    status.className = 'bsim-status'; decorateOutcome(status, fight?.status);
     if (fight) {
       ui.text(right, ui.tr('round') + ': ' + fight.round);
       ui.text(right, fight.opponent.name + ': ' + fight.opponent.hp + ' · ' + ui.tr('hp') + ': ' + fight.player.hp);
-      ui.text(right, ui.tr(fight.player.weapon === 'silverGun' ? 'silverAmmo' : 'ammo') + ': '
-        + (fight.player.weapon === 'silverGun' ? fight.player.silverAmmo : fight.player.ammo) + ' · ' + ui.tr(fight.player.weapon));
+      ui.text(right, ui.tr('weapon') + ': ' + ui.tr(fight.player.weapon));
+      ui.text(right, ui.tr('ammo') + ': ' + fight.player.ammo + ' · ' + ui.tr('silverAmmo') + ': ' + (fight.player.silverAmmo ?? 0));
       if (fight.opponent.ammo != null) ui.text(right, ui.tr('enemyAmmo') + ': ' + fight.opponent.ammo);
       for (const line of fight.log) {
         const node = ui.text(right, ui.tr(line.side) + ': ' + line.dice.join(' + ') + ' · '
@@ -92,10 +103,12 @@ export function createMochilaPanel(getContext, document) {
       }
     }
     const history = ui.group(right, 'history');
-    for (const row of saved.history.slice(-40).reverse()) ui.text(history, row.enemy + ': ' + ui.tr('status.' + row.outcome), 'div');
+    for (const row of saved.history.slice(-40).reverse()) {
+      decorateOutcome(ui.text(history, row.enemy + ': ' + ui.tr('status.' + row.outcome), 'div'), row.outcome);
+    }
     if (locked) {
       const send = (kind, values) => change(state => {
-        state.fight = combatAction(state.fight, kind, undefined, values); return state;
+        state.fight = playCombatAction(state.fight, kind, undefined, values); return state;
       }, snap);
       if (fight.phase === 'enemySetup') {
         ui.text(controls, ui.tr('missingMelee'));
@@ -108,9 +121,13 @@ export function createMochilaPanel(getContext, document) {
       } else if (fight.phase === 'resolve') {
         ui.text(controls, ui.tr('player') + ': ' + fight.pending.dice.join(' + ') + ' · ' + ui.tr(fight.pending.hit || fight.pending.instant ? 'hit' : 'miss'));
         ui.button(controls, 'resolve', () => send('resolve'));
-        if (!fight.pending.hit && !fight.pending.instant && fight.player.bandana && !fight.player.bandanaUsed) ui.button(controls, 'reroll', () => send('reroll'));
+        if (canReroll(fight)) ui.button(controls, 'reroll', () => send('reroll'));
       } else {
-        ui.button(controls, fight.phase === 'fan' ? 'fireAgain' : 'attack', () => send('attack'));
+        const empty = fight.player.weapon !== 'knife'
+          && !(fight.player.weapon === 'silverGun' ? fight.player.silverAmmo : fight.player.ammo);
+        ui.button(controls, fight.phase === 'fan' ? 'fireAgain' : 'attack.' + fight.player.weapon,
+          () => send('attack')).disabled = empty;
+        if (empty) ui.text(controls, ui.tr('emptyWeapon'));
         if (fight.phase === 'fan') ui.button(controls, 'endTurn', () => send('endTurn'));
         if (fight.player.weapon !== 'knife' && !fight.opponent.knifeOnly) ui.button(controls, 'switchKnife', () => send('knife'));
       }
@@ -167,6 +184,14 @@ export function createMochilaPanel(getContext, document) {
       state.player = player; state.fight = null; return state;
     }));
     inputs.get('weapon').addEventListener('change', () => {
+      if (busy()) {
+        const weapon = inputs.get('weapon').value;
+        change(state => {
+          state.fight = playCombatAction(state.fight, 'weapon', undefined, {weapon}); return state;
+        });
+        render();
+        return;
+      }
       reload.disabled = busy() || inputs.get('weapon').value === 'silverGun';
     });
     controls = document.createElement('div'); left.append(controls);

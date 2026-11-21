@@ -1,3 +1,4 @@
+import { decorateOutcome, renderHistory } from '../../outcome.js';
 import {definition, CHARACTER_FIELDS, WARRIORS, NECROMOR, IRON_DRAGON, TABLE_IMAGES} from './definition.js';
 import {startFight, prepareStrike, resolveStrike, castMagic, amendFighter, setBattleCode, finishFight, chance} from './combat.js';
 import {createState} from './state.js';
@@ -124,7 +125,8 @@ export function createDragonRoadPanel({document, t, getRun, getBookId, saveState
       if (action.kind === 'amend') return tk('amended');
       return tk(action.kind === 'magic' ? 'magicLog' : 'strikeLog', {...action, spell: action.spell || tk('spell')});
     }).join('\n');
-    el('history').textContent = data.history.slice(-40).reverse().map(entry => entry.enemy + ': ' + tk('outcome.' + entry.outcome)).join('\n');
+    renderHistory(el('history'), data.history.slice(-40).reverse(), entry => entry.enemy + ': ' + tk('outcome.' + entry.outcome));
+    decorateOutcome(el('result'), fight?.outcome);
   }
   function open() {
     if (Number(getBookId()) !== definition.id || !getRun()) {showAlert(t('battlesim.no_active_playthrough')); return;}

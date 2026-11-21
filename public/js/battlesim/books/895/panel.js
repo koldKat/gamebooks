@@ -1,3 +1,4 @@
+import { decorateOutcome, renderHistory } from '../../outcome.js';
 import {definition, ABILITIES, ENCOUNTERS, OPPONENT_PRESETS} from './definition.js';
 import * as combat from './combat.js';
 import {recover} from './effects.js';
@@ -87,7 +88,8 @@ export function createMountainOfDeathPanel({document, t, getRun, getBookId, save
       current: Math.min(fight.index + 1, fight.enemies.length), count: fight.enemies.length,
       name: fight.enemies[fight.index]?.displayName || '', hp: fight.enemies[fight.index]?.stamina ?? 0}) : '';
     el('log').textContent = data.log.slice(-80).reverse().join('\n');
-    el('history').textContent = data.history.slice(-40).reverse().map(entry => entry.enemy + ': ' + tk('status.' + entry.outcome)).join('\n');
+    renderHistory(el('history'), data.history.slice(-40).reverse(), entry => entry.enemy + ': ' + tk('status.' + entry.outcome));
+    decorateOutcome(el('status'), fight?.outcome);
   }
   function open() {
     if (Number(getBookId()) !== definition.id || !getRun()) {showAlert(t('battlesim.no_active_playthrough')); return;}

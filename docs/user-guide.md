@@ -27,8 +27,6 @@ An author's rating shows its vote count beside the average. Both are derived fro
 
 Open the ⚙ settings button or press **Ctrl+Y** to adjust cover titles, background options, animation preferences, seasonal sprites, and feed appearance.
 
-**Hide Cyrillic covers** and **Hide NSFW covers** control the cover wall and rotating background, including backgrounds drawn from My Books. They do not remove books from your library or filter activity-feed entries. NSFW covers are hidden by default, including for signed-out visitors.
-
 Activity involving NSFW books, anthologies or series carries a red **NSFW** tag in the feed. Collapsed groups also show the tag when they contain such activity.
 
 ### Seasonal events
@@ -86,7 +84,7 @@ This is either the login form or your books list, depending on whether you're si
 |----------|--------|
 | **Ctrl+X** | Hide or restore all three panels |
 | **F1** | Open the Cheat Sheet |
-| **Ctrl+Y** | Landing page settings (cover-title font size/bold/hide Cyrillic, background source, disable seasonal sprites, reduce animations, feed day covers, transparent day cards) |
+| **Ctrl+Y** | Display settings |
 
 **Escape:** dismisses open autocomplete suggestions first. Press it again to close the top dialog; dialogs underneath stay open. Saving and uploading can temporarily block dismissal.
 
@@ -714,6 +712,8 @@ On mobile, the simulator loads when you tap its button. If a network-error messa
 - Your combat history is saved per playthrough
 
 Where a simulator offers **Custom opponents**, type a name to see roster suggestions, then adjust the stats or add another opponent. Printed encounters remain available for their special rules; custom fights do not choose a story destination for you. Opponent setup is locked during an active fight.
+
+Where weapon switching is supported, use **Weapon** during combat to choose a loaded firearm or a melee weapon. An empty firearm cannot attack. Roll confirmation appears when there is an optional decision, such as using a reroll item.
 
 **Good to know:**
 - Choose a preset for its encounter rules, or use custom opponents where offered

@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { WONDERLAND_ENCOUNTERS, isWonderlandTeapot } from './roster.js';
 import { createWonderlandCharacter, wonderlandTest, wonderlandInteger } from './random.js';
 import { startWonderlandFight, wonderlandRound, resolveWonderlandInitiative } from './core.js';
@@ -155,6 +156,8 @@ export function createWonderlandPanel({ document, t, getRun, getBookId, saveStat
     }) : tk('ready');
     el('log').innerHTML = d.log.slice().reverse().map(line => `<div>${escape(line)}</div>`).join('');
     el('history').innerHTML = d.history.slice(-30).reverse().map(h => `<div>${escape(h.enemy)} · ${escape(tk('status.' + h.outcome))}</div>`).join('');
+    decorateOutcome(el('status'), f?.status);
+    decorateHistory(el('history'), d.history.slice(-30).reverse());
   }
   const input = (id, key = id, value = 0, min = 0, step = 1) => `<label class="inv-edit-row">${escape(tk(key))}<input class="inv-edit-input" id="${ID}-${id}" type="number" min="${min}" step="${step}" value="${value}"></label>`;
   const select = (id, keys) => `<label class="inv-edit-row">${escape(tk(id))}<select class="inv-edit-input" id="${ID}-${id}">${keys.map(key => `<option value="${key}">${escape(tk(key || 'chooseInitiative'))}</option>`).join('')}</select></label>`;

@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createDemonOpponentSetup } from '../../engines/demonspawn/setup.js';
 import { CRYPTS_ROSTER, CRYPTS_RULES } from '../../engines/demonspawn/crypts-of-terror-roster.js';
 let customSetup;
@@ -91,6 +92,8 @@ export function renderSim535() {
   el('manual_group').hidden=!f?.manualGroup;
   el('log').innerHTML=d.log.slice().reverse().map(line=>`<div>${escapeHtml(line)}</div>`).join('');
   el('history').innerHTML=d.history.slice(-50).reverse().map(entry=>`<div class="bsim-history-row">${escapeHtml(entry.enemy)}: ${tk(`status.${entry.outcome}`)}</div>`).join('');
+  decorateOutcome(el('status'), f?.outcome);
+  decorateHistory(el('history'), d.history.slice(-50).reverse());
 }
 
 export function setSim535Visible(value) {

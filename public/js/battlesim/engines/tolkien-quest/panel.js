@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import {character,beginFight,step as performStep,applyLuck,acceptNumbers,luckAvailable,openingAction,resolveCalm,resolveOutcome,spellAvailable,woundedExitAvailable,takeWoundedExit,useRecovery,WEAPONS,ARMOUR,MISSILES,SPELLS} from './core.js';
 import {createOpponentEditor} from '../../opponents.js';
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -178,6 +179,8 @@ export function createTolkienQuestPanel({document,definition,getRoster,t,getRun,
     if(f?.allyActive)el('status').textContent+=' | '+tk('allyState',f.ally);
     if(f&&definition.heroFields?.some(field=>field.key==='strength'))el('status').textContent+=' | '+tk('strengthState',{strength:f.hero.strength});
     el('history').innerHTML=(d?.history??[]).slice(-30).reverse().map(e=>'<div>'+escape(e.enemy)+' | '+escape(tk('status.'+e.outcome))+'</div>').join('');
+    decorateOutcome(el('status'), f?.status);
+    decorateHistory(el('history'), (d?.history??[]).slice(-30).reverse());
     el('log').innerHTML=(d?.log??[]).slice().reverse().map(e=>'<div>'+escape(eventText(e))+'</div>').join('');
     el('animal').textContent=d?.hero?.charmedAnimal?tk('animalState',d.hero.charmedAnimal):'';
   }

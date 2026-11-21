@@ -1787,6 +1787,9 @@
   --bsim-accent: #cfb66f;
   --bsim-muted: #87919e;
 }
+.bsim-modal .bsim-log {
+  color: var(--bsim-accent);
+}
 .inv-overlay
   .bsim-modal
   :is(button, label, summary, legend, h1, h2, h3, h4, .inv-modal-title, .bsim-side-title) {
@@ -1808,19 +1811,19 @@
 .inv-overlay .bsim-modal .themed-select-trigger {
   padding-right: 22px;
 }
-.bsim-log :is(.bsim-log-success, .s8-dmg-player, .s8-win, .s8-die-hit) {
+.bsim-modal :is(.bsim-log-success, .s8-dmg-player, .s8-win, .s8-die-hit) {
   color: var(--bsim-success);
 }
-.bsim-log :is(.bsim-log-danger, .s8-dmg-enemy, .s8-dead) {
+.bsim-modal :is(.bsim-log-danger, .s8-dmg-enemy, .s8-dead) {
   color: var(--bsim-danger);
 }
-.bsim-log :is(.bsim-log-accent, .s8-die-6) {
+.bsim-modal :is(.bsim-log-accent, .s8-die-6) {
   color: var(--bsim-accent);
 }
-.bsim-log :is(.bsim-log-muted, .s8-miss, .s8-die-miss) {
+.bsim-modal :is(.bsim-log-muted, .s8-miss, .s8-die-miss) {
   color: var(--bsim-muted);
 }
-.bsim-log :is(.bsim-log-success, .bsim-log-danger, .bsim-log-accent) {
+.bsim-modal :is(.bsim-log-success, .bsim-log-danger, .bsim-log-accent) {
   font-weight: 600;
 }
 .bsim-modal .inv-modal-ftr {

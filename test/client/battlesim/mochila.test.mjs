@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {startFight, combatAction as act, parseRange} from '../../../public/js/battlesim/books/1307/combat.js';
+import {startFight, combatAction as act, playCombatAction, parseRange} from '../../../public/js/battlesim/books/1307/combat.js';
 import {createRequire} from 'node:module';
 const require = createRequire(import.meta.url);
 const {getRosterRows} = require('../../helpers/roster-db.cjs');
@@ -57,16 +57,18 @@ test('Mochila silver revolver deals nine damage and consumes only silver bullets
   assert.equal(f.player.weapon, 'silverGun');
   assert.throws(() => startFight(player({weapon:'silverGun',silverAmmo:7}), enemy('bear-42')));
   f = startFight(player({weapon:'silverGun',silverAmmo:0}), enemy('bear-42'));
-  assert.equal(f.player.weapon, 'knife');
+  assert.equal(f.player.weapon, 'silverGun');
 });
-test('Mochila last silver bullet ends fanning and switches to knife without spending normal ammunition', () => {
+test('Mochila last silver bullet ends fanning and waits for an explicit weapon choice', () => {
   let f = startFight(player({weapon:'silverGun',silverAmmo:1,fanning:true}), enemy('rider-p125'));
   f = attack(f, [4,4], [1,1]);
   assert.equal(f.opponent.hp, enemy('rider-p125').hp - 9);
   assert.equal(f.player.silverAmmo, 0);
   assert.equal(f.player.ammo, 6);
-  assert.equal(f.player.weapon, 'knife');
+  assert.equal(f.player.weapon, 'silverGun');
   assert.equal(f.phase, 'attack');
+  assert.throws(() => act(f, 'attack'));
+  f = act(f, 'weapon', undefined, {weapon:'knife'});
   f = attack(f, [4,4], [1,1]);
   assert.equal(f.opponent.hp, enemy('rider-p125').hp - 11);
 });
@@ -86,14 +88,39 @@ test('Mochila third fanning shot exhausts the cylinder and finishes the round', 
   f = attack(f, [1,1]); f = attack(f, [1,1]);
   f = attack(f, [4,4], [1,1]);
   assert.equal(f.opponent.hp, 18); assert.equal(f.phase, 'attack');
-  assert.equal(f.player.ammo, 0); assert.equal(f.player.weapon, 'knife');
+  assert.equal(f.player.ammo, 0); assert.equal(f.player.weapon, 'gun');
   assert.equal(f.round, 2);
 });
-test('Mochila empty revolver switches to knife and never reloads during a fight', () => {
+test('Mochila empty revolver cannot fire or reload and requires an explicit weapon change', () => {
   let f = attack(startFight(player({ammo:1}), enemy('rider-p125')), [1,1], [1,1]);
-  assert.equal(f.player.weapon, 'knife'); assert.equal(f.player.reserve, 2);
+  assert.equal(f.player.weapon, 'gun'); assert.equal(f.player.reserve, 2);
   assert.throws(() => act(f, 'reload'));
+  assert.throws(() => act(f, 'attack'));
+  f = act(f, 'knife');
   f = attack(f, [6,6], [1,1]); assert.equal(f.opponent.hp, 16);
+});
+test('Mochila can switch between loaded firearms and knife during combat without free extra attacks', () => {
+  let f = startFight(player({silverAmmo:2,fanning:true}), enemy('rider-p125'));
+  f = act(f, 'weapon', undefined, {weapon:'silverGun'});
+  f = attack(f, [4,4]);
+  assert.equal(f.opponent.hp, 9); assert.equal(f.player.ammo, 6); assert.equal(f.player.silverAmmo, 1);
+  f = act(f, 'weapon', dice(1,1), {weapon:'gun'});
+  assert.equal(f.round, 2); assert.equal(f.phase, 'attack');
+  f = act(f, 'weapon', undefined, {weapon:'knife'});
+  f = act(f, 'weapon', undefined, {weapon:'silverGun'});
+  assert.equal(f.player.weapon, 'silverGun');
+  assert.throws(() => act(startFight(player(), enemy('ben')), 'weapon', undefined, {weapon:'gun'}));
+  assert.throws(() => act(f, 'weapon', undefined, {weapon:'laser'}));
+});
+test('Mochila resolves ordinary rolls immediately and pauses only for an available bandana reroll', () => {
+  let f = playCombatAction(startFight(player(), enemy('bear-42')), 'attack', dice(4,4,1,1));
+  assert.equal(f.phase, 'attack'); assert.equal(f.round, 2); assert.equal(f.opponent.hp, 10);
+  f = playCombatAction(startFight(player({bandana:true}), enemy('bear-42')), 'attack', dice(1,1));
+  assert.equal(f.phase, 'resolve');
+  f = playCombatAction(f, 'reroll', dice(4,4,1,1));
+  assert.equal(f.phase, 'attack'); assert.equal(f.player.bandanaUsed, true);
+  const win = playCombatAction(startFight(player({bandana:true}), enemy('bear-42')), 'attack', dice(6,6));
+  assert.equal(win.status, 'win');
 });
 test('Mochila nonlethal Ben and retreating cougar stop at their printed thresholds', () => {
   let f = startFight(player(), enemy('ben'));

@@ -4,6 +4,8 @@ const integer = (value, min, max) => {
   return value;
 };
 const loadedAmmo = player => player.weapon === 'silverGun' ? player.silverAmmo : player.ammo;
+export const canReroll = fight => fight.phase === 'resolve' && !fight.pending.hit
+  && !fight.pending.instant && fight.player.bandana && !fight.player.bandanaUsed;
 export function parseRange(value) {
   const parts = String(value).trim().split(/[,;]/).map(part => part.trim());
   const values = new Set();
@@ -23,7 +25,7 @@ export function startFight(player, opponent) {
   integer(p.reserve, 0, 1000000); integer(e.hp, 1, 1000000); integer(e.damage, 0, 1000000);
   e.hits = parseRange(e.range);
   if (!['gun', 'silverGun', 'knife'].includes(p.weapon)) throw new RangeError('Invalid weapon');
-  if (e.knifeOnly || (p.weapon !== 'knife' && !loadedAmmo(p))) p.weapon = 'knife';
+  if (e.knifeOnly) p.weapon = 'knife';
   return {version:1, player:p, opponent:e, round:1, shots:0, phase:'attack', status:'fighting', log:[]};
 }
 export function validateFight(fight) {
@@ -65,9 +67,14 @@ export function combatAction(original, kind, roll = () => 1 + Math.floor(Math.ra
     parseRange(values.range); integer(values.damage, 0, 1000000);
     f.opponent.meleeRange = values.range; f.opponent.meleeDamage = values.damage;
     enemyTurn(f, roll);
-  } else if (kind === 'knife') {
+  } else if (kind === 'knife' || kind === 'weapon') {
     if (f.phase !== 'attack' && f.phase !== 'fan') throw new RangeError('Resolve attack first');
-    f.player.weapon = 'knife';
+    const weapon = kind === 'knife' ? 'knife' : values.weapon;
+    if (!['gun', 'silverGun', 'knife'].includes(weapon)) throw new RangeError('Invalid weapon');
+    if (f.opponent.knifeOnly && weapon !== 'knife') throw new RangeError('Knife only');
+    if (weapon !== 'knife' && !loadedAmmo({...f.player, weapon})) throw new RangeError('No loaded ammunition');
+    if (weapon === f.player.weapon) return f;
+    f.player.weapon = weapon;
     // Changing weapons after a shot ends this attack, rather than granting another knife strike.
     if (f.phase === 'fan') enemyTurn(f, roll);
   } else if (kind === 'attack') {
@@ -93,7 +100,6 @@ export function combatAction(original, kind, roll = () => 1 + Math.floor(Math.ra
     if (f.opponent.hp <= (f.opponent.stopHp ?? 0)) finish(f, 'win');
     else if (p.gun && f.player.fanning && f.shots < 3 && loadedAmmo(f.player)) f.phase = 'fan';
     else {
-      if (!loadedAmmo(f.player)) f.player.weapon = 'knife';
       enemyTurn(f, roll);
     }
   } else if (kind === 'endTurn') {
@@ -102,4 +108,11 @@ export function combatAction(original, kind, roll = () => 1 + Math.floor(Math.ra
   } else throw new RangeError('Unknown combat action');
   f.log = f.log.slice(-100);
   return f;
+}
+
+// Pause only when the player can choose a bandana reroll, including saved fights.
+export function playCombatAction(original, kind, roll, values) {
+  const next = combatAction(original, kind, roll, values);
+  return next.phase === 'resolve' && !canReroll(next)
+    ? combatAction(next, 'resolve', roll) : next;
 }

@@ -1,5 +1,6 @@
 // Present optional martial encounters, explicit combat actions and saved results.
 import {createOpponentEditor} from '../../opponents.js';
+import {decorateOutcome} from '../../outcome.js';
 import {startMartialFight, martialAction, validateMartialFight} from './core.js';
 import {createQuestState} from '../super-endless-quest/state.js';
 
@@ -93,7 +94,8 @@ export function createMartialPanel({document, definition, t, getRoster, getRun, 
   function report(state) {
     right.replaceChildren();
     const fight = state.fight;
-    text(right, tr(fight ? 'status.' + fight.status : 'ready'), 'h4').className = 'bsim-side-title';
+    const status = text(right, tr(fight ? 'status.' + fight.status : 'ready'), 'h4');
+    status.className = 'bsim-side-title'; decorateOutcome(status, fight?.status);
     if (fight) {
       text(right, fight.opponent.name);
       text(right, tr('totals', {hp:fight.player.hp, maxHp:fight.player.maxHp, experience:fight.player.experience}));
@@ -112,9 +114,11 @@ export function createMartialPanel({document, definition, t, getRoster, getRun, 
       else if (event.kind === 'cancel') text(log, tr('status.cancelled'));
       else if (event.destination) text(log, prefix + tr('destination', {section:event.destination}));
       else text(log, prefix + tr('status.' + fight.status));
+      log.lastElementChild.className = 'bsim-log-' + (event.kind === 'damage' ? 'danger'
+        : event.kind === 'roll' ? event.success ? 'success' : 'danger' : 'accent');
     }
     text(right, tr('history'), 'h4').className = 'bsim-side-title';
-    for (const item of state.history.slice(-30).reverse()) text(right, item.enemy + ' · ' + tr('status.' + item.outcome));
+    for (const item of state.history.slice(-30).reverse()) decorateOutcome(text(right, item.enemy + ' · ' + tr('status.' + item.outcome)), item.outcome);
   }
   function render() {
     if (!overlay) return;

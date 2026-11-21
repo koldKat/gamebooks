@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createDemonOpponentSetup } from '../../engines/demonspawn/setup.js';
 let customSetup;
 import { toggles, actions } from './definition.js';
@@ -76,6 +77,8 @@ export function renderSim537() {
   el('heal').disabled = fight?.outcome !== 'win' || fight?.rubyUsed || !p.rubyPendant || p.lifePoints <= 0;
   el('log').innerHTML = d.log.slice(-100).map(line => `<div class="bsim-log-line">${escapeHtml(line)}</div>`).join('');
   el('history').innerHTML = d.history.slice(-50).reverse().map(h => `<div>${escapeHtml(h.enemy)}: ${tk('status.' + h.outcome)}</div>`).join('');
+  decorateOutcome(el('status'), fight?.outcome);
+  decorateHistory(el('history'), d.history.slice(-50).reverse());
 }
 
 export function setSim537Visible(value) { if (el('btn')) el('btn').style.display = value ? '' : 'none'; if (!value) close(); }

@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createOpponentEditor } from '../../opponents.js';
 import { meleeOpponentFields, shootingOpponentFields } from './opponents.js';
 import { CHECKS, MONEY_RULES, unarmedPresetOptions, definition, PLAYER_DEFAULTS, UNARMED_RETURNS, SHOOTING_RETURNS, shootingEncounter, unarmedEncounter } from './definition.js';
@@ -262,6 +263,8 @@ export function createMoneyPanel({ document, t, getRun, getBookId, saveState, sh
       el('log').innerHTML = fight.events.slice(-60).map(e => '<div>' + escape(eventText(e)) + '</div>').join('');
     }
     el('history').innerHTML = d.history.slice(-40).reverse().map(row => '<div>' + escape(row.enemy + ': ' + tk('status.' + row.outcome)) + '</div>').join('');
+    decorateOutcome(el('status'), fight?.outcome);
+    decorateHistory(el('history'), d.history.slice(-40).reverse());
   }
   function close() { el('overlay')?.classList.remove('active'); }
   function resetCheck() {

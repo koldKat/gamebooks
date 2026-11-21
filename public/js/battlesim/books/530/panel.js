@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { ID, fields, supplies, flags, options } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
@@ -99,6 +100,8 @@ export function renderSim530() {
   el('city_fine').disabled ||= d.patrol?.status !== 'patrol' || p.gold < rules.KINGDOM_RULES.patrol.fine;
   el('log').innerHTML = d.log.slice(-100).reverse().map(text => `<div>${escapeHtml(text)}</div>`).join('');
   el('history').innerHTML = d.history.slice(-50).reverse().map(row => `<div class="bsim-history-row">${escapeHtml(row.enemy)}: ${escapeHtml(tk(row.outcome))}</div>`).join('');
+  decorateOutcome(el('status'), f?.status);
+  decorateHistory(el('history'), d.history.slice(-50).reverse());
 }
 
 export function setSim530Visible(visible) {

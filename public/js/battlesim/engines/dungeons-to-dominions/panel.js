@@ -1,3 +1,4 @@
+import { decorateOutcome } from '../../outcome.js';
 // Bind independent Dungeons to Dominions encounters to the initiating run and shared simulator UI.
 import {createQuestState} from '../super-endless-quest/state.js';
 import {createD20Forms} from '../d20/forms.js';
@@ -32,6 +33,7 @@ export function createDominionsPanel({document, definition, t, getRoster, getRun
     right.replaceChildren();
     const fight = state.fight;
     ui.text(right, ui.tr(fight ? 'status.' + fight.status : 'ready'), 'h4').className = 'bsim-side-title';
+    decorateOutcome(right.lastElementChild, fight?.status);
     if (fight) {
       ui.text(right, fight.opponent.name);
       ui.text(right, `${ui.tr('hp')}: ${fight.player.hp} · ${ui.tr('shield')}: ${fight.player.shield} · ${ui.tr('armor')}: ${fight.player.armor}`);
@@ -61,7 +63,7 @@ export function createDominionsPanel({document, definition, t, getRoster, getRun
     }
     if (state.history.length) {
       ui.text(right, ui.tr('history'), 'h4').className = 'bsim-side-title';
-      for (const row of state.history.slice(-30).reverse()) ui.text(right, row.enemy + ' · ' + ui.tr('status.' + row.outcome));
+      for (const row of state.history.slice(-30).reverse()) decorateOutcome(ui.text(right, row.enemy + ' · ' + ui.tr('status.' + row.outcome)), row.outcome);
     }
     for (const child of right.children) child.classList.add('bsim-report');
   }

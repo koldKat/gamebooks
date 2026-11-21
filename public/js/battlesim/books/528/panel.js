@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { ID, core, resources, flags, options, spells, wizardSpells, healing } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
@@ -93,6 +94,8 @@ export function renderSim528() {
     : f?.status === 'redirect' ? tk('redirect', { section: f.redirect }) : f ? `${label(f.spec.section)}: ${tk(f.status)}` : tk('pick');
   el('log').innerHTML = d.log.slice(-100).reverse().map(line => `<div>${escapeHtml(line)}</div>`).join('');
   el('history').innerHTML = d.history.slice(-50).reverse().map(row => `<div class="bsim-history-row">${escapeHtml(row.enemy)}: ${escapeHtml(tk(row.outcome))}</div>`).join('');
+  decorateOutcome(el('status'), f?.status);
+  decorateHistory(el('history'), d.history.slice(-50).reverse());
 }
 export function setSim528Visible(visible) {
   if (el('btn')) el('btn').style.display = visible ? '' : 'none';

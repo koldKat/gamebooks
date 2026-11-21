@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { sixActionsOpponentFields } from './opponents.js';
 import { newSixActionsCharacter, sixActionsCheck, startSixActionsFight,
@@ -118,6 +119,8 @@ export function createSixActionsPanel({ document, t, getRun, getBookId, saveStat
     el('log').innerHTML = game.log.slice(-100).reverse().map(line => `<div>${escape(line)}</div>`).join('');
     el('history').innerHTML = game.history.slice(-30).reverse()
       .map(item => `<div>${escape(item.enemy)} · ${escape(tk('status.' + item.outcome))}</div>`).join('');
+    decorateOutcome(el('status'), fight?.status);
+    decorateHistory(el('history'), game.history.slice(-30).reverse());
     contextChanged();
   }
   const field = (key, value = '', max = 10000) => `<label class="inv-edit-row" id="${ID}-${key}-row">${escape(tk(key))}<input class="inv-edit-input" type="number" min="0" max="${max}" step="1" id="${ID}-${key}" value="${value}"></label>`;

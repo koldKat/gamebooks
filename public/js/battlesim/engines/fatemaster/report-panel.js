@@ -1,4 +1,5 @@
 // Show Fatemaster current pools, completed combat events and saved encounter history.
+import {decorateOutcome} from '../../outcome.js';
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function renderFatemasterReport(holder,state,t) {
   const tr=(key,params)=>t('battlesim.fatemaster.'+key,params),fight=state.fight;
@@ -18,11 +19,14 @@ export function renderFatemasterReport(holder,state,t) {
     if(e.success!==undefined)details.push(tr(e.success?'passed':'failed'));
     if(e.broken!==undefined)details.push(tr(e.broken?'broken':'intact'));
     if(e.apply!==undefined)details.push(tr(e.apply?'apply_flame':'skip_flame'));
-    return '<p>'+escape(tr('round',{round:e.round})+' · '+tr('event.'+e.type)+(name?' · '+name:'')+(details.length?' · '+details.join(' · '):''))+'</p>';
+    return '<p class="bsim-log-'+(e.hit===false?'muted':'accent')+'">'+escape(tr('round',{round:e.round})+' · '+tr('event.'+e.type)+(name?' · '+name:'')+(details.length?' · '+details.join(' · '):''))+'</p>';
   }).join('');
   holder.innerHTML='<h4 class="bsim-side-title">'+escape(tr(fight?'status.'+fight.status:'ready'))+'</h4>'
     +(fight?'<p>'+escape(tr('round',{round:fight.round}))+'</p>'+table:'')
     +'<h4 class="bsim-side-title">'+escape(tr('combat_log'))+'</h4><div class="bsim-log">'+log+'</div>'
     +'<h4 class="bsim-side-title">'+escape(tr('history'))+'</h4>'
-    +(state.history??[]).slice(-30).reverse().map(e=>'<p>'+escape(e.enemy+' · '+tr('status.'+e.outcome))+'</p>').join('');
+    +'<div class="bsim-history-list">'+(state.history??[]).slice(-30).reverse().map(e=>'<p>'+escape(e.enemy+' · '+tr('status.'+e.outcome))+'</p>').join('')+'</div>';
+  decorateOutcome(holder.querySelector('.bsim-side-title'),fight?.status);
+  const rows=holder.querySelectorAll('.bsim-history-list > p');
+  for(const [index,entry] of (state.history??[]).slice(-30).reverse().entries())decorateOutcome(rows[index],entry.outcome);
 }

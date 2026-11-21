@@ -1,3 +1,4 @@
+import { decorateOutcome } from '../../outcome.js';
 import { definition, ENCOUNTERS } from './definition.js';
 import * as combat from './combat.js';
 import { createState } from './state.js';
@@ -68,6 +69,7 @@ export function createHousePanel({document,t,getRun,getBookId,saveState,showAler
     el('special').hidden = !ENCOUNTERS.some(row => row.id === data.sourceId && row.heavyWound);
     const result = data.result;
     el('status').textContent = tk('status.' + (locked ? 'pending' : result?.outcome ?? 'ready'));
+    decorateOutcome(el('status'), locked ? null : result?.outcome);
     el('totals').textContent = tk('totals',{energy:data.character.energy,initial:data.character.initialEnergy});
     el('destination').textContent = result?.destination ? tk('destination',{section:result.destination}) : '';
     el('log').innerHTML = data.log.slice(-80).map(line => '<div>' + escape(line) + '</div>').join('');

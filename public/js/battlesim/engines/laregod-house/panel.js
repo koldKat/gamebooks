@@ -1,4 +1,5 @@
 import { createOpponentEditor } from '../../opponents.js';
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 
 import { laregodPoints, laregodOpponent, startLaregodFight, laregodRound } from './core.js';
 
@@ -44,6 +45,7 @@ export function createLaregodHousePanel({ document, t, getRun, getBookId, saveSt
         d.history.push({ enemy: d.encounter, outcome: d.fight.status,
           ts: Math.max(Date.now(), (d.history.at(-1)?.ts ?? 0) + 1) });
       }
+      if(Array.isArray(d.logTones)){d.logTones.length=d.log.length;d.logTones=d.logTones.slice(-100);}
       d.log = d.log.slice(-100);
       run[ID] = d; saveState(); render();
     } catch (_) { showAlert(tk('invalid')); }
@@ -67,6 +69,8 @@ export function createLaregodHousePanel({ document, t, getRun, getBookId, saveSt
     d.fight = result.fight;
     d.log.push(tk('round', { n: d.fight.round, number: result.number, player: result.playerRating,
       enemy: result.enemyRating, playerLoss: result.playerLoss, enemyLoss: result.enemyLoss }));
+    d.logTones??=[];d.logTones.length=d.log.length;
+    d.logTones[d.log.length-1]=result.playerLoss?'danger':result.enemyLoss?'success':'muted';
     if (!busy(d)) d.log.push(tk('status.' + d.fight.status));
   }
   function render() {
@@ -97,8 +101,13 @@ export function createLaregodHousePanel({ document, t, getRun, getBookId, saveSt
     el('points').textContent = tk('points', { n: f && active ? f.player.points : laregodPoints(equipment, opponent, context) });
     el('status').textContent = f ? tk('status.' + f.status) + ' | ' + tk('health', {
       player: f.player.endurance, enemy: f.enemy.endurance }) : tk('ready');
-    el('log').innerHTML = d.log.slice().reverse().map(line => `<div>${escape(line)}</div>`).join('');
+    el('log').innerHTML = d.log.slice().reverse().map((line,index) => {
+      const tone=d.logTones?.[d.log.length-1-index];
+      return '<div class="bsim-log-'+(['success','danger','accent','muted'].includes(tone)?tone:'muted')+'">'+escape(line)+'</div>';
+    }).join('');
     el('history').innerHTML = d.history.slice(-30).reverse().map(h => `<div>${escape(h.enemy)} | ${escape(tk('status.' + h.outcome))}</div>`).join('');
+    decorateOutcome(el('status'),f?.status);
+    decorateHistory(el('history'),d.history.slice(-30).reverse());
   }
   const check = key => `<label class="bsim-checkbox"><input type="checkbox" id="${ID}-${key}">${escape(tk(key))}</label>`;
   const button = key => `<button class="bsim-action-btn" type="button" id="${ID}-${key}">${escape(tk(key))}</button>`;

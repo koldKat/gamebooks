@@ -1,3 +1,4 @@
+import { decorateOutcome, renderHistory } from '../../outcome.js';
 import {definition, EASY_PRESETS, HARD_PRESETS, MANOEUVRES} from './definition.js';
 import * as combat from './combat.js';
 import {createState} from './state.js';
@@ -98,7 +99,8 @@ export function createCyberneticWarsPanel({document, t, getRun, getBookId, saveS
     el('totals').textContent = fight ? ['player', 'enemy'].map(who => tk('remaining', {
       name: fight[who].displayName, hp: fight[who].hp, energy: fight[who].energy ?? '—'})).join('\n') : '';
     el('log').textContent = data.log.slice(-80).reverse().join('\n');
-    el('history').textContent = data.history.slice(-40).reverse().map(entry => entry.enemy + ': ' + tk('status.' + entry.outcome)).join('\n');
+    renderHistory(el('history'), data.history.slice(-40).reverse(), entry => entry.enemy + ': ' + tk('status.' + entry.outcome));
+    decorateOutcome(el('status'), fight?.outcome);
   }
   function open() {
     if (Number(getBookId()) !== definition.id || !getRun()) {showAlert(t('battlesim.no_active_playthrough')); return;}

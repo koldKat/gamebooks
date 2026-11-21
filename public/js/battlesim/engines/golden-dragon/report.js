@@ -1,8 +1,10 @@
 // Display Golden Dragon encounter results and bounded history without changing the run.
+import {decorateOutcome} from '../../outcome.js';
 export function renderDragonReport(parent, ui, state) {
   parent.replaceChildren();
   const fight = state.fight;
-  ui.text(parent, ui.tr(fight ? 'status.' + fight.status : 'ready'), 'h4').className = 'bsim-side-title';
+  const status = ui.text(parent, ui.tr(fight ? 'status.' + fight.status : 'ready'), 'h4');
+  status.className = 'bsim-side-title'; decorateOutcome(status, fight?.status);
   if (fight) {
     ui.text(parent, fight.opponent.name);
     ui.text(parent, ui.tr('vigour') + ' ' + fight.player.hp + ' · ' + ui.tr('psi') + ' ' + fight.player.psi);
@@ -31,11 +33,11 @@ export function renderDragonReport(parent, ui, state) {
       }
       if (event.kind === 'flee') message += ' · ' + ui.tr('vigour') + ' -' + event.playerDamage;
       if (event.kind === 'psiSave') message += ' · ' + ui.tr('psi') + ' -' + event.psiDamage;
-      ui.text(log, message);
+      ui.text(log, message).className = 'bsim-log-' + (event.playerDamage || event.psiDamage ? 'danger' : event.enemyDamage ? 'success' : 'muted');
     }
   }
   if (state.history.length) {
     ui.text(parent, ui.tr('history'), 'h4').className = 'bsim-side-title';
-    for (const row of state.history.slice(-30).reverse()) ui.text(parent, row.enemy + ' · ' + ui.tr('status.' + row.outcome));
+    for (const row of state.history.slice(-30).reverse()) decorateOutcome(ui.text(parent, row.enemy + ' · ' + ui.tr('status.' + row.outcome)), row.outcome);
   }
 }

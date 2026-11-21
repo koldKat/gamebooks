@@ -1,12 +1,13 @@
 // Render Real Life combat results and saved history without adding combat controls.
+import {decorateOutcome} from '../../outcome.js';
 export function renderRealLifeReport(document, root, state) {
   root.replaceChildren();
-  const text = (parent, value) => {const node = document.createElement('p'); node.textContent = value; parent.append(node);};
+  const text = (parent, value) => {const node = document.createElement('p'); node.textContent = value; parent.append(node); return node;};
   const report = document.createElement('div'); report.className = 'bsim-report'; report.setAttribute('role', 'status'); root.append(report);
   const fight = state.fight;
   if (!fight) text(report, 'Enter your current combat values and choose an opponent.');
   else {
-    text(report, `${fight.encounter.name || 'Custom encounter'} · Round ${fight.round + 1} · ${fight.status}`);
+    decorateOutcome(text(report, `${fight.encounter.name || 'Custom encounter'} · Round ${fight.round + 1} · ${fight.status}`), fight.status);
     text(report, `Your Wounds: ${fight.hero.wounds}${fight.encounter.mountedCombat ? (fight.hero.mounted ? ' · Mounted' : ' · On foot') : ''}`);
     for (const actor of [...fight.opponents, ...fight.allies]) text(report,
       `${actor.name}: ${actor.noWoundsPrinted ? 'Strength ' + actor.skill : 'Wounds ' + actor.wounds}${actor.outOfFight
@@ -19,6 +20,7 @@ export function renderRealLifeReport(document, root, state) {
   }
   const log = document.createElement('div'); log.className = 'bsim-log'; root.append(log);
   for (const event of [...(fight?.log ?? [])].reverse()) {
+    const previous = log.lastElementChild;
     if (event.type === 'attack' || event.type === 'opening') text(log,
       `${event.actor} → ${event.target}: ${event.dice.join(' + ')}${event.penalty ? ' + ' + event.penalty : ''} against ${event.skill}. `
       + (event.removed ? 'Target out of this fight.' : event.critical ? 'Double one: fatal hit.' : event.success ? `${event.lost} Wound${event.lost === 1 ? '' : 's'}.` : 'Miss.')
@@ -37,9 +39,12 @@ export function renderRealLifeReport(document, root, state) {
     else if (event.type === 'horsemanship') text(log, `${event.actor}: Horsemanship roll ${event.dice.join(' + ')}. ${event.success ? 'Remains mounted.' : 'Falls and continues on foot.'}`);
     else if (event.type === 'opening-skipped') text(log, 'Opening shot skipped.');
     else if (event.type === 'end') text(log, `Encounter ${event.status}.`);
+    if (log.lastElementChild && log.lastElementChild !== previous) log.lastElementChild.className = 'bsim-log-' +
+      (event.type === 'end' ? event.status === 'win' ? 'success' : event.status === 'loss' ? 'danger' : 'muted'
+        : event.success === false ? 'muted' : event.target === 'hero' ? 'danger' : event.actor === 'hero' ? 'success' : 'accent');
   }
   const history = document.createElement('details'); history.className = 'bsim-history';
   const heading = document.createElement('summary'); heading.textContent = 'Combat history'; history.append(heading);
   const list = document.createElement('div'); list.className = 'bsim-history-list'; history.append(list); root.append(history);
-  for (const entry of [...state.history].reverse()) text(list, `${entry.enemy}: ${entry.outcome}`);
+  for (const entry of [...state.history].reverse()) decorateOutcome(text(list, `${entry.enemy}: ${entry.outcome}`), entry.outcome);
 }

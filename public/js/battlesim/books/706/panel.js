@@ -1,3 +1,4 @@
+import { decorateOutcome, renderHistory } from '../../outcome.js';
 import { definition, POSITIONS, DESERT_RULES } from './definition.js';
 import { defendShip, retakeShip, attackShip } from './combat.js';
 import { createState } from './state.js';
@@ -56,7 +57,7 @@ export function createDesertPanel({ document, t, getRun, getBookId, saveState, s
     el('cancel').disabled = !busy;
     el('apply').disabled = busy;
     el('endurance').disabled = el('silver').disabled = busy;
-    el('history').textContent = d.history.slice(-40).reverse().map(h => h.enemy + ': ' + tk('status.' + h.outcome)).join('\n');
+    renderHistory(el('history'), d.history.slice(-40).reverse(), h => h.enemy + ': ' + tk('status.' + h.outcome));
     for (const key of Object.keys(POSITIONS)) {
       const point = d.deployment[key] ?? {};
       for (const field of ['force', 'pots', 'bows']) el(key + '-' + field).value = point[field] ?? (key === DESERT_RULES.defaultPosition && field === 'force' ? DESERT_RULES.force : 0);
@@ -73,6 +74,7 @@ export function createDesertPanel({ document, t, getRun, getBookId, saveState, s
       naval.outcome ? tk('status.' + naval.outcome) : '',
       naval.destination ? tk('return', { section: naval.destination }) : '',
       ...(naval.results ?? []).map(r => tk('pointStatus', r))].filter(Boolean).join('\n') : '';
+    decorateOutcome(el('navalStatus'), naval?.outcome);
     if (naval) {
       el('survivors').value = naval.survivors;
       el('survivors').max = naval.survivors;

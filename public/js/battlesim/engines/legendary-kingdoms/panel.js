@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { legendaryOpponentFields, startCustomLegendaryFight } from './opponents.js';
 import { LEGENDARY_SKILLS, legendarySkillCheck, legendaryHeal, newValleySkullcracker } from './character.js';
@@ -216,6 +217,8 @@ export function createLegendaryPanel({ document, t, getRun, getBookId, saveState
       ...(fight.destination?[tk('destination',{section:fight.destination})]:[])].join('\n'):'';
     el('phase').textContent=active&&fight.kind==='personal'?tk(fight.pending?'assignPrompt':fight.phase==='player'?'playerPrompt':'enemyPrompt'):'';
     el('history').innerHTML=game.history.slice(-30).reverse().map(row=>`<div>${escape(row.enemy)} - ${escape(tk('status.'+(row.outcome==='win'?'won':'lost')))}</div>`).join('');
+    decorateOutcome(el('status'), fight?.status);
+    decorateHistory(el('history'), game.history.slice(-30).reverse());
     el('log').innerHTML=[...game.log,...(fight?.log??[]).map(event=>eventText(event,game))].slice(-60).map(line=>`<div>${escape(line)}</div>`).join('');
     el('log').scrollTop=el('log').scrollHeight;
     const units=game.units.filter(unit=>!unit.routed);

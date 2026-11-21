@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createDemonOpponentSetup } from '../../engines/demonspawn/setup.js';
 import { DEMONDOOM_ROSTER, DEMONDOOM_RULES } from '../../engines/demonspawn/demondoom-roster.js';
 let customSetup;
@@ -94,6 +95,8 @@ export function renderSim536() {
   else if(fight?.outcome==='win'&&fight.encounter.win)el('status').textContent+=' '+tk('continue',{section:fight.encounter.win});
   el('log').innerHTML=d.log.slice().reverse().map(line=>`<div>${escapeHtml(line)}</div>`).join('');
   el('history').innerHTML=d.history.slice(-50).reverse().map(entry=>`<div class="bsim-history-row">${escapeHtml(entry.enemy)}: ${tk(`status.${entry.outcome}`)}</div>`).join('');
+  decorateOutcome(el('status'), fight?.outcome);
+  decorateHistory(el('history'), d.history.slice(-50).reverse());
 }
 
 export function setSim536Visible(value){if(el('btn'))el('btn').style.display=value?'':'none';if(!value)close();}

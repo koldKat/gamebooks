@@ -1,4 +1,5 @@
 // Render saved fleet combat strengths, dice, casualties and encounter history.
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { fleetOppositionTotals, allFleetPlayers, currentFleetEnemies } from './fleet-opposition.js';
 import { escapeFleet } from './fleet-form.js';
 
@@ -19,6 +20,9 @@ const describe = event => {
 export function renderFleetReport({ result, forces, log, history }, state) {
   const fight = state.fight;
   result.textContent = fight ? `${fight.status.replaceAll('-', ' ')} · Round ${fight.round}` : 'Ready';
+  const outcome = ['victory', 'support-arrived'].includes(fight?.status) ? 'win'
+    : ['defeat', 'time-limit'].includes(fight?.status) ? 'loss' : fight?.status;
+  decorateOutcome(result, outcome);
   if (fight) {
     const totals = fleetOppositionTotals(fight.opposition);
     const current = fight.opposition.kind === 'dispersed'
@@ -40,4 +44,5 @@ export function renderFleetReport({ result, forces, log, history }, state) {
     log.innerHTML = events.slice(-100).reverse().map(event => `<p>${escapeFleet(describe(event))}</p>`).join('');
   } else { forces.replaceChildren(); log.replaceChildren(); }
   history.innerHTML = state.history.slice(-30).reverse().map(event => `<p>${escapeFleet(event.enemy)} · ${escapeFleet(event.result ?? event.outcome)}</p>`).join('');
+  decorateHistory(history, state.history.slice(-30).reverse());
 }

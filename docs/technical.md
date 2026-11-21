@@ -244,6 +244,7 @@ public/js/battlesim/
   engines/<family>/        Shared rules, state, actions and UI
   opponents.js             Shared editable opponent controls
   roster-data.js           Database roster loading
+  outcome.js               Shared outcome icons and semantic colors
   loader.js                Desktop lazy loading
 ```
 

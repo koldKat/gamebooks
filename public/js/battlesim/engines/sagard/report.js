@@ -1,15 +1,16 @@
 // Display Sagard hit points, combat events and history without adding action controls.
 import {sagardEncounterActors} from './turn-panel.js';
 import {renderSagardSpecialSummary, sagardSpecialEventText} from './special-report.js';
+import {decorateOutcome} from '../../outcome.js';
 export function renderSagardReport(document, root, state) {
   root.replaceChildren();
-  const text = (parent, value) => {const p = document.createElement('p'); p.textContent = value; parent.append(p);};
+  const text = (parent, value) => {const p = document.createElement('p'); p.textContent = value; parent.append(p); return p;};
   const report = document.createElement('div'); report.className = 'bsim-report'; report.setAttribute('role', 'status'); root.append(report);
   const fight = state.fight;
   if (!fight) text(report, 'Enter your current combat values and choose an opponent.');
   else {
     const names = new Map(sagardEncounterActors(fight).map(row => [row.id, row.name]));
-    text(report, `${fight.encounter.name || 'Custom encounter'} · Round ${fight.round} · ${fight.status}`);
+    decorateOutcome(text(report, `${fight.encounter.name || 'Custom encounter'} · Round ${fight.round} · ${fight.status}`), fight.status);
     const special = renderSagardSpecialSummary(fight, report, text);
     for (const actor of special ? [] : [fight.hero, ...fight.allies, ...fight.opponents]) {
       text(report, `${actor.name}: ${actor.level == null ? 'Level not printed' : `Level ${actor.level}`} · ${actor.immortal
@@ -21,6 +22,7 @@ export function renderSagardReport(document, root, state) {
     if (fight.destination) text(report, `Continue reading at section ${fight.destination}.`);
     const log = document.createElement('div'); log.className = 'bsim-log'; root.append(log);
     for (const event of fight.log.slice(-200).reverse()) {
+      const previous = log.lastElementChild;
       const specialText = sagardSpecialEventText(event);
       if (specialText) text(log, specialText);
       else if (event.kind === 'strategy') text(log, event.mode === 'normal' ? 'Switched to fighting the demon.' : 'Switched to breaking the pendant.');
@@ -46,10 +48,14 @@ export function renderSagardReport(document, root, state) {
         text(log, `${label} → ${names.get(event.target)}${event.die == null ? '' : `: roll ${event.die}`}: ${event.success
           ? event.knockout ? 'out of combat' : `${event.damage} damage` : 'missed or ineffective'}.`);
       }
+      if (log.lastElementChild && log.lastElementChild !== previous) log.lastElementChild.className = 'bsim-log-' +
+        (event.kind === 'heal' ? 'success' : event.success === false ? 'muted'
+          : event.target === 'hero' || event.kind === 'melt' && event.actor === 'hero' ? 'danger'
+            : event.attacker === 'hero' ? 'success' : 'accent');
     }
   }
   const history = document.createElement('details'); history.className = 'bsim-history';
   const heading = document.createElement('summary'); heading.textContent = 'Combat history'; history.append(heading);
   const list = document.createElement('div'); list.className = 'bsim-history-list'; history.append(list); root.append(history);
-  for (const entry of state.history.slice(-100).reverse()) text(list, `${entry.enemy}: ${entry.outcome}`);
+  for (const entry of state.history.slice(-100).reverse()) decorateOutcome(text(list, `${entry.enemy}: ${entry.outcome}`), entry.outcome);
 }

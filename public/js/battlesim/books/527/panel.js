@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { ID, fields, flags, items, spells } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
@@ -86,6 +87,8 @@ export function renderSim527() {
   el('disease-note').textContent = p.disease ? tk('disease_warning') : '';
   el('log').innerHTML = d.log.slice(-100).reverse().map(s => `<div>${escapeHtml(s)}</div>`).join('');
   el('history').innerHTML = d.history.slice(-50).reverse().map(h => `<div class="bsim-history-row">${escapeHtml(h.enemy)}: ${escapeHtml(tk(h.outcome))}</div>`).join('');
+  decorateOutcome(el('status'), f?.status);
+  decorateHistory(el('history'), d.history.slice(-50).reverse());
 }
 export function setSim527Visible(value) {
   if (el('btn')) el('btn').style.display = value ? '' : 'none';

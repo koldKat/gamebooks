@@ -1,3 +1,4 @@
+import { decorateOutcome, renderHistory } from '../../outcome.js';
 import {definition, ENCOUNTERS, SOURCE_IMAGES} from './definition.js';
 import {startFight, applyCode} from './combat.js';
 import {createState} from './state.js';
@@ -101,8 +102,8 @@ export function createShadowsPanel({document, t, getRun, getBookId, saveState, s
     el('result').textContent = lines.join('\n');
     el('log').textContent = (fight?.turns || []).slice().reverse().map(turn =>
       tk('turn', {...turn, result: tk('result.' + turn.result)})).join('\n');
-    el('history').textContent = data.history.slice(-40).reverse().map(entry =>
-      entry.enemy + ': ' + tk('history.' + entry.outcome)).join('\n');
+    renderHistory(el('history'), data.history.slice(-40).reverse(), entry => entry.enemy + ': ' + tk('history.' + entry.outcome));
+    decorateOutcome(el('result'), fight?.outcome);
     const source = (fight?.enemy || selectedCard())?.grid || '';
     if (el('card-image').dataset.source !== source) preview();
   }

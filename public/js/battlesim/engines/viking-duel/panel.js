@@ -1,6 +1,7 @@
 // Connect optional Viking duel setup and saved combat to the shared simulator dialog.
 import {createQuestState} from '../super-endless-quest/state.js';
 import {createD20Forms} from '../d20/forms.js';
+import {decorateOutcome} from '../../outcome.js';
 
 export function createVikingDuelPanel(getContext, {definition, combat, createSetup}) {
   const ctx = () => getContext();
@@ -30,16 +31,15 @@ export function createVikingDuelPanel(getContext, {definition, combat, createSet
           : event.enemyDamage ? 'bsim-log-success' : 'bsim-log-accent';
       }
       if (fight.result) {
-        ui.text(right, ui.tr(fight.result) + (fight.rescued ? ' · ' + ui.tr('rescued') : fight.dead ? ' · ' + ui.tr('dead') : '')
-          + (fight.destination ? ' · ' + ui.tr('section') + ' ' + fight.destination : '')).className =
-          fight.result === 'win' ? 'bsim-log-success' : 'bsim-log-danger';
+        decorateOutcome(ui.text(right, ui.tr(fight.result) + (fight.rescued ? ' · ' + ui.tr('rescued') : fight.dead ? ' · ' + ui.tr('dead') : '')
+          + (fight.destination ? ' · ' + ui.tr('section') + ' ' + fight.destination : '')), fight.result);
         ui.text(right, ui.tr('continueReader'));
       }
     } else ui.text(right, ui.tr('ready'));
     if (state.history.length) {
       const history = ui.group(right, 'history');
       for (const item of state.history.slice().reverse()) {
-        ui.text(history, item.enemy + ' · ' + ui.tr(item.outcome) + ' · ' + item.rounds + ' ' + ui.tr('round'));
+        decorateOutcome(ui.text(history, item.enemy + ' · ' + ui.tr(item.outcome) + ' · ' + item.rounds + ' ' + ui.tr('round')), item.outcome);
       }
     }
     for (const child of right.children) child.classList.add('bsim-report');

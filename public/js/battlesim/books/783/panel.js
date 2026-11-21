@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { definition, CHARACTER_FIELDS, ENCOUNTERS, encounterFor } from './definition.js';
 import * as combat from './combat.js';
 import { createState } from './state.js';
@@ -70,6 +71,8 @@ export function createSamsonPanel({ document, t, getRun, getBookId, saveState, s
       : tk('enemyLine', { name: enemy.displayName || tk('opponent'), strength: enemy.strength, life: enemy.life })).join('\n') : '';
     el('log').innerHTML = data.log.slice(-80).map(line => '<div>' + escape(line) + '</div>').join('');
     el('history').innerHTML = data.history.slice(-40).reverse().map(row => '<div>' + escape(row.enemy + ': ' + tk('status.' + row.outcome)) + '</div>').join('');
+    decorateOutcome(el('status'), fight?.outcome);
+    decorateHistory(el('history'), data.history.slice(-40).reverse());
     const preset = selected();
     el('encounterNote').textContent = preset?.lossLimit ? tk('nonlethal', { limit: preset.lossLimit })
       : preset?.bonus ? tk('bonus', { bonus: preset.bonus }) : tk('groupNote');

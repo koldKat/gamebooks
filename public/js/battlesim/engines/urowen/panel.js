@@ -1,4 +1,5 @@
 import { createCustomOpponentSetup } from '../../custom-setup.js';
+import { decorateOutcome } from '../../outcome.js';
 import { customUrowenEncounter, urowenOpponentFields } from './opponents.js';
 import {UROWEN_SOURCE,UROWEN_RULES} from './roster.js';
 import {createUrowenCharacter,UROWEN_RACES,UROWEN_CAREERS,upgradeUrowenAttribute,
@@ -128,11 +129,13 @@ export function createUrowenPanel({document,t,getRun,getBookId,saveState,showAle
     el('animal').innerHTML=animals.map(animal=>`<option value="${escape(animal.name)}">${escape(animal.name)}</option>`).join('');
     if(animals.some(animal=>animal.name===selectedAnimal))el('animal').value=selectedAnimal;
     el('animal').disabled=busy||animals.length===0;
-    el('log').innerHTML=d.log.slice(-100).reverse().map(row=>`<div>${escape(tk('result',{
+    el('log').innerHTML=d.log.slice(-100).reverse().map(row=>`<div class="bsim-log-${row.playerDamage||row.ongoing||row.supportDamage?'danger':row.enemyDamage||row.damage||row.healed?'success':'muted'}">${escape(tk('result',{
       dice:(row.dice??row.rolls??[]).map(die=>typeof die==='number'?die:die.raw).join(' + ')||'-',
       dealt:row.enemyDamage??row.damage??0,taken:(row.playerDamage??0)+(row.ongoing??0)+(row.supportDamage??0),healed:row.healed??0}))}</div>`).join('');
     el('history').innerHTML=d.history.slice(-50).reverse().map(row=>
       `<div class="bsim-history-row">${escape(row.enemy??label(specs.find(spec=>spec.section===row.section)))}: ${escape(tk(`status.${row.status}`))}</div>`).join('');
+    decorateOutcome(el('status'),f?.status);
+    for(const [index,row] of d.history.slice(-50).reverse().entries())decorateOutcome(el('history').children[index],row.status);
   }
   function init() {
     if(el('overlay'))return;

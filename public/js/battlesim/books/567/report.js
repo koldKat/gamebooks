@@ -1,8 +1,10 @@
+import { decorateOutcome } from '../../outcome.js';
 // Display Craven Manor combat rolls, scores and saved encounter history.
 export function renderReport(right, state, ui) {
   right.replaceChildren();
   const fight = state.fight;
   ui.text(right, ui.tr(fight ? 'status.' + (fight.result || fight.status) : 'ready'), 'h4').className = 'bsim-side-title';
+  decorateOutcome(right.lastElementChild, fight?.result || fight?.status);
   if (fight) {
     ui.text(right, fight.opponent.name);
     ui.text(right, ui.tr('ttp') + ': ' + fight.player.ttp + ' / ' + fight.player.maxTtp);
@@ -39,7 +41,7 @@ export function renderReport(right, state, ui) {
   }
   if (state.history.length) {
     ui.text(right, ui.tr('history'), 'h4').className = 'bsim-side-title';
-    for (const row of state.history.slice(-30).reverse()) ui.text(right, row.enemy + ' · ' + ui.tr('status.' + row.outcome));
+    for (const row of state.history.slice(-30).reverse()) decorateOutcome(ui.text(right, row.enemy + ' · ' + ui.tr('status.' + row.outcome)), row.outcome);
   }
   for (const child of right.children) child.classList.add('bsim-report');
 }

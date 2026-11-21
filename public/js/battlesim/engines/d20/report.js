@@ -1,8 +1,10 @@
 // Display encounter totals, original combat notes, and a bounded readable log.
+import {decorateOutcome} from '../../outcome.js';
 export function renderD20Report(parent, ui, state) {
   const open = new Set([...parent.querySelectorAll('details[open][data-notes]')].map(node=>node.dataset.notes));
   parent.replaceChildren(); const fight=state.fight;
-  ui.text(parent,ui.tr(fight?'status.'+fight.status:'ready'),'h4').className='bsim-side-title';
+  const status=ui.text(parent,ui.tr(fight?'status.'+fight.status:'ready'),'h4');
+  status.className='bsim-side-title';decorateOutcome(status,fight?.status);
   if (!fight) return;
   ui.text(parent,fight.opponent.name); ui.text(parent,ui.tr('roundNumber')+' '+(fight.round+1));
   const actors=[['player',fight.player],...fight.companions.map((actor,i)=>['ally'+i,actor]),...fight.groups.map((actor,i)=>['enemy'+i,actor])];
@@ -47,15 +49,19 @@ export function renderD20Report(parent, ui, state) {
     if(event.roll!=null)value+=' · '+event.roll;
     if(event.movement)value+=' · '+ui.tr('movementFeet')+' '+event.movement;
     if(event.droppedWeapon)value+=' · '+ui.tr('droppedWeaponHelp');
-    ui.text(log,value);
+    const result=event.save??event.check;
+    const allied=key=>key==='player'||/^ally\d+$/.test(key??'');
+    ui.text(log,value).className='bsim-log-'+(result?.hit===false||result?.success===false?'muted'
+      : event.kind==='damage'&&event.target?allied(event.target)?'danger':'success'
+        : result&&(result.hit||result.success)?allied(event.actor)?'success':'danger':'accent');
     for(const effect of event.effects??[]){
       let detail=ui.tr('event.'+effect.kind);if(effect.condition)detail+=' · '+ui.tr('condition.'+effect.condition);
       if(effect.actor)detail+=' · '+name(effect.actor);if(effect.target)detail+=' → '+name(effect.target);
       if(effect.amount!=null)detail+=' · '+effect.amount;if(effect.current!=null)detail+=' → '+effect.current;
       if(effect.roll!=null)detail+=' · '+(typeof effect.roll==='number'?effect.roll:effect.roll.rolls?.join(', '));
-      if(effect.check)detail+=' · '+check(effect.check);ui.text(log,detail);
+      if(effect.check)detail+=' · '+check(effect.check);ui.text(log,detail).className='bsim-log-accent';
     }
   }
   ui.text(parent,ui.tr('history'),'h4').className='bsim-side-title';
-  for(const row of state.history.slice(-30).reverse())ui.text(parent,row.enemy+' · '+ui.tr('status.'+row.outcome));
+  for(const row of state.history.slice(-30).reverse())decorateOutcome(ui.text(parent,row.enemy+' · '+ui.tr('status.'+row.outcome)),row.outcome);
 }

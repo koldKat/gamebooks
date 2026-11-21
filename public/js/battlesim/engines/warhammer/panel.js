@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createOpponentEditor } from '../../opponents.js';
 import { warhammerCharacter, startWarhammerFight, warhammerRound, reloadWarhammerAfterFight, continueWarhammerFight } from './core.js';
 import { terminatorStats, terminatorEngaged } from './terminator.js';
@@ -201,6 +202,8 @@ export function createWarhammerPanel({ document, definition, getRoster, getPlaye
     [...el('targets').querySelectorAll('select')].forEach((input,index) => { if (remaining.some(({index:i}) => String(i) === previous[index])) input.value = previous[index]; });
     el('log').innerHTML = state.log.slice().reverse().map(line => `<div>${escape(line)}</div>`).join('');
     el('history').innerHTML = state.history.slice(-30).reverse().map(entry => `<div>${escape(entry.enemy)} · ${escape(entry.outcome)}</div>`).join('');
+    decorateOutcome(el('status'), fight?.status);
+    decorateHistory(el('history'), state.history.slice(-30).reverse());
   }
   const input = (key,label,value=0,min=0,max=1000000,step=1) => `<label class="inv-edit-row"><span>${escape(label)}</span><input class="inv-edit-input" id="${ID}-${key}" type="number" min="${min}" max="${max}" step="${step}" value="${value}"></label>`;
   const check = (key,label) => `<label class="bsim-checkbox"><input type="checkbox" id="${ID}-${key}">${escape(label)}</label>`;

@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import * as combat from './combat.js';
 import {createState} from './state.js';
 import {createOpponentEditor} from '../../opponents.js';
@@ -65,6 +66,8 @@ export function createDoubleAgentPanel({definition, encounters: ENCOUNTERS, docu
     el('destination').textContent = data.result?.destination ? tk('destination', {section: data.result.destination}) : '';
     el('log').innerHTML = data.log.slice(-80).map(line => '<div>' + escape(line) + '</div>').join('');
     el('history').innerHTML = data.history.slice().reverse().map(row => '<div>' + escape(row.name + ': ' + tk('status.' + row.outcome)) + '</div>').join('');
+    decorateOutcome(el('status'), locked ? null : data.result?.outcome);
+    decorateHistory(el('history'), data.history.slice().reverse());
   }
   function open() {
     if (Number(getBookId()) !== definition.id || !getRun()) {showAlert(t('battlesim.no_active_playthrough')); return;}

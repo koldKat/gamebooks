@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { freewayOpponentFields } from './opponents.js';
 import { newFreewayCharacter, validateFreewayCharacter, testFreewayLuck, healFreewayCharacter,
@@ -121,6 +122,8 @@ export function createFreewayPanel({ document, t, getRun, getBookId, saveState,
     el('log').innerHTML = game.log.slice(-100).reverse().map(line => `<div>${escape(line)}</div>`).join('');
     el('history').innerHTML = game.history.slice(-30).reverse()
       .map(item => `<div>${escape(item.enemy)} · ${escape(tk('status.' + item.outcome))}</div>`).join('');
+    decorateOutcome(el('status'), encounter?.status);
+    decorateHistory(el('history'), game.history.slice(-30).reverse());
     contextChanged();
   }
   const field = key => `<label class="inv-edit-row" id="${ID}-${key}-row">${escape(tk(key))}<input class="inv-edit-input" type="number" min="0" max="10000" step="1" id="${ID}-${key}"></label>`;

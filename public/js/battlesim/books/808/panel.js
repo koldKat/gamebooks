@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { definition, ENCOUNTERS, MECHS } from './definition.js';
 import * as combat from './combat.js';
 import { createState } from './state.js';
@@ -108,6 +109,8 @@ export function createZendariPanel({document, t, getRun, getBookId, saveState, s
     el('repairTime').textContent = tk('repairTime', {minutes: character.repairMinutes});
     el('log').innerHTML = data.log.slice(-80).map(line => '<div>' + escape(line) + '</div>').join('');
     el('history').innerHTML = data.history.slice(-40).reverse().map(row => '<div>' + escape(row.enemy + ': ' + tk('status.' + row.outcome)) + '</div>').join('');
+    decorateOutcome(el('status'), fight?.outcome);
+    decorateHistory(el('history'), data.history.slice(-40).reverse());
   }
   function open() {
     if (Number(getBookId()) !== definition.id || !getRun()) { showAlert(t('battlesim.no_active_playthrough')); return; }

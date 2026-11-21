@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { shadowsOpponentFields } from '../../engines/gateway-opponents.js';
 let customSetup;
@@ -76,6 +77,8 @@ export function renderSim539() {
   for (const key of ['roll_check','manual_success','manual_failure','roll_attribute']) el(key).disabled=fighting || p.stamina<=0 || p.endurance<=0;
   el('log').innerHTML=d.log.slice(-100).reverse().map(text => `<div>${escapeHtml(text)}</div>`).join('');
   el('history').innerHTML=d.history.slice(-50).reverse().map(row => `<div class="bsim-history-row">${escapeHtml(row.enemy)}: ${escapeHtml(tk('status.'+row.outcome))}</div>`).join('');
+  decorateOutcome(el('status'), f?.status);
+  decorateHistory(el('history'), d.history.slice(-50).reverse());
 }
 export function setSim539Visible(visible) {
   if (el('btn')) el('btn').style.display=visible ? '' : 'none';

@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { ID, fields } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
@@ -48,6 +49,8 @@ export function renderSim557() {
   if (f?.spec.custom && !active) el('status').textContent = tk(f.status);
   el('log').innerHTML = d.log.slice(-100).reverse().map(s => `<div>${escapeHtml(s)}</div>`).join('');
   el('history').innerHTML = d.history.slice(-50).reverse().map(h => `<div class="bsim-history-row">${escapeHtml(h.enemy)}: ${tk(h.outcome)}</div>`).join('');
+  decorateOutcome(el('status'), f?.status);
+  decorateHistory(el('history'), d.history.slice(-50).reverse());
 }
 export function setSim557Visible(value) {
   if (el('btn')) el('btn').style.display = value ? '' : 'none';

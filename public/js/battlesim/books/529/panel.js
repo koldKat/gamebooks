@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { ID, core, resources, flags, options, spells } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
@@ -111,6 +112,8 @@ export function renderSim529() {
       `<option value="${i}" ${i === (fighting ? f.options.assignments?.[index] ?? 0 : Math.min(index, p.companions.length)) ? 'selected' : ''} ${actor.life <= 0 ? 'disabled' : ''}>${escapeHtml(i ? actor.name : tk('player'))}</option>`).join('')}</select></label>`).join('') : '';
   el('log').innerHTML = d.log.slice(-100).reverse().map(line => `<div>${escapeHtml(line)}</div>`).join('');
   el('history').innerHTML = d.history.slice(-50).reverse().map(row => `<div class="bsim-history-row">${escapeHtml(row.enemy)}: ${escapeHtml(tk(row.outcome))}</div>`).join('');
+  decorateOutcome(el('status'), f?.status);
+  decorateHistory(el('history'), d.history.slice(-50).reverse());
 }
 
 export function setSim529Visible(visible) {

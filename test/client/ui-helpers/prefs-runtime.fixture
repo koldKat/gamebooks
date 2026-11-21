@@ -199,10 +199,15 @@ await racing.api.syncPrefs();
 assert.equal(racing.effects.findLast(e => e[0] === 'expanded')[1][7], '1');
 
 const startup = await harness();
+const displayDefaults = {
+  coverTooltipTitlePct: '100', coverTooltipTitleBold: '0', hideCyrillicCovers: '0',
+  hideNsfwBooks: '1', feedDayCovers: '1', feedGlassCards: '1', landingCoverSource: 'public',
+  disableFloaties: '0', seasonalEvents: '1', reduceMotion: '0',
+};
 startup.respond(async () => ({ ok: true, json: async () => ({ stashExpanded: { 3: '0' } }) }));
 await startup.api.syncPrefs({ renderBooks: false });
 assert.equal(startup.effects.filter(e => e[0] === 'render').length, 0, 'startup preference sync does not rebuild cached library');
-assert.deepEqual(JSON.parse(startup.storage.get('ui_prefs_v1:Player')), { reduceMotion: '0', stashExpanded: { 3: '0' } });
+assert.deepEqual(JSON.parse(startup.storage.get('ui_prefs_v1:Player')), { ...displayDefaults, stashExpanded: { 3: '0' } });
 startup.effects.length = 0;
 startup.api.restoreCachedPrefs();
 assert.equal(startup.effects.filter(e => e[0] === 'render').length, 0);
@@ -211,12 +216,14 @@ startup.api.savePrefs({ stashExpanded: { 3: '1' } });
 assert.deepEqual(JSON.parse(startup.storage.get('ui_prefs_v1:Player')).stashExpanded, { 3: '1' }, 'local changes are saved for the next cached startup');
 startup.effects.length = 0;
 startup.state.username = 'Other'; startup.api.restoreCachedPrefs();
-assert.deepEqual(plain(startup.effects), [['cover-prefs', { reduceMotion: '0' }]], 'another account clears inherited motion reduction without restoring the previous layout');
+assert.deepEqual(plain(startup.effects), [['cover-prefs', displayDefaults]], 'another account clears inherited display settings without restoring the previous layout');
 
 const motion = await harness();
 motion.storage.set('reduce-motion', '1');
+motion.storage.set('hide-cyrillic-covers', '1');
+motion.storage.set('cover-tooltip-title-bold', '1');
 motion.api.restoreCachedPrefs();
-assert.deepEqual(plain(motion.effects), [['cover-prefs', { reduceMotion: '0' }]], 'fresh account ignores the previous browser setting');
+assert.deepEqual(plain(motion.effects), [['cover-prefs', displayDefaults]], 'fresh account ignores previous browser display settings');
 motion.storage.set('ui_prefs_v1:Player', JSON.stringify({ reduceMotion: '1' }));
 motion.effects.length = 0; motion.api.restoreCachedPrefs();
 assert.equal(motion.effects.find(e => e[0] === 'cover-prefs')[1].reduceMotion, '1', 'saved account opt-in is restored');
@@ -227,6 +234,8 @@ motion.state.username = 'Fresh'; motion.state.token = 'fresh-session';
 motion.respond(async () => ({ ok: true, json: async () => ({}) }));
 await motion.api.syncPrefs();
 assert.equal(motion.effects.findLast(e => e[0] === 'cover-prefs')[1].reduceMotion, '0', 'new account with empty server preferences defaults off');
+assert.equal(motion.effects.findLast(e => e[0] === 'cover-prefs')[1].hideCyrillicCovers, '0', 'new account does not hide Cyrillic covers');
+assert.equal(motion.effects.findLast(e => e[0] === 'cover-prefs')[1].coverTooltipTitleBold, '0', 'new account does not inherit bold cover titles');
 const oldMotionGet = deferred();
 motion.respond(options => options ? Promise.resolve({ ok: true }) : oldMotionGet.promise);
 const motionSync = motion.api.syncPrefs();

@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { definition, ENCOUNTERS, ENEMY_NAMES, encounterFor } from './definition.js';
 import * as combat from './combat.js';
 import * as effects from './effects.js';
@@ -88,6 +89,8 @@ export function createDungeonPanel({ document, t, getRun, getBookId, saveState, 
     el('opponents').textContent = fight ? fight.enemies.map(enemy => tk('enemyLine', { name: enemyLabel(enemy), stamina: enemy.stamina, skill: enemy.skill })).join('\n') : '';
     el('log').innerHTML = data.log.slice(-80).map(line => '<div>' + escape(line) + '</div>').join('');
     el('history').innerHTML = data.history.slice(-40).reverse().map(row => '<div>' + escape(row.enemy + ': ' + tk('status.' + row.outcome)) + '</div>').join('');
+    decorateOutcome(el('status'), fight?.outcome);
+    decorateHistory(el('history'), data.history.slice(-40).reverse());
     el('encounterNote').textContent = selected() ? tk('note.' + (selected().weakPoint ? 'weakPoint' : selected().mode === 'two-claws' ? 'scorpion' : 'preset')) : tk('note.custom');
   }
   function open() {

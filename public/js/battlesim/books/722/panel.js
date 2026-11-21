@@ -1,3 +1,4 @@
+import { decorateOutcome, renderHistory } from '../../outcome.js';
 import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { definition, ENCOUNTERS } from './definition.js';
 import * as rules from './combat.js';
@@ -172,7 +173,8 @@ export function createKharePanel({ document, t, getRun, getBookId, saveState, sh
     }
     el('status').textContent = status.join('\n');
     el('log').textContent = data.log.join('\n');
-    el('history').textContent = data.history.slice(-30).reverse().map(item => item.enemy + ': ' + tk('status.' + item.outcome)).join('\n');
+    renderHistory(el('history'), data.history.slice(-30).reverse(), item => item.enemy + ': ' + tk('status.' + item.outcome));
+    decorateOutcome(el('status'), fight?.outcome);
   }
   function open() {
     if (Number(getBookId()) !== definition.id || !getRun()) { showAlert(t('battlesim.no_active_playthrough')); return; }

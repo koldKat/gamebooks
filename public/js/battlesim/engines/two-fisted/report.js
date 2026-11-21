@@ -1,11 +1,12 @@
 // Display Two-Fisted combat statistics, dice, local instructions and outcome history.
+import {decorateOutcome} from '../../outcome.js';
 export function renderTwoFistedReport(document, root, state) {
   root.replaceChildren();
-  const text = (parent, value) => {const node = document.createElement('p'); node.textContent = value; parent.append(node);};
+  const text = (parent, value) => {const node = document.createElement('p'); node.textContent = value; parent.append(node); return node;};
   const report = document.createElement('div'); report.className = 'bsim-report'; report.setAttribute('role', 'status'); root.append(report);
   const fight = state.fight, player = fight?.fireFight?.player ?? (fight && ['fighting', 'firefighting'].includes(fight.status) ? fight.player : state.player);
   if (!fight) text(report, 'Enter your current combat values and choose an opponent.');
-  else text(report, `${fight.encounter.label || 'Custom encounter'} · ${fight.mode} · Round ${fight.round} · ${fight.status}`);
+  else decorateOutcome(text(report, `${fight.encounter.label || 'Custom encounter'} · ${fight.mode} · Round ${fight.round} · ${fight.status}`), fight.status);
   if (player) {
     text(report, `EXPERTISE ${player.expertise} · ENERGY ${player.energy} · FISTS ${player.fists} · Injuries ${player.injuries}${player.dead ? ' · Dead' : ''}`);
     if (player.copilot) {const crew = player.copilot; text(report, `${crew.name || 'Co-pilot'}: Combat ${crew.combat} · Weapons ${crew.weapons ?? 0} · Manoeuvre ${crew.manoeuvre ?? 0} · Shields ${crew.shields ?? 0} · Injuries ${crew.injuries ?? 0}${crew.dead ? ' · Dead' : ''}`);}
@@ -32,8 +33,9 @@ export function renderTwoFistedReport(document, root, state) {
     else if (event.type === 'trobble-injury') message = `Trobble injured: die ${event.die}, ${event.discarded ? 'discarded' : 'retained'}.`;
     else if (labels[event.type]) message = `${event.who}: ${labels[event.type]}.`;
     else message = event.type.replaceAll('-', ' ') + (event.die != null ? ': die ' + event.die : '') + (event.damage != null ? ', damage ' + event.damage : '');
-    text(log, `Round ${event.round}: ${message}`);
+    text(log, `Round ${event.round}: ${message}`).className = 'bsim-log-' +
+      (event.incoming ? 'danger' : event.outgoing || event.automatic ? 'success' : 'accent');
   }
   const history = document.createElement('div'); history.className = 'bsim-history-list'; root.append(history);
-  for (const entry of [...state.history].reverse()) text(history, `${entry.enemy}: ${entry.outcome} (${entry.rounds} rounds)`);
+  for (const entry of [...state.history].reverse()) decorateOutcome(text(history, `${entry.enemy}: ${entry.outcome} (${entry.rounds} rounds)`), entry.outcome);
 }

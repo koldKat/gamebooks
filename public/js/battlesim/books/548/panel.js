@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { innsmouthOpponentFields } from '../../engines/gateway-opponents.js';
 let customSetup;
@@ -62,6 +63,8 @@ export function renderSim548() {
   el('mode').textContent = tk(encounter.firstKillEnds ? 'first_kill' : encounter.simultaneous ? 'simultaneous' : 'sequential');
   el('log').innerHTML = d.log.slice(-100).reverse().map(text => `<div>${escapeHtml(text)}</div>`).join('');
   el('history').innerHTML = d.history.slice(-50).reverse().map(e => `<div class="bsim-history-row">${escapeHtml(e.enemy)}: ${tk('status.' + e.outcome)}</div>`).join('');
+  decorateOutcome(el('status'), f?.status);
+  decorateHistory(el('history'), d.history.slice(-50).reverse());
 }
 export function setSim548Visible(value) {
   if (el('btn')) el('btn').style.display = value ? '' : 'none';

@@ -519,6 +519,7 @@ hr {
   engines/&lt;family&gt;/        Shared rules, state, actions and UI
   opponents.js             Shared editable opponent controls
   roster-data.js           Database roster loading
+  outcome.js               Shared outcome icons and semantic colors
   loader.js                Desktop lazy loading</code></pre>
 <p><code>definition.js</code> and <code>panel.js</code> are required. Other book modules exist only when they own behavior that the shared family does not already provide. Every entry exports <code>definition</code>, <code>init</code>, <code>render</code>, and <code>setVisible</code>, retaining required compatibility exports.</p>
 <p>Desktop and mobile load simulator modules and translations lazily. Launcher registration, the database availability flag, and XP-history registration must agree. <code>scripts/check-battlesim-registration.js</code> checks installed registration.</p>

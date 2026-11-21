@@ -1,10 +1,12 @@
 // Display graded duel results, the wound transcript and saved outcome history.
+import {decorateOutcome} from '../../outcome.js';
 export function renderKnightmareReport(document, holder, state, t) {
   const tr=(key,params)=>t('battlesim.knightmare.'+key,params);
   const add=(value,tag='p')=>{const node=document.createElement(tag);node.textContent=value;holder.append(node);return node;};
   const grade=value=>tr('grade.'+value),fight=state.fight;
   holder.replaceChildren();
-  add(tr(fight?'status.'+fight.status:'ready'),'h4').className='bsim-side-title';
+  const status=add(tr(fight?'status.'+fight.status:'ready'),'h4');
+  status.className='bsim-side-title';decorateOutcome(status,fight?.status);
   if(fight){
     add(tr('player')+': '+grade(fight.player.lifeForce));
     add(fight.opponent.name+': '+grade(fight.opponent.lifeForce));
@@ -14,6 +16,7 @@ export function renderKnightmareReport(document, holder, state, t) {
   const log=document.createElement('div');log.className='bsim-log';holder.append(log);
   for(const step of [...(fight?.rounds??[])].reverse()){
     const node=document.createElement('p');
+    node.className=step.wounded==='player'?'bsim-log-danger':'bsim-log-success';
     const rolled=step.usedLuck?tr('luck_used'):tr('die_value',{value:step.die});
     const name=step.wounded==='player'?tr('player'):fight.opponent.name;
     node.textContent=tr('round',{round:step.round})+' · '+rolled+' · '+tr('wounded',{name})
@@ -21,5 +24,5 @@ export function renderKnightmareReport(document, holder, state, t) {
     log.append(node);
   }
   add(tr('history'),'h4').className='bsim-side-title';
-  for(const item of state.history.slice(-30).reverse())add(item.enemy+' · '+tr('status.'+item.outcome));
+  for(const item of state.history.slice(-30).reverse())decorateOutcome(add(item.enemy+' · '+tr('status.'+item.outcome)),item.outcome);
 }

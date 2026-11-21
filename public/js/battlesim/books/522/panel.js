@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { ID } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
@@ -76,6 +77,8 @@ export function renderSim522() {
   element('log').innerHTML = d.log.slice().reverse().map(line => `<div>${escapeHtml(line)}</div>`).join('');
   element('history').innerHTML = d.history.slice(-50).reverse().map(entry =>
     `<div class="bsim-history-row">${escapeHtml(entry.enemy)}: ${tk(`status.${entry.outcome}`)}</div>`).join('');
+  decorateOutcome(element('status'), f?.status);
+  decorateHistory(element('history'), d.history.slice(-50).reverse());
 }
 
 export function setSim522Visible(value) {

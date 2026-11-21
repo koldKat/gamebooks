@@ -1,3 +1,4 @@
+import { decorateOutcome, renderHistory } from '../../outcome.js';
 import { createCustomOpponentSetup } from '../../custom-setup.js';
 import { definition, CHARACTER_DEFAULTS, DARTS_BOARD, ENCOUNTERS, NPC_RULES, SPELL_ENCOUNTERS, SPELL_LABELS, encounterFor } from './definition.js';
 import * as rules from './combat.js';
@@ -174,7 +175,8 @@ export function createCrownPanel({ document, t, getRun, getBookId, saveState, sh
     el('status').textContent = fight ? [tk('rounds', fight), fight.outcome ? tk('status.' + fight.outcome) : pending ? tk('pending') : tk('ready'), fight.destination ? tk('destination', { section: fight.destination }) : ''].filter(Boolean).join('\n') : tk(dead ? 'noCharacter' : 'ready');
     el('dartsStatus').textContent = data.darts?.winner === -1 ? tk('status.cancelled') : data.darts ? tk('dartsScore', { total: data.darts.total, player: data.darts.winner === null ? data.darts.nextPlayer + 1 : data.darts.winner + 1 }) + (data.darts.winner !== null ? '\n' + tk(data.darts.winner === 0 ? 'dartsWon' : 'dartsEnded') : '') : '';
     el('log').textContent = data.log.join('\n');
-    el('history').textContent = data.history.slice(-30).reverse().map(item => item.enemy + ': ' + tk('status.' + item.outcome)).join('\n');
+    renderHistory(el('history'), data.history.slice(-30).reverse(), item => item.enemy + ': ' + tk('status.' + item.outcome));
+    decorateOutcome(el('status'), fight?.outcome);
   }
   function open() {
     if (Number(getBookId()) !== definition.id || !getRun()) { showAlert(t('battlesim.no_active_playthrough')); return; }

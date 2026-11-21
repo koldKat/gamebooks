@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import * as rules from './core.js';
 import { POLICE_ENCOUNTERS, preparePoliceEnemy, policeEncounterSetup } from './roster.js';
 import { policeDragonOpening, policeHunt } from './openings.js';
@@ -219,6 +220,8 @@ export function createPolicePanel({ document, t, getRun, getBookId, saveState, s
         : tk('health', { player: f.player.life, enemy: f.enemy.life, count: f.remaining, turn: tk(f.turn) })) : tk('pick');
     el('log').innerHTML = d.log.slice(-100).reverse().map(text => `<div>${escape(text)}</div>`).join('');
     el('history').innerHTML = d.history.slice(-50).reverse().map(row => `<div class="bsim-history-row">${escape(row.enemy)}: ${escape(tk('status.' + row.outcome))}</div>`).join('');
+    decorateOutcome(el('status'), f?.status === 'defeat' ? 'loss' : f?.status);
+    decorateHistory(el('history'), d.history.slice(-50).reverse());
   }
   function init() {
     if (el('overlay')) return;

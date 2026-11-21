@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import {createOpponentEditor} from '../../opponents.js';
 import * as defaultCombat from './core.js';
 import {switchVehicle, rememberCombatCharacter, applyMaintenance} from './vehicles.js';
@@ -236,6 +237,8 @@ export function createCarWarsPanel({document,definition,getRoster,getVehicles,t,
     el('units').innerHTML=fight?[fight.hero,...(fight.allies??[]),...targetsOf(fight)].map(unit=>`<div class="bsim-status">${esc(unit.displayName||unit.name)}: ${unit.kind==='chase'?`Control ${unit.controlRoll}`:`${unit.hp} HP / DC ${unit.defenseClass}`}${unit.kind==='vehicle'?` · driver ${unit.driverHp} HP${unit.gunnerSeat?' · gunner '+unit.gunnerHp+' HP':''} · plant ${unit.powerPlant.boxes} boxes`:''}${unit.escaped?' · escaped':''}</div>`).join(''):'';
     el('log').innerHTML=(game?.log??[]).slice(-100).reverse().map(line=>`<div>${esc(line)}</div>`).join('');
     el('history').innerHTML=(game?.history??[]).slice(-50).reverse().map(item=>`<div>${esc(item.enemy)} · ${esc(item.outcome)}</div>`).join('');
+    decorateOutcome(el('status'), fight?.status);
+    decorateHistory(el('history'), (game?.history??[]).slice(-50).reverse());
     const component=el('repairPart').value;
     el('repairPart').innerHTML='<option value="hp">General HP</option><option value="plant">Power plant</option>'+(game?.vehicle?.weapons??[]).map((w,i)=>`<option value="${i}">${esc(w.name)} (${esc(w.direction)})</option>`).join('');
     if ([...el('repairPart').options].some(o=>o.value===component)) el('repairPart').value=component;

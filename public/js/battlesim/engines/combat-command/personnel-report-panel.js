@@ -1,4 +1,5 @@
 // Render personnel survivors, completed rolls and battle history in the results column.
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function renderPersonnelReport(holder,state) {
   const fight=state.fight;
@@ -16,6 +17,10 @@ export function renderPersonnelReport(holder,state) {
         +(a.bonusHits?' ('+a.bonusHits+' bonus)':'')+(a.ignoredHits?' · hit ignored':'')
         +(a.losses.length?' · '+a.losses.map(v=>v.count+' '+v.name).join(', '):''))+'</p>').join('')
       +event.checks.map(c=>'<p>'+escape(c.message??c.kind+': '+c.total+(c.passed===undefined?'':c.passed?' · passed':' · failed'))+'</p>').join('')+'</div>').join('')
-    +'</div><h4 class="bsim-side-title">Battle history</h4>'
-    +(state.history??[]).slice(-30).reverse().map(e=>'<p>'+escape(e.enemy+' · '+e.outcome)+'</p>').join('');
+    +'</div><h4 class="bsim-side-title">Battle history</h4><div class="bsim-history-list">'
+    +(state.history??[]).slice(-30).reverse().map(e=>'<p>'+escape(e.enemy+' · '+e.outcome)+'</p>').join('') + '</div>';
+  const outcome = ['win', 'survived'].includes(fight?.status) ? 'win'
+    : ['loss', 'surrendered'].includes(fight?.status) ? 'loss' : fight?.status;
+  decorateOutcome(holder.firstElementChild, outcome);
+  decorateHistory(holder.querySelector('.bsim-history-list'), (state.history ?? []).slice(-30).reverse());
 }

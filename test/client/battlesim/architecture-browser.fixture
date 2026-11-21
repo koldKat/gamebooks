@@ -103,12 +103,16 @@ for(const id of BOOK_IDS){
     const bearRandom = Math.random;
     try {
       const values = [5,6,1,1]; Math.random = () => (values.shift() - .5) / 6;
-      action('attack').click(); action('resolve').click();
+      action('attack.gun').click();
+      check(!action('resolve'), 'Mochila skips confirmation without a bandana choice');
       check(run.sim1307.fight.opponent.hp === 10 && overlay.querySelector('[data-live-hp]').value === '10',
         'Mochila bear takes five damage and its Life field updates from fifteen to ten');
       check(overlay.querySelector('[data-stat="hp"]').value === '15', 'Mochila starting Life retained separately');
-      Math.random = () => .99; action('attack').click(); action('resolve').click();
+      Math.random = () => .99; action('attack.gun').click();
       check(overlay.querySelector('[data-live-hp]').value === '0', 'Mochila bear Life reaches zero on victory');
+      check(overlay.querySelector('.bsim-status .sim-icon-win'), 'Mochila victory uses shared trophy');
+      check(getComputedStyle(overlay.querySelector('.bsim-log-success')).color === 'rgb(134, 181, 140)',
+        'Mochila log uses shared success color outside legacy log wrappers');
     } finally {Math.random = bearRandom;}
     choose('Пума');
     check(run.sim1307.fight.status === 'win', 'Mochila browsing presets does not start another combat');
@@ -116,7 +120,7 @@ for(const id of BOOK_IDS){
     check(run.sim1307.fight.opponent.key === 'cougar-61', 'Mochila selected preset survives rendering');
     check(field('hp').disabled, 'Mochila setup locked during combat');
     const random = Math.random;
-    try {Math.random = () => .99; action('attack').click(); action('resolve').click();}
+    try {Math.random = () => .99; action('attack.gun').click();}
     finally {Math.random = random;}
     check(run.sim1307.history.length === 2 && run.sim1307.fight.status === 'win', 'Mochila instant victory records once');
     check(overlay.querySelector('[data-live-hp]').value === '0', 'Mochila opponent Life field shows actual remaining Life');
@@ -134,18 +138,32 @@ for(const id of BOOK_IDS){
     const silverRandom = Math.random;
     try {
       const values = [5,5,1,1]; Math.random = () => (values.shift() - .5) / 6;
-      action('attack').click(); action('resolve').click();
+      action('attack.silverGun').click();
       check(run.sim1307.fight.opponent.hp === 9 && overlay.querySelector('[data-live-hp]').value === '9',
         'Mochila silver revolver deals nine damage through the real controls');
       check(run.sim1307.fight.player.silverAmmo === 5 && run.sim1307.fight.player.ammo === 3,
         'Mochila silver revolver consumes only its silver bullets');
     } finally {Math.random = silverRandom;}
-    const stale = action('attack'), original = run.sim1307;
+    check(!field('weapon').disabled, 'Mochila weapon selector works during combat');
+    field('weapon').value = 'knife'; field('weapon').dispatchEvent(new Event('change', {bubbles:true}));
+    check(run.sim1307.fight.player.weapon === 'knife' && action('attack.knife'), 'Mochila explicit knife choice and attack label');
+    field('weapon').value = 'gun'; field('weapon').dispatchEvent(new Event('change', {bubbles:true}));
+    check(run.sim1307.fight.player.weapon === 'gun', 'Mochila can switch back to Colt during battle');
+    run.sim1307.fight.player.ammo = 0; module.render();
+    check(action('attack.gun').disabled && !action('attack.knife'), 'Mochila empty gun blocks attack without a silent knife switch');
+    field('weapon').value = 'silverGun'; field('weapon').dispatchEvent(new Event('change', {bubbles:true}));
+    check(!action('attack.silverGun').disabled, 'Mochila loaded silver revolver remains available after Colt empties');
+    const stale = action('attack.silverGun'), original = run.sim1307;
     app.state.playthroughs = [{startedAt:2,path:[1]}];
     stale.click();
     check(!app.currentPlaythrough().sim1307 && run.sim1307 === original, 'Mochila stale action cannot change another run');
     app.state.playthroughs = [run];
     module.render();
+    run.sim1307.fight.status = 'loss'; run.sim1307.fight.phase = 'ended';
+    module.render();
+    check(overlay.querySelector('.bsim-status .sim-icon-dead'), 'Mochila loss uses shared skull');
+    check(getComputedStyle(overlay.querySelector('.bsim-status')).color === 'rgb(215, 121, 121)',
+      'Mochila loss uses shared danger color');
   }
   if (id === 732 && !PRESENTATION_ONLY) {
     const run = app.currentPlaythrough();
@@ -674,12 +692,12 @@ for(const id of BOOK_IDS){
     const unrelated=JSON.stringify([run.inventory,run.sim1578,run.path]);
     const hero=(hp=30)=>{for(const [key,value]of Object.entries({maxHp:36,hp,fighting:3,experience:4}))el(key).value=value;};
     const choose=section=>{
-      const name=overlay.querySelector('[role="combobox"]');name.value='';name.dispatchEvent(new FocusEvent('focus'));
+      const name=overlay.querySelector('input[role="combobox"]');name.value='';name.dispatchEvent(new FocusEvent('focus'));
       const option=[...overlay.querySelectorAll('[role="option"]')].find(node=>node.textContent.includes('('+section+')'));
       check(option,'Pax Tharkas installed preset '+section);option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));
     };
     const roll=(a,b,spent=0)=>{el('die1').value=a;el('die2').value=b;el('spent').value=spent;el(data().fight.phase==='save'?'save':'attack').click();};
-    hero();const name=overlay.querySelector('[role="combobox"]');name.value='Custom encounter';
+    hero();const name=overlay.querySelector('input[role="combobox"]');name.value='Custom encounter';
     for(const field of overlay.querySelectorAll('[data-stat]'))field.value=field.dataset.stat==='target'?12:4;
     el('start').click();check(data().fight.opponent.section===undefined,'Pax custom combat requires no preset');
     check(el('hp').disabled&&el('custom').disabled,'Pax setup locked during combat');
@@ -718,7 +736,7 @@ for(const id of BOOK_IDS){
     const roll=(a,b)=>{el('die1').value=a;if(el('die2'))el('die2').value=b??'';el('roll').click();};
     const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
     check(el('preset').value==='','Egyptian custom fight needs no preset');hero();
-    overlay.querySelector('[role="combobox"]').value='Custom rival';
+    overlay.querySelector('input[role="combobox"]').value='Custom rival';
     const stats={hp:5,count:1,bonus:0,armour:0,ammo:0,human:1,type:'melee'};
     for(const input of overlay.querySelectorAll('[data-stat]'))input.value=stats[input.dataset.stat];
     el('start').click();check(data().fight.status==='fighting'&&el('hp').disabled,'Egyptian custom setup locks');
@@ -764,7 +782,7 @@ for(const id of BOOK_IDS){
     const roll=(a,b)=>{el('die1').value=a;if(el('die2'))el('die2').value=b??'';el('roll').click();};
     const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
     check(el('preset').value==='','Aztec custom fight needs no preset');hero();
-    overlay.querySelector('[role="combobox"]').value='Custom rival';
+    overlay.querySelector('input[role="combobox"]').value='Custom rival';
     const stats={hp:5,count:1,bonus:0,armour:0,ammo:0,human:1,type:'melee'};
     for(const input of overlay.querySelectorAll('[data-stat]'))input.value=stats[input.dataset.stat];
     el('start').click();check(data().fight.status==='fighting'&&el('hp').disabled&&el('preset').disabled,'Aztec setup locks during custom combat');
@@ -939,11 +957,12 @@ for(const id of BOOK_IDS){
       }
       check(data().fight.status==='win','Ninja explicit victory reached');
     };
-    hero();el('procedure').value='25';overlay.querySelector('[role="combobox"]').value='Custom training opponent';el('start').click();
+    hero();el('procedure').value='25';overlay.querySelector('input[role="combobox"]').value='Custom training opponent';
+    check(!el('start').disabled,'Ninja start is editable with an active run');el('start').click();
     check(data().fight.opponent.name==='Custom training opponent','Ninja custom fight needs no roster selection');
     check(el('hp').disabled&&el('procedure').disabled&&el('acknowledged').disabled,'Ninja setup locked');complete();
     for(const entry of ENCOUNTERS){
-      const name=overlay.querySelector('[role="combobox"]');name.value=entry.name;name.dispatchEvent(new FocusEvent('focus'));
+      const name=overlay.querySelector('input[role="combobox"]');name.value=entry.name;name.dispatchEvent(new FocusEvent('focus'));
       const option=[...overlay.querySelectorAll('[role="option"]')].find(node=>node.textContent.startsWith(entry.name));
       check(option,'Ninja optional preset');option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));
       check(el('procedure').value===entry.section,'Ninja preset selects combat procedure');hero();el('start').click();complete();
@@ -966,13 +985,13 @@ for(const id of BOOK_IDS){
       for(const key of ['sword','cloak','gem','damageAcknowledged'])el(key).checked=false;
     };
     const choose=section=>{
-      const name=overlay.querySelector('[role="combobox"]');name.value='('+section+')';name.dispatchEvent(new FocusEvent('focus'));
+      const name=overlay.querySelector('input[role="combobox"]');name.value='('+section+')';name.dispatchEvent(new FocusEvent('focus'));
       const option=[...overlay.querySelectorAll('[role="option"]')].find(node=>node.textContent.includes('('+section+')'));
       check(option,'Quarras installed preset '+section);option.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));
     };
     const roll=(a=6,b=6,spent=0)=>{el('die1').value=a;if(el('die2'))el('die2').value=b;el('spent').value=spent;el('attack').click();};
     const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
-    hero({fighting:3});overlay.querySelector('[role="combobox"]').value='Custom opponent';
+    hero({fighting:3});overlay.querySelector('input[role="combobox"]').value='Custom opponent';
     for(const field of overlay.querySelectorAll('[data-stat]'))field.value=field.dataset.stat==='target'?12:4;
     el('start').click();check(data().fight.rulesVersion===1,'Quarras ordinary custom encounter needs no preset');
     roll(4,4,1);check(data().fight.status==='win','Quarras ordinary custom fight resolves');
@@ -4585,7 +4604,7 @@ for(const id of BOOK_IDS){
     el('newCharacterQuick').click();
     let game=app.currentPlaythrough().sim906;
     check(game.character.crew.captain.skill===12&&game.character.ship.shields===18,'Starship initial rolls');
-    const name=overlay.querySelector('[role="combobox"]');
+    const name=overlay.querySelector('input[role="combobox"]');
     name.value='';name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));
     check(overlay.querySelectorAll('[role="option"]').length>15,'Starship roster autocomplete');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
@@ -4626,7 +4645,7 @@ for(const id of BOOK_IDS){
     let game=app.currentPlaythrough().sim904;
     check(game.character.skill===12&&game.character.stamina===24&&game.character.luck===12,'source initial rolls');
     el('encounter').value='0';el('encounter').dispatchEvent(new Event('change',{bubbles:true}));
-    const name=overlay.querySelector('[role="combobox"]');
+    const name=overlay.querySelector('input[role="combobox"]');
     name.value='';name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));
     check(overlay.querySelectorAll('[role="option"]').length>10,'full editable roster autocomplete');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
@@ -4665,7 +4684,7 @@ for(const id of BOOK_IDS){
   }
   if(id===903){
     const el=key=>document.getElementById('sim903-'+key);
-    const name=overlay.querySelector('[role="combobox"]');
+    const name=overlay.querySelector('input[role="combobox"]');
     name.value='';name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));
     check(overlay.querySelectorAll('[role="option"]').length===18,'all original code-card opponents suggested');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
@@ -4773,7 +4792,8 @@ for(const id of BOOK_IDS){
     el('skipLuck').click();check(current().character.stamina===15&&current().fight.pending[0].kind==='fireHit'&&current().fight.rounds===4,'Temple saved incoming wound resolves before queued fire');
     el('skipLuck').click();check(current().character.stamina===14&&current().fight.enemies[0].stamina===3&&!current().fight.pending.length&&current().fight.extension.keep,'Temple saved fire preserves round, enemy wound and extension');
     app.currentPlaythrough().sim710=structuredClone({...current(),fight:null,setup:{encounter:'380'}});module.render();
-    check(el('contextNote').textContent.length>0&&defs.ENCOUNTERS.find(e=>e.section===346).enemies[1].stamina===null,'Temple loaded note references retain unreadable source stamina as manual');
+    const source346 = rosterSeeds[id].find(row => row.stats?.entry?.section === 346)?.stats.entry;
+    check(el('contextNote').textContent.length>0&&source346&&defs.ENCOUNTERS.find(e=>e.section===346).enemies[1].stamina===source346.enemies[1].stamina,'Temple notes and enemy stamina match the installed source-backed roster');
   }
   if(id===690){
     const crown=await import('REPO/public/js/battlesim/engines/legendary-kingdoms/crown.js');
@@ -5210,7 +5230,7 @@ for(const id of BOOK_IDS){
   }
   if(id===570){
     const el=key=>document.getElementById('sim570-'+key);
-    const name=overlay.querySelector('[role="combobox"]');
+    const name=overlay.querySelector('input[role="combobox"]');
     name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(overlay.querySelector('[role="option"]'),'Virtual Police autocomplete');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     name.value='Ръчно въведен противник';
@@ -5650,7 +5670,7 @@ for(const id of BOOK_IDS){
   if(id===654){
     const el=key=>document.getElementById('sim654-'+key);
     for(const details of overlay.querySelectorAll('details'))details.open=true;
-    const name=overlay.querySelector('[role="combobox"]');
+    const name=overlay.querySelector('input[role="combobox"]');
     name.focus();name.dispatchEvent(new Event('input',{bubbles:true}));check(overlay.querySelector('[role="option"]'),'Orc Power autocomplete');
     name.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
     name.value='Ръчно въведена фигура';

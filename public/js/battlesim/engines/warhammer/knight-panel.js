@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createOpponentEditor } from '../../opponents.js';
 import { knightCharacter, knightRecovery, acquireKnightWeapon, startKnightFight, knightRound, knightInterrogation } from './knight.js';
 
@@ -143,6 +144,8 @@ export function createKnightPanel({document,definition,getRoster,getPlayerDefaul
     [...el('targets').querySelectorAll('select')].forEach((input,index)=>{if(remaining.some(({index:i})=>String(i)===previous[index]))input.value=previous[index];});
     el('log').innerHTML=state.log.slice().reverse().map(line=>'<div>'+escape(line)+'</div>').join('');
     el('history').innerHTML=state.history.slice(-30).reverse().map(item=>'<div>'+escape(item.enemy)+' · '+escape(item.outcome)+'</div>').join('');
+    decorateOutcome(el('status'), state.character.taint >= taintRule.taintLimit ? 'loss' : fight?.status);
+    decorateHistory(el('history'), state.history.slice(-30).reverse());
     for(const key of ['w','taint'])el('prisoner-'+key).value=state.prisoner[key];
     for(const control of el('interrogation').querySelectorAll('input,select,button'))control.disabled=locked;
   }

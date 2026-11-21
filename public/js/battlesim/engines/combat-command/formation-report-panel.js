@@ -1,4 +1,5 @@
 // Render formation survivors, current morale and completed combat rolls in the results column.
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 const escape = value => String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
 export function renderFormationReport(holder,state) {
@@ -19,6 +20,8 @@ export function renderFormationReport(holder,state) {
     +(fight?.section?'<p>Book reference: '+escape(fight.section)+'</p>':'')
     +'<div class="bsim-report">'+table+'</div><h4 class="bsim-side-title">Combat log</h4><div class="bsim-log">'
     +(fight?.history??[]).slice().reverse().filter(event=>event.attacks.length||event.checks.length).map(eventHtml).join('')
-    +'</div><h4 class="bsim-side-title">Battle history</h4>'
-    +(state.history??[]).slice(-30).reverse().map(event=>'<p>'+escape(event.enemy+' · '+event.outcome)+'</p>').join('');
+    +'</div><h4 class="bsim-side-title">Battle history</h4><div class="bsim-history-list">'
+    +(state.history??[]).slice(-30).reverse().map(event=>'<p>'+escape(event.enemy+' · '+event.outcome)+'</p>').join('') + '</div>';
+  decorateOutcome(holder.firstElementChild, fight?.status);
+  decorateHistory(holder.querySelector('.bsim-history-list'), (state.history ?? []).slice(-30).reverse());
 }

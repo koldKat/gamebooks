@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createOpponentEditor } from '../../opponents.js';
 import { createCommandRecord, commandEncounterForce, beginCommandEncounter,
   advanceCommandEncounter, cancelCommandEncounter, updateCommandRecord, recoverCommandDrones,
@@ -175,6 +176,8 @@ export function createCombatCommandPanel({document,definition,getRoster,getPlaye
     const rounds=(fight?.history??[]).slice().reverse().map(event=>`Round ${event.round}: `+event.attacks.map(a=>`${a.side==='player'?'You':'Enemy'} AS ${a.strength}, Chart ${a.chart}${a.total==null?'':', roll '+a.total}: ${a.hits} hits`+(a.losses.length?' ('+a.losses.map(loss=>loss.count+' '+loss.name).join(', ')+')':'')).join('; '));
     el('log').innerHTML=[...rounds,...state.log.slice().reverse().map(eventText)].map(line=>'<div>'+escape(line)+'</div>').join('');
     el('history').innerHTML=state.history.slice(-30).reverse().map(entry=>`<div>${escape(entry.enemy)} · ${escape(entry.outcome)}</div>`).join('');
+    decorateOutcome(el('result'), fight?.status);
+    decorateHistory(el('history'), state.history.slice(-30).reverse());
   }
   const button=(key,label)=>`<button class="bsim-action-btn" type="button" id="${ID}-${key}">${escape(label)}</button>`;
   const select=(key,label,options)=>`<label class="inv-edit-row"><span>${escape(label)}</span><select class="inv-edit-input" id="${ID}-${key}">${options}</select></label>`;

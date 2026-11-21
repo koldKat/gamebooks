@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { createOpponentEditor } from '../../opponents.js';
 import { sonicCharacter, sonicHit, sonicExtraLife, sonicCheck, startSonicFight, sonicRound, resumeSonicFight } from './core.js';
 
@@ -130,6 +131,8 @@ export function createSonicPanel({ document, definition, getRoster, getPlayerDef
     el('destinations').textContent = fight?.status === 'win' && fight.config.winChoices ? 'Continue with the book: ' + fight.config.winChoices.join(' / ') : '';
     el('log').innerHTML = state.log.slice().reverse().map(line => `<div>${escape(line)}</div>`).join('');
     el('history').innerHTML = state.history.slice(-30).reverse().map(entry => `<div>${escape(entry.enemy)} · ${escape(entry.outcome)}</div>`).join('');
+    decorateOutcome(el('status'), fight?.status);
+    decorateHistory(el('history'), state.history.slice(-30).reverse());
   }
   const input = (key, label, value = 0, min = 0, max = 1000000) => `<label class="inv-edit-row">${escape(label)}<input class="inv-edit-input" id="${ID}-${key}" type="number" min="${min}" max="${max}" step="1" value="${value}"></label>`;
   const check = (key, label) => `<label class="bsim-checkbox"><input type="checkbox" id="${ID}-${key}">${escape(label)}</label>`;

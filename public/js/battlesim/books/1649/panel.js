@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 // Present encounter setup and combat actions while preserving the reader's story decisions.
 import { currentBookId, currentPlaythrough, saveState, apiFetch } from '../../run-context.js';
 import { getPlayBtnRow } from '../../../play/charsheet.js';
@@ -125,6 +126,8 @@ export function renderSim1649() {
   el('summary').innerHTML = f ? [...f.party, ...f.enemies].map(a => `<div>${escapeHtml(a.name)}: ${a.healthMode === 'power' ? `${a.pow} POW` : a.healthMode ? tk(a.hp > 0 && !a.unconscious ? 'active' : 'defeated') : `${a.hp}/${a.maxHp} HP`}${a.immobilized ? ` · ${tk('immobilized')}` : ''}${a.hypnotized ? ` · ${tk('hypnotized')}` : ''}${a.stunned ? ` · ${tk('stunned')}` : ''}</div>`).join('') : '';
   el('log').innerHTML = (f?.log ?? []).slice().reverse().map(r => `<div>${escapeHtml(logText(f, r))}</div>`).join('');
   el('history').innerHTML = d.history.slice().reverse().map(h => `<div class="bsim-history-row">${escapeHtml(h.enemy)}: ${tk(h.outcome)}</div>`).join('');
+  decorateOutcome(el('status'), f?.status);
+  decorateHistory(el('history'), d.history.slice().reverse());
   el('rules').textContent = f?.spec.notes ?? ENCOUNTERS.find(e => String(e.id) === el('encounter').value)?.notes ?? tk('custom_note');
   actions();
 }

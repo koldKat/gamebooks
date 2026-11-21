@@ -1,4 +1,5 @@
 import { createCustomOpponentSetup } from '../../custom-setup.js';
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { newThievesCharacter, validateThievesCharacter, startThievesFight,
   thievesTargets, thievesRound, resolveThievesLuck, canEscapeThieves,
   escapeThievesFight, bypassThievesFight, healThievesCharacter, testThievesLuck } from './core.js';
@@ -49,6 +50,7 @@ export function createThievesPanel({ document, t, getRun, getBookId, saveState,
       if (run !== getRun() || Number(getBookId()) !== 665) return;
       if (next.fight) next.character = structuredClone(next.fight.character);
       record(next);
+      if (Array.isArray(next.logTones)) {next.logTones.length=next.log.length;next.logTones=next.logTones.slice(-100);}
       next.log = next.log.slice(-100); next.history = next.history.slice(-30);
       run[ID] = next; saveState(); render();
     } catch (_) { showAlert(tk('invalid')); }
@@ -56,6 +58,7 @@ export function createThievesPanel({ document, t, getRun, getBookId, saveState,
   function fightReport(game, fight) {
     game.fight = fight;
     for (const event of fight.events) {
+      const before = game.log.length;
       if (event.kind === 'attack') game.log.push(tk('attackRoll', {
         enemy: enemyLabel(fight.enemies[event.enemy]), player: event.playerAttack, opponent: event.enemyAttack }));
       else if (event.kind === 'luck') game.log.push(tk('luckRoll', { roll: event.roll, result: tk(event.lucky ? 'lucky' : 'unlucky') }));
@@ -66,8 +69,16 @@ export function createThievesPanel({ document, t, getRun, getBookId, saveState,
       else if (event.kind === 'brooch') game.log.push(tk('broochHeal', { amount: event.amount }));
       else if (event.kind === 'randomEnemy') game.log.push(tk('randomResult', {
         roll: event.roll, enemy: enemyLabel(fight.enemies[event.enemy]) }));
+      if (game.log.length > before) {
+        game.logTones ??= []; game.logTones.length=game.log.length;
+        game.logTones[game.log.length-1]=event.appliedDamage !== undefined ? event.kind === 'outgoing' ? 'success' : 'danger'
+          : event.kind === 'luck' ? event.lucky ? 'success' : 'danger' : event.kind === 'brooch' ? 'success' : 'accent';
+      }
     }
-    if (fight.status !== 'fighting') game.log.push(tk('status.' + fight.status));
+    if (fight.status !== 'fighting') {
+      game.log.push(tk('status.' + fight.status)); game.logTones ??= []; game.logTones.length=game.log.length;
+      game.logTones[game.log.length-1]=fight.status === 'win' ? 'success' : fight.status === 'loss' ? 'danger' : 'accent';
+    }
     if (fight.destination) game.log.push(tk('destination', { section: fight.destination }));
   }
   function contextChanged() {
@@ -123,13 +134,18 @@ export function createThievesPanel({ document, t, getRun, getBookId, saveState,
       + fight.enemies.filter((enemy, index) => !fight.config.randomEnemy || fight.config.groups[0].includes(index))
         .map(enemy => `${enemyLabel(enemy)}: ${enemy.stamina}/${enemy.initialStamina}`).join('\n')
       + (fight.destination ? '\n' + tk('destination', { section: fight.destination }) : '') : '';
+    decorateOutcome(el('status'), fight?.status);
     const pending = fight?.pending[0];
     el('pending').textContent = pending ? tk('pending', {
       target: pending.kind === 'outgoing' ? enemyLabel(fight.enemies[pending.enemy]) : tk('you'), damage: pending.damage }) : '';
     el('history').innerHTML = game.history.slice().reverse()
       .map(item => `<div>${escape(item.enemy)} · ${escape(tk('status.' + item.outcome))}</div>`).join('');
+    decorateHistory(el('history'), game.history.slice().reverse());
     const log = el('log');
-    log.innerHTML = game.log.map(line => `<div>${escape(line)}</div>`).join('');
+    log.innerHTML = game.log.map((line,index) => {
+      const tone=game.logTones?.[index];
+      return '<div class="bsim-log-'+(['success','danger','accent','muted'].includes(tone)?tone:'muted')+'">'+escape(line)+'</div>';
+    }).join('');
     log.scrollTop = log.scrollHeight;
     contextChanged();
   }

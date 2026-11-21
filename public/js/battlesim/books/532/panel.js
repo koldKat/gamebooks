@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { ID, fields, supplies, flags, settings, spells } from './definition.js';
 import { createState } from './state.js';
 import { createCombat } from './combat.js';
@@ -92,6 +93,8 @@ export function renderSim532() {
   el('next_stage').hidden = f?.status !== 'win' || !f.spec.nextStage;
   el('log').innerHTML = d.log.slice(-100).reverse().map(text => `<div>${escapeHtml(text)}</div>`).join('');
   el('history').innerHTML = d.history.slice(-50).reverse().map(row => `<div class="bsim-history-row">${escapeHtml(row.enemy)}: ${escapeHtml(tk(row.outcome))}</div>`).join('');
+  decorateOutcome(el('status'), f?.status);
+  decorateHistory(el('history'), d.history.slice(-50).reverse());
 }
 export function setSim532Visible(visible) {
   if (el('btn')) el('btn').style.display = visible ? '' : 'none';

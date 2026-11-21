@@ -20,6 +20,7 @@ export function createFantasyState(definition, getContext) {
             ts:Math.max(Date.now(),(next.history.at(-1)?.ts ?? 0)+1)});
         }
       }
+      if (Array.isArray(next.logTones)) {next.logTones.length=next.log.length;next.logTones=next.logTones.slice(-100);}
       next.log = next.log.slice(-100);
       run[definition.stateKey] = next; context.saveState(); return true;
     },

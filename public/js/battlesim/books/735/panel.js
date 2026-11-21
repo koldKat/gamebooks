@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { definition, ENCOUNTERS, SPACE_RULES } from './definition.js';
 import { prepareEncounter } from './combat.js';
 import { createState } from './state.js';
@@ -133,6 +134,8 @@ export function createSpaceAssassinPanel({ document, t, getRun, getBookId, saveS
     }
     el('log').innerHTML = (battle?.events ?? data.events ?? []).slice(-60).map(event => '<div>' + escape(eventText(event)) + '</div>').join('');
     el('history').innerHTML = data.history.slice(-40).reverse().map(value => '<div>' + escape(value.enemy + ': ' + tk('status.' + value.outcome)) + '</div>').join('');
+    decorateOutcome(el('status'), battle?.outcome);
+    decorateHistory(el('history'), data.history.slice(-40).reverse());
     el('luckResult').textContent = data.lastLuck ? tk('event.luck', { ...data.lastLuck, lucky: tk(data.lastLuck.lucky ? 'lucky' : 'unlucky') }) : '';
     configure();
   }

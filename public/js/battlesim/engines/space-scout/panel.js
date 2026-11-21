@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { spaceScoutLoadout, spaceScoutPersonalEquipment, startSpaceScoutEncounter,
   spaceScoutDuelRound, spaceScoutDuelMissile, spaceScoutFleetOpening,
   spaceScoutFleetMissiles, spaceScoutFleetManeuver, spaceScoutCruiserAttack,
@@ -190,6 +191,8 @@ export function createSpaceScoutPanel({ document, t, getRun, getBookId, saveStat
     el('attack').textContent = tk(allocation ? 'resolveAllocation' : f?.stage === 'headon' ? 'openingShot' : 'attack');
     el('log').innerHTML = d.log.slice().reverse().map(line => `<div>${escape(line)}</div>`).join('');
     el('history').innerHTML = d.history.slice(-30).reverse().map(h => `<div>${escape(h.enemy)} | ${escape(tk('status.' + h.outcome))}</div>`).join('');
+    decorateOutcome(el('status'), f?.status);
+    decorateHistory(el('history'), d.history.slice(-30).reverse());
   }
   const input = (key, value = 0, max = 1000000) => `<label class="inv-edit-row" id="${ID}-${key}Row">${escape(tk(key))}<input class="inv-edit-input" type="number" min="0" max="${max}" step="1" value="${value}" id="${ID}-${key}"></label>`;
   const check = key => `<label class="bsim-checkbox"><input type="checkbox" id="${ID}-${key}">${escape(tk(key))}</label>`;

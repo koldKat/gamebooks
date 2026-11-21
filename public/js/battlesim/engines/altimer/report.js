@@ -1,8 +1,10 @@
 // Display combat results and bounded history without applying story consequences.
+import {decorateOutcome} from '../../outcome.js';
 export function renderAltimerReport(parent, ui, state) {
   parent.replaceChildren();
   const fight = state.fight;
-  ui.text(parent, ui.tr(fight ? 'status.' + fight.status : 'ready'), 'h4').className = 'bsim-side-title';
+  const status = ui.text(parent, ui.tr(fight ? 'status.' + fight.status : 'ready'), 'h4');
+  status.className = 'bsim-side-title'; decorateOutcome(status, fight?.status);
   if (fight) {
     ui.text(parent, ui.tr('body') + ': ' + fight.player.body + ' · ' + ui.tr('spirit') + ': ' + fight.player.hp);
     for (const [index, enemy] of fight.enemies.entries()) {
@@ -21,11 +23,12 @@ export function renderAltimerReport(parent, ui, state) {
         + ' · ' + ui.tr(event.weakSpot ? 'bodyDamage' : 'damage') + ' ' + (event.weakSpot ? event.damage : event.spiritDamage)
         + (event.weakSpot ? ' · ' + ui.tr('damage') + ' ' + event.spiritDamage : '')
         + (event.vestDie === undefined ? '' : ' · ' + ui.tr('vestDie') + ' ' + event.vestDie)
-        + ' · ' + ui.tr('body') + ' ' + event.playerBody + ' · ' + ui.tr('spirit') + ' ' + event.playerHp);
+        + ' · ' + ui.tr('body') + ' ' + event.playerBody + ' · ' + ui.tr('spirit') + ' ' + event.playerHp)
+        .className = 'bsim-log-' + (event.actor === 'player' ? 'success' : 'danger');
     }
   }
   if (state.history.length) {
     ui.text(parent, ui.tr('history'), 'h4').className = 'bsim-side-title';
-    for (const row of state.history.slice(-30).reverse()) ui.text(parent, row.enemy + ' · ' + ui.tr('status.' + row.outcome));
+    for (const row of state.history.slice(-30).reverse()) decorateOutcome(ui.text(parent, row.enemy + ' · ' + ui.tr('status.' + row.outcome)), row.outcome);
   }
 }

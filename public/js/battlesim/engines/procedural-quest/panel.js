@@ -1,5 +1,6 @@
 // Present optional combat procedures, editable opponents and run-bound saved actions.
 import {createOpponentEditor} from '../../opponents.js';
+import {decorateOutcome} from '../../outcome.js';
 import {createQuestState} from '../super-endless-quest/state.js';
 import {startProcedure, procedureAction, validateProcedureFight, availableProcedureChoices} from './core.js';
 import {compileCustomProcedure} from './custom.js';
@@ -126,7 +127,8 @@ export function createProcedurePanel({document, definition, t, getRoster, getRul
   function report(state) {
     right.replaceChildren();
     const fight = state.fight;
-    text(right, tr(fight ? 'status.' + fight.status : 'ready'), 'h4').className = 'bsim-side-title';
+    const status = text(right, tr(fight ? 'status.' + fight.status : 'ready'), 'h4');
+    status.className = 'bsim-side-title'; decorateOutcome(status, fight?.status);
     if (fight) {
       text(right, fight.opponent.name);
       text(right, tr(getRules().experienceEnabled === false ? 'totalsNoExperience' : 'totals',
@@ -146,10 +148,11 @@ export function createProcedurePanel({document, definition, t, getRoster, getRul
       let line = step?.label ?? '';
       if (event.kind === 'roll') line += ' ' + tr(getRules().experienceEnabled === false ? 'rollLogNoExperience' : 'rollLog', {dice:event.dice.join(' + '), spent:event.spent, total:event.total});
       else if (event.kind === 'choice') line += ' ' + (step?.choices.find(row => row.id === event.choice)?.label ?? '');
-      line += ' ' + tr('hp', {hp:event.hp}); text(log, line);
+      line += ' ' + tr('hp', {hp:event.hp}); text(log, line).className = 'bsim-log-' +
+        (event.success === false ? 'danger' : event.success === true ? 'success' : 'accent');
     }
     text(right, tr('history'), 'h4').className = 'bsim-side-title';
-    for (const row of state.history.slice(-30).reverse()) text(right, row.enemy + ' · ' + tr('status.' + row.outcome));
+    for (const row of state.history.slice(-30).reverse()) decorateOutcome(text(right, row.enemy + ' · ' + tr('status.' + row.outcome)), row.outcome);
   }
   function render() {
     if (!overlay?.classList.contains('active')) return;

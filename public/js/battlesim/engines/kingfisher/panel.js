@@ -1,3 +1,4 @@
+import { decorateOutcome } from '../../outcome.js';
 // Present optional Kingfisher combat, compact opponent groups and run-scoped results.
 import {createOpponentEditor} from '../../opponents.js';
 import {createQuestState} from '../super-endless-quest/state.js';
@@ -143,6 +144,7 @@ export function createKingfisherPanel({document, definition, t, getRoster, getRu
   function report(state) {
     right.replaceChildren(); const fight = state.fight;
     text(right, tr(fight ? 'status.' + fight.status : 'ready'), 'h4').className = 'bsim-side-title';
+    decorateOutcome(right.lastElementChild, fight?.status);
     if (fight) {
       text(right, fight.opponent.name); text(right, tr('totals', {...fight.player}));
       text(right, tr('remaining', {count:fight.groups.reduce((sum, row) => sum + row.remaining, 0)}));
@@ -154,11 +156,16 @@ export function createKingfisherPanel({document, definition, t, getRoster, getRu
     text(right, tr('manualStory'));
     text(right, tr('log'), 'h4').className = 'bsim-side-title';
     const log = document.createElement('div'); log.className = 'bsim-log'; right.append(log);
-    for (const event of (fight?.events ?? []).slice().reverse()) text(log, tr(event.singleHitDefeat ? 'eventOneHit' : 'event', {
-      action:tr('action.' + event.kind), name:event.opponent, dice:event.dice?.join(' + ') ?? '',
-      amount:event.amount ?? 0, hp:event.hp}));
+    for (const event of (fight?.events ?? []).slice().reverse()) {
+      const tone = event.kind === 'attack' ? event.hit ? event.actor === 'player' ? 'success' : 'danger' : 'muted'
+        : event.kind === 'healEnemy' ? 'danger'
+          : ['spell', 'orb', 'sleep', 'potion', 'fullHeal', 'antidote'].includes(event.kind) ? 'success' : 'accent';
+      text(log, tr(event.singleHitDefeat ? 'eventOneHit' : 'event', {
+        action:tr('action.' + event.kind), name:event.opponent, dice:event.dice?.join(' + ') ?? '',
+        amount:event.amount ?? 0, hp:event.hp})).className = 'bsim-log-' + tone;
+    }
     text(right, tr('history'), 'h4').className = 'bsim-side-title';
-    for (const item of state.history.slice(-30).reverse()) text(right, item.enemy + ' · ' + tr('status.' + item.outcome));
+    for (const item of state.history.slice(-30).reverse()) decorateOutcome(text(right, item.enemy + ' · ' + tr('status.' + item.outcome)), item.outcome);
   }
   function render() {
     if (!overlay) return; const current = store.snapshot();

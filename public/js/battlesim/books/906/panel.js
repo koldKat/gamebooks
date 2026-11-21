@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import {definition, CREW, COMPANIONS, ENCOUNTERS, encounterFor} from './definition.js';
 import * as combat from './combat.js';
 import {createState} from './state.js';
@@ -108,6 +109,8 @@ export function createStarshipPanel({document, t, getRun, getBookId, saveState, 
     el('log').replaceChildren(...data.log.map(line => { const p = document.createElement('p'); p.textContent = line; return p; }));
     el('log').scrollTop = el('log').scrollHeight;
     el('history').replaceChildren(...data.history.slice().reverse().map(row => { const p = document.createElement('p'); p.textContent = (row.enemy || tk('custom')) + ': ' + tk('outcome.' + row.outcome); return p; }));
+    decorateOutcome(el('status'), fight?.outcome);
+    decorateHistory(el('history'), data.history.slice().reverse());
   }
   function open() {
     if (!getRun() || Number(getBookId()) !== definition.id) { showAlert(tk('noRun')); return; }

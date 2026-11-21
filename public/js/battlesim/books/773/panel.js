@@ -1,3 +1,4 @@
+import { decorateOutcome, decorateHistory } from '../../outcome.js';
 import { definition, ENCOUNTERS, encounterFor } from './definition.js';
 import * as combat from './combat.js';
 import { createState } from './state.js';
@@ -87,6 +88,8 @@ export function createChampionsPanel({ document, t, getRun, getBookId, saveState
       name: enemy.displayName || tk('opponent'), skill: enemy.skill, stamina: enemy.stamina })).join('\n') : '';
     el('log').innerHTML = data.log.slice(-80).map(line => '<div>' + escape(line) + '</div>').join('');
     el('history').innerHTML = data.history.slice(-40).reverse().map(row => '<div>' + escape(row.enemy + ': ' + tk('status.' + row.outcome)) + '</div>').join('');
+    decorateOutcome(el('status'), fight?.outcome);
+    decorateHistory(el('history'), data.history.slice(-40).reverse());
     const preset = selected();
     const special = preset && ['fear', 'fatalLostRound', 'roundLimit', 'pauseOnLoss', 'fire', 'drainingCompanion',
       'bleedOnLoss', 'bleeding', 'selectableGroupMode', 'twoHeads', 'requiresMagicSword', 'requiresHammer', 'drowning', 'tugOfWar']

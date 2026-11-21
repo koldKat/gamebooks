@@ -1,5 +1,6 @@
 import * as combat from './core.js';
 import {createOpponentEditor} from '../../opponents.js';
+import {decorateOutcome} from '../../outcome.js';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const active = fight => fight?.status === 'active';
@@ -51,6 +52,7 @@ export function createFantasyPanel({document,definition,state,getRoster,getSetti
   function report(data,fight){
     data.fight=fight;
     for(const event of fight.events){
+      const before=data.log.length;
       if(event.kind==='attack')data.log.push(tk('attack',event));
       if(event.kind==='automaticRound')data.log.push(tk('automatic.'+event.direction));
       if(event.kind==='luck')data.log.push(tk('luckResult',{n:event.total,result:tk(event.lucky?'lucky':'unlucky')}));
@@ -58,6 +60,12 @@ export function createFantasyPanel({document,definition,state,getRoster,getSetti
       if(event.kind==='extraDamage')data.log.push(tk('extraDamage',{n:event.damage}));
       if(event.kind==='entry')data.log.push(tk('entryResult',{n:event.damage,luck:event.luck,skillChange:event.skillChange??0}));
       if(event.kind==='outcome')data.log.push(tk('status.'+event.status)+(event.destination?' '+tk('destination',{n:event.destination}):''));
+      if(data.log.length>before){
+        const tone=event.kind==='outcome'?(event.status==='win'?'success':event.status==='loss'?'danger':'accent')
+          :event.kind==='damage'?(event.target==='player'?'danger':'success')
+            :event.kind==='luck'?(event.lucky?'success':'danger'):'accent';
+        data.logTones??=[];data.logTones.length=data.log.length;data.logTones[data.log.length-1]=tone;
+      }
     }
   }
   function render(force=false){
@@ -89,11 +97,17 @@ export function createFantasyPanel({document,definition,state,getRoster,getSetti
     el('drink').hidden=Boolean(getSettings().hideStandardPotion);
     el('potionRow').hidden=Boolean(getSettings().hideStandardPotion);
     el('status').textContent=tk('status.'+(fight?.status??'ready'))+(fight?' · '+tk('roundNumber',{n:fight.round}):'');
+    el('status').classList.remove('bsim-log-success','bsim-log-danger');
+    decorateOutcome(el('status'),fight?.status);
     el('pending').textContent=fight?.pending?tk('pending.'+fight.pending.direction,combat.pendingWoundValues(fight)):'';
     el('destination').textContent=fight?.destination?tk('destination',{n:fight.destination}):'';
     el('opponents').innerHTML=(fight?.enemies??[]).map((enemy,index)=>'<div>'+escape((index===fight.target&&locked?'› ':'')+tk('enemyStamina',{name:enemy.displayName||enemy.name,n:enemy.stamina,max:enemy.initialStamina}))+'</div>').join('');
-    el('log').innerHTML=data.log.slice(-80).map(line=>'<div>'+escape(line)+'</div>').join('');
+    el('log').innerHTML=data.log.slice(-80).map((line,index)=>{
+      const tone=data.logTones?.[Math.max(0,data.log.length-80)+index];
+      return '<div class="bsim-log-'+(['success','danger','accent','muted'].includes(tone)?tone:'muted')+'">'+escape(line)+'</div>';
+    }).join('');
     el('history').innerHTML=data.history.slice(-40).toReversed().map(row=>'<div>'+escape(row.enemy+': '+tk('status.'+row.outcome))+'</div>').join('');
+    for(const [index,row] of data.history.slice(-40).toReversed().entries())decorateOutcome(el('history').children[index],row.outcome);
     notes();
   }
   function open(){
