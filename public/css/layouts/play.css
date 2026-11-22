@@ -1390,6 +1390,9 @@ body {
 .run-battle {
   color: #fb923c;
 }
+.run-death-icon {
+  vertical-align: -0.12em;
+}
 .run-win {
   color: #4ade80;
 }

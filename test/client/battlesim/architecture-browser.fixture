@@ -119,7 +119,26 @@ for(const id of BOOK_IDS){
     const run = app.currentPlaythrough();
     const field = key => overlay.querySelector('[data-field="' + key + '"]');
     const action = key => overlay.querySelector('[data-action="' + key + '"]');
+    const checkOpponentLifeLayout = live => {
+      const life = overlay.querySelector('[data-stat="hp"]');
+      const damage = overlay.querySelector('[data-stat="damage"]');
+      const lifeControl = life.closest('.bsim-number-control');
+      const damageControl = damage.closest('.bsim-number-control') ?? damage;
+      const steppers = [...lifeControl.querySelectorAll(':scope > .inv-qty-btn')];
+      const visible = lifeControl.getBoundingClientRect();
+      const adjacent = damageControl.getBoundingClientRect();
+      check(life.readOnly === live && steppers.length === 2
+        && steppers.every(button => button.getBoundingClientRect().width > 0 && button.disabled === live)
+        && visible.width > 0 && Math.abs(visible.left - adjacent.left) < 2
+        && Math.abs(visible.width - adjacent.width) < 2, 'Mochila opponent Life stays aligned');
+    };
     check(field('hp').value==='15'&&field('hpInitial').value==='15'&&field('powers').value==='6','Mochila starts with printed Life15 and Powers6');
+    check(field('silverAmmo').value === '6', 'Mochila starts with six silver rounds');
+    checkOpponentLifeLayout(false);
+    check(!field('resilience').checked && overlay.textContent.includes('Устойчивост'), 'Mochila offers optional resilience in Bulgarian');
+    field('resilience').click();
+    check(run.sim1307.player.resilience, 'Mochila persists resilience for the current run');
+    field('resilience').click();
     check(action('psychicHeal').disabled,'Mochila healing starts unavailable without the power');
     field('hp').value='9';field('hpInitial').value='15';field('powers').value='2';
     field('hasPsychicHealing').checked=true;field('hasPsychicHealing').dispatchEvent(new Event('change',{bubbles:true}));
@@ -142,6 +161,8 @@ for(const id of BOOK_IDS){
     check(overlay.querySelector('.inv-modal-title').textContent === 'Мочила', 'Mochila uses Bulgarian independently of app language');
     check(field('ammo').value === '6' && field('reserve').value === '2', 'Mochila character-sheet ammunition defaults');
     choose('Променена черна мечка'); action('start').click();
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    checkOpponentLifeLayout(true);
     check(action('psychicHeal').disabled&&field('hasPsychicHealing').disabled,'Mochila healing and power ownership are locked during combat');
     const bearRandom = Math.random;
     try {
@@ -150,7 +171,7 @@ for(const id of BOOK_IDS){
       check(!action('resolve'), 'Mochila skips confirmation without a bandana choice');
       check(run.sim1307.fight.opponent.hp === 10 && overlay.querySelector('[data-live-hp]').value === '10',
         'Mochila bear takes five damage and its Life field updates from fifteen to ten');
-      check(overlay.querySelector('[data-stat="hp"]').value === '15', 'Mochila starting Life retained separately');
+      check(Number(run.sim1307.setup.opponents[0].hp) === 15, 'Mochila starting Life retained separately');
       Math.random = () => .99; action('attack.gun').click();
       check(overlay.querySelector('[data-live-hp]').value === '0', 'Mochila bear Life reaches zero on victory');
       check(overlay.querySelector('.bsim-status .sim-icon-win'), 'Mochila victory uses shared trophy');
@@ -171,10 +192,9 @@ for(const id of BOOK_IDS){
     check(run.path.length === 1, 'Mochila never changes story progress');
     field('weapon').value = 'silverGun';
     field('weapon').dispatchEvent(new Event('change', {bubbles:true}));
-    field('silverAmmo').value = '6';
     check(action('reload').disabled, 'Mochila normal reserves cannot reload silver ammunition');
     choose('Конник на войната (§77)');
-    check(overlay.querySelector('[data-live-hp]').hidden && overlay.querySelector('[data-stat="hp"]').value === '18',
+    check(!overlay.querySelector('[data-live-hp]') && overlay.querySelector('[data-stat="hp"]').value === '18',
       'Mochila new preset restores editable starting Life');
     action('start').click();
     check(overlay.querySelector('[data-live-hp]').value === '18', 'Mochila new fight starts with its full Life');
@@ -200,6 +220,29 @@ for(const id of BOOK_IDS){
     app.state.playthroughs = [{startedAt:2,path:[1]}];
     stale.click();
     check(!app.currentPlaythrough().sim1307 && run.sim1307 === original, 'Mochila stale action cannot change another run');
+    module.render();
+    check(field('powers').value === '6' && !field('resilience').checked, 'Mochila new runs restore fresh starting stats');
+    field('weapon').value = 'silverGun';
+    field('weapon').dispatchEvent(new Event('change', {bubbles:true}));
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    checkOpponentLifeLayout(false);
+    action('start').click();
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    checkOpponentLifeLayout(true);
+    const customFightRandom = Math.random;
+    try {
+      Math.random = () => .4;
+      for (let remaining = 5; remaining >= 0; remaining--) {
+        check(!action('attack.silverGun').disabled, 'Mochila can fire each loaded silver round');
+        action('attack.silverGun').click();
+        check(app.currentPlaythrough().sim1307.fight.player.silverAmmo === remaining, 'Mochila spends one silver round per shot');
+      }
+      check(action('attack.silverGun').disabled, 'Mochila blocks an empty silver revolver');
+      action('switchGun').click();
+      const {player} = app.currentPlaythrough().sim1307.fight;
+      check(player.weapon === 'gun' && player.ammo === 6 && player.silverAmmo === 0
+        && !action('attack.gun').disabled, 'Mochila empty silver revolver can switch directly to the loaded Colt');
+    } finally {Math.random = customFightRandom;}
     app.state.playthroughs = [run];
     module.render();
     run.sim1307.fight.status = 'loss'; run.sim1307.fight.phase = 'ended';

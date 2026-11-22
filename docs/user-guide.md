@@ -59,8 +59,8 @@ Each day's card shows the covers of the public books played that day, faded behi
 | *player* **created / added series** *series* | A series was created or added |
 | *player* **began run N of** *book* | Someone started a new playthrough |
 | *player* **won / lost / died in** *book* run N | A playthrough ended |
-| *player* **won** *book* **run N for the first time** | First ever victory in that book, showing which run achieved it |
-| *player* **lost in** *book* **for the first time** | First ever loss (non-battle) in that book |
+| *player* **emerged victorious in** *book* **run N for the first time** | First ever victory in that book, showing which run achieved it |
+| *player* **met with defeat in** *book* **run N for the first time** | First ever loss (non-battle) in that book |
 | *player* **fell in battle in** *book* **for the first time** | First ever battle-death in that book |
 | *player* **won in all books of** *series / anthology* | Every book in a collection completed |
 | *player* **discovered / visited every section of** *book* | Reached 100% mapping or 100% visiting |
@@ -70,7 +70,7 @@ Each day's card shows the covers of the public books played that day, faded behi
 **Clicking things in the feed:**
 - **A username** (if that player has a public profile) → see their books and completed playthroughs
 - **A book name** → opens that book's activity; if it belongs to a series, a series link appears too
-- **The result word** (won / lost / fell in battle / died, if the run is public) → opens a view of that playthrough's path on the graph, with a legend explaining the node colors. Unmapped sections outside that run stay hidden, along with their connectors.
+- **The result** (if the run is public) → opens a view of that playthrough's path on the graph, with a legend explaining the node colors. Unmapped sections outside that run stay hidden, along with their connectors.
 
 ### Right - Login / Books
 

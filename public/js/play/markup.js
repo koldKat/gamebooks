@@ -11,6 +11,9 @@ import { renderPathTrail } from './trail.js';
 import { maxUndos, maxFastTravels } from './limits.js';
 import { navigate, wouldAutoNav } from './navigation.js';
 import { CHOICES_PULSE_THRESHOLD } from './settings.js';
+import { skullIconPath } from '../battlesim/outcome.js';
+
+const runDeathIcon = `<svg class="run-death-icon" viewBox="0 0 24 24" width="1em" height="1em" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="${skullIconPath}"/></svg>`;
 
 export function renderPanelMarkup(pt, sec) {
 
@@ -160,7 +163,7 @@ export function renderPanelMarkup(pt, sec) {
       const lastSec    = p.path[p.path.length - 1];
       let statusText, statusCls;
       if (isDone) {
-        statusText = p.result === 'success' ? t('runs.victory') : p.result === 'battle' ? t('runs.battle') : t('runs.death');
+        statusText = p.result === 'success' ? t('runs.victory') : p.result === 'battle' ? runDeathIcon + ' ' + t('runs.battle') : t('runs.death');
         statusCls  = p.result === 'success' ? 'run-win' : p.result === 'battle' ? 'run-battle' : 'run-death';
       } else if (isPortalPaused) {
         // Portal-paused - run is now active in the target book (via portalTarget) or wherever the series cache says it is.
@@ -222,7 +225,7 @@ export function renderPanelMarkup(pt, sec) {
       const lastSec = p.path[p.path.length - 1];
       let statusText, statusCls;
       if (isDone) {
-        statusText = p.result === 'success' ? t('runs.victory') : p.result === 'battle' ? t('runs.battle') : t('runs.death');
+        statusText = p.result === 'success' ? t('runs.victory') : p.result === 'battle' ? runDeathIcon + ' ' + t('runs.battle') : t('runs.death');
         statusCls  = p.result === 'success' ? 'run-win' : p.result === 'battle' ? 'run-battle' : 'run-death';
       } else {
         statusText = lastSec ? t('runs.section', { n: sectionLabel(lastSec, currentBookId) }) : t('runs.section', { n: '-' });

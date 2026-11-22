@@ -16,7 +16,7 @@ export default {
     'runs.section': 'Section {n}',
     'runs.victory':     '★ Victory',
     'runs.death':       '✝ Loss',
-    'runs.battle':      '⚔ Battle',
+    'runs.battle':      'Death',
     'runs.battle_death': 'Battle Death ⚔',
     'runs.load':    'Load',
     'runs.this':    'This run',

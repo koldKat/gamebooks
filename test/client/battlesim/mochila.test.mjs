@@ -45,6 +45,21 @@ test('Mochila marksman cannot bypass rider immunity and necklace reduces superna
   f = attack(startFight(player({marksman:true}), enemy('bear-42')), [5,6]);
   assert.equal(f.status, 'win');
 });
+test('Mochila resilience absorbs one incoming damage each round without spending Powers', () => {
+  const opponent = {hp:20, range:'6', damage:4};
+  let fight = startFight(player({weapon:'knife', powers:6, resilience:true}), opponent);
+  fight = attack(fight, [3,4], [3,3]);
+  fight = attack(fight, [3,4], [3,3]);
+  assert.equal(fight.player.hp, 9);
+  assert.equal(fight.opponent.hp, 16);
+  assert.equal(fight.player.powers, 6);
+  assert.deepEqual(fight.log.map(line => line.damage), [2,3,2,3]);
+
+  const legacy = startFight(player({weapon:'knife'}), opponent);
+  assert.equal(attack(legacy, [3,4], [3,3]).player.hp, 11);
+  const singleDamage = startFight(player({weapon:'knife', resilience:true}), {...opponent, damage:1});
+  assert.equal(attack(singleDamage, [3,4], [3,3]).player.hp, 15);
+});
 test('Mochila fanning narrows each shot and allows stopping without spending another round', () => {
   let f = startFight(player({fanning:true}), enemy('rider-p125'));
   f = attack(f, [3,4]); assert.equal(f.phase, 'fan'); assert.equal(f.opponent.hp, 13);

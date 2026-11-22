@@ -2,11 +2,12 @@
   {
     "id": "halloween",
     "title": "Halloween event active",
-    "description": "double XP for losses, battle deaths, sim battle losses and surviving (heartbeats).",
+    "description": "5× XP for losses, battle deaths, and sim battle losses. 2× XP for surviving (heartbeats).",
     "start": 1028,
     "end": 1103,
     "day": 1031,
-    "xpMultiplier": 2,
+    "xpMultiplier": 5,
+    "xpMultipliers": { "idle_heartbeat": 2 },
     "heartbeatFloater": "survival-green",
     "xpEvents": [
       "death_run",
@@ -22,7 +23,7 @@
   {
     "id": "diwali",
     "title": "Diwali event active",
-    "description": "Festival of Lights: double XP for wins and sim battle wins.",
+    "description": "Festival of Lights: 5× XP for wins and sim battle wins.",
     "daysAround": 3,
     "dates": {
       "2026": "2026-11-08",
@@ -39,7 +40,7 @@
       "https://www.timeanddate.com/holidays/india/diwali",
       "https://www.hinduplace.com/festival/diwali-dates-widget/"
     ],
-    "xpMultiplier": 2,
+    "xpMultiplier": 5,
     "xpEvents": [
       "win_run",
       "first_win",
@@ -50,7 +51,7 @@
   {
     "id": "thanksgiving",
     "title": "Thanksgiving event active",
-    "description": "double XP for all party activities, sharing runs, and rating books and series.",
+    "description": "5× XP for rating books, anthologies, and series. Double XP for party activities and sharing runs.",
     "rule": {
       "month": 11,
       "weekday": 4,
@@ -58,6 +59,7 @@
     },
     "daysAround": 3,
     "xpMultiplier": 2,
+    "xpMultipliers": { "rate_book": 5, "rate_series": 5 },
     "partyXpEvents": true,
     "xpEvents": [
       "share_run",

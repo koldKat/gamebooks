@@ -51,7 +51,8 @@ function enemyTurn(fight, roll) {
   const hits = melee ? parseRange(e.meleeRange ?? e.range) : e.hits;
   const hit = hits.includes(total);
   const damage = hit ? Math.max(0, (melee ? (e.meleeDamage ?? e.damage) : e.damage)
-    - (e.supernatural && fight.player.necklace ? 1 : 0)) : 0;
+    - (e.supernatural && fight.player.necklace ? 1 : 0)
+    - (fight.player.resilience ? 1 : 0)) : 0;
   if (Number.isInteger(e.ammo) && e.ammo > 0) e.ammo--;
   fight.player.hp = Math.max(0, fight.player.hp - damage);
   fight.log.push({side:'enemy', dice, hit, damage, round:fight.round});

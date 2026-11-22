@@ -48,6 +48,8 @@ export default {
     'feed.verb.died': 'died',
     'feed.verb.lost': 'lost',
     'feed.verb.fell_in_battle': 'fell in battle',
+    'feed.verb.emerged_victorious': 'emerged victorious',
+    'feed.verb.took_a_loss': 'took a loss',
     'feed.noun.anthology': 'anthology',
     'feed.noun.anthologies': 'anthologies',
     'feed.noun.book':      'book',

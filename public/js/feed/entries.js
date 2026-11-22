@@ -133,15 +133,17 @@ export function renderEntry(e) {
   } else if (e.type === 'all_discovered') {
     html = t('feed.tmpl.all_discovered', { user: userEl, book: bookBtn(e.bookId, e.bookName) });
   } else if (e.type === 'first_win') {
+    const verb = t('feed.verb.emerged_victorious');
     const wonEl = (e.runIsPublic && e.runIndex != null)
-      ? `<button class="feed-verb won feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}" data-tooltip="${escapeHtml(_runTooltip(e))}">${t('feed.verb.won')}</button>`
-      : `<span class="feed-verb won">${t('feed.verb.won')}</span>`;
+      ? `<button class="feed-verb won feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}" data-tooltip="${escapeHtml(_runTooltip(e))}">${verb}</button>`
+      : `<span class="feed-verb won">${verb}</span>`;
     const runLabel = _firstResultRunLabel(e);
     html = t('feed.tmpl.first_result', { user: userEl, verb: wonEl, book: bookBtn(e.bookId, e.bookName), run: runLabel, first_time: t('feed.first_time') });
   } else if (e.type === 'first_loss') {
+    const verb = t('feed.verb.took_a_loss');
     const verbEl   = (e.runIsPublic && e.runIndex != null)
-      ? `<button class="feed-verb lost feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}" data-tooltip="${escapeHtml(_runTooltip(e))}">${t('feed.verb.lost')}</button>`
-      : `<span class="feed-verb lost">${t('feed.verb.lost')}</span>`;
+      ? `<button class="feed-verb lost feed-verb-pub" data-book-id="${e.bookId}" data-user-id="${e.userId}" data-run-index="${e.runIndex}" data-tooltip="${escapeHtml(_runTooltip(e))}">${verb}</button>`
+      : `<span class="feed-verb lost">${verb}</span>`;
     const runLabel = _firstResultRunLabel(e);
     html = t('feed.tmpl.first_result', { user: userEl, verb: verbEl, book: bookBtn(e.bookId, e.bookName), run: runLabel, first_time: t('feed.first_time') });
   } else if (e.type === 'first_battle_death') {

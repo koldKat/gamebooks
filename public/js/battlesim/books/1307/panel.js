@@ -13,8 +13,8 @@ import {registerPanelShortcut, shortcutLabel, ALL_PANEL_OVERLAY_IDS} from '../..
 import {t} from '../../../i18n.js';
 import {decorateOutcome} from '../../outcome.js';
 
-const defaults = {hp:15, hpInitial:15, attackMin:9, ammo:6, silverAmmo:0, reserve:2, weapon:'gun', fanning:false,
-  marksman:false, necklace:false, bandana:false, bandanaUsed:false, powers:6, psychicHealing:false};
+const defaults = {hp:15, hpInitial:15, attackMin:9, ammo:6, silverAmmo:6, reserve:2, weapon:'gun', fanning:false,
+  marksman:false, necklace:false, bandana:false, bandanaUsed:false, powers:6, psychicHealing:false, resilience:false};
 const enemyDefaults = {displayName:'', low:2, high:4, low2:7, high2:9, damage:4, hp:10};
 export function createMochilaPanel(getContext, document) {
   const ctx = () => getContext(), id = definition.stateKey;
@@ -35,16 +35,18 @@ export function createMochilaPanel(getContext, document) {
     previewingSetup = true; showOpponentLife(null);
     notes.textContent = entry?.note ?? ui.tr('customNotes');
   }
-  function showOpponentLife(fight) {
+  function showOpponentLife(fight, useNewSetup = false) {
     const input = editor.element.querySelector('[data-stat="hp"]');
     if (!input) return;
-    let output = input.parentElement.querySelector('[data-live-hp]');
-    if (!output) {
-      output = document.createElement('output'); output.className = 'inv-edit-input';
-      output.dataset.liveHp = ''; output.setAttribute('aria-live', 'polite'); input.after(output);
+    if (fight) {
+      input.dataset.setupHp ??= input.value;
+      input.value = String(fight.opponent.hp);
+    } else if (input.dataset.setupHp !== undefined) {
+      if (!useNewSetup) input.value = input.dataset.setupHp;
+      delete input.dataset.setupHp;
     }
-    input.hidden = Boolean(fight); output.hidden = !fight;
-    output.value = fight ? String(fight.opponent.hp) : '';
+    input.readOnly = Boolean(fight);
+    input.toggleAttribute('data-live-hp', Boolean(fight));
   }
   function change(callback, expected = token) {
     try {
@@ -139,9 +141,18 @@ export function createMochilaPanel(getContext, document) {
       } else {
         const empty = fight.player.weapon !== 'knife'
           && !(fight.player.weapon === 'silverGun' ? fight.player.silverAmmo : fight.player.ammo);
-        ui.button(controls, fight.phase === 'fan' ? 'fireAgain' : 'attack.' + fight.player.weapon,
-          () => send('attack')).disabled = empty;
-        if (empty) ui.text(controls, ui.tr('emptyWeapon'));
+        const attack = ui.button(controls, fight.phase === 'fan' ? 'fireAgain' : 'attack.' + fight.player.weapon,
+          () => send('attack'));
+        attack.textContent = ui.tr(fight.phase === 'fan' ? 'fireAgain' : 'attack');
+        attack.disabled = empty;
+        if (empty) {
+          ui.text(controls, ui.tr('emptyWeapon'));
+          const otherWeapon = fight.player.weapon === 'silverGun' ? 'gun' : 'silverGun';
+          if (otherWeapon === 'gun' ? fight.player.ammo : fight.player.silverAmmo) {
+            ui.button(controls, otherWeapon === 'gun' ? 'switchGun' : 'switchSilverGun',
+              () => send('weapon', {weapon:otherWeapon}));
+          }
+        }
         if (fight.phase === 'fan') ui.button(controls, 'endTurn', () => send('endTurn'));
         if (fight.player.weapon !== 'knife' && !fight.opponent.knifeOnly) ui.button(controls, 'switchKnife', () => send('knife'));
       }
@@ -167,12 +178,13 @@ export function createMochilaPanel(getContext, document) {
     inputs.set('weapon', ui.field(left, 'weapon', {entries:[['gun',ui.tr('gun')],['silverGun',ui.tr('silverGun')],['knife',ui.tr('knife')]]}));
     const special = ui.group(left, 'special');
     for (const key of ['fanning','marksman','necklace','bandana','bandanaUsed']) inputs.set(key, ui.checkbox(special, key));
+    inputs.set('resilience', ui.checkbox(special, 'resilience'));
     const healing = ui.group(left, 'psychicHealing', true);
     inputs.set('psychicHealing', ui.checkbox(healing, 'hasPsychicHealing'));
     ui.text(healing, ui.tr('psychicHealingRule'));
     heal = ui.button(healing, 'psychicHeal', () => change(state =>
       saveIdlePlayer(state, psychicHeal(playerInput(), state.fight))));
-    for (const key of ['psychicHealing','powers']) inputs.get(key).addEventListener('change', () => {
+    for (const key of ['psychicHealing','powers','resilience']) inputs.get(key).addEventListener('change', () => {
       if (busy()) return;
       change(state => state.fight?.status === 'fighting' ? null : saveIdlePlayer(state, playerInput()));
     });
@@ -182,13 +194,14 @@ export function createMochilaPanel(getContext, document) {
       {key:'hp',label:ui.tr('enemyHp'),min:1}, {key:'damage',label:ui.tr('damage'),min:0},
     ], presets:encounters.map(presetRow), onSelect:row => {
       selected = encounters.find(entry => entry.key === row.key) ?? null;
-      previewingSetup = true; showOpponentLife(null);
+      previewingSetup = true; showOpponentLife(null, true);
       notes.textContent = selected?.note ?? ui.tr('customNotes');
     }});
     left.append(editor.element); notes = ui.text(left, ui.tr('customNotes'));
     custom = ui.button(left, 'custom', () => choose(null));
     start = ui.button(left, 'start', () => change(state => {
       if (state.fight?.status === 'fighting') return null;
+      showOpponentLife(null);
       const [row] = editor.read();
       if (row.low > row.high || (row.low2 === 0) !== (row.high2 === 0) || row.low2 > row.high2) throw new RangeError('Invalid hit range');
       const enemy = {...selected, name:row.displayName || ui.tr('enemy'), hp:row.hp, damage:row.damage,

@@ -1,7 +1,8 @@
 // Add the shared victory/loss icon and semantic color to simulator outcomes.
+export const skullIconPath = 'M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2A8 8 0 0 0 12 3Zm-3 7a2 2 0 1 1 0 4 2 2 0 0 1 0-4Zm6 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4Zm-3 4 2 3h-4l2-3Z';
 const paths = {
   win: 'M6 2h12v7a6 6 0 0 1-5 5.92V18h3v2H8v-2h3v-3.08A6 6 0 0 1 6 9V2ZM4 3H2v4a4 4 0 0 0 4 4V9a2 2 0 0 1-2-2V3Zm16 0h2v4a4 4 0 0 1-4 4V9a2 2 0 0 0 2-2V3Z',
-  loss: 'M12 3a8 8 0 0 0-8 8c0 2.8 1.4 5.3 3.6 6.8V20a1 1 0 0 0 1 1h6.8a1 1 0 0 0 1-1v-2.2A8 8 0 0 0 12 3Zm-3 7a2 2 0 1 1 0 4 2 2 0 0 1 0-4Zm6 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4Zm-3 4 2 3h-4l2-3Z',
+  loss: skullIconPath,
 };
 
 export function decorateOutcome(node, outcome) {
