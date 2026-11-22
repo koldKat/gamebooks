@@ -14,7 +14,7 @@ import {t} from '../../../i18n.js';
 import {decorateOutcome} from '../../outcome.js';
 
 const defaults = {hp:15, hpInitial:15, attackMin:9, ammo:6, silverAmmo:0, reserve:2, weapon:'gun', fanning:false,
-  marksman:false, necklace:false, bandana:false, bandanaUsed:false, powers:0, psychicHealing:false};
+  marksman:false, necklace:false, bandana:false, bandanaUsed:false, powers:6, psychicHealing:false};
 const enemyDefaults = {displayName:'', low:2, high:4, low2:7, high2:9, damage:4, hp:10};
 export function createMochilaPanel(getContext, document) {
   const ctx = () => getContext(), id = definition.stateKey;

@@ -119,6 +119,7 @@ for(const id of BOOK_IDS){
     const run = app.currentPlaythrough();
     const field = key => overlay.querySelector('[data-field="' + key + '"]');
     const action = key => overlay.querySelector('[data-action="' + key + '"]');
+    check(field('hp').value==='15'&&field('hpInitial').value==='15'&&field('powers').value==='6','Mochila starts with printed Life15 and Powers6');
     check(action('psychicHeal').disabled,'Mochila healing starts unavailable without the power');
     field('hp').value='9';field('hpInitial').value='15';field('powers').value='2';
     field('hasPsychicHealing').checked=true;field('hasPsychicHealing').dispatchEvent(new Event('change',{bubbles:true}));
