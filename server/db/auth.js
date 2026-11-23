@@ -9,6 +9,7 @@ const scrypt = util.promisify(crypto.scrypt);
 const { db, _foldForSearch, _naturalCompare } = require('./connection');
 const { tryBookkeepingWrite } = require('./bookkeeping');
 const { normalizeEmail, emailTaken, isDuplicateEmail } = require('./email-identity');
+const { cyrillicCoverDefault } = require('./cyrillic-cover-preference');
 
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 
@@ -129,24 +130,33 @@ function updateAvatar(userId, avatarPath) {
 }
 
 function getUserPrefs(userId) {
-  const row = db.prepare('SELECT ui_prefs FROM users WHERE id = ?').get(userId);
-  try { return JSON.parse(row?.ui_prefs || 'null') || {}; } catch { return {}; }
+  const row = db.prepare('SELECT ui_prefs, active_country, last_country FROM users WHERE id = ?').get(userId);
+  let prefs;
+  try { prefs = JSON.parse(row?.ui_prefs || 'null'); } catch {}
+  if (!prefs || typeof prefs !== 'object' || Array.isArray(prefs)) prefs = {};
+  if (!Object.hasOwn(prefs, 'hideCyrillicCovers') && (row?.active_country || row?.last_country)) {
+    const value = cyrillicCoverDefault(row.active_country, row.last_country);
+    if (value !== undefined) prefs.hideCyrillicCovers = value;
+  }
+  return prefs;
 }
 
 function setUserPrefs(userId, prefs) {
   db.prepare('UPDATE users SET ui_prefs = ? WHERE id = ?').run(JSON.stringify(prefs), userId);
 }
 
-async function createUser(username, password, email) {
+async function createUser(username, password, email, { country } = {}) {
   const emailVal = normalizeEmail(email);
   if (emailTaken(db, emailVal)) throw new Error('That email address is already in use by another account.');
   const { hash, salt } = await hashPassword(password);
   const tmplIds = db.prepare(`SELECT id FROM join_templates WHERE active = 1`).all().map(r => r.id);
   const tmplId  = tmplIds.length ? tmplIds[Math.floor(Math.random() * tmplIds.length)] : null;
+  const coverDefault = cyrillicCoverDefault(country);
+  const prefs = coverDefault === undefined ? null : JSON.stringify({ hideCyrillicCovers: coverDefault });
   try {
     const result = db.prepare(
-      'INSERT INTO users (username, password_hash, salt, email, join_template_id) VALUES (?, ?, ?, ?, ?)'
-    ).run(username, hash, salt, emailVal, tmplId);
+      'INSERT INTO users (username, password_hash, salt, email, join_template_id, ui_prefs) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(username, hash, salt, emailVal, tmplId, prefs);
     return { id: result.lastInsertRowid, username };
   } catch (e) {
     if (isDuplicateEmail(e)) throw new Error('That email address is already in use by another account.');

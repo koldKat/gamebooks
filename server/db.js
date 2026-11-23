@@ -839,6 +839,7 @@ if (hasColumn('sessions', 'expires_at')) {
 }
 
 require('./db/nsfw').initializeNsfw(db);
+require('./db/cyrillic-cover-preference').backfillCyrillicCoverPreference(db);
 
 const {
   hashPassword, verifyPassword, generateToken,

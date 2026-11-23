@@ -61,7 +61,7 @@ export function createOpponentEditor({document, id, t, fields, presets = [], lan
       current = {...value};
       name.value = value.displayName ?? value.name ?? '';
       for (const input of row.querySelectorAll('[data-stat]')) {
-        input.value = value[input.dataset.stat] ?? '';
+        input.value = value[input.dataset.stat] ?? fields.find(field => field.key === input.dataset.stat)?.defaultValue ?? '';
         input.dataset.unavailable = String(Boolean(isStatUnavailable
           ? isStatUnavailable(input.dataset.stat, value)
           : value.unavailableStats?.includes(input.dataset.stat)));

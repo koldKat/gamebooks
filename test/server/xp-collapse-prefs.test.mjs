@@ -6,7 +6,7 @@ import Database from 'better-sqlite3';
 
 test('independent XP collapse settings persist in the account database and notify other devices', async t => {
   const db = new Database(':memory:'); t.after(() => db.close());
-  db.exec("CREATE TABLE users(id INTEGER PRIMARY KEY,ui_prefs TEXT); INSERT INTO users VALUES(1,'{\"feedFilters\":{\"news\":false}}'),(2,'{}')");
+  db.exec("CREATE TABLE users(id INTEGER PRIMARY KEY,ui_prefs TEXT,active_country TEXT,last_country TEXT); INSERT INTO users (id,ui_prefs) VALUES(1,'{\"feedFilters\":{\"news\":false}}'),(2,'{}')");
   const auth = readFileSync('server/db/auth.js','utf8');
   const helpers={db};runInNewContext(auth.slice(auth.indexOf('function getUserPrefs('),auth.indexOf('async function createUser(')),helpers);
   const source = readFileSync('server/routes/profile.js','utf8');

@@ -18,7 +18,7 @@ async function handleRegister(req, res) {
   if (trimmed.length < 3 || trimmed.length > 64)
     return send(res, 400, { error: 'username must be 3–64 characters' });
   try {
-    const user   = await db.createUser(trimmed, password, email || null);
+    const user   = await db.createUser(trimmed, password, email || null, { country: geoip.lookup(ip)?.country });
     db.readingAccess.syncActivation();
     const token  = db.createSession(user.id);
     send(res, 200, { token, username: user.username });

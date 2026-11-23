@@ -77,6 +77,15 @@ test('read-only copies and original maps cannot block completion of all actual s
   assert.equal(hasFullBookCoverage({total_sections:3}, new Set(['1','2']), canonical), false);
 });
 
+test('a shorter numbered reader preserves complete printed coverage without lowering its target', () => {
+  const printed = { total_sections: 5 };
+  const partialReader = ['1', '2', '4', '5'];
+  assert.equal(hasFullBookCoverage(printed, new Set(['1', '2', '3', '4', '5']), partialReader), true);
+  assert.equal(hasFullBookCoverage(printed, new Set(partialReader), partialReader), false);
+  assert.equal(hasFullBookCoverage(printed, new Set([...partialReader, '6']), partialReader), false);
+  assert.equal(hasFullBookCoverage(printed, new Set(['1', '2', '3', '4', '5']), ['1', 'K2']), false);
+});
+
 test('the map picker is optional for completion while all printed K sectors remain required', () => {
   const printed = [
     ...Array.from({length:289}, (_, i) => String(i + 1)),

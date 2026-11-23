@@ -1,3 +1,5 @@
+import { drawNumber, strikeDamage } from '../../engines/magic-of-darkness/core.js';
+
 // Combat rules and resolution; UI and persistence callbacks are injected.
 export function createCombat(getContext) {
 // BEGIN EXTRACTED RULES
@@ -8,7 +10,7 @@ function _emptyEnemy() {
 
 function _rollTable(d) {
 
-  return d.chanceRollRange === 12 ? Math.floor(Math.random() * 12) + 1 : Math.floor(Math.random() * 10);
+  return d.chanceRollRange === 12 ? drawNumber() : Math.floor(Math.random() * 10);
 }
 
 function _enemyName(d) {
@@ -67,11 +69,11 @@ function _exchange() {
   }
 
   if (playerTotal > enemyTotal) {
-    const dmg = d.player.unarmed ? 1 : 2;
+    const dmg = strikeDamage(d.player.unarmed);
     d.enemy.endurance = Math.max(0, d.enemy.endurance - dmg);
     _appendLog(d, t('battlesim414.log.you_hit', { playerRoll, playerTotal, enemyRoll, enemyTotal, enemy: _enemyNameSafe(d), n: dmg, endurance: d.enemy.endurance, enduranceMax: d.enemy.enduranceMax }));
   } else {
-    const dmg = d.enemy.unarmed ? 1 : 2;
+    const dmg = strikeDamage(d.enemy.unarmed);
     d.player.endurance = Math.max(0, d.player.endurance - dmg);
     _appendLog(d, t('battlesim414.log.enemy_hits', { playerRoll, playerTotal, enemyRoll, enemyTotal, enemy: _enemyNameSafe(d), n: dmg, endurance: d.player.endurance, enduranceMax: d.player.enduranceInitial }));
   }

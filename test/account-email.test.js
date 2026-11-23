@@ -5,12 +5,15 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const Database = require('better-sqlite3');
 const identity = require('../server/db/email-identity');
+const coverPrefs = require('../server/db/cyrillic-cover-preference');
 
 function fixture(t) {
   const db = new Database(':memory:');
   t.after(() => db.close());
   db.exec(`CREATE TABLE users(id INTEGER PRIMARY KEY, username TEXT UNIQUE,
-    password_hash TEXT, salt TEXT, email TEXT, join_template_id INTEGER);
+    password_hash TEXT, salt TEXT, email TEXT, join_template_id INTEGER,
+    ui_prefs TEXT, active_country TEXT, last_country TEXT);
+    CREATE TABLE admin_settings(key TEXT PRIMARY KEY, value TEXT);
     CREATE TABLE join_templates(id INTEGER PRIMARY KEY, active INTEGER);
     INSERT INTO join_templates VALUES(1,1);`);
   identity.initializeEmailIdentity(db);
@@ -19,6 +22,7 @@ function fixture(t) {
       if (name === './connection') return {db};
       if (name === './bookkeeping') return {};
       if (name === './email-identity') return identity;
+      if (name === './cyrillic-cover-preference') return coverPrefs;
       return require(name);
     }});
   vm.runInContext(fs.readFileSync(require.resolve('../server/db/auth'), 'utf8'), context);
@@ -75,4 +79,30 @@ test('index migration is idempotent and preserves account records', t => {
   const before = db.prepare('SELECT * FROM users').all();
   identity.initializeEmailIdentity(db);
   assert.deepEqual(db.prepare('SELECT * FROM users').all(), before);
+});
+
+test('country defaults and one-time backfill preserve other preferences and later account choices', async t => {
+  const { db, auth } = fixture(t);
+  const foreign = await auth.createUser('Visitor', 'test password', null, { country: 'DE' });
+  const local = await auth.createUser('Local', 'test password', null, { country: 'bg' });
+  const unknown = await auth.createUser('Unknown', 'test password', null);
+  assert.equal(auth.getUserPrefs(foreign.id).hideCyrillicCovers, '1');
+  assert.equal(auth.getUserPrefs(local.id).hideCyrillicCovers, '0');
+  assert.equal(auth.getUserPrefs(unknown.id).hideCyrillicCovers, undefined);
+
+  db.prepare('UPDATE users SET active_country = ?, last_country = ? WHERE id = ?')
+    .run('DE', 'BG', foreign.id);
+  db.prepare('UPDATE users SET last_country = ? WHERE id = ?').run('BG', local.id);
+  auth.setUserPrefs(foreign.id, { hideCyrillicCovers: '0', feedFilters: { news: false } });
+  assert.equal(coverPrefs.backfillCyrillicCoverPreference(db), 1);
+  assert.equal(auth.getUserPrefs(foreign.id).hideCyrillicCovers, '1');
+  assert.equal(auth.getUserPrefs(foreign.id).feedFilters.news, false);
+  assert.equal(auth.getUserPrefs(local.id).hideCyrillicCovers, '0');
+  assert.equal(auth.getUserPrefs(unknown.id).hideCyrillicCovers, undefined);
+
+  db.prepare('UPDATE users SET last_country = ? WHERE id = ?').run('GB', unknown.id);
+  assert.equal(auth.getUserPrefs(unknown.id).hideCyrillicCovers, '1');
+  auth.setUserPrefs(foreign.id, { hideCyrillicCovers: '0' });
+  assert.equal(coverPrefs.backfillCyrillicCoverPreference(db), 0);
+  assert.equal(auth.getUserPrefs(foreign.id).hideCyrillicCovers, '0');
 });

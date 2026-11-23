@@ -2,7 +2,7 @@ import { copySourceSheet } from './source-sheet.js';
 import { bindReadingImageZoom } from './image-zoom.js';
 import { copySourceFlipbook } from './source-flipbook.js';
 
-const ELEMENTS = new Set(['P', 'H2', 'H3', 'H4', 'OL', 'UL', 'LI', 'STRONG', 'EM', 'U', 'BR', 'HR', 'FIGURE', 'FIGCAPTION', 'IMG',
+const ELEMENTS = new Set(['P', 'H2', 'H3', 'H4', 'OL', 'UL', 'LI', 'STRONG', 'EM', 'U', 'SMALL', 'BR', 'HR', 'FIGURE', 'FIGCAPTION', 'IMG',
   'TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'TH', 'TD', 'CAPTION', 'A']);
 
 function proseStyle(tag, input) {

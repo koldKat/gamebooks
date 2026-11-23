@@ -4,7 +4,9 @@ const pending = new Map();
 const failures = new Map();
 const BULGARIAN_BOOKS = new Set([8, 32, 481, 486, 491, 570, 644, 648, 654, 658, 661, 663, 665, 671, 672, 700, 706, 710, 718, 722, 723, 724, 728, 731, 732, 734, 735, 757, 768, 769, 773, 783, 797, 807, 808, 809, 810, 812, 817, 832, 833, 838, 856, 857, 860, 873, 891, 895, 896, 903, 904, 906, 3196]);
 
+BULGARIAN_BOOKS.add(413);
 BULGARIAN_BOOKS.add(1307);
+BULGARIAN_BOOKS.add(1414);
 
 export function loadBattleSimTranslations(bookId) {
   const id = Number(bookId);

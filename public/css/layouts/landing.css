@@ -866,15 +866,58 @@ body.feed-collapsed #feed-panel {
 }
 
 #app-banner {
+  --banner-background: #1f2937 url('/banner-bg.svg') center / cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  background: #1f2937 url('/banner-bg.svg') center / cover no-repeat;
+  background: var(--banner-background);
   border: 1px solid #374151;
   border-radius: 8px;
   padding: 0.9rem 1.1rem;
   margin-bottom: 0.5rem;
+}
+
+@media (min-width: 769px) {
+  #feed-panel {
+    padding-top: var(--feed-banner-top);
+  }
+
+  #app-banner {
+    position: relative;
+    isolation: isolate;
+    background: none;
+    border-color: transparent;
+  }
+
+  #app-banner::before {
+    --notch-half: calc(var(--feed-toggle-width) / 2 + var(--feed-toggle-gap));
+    --notch-depth: calc(var(--feed-toggle-height) + var(--feed-toggle-gap) - var(--feed-banner-top));
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: -1px;
+    pointer-events: none;
+    background: var(--banner-background);
+    border: 1px solid #374151;
+    border-radius: inherit;
+    clip-path: polygon(
+      0 0,
+      calc(50% - var(--notch-half)) 0,
+      calc(50% - var(--notch-half)) calc(var(--notch-depth) - 8px),
+      calc(50% - var(--notch-half) + 1px) calc(var(--notch-depth) - 4px),
+      calc(50% - var(--notch-half) + 3px) calc(var(--notch-depth) - 1.5px),
+      calc(50% - var(--notch-half) + 7px) var(--notch-depth),
+      calc(50% + var(--notch-half) - 7px) var(--notch-depth),
+      calc(50% + var(--notch-half) - 3px) calc(var(--notch-depth) - 1.5px),
+      calc(50% + var(--notch-half) - 1px) calc(var(--notch-depth) - 4px),
+      calc(50% + var(--notch-half)) calc(var(--notch-depth) - 8px),
+      calc(50% + var(--notch-half)) 0,
+      100% 0,
+      100% 100%,
+      0 100%
+    );
+  }
 }
 
 #app-banner-text {
@@ -1392,6 +1435,13 @@ body.feed-collapsed #feed-panel {
 
 /* ── Panel toggle buttons ─────────────────────────────────────────── */
 
+:root {
+  --feed-toggle-width: 52px;
+  --feed-toggle-height: 16px;
+  --feed-toggle-gap: 3px;
+  --feed-banner-top: 4px;
+}
+
 .panel-toggle {
   position: fixed;
   top: 50%;
@@ -1448,8 +1498,8 @@ body.right-collapsed #right-toggle {
   left: 50%;
   transform: translateX(-50%);
   z-index: 210;
-  width: 52px;
-  height: 16px;
+  width: var(--feed-toggle-width);
+  height: var(--feed-toggle-height);
   border: 1px solid #374151;
   border-top: none;
   border-radius: 0 0 6px 6px;

@@ -149,6 +149,76 @@ for(const id of BOOK_IDS){
       check(field('hero').value === '2' && field('encounter').value === '19', 'completed battle restores the selected setup');
     } finally { Math.random = savedRandom; }
   }
+  if (id === 1414 && !PRESENTATION_ONLY) {
+    const field = key => overlay.querySelector('[data-field="' + key + '"]');
+    const action = key => overlay.querySelector('[data-action="' + key + '"]');
+    const run = app.currentPlaythrough();
+    const select = section => {
+      field('encounter').value = section;
+      field('encounter').dispatchEvent(new Event('change', {bubbles:true}));
+    };
+    check(requestedRosters.has(id) && overlay.querySelector('.inv-modal-title').textContent === 'Калоян и златният печат',
+      'Kaloyan uses the installed presets and Bulgarian translations');
+    check(field('encounter').options.length === 3 && field('strength').value === '5' && field('fighting').value === '1',
+      'two printed encounters, free duel and the printed starting values');
+    select('247');
+    action('start').click();
+    check(run.sim1414.fight.remaining === 8 && field('encounter').disabled, 'eight guards and locked setup');
+    action('prayer').click();
+    check(run.sim1414.prayerUsed && !action('prayer') && run.sim1414.fight.remaining === 7,
+      'prayer resolves one guard and is consumed for this run');
+    for (let guard = 0; guard < 7; guard++) {
+      field('yourRoll').value = '6';
+      action('exchange').click();
+    }
+    check(run.sim1414.history.length === 1 && run.sim1414.fight.destination === 257, 'guards victory is saved once');
+    select('374');
+    field('strategist').click();
+    field('positionWord').click();
+    field('wounds').value = '1';
+    action('start').click();
+    check(run.sim1414.fight.enemy.strength === 4 && run.sim1414.fight.fighting === 3,
+      'Thorvald applies the wound and position modifiers');
+    for (let round = 0; round < 4; round++) {
+      field('yourRoll').value = '1';
+      field('opponentRoll').value = '6';
+      action('exchange').click();
+    }
+    check(run.sim1414.fight.strength === 1 && run.sim1414.fight.destination === 385 && run.sim1414.history.length === 2,
+      'Thorvald ends the duel at one strength and records the loss');
+    check(right.querySelector('[data-bsim-outcome-icon]'), 'the result uses the shared outcome icon');
+  }
+  if (id === 413 && !PRESENTATION_ONLY) {
+    const field = key => overlay.querySelector('[data-field="' + key + '"]');
+    const action = key => overlay.querySelector('[data-action="' + key + '"]');
+    const run = app.currentPlaythrough();
+    check(requestedRosters.has(id) && overlay.querySelector('.inv-modal-title').textContent === 'Призрачният вятър',
+      'Phantom Wind uses the installed roster and Bulgarian translations');
+    check(field('encounter').options.length === 21, 'Phantom Wind has twenty printed encounters and free combat');
+    check(field('skill').value === '10' && field('endurance').value === '50' && field('magic').value === '15',
+      'Phantom Wind has the printed character defaults');
+    field('encounter').value = '296';
+    field('encounter').dispatchEvent(new Event('change', {bubbles:true}));
+    check(overlay.querySelectorAll('.bsim-opponent-row').length === 2, 'both swordsmen in section 296');
+    action('start').click();
+    check(run.sim413.fight.rotation && run.sim413.fight.player.unarmed && field('encounter').disabled,
+      'fixed rotation, forced unarmed stance, and locked setup');
+    for (let round = 0; round < 27; round++) {
+      field('playerDraw').value = '12';
+      field('enemyDraw').value = '1';
+      action('exchange').click();
+    }
+    check(run.sim413.history.length === 1 && run.sim413.history[0].outcome === 'win',
+      'all swordsmen must be defeated and the outcome is recorded once');
+    check(right.querySelector('[data-bsim-outcome-icon]') && !field('encounter').disabled,
+      'Phantom Wind reports the win and unlocks setup');
+    field('healing').click();
+    field('endurance').value = '46';
+    field('healingDraw').value = '8';
+    action('heal').click();
+    check(run.sim413.player.endurance === 50 && run.sim413.player.magic === 14,
+      'healing spends a point and respects the initial endurance cap');
+  }
   if (id === 1307 && !PRESENTATION_ONLY) {
     const run = app.currentPlaythrough();
     const field = key => overlay.querySelector('[data-field="' + key + '"]');
