@@ -1,0 +1,38 @@
+import shared from './battlesim1608.js';
+
+const prefix = 'battlesim1609.';
+export default {
+  ...Object.fromEntries(Object.entries(shared).map(([key,value]) => [key.replace('battlesim1608.',prefix),value])),
+  ...Object.fromEntries(Object.entries({
+    title:'Greek Quest: Combat',
+    rules:'Enter your current stats and choose an encounter or custom fight. Roll one die for initiative unless the book names the first attacker.',
+    unknownHp:'Set the number of ambushers or training opponents from your die roll. Enter any combat stats the book leaves unspecified.',
+    greekFireUses:'Greek Fire jars',
+    greekFire:'Throw Greek Fire',
+    takeWeapon:'Take the fallen opponent’s sword (+4)',
+    retreat:'Retreat before fighting',
+    allySetup:'If the Maenad is fighting with you, enter her remaining Life Points and medicine doses. Leave her Life Points at zero to fight alone.',
+    allyHp:'Maenad’s Life Points',
+    allyMedicine:'Maenad’s herbal medicine doses',
+    allyAttack:'Roll the Maenad’s attack',
+    allyMedicineUse:'Use the Maenad’s medicine',
+    allyPotion:'Share a healing potion with the Maenad',
+    allyTotals:'{name}: {hp} / {maxHp} Life Points · Herbal medicine: {medicine}',
+    enemyTarget:'Opponent attacks',
+    targetPlayer:'You',
+    eventAllyTarget:'{action} · {name} attacks {target} · {dice} · damage {amount} · ally LP {allyHp}',
+    'action.greekFire':'Greek Fire',
+    'action.takeWeapon':'Captured sword',
+    'action.retreat':'Retreated',
+    'action.allyAttack':'Maenad attack',
+    'action.allyMedicine':'Herbal medicine',
+    'action.allyPotion':'Shared healing potion',
+    'phase.wrestling':'Your wrestling roll: roll two dice.',
+    'phase.enemy':'{name} attacks: roll two dice.',
+    wrestlingFalls:'Falls scored: {falls} / {goal}',
+    enemySpecialVictory:'{name}: resolve the printed special victory condition.',
+    totals:'Life Points: {hp} / {maxHp} · Experience: {experience}',
+    toolsTotals:'Greek Fire jars: {greekFireUses} · Healing potion doses: {potionUses}',
+    manualStory:'Follow the reader for travel, story choices, and inventory rewards. Enter combat supplies you already have.',
+  }).map(([key,value]) => [prefix+key,value])),
+};
