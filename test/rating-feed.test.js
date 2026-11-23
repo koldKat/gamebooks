@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const Database = require('better-sqlite3');
 
-test('current book, anthology and series ratings use their saved date and respect privacy', t => {
+test('book, anthology and series rating edits keep their first feed date and respect privacy', t => {
   const db = new Database(':memory:');
   t.after(() => db.close());
   db.exec(`CREATE TABLE users(id,username,public_profile,avatar_path,hide_from_feed,xp,
@@ -33,15 +33,15 @@ test('current book, anthology and series ratings use their saved date and respec
       return sql.includes("WHERE xe.event = 'rate_") ? db.prepare(sql) : {all:()=>[],get:()=>undefined};
     }}},'./xp':{computeLevel:()=>0,getTitleForLevel:()=>''},
     './job-xp':{},'./content':{},'./books':{},'./rating-stats':{},
-    './gameplay-stats':{},'./profile-progress':{}}[name];
+    './gameplay-stats':{},'./profile-progress':{},'./nsfw':{markNsfwFeedEntries:()=>{}}}[name];
   }};
   vm.runInNewContext(fs.readFileSync(require.resolve('../server/db/feed'),'utf8'),context);
   const feed = () => context.module.exports.getFeed();
-  assert.equal(feed().length,3,'a recent rating is visible even when its one-time XP award is old');
+  assert.equal(feed().length,0,'a recent edit does not bring a rating outside the feed window back');
   db.prepare('UPDATE xp_events SET created_at=?').run(now - 86400);
   let entries = feed();
   assert.equal(entries.length,3);
-  assert.ok(entries.every(e => e.completedAt === now * 1000 && e.isSquire));
+  assert.ok(entries.every(e => e.completedAt === (now - 86400) * 1000 && e.isSquire));
   assert.equal(entries.filter(e => e.isContainer).length,1);
   assert.equal(entries.filter(e => e.type === 'series_rated').length,1);
   const child = entries.find(e => e.bookId === 868);
@@ -61,13 +61,11 @@ test('current book, anthology and series ratings use their saved date and respec
   db.prepare('UPDATE user_series SET rating=4, rated_at=?').run(now);
   entries=feed();
   assert.equal(entries.length,3);
-  assert.ok(entries.every(e => e.completedAt === now * 1000),'restored ratings use their current save date');
+  assert.ok(entries.every(e => e.rating === 4 && e.completedAt === (now - 86400) * 1000),
+    'restored ratings show the current score at the first rating date');
   db.prepare('UPDATE xp_events SET created_at=?').run(old);
-  assert.equal(feed().length,3,'old XP dates do not hide newly saved ratings');
-  db.prepare('UPDATE user_books SET rated_at=?').run(old);
-  db.prepare('UPDATE user_series SET rated_at=?').run(old);
-  assert.equal(feed().length,0,'ratings not changed recently remain outside the feed window');
-  // The first award date also supports legacy ratings without a timestamp.
+  assert.equal(feed().length,0,'old first ratings remain outside the feed window after restoration');
+  // Legacy ratings without a saved date still use their first rating event.
   db.exec('UPDATE user_books SET rated_at=NULL; UPDATE user_series SET rated_at=NULL');
   db.prepare('UPDATE xp_events SET created_at=?').run(now);
   assert.equal(feed().length,3);

@@ -64,6 +64,7 @@ function _cleanupOrphanedTargets(sec, oldChoices, newChoices) {
     if (hasIncoming) continue;
 
     state.playthroughs.forEach(pt => {
+      if (pt.completed && pt.result !== 'portal') return;
       while (pt.path.length > 1 && pt.path[pt.path.length - 1] === target) {
         pt.path.pop();
       }

@@ -1,5 +1,43 @@
 // Render active events, the next calendar event, and clearly labelled private previews.
 import {seasonalEndTime,seasonalStartTime,formatSeasonalRemaining} from './remaining-time.js';
+
+const bonusAccents = {
+  'sim battle losses': 'sim-loss',
+  'sim battle wins': 'sim-win',
+  'battle deaths': 'battle-death',
+  losses: 'loss',
+  wins: 'win',
+  heartbeats: 'heartbeat',
+};
+const bonusTerms = new RegExp(`(\\b(?:${Object.keys(bonusAccents).join('|')})\\b)`, 'gi');
+
+function appendBonusDetails(details, description) {
+  for (const [index, part] of description.split(/(\b(?:double|triple|\d+[×x])\s+XP\b[^.;\n]*)/i).entries()) {
+    if (index % 2 === 0) {
+      details.append(part);
+      continue;
+    }
+    const bonus = document.createElement('span');
+    bonus.className = 'seasonal-event-bonus';
+    const multiplierEnd = part.search(/\bXP\b/i) + 2;
+    const label = document.createElement('span');
+    label.className = 'seasonal-event-multiplier';
+    label.textContent = part.slice(0, multiplierEnd);
+    bonus.append(label);
+    for (const [termIndex, term] of part.slice(multiplierEnd).split(bonusTerms).entries()) {
+      if (termIndex % 2 === 0) {
+        bonus.append(term);
+        continue;
+      }
+      const span = document.createElement('span');
+      span.className = 'seasonal-event-' + bonusAccents[term.toLowerCase()];
+      span.textContent = term;
+      bonus.append(span);
+    }
+    details.append(bonus);
+  }
+}
+
 export function renderSeasonalNotice(events, preview = null, date = new Date(), nextEvent = null) {
   const notice = document.getElementById('seasonal-event-notice');
   if (!notice) return;
@@ -41,14 +79,7 @@ export function renderSeasonalNotice(events, preview = null, date = new Date(), 
     title.append(':');
     const details = document.createElement('span'); details.className = 'seasonal-event-details';
     line.append(title, ' ', details);
-    for (const part of event.description.split(/(sim battle losses|sim battle wins|battle deaths|losses|wins|heartbeats)/)) {
-      const classes = { 'battle deaths':'battle-death', losses:'loss', 'sim battle losses':'sim-loss',
-        wins:'win', 'sim battle wins':'sim-win', heartbeats:'heartbeat' };
-      if (classes[part]) {
-        const span = document.createElement('span');
-        span.className = 'seasonal-event-' + classes[part]; span.textContent = part; details.append(span);
-      } else details.append(part);
-    }
+    appendBonusDetails(details, event.description);
     notice.append(line);
   }
   if (preview) {

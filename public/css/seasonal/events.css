@@ -149,6 +149,13 @@
   font-weight: 400;
   line-height: 1.35;
 }
+.seasonal-event-bonus {
+  color: #a8c3bc;
+}
+.seasonal-event-multiplier {
+  color: #e3bc75;
+  font-weight: 600;
+}
 .seasonal-event-ete,
 .seasonal-event-eta {
   opacity: 0.8;

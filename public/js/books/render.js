@@ -200,12 +200,17 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
 
   function _registerSeriesBuilder(s, stashId) {
     const { activeBooks, activeChildrenMap, topInSeries } = _getSeriesActiveBooksForContext(s, stashId);
+    const bookCount = activeBooks.filter(book => !book.is_container).length;
+    const { totalSections } = _aggregateProgress(activeBooks, activeChildrenMap);
+    const pages = topInSeries.reduce((total, book) => total + (Number(book.pages) ||
+      (book.is_container ? (activeChildrenMap[book.id] || []).reduce((sum, child) => sum + (Number(child.pages) || 0), 0) : 0)), 0);
     const context = `series:${stashId ?? ''}:${s.id}`;
     lazyState.matchers.set(context, searchGroup([s, ...activeBooks]));
     for (const b of topInSeries) if (b.is_container) _registerContainerBuilder(b, activeChildrenMap, context);
     lazyState.builders.set(context, ({ incremental = false } = {}) => {
       const items = (function* () {
         yield `<div class="series-summary">` +
+          `<div class="book-sections">${bookCount === 1 ? '1 book' : `${bookCount} books`}${totalSections > 0 ? ` · ${totalSections} sections` : ''}${pages > 0 ? ` · <span class="book-isbn">${pages} pages</span>` : ''}</div>` +
           `<div class="book-rating-row star-rating" data-series-id="${s.id}" data-user-rating="${s.userRating ?? ''}">${_starsHtml(s.userRating)}<span class="star-label">${_personalStarLabelHtml(s.userRating, 'series')}</span></div></div>`;
         if (activeBooks.length) {
           for (const b of topInSeries) yield b.is_container

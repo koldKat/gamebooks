@@ -115,6 +115,40 @@ for(const id of BOOK_IDS){
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
   }
+  if (id === 32 && !PRESENTATION_ONLY) {
+    const field = key => overlay.querySelector('[data-field="' + key + '"]');
+    const action = key => overlay.querySelector('[data-action="' + key + '"]');
+    const select = (key,value) => {
+      field(key).value = value;
+      field(key).dispatchEvent(new Event('change', {bubbles:true}));
+    };
+    check(requestedRosters.has(id) && overlay.querySelector('.inv-modal-title').textContent === 'Кървав сняг',
+      'Bloody Snow loads the installed roster and Bulgarian translations');
+    check(field('hero').options.length === 6 && field('encounter').options.length === 8, 'six heroes and seven book encounters');
+    check(field('strength').value === '5' && action('start').disabled, 'Petar starts with printed stats and needs equipment');
+    select('hero','2');
+    check(field('speed').value === '5' && field('armor').value === '0', 'Ilya gets a separate stat preset');
+    [...overlay.querySelectorAll('[data-field="equipmentItem"]')].slice(0,3).forEach(box => box.click());
+    select('encounter','19');
+    check(field('encounter').value === '19' && overlay.querySelectorAll('.bsim-opponent-row').length === 3,
+      'wolf preset stays selected and shows all three opponents');
+    select('opening','bow');
+    select('target','1');
+    const savedRandom = Math.random;
+    try {
+      Math.random = () => .45;
+      action('start').click();
+      const run = app.currentPlaythrough();
+      check(run.sim32.fight.opponents.map(enemy => enemy.hp).join(',') === '2,0,2', 'the selected wolf is removed before melee');
+      check(right.contains(overlay.querySelector('.bsim-status')), 'combat results remain in the right column');
+      let calls = 0;
+      Math.random = () => calls++ % 2 ? .01 : .99;
+      for (let turn = 0; turn < 4; turn++) action('roll').click();
+      check(run.sim32.history.length === 1 && run.sim32.history[0].outcome === 'won',
+        'a win is saved once after both remaining wolves are defeated');
+      check(field('hero').value === '2' && field('encounter').value === '19', 'completed battle restores the selected setup');
+    } finally { Math.random = savedRandom; }
+  }
   if (id === 1307 && !PRESENTATION_ONLY) {
     const run = app.currentPlaythrough();
     const field = key => overlay.querySelector('[data-field="' + key + '"]');

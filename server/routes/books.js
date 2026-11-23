@@ -4,6 +4,7 @@
 
 const db = require('../db');
 const { patchBookPositions } = require('../db/book-positions');
+const { reconcileRunEndings } = require('../db/run-endings');
 const {
   authenticate, authenticateOptional, send, readBody, getClientIp, tokenFromReq, isLocalhost, isRequestImpersonating,
 } = require('../request-helpers');
@@ -691,6 +692,7 @@ async function handleSaveState(req, res, bookId) {
   if (oldState && db.getPartyForBook(userId, bookId)) {
     stateObj.positions = { ...(stateObj.positions || {}), ...(oldState.positions || {}) };
   }
+  const correctedRuns = reconcileRunEndings(oldState, stateObj);
   if (!db.saveBookState(userId, bookId, stateObj, { skipTimestamp: impersonating })) return send(res, 404, { error: 'Not found' });
   send(res, 200, { ok: true });
   // Scan all runs: completion clears activePtIndex before state is saved.
@@ -704,7 +706,9 @@ async function handleSaveState(req, res, bookId) {
         const isNowTerminal = newPt.completed && newPt.result !== 'portal';
         const wasTerminal = oldPt?.completed && oldPt?.result !== 'portal';
         // Require startedAt before copying completion so untouched placeholders cannot earn rewards.
-        if (isNowTerminal && !wasTerminal && newPt.startedAt) {
+        if (correctedRuns.has(newPt.startedAt) && wasTerminal) {
+          db.correctSeriesRunEnding(userId, bookMeta.series_id, i, oldPt, newPt, bookId);
+        } else if (isNowTerminal && !wasTerminal && newPt.startedAt) {
           // Newly completed - record completion and sync public status
           db.completeSeriesRun(userId, bookMeta.series_id, i, newPt.result);
           db.updateSeriesRunPublic(userId, bookMeta.series_id, i, !!newPt.isPublic);
@@ -720,7 +724,8 @@ async function handleSaveState(req, res, bookId) {
   }
   // Impersonated saves must not award the player's XP.
   if (oldState && !impersonating) db.processStateXp(userId, bookId, oldState, stateObj, stateObj.totalSections || 0);
-  bookStreamPush(userId, bookId, req.headers['x-book-client'], { type: 'state_updated', by: userId, bookId });
+  bookStreamPush(userId, bookId, correctedRuns.size ? null : req.headers['x-book-client'],
+    { type: 'state_updated', by: userId, bookId });
   // Fan out to party members and award them the same XP milestones
   const party = db.getPartyForBook(userId, bookId);
   if (party) {
@@ -746,7 +751,7 @@ async function handleSaveState(req, res, bookId) {
         || (pt.completed && (pt.result !== op?.result || pt.completedAt !== op?.completedAt))
         || (!!pt.isPublic !== !!op?.isPublic);
   });
-  if (feedRelevant) feedPush({ type: 'feed_changed', entity: 'book', action: 'state_save', id: bookId });
+  if (feedRelevant || correctedRuns.size) feedPush({ type: 'feed_changed', entity: 'book', action: 'state_save', id: bookId });
 }
 
 async function handleSavePositions(req, res, bookId) {

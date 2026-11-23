@@ -4,6 +4,10 @@
   border-bottom: 1px solid rgba(245, 166, 35, 0.18);
 }
 
+.series-summary > .book-sections {
+  display: flex;
+}
+
 .series-header-row {
   display: flex;
   align-items: center;

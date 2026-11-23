@@ -770,7 +770,7 @@ SIM_HISTORY_KEYS.push('sim895');
 SIM_HISTORY_KEYS.push('sim896');
 SIM_HISTORY_KEYS.push('sim903');
 SIM_HISTORY_KEYS.push('sim904');
-SIM_HISTORY_KEYS.push('sim906', 'sim3196', 'sim592', 'sim601', 'sim602', 'sim603', 'sim731', 'sim732', 'sim1307', 'sim265', 'sim266');
+SIM_HISTORY_KEYS.push('sim32', 'sim906', 'sim3196', 'sim592', 'sim601', 'sim602', 'sim603', 'sim731', 'sim732', 'sim1307', 'sim265', 'sim266');
 SIM_HISTORY_KEYS.push('sim1285');
 SIM_HISTORY_KEYS.push('sim1286');
 SIM_HISTORY_KEYS.push('sim1287');
@@ -891,6 +891,9 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
   );
 
   // Use series-scoped, startedAt-based refs to deduplicate propagated rewards without reused-index collisions.
+  const runOutcomeLogged = db.prepare(`SELECT 1 FROM xp_events
+    WHERE user_id = ? AND ref = ? AND event IN ('win_run', 'death_run', 'battle_run') LIMIT 1`);
+  const oldRunsByStart = new Map(oldPts.filter(pt => pt?.startedAt).map(pt => [pt.startedAt, pt]));
   let _anyRunJustCompleted = false;
   for (let i = 0; i < newPts.length; i++) {
     const oldPt = oldPts[i];
@@ -900,7 +903,8 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
     const runKey = newPt?.startedAt ?? i;
     const ref    = owSeriesId ? `series:${owSeriesId}:${runKey}` : `${bookId}:${runKey}`;
 
-    if (!oldPt?.completed && newPt?.completed) {
+    if (newPt?.completed && !oldRunsByStart.get(newPt.startedAt)?.completed
+        && !runOutcomeLogged.get(userId, ref)) {
       _anyRunJustCompleted = true;
       awardCleanRun(newPt, i);
       if (newPt.result === 'death') {
@@ -974,6 +978,7 @@ function processStateXp(userId, bookId, oldState, newState, totalSections) {
           const newPt = newPts[i];
           if (!newPt?.completed || !_touched(newPt)) continue;
           const ref = `${refPrefix}${newPt?.startedAt ?? i}`;
+          if (runOutcomeLogged.get(userId, ref)) continue;
           let awarded = false;
           if (newPt.result === 'death') {
             awarded = awardXp(userId, 'death_run', ref);

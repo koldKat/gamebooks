@@ -7,13 +7,15 @@ const vm = require('node:vm');
 
 function feedFor({ publicRun = true, publicBook = true, hideFirst = true, firstOutcome = null,
   differentStarts = false, reverseMilestones = false, milestoneOnlyFirst = false, milestoneIndex = 3,
-  openWorld = false, container = false } = {}) {
+  openWorld = false, container = false, correctedWin = false } = {}) {
   const now = Date.now();
   const result = firstOutcome === 'first_loss' ? 'death' : firstOutcome === 'first_battle_death' ? 'battle' : 'success';
   const runs = Array.from({length:firstOutcome ? milestoneIndex + 1 : 1}, (_,index) => ({
     startedAt: now - 20000 + index * 1000, completedAt: now - 10000 + index * 1000,
-    completed: true, result:index === milestoneIndex || !firstOutcome ? result : 'success', path:[1,2],isPublic:publicRun,
+    completed: true, result:index === milestoneIndex || !firstOutcome ? result
+      : firstOutcome === 'first_win' ? 'death' : 'success', path:[1,2],isPublic:publicRun,
   }));
+  if (correctedWin) runs[milestoneIndex - 1].path = [1,92];
   const rows = ['koldKat', 'sashii'].map((username, index) => ({
     userId: index + 1, user_id:index + 1, username, public_profile: 1,
     hide_from_feed: index === 0 && hideFirst ? 1 : 0,
@@ -37,13 +39,14 @@ function feedFor({ publicRun = true, publicBook = true, hideFirst = true, firstO
       },
       get: userId => {
         if (!firstOutcome || !sql.includes('SELECT ref FROM xp_events')) return undefined;
-        const row=rows.find(row=>row.userId===userId),run=JSON.parse(row.state_data).playthroughs[milestoneIndex];
+        const row=rows.find(row=>row.userId===userId),run=JSON.parse(row.state_data).playthroughs[correctedWin ? milestoneIndex - 1 : milestoneIndex];
         return {ref:`868:${run.startedAt}`};
       },
     }) } },
     './xp': { computeLevel: () => 1, getTitleForLevel: () => 'Lost Soul' },
     './content': {}, './books': {}, './job-xp': require('../server/db/job-xp'), './rating-stats': {},
     './gameplay-stats': {}, './profile-progress': {},
+    './nsfw': require('../server/db/nsfw'),
   };
   const context = vm.createContext({ module: { exports: {} }, require: name => deps[name], Date });
   vm.runInContext(fs.readFileSync(require.resolve('../server/db/feed'), 'utf8'), context);
@@ -64,7 +67,7 @@ test('public-book party starts respect hide-feed settings while shared completio
 
 test('open-world book runs without a corresponding series journey remain visible', () => {
   const entries = feedFor({ openWorld: true, hideFirst: false });
-  for (const type of ['run_started', 'run_completed']) {
+  for (const type of ['run_started', 'first_win']) {
     const matches = entries.filter(entry => entry.type === type);
     assert.equal(matches.length, 1);
     assert.equal(matches[0].seriesId, 12);
@@ -84,7 +87,7 @@ test('first wins, losses and battle deaths retain anthology and series context',
 test('hiding feed activity still excludes a hidden player from private party runs', () => {
   for (const publicBook of [true, false]) {
     const entries = feedFor({ publicRun: false, publicBook });
-    for (const type of ['run_started', 'run_completed']) {
+    for (const type of ['run_started', 'first_win']) {
       const matching = entries.filter(e => e.type === type);
       assert.equal(matching.length, 1);
       assert.equal(matching[0].username, 'sashii');
@@ -95,7 +98,7 @@ test('hiding feed activity still excludes a hidden player from private party run
 
 test('party members who show feed activity still merge their private run events', () => {
   const entries = feedFor({ publicRun: false, hideFirst: false });
-  for (const type of ['run_started', 'run_completed']) {
+  for (const type of ['run_started', 'first_win']) {
     const matching = entries.filter(e => e.type === type);
     assert.equal(matching.length, 1);
     assert.equal(matching[0].usernames.length, 2);
@@ -121,13 +124,21 @@ test('unrelated runs with the same array position do not merge their first outco
   assert.ok(milestones.every(e=>!e.usernames));
 });
 
-test('first-outcome merging respects hidden players and retains completion when a partner has no milestone', () => {
+test('first-outcome merging respects hidden players and individual battle death milestones', () => {
   const hidden=feedFor({firstOutcome:'first_loss'}).filter(e=>e.type==='first_loss');
   assert.equal(hidden.length,1);assert.equal(hidden[0].username,'sashii');assert.equal(hidden[0].usernames,undefined);
-  const entries=feedFor({firstOutcome:'first_loss',hideFirst:false,milestoneOnlyFirst:true});
-  assert.equal(entries.filter(e=>e.type==='first_loss').length,1);
+  const entries=feedFor({firstOutcome:'first_battle_death',hideFirst:false,milestoneOnlyFirst:true});
+  assert.equal(entries.filter(e=>e.type==='first_battle_death').length,1);
   assert.equal(entries.filter(e=>e.type==='run_completed'&&e.runIndex===3).length,1,
     'a shared completion remains when it is not represented for every player by first-outcome entries');
   const win=feedFor({firstOutcome:'first_win',hideFirst:false,milestoneIndex:0}).find(e=>e.type==='first_win');
   assert.equal(win.runIndex,0,'first shared run is still Run 1');
+});
+
+test('a corrected win becomes a loss and the next real win owns the first-win feed entry', () => {
+  const entries = feedFor({ firstOutcome: 'first_win', hideFirst: false, correctedWin: true });
+  assert.equal(entries.find(e => e.type === 'first_win').runIndex, 3);
+  const corrected = entries.find(e => e.type === 'run_completed' && e.runIndex === 2);
+  assert.equal(corrected.result, 'death');
+  assert.equal(corrected.lastSection, 92);
 });

@@ -112,10 +112,18 @@ export async function openCollectibles(){
   });
   for(const host of body.querySelectorAll('[data-cursor-preview]')){
    const id=host.dataset.cursorPreview,quantity=data.quantities?.[id]??1;
-   if(displayedNew.has(id))host.parentElement.classList.add('collectible-item--new');
+   const item=host.parentElement;
+   if(displayedNew.has(id)){
+    item.classList.add('collectible-item--new');
+    item.addEventListener('pointerenter',event=>{
+     if(event.pointerType!=='mouse')return;
+     displayedNew.delete(id);
+     item.classList.remove('collectible-item--new');
+    });
+   }
    if(quantity>1||data.showSingleQuantity){
     const badge=document.createElement('span');badge.className='collectible-quantity';
-    badge.textContent='x'+quantity.toLocaleString();host.parentElement.append(badge);
+    badge.textContent='x'+quantity.toLocaleString();item.append(badge);
    }
   }
  }catch{if(sequence===request&&token===getToken()&&dialog.open)body.textContent='Unable to load. Close and try again.';}

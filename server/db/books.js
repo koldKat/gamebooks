@@ -447,6 +447,17 @@ function completeSeriesRun(userId, seriesId, runIndex, result) {
     .run(result, userId, seriesId, runIndex);
 }
 
+function correctSeriesRunEnding(userId, seriesId, runIndex, previous, run, bookId) {
+  const reopened = !run.completed;
+  db.prepare(`UPDATE series_runs SET completed = ?, result = ?, last_book_id = ?, last_section = ?,
+      completed_at = CASE WHEN ? THEN NULL ELSE completed_at END
+    WHERE user_id = ? AND series_id = ? AND run_index = ? AND completed = 1 AND result = ?
+      AND ABS(completed_at - ?) <= 1`)
+    .run(run.completed ? 1 : 0, run.result, reopened ? bookId : null,
+      reopened ? String(run.path.at(-1)) : null, reopened ? 1 : 0,
+      userId, seriesId, runIndex, previous.result, Math.floor(previous.completedAt / 1000));
+}
+
 function updateSeriesRunPublic(userId, seriesId, runIndex, isPublic) {
   db.prepare(`UPDATE series_runs SET is_public = ? WHERE user_id = ? AND series_id = ? AND run_index = ?`)
     .run(isPublic ? 1 : 0, userId, seriesId, runIndex);
@@ -1333,7 +1344,7 @@ module.exports = {
   _pruneRedundantAnthologyMembership,
   getBookSection, getBookNumberingMinimum, _canLiveRead,
   getSeriesById, updateSeries, getSeriesCharacter, saveSeriesCharacter, getSeriesRuns,
-  updateSeriesRunPosition, completeSeriesRun, updateSeriesRunPublic, migratePreSeriesRuns,
+  updateSeriesRunPosition, completeSeriesRun, correctSeriesRunEnding, updateSeriesRunPublic, migratePreSeriesRuns,
   reverseSeriesOpenWorld, createSeriesRun, getActiveSeriesRunsForUser, deleteSeriesRun,
   patchSeriesRunDeletion, resetSeriesForUser, updateSeriesRun, deleteSeries, deleteSeriesRow,
   countSeriesOtherUsers, countBooksInSeries, getNextSeriesUser, transferSeriesOwnership,

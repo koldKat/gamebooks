@@ -116,6 +116,11 @@ body.reduce-motion [data-open-collectibles].collectibles-btn--new {
   outline: 2px solid #c6ae7b;
   outline-offset: 2px;
 }
+body.reduce-motion #collectibles-dialog .collectible-item--new {
+  animation: none;
+  border-color: #68a67e;
+  box-shadow: inset 0 0 0 1px #4ade8040;
+}
 #collectibles-dialog .season-cursor-preview {
   height: 60px;
   display: grid;

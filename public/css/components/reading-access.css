@@ -408,6 +408,14 @@
 .reading-time-sheet td.reading-time-gap {
   border: 0;
 }
+table.reading-number-grid {
+  font-variant-numeric: tabular-nums;
+}
+.reading-number-grid td {
+  padding: 0.25em 0;
+  text-align: center;
+  white-space: nowrap;
+}
 .liveread-body table.reading-wide-table,
 .m-top table.reading-wide-table {
   min-width: 40rem;
