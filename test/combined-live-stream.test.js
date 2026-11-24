@@ -37,3 +37,22 @@ test('legacy feed stream remains public and subscribes only to the feed', async 
   await context.handleGetFeedStream({ url: '/api/feed/stream' }, { writeHead() {}, write() {} });
   assert.deepEqual(registered, ['feed']); cleanup(); assert.deepEqual(registered, []);
 });
+
+test('book creation refreshes only the creator’s library, including for private books', async () => {
+  const creation = source.slice(source.indexOf('async function handleCreateBook('), source.indexOf('async function handleUpdateBook('));
+  const privateUpdates = [];
+  const publicUpdates = [];
+  const context = {
+    authenticate: async () => 17,
+    readBody: async () => ({ name: 'Private Story', total_sections: 25 }),
+    db: { createBook: () => ({ id: 42 }), awardXp() {} },
+    send() {},
+    feedPush() {},
+    publicCatalogPush: (...args) => publicUpdates.push(args),
+    userBadgePush: (userId, payload) => privateUpdates.push([userId, payload.type]),
+  };
+  vm.runInNewContext(creation, context);
+  await context.handleCreateBook({}, {});
+  assert.deepEqual(privateUpdates, [[17, 'library_changed']]);
+  assert.deepEqual(publicUpdates, []);
+});

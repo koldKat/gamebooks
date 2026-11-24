@@ -48,7 +48,7 @@ function _subscribeLive(channel, options) {
         let payload;
         try { payload = JSON.parse(event.data); } catch { return; }
         const channel = payload.type === 'public_catalog_changed' ? 'catalog'
-          : payload.type === 'badge_state_changed' ? 'badges'
+          : payload.type === 'badge_state_changed' || payload.type === 'library_changed' ? 'badges'
           : !payload.type ? 'xp' : 'feed';
         const sub = _liveSubscriptions.get(channel);
         if (sub?.enabled()) sub.onMessage?.(event);
@@ -74,6 +74,8 @@ let _userBadgeDirty      = false;
 let _coinsDirty          = false;
 let _feedPollInterval    = null;
 let _booksPollInterval   = null;
+let _libraryChangedTimer = null;
+let _libraryDirty        = false;
 let _lastFeedVersion     = null;
 let _feedVersionPrimed   = false;
 
@@ -243,7 +245,24 @@ function _takeLiveLeadership() {
   _setLiveLeader(verify?.id === _liveTabId);
 }
 
+function _refreshVisibleLibrary() {
+  if (!getToken()) return;
+  _libraryDirty = true;
+  clearTimeout(_libraryChangedTimer);
+  if (document.visibilityState !== 'visible' || !_hooks.isLandingVisible?.()) return;
+  _libraryChangedTimer = setTimeout(() => {
+    if (getToken() && document.visibilityState === 'visible' && _hooks.isLandingVisible?.()) {
+      _libraryDirty = false;
+      _hooks.refreshBooksListOnly?.({ afterMutation: true });
+    }
+  }, 150);
+}
+
 function _applyFollowerLiveEvent(type, payload = null) {
+  if (type === 'library_changed') {
+    _refreshVisibleLibrary();
+    return;
+  }
   if (type === 'config_reconcile') {
     _signalConfigChange();
     return;
@@ -374,7 +393,13 @@ export function _connectUserBadgeSSE() {
     const refresh = event => {
       if (event?.data) {
         try {
-          if (JSON.parse(event.data).companions) {
+          const payload = JSON.parse(event.data);
+          if (payload.type === 'library_changed') {
+            _refreshVisibleLibrary();
+            _broadcastLiveEvent('library_changed');
+            return;
+          }
+          if (payload.companions) {
             window.dispatchEvent(new Event('companion-market-updated'));
             _broadcastLiveEvent('companions_changed');
           }
@@ -384,7 +409,12 @@ export function _connectUserBadgeSSE() {
       _broadcastLiveEvent('badges_changed');
     };
     _userBadgeSource = _subscribeLive('badges', {
-      enabled: () => _isLiveLeader && !!getToken(), onMessage: refresh, onReconnect: refresh,
+      enabled: () => _isLiveLeader && !!getToken(), onMessage: refresh,
+      onReconnect: () => {
+        refresh();
+        _refreshVisibleLibrary();
+        _broadcastLiveEvent('library_changed');
+      },
     });
   } catch (_) {}
 }
@@ -439,6 +469,7 @@ export function _ensureLiveTabControllerStarted() {
   function _onTabBecomeVisible() {
     _takeLiveLeadership();
     _resumeLiveStreams();
+    if (_libraryDirty) _refreshVisibleLibrary();
     // Catch up feed and reward state after a frozen/throttled tab becomes visible.
     _refreshFeedIfChanged();
     if (getToken()) _hooks.scheduleRewardProfileRefresh?.(150);

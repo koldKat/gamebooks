@@ -372,6 +372,7 @@ async function handleCreateBook(req, res) {
   if (parent_book_id) db.awardXp(userId, 'add_book_to_anthology', book.id);
   if (parent_book_id && book_order != null) db.awardXp(userId, 'add_anthology_order', book.id);
   if (isPublic && !isContainer) publicCatalogPush({ type: 'public_catalog_changed', entity: 'book', id: book.id, action: 'create' });
+  userBadgePush(userId, { type: 'library_changed' });
   feedPush({ type: 'feed_changed', entity: 'book', action: 'create', id: book.id });
 }
 
