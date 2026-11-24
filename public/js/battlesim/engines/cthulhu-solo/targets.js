@@ -1,21 +1,41 @@
 // Allocate combat turns and targets from printed encounter rules without story navigation.
-const active = actor => actor.hp > 0 && !actor.fled && !actor.unconscious;
-export function requireTurn(fight, side, index) {
-  let order = fight.spec.order;
-  if (fight.round === 1 && fight.spec.openingOrder) order = fight.spec.openingOrder;
-  if (order === 'ambush') order = fight.ambush ? 'party-first' : 'enemies-first';
-  const pending = ['party', 'enemies'].flatMap(team => {
+import { combatantAvailable as active } from './encounter-rules.js';
+
+export const isDodgingThisRound = actor => actor.dodgeOnEven && actor.stanceRoll % 2 === 0;
+const canFireOpening = actor => active(actor) && actor.canFireOpening && actor.ammo > 0 && actor.used < (actor.openingShots ?? 1);
+export function pendingCombatTurns(fight) {
+  if (fight.openingFire) return fight.party.flatMap((actor, index) =>
+    canFireOpening(actor) ? [{ side: 'party', index, actor }] : []);
+  return ['party', 'enemies'].flatMap(team => {
     if (team === 'party' && fight.spec.allowPartyAttack === false || team === 'enemies' && fight.spec.allowEnemyAttack === false) return [];
+    if (team === 'party' && fight.spec.playerOnlyOpeningAttack && fight.round !== 1) return [];
     if (team === 'enemies' && fight.spec.enemyActionsLimit != null
         && fight.enemies.reduce((sum, actor) => sum + actor.used, 0) >= fight.spec.enemyActionsLimit) return [];
+    if (team === 'enemies' && fight.spec.totalEnemyActions != null
+        && (fight.enemyActionsTaken ?? 0) >= fight.spec.totalEnemyActions) return [];
     if (team === 'party' && fight.spec.partyActionsLimit != null
         && fight.party.reduce((sum, actor) => sum + actor.used, 0) >= fight.spec.partyActionsLimit) return [];
     return fight[team].flatMap((actor, i) => !(team === 'party' && fight.spec.playerMainOnly && i !== (fight.mainIndex ?? 0))
       && !(team === 'party' && fight.spec.playerExcludesMain && i === (fight.mainIndex ?? 0))
       && active(actor) && !actor.hypnotized && !actor.temporaryInsanity && !(team === 'party' && fight.spec.excludeDriver && actor.driver)
-      && (!actor.grappled || actor.canActGrappled) && actor.used < (actor.attacks ?? 1)
+      && !(team === 'party' && fight.spec.riflesOnly && !actor.ammo)
+      && !isDodgingThisRound(actor) && (!actor.grappled || actor.canActGrappled) && actor.used < (actor.attacks ?? 1)
       && (team === 'party' || actor.moves?.length) ? [{ side: team, index: i, actor }] : []);
   });
+}
+
+export function requireTurn(fight, side, index) {
+  if (fight.openingFire) {
+    if (side !== 'party' || !fight.party[index] || !canFireOpening(fight.party[index])) throw new RangeError('Opening shot unavailable');
+    return;
+  }
+  let order = fight.spec.order;
+  if (fight.round === 1 && fight.spec.openingOrder) order = fight.spec.openingOrder;
+  if (order === 'ambush') order = fight.ambush ? 'party-first' : 'enemies-first';
+  if (order === 'ready') order = fight.ambush ? fight.spec.order : 'enemies-first';
+  if (order === 'firearm') order = fight.party.some(actor => ['firearm', 'pistol', 'rifle', 'smg', 'shotgun'].includes(actor.weaponKind))
+    ? 'party-first' : 'enemies-first';
+  const pending = pendingCombatTurns(fight);
   if (fight.round === 1 && fight.spec.mainOpens && pending.some(row => row.side === 'party' && row.index === (fight.mainIndex ?? 0))) {
     if (side !== 'party' || index !== (fight.mainIndex ?? 0)) throw new RangeError('Main investigator acts first');
     return;
@@ -36,6 +56,10 @@ export function requireTurn(fight, side, index) {
 export function allocateAttack(fight, side, actor, requested, move, random) {
   const opponents = fight[side === 'party' ? 'enemies' : 'party'];
   let candidates = opponents.flatMap((target, index) => active(target) ? [index] : []);
+  if (actor.targetRoles?.length) {
+    const priority = actor.targetRoles.map(role => candidates.find(index => opponents[index].role === role)).find(index => index != null);
+    if (priority != null) candidates = [priority];
+  }
   let rule = move.targetRule ?? actor.targetRule;
   if (actor.openingTarget && fight.round === 1) rule = actor.openingTarget;
   if (actor.allocation === 'trample-each') {

@@ -1,5 +1,6 @@
 // Apply explicit encounter recovery and phase changes without making story decisions.
 import { combatCheck } from './checks.js';
+import { retreatCounter } from './combat.js';
 
 function actorFor(fight, index) {
   const actor = fight?.party?.[index];
@@ -40,15 +41,33 @@ export function retreat(fight, random = Math.random) {
   if (fight?.status !== 'fighting' || !fight.spec.retreat) throw new RangeError('Retreat unavailable');
   const rule = fight.spec.retreat;
   if (fight.round < (rule.fromRound ?? 1)) throw new RangeError('Too early to retreat');
+  if (rule.opponentDamage != null && !fight.enemies.every(a => a.maxHp - a.hp >= rule.opponentDamage)) {
+    throw new RangeError('Opponents are not weakened enough');
+  }
+  if (rule.failureCounter && fight.lastRetreatRound === fight.round) throw new RangeError('Already attempted this round');
+  if (rule.onceAfterEnemyAction && (!fight.enemyActionsTaken || fight.lastRetreatAfterEnemyActions === fight.enemyActionsTaken)) throw new RangeError('Resolve the next attack first');
   if (rule.requiresStunned && !fight.enemies.some(enemy => enemy.stunned)) throw new RangeError('Opponent is not stunned');
+  const previous = fight.log.at(-1);
+  const missedOpeningAttack = rule.automaticFollowingMiss && fight.enemyActionsTaken === 1
+    && previous?.side === 'enemies' && previous.attack && !previous.wound;
   const rolls = fight.party.map(actor => actor.hp <= 0 || actor.fled ? null
-    : rule.automatic || rule.automaticRound && fight.round >= rule.automaticRound ? { level: 2 }
-      : combatCheck(actor.dex, 0, random, fight.mode ?? 'percentile'));
-  rolls.forEach((check, index) => { if (check?.level >= 2) fight.party[index].fled = true; });
+    : rule.automatic || missedOpeningAttack || rule.automaticRound && fight.round >= rule.automaticRound ? { level: 2 }
+      : combatCheck(actor[rule.skill ?? 'dex'], 0, random, fight.mode ?? 'percentile'));
+  rolls.forEach((check, index) => { if (check?.level >= (rule.level ?? 2)) fight.party[index].fled = true; });
+  if (rule.failureCounter) fight.lastRetreatRound = fight.round;
+  if (rule.onceAfterEnemyAction) fight.lastRetreatAfterEnemyActions = fight.enemyActionsTaken;
   if (fight.party.every(actor => actor.hp <= 0 || actor.fled)) fight.status = 'retreated';
+  else if (rule.failAfterEnemyActions != null && fight.enemyActionsTaken >= rule.failAfterEnemyActions) fight.status = 'loss';
   fight.log.push({ round: fight.round, side: 'party', index: 0, retreat: rolls });
   fight.log = fight.log.slice(-200);
+  if (rule.failureCounter && fight.status === 'fighting') retreatCounter(fight, random);
   return rolls;
+}
+
+export function surrender(fight) {
+  if (fight?.status !== 'fighting' || !fight.spec.allowSurrender) return false;
+  fight.status = 'surrendered';
+  return true;
 }
 
 export function changePhase(fight, spec) {

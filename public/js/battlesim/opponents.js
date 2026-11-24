@@ -1,7 +1,7 @@
 const escape = value => String(value).replace(/[&<>"']/g, character =>
   ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[character]));
 
-export function validateOpponents(rows, fields, isStatUnavailable) {
+export function validateOpponents(rows, fields, isStatUnavailable, isStatOptional) {
   if (!Array.isArray(rows) || !rows.length || rows.length > 100) throw new RangeError('Invalid opponent count');
   return rows.map(row => {
     const result = {...row};
@@ -14,6 +14,10 @@ export function validateOpponents(rows, fields, isStatUnavailable) {
       // Derived encounters explicitly opt out of fixed numeric inputs.
       if (isStatUnavailable?.(field.key, row)) { result[field.key] = null; continue; }
       const raw = row[field.key];
+      if ((raw === '' || raw == null) && isStatOptional?.(field.key, row)) {
+        result[field.key] = null;
+        continue;
+      }
       const value = Number(raw);
       if (raw === '' || raw == null || !Number.isFinite(value)
           || value < (field.min ?? 0) || value > (field.max ?? 1000000)
@@ -28,7 +32,7 @@ export function validateOpponents(rows, fields, isStatUnavailable) {
 }
 
 // Presets fill editable fields; they never replace a running fight.
-export function createOpponentEditor({document, id, t, fields, presets = [], language = 'en', onSelect, isStatUnavailable}) {
+export function createOpponentEditor({document, id, t, fields, presets = [], language = 'en', onSelect, isStatUnavailable, isStatOptional}) {
   const label = key => t('battlesim.editor.' + (language === 'bg' ? 'bg.' : '') + key);
   const element = document.createElement('details');
   element.className = 'bsim-opponent-editor';
@@ -67,6 +71,7 @@ export function createOpponentEditor({document, id, t, fields, presets = [], lan
           : value.unavailableStats?.includes(input.dataset.stat)));
         input.disabled = locked || input.dataset.unavailable === 'true';
         input.placeholder = input.dataset.unavailable === 'true' ? '-' : '';
+        if (input.type === 'number') input.required = !isStatOptional?.(input.dataset.stat, value);
       }
     }
     function suggest() {
@@ -135,7 +140,7 @@ export function createOpponentEditor({document, id, t, fields, presets = [], lan
       rows = []; container.replaceChildren();
       for (const opponent of opponents?.length ? opponents : [{}]) append(opponent);
     },
-    read() { return validateOpponents(rows.map(row => row.read()), fields, isStatUnavailable); },
+    read() { return validateOpponents(rows.map(row => row.read()), fields, isStatUnavailable, isStatOptional); },
     snapshot() { return rows.map(row => row.read()); },
     lock(value) { locked = Boolean(value); refresh(); },
     fixCount(value) { fixedCount = Boolean(value); refresh(); },

@@ -2,8 +2,8 @@ import { decorateOutcome } from '../../outcome.js';
 // Present optional Kingfisher combat, compact opponent groups and run-scoped results.
 import {createOpponentEditor} from '../../opponents.js';
 import {createQuestState} from '../super-endless-quest/state.js';
-import {startKingfisherFight, kingfisherAction, kingfisherIsUnarmed, kingfisherCanTakeWeapon, kingfisherCanThrowFire,
-  kingfisherCanRetreat, kingfisherAllyInFight,
+import {startKingfisherFight, kingfisherAction, kingfisherLocksWeapon, kingfisherCanTakeWeapon, kingfisherCanThrowFire,
+  kingfisherCanCastNet, kingfisherCanRetreat, kingfisherAllyInFight,
   kingfisherUsesSpecialVictory, kingfisherTurnGroup,
   kingfisherWeaponAvailable, validateKingfisherFight} from './core.js';
 
@@ -58,10 +58,12 @@ export function createKingfisherPanel({document, definition, t, getRoster, getRu
     editor.set(entry ? entry.profiles.map(editable) : [{displayName:'', hp:null, bonus:0, armour:0, count:1, ammo:0, type:'melee', human:0}]);
     editor.fixCount(Boolean(entry));
     lockCounts();
-    if (entry?.unarmedOnly || entry?.firstDuelUnarmed) weapon.value = 'melee';
+    const forcesMelee = entry?.unarmedOnly || entry?.firstDuelUnarmed || entry?.forcedPlayerMeleeBonus != null;
+    if (forcesMelee) weapon.value = 'melee';
+    weapon.disabled = Boolean(forcesMelee);
     for (const [key, input] of Object.entries(options)) {
       input.checked = false;
-      input.closest('label').hidden = !entry?.contextOptions?.includes(key);
+      input.closest('label').hidden = key !== 'hasNet' && !entry?.contextOptions?.includes(key);
     }
   }
   function change(action, expected = token) {
@@ -97,11 +99,13 @@ export function createKingfisherPanel({document, definition, t, getRoster, getRu
       target.addEventListener('change', () => act({kind:'target', index:Number(target.value)}));
     }
     if (fight.phase === 'player') {
-      const current = select(controls, 'activeWeapon', (kingfisherIsUnarmed(fight) ? ['melee'] : weaponModes()).map(value => [value, tr('weapon.' + value)]));
+      const current = select(controls, 'activeWeapon', (kingfisherLocksWeapon(fight) ? ['melee'] : weaponModes()).map(value => [value, tr('weapon.' + value)]));
       current.value = fight.player.weapon; current.addEventListener('change', () => act({kind:'weapon', weapon:current.value}));
     }
-    text(controls, tr(fight.phase === 'player' && fight.opponent.playerWrestlingRoll ? 'phase.wrestling' : 'phase.' + fight.phase,
-      {name:group.name}));
+    const magicShot = fight.phase === 'player' && fight.player.weapon === 'magicBow';
+    const phaseLabel = magicShot ? 'phase.magicBow' : fight.phase === 'player' && fight.opponent.playerWrestlingRoll
+      ? 'phase.wrestling' : 'phase.' + fight.phase;
+    text(controls, tr(phaseLabel, {name:group.name}));
     let enemyWeapon;
     if (fight.phase === 'enemy' && group.weapons.length > 1) enemyWeapon = select(controls, 'enemyWeapon',
       group.weapons.flatMap((item, index) => kingfisherWeaponAvailable(item) ? [[String(index), item.name]] : []));
@@ -122,25 +126,26 @@ export function createKingfisherPanel({document, definition, t, getRoster, getRu
       const any = die1.value.trim() || total === 2 && die2?.value.trim();
       return any ? [numeric(die1), ...(total === 2 ? [numeric(die2)] : [])] : undefined;
     };
-    const allyAction = kind => {
+    const rollTwo = kind => {
       try { act({kind, dice:rolled(2)}); }
       catch { showAlert(tr('invalid')); }
     };
     const rollButton = button(controls, 'roll', () => {
       try {
-        act({kind:fight.phase === 'initiative' ? 'initiative' : fight.phase === 'spray' ? 'spray' : 'attack', dice:rolled(count),
+        act({kind:fight.phase === 'initiative' ? 'initiative' : fight.phase === 'spray' ? 'spray' : 'attack', dice:magicShot ? undefined : rolled(count),
           weaponIndex:Number(enemyWeapon?.value ?? 0), target:enemyTarget?.value});
       } catch { showAlert(tr('invalid')); }
-    });
+    }, tr(magicShot ? 'shootMagicBow' : 'roll'));
     rollButton.disabled = fight.phase === 'player' && (fight.player.weapon === 'magic' && !fight.player.magicUses
-      || fight.player.weapon === 'heavy' && fight.heavyReady === false);
+      || fight.player.weapon === 'heavy' && fight.heavyReady === false || magicShot && !fight.player.magicBowArrows);
+    if (kingfisherCanCastNet(fight)) button(controls, 'castNet', () => rollTwo('net'));
     if (kingfisherCanTakeWeapon(fight)) button(controls, 'takeWeapon', () => act({kind:'takeWeapon'}));
     if (kingfisherCanThrowFire(fight)) button(controls, 'greekFire', () => act({kind:'greekFire'}));
     if (kingfisherCanRetreat(fight)) button(controls, 'retreat', () => act({kind:'retreat'}));
-    if (ally && fight.phase === 'player' && !fight.allyActed) button(controls, 'allyAttack', () => allyAction('allyAttack'));
+    if (ally && fight.phase === 'player' && !fight.allyActed) button(controls, 'allyAttack', () => rollTwo('allyAttack'));
     if (ally && fight.player.allyHp < fight.ally.maxHp) {
-      if (fight.player.allyMedicine) button(controls, 'allyMedicineUse', () => allyAction('allyMedicine'));
-      if (fight.player.potionUses) button(controls, 'allyPotion', () => allyAction('allyPotion'));
+      if (fight.player.allyMedicine) button(controls, 'allyMedicineUse', () => rollTwo('allyMedicine'));
+      if (fight.player.potionUses) button(controls, 'allyPotion', () => rollTwo('allyPotion'));
     }
     if (fight.phase === 'player' && tools().includes('heavyBonus')) button(controls, 'wait', () => act({kind:'wait'}));
     if (fight.phase === 'player' && !fight.opponent.unarmedOnly) {
@@ -176,9 +181,15 @@ export function createKingfisherPanel({document, definition, t, getRoster, getRu
       text(right, fight.opponent.name); text(right, tr('totals', {...fight.player}));
       text(right, tr('remaining', {count:fight.groups.reduce((sum, row) => sum + row.remaining, 0)}));
       for (const group of fight.groups) {
-        const label = !group.hpUnstated ? 'enemyTotals' : kingfisherUsesSpecialVictory(fight.opponent) ? 'enemySpecialVictory' : 'enemyOneHitTotals';
+        const label = !group.hpUnstated ? 'enemyTotals' : fight.opponent.surviveRounds ? 'enemyUnprintedHp'
+          : kingfisherUsesSpecialVictory(fight.opponent) ? 'enemySpecialVictory' : 'enemyOneHitTotals';
         text(right, tr(label, {name:group.name, hp:group.currentHp, count:group.remaining}));
       }
+      if (fight.opponent.surviveRounds) text(right, tr('survivalRounds', {
+        rounds:Math.min(fight.round, fight.survivalEnemyTurns ?? 0), goal:fight.opponent.surviveRounds,
+      }));
+      if (fight.playerNetRounds > 0) text(right, tr('playerNetted', {rounds:fight.playerNetRounds}));
+      if (fight.groups[fight.active].netRoundsLeft > 0) text(right, tr('opponentNetted', {rounds:fight.groups[fight.active].netRoundsLeft}));
       if (fight.opponent.playerWrestlingRoll) text(right, tr('wrestlingFalls', {falls:fight.wrestlingFalls ?? 0, goal:fight.opponent.fallsToWin}));
       if (fight.allyPresent) text(right, tr('allyTotals', {name:fight.ally.name, hp:fight.player.allyHp,
         maxHp:fight.ally.maxHp, medicine:fight.player.allyMedicine}));
@@ -218,7 +229,9 @@ export function createKingfisherPanel({document, definition, t, getRoster, getRu
     }
     token = current;
     for (const input of left.querySelectorAll('input,select')) input.disabled = locked;
-    editor.lock(locked); preset.disabled = start.disabled = weapon.disabled = locked; cancel.disabled = !locked;
+    editor.lock(locked); preset.disabled = start.disabled = locked; cancel.disabled = !locked;
+    const entry = selectedPreset();
+    weapon.disabled = locked || Boolean(entry?.unarmedOnly || entry?.firstDuelUnarmed || entry?.forcedPlayerMeleeBonus != null);
     lockCounts(locked);
     if (controlsRun !== current.run || controlsState !== current.original) {
       actionControls(state, current); controlsRun = current.run; controlsState = current.original;
@@ -259,9 +272,10 @@ export function createKingfisherPanel({document, definition, t, getRoster, getRu
       {key:'bonus', label:tr('enemyBonus'), min:-1000, max:1000}, {key:'armour', label:tr('armour')},
       {key:'ammo', label:tr('ammo')}, {key:'human', label:tr('human'), min:0, max:1},
       {key:'type', label:tr('enemyWeapon'), options:['melee','bow','firearm','poison','thrown'].map(value => ({value, label:tr('weapon.' + value)}))},
-    ]}); left.append(editor.element);
+    ], isStatOptional:key => key === 'hp' && Boolean(selectedPreset()?.surviveRounds)}); left.append(editor.element);
     weapon.addEventListener('change', () => { editor.set(editor.snapshot()); editor.fixCount(Boolean(preset.value)); lockCounts(); });
     for (const key of getRules().contextOptions) options[key] = checkbox(left, 'context.' + key);
+    if (getRules().net) options.hasNet = checkbox(left, 'context.hasNet');
     preset.addEventListener('change', choosePreset); choosePreset(); text(left, tr('unknownHp'));
     start = button(left, 'start', () => change(begin)); controls = document.createElement('div'); controls.id = id + '-controls'; left.append(controls);
     cancel = button(left, 'cancel', () => {

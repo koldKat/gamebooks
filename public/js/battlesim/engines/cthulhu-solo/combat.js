@@ -1,8 +1,10 @@
 // Track optional percentile encounters, wounds and combat effects without advancing the story.
-import { combatCheck, damageDice, opposedResult, percentileCheck } from './checks.js';
-import { allocateAttack, requireTurn } from './targets.js';
+import { combatCheck, damageDice, opposedResult, percentileCheck, successLevel } from './checks.js';
+import { allocateAttack, isDodgingThisRound, pendingCombatTurns, requireTurn } from './targets.js';
+import { classicCheck, classicDamageBonus, resolveClassicManeuver } from './classic.js';
+import { admitReinforcements, combatantAvailable as alive, distributePartyDamage, prepareOpeningFire,
+  resolveManeuver, selectPartyWeapon } from './encounter-rules.js';
 
-const alive = actor => actor.hp > 0 && !actor.fled && !actor.unconscious;
 const firearms = new Set(['firearm', 'pistol', 'rifle', 'smg', 'shotgun']);
 const number = (value, min = 0, max = 1000) => {
   if (!Number.isSafeInteger(value) || value < min || value > max) throw new RangeError('Invalid combatant');
@@ -20,22 +22,76 @@ function fighter(actor) {
   return result;
 }
 
-export function createFight(spec, party, enemies = spec?.enemies, { mode = 'percentile', pulpy = false, ambush = false } = {}) {
+export function createFight(spec, party, enemies = spec?.enemies, { mode = 'percentile', pulpy = false, ambush = false, random = Math.random } = {}) {
   if (!spec || !Array.isArray(party) || !party.length || party.length > 12
       || !Array.isArray(enemies) || !enemies.length || enemies.length > 24) throw new RangeError('Invalid encounter');
   if (!['percentile', 'coin'].includes(mode)) throw new RangeError('Invalid combat mode');
   if (spec.maxParty && party.length > spec.maxParty) throw new RangeError('Too many investigators for encounter');
   const fight = { version: 1, mode, ambush, spec: structuredClone(spec), party: party.map(fighter), enemies: enemies.map(fighter),
     round: 1, status: 'fighting', log: [], roundDamage: 0, pendingDamage: [] };
+  if (spec.mainRole) {
+    fight.mainIndex = fight.party.findIndex(a => a.role === spec.mainRole);
+    if (fight.mainIndex < 0 || !alive(fight.party[fight.mainIndex])) throw new RangeError('Main investigator unavailable');
+  }
+  if (spec.requiredRoles?.some(role => !fight.party.some(actor => actor.role === role && alive(actor)))) {
+    throw new RangeError('A required investigator is missing');
+  }
   if (!fight.party.some(alive) || !fight.enemies.some(alive)) throw new RangeError('No active combatants');
-  for (const actor of fight.party) actor.pulpy = Boolean(pulpy);
+  for (const [index, actor] of fight.party.entries()) {
+    actor.pulpy = Boolean(pulpy);
+    if (index === (fight.mainIndex ?? 0) && spec.halveLeadStrength) {
+      fight.originalLeadStrength = actor.str;
+      actor.str = Math.floor(actor.str / 2);
+      actor.db = classicDamageBonus(actor.str, actor.siz);
+    }
+    if (spec.playerInjuryLimit != null || spec.knockoutAtHalfLoss || spec.shareDamage) actor.startingHp = actor.hp;
+    if (spec.reinforcements && index !== (fight.mainIndex ?? 0)) actor.waiting = true;
+  }
   if (spec.enemyAttacks === 'party') for (const actor of fight.enemies) actor.attacks = party.length;
+  if (spec.startingDamageRoll) {
+    const actor = fight.party.find(member => member.role === spec.startingDamageRoll.role);
+    if (!actor) throw new RangeError('Missing combatant');
+    const damage = damageDice(spec.startingDamageRoll.dice, random).total;
+    hurt(actor, damage);
+    fight.log.push({ round: 1, side: 'party', index: fight.party.indexOf(actor), startingDamage: damage });
+    if (spec.classicManeuver?.victim === actor.role && actor.hp === 0) fight.status = 'loss';
+  }
+  prepareOpeningFire(fight, random);
+  beginRound(fight, random);
   return fight;
 }
 
+function beginRound(fight, random) {
+  admitReinforcements(fight, random);
+  for (const enemy of fight.enemies) {
+    if (enemy.dodgeOnEven && alive(enemy)) enemy.stanceRoll = damageDice('1D6', random).total;
+    if (enemy.armorPerRound) enemy.armorRemaining = enemy.armorPerRound;
+  }
+}
+
+export function canAdvanceRound(fight) {
+  if (fight?.status !== 'fighting') return false;
+  return fight.openingFire || !fight.spec.requireFullRound || pendingCombatTurns(fight).length === 0;
+}
+
+const thresholdsFor = (fight, skill, thresholds) => fight.spec.quickstartDamage
+  ? { ...thresholds, fumbleAt: skill >= 50 ? 100 : 96 }
+  : thresholds;
+
 function result(fight) {
-  if (!fight.party.some(alive)) fight.status = 'loss';
-  else if (!fight.enemies.some(e => alive(e) || e.dormant)) fight.status = fight.enemies.some(e => e.fled) ? 'escaped' : 'win';
+  const lead = fight.party[fight.mainIndex ?? 0];
+  if (!fight.party.some(alive) || fight.spec.mainMustStand && !alive(lead)
+      || fight.spec.failIfRoleDown && !fight.party.some(a => a.role === fight.spec.failIfRoleDown && alive(a))) fight.status = 'loss';
+  else if (fight.spec.knockoutAtHalfLoss && (lead.startingHp - lead.hp) * 2 >= lead.startingHp) {
+    lead.unconscious = true;
+    fight.status = 'loss';
+  }
+  else if (fight.spec.playerInjuryLimit != null && fight.party.some(actor => actor.startingHp - actor.hp >= fight.spec.playerInjuryLimit)) fight.status = 'loss';
+  else if (fight.spec.opponentsFleeAfterHits && fight.enemies.filter(a => a.wasHit).length >= Math.ceil(fight.enemies.length / 2)) {
+    for (const enemy of fight.enemies) enemy.fled = true;
+    fight.status = 'win';
+  }
+  else if (!fight.enemies.some(e => alive(e) || e.dormant)) fight.status = fight.enemies.some(e => e.fled) && !fight.spec.enemyFleeIsWin ? 'escaped' : 'win';
 }
 
 function hurt(actor, amount) { actor.hp = Math.max(0, actor.hp - Math.max(0, amount)); }
@@ -47,17 +103,34 @@ function preventFatal(actor, amount) {
 function wound(target, attacker, move, attack, fight, random, playerAttack) {
   const instant = move.killOnHit || move.killAt && attack.level >= move.killAt || ['knockout', 'throttle', 'grapple', 'entangle'].includes(move.effect)
     || move.criticalMode === 'kill' && attack.level >= move.criticalAt;
-  const rolled = instant ? { formula: '', rolls: [], total: 0 } : damageDice(move.damage ?? attacker.damage, random, { db: attacker.db ?? '0' });
+  let formula = move.damage ?? attacker.damage;
+  const db = attacker.db ?? '0';
+  if (!instant && fight.spec.classicRules && move.classicImpale && !target.impaleImmune && attack.level === 4) {
+    formula += `+${formula.replace(/\+DB/gi, '')}`;
+  }
+  if (!instant && move.extremeDamage && attack.level >= 4) {
+    const weapon = formula.replace(/\+DB/gi, '');
+    const maxWeapon = damageDice(weapon, random, { maximize: true }).total;
+    formula = move.extremeDamage === 'impaling'
+      ? `${formula}+${maxWeapon}`
+      : `${maxWeapon}${weapon !== formula ? '+DB' : ''}`;
+  }
+  const rolled = instant ? { formula: '', rolls: [], total: 0 } : damageDice(formula, random, { db });
   let raw = rolled.total;
   if (move.criticalAt && attack.level >= move.criticalAt && move.criticalMode === 'max-plus-roll') {
     raw += damageDice(move.damage ?? attacker.damage, random, { db: attacker.db ?? '0', maximize: true }).total;
   }
-  let amount = Math.max(0, raw - (move.ignoresArmor ? 0 : target.armor ?? 0));
+  const armor = move.ignoresArmor ? 0 : target.armorRemaining ?? target.armor ?? 0;
+  let amount = Math.max(0, raw - armor);
+  if (playerAttack && target.healthMode === 'hit-count') amount = 1;
+  if (target.armorRemaining != null && !move.ignoresArmor) target.armorRemaining -= Math.min(raw, armor);
   const effects = [];
   if (move.killOnHit || move.criticalMode === 'kill' && attack.level >= move.criticalAt) amount = target.hp;
   if (move.killAt && attack.level >= move.killAt) amount = target.hp;
   else if (move.damageToKill != null) amount = raw >= move.damageToKill ? target.hp : 0;
   if (playerAttack) {
+    if (fight.spec.opponentsFleeAfterHits) target.wasHit = true;
+    if (target.nonlethalFloor) amount = Math.min(amount, Math.max(0, target.hp - target.nonlethalFloor));
     const material = attacker.material ?? 'ordinary', kind = attacker.weaponKind ?? 'melee';
     const magical = ['silver', 'magic', 'fire', 'explosive'].includes(material);
     switch (target.resistance) {
@@ -83,6 +156,17 @@ function wound(target, attacker, move, attack, fight, random, playerAttack) {
     if (target.silverMinimum && material === 'silver') amount = Math.max(target.silverMinimum, amount);
     if (target.buckshotImpaleDamage && kind === 'shotgun' && material === 'ordinary') amount = attack.level >= 4 ? target.buckshotImpaleDamage : 0;
   }
+  if (!playerAttack && fight.spec.shareDamage && !move.effect && amount > 0) {
+    const distributed = [];
+    for (const [actor, damage] of distributePartyDamage(fight, target, amount, move.protectParty)) {
+      hurt(actor, damage);
+      if (fight.spec.companionWoundFloor && actor !== fight.party[fight.mainIndex ?? 0]
+          && actor.hp <= fight.spec.companionWoundFloor) actor.unconscious = true;
+      if (fight.spec.majorWounds && damage >= actor.maxHp / 2) actor.majorWound = true;
+      distributed.push({ index: fight.party.indexOf(actor), damage });
+    }
+    return { rolled, raw, amount, effects: [], distributed };
+  }
   if (move.effect === 'grapple' || move.effect === 'entangle') {
     target.immobilized = true; effects.push(move.effect); amount = 0;
     if (move.effect === 'grapple') target.grappled = true;
@@ -102,6 +186,14 @@ function wound(target, attacker, move, attack, fight, random, playerAttack) {
     const side = fight.party.includes(target) ? 'party' : 'enemies';
     fight.pendingDamage.push({ side, index: fight[side].indexOf(target), amount });
   } else if (!(playerAttack && fight.spec.roundDamageTarget != null)) hurt(target, amount);
+  if (playerAttack && target.hp > 0 && target.fleeImmediatelyAt != null && target.hp <= target.fleeImmediatelyAt) {
+    target.fled = true;
+    effects.push('fled');
+  }
+  if (playerAttack && target.incapacitateAtHalf && target.hp <= Math.floor(target.maxHp / 2)) {
+    target.unconscious = true;
+    effects.push('unconscious');
+  }
   if (playerAttack && fight.spec.nonlethalBrawl && attacker.unarmedBrawl && target.hp === 0) target.unconscious = true;
   if (move.effect === 'blood-drain') {
     attacker.hp += amount;
@@ -114,8 +206,32 @@ function wound(target, attacker, move, attack, fight, random, playerAttack) {
       }
     }
   }
+  let constitution;
+  if (!playerAttack && fight.spec.majorWounds && amount >= target.maxHp / 2) {
+    target.majorWound = true;
+    effects.push('major-wound');
+    if (fight.spec.majorWounds === 'constitution' && target.hp > 0) {
+      constitution = percentileCheck(target.con, 0, random, 0, thresholdsFor(fight, target.con));
+      if (constitution.level < 2) target.unconscious = true;
+    }
+  }
   fight.roundDamage += playerAttack ? amount : 0;
-  return { rolled, raw, amount, effects };
+  return constitution ? { rolled, raw, amount, effects, constitution } : { rolled, raw, amount, effects };
+}
+
+export function prepareSkillRoll(fight, options, random = Math.random) {
+  const rolls = [];
+  const entry = attackTurn(fight, { ...options, deferLuck: true }, () => {
+    const roll = random();
+    rolls.push(roll);
+    return roll;
+  });
+  return entry?.luckAvailable ? { options, rolls, entry } : null;
+}
+
+export function resolveSkillRoll(fight, pending, luckSpent, random = Math.random) {
+  let nextRoll = 0;
+  return attackTurn(fight, { ...pending.options, luckSpent }, () => pending.rolls[nextRoll++] ?? random());
 }
 
 export function attackTurn(fight, options, random = Math.random) {
@@ -130,34 +246,58 @@ export function attackTurn(fight, options, random = Math.random) {
       && next.enemies.reduce((sum, actor) => sum + actor.used, 0) >= next.spec.enemyActionsLimit) throw new RangeError('Enemy phase complete');
   if (side === 'party' && next.spec.partyActionsLimit != null
       && next.party.reduce((sum, actor) => sum + actor.used, 0) >= next.spec.partyActionsLimit) throw new RangeError('Party phase complete');
+  if (side === 'enemies' && next.spec.totalEnemyActions != null
+      && (next.enemyActionsTaken ?? 0) >= next.spec.totalEnemyActions) throw new RangeError('Enemy phase complete');
   const other = side === 'party' ? 'enemies' : 'party', actor = next[side][number(index, 0, 23)];
   const requestedTarget = next[other][number(targetIndex, 0, 23)];
   if (!actor || !requestedTarget || !alive(actor) || actor.hypnotized || actor.temporaryInsanity
       || side === 'party' && next.spec.excludeDriver && actor.driver || actor.grappled && !actor.canActGrappled
-      || actor.used >= (actor.attacks ?? 1)) throw new RangeError('Combatant cannot act');
+      || actor.used >= ((next.openingFire ? actor.openingShots : actor.attacks) ?? 1)) throw new RangeError('Combatant cannot act');
+  if (side === 'party' && !next.spec.classicManeuver) selectPartyWeapon(next, index, options.weapon);
   if (side === 'party' && next.spec.playerRequiresFirearm && !firearms.has(actor.weaponKind)) throw new RangeError('A firearm is required');
+  if (side === 'party' && next.spec.openingFirearmOnly && next.round === 1 && !firearms.has(actor.weaponKind)) throw new RangeError('A firearm is required');
+  if (side === 'party' && next.spec.playerOnlyOpeningAttack && next.round !== 1) throw new RangeError('Fight back or dodge the attack');
   const entry = { round: next.round, side, index, target: targetIndex };
+  if (side === 'enemies' && isDodgingThisRound(actor)) throw new RangeError('Opponent is dodging this round');
   requireTurn(next, side, index);
   actor.used++;
+  if (side === 'enemies' && next.spec.totalEnemyActions != null) next.enemyActionsTaken = (next.enemyActionsTaken ?? 0) + 1;
   if (actor.skip || actor.stunned) {
     if (actor.skip) actor.skip--;
     entry.skipped = true;
   } else if (actor.fleeAt != null && actor.hp <= actor.fleeAt) {
     actor.fled = true; entry.fled = true;
+  } else if (side === 'party' && next.spec.classicManeuver) {
+    if (!alive(requestedTarget)) throw new RangeError('Opponent unavailable');
+    Object.assign(entry, resolveClassicManeuver(next, actor, requestedTarget, random));
   } else {
     const playerAttack = side === 'party';
     const ranged = firearms.has(actor.weaponKind);
+    if (playerAttack && ranged && next.spec.expeditionWeapons) {
+      if (!actor.ammo) throw new RangeError('No cartridges remaining');
+      actor.ammo--;
+    }
+    const pointBlank = playerAttack && next.openingFire && !next.spec.openingFireRule?.normalRange;
+    const leadBonus = playerAttack && index === (next.mainIndex ?? 0) ? next.spec.mainWeaponBonus?.[ranged ? 'rifle' : 'melee'] ?? 0 : 0;
     const move = playerAttack ? { skill: next.spec.playerUsesBrawl ? actor.brawl : actor.skill,
       damage: next.spec.playerUsesBrawl ? '1D3+DB' : actor.damage,
       effect: next.spec.playerEffect,
       bonus: Math.max(-2, Math.min(2, (next.spec.playerBonusFirearmsOnly && !ranged ? 0 : next.spec.playerBonus ?? 0)
-        + (actor.attackBonus ?? 0) + (next.spec.openingAmbushBonus && next.ambush && next.round === 1 && actor.used === 1 ? 1 : 0))),
+        + (actor.attackBonus ?? 0) + leadBonus + (pointBlank && !next.spec.classicRules ? 1 : 0)
+        + (next.spec.openingAmbushBonus && next.ambush && next.round === 1 && actor.used === 1 ? 1 : 0))),
       criticalAt: next.spec.playerCriticalAt ?? 0, criticalMode: next.spec.playerCriticalMode ?? 'none',
       killOnHit: next.spec.playerHitKills ?? false, ignoresArmor: actor.ignoresArmor ?? false,
       killAt: next.spec.playerKillAt, damageToKill: next.spec.playerDamageToKill,
-      forcedDefense: next.spec.playerForcedDefense,
+      forcedDefense: pointBlank || ranged && next.spec.expeditionWeapons ? 'none' : next.spec.playerForcedDefense,
+      classicImpale: ranged || actor.weaponKind === 'knife',
+      classicPointBlank: pointBlank,
+      extremeDamage: next.spec.quickstartDamage ? ranged || actor.weaponKind === 'knife' ? 'impaling' : 'blunt' : undefined,
       ...(actor.move ?? {}) } : actor.moves?.[number(moveIndex, 0, 11)];
     let selectedMove = move;
+    if (!playerAttack && actor.roundMoves) {
+      const selectedIndex = actor.roundMoves[next.round - 1]?.[actor.used - 1];
+      selectedMove = actor.moves[selectedIndex]; entry.moveIndex = selectedIndex;
+    }
     if (!playerAttack && actor.weaponDropped && actor.moves?.some(m => m.unarmed)) selectedMove = actor.moves.find(m => m.unarmed);
     if (!playerAttack && actor.randomMoves) {
       if (actor.randomMoves.length !== actor.moves.length || actor.randomMoves.some(n => !Number.isSafeInteger(n) || n < 1)) throw new RangeError('Invalid attack table');
@@ -165,44 +305,82 @@ export function attackTurn(fight, options, random = Math.random) {
       const selectedIndex = actor.randomMoves.findIndex(weight => (roll -= weight) <= 0);
       selectedMove = actor.moves[selectedIndex]; entry.moveIndex = selectedIndex;
     }
+    if (!playerAttack && actor.subdued) selectedMove = { ...selectedMove, damage: '1', extremeDamage: undefined };
+    if (!playerAttack && options.protectParty) selectedMove = { ...selectedMove, protectParty: true };
     const selected = allocateAttack(next, side, actor, targetIndex, selectedMove, random);
     entry.target = selected.index;
-    return finishAttack(next, fight, actor, selected.target, selected.move, { playerAttack, defense, entry }, random);
+    return finishAttack(next, fight, actor, selected.target, selected.move, { playerAttack, defense, entry, options }, random);
   }
   result(next); next.log.push(entry); next.log = next.log.slice(-200);
   Object.assign(fight, next); return entry;
 }
 
-function finishAttack(next, fight, actor, target, move, { playerAttack, defense, entry }, random) {
+function finishAttack(next, fight, actor, target, move, { playerAttack, defense, entry, options }, random) {
     if (!move) throw new RangeError('Invalid attack');
     if ((actor.weaponDestroyed || actor.weaponDropped) && !move.unarmed) throw new RangeError('Weapon unavailable');
     if (move.requiresDropped && !actor.weaponDropped) throw new RangeError('Weapon has not been dropped');
     if (move.requiresImmobilized && !target.immobilized && !target.hypnotized) throw new RangeError('Target is not immobilized');
-    let actualDefense = move.forcedDefense ?? defense;
+  let actualDefense = playerAttack && isDodgingThisRound(target) ? 'dodge' : move.forcedDefense ?? defense;
     if (target.immobilized || target.hypnotized || target.temporaryInsanity || (playerAttack ? next.spec.enemyCannotDefend : next.spec.partyCannotDefend)) actualDefense = 'none';
     const extra = playerAttack && target.addPercentileToAttack && next.mode !== 'coin' ? percentileCheck(100, 0, random).raw : 0;
-    const attack = move.automatic ? { level: 2, automatic: true } : combatCheck(move.skill, move.bonus ?? 0, random, next.mode ?? 'percentile', extra, move.thresholds);
+    const classic = next.spec.classicRules;
+    const attack = move.automatic ? { level: 2, automatic: true }
+      : classic ? classicCheck(move.skill, random, { doubled: move.classicPointBlank, impaling: move.classicImpale })
+        : combatCheck(move.skill, move.bonus ?? 0, random, next.mode ?? 'percentile', extra, thresholdsFor(next, move.skill, move.thresholds));
     const defenseStat = move.defenseRequiresMelee && firearms.has(target.weaponKind) ? target.brawl
       : move.defenseStat ? target[move.defenseStat] : actualDefense === 'fight' ? target.brawl : target.dodge;
-    const defend = actualDefense === 'none' ? { level: 1 } : combatCheck(defenseStat, 0, random, next.mode ?? 'percentile');
+    const defend = actualDefense === 'none' ? { level: 1 }
+      : classic ? classicCheck(defenseStat, random)
+        : combatCheck(defenseStat, 0, random, next.mode ?? 'percentile', 0, thresholdsFor(next, defenseStat));
+    const player = playerAttack ? actor : target;
+    const luckOwner = next.spec.spendLeadLuck ? next.party[next.mainIndex ?? 0] : player;
+    const playerRoll = playerAttack ? attack : defend;
+    const luckAvailable = next.spec.spendSkillLuck && Number.isInteger(playerRoll.roll) && playerRoll.level > 0
+      ? Math.min(luckOwner.luck ?? 0, playerRoll.roll - 1) : 0;
+    if (options.deferLuck && luckAvailable > 0) {
+      return { luckAvailable, playerRoll: playerRoll.roll, skill: playerRoll.skill };
+    }
+    const spent = number(options.luckSpent ?? 0, 0, luckAvailable);
+    if (spent) {
+      playerRoll.originalRoll = playerRoll.roll;
+      playerRoll.roll -= spent;
+      playerRoll.level = successLevel(playerRoll.roll, playerRoll.skill,
+        thresholdsFor(next, playerRoll.skill, playerAttack ? move.thresholds : undefined));
+      luckOwner.luck -= spent;
+      entry.luckSpent = spent;
+    }
     const attackLevel = move.defenseRule === 'success-except-critical' && attack.level >= 2 && attack.level < 5 ? 2 : attack.level;
-    const opposed = opposedResult(attackLevel, defend.level, { tie: move.tie ?? (actualDefense === 'fight' ? 'attacker' : 'defender') });
+    const maneuver = playerAttack && next.spec.maneuver;
+    const tie = maneuver ? (attack.skill > defend.skill ? 'attacker' : 'defender')
+      : move.tie ?? (actualDefense === 'fight' ? 'attacker' : 'defender');
+    const opposed = classic ? { attacker: attackLevel >= 2 && defend.level < 2, defender: false }
+      : opposedResult(attackLevel, defend.level, { tie });
     entry.attack = attack; entry.defense = defend; entry.defenseMode = actualDefense;
     const threshold = playerAttack ? next.spec.playerMinimumLevel ?? next.spec.playerWeaponThresholds?.[actor.weaponKind] ?? 2 : 2;
-    if (move.equalDamage != null && attack.level === defend.level) {
+    if (maneuver) {
+      const hp = actor.hp;
+      resolveManeuver(next, actor, target, opposed.attacker, next.round, random);
+      entry.maneuver = { succeeded: opposed.attacker, damage: hp - actor.hp };
+    } else if (move.equalDamage != null && attack.level === defend.level) {
       const fixed = { damage: String(move.equalDamage), ignoresArmor: true };
       entry.wound = wound(target, actor, fixed, attack, next, random, playerAttack);
       entry.counter = wound(actor, target, fixed, defend, next, random, !playerAttack);
     } else {
       if (opposed.attacker && attack.level >= threshold) entry.wound = wound(target, actor, move, attack, next, random, playerAttack);
       if (opposed.defender && actualDefense === 'fight' && !move.noCounter) entry.counter = wound(actor, target,
-        { damage: target.counterDamage ?? target.damage ?? '1D3', killOnHit: move.counterKill, ignoresArmor: target.ignoresArmor }, defend, next, random, !playerAttack);
+        { damage: move.counterDamage ?? target.counterDamage ?? target.damage ?? '1D3', killOnHit: move.counterKill, ignoresArmor: target.ignoresArmor }, defend, next, random, !playerAttack);
     }
     if (playerAttack && attack.level === 2 && actor.braced && next.spec.playerBracedHit) entry.unresolvedHit = true;
     if (playerAttack && attack.level < 2 && next.spec.rescueFailureDamage) {
       const victim = next.party[next.mainIndex ?? 0];
       entry.rescueWound = wound(victim, actor, { damage: next.spec.rescueFailureDamage }, attack, next, random, false);
     }
+    if (playerAttack && actor.weaponKind === 'rifle' && attack.level === 0 && next.spec.fumbleHitsRole) {
+      const victim = next.party.find(a => a.role === next.spec.fumbleHitsRole && alive(a));
+      if (victim) entry.friendlyFire = wound(victim, actor, { damage: actor.damage }, attack, next, random, false);
+    }
+    if (!playerAttack && opposed.defender && actualDefense === 'dodge'
+        && (move.escapeOnDodge || move.escapeOnOpeningDodge && next.round === 1 && !next.ambush)) next.status = 'retreated';
     if (attack.level === 0) {
       const fumble = move.fumble ?? (playerAttack ? next.spec.playerFumble : undefined) ?? 'skip';
       if (fumble === 'weapon') {
@@ -213,11 +391,24 @@ function finishAttack(next, fight, actor, target, move, { playerAttack, defense,
       entry.fumble = fumble;
     }
   result(next); next.log.push(entry); next.log = next.log.slice(-200);
+  if (move.completeExchange && next.status !== 'loss') next.status = 'round-complete';
   Object.assign(fight, next); return entry;
 }
 
-export function nextRound(fight) {
-  if (fight?.status !== 'fighting') return false;
+export function nextRound(fight, random = Math.random) {
+  if (!canAdvanceRound(fight)) return false;
+  if (fight.openingFire) {
+    fight.openingFire = false;
+    for (const actor of fight.party) actor.used = 0;
+    if (fight.spec.openingRetreatRoll) {
+      const remaining = fight.enemies.filter(alive).length;
+      const hits = fight.enemies.length - remaining;
+      const roll = damageDice(fight.spec.openingRetreatRoll, random).total;
+      fight.log.push({ round: 1, side: 'party', index: fight.mainIndex ?? 0, volley: { hits, remaining, roll } });
+      fight.status = hits <= roll ? 'win' : 'round-complete';
+    } else if (fight.spec.openingOnly) fight.status = fight.spec.openingFailure ?? 'round-complete';
+    return true;
+  }
   for (const injury of fight.pendingDamage) {
     const actor = fight[injury.side][injury.index];
     if (!preventFatal(actor, injury.amount)) hurt(actor, injury.amount);
@@ -225,6 +416,7 @@ export function nextRound(fight) {
   fight.pendingDamage = [];
   result(fight); if (fight.status !== 'fighting') return true;
   if (fight.spec.singleRound) { fight.status = 'round-complete'; return true; }
+  if (fight.round === fight.spec.surviveRounds) { fight.status = 'win'; return true; }
   if (fight.spec.roundDamageTarget != null) {
     if (fight.roundDamage > fight.spec.roundDamageTarget) { fight.status = 'win'; return true; }
     for (const actor of fight.party.filter(alive)) {
@@ -240,7 +432,18 @@ export function nextRound(fight) {
     if (actor.dormant && fight.round > actor.turnedRound) { actor.hp = 1; actor.dormant = false; }
     else if (actor.hp > 0 && actor.regeneration) actor.hp = Math.max(actor.hp, Math.min(actor.maxHp, actor.hp + actor.regeneration));
   }
+  beginRound(fight, random);
   return true;
+}
+
+export function retreatCounter(fight, random = Math.random) {
+  const next = structuredClone(fight);
+  const index = next.enemies.findIndex(alive), targetIndex = next.party.findIndex(alive);
+  if (index < 0 || targetIndex < 0) return null;
+  const actor = next.enemies[index], target = next.party[targetIndex];
+  const entry = { round: next.round, side: 'enemies', index, target: targetIndex, retreatCounter: true };
+  return finishAttack(next, fight, actor, target, actor.moves[0],
+    { playerAttack: false, defense: 'none', entry, options: {} }, random);
 }
 
 export function ghostDuel(fight, index, random = Math.random) {

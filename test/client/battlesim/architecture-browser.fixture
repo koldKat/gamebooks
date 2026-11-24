@@ -65,7 +65,7 @@ for(const id of BOOK_IDS){
     if(!input.readOnly)check(input.closest('.inv-qty-wrap')?.querySelectorAll('.inv-qty-btn').length===2,'shared numeric stepper '+id+' '+input.id);
     if(input.closest('.bsim-number-control'))check([...input.parentElement.querySelectorAll('button')].every(button=>!button.hidden&&button.disabled===(input.matches(':disabled')||input.readOnly)),'numeric control visibility and lock '+id+' '+input.id);
   }
-  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817||id===832||id===833||id===838||id===1578||id===1587||id===1589||id===1591||id===1592||id===1596||id===1597||id===1598||id===1607||id===1608||id===1609){
+  if(id===769||id===773||id===783||id===797||id===807||id===808||id===809||id===810||id===812||id===817||id===832||id===833||id===838||id===1578||id===1587||id===1589||id===1591||id===1592||id===1596||id===1597||id===1598||id===1607||id===1608||id===1609||id===1610){
     const {ALL_PANEL_OVERLAY_IDS}=await import('REPO/public/js/core/util.js');
     check(ALL_PANEL_OVERLAY_IDS.includes(overlay.id),'simulator registered for panel mutual exclusion '+id);
   }
@@ -148,6 +148,135 @@ for(const id of BOOK_IDS){
         'a win is saved once after both remaining wolves are defeated');
       check(field('hero').value === '2' && field('encounter').value === '19', 'completed battle restores the selected setup');
     } finally { Math.random = savedRandom; }
+  }
+  if (id === 1651 && !PRESENTATION_ONLY) {
+    const el = key => document.getElementById('sim1651-' + key);
+    const select = (key, value) => {
+      el(key).value = value;
+      el(key).dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const run = app.currentPlaythrough();
+    const fight = () => run.sim1651.fight;
+    const start = (section, random) => {
+      select('encounter', section);
+      Math.random = random;
+      el('start').click();
+      check(fight()?.status === 'fighting' && fight().spec.section === Number(section), 'Flames starts printed encounter ' + section);
+    };
+    const miss = () => .55;
+    const originalRandom = Math.random;
+    try {
+      check(requestedRosters.has(id) && el('encounter').options.length === 5, 'Flames loads all four encounters');
+      start('167', miss);
+      check(el('side').value === 'enemies' && el('round').disabled, 'Ambush opens with the first claw');
+      el('resolve').click();
+      check(el('round').disabled, 'Ambush needs both claw checks');
+      el('resolve').click();
+      el('round').click();
+      check(fight().status === 'round-complete', 'Ambush ends after both claws');
+      start('173', miss);
+      const moves = [];
+      for (let round = 1; round <= 3; round++) {
+        for (let action = 0; action < 3; action++) {
+          el('resolve').click();
+          if (fight().log.at(-1).side === 'enemies') moves.push(fight().log.at(-1).moveIndex);
+        }
+        el('round').click();
+      }
+      check(fight().status === 'win' && moves.join(',') === '0,0,0,1,0,0', 'Bear uses the three printed attack rounds');
+      overlay.querySelector('#sim1651-party select[data-stat="weaponKind"]').value = 'knife';
+      start('235', () => .25);
+      check(el('side').value === 'party' && fight().enemies[0].stanceRoll === 2, 'Even rider roll skips his attack');
+      const attack = [.35, .05, .55, .55, .95];
+      Math.random = () => attack.shift() ?? .55;
+      el('resolve').click();
+      check(fight().status === 'win' && fight().log.at(-1).defenseMode === 'dodge', 'Rider dodges and stops at the printed threshold');
+      start('262', miss);
+      check(el('retreat').disabled, 'Artisan escape starts locked');
+      for (let round = 1; round <= 3; round++) {
+        el('resolve').click();
+        el('resolve').click();
+        el('round').click();
+      }
+      const escape = [.65, .05];
+      Math.random = () => escape.shift() ?? .55;
+      el('retreat').click();
+      check(fight().status === 'retreated' && run.path.join(',') === '1', 'Hard Dodge escape leaves story navigation to the reader');
+    } finally { Math.random = originalRandom; }
+  }
+  if (id === 1652 && !PRESENTATION_ONLY) {
+    const el = key => document.getElementById('sim1652-' + key);
+    const select = section => {
+      el('encounter').value = section;
+      el('encounter').dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const run = app.currentPlaythrough();
+    const fight = () => run.sim1652.fight;
+    const originalRandom = Math.random;
+    try {
+      check(requestedRosters.has(id) && el('encounter').options.length === 11
+        && el('investigator-preset').options.length === 6, 'Frost loads the printed encounters and investigator profiles');
+      Math.random = () => .55;
+      for (const section of ['186', '221', '228', '271', '307', '337', '376', '391', '446', '591']) {
+        select(section);
+        if (section === '307') el('remaining').value = '11';
+        el('start').click();
+        check(fight()?.status === 'fighting' && fight().spec.section === Number(section), 'Frost starts encounter ' + section);
+        if (section === '186') {
+          check(el('side').value === 'enemies' && fight().party.filter(a => a.waiting).length === 2, 'Wind-walker opens while two investigators wait');
+        }
+        if (section === '271') check(fight().party.find(a => a.role === 'norman').hp === 8, 'Norman starts six hit points down');
+        if (section === '307') check(fight().enemies.length === 3, 'Only Nadelmann’s share of eleven wolves enters combat');
+        if (section === '391') {
+          check(fight().openingFire && el('combat-weapon').value === 'rifle' && el('retreat').disabled && !el('surrender').hidden, 'Sasquatches offer a single opening shot and surrender');
+          el('resolve').click();
+          check(el('resolve').disabled && fight().party[0].ammo === 4, 'One shot consumes one cartridge and closes opening attacks');
+          el('round').click();
+          check(!fight().openingFire && ![...el('combat-weapon').options].some(o => o.value === 'rifle'), 'Opening ends in the first melee round');
+        }
+        if (section === '446') check(fight().log.filter(row => row.openingCheck).length === 4, 'Each present investigator checks Psychology');
+        if (section === '591') {
+          check(fight().enemies.length === 6, 'Riflemen use the printed count roll');
+          el('surrender').click();
+          check(fight().status === 'surrendered', 'Surrender ends only the current exchange');
+        }
+        if (fight().status === 'fighting') {
+          fight().status = 'unresolved';
+          module.render();
+        }
+      }
+      check(run.path.join(',') === '1', 'Frost fights leave the reading path alone');
+    } finally { Math.random = originalRandom; }
+  }
+  if (id === 1655 && !PRESENTATION_ONLY) {
+    const el = key => document.getElementById('sim1655-' + key);
+    const select = section => {
+      el('encounter').value = section;
+      el('encounter').dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const run = app.currentPlaythrough();
+    const fight = () => run.sim1655.fight;
+    const originalRandom = Math.random;
+    try {
+      check(requestedRosters.has(id) && el('encounter').options.length === 17
+        && el('investigator-preset').options.length === 7, 'Wendigo loads the original roster and investigator profiles');
+      check(el('use-luck').closest('label').hidden, 'Classic combat has no modern Luck spending');
+      select('446');
+      el('start').click();
+      check(fight()?.enemies[0].hp === 30 && fight().spec.classicRules, 'Possessed Charlie uses the original 30 HP');
+      fight().status = 'unresolved';
+      module.render();
+      select('464');
+      Math.random = () => .05;
+      el('start').click();
+      check(fight()?.party.find(actor => actor.role === 'sylvia')?.hp === 10, 'Sylvia starts one point down on this roll');
+      Math.random = () => .15;
+      el('resolve').click();
+      check(fight().status === 'win' && fight().log.at(-1)?.maneuver?.succeeded,
+        'The combined Strength roll breaks the hold: ' + JSON.stringify({ status: fight().status, log: fight().log,
+          side: el('side').value, actor: el('actor').value, target: el('target').value, disabled: el('resolve').disabled }));
+      check(run.path.join(',') === '1', 'The reader owns passage choices');
+    } finally { Math.random = originalRandom; }
   }
   if (id === 1414 && !PRESENTATION_ONLY) {
     const field = key => overlay.querySelector('[data-field="' + key + '"]');
@@ -914,6 +1043,38 @@ for(const id of BOOK_IDS){
     el('cancel').click();app.setCurrentBookId(1);document.getElementById('confirm-ok').click();
     check(JSON.stringify(data())===before,'Pax stale confirmation cannot update another book');app.setCurrentBookId(id);
     check(JSON.stringify([run.inventory,run.sim1578,run.path])===unrelated,'Pax inventory, other fight and story path preserved');
+  }
+  if(id===1610){
+    const run=app.currentPlaythrough(), fight=()=>run.sim1610?.fight;
+    const el=key=>document.getElementById('sim1610-'+key);
+    const {ENCOUNTERS}=await import('REPO/public/js/battlesim/books/1610/definition.js');
+    check(ENCOUNTERS.length===15&&requestedRosters.has(id),'Roman Quest loads all printed encounters');
+    run.inventory=[{name:'Unrelated equipment'}];run.sim1609={preserved:true};
+    const unrelated=JSON.stringify([run.inventory,run.path,run.sim1609]);
+    const setup=entry=>{
+      el('preset').value=entry.section;el('preset').dispatchEvent(new Event('change',{bubbles:true}));
+      el('hp').value=60;el('maxHp').value=60;
+      if(entry.section==='103'){
+        check(overlay.querySelector('[data-stat="hp"]').value==='','Roman Quest leaves unprinted Life Points blank');
+      }
+      el('start').click();
+      check(fight()?.status==='fighting'&&fight().opponent.key===entry.key,'Roman Quest starts '+entry.key);
+    };
+    const roll=(a,b)=>{el('die1').value=a;if(el('die2'))el('die2').value=b??'';el('roll').click();};
+    const cancel=()=>{el('cancel').click();document.getElementById('confirm-ok').click();};
+    for(const entry of ENCOUNTERS){setup(entry);cancel();}
+    setup(ENCOUNTERS.find(entry=>entry.section==='90'));
+    roll(4,5);
+    check(fight().player.hp===60&&fight().phase==='enemy','Roman Quest net immobilizes without dealing damage');
+    for(let round=0;round<3;round++){
+      check(fight().phase==='enemy','Roman Quest resolves three unanswered attacks');
+      roll(1,1);
+    }
+    check(fight().phase==='player','Roman Quest player can attack again after the net');
+    const before=JSON.stringify(run.sim1610);
+    module.render();
+    check(before===JSON.stringify(run.sim1610),'Roman Quest render preserves the active fight');
+    check(JSON.stringify([run.inventory,run.path,run.sim1609])===unrelated,'Roman Quest preserves inventory, story path and other fights');
   }
   if(id===1609){
     const run=app.currentPlaythrough(), fight=()=>run.sim1609?.fight;

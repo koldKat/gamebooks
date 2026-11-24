@@ -10,10 +10,10 @@ function die(sides, random) {
   return Math.floor(value * sides) + 1;
 }
 
-export function successLevel(roll, skill, { hard = Math.floor(skill / 2), extreme = Math.floor(skill / 5) } = {}) {
+export function successLevel(roll, skill, { hard = Math.floor(skill / 2), extreme = Math.floor(skill / 5), fumbleAt = 96 } = {}) {
   integer(roll, 1, 1000); integer(skill, 0, 1000);
   integer(hard, 0, skill); integer(extreme, 0, hard);
-  if (roll >= 96) return 0;
+  if (roll >= fumbleAt) return 0;
   if (roll === 1) return 5;
   if (roll > skill) return 1;
   if (roll <= extreme) return 4;

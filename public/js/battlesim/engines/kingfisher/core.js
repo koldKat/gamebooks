@@ -2,6 +2,7 @@
 const LIMIT = 1000000;
 const modes = ['melee', 'bow', 'firearm', 'poison', 'thrown'];
 const states = ['fighting', 'win', 'loss', 'fled', 'ended', 'cancelled'];
+const playerWeapons = ['unarmed', 'melee', 'bow', 'firearm', 'magic', 'heavy', 'magicBow'];
 function number(value, min = 0, max = LIMIT, whole = true) {
   if (!Number.isFinite(value) || value < min || value > max || whole && !Number.isSafeInteger(value)) throw new RangeError('Invalid combat value');
   return value;
@@ -36,11 +37,19 @@ export function normalizeKingfisherEncounter(source) {
     for (const key of ['replacementCount','fixedDamage','fatalNaturalScore']) if (row[key] != null) number(row[key], 1);
     if (row.firstSuccessfulHitBonus != null) number(row.firstSuccessfulHitBonus, -1000, 1000);
     if (row.openingDamage != null) number(row.openingDamage, 0, row.hp ?? 0);
+    if (row.armedPlayerBonus != null) number(row.armedPlayerBonus, -1000, 1000);
+    if (row.doubleDamageNaturalScore != null) number(row.doubleDamageNaturalScore, 2, 12);
+    if (row.netScoreMinimum != null) {
+      number(row.netScoreMinimum, 2, 12);
+      number(row.netRounds, 1, 100);
+    }
     return row;
   });
   if (source.captureBelow != null) number(source.captureBelow, 1);
   if (source.captureAbove != null) number(source.captureAbove);
-  for (const key of ['stopBelow','captureAfterRounds','enemyStopBelow','playerStopBelow']) if (source[key] != null) number(source[key], 1);
+  for (const key of ['stopBelow','captureAfterRounds','enemyStopBelow','playerStopBelow','surviveRounds']) if (source[key] != null) number(source[key], 1);
+  if (source.forcedPlayerMeleeBonus != null) number(source.forcedPlayerMeleeBonus, -1000, 1000, false);
+  if (source.forcedPlayerArmour != null) number(source.forcedPlayerArmour, 0, 1000);
   if (source.onlyPlayerNaturalScore != null) number(source.onlyPlayerNaturalScore, 2, 12);
   if (source.playerWrestlingRoll) number(source.fallsToWin, 1);
   if (source.lootedWeaponBonus != null) number(source.lootedWeaponBonus, -1000, 1000);
@@ -55,10 +64,11 @@ function playerInput(input) {
   if (input.greekFireUses != null) result.greekFireUses = number(input.greekFireUses);
   if (input.allyHp != null) result.allyHp = number(input.allyHp, 0, LIMIT, false);
   if (input.allyMedicine != null) result.allyMedicine = number(input.allyMedicine);
+  if (input.magicBowArrows != null) result.magicBowArrows = number(input.magicBowArrows);
   for (const key of ['meleeBonus','rangedBonus','damageModifier','playerRollModifier','enemyRollModifier']) result[key] = number(input[key] ?? 0, -1000, 1000);
   result.armour = number(input.armour ?? 0, 0, 1000);
   result.weapon = input.weapon ?? 'melee';
-  if (!['melee','bow','firearm','magic','heavy'].includes(result.weapon)) throw new RangeError('Invalid player weapon');
+  if (!playerWeapons.includes(result.weapon)) throw new RangeError('Invalid player weapon');
   result.poisonImmune = Boolean(input.poisonImmune); result.projectileProtection = Boolean(input.projectileProtection);
   return result;
 }
@@ -68,6 +78,9 @@ export const kingfisherTurnGroup = fight => fight.phase === 'enemy' && fight.ene
 export const kingfisherUsesSpecialVictory = opponent => Boolean(opponent?.onlyPlayerNaturalScore || opponent?.playerWrestlingRoll);
 export const kingfisherIsUnarmed = fight => Boolean(fight.opponent.unarmedOnly
   || fight.opponent.firstDuelUnarmed && fight.duelsStarted === 1);
+export const kingfisherLocksWeapon = fight => kingfisherIsUnarmed(fight) || fight.opponent.forcedPlayerMeleeBonus != null;
+export const kingfisherCanCastNet = fight => Boolean(fight.net && fight.options.hasNet && fight.phase === 'player'
+  && !kingfisherLocksWeapon(fight) && !active(fight).netRoundsLeft);
 export const kingfisherCanTakeWeapon = fight => fight.opponent.lootedWeaponBonus != null && fight.duelsStarted > 1 && !fight.tookWeapon;
 export const kingfisherCanThrowFire = fight => fight.phase === 'player' && fight.player.greekFireUses > 0
   && !kingfisherIsUnarmed(fight) && !kingfisherUsesSpecialVictory(fight.opponent);
@@ -107,11 +120,11 @@ function firstPhase(fight) {
 }
 export function startKingfisherFight(input, encounter, options = {}, rules = {}) {
   const opponent = normalizeKingfisherEncounter(encounter), player = playerInput(input);
-  if (opponent.unarmedOnly || opponent.firstDuelUnarmed) player.weapon = 'melee';
+  if (opponent.unarmedOnly || opponent.firstDuelUnarmed || opponent.forcedPlayerMeleeBonus != null) player.weapon = 'melee';
   const fight = {family:'kingfisher', rulesVersion:1, opponent, player, options:structuredClone(options),
     hitMinimum:number(rules.hitMinimum, 2, 12), initiativeMinimum:number(rules.initiativeMinimum, 1, 6),
     groups:opponent.profiles.map(profile => {
-      const hitCounter = profile.hp == null && (profile.singleHitDefeat || kingfisherUsesSpecialVictory(opponent)
+      const hitCounter = profile.hp == null && (profile.singleHitDefeat || kingfisherUsesSpecialVictory(opponent) || opponent.surviveRounds
         || profile.magicDuel && player.weapon === 'magic' && player.magicUses);
       if (profile.hp == null && !hitCounter) throw new RangeError('Enter the opponent Life Points');
       if (profile.count == null || profile.bonus == null || profile.weapons.some(weapon => weapon.bonus == null)) throw new RangeError('Enter the unprinted combat stats');
@@ -121,6 +134,7 @@ export function startKingfisherFight(input, encounter, options = {}, rules = {})
     }), active:0, status:'fighting', phase:'initiative', round:0, revision:0, events:[], poisoned:0,
     consecutiveHits:0, surpriseUsed:false, destination:null, combatStarted:false, escapeAttempts:0, escapeClosed:false, heavyReady:true,
     bowInitiativeAdvantage:rules.bowInitiativeAdvantage !== false, bowSuppressesMelee:rules.bowSuppressesMelee !== false};
+  if (rules.net) fight.net = {minimum:number(rules.net.minimum, 2, 12), rounds:number(rules.net.rounds, 1, 100)};
   for (const pair of opponent.contextExclusions ?? []) if (pair.every(key => fight.options[key])) throw new RangeError('Incompatible encounter options');
   if (rules.ally) {
     fight.ally = {name:name(rules.ally.name), maxHp:number(rules.ally.maxHp, 1), bonus:number(rules.ally.bonus, -1000, 1000),
@@ -146,6 +160,8 @@ export function validateKingfisherFight(fight) {
     number(fight.player.allyMedicine, 0, number(fight.ally.medicineMax));
   }
   if (fight.opponent.playerWrestlingRoll) number(fight.wrestlingFalls ?? 0, 0, fight.opponent.fallsToWin);
+  if (fight.opponent.surviveRounds) number(fight.survivalEnemyTurns ?? 0);
+  if (fight.playerNetRounds != null) number(fight.playerNetRounds, 0, 100);
   for (const turn of fight.enemyTurn ?? []) {
     number(turn.index, 0, fight.groups.length - 1);
     number(turn.remaining, 1, fight.groups[turn.index].remaining);
@@ -156,6 +172,7 @@ export function validateKingfisherFight(fight) {
       number(weapon.remainingAmmo, 0, weapon.ammo);
       if (weapon.uses != null) number(weapon.usesLeft, 0, weapon.uses);
     }
+    if (group.netRoundsLeft != null) number(group.netRoundsLeft, 0, 100);
   }
   if (fight.status === 'fighting' && (!active(fight).remaining || !['initiative','player','enemy','spray'].includes(fight.phase))) throw new RangeError('Invalid active opponent');
   return fight;
@@ -180,6 +197,7 @@ function hurtPlayer(fight, amount) {
       && fight.player.hp > (fight.opponent.captureAbove ?? 0)) finish(fight, 'loss', fight.opponent.captureSection);
 }
 function hurtOpponent(fight, group, event) {
+  if (group.hpUnstated && fight.opponent.surviveRounds && !event.singleHitDefeat) return;
   group.currentHp = Math.max(0, group.currentHp - event.amount);
   if (!group.currentHp) {
     event.defeated = true;
@@ -200,6 +218,7 @@ function defeated(fight, killed = true) {
   if (group.remaining) {
     group.currentHp = group.hp; group.healingLeft = group.healingDoses ?? 0; group.hitStreak = 0;
     group.landedFirstHit = false;
+    if (group.netRoundsLeft) group.netRoundsLeft = 0;
     group.weapons = group.weapons.map(resetWeapon);
   } else fight.active = fight.groups.findIndex(row => row.remaining);
   fight.consecutiveHits = 0;
@@ -244,9 +263,21 @@ export function kingfisherAction(source, action, random = Math.random) {
     if (!fight.groups[index].remaining || fight.phase === 'spray' || fight.enemyTurn?.length) throw new RangeError('Unavailable opponent');
     fight.active = index;
   } else if (action.kind === 'weapon') {
-    if (fight.phase !== 'player' || !['melee','bow','firearm','magic','heavy'].includes(action.weapon)
-        || kingfisherIsUnarmed(fight) && action.weapon !== 'melee') throw new RangeError('Unavailable weapon change');
+    if (fight.phase !== 'player' || !playerWeapons.includes(action.weapon)
+        || kingfisherLocksWeapon(fight) && action.weapon !== 'melee') throw new RangeError('Unavailable weapon change');
     fight.player.weapon = action.weapon;
+  } else if (action.kind === 'net') {
+    if (!kingfisherCanCastNet(fight)) throw new RangeError('Net unavailable');
+    event.dice = dice(action.dice, 2, random);
+    event.score = event.dice[0] + event.dice[1];
+    event.hit = event.score >= fight.net.minimum;
+    event.amount = 0;
+    fight.combatStarted = true;
+    fight.round++;
+    if (event.hit) {
+      group.netRoundsLeft = fight.net.rounds;
+      event.immobilized = group.netRoundsLeft;
+    } else beginEnemyTurn(fight);
   } else if (action.kind === 'takeWeapon') {
     if (!kingfisherCanTakeWeapon(fight)) throw new RangeError('No captured weapon available');
     fight.player.weapon = 'melee';
@@ -327,8 +358,12 @@ export function kingfisherAction(source, action, random = Math.random) {
     const unarmed = kingfisherIsUnarmed(fight);
     const magic = playerTurn && fight.player.weapon === 'magic' && !unarmed;
     const heavy = playerTurn && fight.player.weapon === 'heavy' && !unarmed;
+    const magicBow = playerTurn && fight.player.weapon === 'magicBow';
     if (magic && !fight.player.magicUses || heavy && fight.heavyReady === false) throw new RangeError('Weapon is not ready');
-    if (playerTurn && group.hpUnstated && !group.singleHitDefeat && !magic && !specialVictory) throw new RangeError('Opponent Life Points are not printed');
+    if (magicBow && !fight.player.magicBowArrows) throw new RangeError('No magic arrows available');
+    if (playerTurn && group.hpUnstated && !group.singleHitDefeat && !magic && !magicBow && !specialVictory && !fight.opponent.surviveRounds) {
+      throw new RangeError('Opponent Life Points are not printed');
+    }
     fight.combatStarted = true;
     if (playerTurn && fight.player.weapon === 'bow' && !fight.player.ammo) throw new RangeError('No arrows available');
     const weaponIndex = group.weaponSequence ? group.weapons.findIndex(weapon => kingfisherWeaponAvailable(weapon)
@@ -338,21 +373,24 @@ export function kingfisherAction(source, action, random = Math.random) {
     if (weapon?.type === 'bow' && !weapon.remainingAmmo) throw new RangeError('No enemy arrows available');
     if (playerTurn) fight.round++;
     if (fight.status === 'fighting') {
-      event.dice = dice(action.dice, 2, random); event.naturalScore = event.dice.reduce((a,b) => a + b, 0);
+      event.dice = magicBow ? [] : dice(action.dice, 2, random); event.naturalScore = event.dice.reduce((a,b) => a + b, 0);
       event.score = event.naturalScore * (playerTurn ? 1 : group.scoreMultiplier ?? 1) + (playerTurn ? fight.player.playerRollModifier ?? 0 : fight.player.enemyRollModifier ?? 0);
-      event.hit = !playerTurn && fight.guaranteedHit || event.score >= fight.hitMinimum;
+      event.hit = magicBow || !playerTurn && fight.guaranteedHit || event.score >= fight.hitMinimum;
       if (!playerTurn && group.fatalNaturalScore && event.naturalScore === group.fatalNaturalScore) event.hit = true;
       if (playerTurn && fight.opponent.playerWrestlingRoll) {
         wrestle(fight, event);
       } else if (playerTurn) {
         const ranged = ['bow','firearm'].includes(fight.player.weapon), loaded = fight.player.ammo > 0;
-        const bonus = unarmed || fight.opponent.firstDuelUnarmed && !fight.tookWeapon ? 0
-          : heavy ? fight.player.heavyBonus : ranged ? loaded ? fight.player.rangedBonus : 0 : fight.player.meleeBonus;
+        let bonus = fight.opponent.forcedPlayerMeleeBonus ?? fight.player.meleeBonus;
+        if (unarmed || fight.player.weapon === 'unarmed' || fight.opponent.firstDuelUnarmed && !fight.tookWeapon) bonus = 0;
+        else if (heavy) bonus = fight.player.heavyBonus;
+        else if (ranged) bonus = loaded ? fight.player.rangedBonus : 0;
         if (ranged && loaded) fight.player.ammo--;
         if (magic) fight.player.magicUses--;
+        if (magicBow) fight.player.magicBowArrows--;
         fight.heavyReady = !heavy;
         event.amount = event.hit ? Math.max(0, event.score + bonus + fight.player.damageModifier + fight.contextDamage - group.armour) : 0;
-        if (event.hit && (magic || group.singleHitDefeat)) { event.amount = group.currentHp; event.singleHitDefeat = true; }
+        if (event.hit && (magic || magicBow || group.singleHitDefeat)) { event.amount = group.currentHp; event.singleHitDefeat = true; }
         if (fight.opponent.onlyPlayerNaturalScore) {
           event.hit = event.naturalScore === fight.opponent.onlyPlayerNaturalScore;
           event.amount = event.hit ? group.currentHp : 0;
@@ -361,7 +399,9 @@ export function kingfisherAction(source, action, random = Math.random) {
         const remainingBefore = group.remaining;
         hurtOpponent(fight, group, event);
         if (fight.status === 'fighting' && group.remaining === remainingBefore && !event.defeated) {
-          fight.phase = fight.bowSuppressesMelee !== false && fight.player.weapon === 'bow' && !group.weapons.some(w => w.type === 'bow') ? 'player' : 'enemy';
+          const heldByNet = group.netRoundsLeft > 0;
+          if (heldByNet) group.netRoundsLeft--;
+          fight.phase = heldByNet || fight.bowSuppressesMelee !== false && fight.player.weapon === 'bow' && !group.weapons.some(w => w.type === 'bow') ? 'player' : 'enemy';
           if (fight.phase === 'enemy') beginEnemyTurn(fight);
           if (fight.phase === 'player' && fight.poisoned) { event.poisonDamage = fight.poisoned; hurtPlayer(fight, fight.poisoned); }
         }
@@ -373,16 +413,24 @@ export function kingfisherAction(source, action, random = Math.random) {
         };
         const loaded = weapon.remainingAmmo > 0;
         let bonus = weapon.bonus;
+        if (group.armedPlayerBonus != null && fight.player.weapon !== 'unarmed') bonus = group.armedPlayerBonus;
         if (group.firstSuccessfulHitBonus != null && !group.landedFirstHit) bonus = group.firstSuccessfulHitBonus;
         if (weapon.type === 'firearm' && !loaded || !allyTarget && (weapon.type === 'poison' && fight.player.poisonImmune
             || ['bow','thrown'].includes(weapon.type) && fight.player.projectileProtection)) bonus = 0;
         if (['bow','firearm'].includes(weapon.type) && loaded) weapon.remainingAmmo--;
         if (weapon.uses != null) weapon.usesLeft--;
-        if (event.hit && group.halveAt && event.score >= group.halveAt) {
+        const wasNetted = fight.playerNetRounds > 0;
+        if (!wasNetted && !allyTarget && event.naturalScore >= group.netScoreMinimum) {
+          event.amount = 0;
+          event.immobilized = group.netRounds;
+          fight.playerNetRounds = group.netRounds;
+        } else if (event.hit && group.halveAt && event.score >= group.halveAt) {
           event.amount = targetHp / 2; hurt(event.amount);
         } else {
           const fixed = weapon.fixedDamage ?? group.fixedDamage;
-          event.amount = event.hit ? Math.max(0, (fixed ?? event.score + bonus) - (group.ignoreArmour || allyTarget ? 0 : fight.player.armour)) : 0;
+          const armour = group.ignoreArmour || allyTarget ? 0 : fight.opponent.forcedPlayerArmour ?? fight.player.armour;
+          const rawDamage = (fixed ?? event.score + bonus) * (event.naturalScore === group.doubleDamageNaturalScore ? 2 : 1);
+          event.amount = event.hit ? Math.max(0, rawDamage - armour) : 0;
           if (event.hit && (group.lethalHit && !(group.type === 'poison' && !allyTarget && fight.player.poisonImmune)
               || group.fatalNaturalScore && event.naturalScore === group.fatalNaturalScore)) event.amount = targetHp;
           hurt(event.amount);
@@ -394,8 +442,11 @@ export function kingfisherAction(source, action, random = Math.random) {
           if (group.fatalConsecutiveHits && group.hitStreak >= group.fatalConsecutiveHits) hurtPlayer(fight, fight.player.hp);
         }
         fight.guaranteedHit = false;
+        if (fight.opponent.surviveRounds) fight.survivalEnemyTurns = (fight.survivalEnemyTurns ?? 0) + 1;
+        if (wasNetted) { fight.playerNetRounds--; fight.round++; }
         if (fight.status === 'fighting') {
           fight.phase = group.spray && event.hit ? 'spray' : finishEnemyAttack(fight);
+          if (fight.playerNetRounds > 0 && fight.phase === 'player') beginEnemyTurn(fight);
           if (fight.phase === 'player' && fight.poisoned) { event.poisonDamage = fight.poisoned; hurtPlayer(fight, fight.poisoned); }
         }
         if (fight.status === 'fighting' && fight.opponent.captureAfterRounds && fight.round >= fight.opponent.captureAfterRounds) finish(fight, 'loss', fight.opponent.captureSection);
@@ -409,6 +460,10 @@ export function kingfisherAction(source, action, random = Math.random) {
     if (route.fatal) { fight.player.hp = 0; finish(fight, 'loss', route.section); }
     else finish(fight, 'ended', route.section);
   } else throw new RangeError('Unknown combat action');
+  if (fight.status === 'fighting' && fight.opponent.surviveRounds
+      && Math.min(fight.round, fight.survivalEnemyTurns ?? 0) >= fight.opponent.surviveRounds) {
+    finish(fight, 'ended', fight.opponent.winSection);
+  }
   thresholdResult(fight);
   fight.revision++; event.hp = fight.player.hp; event.enemyHp = event.defeated ? 0 : active(fight).currentHp; event.status = fight.status;
   if (fight.ally) event.allyHp = fight.player.allyHp;

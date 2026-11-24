@@ -1,4 +1,4 @@
-// Exercise rare active-time rotation, bounded particle cleanup and all live companion actions.
+// Exercise rare visible-time rotation, bounded particle cleanup and all live companion actions.
 const fs=require('node:fs'),path=require('node:path'),checkBrowser=require('../battlesim/browser-harness.cjs');
 const root=fs.mkdtempSync(path.join(process.env.TMPDIR||'/tmp','cursor-variants-')),base=path.resolve('public'),file=path.join(root,'check.html');
 const html=`<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="file://${base}/css/seasonal/events.css"><link rel="stylesheet" href="file://${base}/css/admin/seasons.css"><style>body{margin:25px;background:#141d29;color:#ccc;font:14px sans-serif}.catalogue{display:grid;grid-template-columns:1fr 1fr;gap:20px}.season-card{min-width:0}.season-cursor-gallery{margin-top:0}</style><script>addEventListener('error',e=>document.body.dataset.failure=e.error?.stack||e.message);addEventListener('unhandledrejection',e=>document.body.dataset.failure=e.reason?.stack||String(e.reason));</script><script type="module">
@@ -12,11 +12,18 @@ const frame=ms=>{advance(ms);for(const id of [...frames.keys()]){const fn=frames
 const move=()=>{document.dispatchEvent(new PointerEvent('pointermove',{pointerType:'mouse',clientX:250,clientY:200}));frame(1);};
 for(const designs of Object.values(cursorDesigns))for(const [index,randomValue]of [0,.34,.67].entries()){const end=createRotatingCursor(designs,{random:()=>randomValue});const node=document.querySelector('.seasonal-'+designs[index].id);check(node,'reload can start with '+designs[index].id);check(getComputedStyle(node).width==='32px'&&getComputedStyle(node).height==='32px','every live cursor matches the pumpkin scale');document.dispatchEvent(new PointerEvent('pointermove',{pointerType:'mouse',clientX:innerWidth-1,clientY:200}));frame(1);const gap=innerWidth-1-node.getBoundingClientRect().right;check(gap>=0&&gap<=1,'right-edge gap stays close to the pointer '+designs[index].id);document.dispatchEvent(new PointerEvent('pointermove',{pointerType:'mouse',clientX:innerWidth-1,clientY:innerHeight-1}));frame(1);const rect=node.getBoundingClientRect(),bottomGap=innerHeight-1-rect.bottom;check(bottomGap>=0&&bottomGap<=1&&rect.right<=innerWidth,'bottom corner stays close and inside viewport '+designs[index].id);end();}
 let stop=createRotatingCursor(cursorDesigns.halloween,{random:()=>0});move();
-advance(300000);check(document.querySelector('.seasonal-pumpkin')&&!document.querySelector('canvas'),'idle time never switches the cursor');
-for(let i=0;i<70;i++){move();advance(10000);}check(!document.querySelector('canvas'),'rotation is very rare');
-move();advance(5000);check(document.querySelector('.seasonal-cursor-particles'),'active-time budget starts a particle transition');
+advance(899999);check(document.querySelector('.seasonal-pumpkin')&&!document.querySelector('canvas'),'the visible companion stays for at least 15 minutes');
+advance(1);check(document.querySelector('.seasonal-cursor-particles'),'rotation starts with a stationary mouse');
 for(let i=0;i<20;i++)frame(100);check(document.querySelector('.seasonal-mummy')&&!document.querySelector('.seasonal-pumpkin')&&!document.querySelector('canvas'),'particles reform into a different cursor');
 stop();check(!document.querySelector('.seasonal-companion,.seasonal-pumpkin,canvas')&&timers.size===0&&frames.size===0,'rotation and companion cleanup remove all work');
+stop=createRotatingCursor(cursorDesigns.halloween,{random:()=>.999999});move();
+advance(1799999);check(!document.querySelector('canvas'),'the upper end of the range is 30 minutes');
+advance(1);check(document.querySelector('canvas'),'the companion rotates at the upper end of the range');stop();
+stop=createRotatingCursor(cursorDesigns.halloween,{random:()=>0,switchDelay:()=>30000});move();advance(10000);
+document.documentElement.dispatchEvent(new PointerEvent('pointerleave'));advance(60000);
+check(!document.querySelector('canvas')&&document.querySelector('.seasonal-pumpkin').hidden,'time does not count while the companion is hidden');
+move();advance(19999);check(!document.querySelector('canvas'),'rotation resumes with its remaining time');
+advance(1);check(document.querySelector('canvas'),'one mouse movement resumes the visible timer');stop();
 stop=createRotatingCursor(cursorDesigns.halloween,{random:()=>0,switchDelay:()=>1000});move();advance(1000);frame(1);window.dispatchEvent(new Event('blur'));check(!document.querySelector('canvas')&&[...document.querySelectorAll('.seasonal-companion,.seasonal-pumpkin')].every(n=>n.hidden),'blur cancels particle effects and hides the companion');stop();
 document.body.classList.add('reduce-motion');stop=createRotatingCursor(cursorDesigns.halloween,{random:()=>0,switchDelay:()=>1000});for(let i=0;i<3;i++){move();advance(1000);}check(document.querySelector('canvas'),'app reduced motion preserves reformation');stop();document.body.classList.remove('reduce-motion');
 check(timers.size===0&&frames.size===0,'no remaining test callbacks '+JSON.stringify({timers:[...timers.values()].map(t=>String(t.fn).slice(0,100)),frames:[...frames.values()].map(String)}));
@@ -61,6 +68,6 @@ for(const[season,designs]of Object.entries(cursorDesigns)){
   if(${Boolean(process.env.CURSOR_ACTIONS)}){const effect=design.id==='zombie'?'is-vomiting':design.actions?.[design.id==='snowman'?1:0]||({pumpkin:'is-gaping',diya:'is-flaring',santa:'is-laughing',champagne:'is-popping'})[design.id];instance.node.classList.add(effect);for(const a of instance.node.getAnimations({subtree:true})){a.pause();a.currentTime=Number(a.effect.getTiming().duration)*.55;}}
  }
 }
-document.body.dataset.test=JSON.stringify({events:Object.keys(cursorDesigns).length,companions:Object.values(cursorDesigns).flat().length,randomInitialCompanion:true,rareActiveTime:true,idleSafe:true,particleReformation:true,blink:true,look:true,actions:61,mummyUnwrap:true,zombieBrainExplosion:true,zombieVomit:true,mummySocketFlames:true,snowmanNoseAndButtonSurprise:true,reducedMotion:true,cleanup:true});
+document.body.dataset.test=JSON.stringify({events:Object.keys(cursorDesigns).length,companions:Object.values(cursorDesigns).flat().length,randomInitialCompanion:true,visibleTimeRotation:true,hiddenTimePaused:true,particleReformation:true,blink:true,look:true,actions:61,mummyUnwrap:true,zombieBrainExplosion:true,zombieVomit:true,mummySocketFlames:true,snowmanNoseAndButtonSurprise:true,reducedMotion:true,cleanup:true});
 </script>`;
 (async()=>{try{fs.writeFileSync(file,html);console.log(JSON.stringify(await checkBrowser({file,root,profile:path.join(root,'profile'),width:1400,chromium:process.env.CHROMIUM,screenshotPath:process.env.SEASONAL_SCREENSHOT,timeoutMs:30000})));}finally{fs.rmSync(root,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1;});

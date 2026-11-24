@@ -256,6 +256,9 @@ Simulator panels access runs through `battlesim/run-context.js`. With no active 
 
 Shared engine families live under `engines/`. Engines own combat calculations, phases, actions, validation, and reusable panel behavior. Book adapters supply identity, application wiring, source-language strings, and declarative options. Opponents, charts, encounter exceptions, and printed combat notes remain in the database.
 
+The percentile combat panel in `engines/cthulhu-solo/` is shared by its book adapters. Encounter data can load investigator and weapon presets, specify per-round attacks and escape rules, and select the corresponding percentile rules. Classic encounters use resistance-table checks and explicitly defined opening volleys. Other variants can enable review of skill rolls before applying damage.
+Party encounters can define opening fire, reinforcement checks, damage allocation and opponent retreat conditions. The shared panel keeps these actions in the current fight and leaves section navigation to the reader.
+
 Extend an existing family when its combat model fits. Add family behavior through explicit options or encounter metadata rather than checks for a particular book ID. Separate setup values, captured encounter rules, mutable combat state, and confirmed outcomes. Undefined source values require explicit player input; rendering must not invent them.
 
 The Fighting Fantasy family accepts fixed starting scores, player Stamina stop conditions, wound amounts, and independent simultaneous attack rolls as explicit options. Its optional group-target control permits changes between rounds only; waiting opponents enter the active group as vacancies appear. Existing encounters retain their configured roll behavior.
