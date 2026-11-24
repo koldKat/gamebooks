@@ -12,7 +12,11 @@ const bonusAccents = {
 const bonusTerms = new RegExp(`(\\b(?:${Object.keys(bonusAccents).join('|')})\\b)`, 'gi');
 
 function appendBonusDetails(details, description) {
-  for (const [index, part] of description.split(/(\b(?:double|triple|\d+[×x])\s+XP\b[^.;\n]*)/i).entries()) {
+  const normalized = description
+    .replace(/\bdouble\s+XP\b/gi, '2x XP')
+    .replace(/\btriple\s+XP\b/gi, '3x XP')
+    .replace(/\b(\d+)[×x]\s+XP\b/gi, '$1x XP');
+  for (const [index, part] of normalized.split(/(\b\d+x XP\b[^.;\n]*)/).entries()) {
     if (index % 2 === 0) {
       details.append(part);
       continue;

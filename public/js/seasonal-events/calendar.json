@@ -2,7 +2,7 @@
   {
     "id": "halloween",
     "title": "Halloween event active",
-    "description": "5× XP for losses, battle deaths, and sim battle losses. 2× XP for surviving (heartbeats).",
+    "description": "5x XP for losses, battle deaths, and sim battle losses. 2x XP for surviving (heartbeats).",
     "start": 1028,
     "end": 1103,
     "day": 1031,
@@ -23,7 +23,7 @@
   {
     "id": "diwali",
     "title": "Diwali event active",
-    "description": "Festival of Lights: 5× XP for wins and sim battle wins.",
+    "description": "Festival of Lights: 5x XP for wins and sim battle wins.",
     "daysAround": 3,
     "dates": {
       "2026": "2026-11-08",
@@ -51,7 +51,7 @@
   {
     "id": "thanksgiving",
     "title": "Thanksgiving event active",
-    "description": "5× XP for rating books, anthologies, and series. Double XP for party activities and sharing runs.",
+    "description": "5x XP for rating books, anthologies, and series. 2x XP for party activities and sharing runs.",
     "rule": {
       "month": 11,
       "weekday": 4,
@@ -72,11 +72,20 @@
   {
     "id": "st-nicholas",
     "title": "St. Nicholas event active",
-    "description": "double XP for book contributions, inventory, equipment and character sheets.",
+    "description": "5x XP for book contributions. 2x XP for inventory, equipment, and character sheets.",
     "start": 1203,
     "end": 1209,
     "day": 1206,
-    "xpMultiplier": 2,
+    "xpMultiplier": 5,
+    "xpMultipliers": {
+      "inventory_started": 2,
+      "add_item": 2,
+      "equipment_started": 2,
+      "equip_item": 2,
+      "charsheet_run": 2,
+      "charsheet_saved": 2,
+      "add_charsheet_field": 2
+    },
     "xpEvents": [
       "add_book",
       "add_isbn",
@@ -110,11 +119,12 @@
   {
     "id": "st-lucia",
     "title": "St. Lucia event active",
-    "description": "double XP for discovering and visiting sections, and discovering or mapping whole books, series and anthologies.",
+    "description": "5x XP for mapping whole books, anthologies, and series. 2x XP for individual discoveries, individual mappings, and full discoveries.",
     "start": 1210,
     "end": 1216,
     "day": 1213,
     "xpMultiplier": 2,
+    "xpMultipliers": { "visit_all": 5, "visit_all_anthology": 5, "visit_all_series": 5 },
     "xpEvents": [
       "discover_node",
       "visit_node",
@@ -129,11 +139,19 @@
   {
     "id": "christmas",
     "title": "Christmas event active",
-    "description": "double XP for wins, sim battle wins, new runs, discovering or mapping whole books, heartbeats, and all party activities.",
+    "description": "5x XP for all wins. 2x XP for new runs, discovering or mapping whole books, heartbeats, and all party activities.",
     "start": 1222,
     "end": 1228,
     "day": 1225,
     "xpMultiplier": 2,
+    "xpMultipliers": {
+      "win_run": 5,
+      "first_win": 5,
+      "first_win_ow": 5,
+      "battlesim_win": 5,
+      "won_all_series": 5,
+      "won_all_anthology": 5
+    },
     "partyXpEvents": true,
     "xpEvents": [
       "win_run",
@@ -155,11 +173,20 @@
   {
     "id": "new-year",
     "title": "New Year event active",
-    "description": "double XP for everything.",
+    "description": "5x XP for new runs and all wins. 2x XP for everything else.",
     "start": 1229,
     "end": 104,
     "day": 101,
     "xpMultiplier": 2,
+    "xpMultipliers": {
+      "run_depth": 5,
+      "win_run": 5,
+      "first_win": 5,
+      "first_win_ow": 5,
+      "battlesim_win": 5,
+      "won_all_series": 5,
+      "won_all_anthology": 5
+    },
     "xpEvents": [
       "*"
     ]
@@ -167,7 +194,7 @@
   {
     "id": "friday-13",
     "title": "Friday the 13th event active",
-    "description": "5x XP for losses, battle deaths and sim battle losses; 2x XP for surviving (heartbeats).",
+    "description": "5x XP for losses, battle deaths, and sim battle losses. 2x XP for surviving (heartbeats).",
     "rule": {
       "day": 13,
       "weekday": 5

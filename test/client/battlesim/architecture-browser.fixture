@@ -248,6 +248,36 @@ for(const id of BOOK_IDS){
       check(run.path.join(',') === '1', 'Frost fights leave the reading path alone');
     } finally { Math.random = originalRandom; }
   }
+  if (id === 1686 && !PRESENTATION_ONLY) {
+    const run = app.currentPlaythrough();
+    const field = key => overlay.querySelector('[data-field="' + key + '"]');
+    const action = key => overlay.querySelector('[data-action="' + key + '"]');
+    const fight = () => run.sim1686.fight;
+    check(requestedRosters.has(id), 'Gnomes loads the printed database roster');
+    const opponent = overlay.querySelector('.bsim-opponent-row input[role="combobox"]');
+    opponent.value = 'Ambushing draconian';
+    opponent.dispatchEvent(new Event('input', { bubbles: true }));
+    const option = overlay.querySelector('.bsim-opponent-row [role="option"]');
+    check(option?.textContent.startsWith('Ambushing draconian'), 'Exact draconian preset');
+    option.dispatchEvent(new Event('pointerdown', { bubbles: true, cancelable: true }));
+    action('start').click();
+    check(fight().enemies[0].hp === 12 && fight().enemies[0].hit === 7 && fight().opponent.section === '52G', 'Draconian uses passage-specific stats');
+    for (const remaining of [7, 0]) {
+      field('playerDie').value = '8';
+      field('enemyDie').value = '12';
+      action('rollRound').click();
+      check(fight().enemies[0].hp === remaining, 'Rye’s armor attack escalates on successive turns');
+    }
+    check(fight().status === 'win' && run.sim1686.history.length === 1, 'Gnomes records the resolved outcome once');
+    check(right.querySelector('.bsim-log-success'), 'Gnomes combat outcome log is themed');
+    field('mode').value = 'army';
+    field('mode').dispatchEvent(new Event('change', { bubbles: true }));
+    for (const [key, value] of Object.entries({playerOffense:60,playerDefense:20,enemyOffense:45,enemyDefense:30})) field(key).value = value;
+    action('start').click();
+    action('openingStrike').click();
+    check(fight().round === 1 && fight().enemies[0].hp === 170 && fight().player.hp === 100, 'Gnomes final battle starts with one unanswered strike');
+    check(run.path.join(',') === '1', 'Gnomes battles leave the reading path untouched');
+  }
   if (id === 1655 && !PRESENTATION_ONLY) {
     const el = key => document.getElementById('sim1655-' + key);
     const select = section => {

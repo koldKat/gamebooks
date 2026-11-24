@@ -7,6 +7,7 @@ const Database = require('better-sqlite3');
 const { seasonalXpMultiplier, seasonalXpSeasons } = require('../server/seasonal-events');
 const { initializeSeasonParticipation, recordSeasonParticipation } = require('../server/db/season-participation');
 const { withPartyXpContext } = require('../server/seasonal-party-context');
+const WIN_XP_EVENTS = ['win_run', 'first_win', 'first_win_ow', 'battlesim_win', 'won_all_series', 'won_all_anthology'];
 
 test('Thanksgiving pays five times for ratings and doubles other eligible awards', t => {
   const f = fixture(t), date = new Date('2026-11-26T12:00:00Z');
@@ -182,18 +183,18 @@ test('catalog contribution XP and participation require public items, including 
   f.award('add_description','2',40);assert.equal(f.xp(),40);
   assert.equal(f.db.prepare('SELECT COUNT(*) n FROM seasonal_participation_days').get().n,0);
   f.db.exec('UPDATE books SET is_public=1 WHERE id=2');
-  f.award('make_book_public','2',100);assert.equal(f.xp(),240);
+  f.award('make_book_public','2',100);assert.equal(f.xp(),540);
   assert.equal(f.award('add_description','2',40),false,'publication never re-awards old private edits');
-  f.award('add_description','1',40);assert.equal(f.xp(),320);
-  f.award('create_series','2',50);assert.equal(f.xp(),370);
+  f.award('add_description','1',40);assert.equal(f.xp(),740);
+  f.award('create_series','2',50);assert.equal(f.xp(),790);
   f.db.exec('UPDATE series SET is_public=1 WHERE id=2');
-  f.award('make_series_public','2',100);assert.equal(f.xp(),570);
-  f.award('add_description','4',40);assert.equal(f.xp(),610,'private anthology stays normal');
+  f.award('make_series_public','2',100);assert.equal(f.xp(),1290);
+  f.award('add_description','4',40);assert.equal(f.xp(),1330,'private anthology stays normal');
   f.db.exec('UPDATE books SET is_public=1 WHERE id=4');
-  f.award('make_book_public','4',100);assert.equal(f.xp(),810,'anthology publication qualifies');
+  f.award('make_book_public','4',100);assert.equal(f.xp(),1830,'anthology publication qualifies');
   f.date('2026-12-31T12:00:00Z');
   f.db.exec('UPDATE books SET is_public=0 WHERE id=4');
-  f.award('add_authors','4',10);assert.equal(f.xp(),820,'wildcard events use the same visibility rule');
+  f.award('add_authors','4',10);assert.equal(f.xp(),1840,'wildcard events use the same visibility rule');
 });
 
 test('private contributions cannot gain a seasonal job bonus or qualify through its trigger',t=>{
@@ -237,10 +238,11 @@ test('a fully capped award with no XP gain does not create a participation day',
   assert.equal(f.db.prepare('SELECT COUNT(*) n FROM seasonal_participation_days').get().n, 0);
 });
 
-test('Christmas doubles wins, new runs, full-book milestones and heartbeats outside parties', t => {
+test('Christmas gives five times XP for wins and doubles other holiday rewards outside parties', t => {
   const f=fixture(t);f.date('2026-12-25T12:00:00Z');
-  for(const event of ['win_run','battlesim_win','first_win','first_win_ow','run_depth','discover_all','visit_all','discover_all_series','visit_all_series','discover_all_anthology','visit_all_anthology','won_all_series','won_all_anthology','idle_heartbeat']) {
-    const before=f.xp();assert.equal(f.award(event,event,10),true);assert.equal(f.xp()-before,20,event);
+  for(const event of [...WIN_XP_EVENTS,'run_depth','discover_all','visit_all','discover_all_series','visit_all_series','discover_all_anthology','visit_all_anthology','idle_heartbeat']) {
+    const before=f.xp();assert.equal(f.award(event,event,10),true);
+    assert.equal(f.xp()-before,WIN_XP_EVENTS.includes(event)?50:20,event);
     assert.equal(f.award(event,event,10),false);
   }
   for(const event of ['death_run','visit_node','discover_node','add_note','rate_book']) {
@@ -260,7 +262,7 @@ test('Christmas doubles all party activities without stacking existing bonuses',
       assert.equal(f.award(event, 'christmas-party:' + event, 10), true);
       assert.equal(f.award(event, 'christmas-party:' + event, 10), false);
     }, date);
-    assert.equal(f.xp() - before, 20, event);
+    assert.equal(f.xp() - before, event === 'win_run' ? 50 : 20, event);
   }
   for (const book of [20, 30]) {
     assert.equal(withPartyXpContext(f.db, 1, book,
@@ -275,11 +277,14 @@ test('Christmas doubles all party activities without stacking existing bonuses',
   }
 });
 
-test('New Year doubles every XP event and amount override without duplicating awards',t=>{
+test('New Year gives five times XP for new runs and wins and doubles all other awards',t=>{
   const f=fixture(t);f.date('2026-12-31T12:00:00Z');
   f.db.exec('CREATE TABLE series(id INTEGER PRIMARY KEY,is_public INTEGER);CREATE TABLE books(id INTEGER PRIMARY KEY,is_public INTEGER,series_id INTEGER,parent_book_id INTEGER);INSERT INTO books VALUES(1,1,NULL,NULL)');
-  for(const event of ['win_run','battlesim_loss','idle_heartbeat','discover_node','add_note','rate_book','upload_cover','future_xp_event']) {
-    const ref=event==='upload_cover'?'1':event;const before=f.xp();f.award(event,ref,7);assert.equal(f.xp()-before,14,event);assert.equal(f.award(event,ref,7),false);
+  const fiveTimes=['run_depth',...WIN_XP_EVENTS];
+  for(const event of [...fiveTimes,'battlesim_loss','idle_heartbeat','discover_node','add_note','rate_book','upload_cover','future_xp_event']) {
+    const ref=event==='upload_cover'?'1':event;const before=f.xp();f.award(event,ref,7);
+    assert.equal(f.xp()-before,fiveTimes.includes(event)?35:14,event);
+    assert.equal(f.award(event,ref,7),false);
   }
   assert.equal(seasonalXpMultiplier('future_xp_event',new Date('2027-01-04T21:59:59Z')),2);
   assert.equal(seasonalXpMultiplier('future_xp_event',new Date('2027-01-04T22:00:00Z')),1);
@@ -324,7 +329,7 @@ test('Fatemaster saved outcomes use real seasonal XP awards without rewarding pa
   const start=source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
   const end=source.indexOf('\n  }\n\n  // Award every',start);
   assert.ok(start>0&&end>start);
-  for(const bookId of [1476,1477])for(const [date,winXp,lossXp]of [['2026-10-31T12:00:00Z',10,25],['2026-11-08T12:00:00Z',50,5],['2026-12-31T12:00:00Z',20,10]]){
+  for(const bookId of [1476,1477])for(const [date,winXp,lossXp]of [['2026-10-31T12:00:00Z',10,25],['2026-11-08T12:00:00Z',50,5],['2026-12-31T12:00:00Z',50,10]]){
     const f=fixture(t);f.date(date);
     vm.runInContext(registration+'\nfunction syncFatemasterOutcomes(newPt,oldPt){const userId=1;'+source.slice(start,end)+'\n}',f.context);
     const run={path:['1','418'],inventory:[{id:'keep',count:2}],sim1475:{history:[{ts:1,outcome:'win'}]}};
@@ -354,7 +359,7 @@ test('Knightmare duel outcomes award seasonal XP once and exclude active or canc
   const start=source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
   const end=source.indexOf('\n  }\n\n  // Award every',start);
   assert.ok(start>0&&end>start);
-  for(const [date,winXp,lossXp]of [['2026-10-31T12:00:00Z',10,25],['2026-11-08T12:00:00Z',50,5],['2026-12-31T12:00:00Z',20,10]]){
+  for(const [date,winXp,lossXp]of [['2026-10-31T12:00:00Z',10,25],['2026-11-08T12:00:00Z',50,5],['2026-12-31T12:00:00Z',50,10]]){
     const f=fixture(t);f.date(date);
     vm.runInContext(registration+'\nfunction syncKnightmareOutcomes(newPt,oldPt){const userId=1;'+source.slice(start,end)+'\n}',f.context);
     const run={path:['1','11'],inventory:[{id:'keep',count:2}],sim1473:{history:[{ts:1,outcome:'win'}]}};
@@ -409,7 +414,7 @@ test('Real Life saved outcomes award seasonal XP once and exclude unfinished bou
   const start = source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
   const end = source.indexOf('\n  }\n\n  // Award every', start);
   assert.ok(start > 0 && end > start);
-  for (const bookId of [1533, 1534, 1535, 1537, 1539]) for (const [date, winXp, lossXp] of [['2026-10-31T12:00:00Z', 10, 25], ['2026-11-08T12:00:00Z', 50, 5], ['2026-12-31T12:00:00Z', 20, 10]]) {
+  for (const bookId of [1533, 1534, 1535, 1537, 1539]) for (const [date, winXp, lossXp] of [['2026-10-31T12:00:00Z', 10, 25], ['2026-11-08T12:00:00Z', 50, 5], ['2026-12-31T12:00:00Z', 50, 10]]) {
     const f = fixture(t); f.date(date);
     vm.runInContext(registration + '\nfunction syncRealLifeOutcomes(newPt,oldPt){const userId=1;' + source.slice(start, end) + '\n}', f.context);
     const run = {path: ['1'], inventory: [{id: 'keep', count: 2}], sim8: {history: [{ts: 1, outcome: 'win'}]}};
@@ -444,7 +449,7 @@ test('lethal firearm outcomes award seasonal XP once and exclude interruptions a
   const start = source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
   const end = source.indexOf('\n  }\n\n  // Award every', start);
   assert.ok(start > 0 && end > start);
-  for (const bookId of [1536, 1540]) for (const [date, winXp, lossXp] of [['2026-10-31T12:00:00Z', 10, 25], ['2026-11-08T12:00:00Z', 50, 5], ['2026-12-31T12:00:00Z', 20, 10]]) {
+  for (const bookId of [1536, 1540]) for (const [date, winXp, lossXp] of [['2026-10-31T12:00:00Z', 10, 25], ['2026-11-08T12:00:00Z', 50, 5], ['2026-12-31T12:00:00Z', 50, 10]]) {
     const f = fixture(t); f.date(date);
     vm.runInContext(registration + '\nfunction syncFirearmOutcomes(newPt,oldPt){const userId=1;' + source.slice(start, end) + '\n}', f.context);
     const run = {path: ['1'], inventory: [{id: 'keep', count: 2}]};
@@ -478,7 +483,7 @@ test('Sagard outcomes award seasonal XP once while escape, withdrawal and cancel
   const start = source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
   const end = source.indexOf('\n  }\n\n  // Award every', start);
   assert.ok(start > 0 && end > start);
-  for (const [date, winXp, lossXp] of [['2026-10-31T12:00:00Z', 10, 25], ['2026-11-08T12:00:00Z', 50, 5], ['2026-12-31T12:00:00Z', 20, 10]]) {
+  for (const [date, winXp, lossXp] of [['2026-10-31T12:00:00Z', 10, 25], ['2026-11-08T12:00:00Z', 50, 5], ['2026-12-31T12:00:00Z', 50, 10]]) {
     const f = fixture(t); f.date(date);
     vm.runInContext(registration + '\nfunction syncSagardOutcomes(newPt,oldPt){const userId=1;' + source.slice(start, end) + '\n}', f.context);
     const run = {path: ['1'], inventory: [{id: 'keep', count: 2}]};
@@ -513,7 +518,7 @@ test('Green Hydra pending recovery awards nothing and final win or declined defe
   const start = source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
   const end = source.indexOf('\n  }\n\n  // Award every', start);
   assert.ok(start > 0 && end > start);
-  for (const [date, winXp, lossXp] of [['2026-10-31T12:00:00Z', 10, 25], ['2026-11-08T12:00:00Z', 50, 5], ['2026-12-31T12:00:00Z', 20, 10]]) {
+  for (const [date, winXp, lossXp] of [['2026-10-31T12:00:00Z', 10, 25], ['2026-11-08T12:00:00Z', 50, 5], ['2026-12-31T12:00:00Z', 50, 10]]) {
     const f = fixture(t); f.date(date);
     vm.runInContext(registration + '\nfunction syncHydraOutcomes(newPt,oldPt){const userId=1;' + source.slice(start, end) + '\n}', f.context);
     const run = {path: ['1'], inventory: ['Keep']};
@@ -567,7 +572,7 @@ test('formation saved outcomes award seasonal XP once and include opening-shot l
     if(status==='cancelled')fight=cancelFormationFight(fight);
     return fight;
   }
-  for(const [date,winXp,lossXp]of [['2026-10-31T12:00:00Z',10,25],['2026-11-08T12:00:00Z',50,5],['2026-12-31T12:00:00Z',20,10]]){
+  for(const [date,winXp,lossXp]of [['2026-10-31T12:00:00Z',10,25],['2026-11-08T12:00:00Z',50,5],['2026-12-31T12:00:00Z',50,10]]){
     const f=fixture(t);f.date(date);
     vm.runInContext(registration+'\nfunction syncFormationOutcomes(newPt,oldPt){const userId=1;'+source.slice(start,end)+'\n}',f.context);
     const run={path:['1'],inventory:[{id:'keep',count:2}],sim1472:{history:[{ts:1,outcome:'win'}]}};
@@ -610,13 +615,23 @@ test('St. Nicholas doubles preparation activities only during its calendar windo
   assert.equal(seasonalXpMultiplier(event,new Date('2026-12-06T12:00:00Z')),1,event+' remains ordinary');
 });
 
-test('new festivals double only their agreed XP actions',()=>{
+test('autumn and early winter festivals apply their configured multipliers',t=>{
  const groups=[
-  ['2026-11-26T12:00:00Z',['share_run','create_party','join_party'],['win_run','visit_node']],
-  ['2026-12-06T12:00:00Z',['add_book','add_description','add_isbn','add_authors','upload_cover','make_book_public','create_series','make_series_public'],['share_run','win_run','idle_heartbeat']],
-  ['2026-12-13T12:00:00Z',['discover_node','visit_node','discover_all','visit_all','discover_all_series','visit_all_series','discover_all_anthology','visit_all_anthology'],['win_run','share_run','idle_heartbeat']]
+  ['2026-11-26T12:00:00Z',2,['share_run','create_party','join_party'],['win_run','visit_node']],
+  ['2026-12-06T12:00:00Z',5,['add_book','add_description','add_isbn','add_authors','upload_cover','make_book_public','create_series','make_series_public'],['share_run','win_run','idle_heartbeat']],
+  ['2026-12-13T12:00:00Z',2,['discover_node','visit_node','discover_all','discover_all_series','discover_all_anthology'],['win_run','share_run','idle_heartbeat']]
  ];
- for(const [stamp,yes,no] of groups){const date=new Date(stamp);for(const event of yes)assert.equal(seasonalXpMultiplier(event,date),2,event);for(const event of no)assert.equal(seasonalXpMultiplier(event,date),1,event);}
- const nicholas=require('../public/js/seasonal-events/calendar.json').find(e=>e.id==='st-nicholas');
- assert.doesNotMatch(nicholas.description,/pdf|attachment/i);
+ for(const [stamp,multiplier,yes,no] of groups){const date=new Date(stamp);for(const event of yes)assert.equal(seasonalXpMultiplier(event,date),multiplier,event);for(const event of no)assert.equal(seasonalXpMultiplier(event,date),1,event);}
+ const f=fixture(t);f.date('2026-12-13T12:00:00Z');
+ for(const event of ['visit_all','visit_all_anthology','visit_all_series']){
+  const before=f.xp();f.award(event,event,10);assert.equal(f.xp()-before,50,event);
+  assert.equal(seasonalXpMultiplier(event,new Date('2026-12-09T21:59:59Z')),1);
+  assert.equal(seasonalXpMultiplier(event,new Date('2026-12-16T22:00:00Z')),1);
+ }
+ const seasons=require('../public/js/seasonal-events/calendar.json');
+ assert.doesNotMatch(seasons.find(e=>e.id==='st-nicholas').description,/public|pdf|attachment/i);
+ for(const season of seasons){
+  assert.match(season.description,/\b[0-9]+x XP\b/);
+  assert.doesNotMatch(season.description,/\b(?:double|triple|[0-9]+×)\s+XP\b/i);
+ }
 });

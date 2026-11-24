@@ -45,14 +45,15 @@ export async function openStatsModal() {
       while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
       return `${i <= 1 ? Math.round(v) : v.toFixed(Math.max(0, i - 1))} ${units[i]}`;
     };
-    const fmtUptime = secs => {
+    const sessionUptime = s.uptimeSec || 0;
+    const fmtUptime = (secs, { showMinutes = true } = {}) => {
       const s = Math.floor(secs);
       const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
       const parts = [];
       if (d) parts.push(`${d}d`);
       if (d || h) parts.push(`${h}h`);
-      parts.push(`${m}m`);
-      return parts.join(' ');
+      if (showMinutes) parts.push(`${m}m`);
+      return parts.join(' ') || '0h';
     };
     const fmtDuration = mins => {
       const total = Math.max(0, Math.round(Number(mins) || 0));
@@ -230,8 +231,9 @@ export async function openStatsModal() {
         cls: 'the-app', label: t('stats.sec.app'),
         rows: [
           [t('stats.age'), (() => { const d = Math.floor(s.appAgeDays || 0); const y = Math.floor(d / 365); return y > 0 ? `${y}y ${d - y * 365}d` : `${d}d`; })()],
-          [t('stats.server_uptime_session'), fmtUptime(s.uptimeSec || 0)],
-          [t('stats.total_uptime'), s.totalDowntimeS != null ? fmtUptime(Math.max(0, (s.appAgeDays || 0) * 86400 - s.totalDowntimeS)) : na],
+          [t('stats.server_uptime_session'), fmtUptime(sessionUptime, { showMinutes: sessionUptime < 3600 })],
+          [t('stats.total_uptime'), s.totalDowntimeS != null
+            ? fmtUptime(Math.max(0, (s.appAgeDays || 0) * 86400 - s.totalDowntimeS), { showMinutes: false }) : na],
           [t('stats.uptime_pct'), s.uptimePct != null ? `${Number(s.uptimePct).toFixed(2)}%` : na],
           [t('stats.total_downtime'), s.totalDowntimeS != null ? fmtUptime(s.totalDowntimeS) : na],
           [t('stats.lines_of_code'), s.linesOfCode ? fmt(s.linesOfCode) : na],
