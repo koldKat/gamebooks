@@ -92,16 +92,20 @@ export function _visibleCoverItems({ includeNonReadableOnMobile = false } = {}) 
   return items;
 }
 
-export function _sortedAllBooks() {
-  const items = _visibleCoverItems();
+export function _sortCoverItems(items) {
   if (coversState._coversSortMode === 'alpha')    return _sortedByName(items);
   if (coversState._coversSortMode === 'za')       return _sortedByName(items).reverse();
+  if (coversState._coversSortMode === 'random')   return _shuffle(items);
   if (coversState._coversSortMode === 'latest')   return [...items].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   if (coversState._coversSortMode === 'oldest')   return [...items].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
   if (coversState._coversSortMode === 'popular')  return [...items].sort((a, b) => (b.libraryCount || 0) - (a.libraryCount || 0));
   if (coversState._coversSortMode === 'longest')  return [...items].filter(i => i.totalSections > 0).sort((a, b) => b.totalSections - a.totalSections);
   if (coversState._coversSortMode === 'shortest') return [...items].filter(i => i.totalSections > 0).sort((a, b) => a.totalSections - b.totalSections);
   return [...items];
+}
+
+export function _sortedAllBooks() {
+  return _sortCoverItems(_visibleCoverItems());
 }
 
 export function _randomizedCoverItems() {

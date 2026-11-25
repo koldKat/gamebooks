@@ -14,7 +14,7 @@ test('shared catalog filters and background preferences retain their behavior', 
     const { loadNsfwCatalog } = await import('../../../public/js/content/nsfw.js');
     await loadNsfwCatalog();
     const { coversState } = await import('../../../public/js/covers/state.js');
-    const { _visibleCoverItems, _sortedAllBooks, _setCoverFavoritesFromPrefs } = await import('../../../public/js/covers/filters.js');
+    const { _visibleCoverItems, _sortCoverItems, _sortedAllBooks, _setCoverFavoritesFromPrefs } = await import('../../../public/js/covers/filters.js');
     const { _landingCoverPool, _effectiveLandingCoverSource, _persistLandingCoverPos } = await import('../../../public/js/covers/background.js');
     const prefs = [];
     coversState._hooks = {
@@ -42,6 +42,15 @@ test('shared catalog filters and background preferences retain their behavior', 
       assert.ok(!_visibleCoverItems().some(b => b.id === 6 || b.id === 7), `${mode} excludes coverless items`);
     }
     coversState._coversKindMode = 'all';
+    const searchMatches = [
+      { name: 'A book', createdAt: 1 },
+      { name: 'Z series', createdAt: 3, isSeries: true },
+      { name: 'M book', createdAt: 2 },
+    ];
+    coversState._coversSortMode = 'latest';
+    assert.deepEqual(_sortCoverItems(searchMatches).map(item => item.name), ['Z series', 'M book', 'A book']);
+    coversState._coversSortMode = 'oldest';
+    assert.deepEqual(_sortCoverItems(searchMatches).map(item => item.name), ['A book', 'M book', 'Z series']);
     for (const sort of ['random', 'latest', 'oldest', 'popular', 'longest', 'shortest', 'za']) {
       coversState._coversSortMode = sort;
       assert.ok(!_sortedAllBooks().some(b => b.id === 6 || b.id === 7), `${sort} excludes coverless items`);

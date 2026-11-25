@@ -6,7 +6,7 @@ import { runInNewContext } from 'node:vm';
 const source = readFileSync(new URL('../../../public/js/covers/book-dialog.js', import.meta.url), 'utf8')
   .replace(/^import .*;\n/gm, '').replace('export function ', 'function ');
 
-function dialog({ loggedIn = false, owned = false, mobile = true, admin = false, moderator = false, ok = true, meta = {}, entries = [] } = {}) {
+function dialog({ loggedIn = false, owned = false, mobile = true, admin = false, moderator = false, ok = true, meta = {}, entries = [], nsfw = [] } = {}) {
   let editOptions;
   const events = [], requests = [], panels = new Set(['mobile-addbook-open']);
   const buttons = new Map();
@@ -28,10 +28,11 @@ function dialog({ loggedIn = false, owned = false, mobile = true, admin = false,
     querySelectorAll: () => [],
   };
   const window = { location: {} };
+  const title = {};
   const context = {
     document: {
       body: { classList: { remove: (...names) => names.forEach(name => panels.delete(name)) } },
-      getElementById: id => id === 'pub-modal-body' ? body : { style: {}, classList: { remove() {} } },
+      getElementById: id => id === 'pub-modal-body' ? body : id === 'pub-modal-title' ? title : { style: {}, classList: { remove() {} } },
     },
     window,
     _destroyPubNetworks() {},
@@ -44,6 +45,7 @@ function dialog({ loggedIn = false, owned = false, mobile = true, admin = false,
     publicName: value => value,
     t: (key, params) => key === 'covers.author_rating_votes' ? `${params.n} vote${params.s}` : key,
     _seriesRowBadges: book => book.hasLiveReading ? '<span class="reading-badge">Reading</span>' : '',
+    publicNsfwTag: item => nsfw.includes(item.id ?? item) ? '<span class="pub-nsfw-tag">NSFW</span>' : '',
     coversState: { _hooks: {
       getIsAdmin: () => admin,
       getIsModerator: () => moderator,
@@ -62,8 +64,16 @@ function dialog({ loggedIn = false, owned = false, mobile = true, admin = false,
   runInNewContext(source + '\nrenderCoverActivity(42, "Book", entries, null, bookMeta, loggedIn, owned);', {
     ...context, bookMeta: { isPublic: true, ...meta }, loggedIn, owned, entries,
   });
-  return { body, buttons, events, requests, panels, window, get editOptions() { return editOptions; } };
+  return { body, title, buttons, events, requests, panels, window, get editOptions() { return editOptions; } };
 }
+
+test('public dialogs label the book and individual anthology children', () => {
+  assert.match(dialog({ nsfw: [42] }).title.innerHTML, /pub-nsfw-tag/);
+  const anthology = dialog({ nsfw: [1], meta: { isContainer: true, children: [{ id: 1, name: 'Flagged' }, { id: 2, name: 'Unflagged' }] } });
+  assert.doesNotMatch(anthology.title.innerHTML, /pub-nsfw-tag/);
+  assert.match(anthology.body.html, /Flagged<\/span>\s*<span class="child-row-badges"><span class="pub-nsfw-tag">NSFW/);
+  assert.equal(anthology.body.html.match(/pub-nsfw-tag/g).length, 1);
+});
 
 test('anthology dialogs show child books without duplicate run cards or empty-activity notices', () => {
   const entries = [{ username: 'Reader', publicProfile: true, bookName: 'Child', bookId: 1, userId: 7,

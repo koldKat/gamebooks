@@ -384,13 +384,13 @@ test('Knightmare duel outcomes award seasonal XP once and exclude active or canc
   }
 });
 
-test('Overlord and Warbringer reward real outcomes once and exclude reader returns', t => {
+test('Overlord, Warbringer, and What Lies Beneath reward real outcomes once and exclude reader returns', t => {
   const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
   const registration = source.slice(source.indexOf('const SIM_HISTORY_KEYS ='), source.indexOf('const RETIRED_SIM_HISTORY_KEYS ='));
   const start = source.indexOf('    for (const simKey of SIM_HISTORY_KEYS)');
   const end = source.indexOf('\n  }\n\n  // Award every', start);
   assert.ok(start > 0 && end > start);
-  for (const simKey of ['sim313', 'sim314']) for (const [date, winXp, lossXp] of [['2026-10-31T12:00:00Z', 10, 25], ['2026-11-08T12:00:00Z', 50, 5]]) {
+  for (const simKey of ['sim313', 'sim314', 'sim1808']) for (const [date, winXp, lossXp] of [['2026-10-31T12:00:00Z', 10, 25], ['2026-11-08T12:00:00Z', 50, 5]]) {
     const f = fixture(t); f.date(date);
     vm.runInContext(registration + '\nfunction syncOverlord(newPt,oldPt){const userId=1;' + source.slice(start, end) + '\n}', f.context);
     const run = { [simKey]: { history: [] } };

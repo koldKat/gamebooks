@@ -197,7 +197,7 @@ body.no-feed-glass-cards .feed-day-card--glass::before {
 }
 .feed-created--series,
 .feed-entry--created.feed-created--series + .feed-group-body {
-  --feed-created-accent: #f5a623;
+  --feed-created-accent: #fde047;
 }
 .feed-user-group .feed-entry--party {
   border-left: none;
@@ -638,7 +638,8 @@ body.right-collapsed #landing-right {
 .feed-entry--joblevel .feed-title {
   color: #fb7185;
 }
-.feed-nsfw-tag {
+.feed-nsfw-tag,
+.pub-nsfw-tag {
   display: inline-block;
   padding: 0 4px;
   border: 1px solid #86434b;

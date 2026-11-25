@@ -1,5 +1,10 @@
 import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
+import { hasNsfwLabel } from '../content/nsfw.js';
+
+export function publicNsfwTag(item) {
+  return hasNsfwLabel(item) ? ` <span class="pub-nsfw-tag">${escapeHtml(t('feed.nsfw'))}</span>` : '';
+}
 
 export function _seriesRowBadges(b) {
   const battleSim = b.hasBattleSim

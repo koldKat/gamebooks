@@ -739,6 +739,9 @@ a.book-modal-child-row {
   align-items: center;
   flex-shrink: 0;
 }
+.child-row-badges .pub-nsfw-tag:not(:first-child) {
+  margin-left: 0.25rem;
+}
 .child-row-sections {
   font-size: 0.75rem;
   color: #6b7280;

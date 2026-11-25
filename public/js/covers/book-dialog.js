@@ -2,7 +2,7 @@ import { loadingHtml } from '../ui-helpers/loading.js';
 import { _isMobile, publicEntryLinks, handlePublicEntryClick } from './helpers.js';
 import { _syncCoverLibraryMembership } from './grid.js';
 import { openCoverActivity, openSeriesActivity } from './activity.js';
-import { _seriesRowBadges } from './badges.js';
+import { _seriesRowBadges, publicNsfwTag } from './badges.js';
 import { coversState } from './state.js';
 import { apiFetch } from '../core/state.js';
 import { closePublicModal, renderPublicProfile, openPublicRun, _destroyPubNetworks } from '../account/public-profile.js';
@@ -18,7 +18,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
   backBtn.style.display = 'none';
   const typeLabel = bookMeta?.isContainer ? 'Anthology' : bookMeta?.issn ? 'Magazine' : '';
   document.getElementById('pub-modal-title').innerHTML =
-    escapeHtml(bookName) + (typeLabel ? ` <span class="pub-modal-type">(${typeLabel})</span>` : '');
+    escapeHtml(bookName) + (typeLabel ? ` <span class="pub-modal-type">(${typeLabel})</span>` : '') + publicNsfwTag(bookId);
   const body = document.getElementById('pub-modal-body');
   body.style.padding  = '';
   body.style.overflow = '';
@@ -110,7 +110,7 @@ export function renderCoverActivity(bookId, bookName, entries, userRating, bookM
     headerHtml += bookMeta.children.map(c =>
       `<button class="book-modal-child-row" data-book-id="${c.id}" data-book-name="${escapeHtml(c.name)}">
         <span class="child-row-name">${escapeHtml(c.name)}</span>
-        <span class="child-row-badges">${_seriesRowBadges(c)}</span>
+        <span class="child-row-badges">${_seriesRowBadges(c)}${publicNsfwTag(c)}</span>
         ${c.total_sections ? `<span class="child-row-sections">${c.total_sections} sections</span>` : ''}
         <span class="child-row-arrow">›</span>
       </button>`

@@ -35,7 +35,7 @@ function render(kind, { loggedIn = true, owned = true, rating = 2.5, canRate = t
     : '\nrenderCoverActivity(42, "Book", [], rating, data, loggedIn, owned, canRate);'), {
     document: { getElementById: id => id === 'pub-modal-body' ? body : element() },
     coversState: { _hooks: hooks }, apiFetch, getToken: () => loggedIn ? 'token' : null,
-    escapeHtml: String, t: key => key, _destroyPubNetworks() {}, _seriesRowBadges: () => '', publicEntryLinks: () => '',
+    escapeHtml: String, t: key => key, _destroyPubNetworks() {}, _seriesRowBadges: () => '', publicNsfwTag: () => '', publicEntryLinks: () => '',
     rating, loggedIn, owned, canRate,
     data: { id: 42, name: 'Item', books: [], isContainer: kind === 'anthology', avgRating: 4.5, voteCount: 9 },
   });

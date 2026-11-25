@@ -8878,6 +8878,34 @@ for(const id of BOOK_IDS){
     }finally{Math.random=originalRandom;}
   }
   }
+  if(id===1808&&!PRESENTATION_ONLY){
+    const el=key=>document.getElementById('sim1808-'+key);
+    const change=key=>el(key).dispatchEvent(new Event('change',{bubbles:true}));
+    const run=app.currentPlaythrough();
+    check(requestedRosters.has(1808)&&el('encounter').options.length===44,'What Lies Beneath loads the complete database roster');
+    el('encounter').value='176'; change('encounter');
+    check(el('encounter').value==='176'&&el('custom-fields').hidden,'What Lies Beneath retains chosen encounter');
+    el('hit').value='1'; change('hit');
+    el('vigor').value='8'; change('vigor');
+    const originalRandom=Math.random;
+    try {
+      Math.random=()=>0;
+      el('start').click();
+      check(run.sim1808.fight.totalChecks===6&&el('hit').disabled,'What Lies Beneath locks setup for six checks');
+      for(let n=0;n<6;n++){
+        check(run.sim1808.fight.status==='fighting','What Lies Beneath only completes after final check');
+        el('roll').click();el('accept').click();
+      }
+      check(run.sim1808.fight.status==='win'&&run.sim1808.player.vigor===2&&run.sim1808.history.length===1,
+        'What Lies Beneath tracks repeated misses, surviving Vigor and one outcome');
+      el('encounter').value='custom'; change('encounter');
+      check(!el('custom-fields').hidden,'What Lies Beneath free battle remains available');
+      el('damage').value='0';
+      el('start').click();el('roll').click();el('accept').click();
+      check(run.sim1808.history.length===2&&run.sim1808.history.at(-1).outcome==='loss',
+        'What Lies Beneath free battle records a failed Hit check');
+    }finally{Math.random=originalRandom;}
+  }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   await Promise.resolve();
   for(const wrapper of overlay.querySelectorAll('.bsim-number-control'))

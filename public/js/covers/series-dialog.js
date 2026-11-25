@@ -1,6 +1,6 @@
 import { _syncCoverLibraryMembership } from './grid.js';
 import { openCoverActivity, openSeriesActivity } from './activity.js';
-import { _seriesRowBadges } from './badges.js';
+import { _seriesRowBadges, publicNsfwTag } from './badges.js';
 import { coversState } from './state.js';
 import { getToken, apiFetch } from '../core/state.js';
 import { escapeHtml } from '../core/util.js';
@@ -10,7 +10,7 @@ import { publicEntryLinks, handlePublicEntryClick } from './helpers.js';
 export function renderSeriesActivity(data) {
   const backBtn = document.getElementById('pub-back-btn');
   document.getElementById('pub-modal-title').innerHTML =
-    escapeHtml(data.name) + ` <span class="pub-modal-type">${t('covers.series_label')}</span>`;
+    escapeHtml(data.name) + ` <span class="pub-modal-type">${t('covers.series_label')}</span>` + publicNsfwTag({ id: data.id, isSeries: true });
   const body = document.getElementById('pub-modal-body');
   body.style.padding  = '';
   body.style.overflow = '';
@@ -51,7 +51,7 @@ export function renderSeriesActivity(data) {
     html += `<div class="book-modal-children-section"><div class="book-modal-children-header">${t('covers.books_in_series')}</div><div class="book-modal-children-list">`;
     for (const b of data.books) {
       const num = b.seriesNumber ? ` <span class="child-row-num">#${escapeHtml(b.seriesNumber)}</span>` : '';
-      const badges = _seriesRowBadges(b);
+      const badges = _seriesRowBadges(b) + publicNsfwTag(b);
       if (b.isContainer) {
         const sub = `<span class="child-row-sections">${b.childCount} ${b.childCount === 1 ? 'book' : 'books'}</span>`;
         html += `<div class="book-modal-anthology-row" data-anthology-id="${b.id}">
@@ -69,7 +69,7 @@ export function renderSeriesActivity(data) {
             const csub = c.totalSections ? `<span class="child-row-sections">${c.totalSections} sections</span>` : '';
             html += `<button class="book-modal-child-row anthology-child-btn" data-book-id="${c.id}" data-book-name="${escapeHtml(c.name)}">
               <span class="child-row-name">${escapeHtml(c.name)}</span>
-              <span class="child-row-badges">${_seriesRowBadges(c)}</span>
+              <span class="child-row-badges">${_seriesRowBadges(c)}${publicNsfwTag(c)}</span>
               ${csub}
               <span class="child-row-arrow">&#x203a;</span>
             </button>`;

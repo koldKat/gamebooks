@@ -804,6 +804,7 @@ SIM_HISTORY_KEYS.push('sim1566', 'sim1575', 'sim1576', 'sim1577', 'sim1578', 'si
 SIM_HISTORY_KEYS.push('sim1473');
 SIM_HISTORY_KEYS.push('sim1621');
 SIM_HISTORY_KEYS.push('sim1751');
+SIM_HISTORY_KEYS.push('sim1808');
 SIM_HISTORY_KEYS.push('sim1622');
 SIM_HISTORY_KEYS.push('sim388', 'sim390', 'sim391', 'sim409', 'sim410');
 SIM_HISTORY_KEYS.push('sim1649');
