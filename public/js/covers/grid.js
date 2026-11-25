@@ -138,7 +138,7 @@ export function _refillLazyIfShort() {
   }
 }
 
-export function _startLazy(items) {
+export function _startLazy(items, emptyMessage = '') {
   _stopLazy();
   const grid  = document.getElementById('covers-grid');
   const panel = document.getElementById('covers-panel');
@@ -149,7 +149,16 @@ export function _startLazy(items) {
   coversState._lazyOffset = 0;
   coversState._lazyGrid   = grid;
   _updateCoversCount();
-  if (!coversState._lazyItems.length) return;
+  if (!coversState._lazyItems.length) {
+    if (emptyMessage) {
+      const status = document.createElement('p');
+      status.className = 'covers-search-status';
+      status.setAttribute('role', 'status');
+      status.textContent = emptyMessage;
+      grid.appendChild(status);
+    }
+    return;
+  }
   _appendLazyBatch();
   coversState._lazyScrollFn = () => {
     if (!coversState._lazyItems || coversState._lazyOffset >= coversState._lazyItems.length) return;

@@ -15,6 +15,10 @@ test('catalog refresh preserves pause, queued-request, auth, and fingerprint beh
   globalThis.clearInterval = () => {};
   const calls = [];
   globalThis.fetch = (url, options) => new Promise(resolve => calls.push({ url, options, resolve }));
+  const emptyLabels = { bookIds: [], seriesIds: [], coverUrls: [] };
+  const respond = (call, payload = [], status = 200) => {
+    call.resolve(new Response(JSON.stringify(call.url.endsWith('/nsfw') ? emptyLabels : payload), { status }));
+  };
   try {
     const { loadCovers, pauseCoversAutoRefresh, resumeCoversAutoRefresh, _coversFingerprint, _isLandingBooksViewVisible } = await import('../../../public/js/covers/data.js');
     wrapper.style.display = '';
@@ -40,16 +44,17 @@ test('catalog refresh preserves pause, queued-request, auth, and fingerprint beh
     assert.equal(calls.length, 0);
     resumeCoversAutoRefresh();
     const first = loadCovers();
-    assert.equal(calls.length, 3);
+    assert.equal(calls.length, 4);
+    assert.ok(calls.some(c => c.url === '/api/public/nsfw'));
     assert.equal(calls.find(c => c.url === '/api/public/books').options.headers.Authorization, 'Bearer token');
     assert.ok(calls.every(c => c.options.cache === 'no-store'));
     await loadCovers({ force: false });
     await loadCovers({ force: true });
-    assert.equal(calls.length, 3, 'concurrent triggers do not start parallel catalog fetches');
-    for (const call of calls.slice(0, 3)) call.resolve(new Response('[]'));
+    assert.equal(calls.length, 4, 'concurrent triggers do not start parallel catalog fetches');
+    for (const call of calls.slice(0, 4)) respond(call);
     await first;
-    assert.equal(calls.length, 6, 'all concurrent triggers drain as one follow-up refresh');
-    for (const call of calls.slice(3)) call.resolve(new Response('[]'));
+    assert.equal(calls.length, 8, 'all concurrent triggers drain as one follow-up refresh');
+    for (const call of calls.slice(4)) respond(call);
     await new Promise(resolve => setImmediate(resolve));
     const { coversState } = await import('../../../public/js/covers/state.js');
     coversState._coversKindMode = 'favorites';
@@ -58,7 +63,7 @@ test('catalog refresh preserves pause, queued-request, auth, and fingerprint beh
       const pending = loadCovers();
       for (const call of calls.slice(start)) {
         const payload = call.url.endsWith('/books') ? books : call.url.endsWith('/covers') ? covers : [];
-        call.resolve(new Response(JSON.stringify(payload), { status }));
+        respond(call, payload, status);
       }
       await pending;
     };
@@ -92,20 +97,20 @@ test('catalog refresh preserves pause, queued-request, auth, and fingerprint beh
     const pausedStart = calls.length;
     const pausedRequest = loadCovers();
     pauseCoversAutoRefresh();
-    for (const call of calls.slice(pausedStart)) call.resolve(new Response(JSON.stringify(call.url.endsWith('/books') ? [{ id: 2, name: 'Transient upload state' }] : [])));
+    for (const call of calls.slice(pausedStart)) respond(call, call.url.endsWith('/books') ? [{ id: 2, name: 'Transient upload state' }] : []);
     await pausedRequest;
     assert.deepEqual(coversState._allBooks, [], 'pausing also prevents an already-running request from rendering');
     resumeCoversAutoRefresh();
     const switchStart = calls.length;
     const oldAccountRequest = loadCovers();
     token = 'new-token';
-    for (const call of calls.slice(switchStart)) call.resolve(new Response(JSON.stringify(call.url.endsWith('/books') ? [{ id: 3, name: 'Old account response', pdfPath: '/old.pdf' }] : [])));
+    for (const call of calls.slice(switchStart)) respond(call, call.url.endsWith('/books') ? [{ id: 3, name: 'Old account response', pdfPath: '/old.pdf' }] : []);
     await oldAccountRequest;
     assert.deepEqual(coversState._allBooks, [], 'previous-account response is discarded');
-    const freshCalls = calls.slice(switchStart + 3);
-    assert.equal(freshCalls.length, 3, 'account change schedules one fresh catalog fetch');
+    const freshCalls = calls.slice(switchStart + 4);
+    assert.equal(freshCalls.length, 4, 'account change schedules one fresh catalog fetch');
     assert.equal(freshCalls.find(call => call.url.endsWith('/books')).options.headers.Authorization, 'Bearer new-token');
-    for (const call of freshCalls) call.resolve(new Response(JSON.stringify(call.url.endsWith('/books') ? [{ id: 3, name: 'Current account response' }] : [])));
+    for (const call of freshCalls) respond(call, call.url.endsWith('/books') ? [{ id: 3, name: 'Current account response' }] : []);
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(coversState._allBooks[0].name, 'Current account response');
     assert.equal(coversState._allBooks[0].pdfPath, undefined);

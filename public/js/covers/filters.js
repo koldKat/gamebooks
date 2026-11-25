@@ -69,7 +69,7 @@ export function _isNotInMyBooks(item) {
   return !ownedIds.has(item.id);
 }
 
-export function _visibleCoverItems() {
+export function _visibleCoverItems({ includeNonReadableOnMobile = false } = {}) {
   const base = [...coversState._allBooks, ...coversState._allSeriesCovers].filter(item =>
     !isHiddenNsfwBook(item) &&
     (item.isSeries || !!item.coverUrl?.trim()) &&
@@ -83,8 +83,9 @@ export function _visibleCoverItems() {
   else items = base;
   // Exclude series covers from battle-sim filters; they do not represent one simulator.
   if (coversState._coversBattleSimOnly) items = items.filter(_hasBattleSim);
-  // Mobile always filters to readable books, regardless of the saved availability toggle.
-  if (coversState._coversLiveReadingOnly || _isMobile()) items = items.filter(_hasLiveReading);
+  if (coversState._coversLiveReadingOnly || (!includeNonReadableOnMobile && _isMobile())) {
+    items = items.filter(_hasLiveReading);
+  }
   // Open world is a series-only concept - non-series items never match.
   if (coversState._coversOpenWorldOnly) items = items.filter(i => !!i.isOpenWorld);
   if (coversState._coversNotMineOnly && getToken()) items = items.filter(_isNotInMyBooks);

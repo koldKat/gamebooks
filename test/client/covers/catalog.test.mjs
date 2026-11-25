@@ -61,6 +61,10 @@ test('shared catalog filters and background preferences retain their behavior', 
     coversState._coversNotMineOnly = false;
     window.innerWidth = 500;
     assert.deepEqual(_visibleCoverItems().map(b => b.id), [1], 'mobile forces live-reading availability');
+    assert.deepEqual(_visibleCoverItems({ includeNonReadableOnMobile: true }).map(b => b.id), [1, 4, 'series_10']);
+    coversState._coversLiveReadingOnly = true;
+    assert.deepEqual(_visibleCoverItems({ includeNonReadableOnMobile: true }).map(b => b.id), [1]);
+    coversState._coversLiveReadingOnly = false;
     window.innerWidth = 1280;
     coversState._landingCoverSource = 'mine';
     assert.equal(_effectiveLandingCoverSource(), 'mine');

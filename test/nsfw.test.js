@@ -131,9 +131,13 @@ test('cover visibility defaults on and filtering does not mutate book data', asy
   const {context:c,storage,events,checkbox} = client();
   assert.equal(c.hideNsfwBooks(),true);
   assert.equal(c.isHiddenNsfwCover('/covers/unknown.jpg'),true,'no first-load artwork leak');
+  assert.equal(c.hasNsfwLabel({id:22}),false,'wait for labels before matching an NSFW search');
   await c.loadNsfwCatalog();
   assert.equal(c.isHiddenNsfwBook(22),true);
   assert.equal(c.isHiddenNsfwBook({isSeries:true,entityId:7}),true);
+  assert.equal(c.hasNsfwLabel({id:22}),true);
+  assert.equal(c.hasNsfwLabel({id:23}),false);
+  assert.equal(c.hasNsfwLabel({isSeries:true,entityId:7}),true);
   assert.equal(c.isHiddenNsfwCover('/covers/safe.jpg'),false);
   const books=[{id:1,children:[{id:22},{id:23}],childIds:[22,23],childNames:['Adult','Safe']}];
   const visible=c.filterNsfwPublicBooks(books);

@@ -3,6 +3,8 @@ import { _startLazy, _refreshCoversDisplay } from './grid.js';
 import { coversState } from './state.js';
 import { getToken } from '../core/state.js';
 import { foldForSearch, matchesSearch, naturalCompare } from '../core/sort.js';
+import { hasNsfwLabel, hideNsfwBooks } from '../content/nsfw.js';
+import { t } from '../i18n.js';
 
 export function _initCoverSearch() {
   // Covers search
@@ -40,18 +42,24 @@ export function _initCoverSearch() {
     coversClearBtn.style.display = 'block';
     const isAnthologySearch = q === 'anthology' || q === 'anthologies';
     const isSeriesSearch = q === 'series';
-    const results = _visibleCoverItems()
+    const isNsfwSearch = q === 'nsfw';
+    coversPanel2.classList.add('covers-searching');
+    if (isNsfwSearch && hideNsfwBooks()) {
+      _startLazy([], t(getToken() ? 'covers.nsfw_hidden' : 'covers.nsfw_sign_in'));
+      return;
+    }
+    const results = _visibleCoverItems({ includeNonReadableOnMobile: isNsfwSearch })
       .filter(b => {
         if (isAnthologySearch) return b.isContainer;
         if (isSeriesSearch) return b.isSeries;
+        if (isNsfwSearch) return hasNsfwLabel(b);
         return matchesSearch(b.name, q) ||
           (b.childNames || []).some(n => matchesSearch(n, q)) ||
           matchesSearch(b.authors || '', q) ||
           matchesSearch(b.seriesName || '', q);
       })
       .sort((a, b) => naturalCompare(a.name, b.name));
-    coversPanel2.classList.add('covers-searching');
-    _startLazy(results);
+    _startLazy(results, isNsfwSearch ? t('covers.nsfw_no_matches') : '');
   });
 
   coversSearchEl.addEventListener('keydown', e => {

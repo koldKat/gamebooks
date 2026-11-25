@@ -299,6 +299,12 @@ body.covers-collapsed #covers-panel {
   gap: 0.5rem;
 }
 
+.covers-search-status {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.8rem;
+}
+
 #cover-preview-popup {
   display: none;
   position: fixed;

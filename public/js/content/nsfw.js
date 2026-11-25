@@ -40,6 +40,8 @@ function isNsfwBook(item) {
 
 export function isHiddenNsfwBook(item) { return hidden && isNsfwBook(item); }
 
+export function hasNsfwLabel(item) { return catalog !== null && isNsfwBook(item); }
+
 export function isHiddenNsfwCover(url) {
   return hidden && (!catalog || coverUrls.has(url));
 }
