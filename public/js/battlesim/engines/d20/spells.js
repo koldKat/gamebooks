@@ -1,6 +1,26 @@
 // Track prepared spells and slots without inventing unprinted spell outcomes.
 import {combatNumber} from './dice.js';
 
+export function normalizeItemSpells(source = []) {
+  if (!Array.isArray(source) || source.length > 50) throw new RangeError('Invalid spell items');
+  return source.map(({spell, source, remaining}) => {
+    if (typeof spell !== 'string' || !spell.trim() || spell.length > 100 || !['book', 'scroll', 'potion'].includes(source)) {
+      throw new RangeError('Invalid spell item');
+    }
+    return {spell:spell.trim(), source, remaining:combatNumber(remaining, 0, source === 'book' ? 1 : 100)};
+  });
+}
+
+export function beginItemCast(source, index, freeHand) {
+  if (source.pendingCast || freeHand !== true) throw new RangeError('Casting from an item requires a free hand');
+  const itemSpells = normalizeItemSpells(source.itemSpells);
+  const item = itemSpells[combatNumber(index, 0, itemSpells.length - 1)];
+  if (!item.remaining) throw new RangeError('No use of this spell item remains');
+  item.remaining--;
+  const pendingCast = {spell:item.spell, itemIndex:index, source:item.source};
+  return {actor:{...source,itemSpells,pendingCast}, event:{kind:'cast',...pendingCast,remaining:item.remaining}};
+}
+
 export function normalizeSpellcasting(source, remaining) {
   if (!source || !source.spells || !source.slots) throw new RangeError('Invalid spellcasting');
   const casting = structuredClone(source), slots = {};
@@ -23,6 +43,14 @@ export function normalizeSpellcasting(source, remaining) {
 export function validatePendingCast(actor) {
   const pending = actor.pendingCast;
   if (!pending) return;
+  if (pending.itemIndex != null) {
+    const items = normalizeItemSpells(actor.itemSpells);
+    const item = items[combatNumber(pending.itemIndex, 0, items.length - 1)];
+    if (item.spell !== pending.spell || item.source !== pending.source || item.remaining >= (item.source === 'book' ? 1 : 100)) {
+      throw new RangeError('Invalid pending spell item');
+    }
+    return;
+  }
   if (!actor.spellcasting || typeof pending.spell !== 'string' || !/^[0-9]$/.test(String(pending.level))) throw new RangeError('Invalid pending spell');
   const base = Object.entries(actor.spellcasting.spells).find(([, spells]) => spells.includes(pending.spell));
   if (!base || Number(base[0]) > pending.level || (Number(base[0]) === 0) !== (pending.level === 0)) throw new RangeError('Invalid pending spell');
@@ -49,6 +77,7 @@ export function finishCast(source, {cancel = false, note} = {}) {
   const actor = structuredClone(source), pending = actor.pendingCast;
   // Cancellation is available only before any result has been committed.
   if (cancel && pending.level) actor.spellSlots[pending.level]++;
+  if (cancel && pending.itemIndex != null) actor.itemSpells[pending.itemIndex].remaining++;
   const displacement = actor.features?.displacement;
   if (!cancel && displacement && pending.level >= displacement.rechargesAfterIllusionSpellMinimumLevel
       && displacement.illusionSpells.includes(pending.spell)) actor.sourceDisplacementReady = true;

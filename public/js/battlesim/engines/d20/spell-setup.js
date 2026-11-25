@@ -35,3 +35,42 @@ export function createD20SpellSetup(parent, ui) {
   }
   return {read, fill};
 }
+
+export function createItemSpellSetup(parent, ui) {
+  const root = ui.group(parent, 'spellItems');
+  const rows = [];
+  const list = ui.document.createElement('div');
+  root.append(list);
+  function add(item = {spell:'', source:'book', remaining:1}) {
+    if (rows.length >= 50) return;
+    const box = ui.document.createElement('fieldset');
+    box.className = 'bsim-opponent-row';
+    list.append(box);
+    const name = ui.field(box, 'spell', {value:item.spell});
+    const source = ui.field(box, 'spellItemSource', {value:item.source,
+      entries:['book','scroll','potion'].map(key => [key,ui.tr('spellItem.'+key)])});
+    const remaining = ui.field(box, 'spellItemUses', {type:'number', max:100, value:item.remaining});
+    const row = {box, name, source, remaining};
+    rows.push(row);
+    function updateLimit() {
+      remaining.max = source.value === 'book' ? '1' : '100';
+      if (Number(remaining.value) > Number(remaining.max)) remaining.value = remaining.max;
+    }
+    source.addEventListener('change', updateLimit);
+    updateLimit();
+    ui.button(box, 'remove', () => { rows.splice(rows.indexOf(row), 1); box.remove(); });
+  }
+  ui.button(root, 'addSpellItem', () => add());
+  return {
+    fill(actor) {
+      list.replaceChildren();
+      rows.length = 0;
+      for (const item of actor?.itemSpells ?? []) add(item);
+    },
+    read() {
+      return {itemSpells:rows.map(row => ({
+        spell:row.name.value, source:row.source.value, remaining:ui.number(row.remaining),
+      }))};
+    },
+  };
+}

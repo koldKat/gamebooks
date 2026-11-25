@@ -269,6 +269,8 @@ Encounter options also support Skill loss on wounds, ally damage and item costs 
 
 Pending actions validate account, book, run identity, and state revision before saving. Combat resources belong to that encounter or its explicit continuation. Campaign travel, narrative choices, and story inventory stay outside the combat engine.
 
+The d20 engine reads encounter-specific rules and combatant profiles from the database. A profile can define turn order, action limits, attack schedules, item-based spellcasting, and printed encounter transitions. The simulator records those effects on the active run and offers manual controls for tactical rulings from the source rules.
+
 Saved fights retain their rule version, turn, participants, resources, pending decisions, and history. Rendering does not migrate or reset them. Each completed outcome is recorded once; canceled or incomplete encounters must not be reported as victories.
 
 Custom encounters use the common opponent editor. Missing or derived source attributes remain explicitly unavailable until the appropriate engine resolves them; setup must not invent substitute values. Ordinary custom fights do not require a preset.

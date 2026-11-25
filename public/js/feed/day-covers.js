@@ -49,10 +49,20 @@ function _clearCoverTiles(card) {
   if (stack?.firstChild) stack.replaceChildren();
 }
 
+function _writeCoverTiles(stack, tiles, cardWidth) {
+  const html = tiles.map(({ top, cover, box }) => {
+    const left = Math.round((cardWidth - box.w) / 2);
+    return `<div class="feed-day-cover-tile" style="top:${top}px;left:${left}px;width:${box.w}px;height:${box.h}px;background-image:url('${escapeHtml(cover)}')"></div>`;
+  }).join('');
+  if (stack.innerHTML !== html) stack.innerHTML = html;
+}
+
 export async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLists) {
   const generation = _coverGeneration;
   const cards = root.querySelectorAll('.feed-day-card[data-day-index]');
-  if (document.body.classList.contains('no-feed-day-covers') || document.body.classList.contains('feed-collapsed')) {
+  const coversHidden = () => document.body.classList.contains('no-feed-day-covers')
+    || document.body.classList.contains('feed-collapsed');
+  if (coversHidden()) {
     for (const card of cards) _clearCoverTiles(card);
     _dayCoverResizeObserver?.disconnect();
     return;
@@ -64,12 +74,37 @@ export async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLis
     if (!_nearViewport(card)) { _clearCoverTiles(card); return; }
     const covers = [...new Set(dayCoverLists[Number(card.dataset.dayIndex)] || [])];
     const stack = card.querySelector('.feed-day-cover-stack');
-    if (!covers?.length || !stack) return;
+    if (!covers.length || !stack) return;
     if (card.offsetWidth <= 0 || card.offsetHeight <= 0) return;
-    const metas = await Promise.all(covers.map(_loadDayCoverMeta));
-    if (generation !== _coverGeneration) return;
-    if (card.isConnected === false || document.body.classList.contains('no-feed-day-covers')) return;
-    if (!_nearViewport(card)) { _clearCoverTiles(card); return; }
+
+    const canPaint = () => {
+      if (generation !== _coverGeneration || card.isConnected === false || coversHidden()) return false;
+      if (_nearViewport(card)) return true;
+      _clearCoverTiles(card);
+      return false;
+    };
+
+    // Collapsed days often need just one cover, even when dozens of books contributed.
+    let firstLoaded = 0;
+    for (; firstLoaded < covers.length; firstLoaded++) {
+      const cover = covers[firstLoaded];
+      const meta = await _loadDayCoverMeta(cover);
+      if (!canPaint()) return;
+      if (!meta) continue;
+      const w = card.offsetWidth;
+      const height = card.offsetHeight;
+      if (w <= 0 || height <= 0) return;
+      const h = Math.max(1, Math.round((meta.height / meta.width) * w));
+      if (h >= height || !stack.firstChild) {
+        _writeCoverTiles(stack, [{ top: Math.round((height - h) / 2), cover, box: { w, h } }], w);
+      }
+      if (h >= height) return;
+      break;
+    }
+
+    if (firstLoaded === covers.length) return;
+    const metas = await Promise.all(covers.map((cover, i) => i < firstLoaded ? null : _loadDayCoverMeta(cover)));
+    if (!canPaint()) return;
     if (metas.every(m => !m?.width || !m?.height)) return;
     const cardW   = card.offsetWidth;
     const targetH = card.offsetHeight;
@@ -112,11 +147,7 @@ export async function _applyDayCoverFlows(root, dayCoverLists = _lastDayCoverLis
       guard++;
     }
 
-    const html = tiles.map(t => {
-      const left = Math.round((cardW - t.box.w) / 2);
-      return `<div class="feed-day-cover-tile" style="top:${t.top}px;left:${left}px;width:${t.box.w}px;height:${t.box.h}px;background-image:url('${escapeHtml(t.cover)}')"></div>`;
-    }).join('');
-    if (stack.innerHTML !== html) stack.innerHTML = html;
+    _writeCoverTiles(stack, tiles, cardW);
   };
   let next = 0;
   await Promise.all(Array.from({ length: Math.min(4, cards.length) }, async () => {

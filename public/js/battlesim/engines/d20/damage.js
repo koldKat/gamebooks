@@ -2,7 +2,7 @@
 import {combatNumber} from './dice.js';
 
 export const DAMAGE_TYPES = Object.freeze(['acid', 'bludgeoning', 'cold', 'fire', 'force', 'lightning',
-  'necrotic', 'piercing', 'poison', 'psychic', 'radiant', 'slashing', 'thunder']);
+  'necrotic', 'piercing', 'poison', 'psychic', 'radiant', 'slashing', 'thunder', 'untyped']);
 const physical = new Set(['bludgeoning', 'piercing', 'slashing']);
 
 export function validateDefenses(defenses = {}) {
@@ -17,16 +17,21 @@ export function validateDefenses(defenses = {}) {
     if (defenses[key] !== undefined && typeof defenses[key] !== 'boolean') throw new RangeError('Invalid resistance');
     result[key] = defenses[key] ?? false;
   }
+  if (defenses.rangedPiercingResistance !== undefined) {
+    if (typeof defenses.rangedPiercingResistance !== 'boolean') throw new RangeError('Invalid resistance');
+    result.rangedPiercingResistance = defenses.rangedPiercingResistance;
+  }
   return result;
 }
 
-export function mitigateDamage(amount, type, defenses = {}, {magical = false, silvered = false, attack = true} = {}) {
+export function mitigateDamage(amount, type, defenses = {}, {magical = false, silvered = false, attack = true, ranged = false} = {}) {
   combatNumber(amount);
   if (!DAMAGE_TYPES.includes(type) || typeof magical !== 'boolean' || typeof silvered !== 'boolean'
-      || typeof attack !== 'boolean') throw new RangeError('Invalid damage');
+      || typeof attack !== 'boolean' || typeof ranged !== 'boolean') throw new RangeError('Invalid damage');
   const traits = validateDefenses(defenses);
   if (traits.immunities.includes(type)) return {amount:0, immune:true, resisted:false, vulnerable:false};
-  const resisted = traits.resistances.includes(type) || attack && !magical && (traits.nonmagicalAttackResistance
+  const resisted = traits.resistances.includes(type) || attack && ranged && type === 'piercing' && traits.rangedPiercingResistance
+    || attack && !magical && (traits.nonmagicalAttackResistance
     || traits.nonmagicalPhysicalResistance && physical.has(type) && !(silvered && traits.silverBypassesPhysicalResistance));
   const vulnerable = traits.vulnerabilities.includes(type);
   // Multiple applicable resistances never stack; round the halved damage down.
@@ -40,6 +45,11 @@ export function validateVitality(actor) {
   combatNumber(actor.hp, 0, actor.maxHp);
   combatNumber(actor.baseMaxHp ?? actor.maxHp, Math.max(1, actor.maxHp));
   return actor;
+}
+
+export function isDefeated(actor) {
+  return actor.withdrawn === true ||
+    actor.hp === 0 && (actor.dead || !actor.maxHp || !actor.features?.regeneration?.canRecoverFromZero);
 }
 
 export function applyDamage(actor, amount) {

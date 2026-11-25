@@ -5,7 +5,7 @@ import {applyDamage, reduceMaximumHp, DAMAGE_TYPES} from './damage.js';
 const abilities = new Set(['str', 'dex', 'con', 'int', 'wis', 'cha']);
 const conditions = new Set(['blinded', 'charmed', 'deafened', 'exhaustion', 'frightened', 'grappled',
   'incapacitated', 'invisible', 'paralyzed', 'petrified', 'poisoned', 'prone', 'restrained',
-  'stunned', 'unconscious', 'confused', 'blurred', 'quicksand', 'shielded', 'burning', 'displaced']);
+  'stunned', 'unconscious', 'confused', 'blurred', 'quicksand', 'shielded', 'burning', 'displaced', 'hindered']);
 const disabling = ['incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious'];
 const automaticFailure = ['paralyzed', 'petrified', 'stunned', 'unconscious'];
 
@@ -35,7 +35,7 @@ export function validateCondition(source) {
 export function validateHitEffects(effects = []) {
   if (!Array.isArray(effects) || effects.length > 10) throw new RangeError('Invalid attack effects');
   return effects.map(effect => {
-    if (!['condition', 'maximumHpDrain', 'strengthDrain'].includes(effect?.kind)) throw new RangeError('Invalid attack effect');
+    if (!['condition', 'maximumHpDrain', 'strengthDrain', 'nextAttackDisadvantage'].includes(effect?.kind)) throw new RangeError('Invalid attack effect');
     if (effect.save) {
       if (!abilities.has(effect.save.ability)) throw new RangeError('Invalid effect save');
       combatNumber(effect.save.dc, 0, 1000);
@@ -59,7 +59,7 @@ export function attackConditions(attacker, target, {distance, ignoreInvisibility
     advantage:!ignoreInvisibility && hasCondition(attacker, 'invisible')
       || ['paralyzed', 'petrified', 'stunned', 'unconscious', 'restrained', 'quicksand', 'blinded'].some(key => hasCondition(target, key))
       || hasCondition(target, 'prone') && near,
-    disadvantage:['blinded', 'poisoned', 'prone', 'restrained', 'confused', 'quicksand'].some(key => hasCondition(attacker, key))
+    disadvantage:['blinded', 'poisoned', 'prone', 'restrained', 'confused', 'quicksand', 'hindered'].some(key => hasCondition(attacker, key))
       || !ignoreInvisibility && hasCondition(target, 'invisible') || !ignoreBlur && hasCondition(target, 'blurred')
       || hasCondition(target, 'prone') && !near
       || hasCondition(target, 'displaced') && !cannotAct(target) && target.currentSpeed !== 0,
@@ -75,7 +75,8 @@ export function actorSave(actor, ability, dc, options = {}) {
   }
   return rollSave(actor.saves[ability], dc, {...options,
     advantage:Boolean(options.advantage || options.magical && actor.magicResistance),
-    disadvantage:Boolean(options.disadvantage || hasCondition(actor, 'confused') || ability === 'dex' && hasCondition(actor, 'restrained'))});
+    disadvantage:Boolean(options.disadvantage || hasCondition(actor, 'confused') || hasCondition(actor, 'hindered')
+      || ability === 'dex' && hasCondition(actor, 'restrained'))});
 }
 
 export function addCondition(actor, source) {
@@ -88,9 +89,12 @@ export function addCondition(actor, source) {
   return {actor:updated, immune:false};
 }
 
-export function resolveDamageFeatures(before, amount, {critical = false, radiant = false, dice = {}, random = Math.random} = {}) {
+export function resolveDamageFeatures(before, amount, {critical = false, radiant = false, damageTypes = [], dice = {}, random = Math.random} = {}) {
   combatNumber(amount);
   let actor = applyDamage(before, amount); const events = [];
+  if (amount > 0 && before.features?.regeneration?.blockedBy?.some(type => damageTypes.includes(type))) {
+    actor.regenerationBlocked = true;
+  }
   const fortitude = before.features?.undeadFortitude;
   if (before.hp > 0 && actor.hp === 0 && amount > 0 && fortitude && !critical && !radiant) {
     const dc = combatNumber(fortitude.dcBase, 0, 1000) + amount;
@@ -142,6 +146,9 @@ export function resolveHitEffects(target, attack, amount, {dice = [], initialSav
       }
       if (current === 0) { actor.hp = 0; actor.dead = true; }
       events.push({kind:effect.kind, amount:roll.amount, current, roll, applied:true});
+    } else if (effect.kind === 'nextAttackDisadvantage') {
+      actor.nextAttackDisadvantage = true;
+      events.push({kind:effect.kind, check, applied:true});
     } else {
       const condition = {...effect.condition, magical:Boolean(effect.magical || attack.magical)};
       if (effect.repeatSave) { condition.save = effect.save; condition.repeatSave = true; }

@@ -50,3 +50,24 @@ test('expanded cards cycle distinct covers evenly while short cards prioritize t
   await context.apply(root, [['only-book']]);
   assert.equal((stack.innerHTML.match(/url\('only-book'\)/g) || []).length, 7);
 });
+
+test('a collapsed day paints its first available cover without requesting the rest', async () => {
+  const requests = [];
+  const stack = { innerHTML: '' };
+  const card = { dataset: { dayIndex: '0' }, offsetWidth: 100, offsetHeight: 80,
+    querySelector: () => stack };
+  class Image {
+    constructor() { this.naturalWidth = 100; this.naturalHeight = 150; }
+    set src(url) {
+      requests.push(url);
+      queueMicrotask(() => url === 'missing' ? this.onerror() : this.onload());
+    }
+  }
+  const context = { Image, setTimeout, clearTimeout, escapeHtml: String, window: { addEventListener() {} },
+    document: { addEventListener() {}, body: { classList: { contains: () => false } } } };
+  runInNewContext(moduleSource('day-covers') + '\nthis.apply = _applyDayCoverFlows;', context);
+  const covers = [['missing', 'busiest', ...Array.from({ length: 40 }, (_, i) => `book-${i}`)]];
+  await context.apply({ querySelectorAll: () => [card] }, covers);
+  assert.deepEqual(requests, ['missing', 'busiest']);
+  assert.match(stack.innerHTML, /url\('busiest'\)/);
+});

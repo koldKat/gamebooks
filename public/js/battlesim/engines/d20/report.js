@@ -3,7 +3,7 @@ import {decorateOutcome} from '../../outcome.js';
 export function renderD20Report(parent, ui, state) {
   const open = new Set([...parent.querySelectorAll('details[open][data-notes]')].map(node=>node.dataset.notes));
   parent.replaceChildren(); const fight=state.fight;
-  const status=ui.text(parent,ui.tr(fight?'status.'+fight.status:'ready'),'h4');
+  const status=ui.text(parent,ui.tr(fight?.surrenderOffer==='accepted'?'status.surrendered':fight?'status.'+fight.status:'ready'),'h4');
   status.className='bsim-side-title';decorateOutcome(status,fight?.status);
   if (!fight) return;
   ui.text(parent,fight.opponent.name); ui.text(parent,ui.tr('roundNumber')+' '+(fight.round+1));
@@ -45,10 +45,12 @@ export function renderD20Report(parent, ui, state) {
     if(event.amount!=null)value+=' · '+event.amount;
     if(event.check||event.save)value+=' · '+check(event.save??event.check);
     if(event.selection)value+=' · '+actors.find(([key])=>key===event.actor)?.[1].attacks[event.selection.attackIndex].name;
-    if(event.order)value+=' · '+event.order.map(item=>name(item.key)+' '+item.check.total).join(', ');
+    if(event.order)value+=' · '+event.order.map(item=>item.check ? name(item.key)+' '+item.check.total : name(item.key)).join(', ');
     if(event.roll!=null)value+=' · '+event.roll;
     if(event.movement)value+=' · '+ui.tr('movementFeet')+' '+event.movement;
     if(event.droppedWeapon)value+=' · '+ui.tr('droppedWeaponHelp');
+    if(event.itemLost)value+=' · '+ui.tr('retreatItemLost');
+    if(event.asset)value+=' · '+event.asset+' · '+event.gamebookXp+' '+ui.tr('printedXp');
     const result=event.save??event.check;
     const allied=key=>key==='player'||/^ally\d+$/.test(key??'');
     ui.text(log,value).className='bsim-log-'+(result?.hit===false||result?.success===false?'muted'

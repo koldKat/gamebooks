@@ -6,7 +6,13 @@ import {addCondition, actorSave, cannotAct, hasCondition, resolveDamageFeatures}
 export function prepareD20Encounter(fight, setup = {}) {
   const options = fight.opponent.options ?? {}, rules = fight.opponent.contextRules ?? {};
   fight.openingAttacks = [];
+  if (rules.initiative === 'party-first') {
+    fight.protagonistSurprised = options.protagonistSurprised === true || setup.protagonistSurprised === true;
+  }
   for (const actor of [fight.player, ...fight.companions]) actor.encounterAdvantageCharges = 0;
+  if (options.openingDisadvantageOnFailedDexteritySave && setup.failedDexteritySave === true) {
+    fight.player.openingActionDisadvantage = true;
+  }
   if (options.quicksand) {
     if (!rules.quicksand) throw new RangeError('Missing quicksand rule');
     Object.assign(fight.player, addCondition(fight.player, {name:'quicksand', escape:rules.quicksand}).actor);

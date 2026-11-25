@@ -803,6 +803,7 @@ SIM_HISTORY_KEYS.push('sim1555');
 SIM_HISTORY_KEYS.push('sim1566', 'sim1575', 'sim1576', 'sim1577', 'sim1578', 'sim1587', 'sim1589', 'sim1591', 'sim1592', 'sim1596', 'sim1597', 'sim1598', 'sim1607', 'sim1608', 'sim1620');
 SIM_HISTORY_KEYS.push('sim1473');
 SIM_HISTORY_KEYS.push('sim1621');
+SIM_HISTORY_KEYS.push('sim1751');
 SIM_HISTORY_KEYS.push('sim1622');
 SIM_HISTORY_KEYS.push('sim388', 'sim390', 'sim391', 'sim409', 'sim410');
 SIM_HISTORY_KEYS.push('sim1649');

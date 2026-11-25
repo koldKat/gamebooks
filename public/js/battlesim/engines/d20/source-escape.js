@@ -26,3 +26,34 @@ export function sourceEscape(source, action, performAttack, random = Math.random
   fight.revision = source.revision + 1;
   return fight;
 }
+
+export function opportunityRetreat(source, action, performAttack) {
+  const actorKey = action.actor ?? 'player';
+  const actor = actorKey === 'player' ? source.player : /^ally\d+$/.test(actorKey) ? source.companions[Number(actorKey.slice(4))] : null;
+  if (!actor?.hp || cannotAct(actor)) throw new RangeError('No combatant can attempt escape');
+  const forced = source.groups.findIndex(enemy => enemy.hp && enemy.features?.retreatAttacks?.forced);
+  let fight = source, escaped = true, partingStrikeHit = false;
+  if (forced >= 0 || action.withinOpportunityReach) {
+    const index = forced >= 0 ? forced : /^enemy\d+$/.test(action.target) ? Number(action.target.slice(5)) : -1;
+    const enemy = source.groups[index];
+    if (!enemy?.hp) throw new RangeError('Choose the nearest opponent that can attack');
+    const rule = enemy.features?.retreatAttacks;
+    const melee = enemy.attacks.findIndex(attack => attack.kind !== 'save' && !attack.ranged && attack.range == null);
+    for (const attackIndex of rule?.indices ?? (melee === -1 ? [] : [melee])) {
+      if (fight.status !== 'fighting' || fight.surrenderOffer === 'offered') break;
+      fight = performAttack(fight, {kind:'attack',expectedRevision:fight.revision,actor:'enemy'+index,target:actorKey,
+        attackIndex,distance:5,opportunity:true});
+      partingStrikeHit ||= fight.events.at(-1).check.hit;
+    }
+    escaped = !(rule?.stopOnHit && partingStrikeHit);
+    partingStrikeHit &&= Boolean(rule?.itemLostOnHit);
+  }
+  fight = structuredClone(fight);
+  if (escaped && fight.status === 'fighting' && fight.surrenderOffer !== 'offered') {
+    fight.status = 'fled'; fight.phase = 'complete';
+  }
+  fight.events = [...fight.events.slice(-99),{kind:escaped ? 'retreat' : 'retreatStopped',
+    actor:actorKey,round:fight.round,itemLost:partingStrikeHit}];
+  fight.revision = source.revision + 1;
+  return fight;
+}

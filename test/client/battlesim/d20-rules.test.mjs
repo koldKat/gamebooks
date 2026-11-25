@@ -118,6 +118,210 @@ test('hit components apply their own critical dice and defenses', () => {
   assert.equal(result.events[0].damage[1].immune, true);
 });
 
+test('source-defined criticals double the rolled weapon damage including modifiers', () => {
+  const enemy = combatant('Enemy', {defenses:{resistances:['slashing']}});
+  const preset = {...encounter([enemy]), contextRules:{weaponDamage:{critical:'double-total', minimumOnHit:1}}};
+  const result = act(startD20Fight(combatant('Player'), preset), {kind:'attack', actor:'player',
+    target:'enemy0', attackIndex:0, dice:[20], damageDice:[[3]]});
+  assert.equal(result.groups[0].hp, 15);
+  assert.deepEqual(result.events[0].damage[0].roll.rolls, [3]);
+});
+
+test('source-defined minimum weapon damage applies once before defenses', () => {
+  const player = combatant('Player', {attacks:[{name:'Strike', bonus:4, damage:[
+    {formula:'1d4-3', type:'slashing'}, {formula:'0', type:'cold'}]}]});
+  const start = defenses => startD20Fight(player, {...encounter([combatant('Enemy', {defenses})]),
+    contextRules:{weaponDamage:{critical:'double-total', minimumOnHit:1}}});
+  const attack = {kind:'attack', actor:'player', target:'enemy0', attackIndex:0,
+    dice:[15], damageDice:[[1], []]};
+  assert.equal(act(start({}), attack).events[0].amount, 1);
+  assert.equal(act(start({}), {...attack, dice:[20]}).events[0].amount, 2);
+  assert.equal(act(start({immunities:['slashing']}), attack).events[0].amount, 0);
+});
+
+test('party-first initiative skips dice and puts surprised players after enemies in the opening round', () => {
+  const preset = {...encounter([combatant('Enemy'), combatant('Other enemy')]),
+    contextRules:{initiative:'party-first'}};
+  const party = [combatant('Companion')];
+  const order = fight => act(fight, {kind:'initiative'}).events.at(-1).order.map(entry => entry.key);
+  assert.deepEqual(order(startD20Fight(combatant('Player'), preset, party)),
+    ['player', 'ally0', 'enemy0', 'enemy1']);
+  const ambush = startD20Fight(combatant('Player'), {...preset, options:{protagonistSurprised:true}}, party);
+  assert.deepEqual(order(ambush), ['enemy0', 'enemy1', 'player', 'ally0']);
+  assert.deepEqual(order(act(ambush, {kind:'round'})), ['player', 'ally0', 'enemy0', 'enemy1']);
+  assert.deepEqual(ambush.events, []);
+});
+
+test('recoverable opponents at zero HP only die if their next regeneration is blocked', () => {
+  const troll = combatant('Troll', {features:{regeneration:{amount:10, blockedBy:['acid','fire'], canRecoverFromZero:true}}});
+  const fight = startD20Fight(combatant('Player'), encounter([troll]));
+  const hit = type => act(fight, {kind:'damage', target:'enemy0', amount:20, type, reason:'Attack damage'});
+  const down = hit('slashing');
+  assert.equal(down.status, 'fighting');
+  assert.equal(act(down, {kind:'startTurn', actor:'enemy0'}).groups[0].hp, 10);
+  const burned = act(hit('fire'), {kind:'startTurn', actor:'enemy0'});
+  assert.equal(burned.status, 'win');
+  assert.equal(burned.groups[0].dead, true);
+});
+
+test('profile thresholds select the printed damage formula and ranged piercing defense', () => {
+  const bandits = combatant('Bandits', {hp:12, attacks:[{name:'Swords', bonus:5,
+    weakenedAtHp:{below:15, formula:'1d6+3'}, damage:[{formula:'3d6+3', type:'slashing'}]}]});
+  const fight = startD20Fight(combatant('Player'), encounter([bandits]));
+  const weakHit = act(fight, {kind:'attack', actor:'enemy0', target:'player', attackIndex:0, dice:[17], damageDice:[[4]]});
+  assert.equal(weakHit.events.at(-1).amount, 7);
+  const defender = {rangedPiercingResistance:true};
+  assert.equal(mitigateDamage(11, 'piercing', defender, {ranged:true}).amount, 5);
+  assert.equal(mitigateDamage(11, 'piercing', defender).amount, 11);
+  assert.equal(mitigateDamage(11, 'untyped', defender, {ranged:true}).amount, 11);
+});
+
+test('printed damage rerolls use the second result even if it is still below the threshold', () => {
+  const result = rollDamage('1d12+4', {dice:[2], rerollBelow:3, rerollDice:[1]});
+  assert.equal(result.amount, 5);
+  assert.deepEqual(result.rerolls, [{from:2,to:1}]);
+});
+
+test('a printed random attack uses the source die-to-attack table', () => {
+  const attacks = [0, 1, 2].map(i => ({name:'Attack '+i, bonus:1, damage:[]}));
+  const demon = combatant('Demon', {attacks, features:{randomAttack:{sides:6, indices:[0,0,1,1,2,2]}}});
+  const fight = startD20Fight(combatant('Player'), encounter([demon]));
+  const choose = roll => act(fight, {kind:'selectAttack', actor:'enemy0', target:'player', roll}).events.at(-1).selection;
+  assert.deepEqual(choose(1), {attackIndex:0,roll:1});
+  assert.deepEqual(choose(4), {attackIndex:1,roll:4});
+  assert.deepEqual(choose(6), {attackIndex:2,roll:6});
+});
+
+test('printed retreat reacts only within reach and can be stopped by a hit', () => {
+  const enemy = combatant('Enemy', {features:{retreatAttacks:{indices:[0,0],stopOnHit:true}}});
+  const start = options => startD20Fight(combatant('Player'), {...encounter([enemy]),
+    contextRules:{retreat:'opportunity'}, options});
+  const retreat = {kind:'flee',actor:'player',target:'enemy0'};
+  assert.equal(act(start(), retreat).status, 'fled');
+  const initial = start();
+  const stopped = d20Action(initial, {...retreat, withinOpportunityReach:true, expectedRevision:0}, () => 0.70);
+  assert.equal(stopped.status, 'fighting');
+  assert.equal(stopped.events.filter(event => event.kind==='attack').length, 2);
+  assert.equal(stopped.revision, 1);
+  assert.throws(() => act(start({noRetreat:true}), retreat));
+});
+
+test('a forced parting strike reports the printed item loss without dealing HP damage', () => {
+  const thief = combatant('Thief', {attacks:[{name:'Parting Strike',bonus:4,damage:[]}],
+    features:{retreatAttacks:{indices:[0],forced:true,itemLostOnHit:true}}});
+  const fight = startD20Fight(combatant('Player'), {...encounter([thief]),contextRules:{retreat:'opportunity'}});
+  const result = d20Action(fight, {kind:'flee',expectedRevision:0}, () => 0.97);
+  assert.equal(result.status, 'fled');
+  assert.equal(result.player.hp, 20);
+  assert.equal(result.events.at(-1).itemLost, true);
+});
+
+test('printed item casting requires a free hand and spends one use and one action', () => {
+  const player = combatant('Player', {level:5,itemSpells:[
+    {spell:'Fireball',source:'book',remaining:1}, {spell:'Shield',source:'scroll',remaining:2},
+  ]});
+  const preset = {...encounter([combatant('Enemy')]),contextRules:{
+    actionAllowance:{base:1,extraAtLevel:5},spellSource:'items',
+  }};
+  const first = startD20Fight(player, preset);
+  const cast = {kind:'cast',actor:'player',itemIndex:0,freeHand:true};
+  assert.throws(() => act(first,{...cast,freeHand:false}));
+  const started = act(first,cast);
+  assert.equal(started.player.itemSpells[0].remaining,0);
+  const cancelled = act(started,{kind:'cancelCast',actor:'player',note:'Canceled',results:[]});
+  assert.equal(cancelled.player.itemSpells[0].remaining,1);
+  assert.equal(cancelled.player.actionsSpent,0);
+  const resolved = act(started,{kind:'resolveCast',actor:'player',note:'Resolved',results:[]});
+  assert.throws(() => act(resolved,cast));
+  const second = act(resolved,{...cast,itemIndex:1});
+  assert.equal(second.player.itemSpells[1].remaining,1);
+  const finished = act(second,{kind:'resolveCast',actor:'player',note:'Resolved',results:[]});
+  assert.throws(() => act(finished,{...cast,itemIndex:1}));
+  assert.equal(act(act(finished,{kind:'round'}),{...cast,itemIndex:1}).player.itemSpells[1].remaining,0);
+});
+
+test('a potion and a gear change consume the same printed turn allowance as attacks', () => {
+  const preset = {...encounter([combatant('Enemy')]),contextRules:{
+    actionAllowance:{base:1,extraAtLevel:5},abilityDcDefault:15,
+  }};
+  const fight = startD20Fight(combatant('Player',{hp:10,level:4}),preset);
+  const healed = act(fight,{kind:'combatItem',actor:'player',source:'potion',note:'Healing potion',formula:'1d4+2',damageDice:[3]});
+  assert.equal(healed.player.hp,15);
+  const gear = {kind:'combatItem',actor:'player',source:'equipment',note:'Shield',armorClass:15};
+  assert.throws(() => act(healed,gear));
+  const next = act(act(healed,{kind:'round'}),gear);
+  assert.equal(next.player.ac,15);
+  assert.equal(act(next,{kind:'check',actor:'player',ability:'dex',dice:[13]}).events.at(-1).check.success,true);
+});
+
+test('the printed surrender offer stops a lethal blow at one HP and only occurs once', () => {
+  const king = combatant('King', {features:{offerSurrenderBelow:25}});
+  const start = startD20Fight(combatant('Player',{hp:30,maxHp:30}),encounter([king]));
+  const damage = {kind:'damage',target:'player',amount:50,type:'force',reason:'Attack damage'};
+  const offer = act(start,damage);
+  assert.equal(offer.player.hp,1);
+  assert.equal(offer.surrenderOffer,'offered');
+  assert.throws(() => act(offer,damage));
+  assert.equal(act(offer,{kind:'acceptSurrender'}).surrenderOffer,'accepted');
+  assert.equal(act(act(offer,{kind:'refuseSurrender'}),damage).status,'loss');
+});
+
+test('an opponent that withdraws at the printed threshold preserves the remaining HP', () => {
+  const enemy = combatant('Enemy',{features:{withdrawAtOrBelow:10}});
+  const fight = startD20Fight(combatant('Player'),encounter([enemy]));
+  const result = act(fight,{kind:'damage',target:'enemy0',amount:10,type:'slashing',reason:'Attack damage'});
+  assert.equal(result.groups[0].hp,10);
+  assert.equal(result.groups[0].withdrawn,true);
+  assert.equal(result.status,'win');
+});
+
+test('a source form changes before the first attack is resolved and leaves when its turn ends', () => {
+  const raven = combatant('Warlock',{hp:50,maxHp:50,features:{
+    formOnFirstAttack:{name:'Raven',hp:32,withdrawAfterTurn:true},
+  }});
+  const fight = startD20Fight(combatant('Player'),encounter([raven]));
+  const result = act(fight,{kind:'attack',actor:'player',target:'enemy0',attackIndex:0,dice:[15],damageDice:[[1]]});
+  assert.equal(result.groups[0].name,'Raven');
+  assert.equal(result.groups[0].hp,29);
+  assert.equal(result.events.at(-1).effects[0].kind,'attackedForm');
+  const afterTurn = act(result,{kind:'endTurn',actor:'enemy0'});
+  assert.equal(afterTurn.status,'win');
+  assert.equal(afterTurn.groups[0].hp,29);
+});
+
+test('only a printed asset combination can defeat the selected group and the log shows half XP', () => {
+  const defender = combatant('Defender',{experience:1800,features:{
+    defeatingAssets:[{id:'dual',label:'Demolition charges and suppressive fire'}],
+  }});
+  const fight = startD20Fight(combatant('Player'),encounter([defender,combatant('Other')]));
+  const action = {kind:'encounterAsset',target:'enemy0',asset:'dual'};
+  assert.throws(() => act(fight,{...action,asset:'single'}));
+  const next = act(fight,action);
+  assert.equal(next.status,'fighting');
+  assert.equal(next.groups[0].withdrawn,true);
+  assert.equal(next.groups[1].hp,20);
+  assert.equal(next.events.at(-1).gamebookXp,900);
+  assert.throws(() => act(next,action));
+});
+
+test('printed attack schedules support openings, repeating rounds, cooldowns and health thresholds', () => {
+  const attacks = ['Fist','Arquebus','Berserk Fist'].map(name => ({name,bonus:0,damage:[]}));
+  const enemy = combatant('Golem',{hp:15,attacks,features:{attackPlan:{
+    firstRounds:[[1]],regular:[0],recurring:{firstRound:4,every:3,attacks:[1]},lowHp:{below:20,attacks:[2]},
+  }}});
+  const rules = {actionAllowance:{base:1,extraAtLevel:5}};
+  let fight = startD20Fight(combatant('Player'),{...encounter([enemy]),contextRules:rules});
+  const attack = (current,attackIndex) => act(current,{kind:'attack',actor:'enemy0',target:'player',attackIndex,dice:[15]});
+  assert.throws(() => attack(fight,0));
+  fight = attack(fight,1);
+  assert.throws(() => attack(fight,2));
+  fight = act(fight,{kind:'round'});
+  assert.throws(() => attack(fight,1));
+  fight = attack(attack(fight,0),2);
+  fight = act(act(fight,{kind:'round'}),{kind:'round'});
+  assert.equal(attack(fight,1).events.at(-1).attack,'Arquebus');
+});
+
 test('maximum-HP loss can kill without making the terminal save invalid', () => {
   const result = act(begin(), {kind:'maximumHp', target:'player', amount:30, reason:'Life drain'});
   assert.equal(result.status, 'loss');

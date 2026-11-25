@@ -1,6 +1,6 @@
 // Resolve source-defined encounter choices, turn features, and escape attempts.
 import {combatNumber, rollDie, rollCheck} from './dice.js';
-import {mitigateDamage} from './damage.js';
+import {healDamage, isDefeated, mitigateDamage} from './damage.js';
 import {addCondition, cannotAct, hasCondition} from './effects.js';
 
 function die(sides, supplied, random) {
@@ -15,7 +15,21 @@ export function startActorTurn(source, {roll, random = Math.random} = {}) {
   actor.martialFuryActive = false;
   actor.bonusAttacksPending = 0;
   actor.movementLostThisTurn = 0;
-  actor.normalAttacksRemaining = combatNumber(actor.features?.multiattack?.count ?? 1, 1, 20);
+  const regeneration = actor.features?.regeneration;
+  if (regeneration && !isDefeated(actor)) {
+    if (actor.regenerationBlocked) {
+      delete actor.regenerationBlocked;
+      if (!actor.hp) actor.dead = true;
+      events.push({kind:'regenerationBlocked'});
+    } else {
+      const healed = healDamage(actor, combatNumber(regeneration.amount, 1));
+      events.push({kind:'regeneration', amount:healed.hp - actor.hp});
+      actor.hp = healed.hp;
+    }
+  }
+  const multiattack = actor.features?.multiattack;
+  const unavailable = multiattack?.hpThresholds?.filter(hp => actor.hp <= hp).length ?? 0;
+  actor.normalAttacksRemaining = Math.max(0, combatNumber(multiattack?.count ?? 1, 1, 20) - unavailable);
   const invisibility = actor.features?.invisibilityRoll;
   if (actor.hp && !cannotAct(actor) && invisibility && !hasCondition(actor, 'invisible')) {
     const value = die(invisibility.die, roll, random);
@@ -33,6 +47,11 @@ export function startActorTurn(source, {roll, random = Math.random} = {}) {
 
 export function selectActorAttack(actor, target, {distance, roll, rayRoll, random = Math.random} = {}) {
   if (!actor.hp || cannotAct(actor)) throw new RangeError('Combatant cannot act');
+  const randomAttack = actor.features?.randomAttack;
+  if (randomAttack) {
+    const value = die(randomAttack.sides, roll, random);
+    return {attackIndex:combatNumber(randomAttack.indices[value - 1], 0, actor.attacks.length - 1), roll:value};
+  }
   const selector = actor.features?.attackSelection;
   if (selector) {
     combatNumber(distance);

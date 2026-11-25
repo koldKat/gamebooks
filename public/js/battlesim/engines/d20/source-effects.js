@@ -11,7 +11,7 @@ function die(sides, value, random) {
 function damage(actor, formula, type, dice, random) {
   const roll = rollDamage(formula, {dice, random});
   const dealt = mitigateDamage(roll.amount, type, actor.defenses, {attack:false});
-  const result = resolveDamageFeatures(actor, dealt.amount, {random});
+  const result = resolveDamageFeatures(actor, dealt.amount, {damageTypes:[type], random});
   return {actor:result.actor, event:{kind:'sourceDamage', amount:dealt.amount, type, roll, effects:result.events}};
 }
 
@@ -73,7 +73,46 @@ export function sourceDamageTransitions(before, fight, event) {
       actor.sourceMergedUntilRound = fight.round + combatNumber(rule.absentRounds, 1, 100);
       (event.effects ??= []).push({kind:'mergedIntoFire'});
     }
+    const threshold = actor.features?.withdrawAtOrBelow;
+    if (threshold != null && !actor.withdrawn && actor.hp <= threshold && actor.hp < previous[i].hp) {
+      actor.withdrawn = true;
+      (event.effects ??= []).push({kind:'enemyWithdrew',actor:'enemy'+fight.groups.indexOf(actor)});
+    }
   }
+  const surrender = fight.groups.find(actor => actor.hp && !actor.withdrawn && actor.features?.offerSurrenderBelow);
+  if (surrender && !fight.surrenderOffer && fight.player.hp < combatNumber(surrender.features.offerSurrenderBelow, 1)
+      && fight.player.hp < before.player.hp) {
+    fight.player.hp = Math.max(1, fight.player.hp);
+    delete fight.player.dead;
+    fight.surrenderOffer = 'offered';
+    (event.effects ??= []).push({kind:'surrenderOffered'});
+  }
+}
+
+export function beginAttackedForm(actor) {
+  const form = actor.features?.formOnFirstAttack;
+  if (!form || actor.attackedFormActive) return null;
+  actor.attackedFormActive = true;
+  actor.name = form.name;
+  actor.hp = actor.maxHp = combatNumber(form.hp, 1, actor.baseMaxHp);
+  return {kind:'attackedForm', current:actor.hp};
+}
+
+export function endSourceTurn(actor) {
+  if (actor.hp && actor.attackedFormActive && actor.features?.formOnFirstAttack?.withdrawAfterTurn) {
+    actor.withdrawn = true;
+    return {kind:'enemyWithdrew'};
+  }
+  return null;
+}
+
+export function useEncounterAsset(actor, id) {
+  const assets = actor.features?.defeatingAssets;
+  const rule = assets?.find(asset => asset.id === id);
+  if (!actor.hp || actor.withdrawn || !rule) throw new RangeError('This asset does not defeat the opponent');
+  actor.withdrawn = true;
+  const reward = actor.experience ?? 0;
+  return {asset:rule.label, gamebookXp:Math.floor(reward / 2)};
 }
 
 export const SOURCE_ACTIONS = ['douse', 'touchFire', 'enterFireSpace', 'water', 'reappear'];

@@ -121,6 +121,7 @@ if (!baseline) {
   const anthology = { ...base, type: 'book_created', bookId: 400, bookName: 'Issue Seven', isContainer: true, parentBookId: null, parentBookName: null };
   const child = { ...base, type: 'book_created', bookId: 401, bookName: 'Issue Story', parentBookId: 400, parentBookName: 'Issue Seven' };
   const olderSeries = anthologyDay([anthology, child], 'older-anthology-series');
+  assert.ok(olderSeries.includes('class="feed-catalog-group feed-created--series"'), 'a series batch colors the stripe on its outer container');
   assert.ok(olderSeries.includes('feed.tmpl.created_in_series') && olderSeries.includes('|noun=feed.noun.anthology|series='), 'an anthology added to an older series gets the series heading');
   assert.ok(olderSeries.includes('feed.anthology_in_batch|n=1'), 'series heading counts anthologies, not books');
   assert.equal((olderSeries.match(/data-book-id="400"/g) || []).length, 1, 'anthology remains visible once');
@@ -186,9 +187,12 @@ if (!baseline) {
     }
   };
   for (const kind of ['books', 'anthologies', 'series']) {
-    assert.equal(creationGroupCount(renderDay(creations(kind, 5), 'today')), 0, `${kind}: five creations stay outside daily groups`);
+    const five = renderDay(creations(kind, 5), 'today');
+    assert.equal(creationGroupCount(five), 0, `${kind}: five creations stay outside daily groups`);
+    assert.equal(five.includes('feed-entry--created feed-created--series'), kind === 'series');
     const six = renderDay(creations(kind, 6), 'today');
     assert.equal(creationGroupCount(six), 1, `${kind}: six creations collapse`);
+    assert.equal(six.includes('feed-user-group--created feed-created--series'), kind === 'series');
     assert.ok(six.includes(`feed.${kind}_created_today|n=6`));
     assert.ok(/aria-expanded="false"/.test(six) && /class="feed-group-body"[^>]* hidden/.test(six));
     assert.equal(creationGroupCount(renderDay([...creations(kind, 3), ...creations(kind, 3, { username: 'Other' })], 'today')), 0, 'counts never combine users');

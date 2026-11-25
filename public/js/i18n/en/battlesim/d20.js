@@ -5,6 +5,13 @@ const labels={
   manualStory:'Apply story instructions, codewords, and inventory changes yourself.',
   invalid:'Check the required stats, dice, range, and available actions.',
   player:'Your character',companion:'Companion',companions:'Companions',addCompanion:'Add companion',remove:'Remove',
+  companionPreset:'Companion profile',customCompanion:'Custom companion',protagonistSurprised:'Your side is surprised',
+  combatLevel:'Character level',remainingActions:'Actions left this round',
+  spellItems:'Spell items',spellItemSource:'Source',spellItemUses:'Uses left',addSpellItem:'Add spell item',oneHandFree:'One hand is free',
+  'spellItem.book':'Spellbook','spellItem.scroll':'Scroll','spellItem.potion':'Potion',
+  combatItems:'Use an item or swap equipment',itemName:'Item name',potionHealing:'Potion healing dice',
+  newArmorClass:'New Armor Class (optional)',drinkPotion:'Drink potion',swapGear:'Swap equipment',
+  'event.combatItem':'Used item',
   name:'Name',hp:'Current Hp',maxHp:'Maximum Hp',ac:'Armor Class',bonus:'Attack bonus',formula:'Damage dice',damageType:'Damage type',
   attackAbility:'Attack ability',manualModifier:'Enter modifiers manually',magical:'Magical',silvered:'Silvered weapon',
   characterDetails:'Abilities and defenses',strengthScore:'Current Strength score',athletics:'Athletics bonus',
@@ -32,7 +39,20 @@ const labels={
 };
 for(const key of ['str','dex','con','int','wis','cha']){labels['ability.'+key]=key.toUpperCase()+' modifier';labels['save.'+key]=key.toUpperCase()+' saving throw';}
 for(let level=1;level<=9;level++)labels['slots.'+level]='Level '+level+' slots';
-for(const key of ['acid','bludgeoning','cold','fire','force','lightning','necrotic','piercing','poison','psychic','radiant','slashing','thunder'])labels['damage.'+key]=key[0].toUpperCase()+key.slice(1);
+for(const key of ['acid','bludgeoning','cold','fire','force','lightning','necrotic','piercing','poison','psychic','radiant','slashing','thunder','untyped'])labels['damage.'+key]=key[0].toUpperCase()+key.slice(1);
+Object.assign(labels, {'event.regeneration':'Regenerated', 'event.regenerationBlocked':'Regeneration blocked',
+  'event.nextAttackDisadvantage':'Disadvantage on the next attack',
+  'event.retreat':'Retreat', 'event.retreatStopped':'Retreat stopped by an opportunity attack',
+  withinOpportunityReach:'The selected foe is within melee reach',
+  retreatItemLost:'The thief took a random item. Apply the loss to your inventory.'});
+Object.assign(labels, {'event.enemyWithdrew':'Opponent withdrew', 'event.surrenderOffered':'The enemy has offered surrender.',
+  acceptSurrender:'Accept surrender',refuseSurrender:'Refuse surrender',
+  'event.acceptSurrender':'Accepted the surrender terms','event.refuseSurrender':'Refused the surrender terms',
+  'status.surrendered':'Surrendered',
+  'event.attackedForm':'Changed form','event.encounterAsset':'Used encounter assets',
+  encounterAssets:'Expedition assets',encounterAsset:'Assets to use',
+  assetAvailable:'I have these assets available',useEncounterAsset:'Use assets',printedXp:'gamebook XP',
+  'condition.hindered':'Disadvantaged'});
 for(const key of ['blinded','charmed','deafened','exhaustion','frightened','grappled','incapacitated','invisible','paralyzed','petrified','poisoned','prone','restrained','stunned','unconscious','confused','blurred','quicksand','shielded'])labels['condition.'+key]=key[0].toUpperCase()+key.slice(1);
 Object.assign(labels,{'effect.damage':'Damage','effect.heal':'Healing','effect.maximumHp':'Maximum-Hp drain','effect.condition':'Apply condition','effect.removeCondition':'Remove condition',
   'status.fighting':'Encounter in progress','status.win':'Victory','status.loss':'Defeat','status.fled':'Escaped','status.cancelled':'Canceled'});

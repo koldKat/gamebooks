@@ -144,7 +144,8 @@ export function createDayRenderer() {
       if (!body) return '';
       let out = '';
       if (children) {
-        out += '<div class="feed-catalog-group">';
+        const seriesClass = extraClass.includes('feed-created--series') ? ' feed-created--series' : '';
+        out += `<div class="feed-catalog-group${seriesClass}">`;
         const containerKey = loose ? looseKeyOf(e) + (e.isContainer ? ':anthologies' : '') : e.type === 'series_created' ? `s:${e.seriesId}`
           : e.isContainer ? `a:${e.bookId}` : looseKeyOf(e);
         const batchKey = 'batch:' + JSON.stringify([e.username, containerKey]);
@@ -175,7 +176,8 @@ export function createDayRenderer() {
         renderedCreations.add(creationGroup.key);
         const key = 'creations:' + creationGroup.key;
         const id = groupId(key);
-        out += '<div class="feed-user-group feed-user-group--created">';
+        const seriesClass = creationGroup.kind === 'series' ? ' feed-created--series' : '';
+        out += `<div class="feed-user-group feed-user-group--created${seriesClass}">`;
         out += `<button class="feed-group-toggle" data-target="${id}" data-group-key="${escapeHtml(thisDayIndex + ':' + key)}" aria-expanded="false">`;
         out += `<span class="feed-group-chevron">▶</span>${renderGroupLabel(e, e.username)}<span class="feed-group-count">${t('feed.' + creationGroup.kind + '_created_today', { n: creationGroup.items.length })}</span>`;
         out += nsfwTag(creationGroup.items.every(item => item.isNsfw));

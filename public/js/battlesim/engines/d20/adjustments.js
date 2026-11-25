@@ -20,10 +20,10 @@ export function applyCombatAdjustment(context, action, random = Math.random) {
     const amount = combatNumber(action.amount); event.amount = amount;
     if (action.kind === 'damage') {
       event.damage = mitigateDamage(amount, action.type, target.defenses,
-        {magical:action.magical ?? false, silvered:action.silvered ?? false, attack:action.isAttack ?? false});
+        {magical:action.magical ?? false, silvered:action.silvered ?? false, attack:action.isAttack ?? false, ranged:action.ranged ?? false});
       event.amount = event.damage.amount;
       const result = resolveDamageFeatures(target, event.amount, {critical:action.critical ?? false,
-        radiant:action.type === 'radiant' && event.amount > 0, dice:action.featureDice, random});
+        radiant:action.type === 'radiant' && event.amount > 0, damageTypes:[action.type], dice:action.featureDice, random});
       context.setActor(action.target, result.actor); event.effects = result.events;
     } else context.setActor(action.target, action.kind === 'heal' ? healDamage(target, amount) : reduceMaximumHp(target, amount));
   }

@@ -6,7 +6,7 @@ import {createD20Setup} from './setup-panel.js';
 import {renderD20Actions} from './actions-panel.js';
 import {renderD20Report} from './report.js';
 
-export function createD20Panel({document,definition,t,getRoster,getOpponents,getRules,getRun,getBookId,
+export function createD20Panel({document,definition,t,getRoster,getOpponents,getCompanions=getOpponents,getRules,getRun,getBookId,
   saveState,getButtonRow,showAlert,showConfirm,registerShortcut=()=>{}}){
   const id=definition.stateKey,tr=key=>t(definition.i18nPrefix+'.'+key),ui=createD20Forms(document,id,tr);
   const store=createQuestState(()=>({run:getRun(),bookId:getBookId(),definition,saveState}),{validateFight:validateD20Fight});
@@ -38,7 +38,7 @@ export function createD20Panel({document,definition,t,getRoster,getOpponents,get
     overlay.querySelector('.inv-modal-title').textContent=tr('title');
     const closer=overlay.querySelector('.inv-close-btn');closer.setAttribute('aria-label',t('btn.close'));closer.addEventListener('click',close);
     const left=overlay.querySelector('.bsim-col-left');right=overlay.querySelector('.bsim-col-right');ui.text(left,tr('rules'));
-    setup=createD20Setup(left,ui,{id,t,getEncounters:getRoster,getOpponents,getRules});
+    setup=createD20Setup(left,ui,{id,t,getEncounters:getRoster,getOpponents,getCompanions,getRules});
     start=ui.button(left,'start',()=>change(state=>{if(busy(state))return null;state.fight=setup.read();return state;}));
     controls=document.createElement('div');controls.id=id+'-controls';left.append(controls);
     cancel=ui.button(left,'cancel',()=>{

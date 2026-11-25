@@ -5,6 +5,7 @@ import { readFileSync as readPhysical } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import vm from 'node:vm';
 
 const dir = new URL('../../../public/js/', import.meta.url);
 test('desktop battle-sim relocation retains the registry and visibility lifecycle', () => {
@@ -22,7 +23,7 @@ test('desktop battle-sim relocation retains the registry and visibility lifecycl
     .replace('  prepareBattleSimLayout(simulatorOverlay(document, sim.id));\n', '')
     .replace(/const SUPPORTED_BATTLE_SIM_BOOKS = new Set\(\[[\s\S]*?\]\);/, 'SUPPORTED_SET');
   assert.equal(createHash('sha256').update(unchanged).digest('hex'),
-    '3cce23bb8c59cf73e60f839520bfa24a895c9062049d4f4ac8efc9599ac32069');
+    '18bdeee563406a0c7683eca0fdb14c832a804d2665443c6b4233d369db5fcfbb');
   assert.deepEqual(source.match(/^import\s.+$/gm),
     ["import {prepareBattleSimLayout, simulatorOverlay} from './layout.js';"],
     'only the lightweight layout helper is eager; simulators remain lazy');
@@ -35,6 +36,8 @@ test('every desktop-supported simulator exists with the expected dynamic export 
   const ids = [...registry.matchAll(/\d+/g)].map(match => Number(match[0]));
   assert.ok(ids.length > 100);
   assert.equal(new Set(ids).size, ids.length);
+  const parser = {exports:{}, module:{}};
+  vm.runInNewContext(process.binding('natives')['internal/deps/acorn/acorn/dist/acorn'],parser);
   for (const id of ids) {
     const entry = readPhysical(new URL('battlesim/battlesim' + id + '.js', dir), 'utf8');
     const exports = entry.match(new RegExp("export\\s+(\\*|\\{[^}]+\\})\\s+from './books/"+id+"/panel\\.js'"));
@@ -44,7 +47,17 @@ test('every desktop-supported simulator exists with the expected dynamic export 
     }
     const module = readPhysical(new URL('battlesim/books/' + id + '/panel.js', dir), 'utf8');
     const names = ['init', 'render', 'setVisible'];
-    for (const name of names) assert.match(module, new RegExp('export\\s*\\{[^}]*\\bas\\s+'+name+'\\b'), id + ': ' + name);
+    const bindings = new Set();
+    const ast = parser.exports.parse(module,{ecmaVersion:'latest',sourceType:'module'});
+    for (const node of ast.body.filter(node => node.type === 'ExportNamedDeclaration')) {
+      for (const specifier of node.specifiers) bindings.add(specifier.exported.name);
+      if (node.declaration?.id?.name) bindings.add(node.declaration.id.name);
+      for (const {id} of node.declaration?.declarations ?? []) {
+        if (id.name) bindings.add(id.name);
+        for (const property of id.properties ?? []) bindings.add(property.value?.name);
+      }
+    }
+    for (const name of names) assert.ok(bindings.has(name), id + ': ' + name);
   }
 });
 

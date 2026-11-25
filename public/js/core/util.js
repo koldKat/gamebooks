@@ -52,6 +52,7 @@ ALL_PANEL_OVERLAY_IDS.push('sim1537-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim1539-overlay', 'sim1540-overlay', 'sim1541-overlay', 'sim1542-overlay', 'sim1543-overlay', 'sim1544-overlay', 'sim1555-overlay', 'sim1566-overlay', 'sim1575-overlay', 'sim1576-overlay', 'sim1577-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim1473-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim1621-overlay');
+ALL_PANEL_OVERLAY_IDS.push('sim1751-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim1622-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim388-overlay', 'sim390-overlay', 'sim391-overlay', 'sim409-overlay', 'sim410-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim1649-overlay');

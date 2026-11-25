@@ -20,12 +20,27 @@ export function damageExpression(input) {
     modifier:combatNumber((match[3] === '-' ? -1 : 1) * Number(match[4] || 0), -1000000)};
 }
 
-export function rollDamage(expression, {critical = false, random = Math.random, dice} = {}) {
+export function rollDamage(expression, {critical = false, random = Math.random, dice, rerollBelow, rerollDice} = {}) {
   const parsed = damageExpression(expression), count = parsed.count * (critical ? 2 : 1);
   if (dice !== undefined && (!Array.isArray(dice) || dice.length !== count)) throw new RangeError('Wrong damage dice');
   const rolls = dice === undefined ? Array.from({length:count}, () => rollDie(parsed.sides, random))
     : dice.map(value => combatNumber(value, 1, parsed.sides));
-  return {amount:Math.max(0, rolls.reduce((sum, value) => sum + value, parsed.modifier)), rolls, modifier:parsed.modifier};
+  const rerolls = [];
+  if (rerollBelow != null && count) {
+    combatNumber(rerollBelow, 2, parsed.sides + 1);
+    const indices = rolls.flatMap((value, index) => value < rerollBelow ? [index] : []);
+    if (rerollDice !== undefined && (!Array.isArray(rerollDice) || rerollDice.length !== indices.length)) {
+      throw new RangeError('Wrong reroll dice');
+    }
+    for (const [position, index] of indices.entries()) {
+      const next = rerollDice === undefined ? rollDie(parsed.sides, random) : combatNumber(rerollDice[position], 1, parsed.sides);
+      rerolls.push({from:rolls[index], to:next});
+      rolls[index] = next;
+    }
+  }
+  const result = {amount:Math.max(0, rolls.reduce((sum, value) => sum + value, parsed.modifier)), rolls, modifier:parsed.modifier};
+  if (rerolls.length) result.rerolls = rerolls;
+  return result;
 }
 
 export function rollCheck(bonus, {advantage = false, disadvantage = false, random = Math.random, dice} = {}) {
