@@ -201,12 +201,16 @@ test('cover preferences do not filter or alter the feed', async () => {
 
 test('classification endpoint allows only admins and Lorekeepers and validates before writing', async () => {
   let admin=false, moderator=false, local=false, writes=0, pushes=0, body={isNsfw:true};
+  const ownerUpdates = [];
   const dependencies={
     '../db': {isUserAdmin:()=>admin,isUserModerator:()=>moderator},
-    '../db/connection': {db:{prepare:()=>({get:()=>({is_nsfw:0}),run:()=>{writes++;return{changes:1};}})}},
+    '../db/connection': {db:{prepare:()=>({
+      get:()=>({is_nsfw:0}),run:()=>{writes++;return{changes:1};},
+      all:()=>[{ user_id: 2 }, { user_id: 3 }],
+    })}},
     '../db/nsfw': {getNsfwCatalog(){}},
     '../request-helpers': {authenticate:async()=>1,requireLocalhost:()=>local,readBody:async()=>body,send:(res,status,data)=>({status,data})},
-    '../sse': {publicCatalogPush:()=>pushes++,feedPush(){}},
+    '../sse': {publicCatalogPush:()=>pushes++,feedPush(){},userBadgePush:(id,event)=>ownerUpdates.push([id,event.type])},
   };
   const c=vm.createContext({module:{exports:{}},require:name=>dependencies[name]});
   vm.runInContext(readFileSync('server/routes/nsfw.js','utf8'),c);
@@ -223,6 +227,7 @@ test('classification endpoint allows only admins and Lorekeepers and validates b
   assert.equal((await updateSeries({method:'GET'},{},9)).status,200);
   assert.equal((await update({method:'PATCH'},{},22)).status,200);
   assert.equal(writes,1);assert.equal(pushes,1);
+  assert.deepEqual(ownerUpdates, [[2, 'library_changed'], [3, 'library_changed']]);
   admin=false;moderator=true;
   assert.equal((await update({method:'GET'},{},22)).status,200);
   assert.equal((await update({method:'PATCH'},{},22)).status,200);

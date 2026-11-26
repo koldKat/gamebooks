@@ -10,6 +10,7 @@ import { _containerIdsFor, _sortChildrenMap, _sortBooks, _sortSeriesBooks, _aggr
 import { _wireRenderedContent } from './actions.js';
 import { naturalCompare } from '../core/sort.js';
 import { _startLandingCoverRotation, _resetLandingCoverQueue, _effectiveLandingCoverSource } from '../covers.js';
+import { publicNsfwTag } from '../covers/badges.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../core/util.js';
 import { updateBooksList } from './update.js';
@@ -244,6 +245,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
       `<div class="series-header-row" data-series-id="${s.id}" data-expanded="${expanded ? '1' : '0'}" data-stash-id="${stashId ?? ''}" data-open-world="${s.is_open_world ? '1' : '0'}">` +
         `<span class="series-header-chevron">▶</span>` +
         `<span class="series-header-name" data-tooltip="${escapeHtml(s.name)}">${escapeHtml(s.name)}${s.is_open_world ? ` <span class="series-open-world-badge" data-tooltip="${escapeHtml(t('covers.open_world_series'))}"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>` : ''}</span>` +
+        publicNsfwTag({ ...s, isSeries: true }) +
         `<span class="series-header-count">${activeBooks.length ? countLabel + sectLabel : 'no books yet'}</span>` +
         (s.is_owner || editRole
           ? `<button class="series-edit-btn${editRole ? ' series-edit-btn--admin' : ''}"${editRole ? ` data-tooltip="${editRole} edit"` : ''} data-series-id="${s.id}" data-series-name="${escapeHtml(s.name)}" data-series-desc="${escapeHtml(s.description || '')}" data-series-public="${s.is_public ? '1' : '0'}" data-series-open-world="${s.is_open_world ? '1' : '0'}">✎</button>`

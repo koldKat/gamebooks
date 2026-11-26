@@ -47,7 +47,7 @@ function getBooks(userId) {
   const canLiveRead = _canLiveRead(userId);
   const rows = db.prepare(`
     SELECT b.id, b.name, b.total_sections, b.max_section_number, b.discoverable_sections,
-           b.isbn, b.issn, b.asin, b.cover_path, b.pdf_path, b.created_at, b.created_by, b.is_public,
+           b.isbn, b.issn, b.asin, b.cover_path, b.pdf_path, b.created_at, b.created_by, b.is_public, b.is_nsfw,
            b.pages, b.authors, b.description,
            b.series_id, b.series_number, b.is_container, b.parent_book_id, b.book_order, b.has_battle_sim, b.has_live_reading,
            s.name AS series_name,
@@ -349,7 +349,7 @@ function getSeriesAutocomplete(userId = null) {
 function getAllSeries(userId, seriesId = null) {
   if (userId) {
     return db.prepare(`
-      SELECT s.id, s.name, s.description, s.is_public, s.is_open_world, us.rating AS userRating,
+      SELECT s.id, s.name, s.description, s.is_public, s.is_open_world, s.is_nsfw, us.rating AS userRating,
              CASE WHEN s.created_by = ? THEN 1 ELSE 0 END AS is_owner
       FROM series s
       JOIN user_series us ON us.series_id = s.id AND us.user_id = ?
@@ -825,6 +825,10 @@ function normalizeAuthors(raw) {
   return parts.join(', ');
 }
 
+function normalizeSeriesNumber(value) {
+  return String(value ?? '').trim().replace(/^(\d+)\.0+$/, '$1') || null;
+}
+
 function createBook(userId, name, totalSections, isbn, issn, asin, pages, authors, description, seriesId, seriesNumber, isContainer, parentBookId, bookOrder, isPublic = false, maxSectionNumber = null, isNsfw = false) {
   maxSectionNumber = isContainer ? null : (maxSectionNumber ?? totalSections);
   const initialState = JSON.stringify({
@@ -841,7 +845,7 @@ function createBook(userId, name, totalSections, isbn, issn, asin, pages, author
       name, total_sections, max_section_number, isbn, issn, asin, pages, authors, description, created_by,
       series_id, series_number, is_container, parent_book_id, book_order, is_public, published_at, is_nsfw
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CASE WHEN ? THEN strftime('%s','now') ELSE NULL END, ?)`
-  ).run(name, totalSections, maxSectionNumber, isbn || null, issn || null, asin || null, pages || null, normalizeAuthors(authors), description || null, userId, seriesId || null, seriesNumber || null, isContainer ? 1 : 0, parentBookId || null, bookOrder ?? null, isPublic ? 1 : 0, isPublic ? 1 : 0, isNsfw ? 1 : 0);
+  ).run(name, totalSections, maxSectionNumber, isbn || null, issn || null, asin || null, pages || null, normalizeAuthors(authors), description || null, userId, seriesId || null, normalizeSeriesNumber(seriesNumber), isContainer ? 1 : 0, parentBookId || null, bookOrder ?? null, isPublic ? 1 : 0, isPublic ? 1 : 0, isNsfw ? 1 : 0);
   const bookId = bookResult.lastInsertRowid;
   db.prepare(
     'INSERT INTO user_books (user_id, book_id, state_data) VALUES (?, ?, ?)'
@@ -1035,7 +1039,7 @@ function updateBook(userId, bookId, name, totalSections, isbn, issn, asin, pages
     WHERE id = ?
   `).run(name, totalSections, maxSectionNumber, isbn || null, issn || null, asin || null, pages || null,
          normalizeAuthors(authors), description || null, discoverableSections ?? null, isPublic ? 1 : 0, firstPublish ? 1 : 0,
-         seriesId ?? null, seriesNumber || null, isContainer ? 1 : 0, parentBookId ?? null, bookOrder ?? null,
+         seriesId ?? null, normalizeSeriesNumber(seriesNumber), isContainer ? 1 : 0, parentBookId ?? null, bookOrder ?? null,
          bookId);
   db.prepare(`
     UPDATE user_books SET state_data = ?, updated_at = strftime('%s','now')

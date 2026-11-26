@@ -3,6 +3,7 @@ import { booksState } from './state.js';
 import { _patchCachedBook } from './data.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../core/util.js';
+import { publicNsfwTag } from '../covers/badges.js';
 
 // ── Star rating helpers ───────────────────────────────────────────────────────
 export function _starsHtml(rating) {
@@ -142,7 +143,7 @@ export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrSta
     `<div class="book-info">` +
       `<div class="book-name-row">` +
         `<span class="book-name-text" data-id="${b.id}" data-name="${escapeHtml(b.name)}" data-tooltip="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>` +
-        openWorldBadge + battleSimBadge + liveReadingBadge + pdfBadge +
+        publicNsfwTag(b) + openWorldBadge + battleSimBadge + liveReadingBadge + pdfBadge +
         activeBadge +
       `</div>` +
       subtitle +

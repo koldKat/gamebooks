@@ -51,6 +51,7 @@ function setup() {
     fs: { unlinkSync: filename => deletedFiles.push(filename) }, path: require('node:path') });
   const feed = load('feed', { './connection': connection, './xp': {}, './job-xp': { getJobTitle() {} }, './content': {}, './books': books,
     './rating-stats': { getPlayerRatingStats() {} }, './gameplay-stats': { getSimulatorBattleStats() {} },
+    './nsfw': require('../server/db/nsfw'),
     './profile-progress': { addBookProgress() {}, collectedCount() {} } });
   return { db, books, feed, deletedFiles };
 }
@@ -82,7 +83,7 @@ test('creation rejects unauthorized or invalid NSFW flags before any catalog wri
       awardXp() {},
     };
     if (name === '../request-helpers') return { authenticate: async () => 1, readBody: async () => body, send: (_res, code) => { status = code; } };
-    if (name === '../sse') return { feedPush() {}, publicCatalogPush() {} };
+    if (name === '../sse') return { feedPush() {}, publicCatalogPush() {}, userBadgePush() {} };
     return {};
   } });
   vm.runInContext(fs.readFileSync(require.resolve('../server/routes/books'), 'utf8'), context);
@@ -429,11 +430,15 @@ test('metadata save returns the saved book and only its owned destination series
   const { db, books } = setup();
   try {
     db.exec('CREATE TABLE book_reading_entries (book_id INTEGER, section_id TEXT, counts_as_section INTEGER, start_section_id TEXT)');
-    const bid = books.createBook(1, 'Original', 100).id;
     const target = books.getOrCreateSeries('Destination', 1, true);
+    const bid = books.createBook(1, 'Original', 100, null, null, null, null, null, null, target, 1).id;
+    const sibling = books.createBook(1, 'Fractional position', 100, null, null, null, null, null, null, target, 1.5).id;
+    const readPosition = db.prepare('SELECT series_number FROM books WHERE id = ?').pluck();
+    assert.equal(readPosition.get(bid), '1');
+    assert.equal(readPosition.get(sibling), '1.5');
     books.getOrCreateSeries('Unrelated', 1, true);
     const routes = editRoutes(db, books, { userId: 1, body: { name: 'Saved', total_sections: 100,
-      is_public: false, series_name: 'Destination', series_number: '2' } });
+      is_public: false, series_name: 'Destination', series_number: '2.00' } });
     assert.equal(await routes.edit(bid), 200);
     assert.equal(routes.response.book.id, bid);
     assert.equal(routes.response.book.name, 'Saved');
@@ -582,7 +587,7 @@ test('empty container creation does not publish a covers refresh, but ordinary c
       awardXp: (...args) => rewards.push(args),
     };
     if (name === '../request-helpers') return { authenticate: async () => 1, readBody: async () => body, send: (_res, code) => { status = code; } };
-    if (name === '../sse') return { feedPush: event => feed.push(event), publicCatalogPush: event => catalog.push(event) };
+    if (name === '../sse') return { feedPush: event => feed.push(event), publicCatalogPush: event => catalog.push(event), userBadgePush() {} };
     return {};
   } });
   vm.runInContext(fs.readFileSync(require.resolve('../server/routes/books'), 'utf8'), context);
@@ -607,7 +612,7 @@ test('create route accepts a separate maximum and rejects invalid values before 
   const context = vm.createContext({ module: { exports: {} }, require(name) {
     if (name === '../db') return { createBook: (...args) => { created = args; return { id: 1 }; }, awardXp() {}, getOrCreateSeries: () => { seriesCalls++; return 1; } };
     if (name === '../request-helpers') return { authenticate: async () => 1, readBody: async () => body, send: (_res, code) => { status = code; } };
-    if (name === '../sse') return { feedPush() {}, publicCatalogPush() {} };
+    if (name === '../sse') return { feedPush() {}, publicCatalogPush() {}, userBadgePush() {} };
     return {};
   } });
   vm.runInContext(fs.readFileSync(require.resolve('../server/routes/books'), 'utf8'), context);

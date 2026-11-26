@@ -5,7 +5,7 @@ const database = require('../db');
 const { db } = require('../db/connection');
 const { getNsfwCatalog } = require('../db/nsfw');
 const { authenticate, requireLocalhost, send, readBody } = require('../request-helpers');
-const { publicCatalogPush, feedPush } = require('../sse');
+const { publicCatalogPush, feedPush, userBadgePush } = require('../sse');
 
 function handleNsfwCatalog(req, res) {
   res.setHeader('Cache-Control', 'no-store');
@@ -44,6 +44,10 @@ async function saveNsfw(req, res, entity, id) {
   if (typeof isNsfw !== 'boolean') return send(res, 400, { error: 'isNsfw must be a boolean' });
   const result = db.prepare(`UPDATE ${table} SET is_nsfw = ? WHERE id = ?`).run(isNsfw ? 1 : 0, id);
   if (!result.changes) return send(res, 404, { error: 'Not found' });
+  const owners = entity === 'series'
+    ? db.prepare('SELECT user_id FROM user_series WHERE series_id = ?').all(id)
+    : db.prepare('SELECT user_id FROM user_books WHERE book_id = ?').all(id);
+  for (const { user_id: userId } of owners) userBadgePush(userId, { type: 'library_changed' });
   publicCatalogPush({ type: 'public_catalog_changed', entity, id, action: 'update' });
   feedPush({ type: 'feed_changed', entity, id, action: 'update' });
   return send(res, 200, { ok: true, isNsfw });

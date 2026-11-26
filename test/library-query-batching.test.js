@@ -7,7 +7,7 @@ const Database = require('better-sqlite3');
 
 function library() {
   const raw = new Database(':memory:');
-  const columns = 'id name total_sections max_section_number discoverable_sections isbn issn asin cover_path pdf_path created_at created_by is_public pages authors description series_id series_number is_container parent_book_id book_order has_battle_sim has_live_reading'.split(' ');
+  const columns = 'id name total_sections max_section_number discoverable_sections isbn issn asin cover_path pdf_path created_at created_by is_public is_nsfw pages authors description series_id series_number is_container parent_book_id book_order has_battle_sim has_live_reading'.split(' ');
   raw.exec(`CREATE TABLE books (${columns.map(name => name + (name === 'id' ? ' INTEGER PRIMARY KEY' : '')).join(',')});
     CREATE TABLE series (id INTEGER, name TEXT);
     CREATE TABLE user_books (user_id INTEGER, book_id INTEGER, state_data TEXT, created_at INTEGER, updated_at INTEGER, rating REAL, party_id INTEGER, bg_hidden INTEGER, bg_pos_y INTEGER);
@@ -66,7 +66,7 @@ test('library counts completed endings with stale discovery flags without counti
 test('batched summaries preserve progress, global ratings, anthology order and account isolation', () => {
   const h = library();
   try {
-    h.raw.exec(`INSERT INTO books (id,name,total_sections,has_live_reading) VALUES (1,'First',10,1),(11,'Eleventh',2,0);
+    h.raw.exec(`INSERT INTO books (id,name,total_sections,has_live_reading,is_nsfw) VALUES (1,'First',10,1,1),(11,'Eleventh',2,0,0);
       INSERT INTO user_books (user_id,book_id,state_data,created_at,updated_at,rating) VALUES
       (7,1,'{"playthroughs":[{"path":[1,"1"],"startedAt":100}],"graph":{"2":{}}}',1,5,4),
       (7,11,'{"graph":{"1":{},"2":{}}}',2,6,NULL),(8,1,'{}',1,0,2);
@@ -81,11 +81,13 @@ test('batched summaries preserve progress, global ratings, anthology order and a
     assert.equal(books[0].avgRating, 3, 'ratings include other owners');
     assert.equal(books[0].voteCount, 2);
     assert.equal(books[0].hasLiveReading, true);
+    assert.equal(books[0].is_nsfw, 1);
     assert.deepEqual(books[0].extra_anthology_ids, [20]);
     assert.deepEqual(books[0].extra_anthology_orders, { 20: 3 });
     assert.equal(books[1].visited, 2, 'already-complete graph keeps its original count');
     assert.equal(books[1].avgRating, null);
     assert.equal(books[1].voteCount, 0);
+    assert.equal(books[1].is_nsfw, 0);
     assert.equal(h.getBooks(8)[0].visited, 0, 'another account has no mapped nodes');
   } finally { h.raw.close(); }
 });

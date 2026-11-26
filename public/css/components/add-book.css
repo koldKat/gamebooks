@@ -40,7 +40,6 @@
   font-size: 0.92rem;
   font-weight: 700;
   color: #f5a623;
-  flex: 1;
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -61,6 +60,7 @@
   color: #6b7280;
   line-height: 1;
   flex-shrink: 0;
+  margin-inline-start: auto;
   white-space: nowrap;
 }
 .series-edit-btn {
