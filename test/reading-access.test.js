@@ -4,6 +4,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const Database = require('better-sqlite3');
 const { createReadingAccess } = require('../server/db/reading-access');
+const { visibleReadingBook } = require('../server/reading-availability');
 
 function fixture({ tester = false } = {}) {
   const db = new Database(':memory:');
@@ -23,6 +24,71 @@ function fixture({ tester = false } = {}) {
   db.prepare('UPDATE users SET username=? WHERE id=2').run(tester ? 'sashii' : 'player2');
   return { db, access: createReadingAccess(db) };
 }
+
+test('restricted books require an explicit reader even with an existing unlock', () => {
+  const { db, access } = fixture();
+  try {
+    db.exec(`INSERT INTO book_reading_restrictions VALUES (263);
+      INSERT INTO restricted_book_readers VALUES (2);
+      INSERT INTO reading_unlocks (user_id,book_id,cost_gc) VALUES (1,263,0);`);
+    assert.equal(access.getAccess(1, 263), null);
+    assert.equal(access.getReadingMatter(1, 263), null);
+    assert.equal(access.unlock(1, 263, 4).error, 'not_found');
+    assert.deepEqual([...access.deniedBookIds(null)], [263]);
+    assert.deepEqual([...access.deniedBookIds(2)], []);
+    const book = { id: 263, hasLiveReading: true };
+    const anthology = { id: 100, isContainer: true, hasLiveReading: true, children: [book] };
+    for (const viewer of [null, 1]) {
+      const visible = visibleReadingBook(anthology, access.deniedBookIds(viewer), access.badgeBookIds(viewer));
+      assert.equal(visible.hasLiveReading, false);
+      assert.equal(visible.children[0].hasLiveReading, false);
+      assert.equal(Object.hasOwn(visible.children[0], 'restrictedReadingBadge'), false);
+    }
+    const visible = visibleReadingBook(anthology, access.deniedBookIds(2), access.badgeBookIds(2));
+    assert.equal(visible.hasLiveReading, true);
+    assert.equal(visible.restrictedReadingBadge, true);
+    assert.equal(visible.children[0].restrictedReadingBadge, true);
+    assert.equal(access.getAccess(2, 263).bookId, 263);
+    assert.equal(access.getReadingMatter(2, 263).rulesText, 'Rules');
+    assert.equal(access.getAccess(1, 999).bookId, 999);
+    assert.equal(db.prepare('SELECT count(*) FROM reading_unlocks WHERE user_id=1 AND book_id=263').pluck().get(), 1);
+  } finally {
+    db.close();
+  }
+});
+
+test('future reader imports by restricted authors inherit the policy and badge', () => {
+  const { db, access } = fixture();
+  try {
+    db.exec(`INSERT INTO restricted_book_readers VALUES (2);
+      INSERT INTO books (id, name, total_sections, has_live_reading, authors) VALUES
+        (1001, 'Future import', 99, 0, 'Another Author, ЕЛЕНА   ПАВЛОВА'),
+        (1002, 'English edition', 99, 1, 'Allen Sharp'),
+        (1003, 'Different author', 99, 1, 'Luke Sharp'),
+        (1004, 'Older spelling', 99, 1, 'Алан Шарп');
+      INSERT INTO reading_unlocks (user_id, book_id, cost_gc) VALUES (1, 1001, 0);`);
+    assert.equal(access.deniedBookIds(null).has(1001), false);
+    db.exec('UPDATE books SET has_live_reading = 1 WHERE id = 1001');
+
+    const expected = [1001, 1002, 1004];
+    for (const viewer of [null, 1]) {
+      assert.deepEqual([...access.deniedBookIds(viewer)], expected);
+      assert.equal(access.badgeBookIds(viewer).size, 0);
+    }
+    for (const id of expected) {
+      assert.equal(access.canRead(null, id), false);
+      assert.equal(access.getAccess(1, id), null);
+      assert.equal(access.getReadingMatter(1, id), null);
+      assert.equal(access.unlock(1, id, 0).error, 'not_found');
+      assert.equal(access.getAccess(2, id).bookId, id);
+    }
+    assert.equal(access.deniedBookIds(2).size, 0);
+    assert.deepEqual([...access.badgeBookIds(2)], expected);
+    assert.equal(access.getAccess(1, 1003).bookId, 1003);
+  } finally {
+    db.close();
+  }
+});
 
 test('admin pays real coins before 482 users, while ordinary players and short books stay free', () => {
   const { db, access } = fixture();

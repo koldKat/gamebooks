@@ -3,7 +3,8 @@
 // Read-only admin canvas watch, behind the localhost gate; never writes or registers player presence.
 
 const db = require('../db');
-const { requireLocalhost, send } = require('../request-helpers');
+const { requireLocalhost, send, tokenFromReq } = require('../request-helpers');
+const { setReadingImageCookie } = require('../reading-images');
 
 // Use independent admin-watch polling, not the party-scoped SSE registry.
 async function handleWatchState(req, res, userId, requestedBookId) {
@@ -35,7 +36,14 @@ async function handleWatchState(req, res, userId, requestedBookId) {
   const activePt = state.activePtIndex != null ? playthroughs[state.activePtIndex] : null;
   const path = activePt?.path || [];
   const currentSec = path.length ? path[path.length - 1] : null;
-  const section = currentSec != null ? db.getBookSection(bookId, currentSec) : null;
+  let mayRead = currentSec != null;
+  if (mayRead && !db.readingAccess.canRead(null, bookId)) {
+    const token = tokenFromReq(req);
+    const viewerId = token ? db.getSession(token)?.user_id : null;
+    mayRead = db.readingAccess.canRead(viewerId, bookId);
+    if (mayRead) setReadingImageCookie(req, res);
+  }
+  const section = mayRead ? db.getBookSection(bookId, currentSec) : null;
   send(res, 200, { username: user.username, bookId, isOpenWorld, state, items, notebook, bgPref, section, currentSec });
 }
 

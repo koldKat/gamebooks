@@ -19,13 +19,18 @@ const {
 const { SSE_PING_MS } = require('../request-helpers');
 const { maintainStream } = require('../sse-transport');
 const { buildFullExportZip, buildBookExportZip, safeFilename } = require('../export');
+const { visibleReadingBook } = require('../reading-availability');
 
 // ── Book handlers ─────────────────────────────────────────────────────────────
 
 async function handleGetBooks(req, res) {
   const userId = await authenticate(req, res);
   if (userId === null) return;
-  send(res, 200, db.getBooks(userId));
+  const denied = db.readingAccess.deniedBookIds(userId);
+  const marked = db.readingAccess.badgeBookIds(userId);
+  const hasPdfAccess = db.getUserById(userId)?.pdf_access === 1;
+  const books = db.getBooks(userId, hasPdfAccess);
+  send(res, 200, denied.size || marked.size ? books.map(book => visibleReadingBook(book, denied, marked)) : books);
 }
 
 async function handleGetStashes(req, res) {
@@ -244,9 +249,12 @@ async function handleAddSeriesToLibrary(req, res, seriesId, query) {
 async function handleGetPublicSeriesInfo(req, res, seriesId) {
   const userId = authenticateOptional(req);
   const user = userId ? db.getUserById(userId) : null;
-  const hasPdfAccess = !!user && (!!user.pdf_access || !!user.is_admin);
+  const hasPdfAccess = user?.pdf_access === 1;
   const data = db.getPublicSeriesInfo(seriesId, hasPdfAccess, userId);
   if (!data) return send(res, 404, { error: 'not found' });
+  const denied = db.readingAccess.deniedBookIds(userId);
+  const marked = db.readingAccess.badgeBookIds(userId);
+  if (denied.size || marked.size) data.books = data.books.map(book => visibleReadingBook(book, denied, marked));
   send(res, 200, data);
 }
 
@@ -443,9 +451,15 @@ async function handleUpdateBook(req, res, bookId) {
   db._pruneRedundantAnthologyMembership(bookId, resolvedParentBookId);
   // Return only the saved metadata; clients keep their existing progress and
   // update the affected library groups without fetching the entire library.
+  const savedBook = { ...db.getBookById(bookId), ...db.getBookIdentifiers(null, bookId),
+    ...db.getBookContainerFields(bookId), series_name: seriesId ? db.getSeriesById(seriesId)?.name ?? null : null };
+  const viewerId = fromLocalhost ? authenticateOptional(req) : userId;
+  if (viewerId == null || db.getUserById(viewerId)?.pdf_access !== 1) {
+    savedBook.pdf_path = null;
+    savedBook.pdf_size = null;
+  }
   send(res, 200, { ok: true,
-    book: { ...db.getBookById(bookId), ...db.getBookIdentifiers(null, bookId),
-      ...db.getBookContainerFields(bookId), series_name: seriesId ? db.getSeriesById(seriesId)?.name ?? null : null },
+    book: savedBook,
     series: seriesId ? db.getAllSeries(userId, seriesId)[0] ?? null : null,
   });
   // XP always goes to the book's creator, not the requester (admin may edit others' books)

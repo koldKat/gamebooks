@@ -23,6 +23,7 @@ test('watch follows unfinished gameplay rather than a portal-paused book or inva
 });
 
 function viewer() {
+  const { nodeShapeOptions, createNodeShapeRenderer } = require('../public/js/graph/node-shapes.js');
   const elements = new Map();
   const element = () => ({
     style: {}, children: [], classList: { add() {}, remove() {} },
@@ -37,14 +38,16 @@ function viewer() {
     remove(id) { this.data.delete(id); }
   }
   const context = vm.createContext({
-    URLSearchParams, location: { search: '' },
+    URLSearchParams, location: { search: '' }, localStorage: { getItem: () => null },
+    nodeShapeOptions, createNodeShapeRenderer, mountReadingSourceSheets() {},
     document: {
       createElement: element, createTextNode: text => ({ textContent: text }),
       getElementById(id) { if (!elements.has(id)) elements.set(id, element()); return elements.get(id); },
     },
     vis: { DataSet, Network: class { on() {} setOptions() {} getScale() { return 1; } focus() {} destroy() {} } },
   });
-  vm.runInContext(fs.readFileSync(path.join(__dirname, '../admin/js/watch.js'), 'utf8'), context);
+  const script = fs.readFileSync(path.join(__dirname, '../admin/js/watch.js'), 'utf8');
+  vm.runInContext(script.replace(/^import .*;\n/gm, ''), context);
   return context;
 }
 

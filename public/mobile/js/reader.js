@@ -212,8 +212,10 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
     }
   };
   let entrySection = 1;
+  let sourceLink;
   const locked = await showReadingGate(gateBody, book.id, {
     isCurrent, onUnlock: resume, onCancel: leave, onStartSection: section => { entrySection = section; },
+    onAccess: access => { sourceLink = access.sourceLink; },
   });
   if (!isCurrent() || locked) return;
   _sectionCache.clear();
@@ -221,7 +223,7 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
     <div class="m-topbar">
       <button id="m-back-btn">${t('mobile.back_home')}</button>
       <button id="m-reading-menu-btn" class="m-pane-toggle-btn" aria-label="${t('liveread.menu')}" style="display:none">${ICON_MENU}</button>
-      <span class="m-book-title">${_escapeHtml(book.name)}</span>
+      <a class="m-book-title">${_escapeHtml(book.name)}</a>
       <button id="m-toggle-text-btn" class="m-pane-toggle-btn" aria-label="${t('mobile.text_only')}">${ICON_TEXT}</button>
       <button id="m-toggle-graph-btn" class="m-pane-toggle-btn" aria-label="${t('mobile.graph_only')}">${ICON_GRAPH}</button>
     </div>
@@ -247,6 +249,12 @@ export async function renderReader(mount, book, onBack, { startAtOne = false } =
         <div id="m-graph-loading" class="m-graph-loading">${_loadingHtml(t('mobile.loading_graph'))}</div>
       </div>
     </div>`;
+  if (sourceLink) {
+    const title = mount.querySelector('.m-book-title');
+    title.href = sourceLink;
+    title.target = '_blank';
+    title.rel = 'noopener noreferrer';
+  }
   document.getElementById('m-back-btn').addEventListener('click', () => { _closeReadingMenu(); leave(); });
   document.getElementById('m-reading-menu-btn').addEventListener('click', e => _openReadingMenu(e.currentTarget));
   _initReadingMenu(book.id, isCurrent);

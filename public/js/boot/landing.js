@@ -98,7 +98,7 @@ export async function loadSessionProfile(sessionToken = getToken()) {
     bootState._isAdmin = resolveIsAdmin(profile);
     _processRewardSnapshot(profile);
     bootState._canSeeAppXp = bootState._isAdmin || profile.id === APP_XP_EXTRA_USER_ID;
-    bootState._hasPdfAccess = !!profile.pdfAccess || bootState._isAdmin;
+    bootState._hasPdfAccess = !!profile.pdfAccess;
     refreshAppXp({ immediate: true });
     _connectAppXpSSE();
     updateAvatarUI(profile.avatarUrl || null);

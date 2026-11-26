@@ -49,7 +49,6 @@ The Players tab shows identity, registration and activity dates, library and run
 | **Pathmaker** | Assign or remove contributor identity |
 | **Lorekeeper** | Assign or remove public-catalog moderation |
 | **Squire** | Assign or remove the independent badge and reward qualification |
-| **Grant/Revoke Book Access** | Control access to downloadable PDF attachments |
 | **Impersonate** | Create a one-time sign-in link for the player's account |
 | **Refund** | Refund the latest or all purchases of a selected shop upgrade |
 | **Delete** | Permanently remove the player and associated data; unavailable for protected accounts |

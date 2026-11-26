@@ -5,7 +5,7 @@ const path = require('node:path');
 const { BOOKS_DIR } = require('./paths');
 
 // Keep saved download links working after files move into format folders.
-// Authentication still runs in server.js before static serving.
+// Static serving applies the same access rules to the resolved file.
 function legacyBookDownload(urlPath, directory = BOOKS_DIR) {
   const match = /^\/books\/([^/\\]+\.(pdf))$/i.exec(urlPath);
   if (!match) return null;

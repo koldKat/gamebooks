@@ -110,7 +110,7 @@ for(const id of BOOK_IDS){
     const label=field.parentElement.querySelector(':scope > span:first-child');
     if(label)check(Math.abs(field.getBoundingClientRect().left-label.getBoundingClientRect().right-5.6)<0.2,'aligned field label '+id+' '+field.id);
   }
-  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807,808,809,810,812,817,832,833,838].includes(id)){
+  if([570,644,648,654,658,663,665,671,672,700,706,710,718,722,723,724,728,735,757,768,769,773,783,797,807,808,809,810,812,817,832,833,838,1309].includes(id)){
     const title=overlay.querySelector('.inv-modal-title')?.textContent||'';
     check(/[А-Яа-я]/.test(title),'Bulgarian book has Bulgarian simulator title '+id+':'+title);
     check(!/\b(?:Character|Encounter|Programs|Save|Full Moon|Alpha versus Omega)\b/.test(overlay.textContent),'no English UI in Bulgarian simulator '+id);
@@ -6526,9 +6526,10 @@ for(const id of BOOK_IDS){
       check(state().fight.outcome==='loss'&&state().fight.destination===200&&state().character.dead&&state().fight.rounds===4&&state().fight.enemies[0].life===null&&state().fight.extension.keep&&state().history.length===history+1,'Samson saved fatal bout uses database death route instead of nonlethal defeat route');
     }finally{Math.random=random;}
   }
-  if(id===797){
-    const el=key=>document.getElementById('sim797-'+key);
+  if(id===797||id===1309){
+    const el=key=>document.getElementById('sim'+id+'-'+key);
     const state=()=>app.currentPlaythrough().sim797;
+    check(requestedRosters.has(id),'pirate roster fetched for its own edition');
     check(!el('elapsed')&&!el('testLuck'),'pirate leaves story clocks and noncombat Luck tests in the reader');
     const editor=overlay.querySelector('.bsim-opponent-editor');
     const name=editor.querySelector('[role="combobox"]');
@@ -6553,12 +6554,14 @@ for(const id of BOOK_IDS){
       el('start').click();el('round').click();
       check(state().fight.outcome==='win'&&state().fight.config.stun===false&&state().history.length===2,'pirate editable ordinary custom fight');
       const core=await import('REPO/public/js/battlesim/books/797/combat.js'),player={...core.medicalStation(core.newCharacter(()=>6)),stamina:13,elapsed:3600};
-      const fight=core.startFight(27,player);fight.rounds=4;fight.enemies[0].stamina=7;fight.extension={keep:true};
+      const editionRoster=id===1309?(await import('REPO/public/js/battlesim/books/1309/definition.js')).roster:undefined;
+      const start=(section,character)=>core.startFight(section,character,{},editionRoster?.encounterFor);
+      const fight=start(27,player);fight.rounds=4;fight.enemies[0].stamina=7;fight.extension={keep:true};
       app.currentPlaythrough().sim797={...structuredClone(state()),fight:JSON.parse(JSON.stringify(fight)),character:structuredClone(fight.character)};
       const saved=JSON.stringify(state().fight);module.render();module.render();check(JSON.stringify(state().fight)===saved,'pirate saved clock renders without mutation');
       el('round').click();
       check(state().fight.outcome===null&&state().fight.destination===null&&state().character.elapsed===3600&&state().fight.rounds===5&&state().fight.enemies[0].stamina===7&&state().fight.extension.keep&&state().fight.pendingDoubles,'pirate legacy clock cannot override saved wounds or simultaneous doubles');
-      const pending=core.startFight(27,{...player,elapsed:0});pending.pendingDoubles=true;pending.rounds=4;pending.character.elapsed=1234;pending.enemies[0].stamina=7;pending.extension={keep:true};
+      const pending=start(27,{...player,elapsed:0});pending.pendingDoubles=true;pending.rounds=4;pending.character.elapsed=1234;pending.enemies[0].stamina=7;pending.extension={keep:true};
       app.currentPlaythrough().sim797={...structuredClone(state()),fight:JSON.parse(JSON.stringify(pending)),character:structuredClone(pending.character)};module.render();el('player').click();
       check(state().fight.outcome==='win'&&state().character.elapsed===1234&&state().fight.rounds===4&&state().fight.enemies[0].stamina===7&&state().fight.extension.keep,'pirate saved doubles resolve without charging time twice');
       state().character.extension={keep:true};

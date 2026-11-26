@@ -18,6 +18,9 @@ function moduleWithDb(file, db, dependencies = {}) {
     if (name === './connection') return { db, _naturalCompareByName: (a, b) => a.name.localeCompare(b.name) };
     if (name === './job-xp') return require('../server/db/job-xp');
     if (name === './rating-stats') return require('../server/db/rating-stats');
+    if (name === './gameplay-stats' || name === './profile-progress' || name === './nsfw') {
+      return require('../server/db/' + name.slice(2));
+    }
     if (name in dependencies) return dependencies[name];
     throw Error('Unexpected dependency ' + name);
   } };
@@ -53,6 +56,11 @@ test('catalog aggregates do not multiply children or sections by the number of r
   assert.equal(anthology.hasPdf, false);
   assert.equal(anthology.pdfPath, null);
   assert.equal(anthology.hasLiveReading, true);
+  assert.equal(api.getAllPublicBooks(false, new Set([11])).find(b => b.id === 10).hasLiveReading, false);
+  assert.equal(anthology.restrictedReadingBadge, undefined);
+  const marked = api.getAllPublicBooks(false, new Set(), new Set([11]));
+  assert.equal(marked.find(b => b.id === 10).restrictedReadingBadge, true);
+  assert.equal(marked.find(b => b.id === 20).restrictedReadingBadge, undefined);
   assert.equal(api.getAllPublicBooks(true).find(b => b.id === 10).hasPdf, true);
   assert.equal(books.find(b => b.id === 30).totalSections, 0);
   assert.equal(books.find(b => b.id === 40).seriesId, null);

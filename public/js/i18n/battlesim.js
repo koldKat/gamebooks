@@ -6,7 +6,9 @@ const BULGARIAN_BOOKS = new Set([8, 32, 481, 486, 491, 570, 644, 648, 654, 658, 
 
 BULGARIAN_BOOKS.add(413);
 BULGARIAN_BOOKS.add(1307);
+BULGARIAN_BOOKS.add(1309);
 BULGARIAN_BOOKS.add(1414);
+BULGARIAN_BOOKS.add(3558);
 
 export function loadBattleSimTranslations(bookId) {
   const id = Number(bookId);

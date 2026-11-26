@@ -525,7 +525,9 @@ function resetForNewBook() {
 
 async function poll() {
   try {
-    const res = await fetch(`/api/admin/watch/${userId}/${requestedBookId}`);
+    const token = localStorage.getItem('gamebook_auth_token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`/api/admin/watch/${userId}/${requestedBookId}`, { headers });
     if (!res.ok) { statusEl.textContent = `error (${res.status})`; statusEl.classList.add('stale'); return; }
     const data = await res.json();
     titleEl.textContent = `Watching ${data.username || 'player #' + userId}`;

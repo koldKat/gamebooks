@@ -462,7 +462,8 @@ body.no-feed-glass-cards .feed-day-card--glass::before {
   width: auto;
   padding: 0 0 0 0.3rem;
   font-size: 0.75rem;
-  vertical-align: baseline;
+  line-height: inherit;
+  vertical-align: middle;
 }
 .feed-group-toggle:hover {
   color: #d1d5db;

@@ -43,11 +43,13 @@ document.getElementById('confirm-overlay').addEventListener('keydown', event => 
   }
 });
 
-export async function api(method, path, body) {
-  const opts = { method };
+export async function api(method, path, body, { session = false } = {}) {
+  const opts = { method, headers: {} };
+  const token = session ? localStorage.getItem('gamebook_auth_token') : null;
+  if (token) opts.headers.Authorization = `Bearer ${token}`;
   if (body !== undefined) {
     opts.body    = JSON.stringify(body);
-    opts.headers = { 'Content-Type': 'application/json' };
+    opts.headers['Content-Type'] = 'application/json';
   }
   const res = await fetch(path, opts);
   if (!res.ok) throw new Error(`${method} ${path} → ${res.status}`);

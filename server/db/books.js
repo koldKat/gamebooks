@@ -43,7 +43,7 @@ function getBookNumberingMinimum(book, totalSections) {
   return Math.max(1, highestNumeric, totalSections - Math.min(extra, lettered));
 }
 
-function getBooks(userId) {
+function getBooks(userId, hasPdfAccess = false) {
   const canLiveRead = _canLiveRead(userId);
   const rows = db.prepare(`
     SELECT b.id, b.name, b.total_sections, b.max_section_number, b.discoverable_sections,
@@ -106,7 +106,8 @@ function getBooks(userId) {
     const voteCount = rating?.vote_count || 0;
     return {
       ...b,
-      pdf_size: _getPdfSize(b.pdf_path),
+      pdf_path: hasPdfAccess ? b.pdf_path : null,
+      pdf_size: hasPdfAccess ? _getPdfSize(b.pdf_path) : null,
       visited,
       last_run_at,
       userRating: user_rating ?? null,
@@ -735,7 +736,8 @@ function createSeries(name, description, userId, isPublic = false, isNsfw = fals
 function getPublicSeriesInfo(seriesId, hasPdfAccess = false, userId = null) {
   const series = db.prepare('SELECT id, name, description, is_public, is_open_world, created_by FROM series WHERE id = ? AND is_public = 1').get(seriesId);
   if (!series) return null;
-  // Top-level books/anthologies in this series only (no anthology children)
+  // A child can belong to a different series from its anthology. Show it
+  // directly unless its public parent already represents it in this series.
   const books = db.prepare(
     `SELECT b.id, b.name, b.total_sections, b.max_section_number, b.cover_path, b.is_container, b.series_number,
             b.isbn, b.issn, b.pages, b.authors, b.has_battle_sim, b.has_live_reading, b.pdf_path,
@@ -743,7 +745,10 @@ function getPublicSeriesInfo(seriesId, hasPdfAccess = false, userId = null) {
             (SELECT MAX(c.has_battle_sim) FROM books c WHERE c.parent_book_id = b.id AND c.is_public = 1) AS child_has_battle_sim
      FROM books b
      WHERE b.series_id = ?
-       AND (b.parent_book_id IS NULL OR b.parent_book_id = 0)
+       AND NOT EXISTS (
+         SELECT 1 FROM books p WHERE p.id = b.parent_book_id
+           AND p.series_id = b.series_id AND p.is_public = 1
+       )
        AND b.is_public = 1
      ORDER BY CASE WHEN b.series_number IS NULL OR b.series_number = '' THEN 1 ELSE 0 END,
               CAST(b.series_number AS REAL),

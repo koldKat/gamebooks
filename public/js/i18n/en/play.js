@@ -126,6 +126,9 @@ export default {
     'graph.loading': 'Loading graph…',
 
     'liveread.title': 'Read Book',
+    'liveread.get_book': 'Get Book',
+    'liveread.play_online': 'Play Online',
+    'liveread.download_book': 'Download Book',
     'liveread.reading_section': 'Reading section {n}',
     'liveread.loading': 'Loading...',
     'liveread.no_active_playthrough': 'Start a game in this book to read it.',

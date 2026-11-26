@@ -716,6 +716,10 @@ body.cover-tooltip-title-bold #cover-tooltip-settings-preview {
   border: 1px solid rgba(52, 211, 153, 0.45);
   border-radius: 3px;
 }
+.cover-livereading-badge[data-restricted='1'] {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.45);
+}
 /* Shift past an existing battle-sim badge. */
 .cover-livereading-badge[data-badge-offset='1'] {
   left: 20px;

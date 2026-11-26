@@ -30,6 +30,7 @@ export default {
     'covers.has_battle_sim': 'Has a battle simulator',
     'covers.book_available': 'Book available',
     'covers.has_live_reading': 'Available to read in-app',
+    'covers.restricted_live_reading': 'Restricted in-app reading',
     'covers.open_world_only': 'Open world only',
     'covers.not_in_my_books': 'Not in my books',
     'covers.nsfw_hidden': 'Turn off Hide NSFW covers in Settings to see these results.',

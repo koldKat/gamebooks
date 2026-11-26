@@ -535,6 +535,7 @@ db.exec(`CREATE TABLE IF NOT EXISTS admin_settings (
   value TEXT NOT NULL DEFAULT ''
 )`);
 const readingAccess = require('./db/reading-access').createReadingAccess(db);
+const bookSources = require('./db/book-sources').createBookSources(db);
 require('./db/reading-ownership').installReadingOwnershipGuards(db);
 
 // One-time backfill: assign a permanent template to every level_up event that doesn't have one yet
@@ -900,7 +901,7 @@ const {
 const {
   getFeed,
   getFeedVersion,
-  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setSquire, setPdfAccess, setDisplayName,
+  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setSquire, setDisplayName,
   getPublicProfile, getProfileStats,
   getPublicCovers, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
   getPublicCoverPaths,
@@ -986,7 +987,7 @@ module.exports = {
   getShopItems, setShopItemCost,
   getFeed,
   getFeedVersion,
-  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setSquire, setPdfAccess, setDisplayName, adminUpdateUser, getPublicProfile, getProfileStats, getPublicRun, getPublicSeriesRun, getPublicCovers, getAllPublicBooks, getAllPublicSeries, getAllPublicAnthologies, getPublicBooksInSeries, getBookActivity, getPublicBookMeta, getPublicSeriesInfo, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
+  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setSquire, setDisplayName, adminUpdateUser, getPublicProfile, getProfileStats, getPublicRun, getPublicSeriesRun, getPublicCovers, getAllPublicBooks, getAllPublicSeries, getAllPublicAnthologies, getPublicBooksInSeries, getBookActivity, getPublicBookMeta, getPublicSeriesInfo, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
   getPublicCoverPaths,
   getBookRating, setBookRating, getSeriesRating, setSeriesRating, canUserRateBook, canUserRateSeries, setBookBgPref, getBookBgPref,
   awardXp, awardCoins, awardIdleHeartbeatXp, getUserXpInfo, claimBonusGc, processStateXp, runXpMigration, migratePublicBookXp, migrateEquipmentXp, setXpFeedHook, setAppXpHook,
@@ -1020,7 +1021,7 @@ module.exports = {
   leaveParty, getPartyForBook, getPendingInvites, fanOutState, getPartyMemberIds,
   getAppBirthTimestamp,
   getAdminGcSupply, adminGiftGc, adminPreviewBulkGc, adminGiftBulkGc,
-  readingAccess,
+  readingAccess, bookSources,
   settleSeasonParticipation,
   getSeasonPayoutReports,
   backupDb,

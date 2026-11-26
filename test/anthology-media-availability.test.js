@@ -58,6 +58,10 @@ test('series list shows anthology reading availability from public children', t 
   db.exec(`INSERT INTO books(id,name,has_live_reading,has_battle_sim,is_public) VALUES
     (13,'Secondary readable child',1,1,1),(14,'Private secondary child',1,1,0);
     INSERT INTO book_anthology_memberships VALUES(11,1),(13,1),(14,1);`);
+  db.exec(`INSERT INTO books(id,name,is_container) VALUES (5,'Unrelated anthology',1);
+    INSERT INTO books(id,name,parent_book_id,series_id,series_number,is_public) VALUES
+      (51,'Cross-listed child',5,50,'5',1),(52,'Private cross-listed child',5,50,'6',0);
+    UPDATE books SET series_id=50 WHERE id=11;`);
   const context = vm.createContext({ db,
     _naturalCompare: (a, b) => String(a).localeCompare(String(b), 'en', { numeric: true }),
     _getAggregateSeriesRating: () => ({ avgRating: null, voteCount: 0 }),
@@ -70,6 +74,8 @@ test('series list shows anthology reading availability from public children', t 
     assert.equal(rows.find(b => b.id === 2).hasLiveReading, false);
     assert.equal(rows.find(b => b.id === 3).hasLiveReading, false);
     assert.equal(rows.find(b => b.id === 4).hasLiveReading, true);
+    assert.equal(rows.find(b => b.id === 51).seriesNumber, '5');
+    assert.equal(rows.some(b => b.id === 11 || b.id === 52), false);
     assert.deepEqual(Array.from(rows.find(b => b.id === 1).children, b => b.hasLiveReading), [true, false, true]);
     assert.equal(rows.find(b => b.id === 1).childCount,3);
     assert.equal(rows.find(b => b.id === 1).hasBattleSim,true);

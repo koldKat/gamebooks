@@ -85,7 +85,7 @@ export async function editAdminBook(bookId) {
   if (_openingBookEditor || _bookEditor?.dialog.open) return;
   _openingBookEditor = true;
   try {
-    const data = await api('GET', `/api/admin/books/${bookId}/stats?metadata=1`);
+    const data = await api('GET', `/api/admin/books/${bookId}/stats?metadata=1`, undefined, { session: true });
     _currentBookId = bookId;
     _bookDetailData = data;
     openBookEditor();
@@ -939,11 +939,6 @@ export async function loadUserDetail(userId, edit = false) {
           loadUserDetail(user.id);
         }));
       }
-      const pdfLabel = user.pdf_access ? 'Revoke Book Access' : 'Grant Book Access';
-      actionBar.appendChild(mkBtn(pdfLabel, user.pdf_access ? 'btn-warn' : 'btn-info', async () => {
-        await api('POST', `/api/admin/users/${user.id}/pdf-access`, { pdfAccess: !user.pdf_access });
-        loadUserDetail(user.id);
-      }));
     }
     if (!user.is_protected) {
       if (user.locked_until) {
@@ -1096,11 +1091,11 @@ function _populateBookEditForm(d) {
     pdfLink.href        = pdfUrl(d.pdf_path);
     pdfLink.textContent = d.pdf_size ? `PDF (${fmtBytes(d.pdf_size)})` : 'Current PDF';
     pdfLink.style.display   = '';
-    pdfRemove.style.display = '';
   } else {
+    pdfLink.removeAttribute('href');
     pdfLink.style.display   = 'none';
-    pdfRemove.style.display = 'none';
   }
+  pdfRemove.style.display = d.hasPdfAttachment ? '' : 'none';
 
 }
 
@@ -1168,9 +1163,9 @@ document.getElementById('bef-pdf-remove').addEventListener('click', () => {
   if (!_currentBookId || !_bookEditor) return;
     document.getElementById('bef-pdf-link').style.display   = 'none';
     document.getElementById('bef-pdf-remove').style.display = 'none';
-    document.getElementById('bef-pdf-name').textContent = _bookEditor.data.pdf_path ? 'Removed on save' : '';
+    document.getElementById('bef-pdf-name').textContent = _bookEditor.data.hasPdfAttachment ? 'Removed on save' : '';
     _pendingAdminPdf = null;
-    _removeAdminPdf = !!_bookEditor.data.pdf_path;
+    _removeAdminPdf = !!_bookEditor.data.hasPdfAttachment;
 });
 
 document.getElementById('bef-save').addEventListener('click', async () => {
@@ -1263,6 +1258,7 @@ document.getElementById('bef-save').addEventListener('click', async () => {
       if (!response.ok) throw new Error('Details saved, but PDF removal failed. Try Save again.');
       _removeAdminPdf = false;
       editor.data.pdf_path = null;
+      editor.data.hasPdfAttachment = false;
     }
 
     editor.setBusy(false);
@@ -1298,7 +1294,7 @@ export async function loadBookDetail(bookId, backCtx, edit = false) {
   document.getElementById('book-ratings-meta').textContent = '';
 
   try {
-    const d = await api('GET', `/api/admin/books/${bookId}/stats`);
+    const d = await api('GET', `/api/admin/books/${bookId}/stats`, undefined, { session: true });
     if (bookId !== _currentBookId || detailRequest !== _detailGeneration) return;
 
     document.getElementById('book-back-btn').textContent =
@@ -1341,6 +1337,7 @@ export async function loadBookDetail(bookId, backCtx, edit = false) {
       pdfOpenBtn.href = pdfUrl(d.pdf_path);
       pdfOpenBtn.style.display = '';
     } else {
+      pdfOpenBtn.removeAttribute('href');
       pdfOpenBtn.style.display = 'none';
     }
     if (d.description) addMetaItem(metaFields, 'Description', d.description);

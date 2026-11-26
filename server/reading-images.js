@@ -38,7 +38,7 @@ async function handleReadingImage(req, res, bookId, filename) {
     } catch (_) { return send(res, 401, { error: 'Unauthorized' }); }
   }
   let locked = false;
-  if (!isLocalhostReal(req)) {
+  if (!isLocalhostReal(req) || !books.readingAccess.canRead(null, bookId)) {
     const userId = await authenticate(authenticatedRequest, res);
     if (userId === null) return;
     if (!books._canLiveRead(userId)) return send(res, 403, { error: 'forbidden' });

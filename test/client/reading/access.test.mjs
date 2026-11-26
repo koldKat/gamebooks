@@ -103,11 +103,15 @@ function desktopSetup({ hasRun = true, startSection = 1 } = {}) {
   const active = new Set();
   const panel = { classList: { add: x => active.add(x), remove: x => active.delete(x), contains: x => active.has(x) } };
   const body = { innerHTML: '', textContent: '', style: {}, setAttribute() {} };
+  const sourceLink = { hidden: true, dataset: {}, removeAttribute(name) { delete this[name]; } };
+  const sourceHost = { textContent: '' };
+  const sourceLabel = { textContent: '' };
+  const elements = { 'liveread-panel': panel, 'liveread-body': body, 'liveread-source-link': sourceLink, 'liveread-source-host': sourceHost, 'liveread-source-label': sourceLabel };
   const events = [], starts = [];
   const context = vm.createContext({
-    document: { getElementById: id => id === 'liveread-panel' ? panel : body, addEventListener() {}, removeEventListener() {} },
+    document: { getElementById: id => elements[id] ?? null, addEventListener() {}, removeEventListener() {} },
     t: key => key, currentBookId: 263, state: { startSection }, closeReadingGate() {},
-    getToken: () => 'account',
+    getToken: () => 'account', URL,
     currentPlaythrough: () => hasRun ? ({}) : null, currentSection: () => hasRun ? section : null,
     suppressAutoNav: value => events.push(value), setLightweightRestabilize() {},
     startPlaythrough: sec => { starts.push(sec); section = sec ?? 1; hasRun = true; }, showAlert: () => { throw new Error('Unexpected warning'); },
@@ -118,9 +122,28 @@ function desktopSetup({ hasRun = true, startSection = 1 } = {}) {
   });
   vm.runInContext(desktop, context);
   vm.runInContext('_showSection = sec => { globalThis.lastSection = sec; }', context);
-  return { context, body, events, starts, get isPanelOpen() { return active.has('active'); }, get gateOptions() { return gateOptions; },
+  return { context, body, sourceLink, sourceHost, sourceLabel, events, starts, get isPanelOpen() { return active.has('active'); }, get gateOptions() { return gateOptions; },
     resolve: value => resolveGate(value) };
 }
+
+test('desktop reader clears the account-specific shop link when it closes', async () => {
+  const s = desktopSetup();
+  const opened = s.context._open();
+  const url = 'https://example.org/book';
+  s.gateOptions.onAccess({ sourceLink: url, sourceKind: 'play' });
+  s.resolve(false);
+  await opened;
+  assert.equal(s.sourceLink.href, url);
+  assert.equal(s.sourceLink.hidden, false);
+  assert.equal(s.sourceHost.textContent, 'example.org');
+  assert.equal(s.sourceLabel.textContent, 'liveread.play_online');
+  assert.equal(s.sourceLink.dataset.tooltip, 'example.org');
+  s.context._close();
+  assert.equal(s.sourceLink.hidden, true);
+  assert.equal(s.sourceLink.href, undefined);
+  assert.equal(s.sourceHost.textContent, '');
+  assert.equal(s.sourceLink.dataset.tooltip, undefined);
+});
 
 test('desktop render cannot overwrite locked frontmatter; unlock starts at 1 without deleting a run', async () => {
   const s = desktopSetup();
@@ -203,6 +226,32 @@ test('switching books closes an old unlock preview rather than retaining its loc
 
 const mobile = readFileSync(new URL('../../../public/mobile/js/reader.js', import.meta.url), 'utf8')
   .replace(/^import[\s\S]*?;$/gm, '').replace(/^export /gm, '');
+test('the mobile book title links to the current source in a new tab when one is available', async () => {
+  const source = 'https://example.org/play';
+  const context = vm.createContext({
+    t: key => key, getToken: () => 'account', closeMobileItems() {},
+    showReadingGate: async (body, bookId, hooks) => {
+      hooks.onAccess(bookId === 1 ? { sourceLink: source } : {});
+      return false;
+    },
+  });
+  const header = mobile.slice(0, mobile.indexOf("  document.getElementById('m-back-btn')"));
+  vm.runInContext(header + '\n}', context);
+  function mountHeader() {
+    const title = {};
+    const back = { addEventListener() {} };
+    return { title, isConnected: true, querySelector: selector => selector === '.m-book-title' ? title : back };
+  }
+  const linked = mountHeader();
+  await context.renderReader(linked, { id: 1, name: 'Current & linked' }, () => {});
+  assert.match(linked.innerHTML, /class="m-book-title">Current &amp; linked<\/a>/);
+  assert.deepEqual(linked.title, { href: source, target: '_blank', rel: 'noopener noreferrer' });
+  const unlinked = mountHeader();
+  await context.renderReader(unlinked, { id: 2, name: 'Plain title' }, () => {});
+  assert.match(unlinked.innerHTML, /class="m-book-title">Plain title<\/a>/);
+  assert.deepEqual(unlinked.title, {});
+});
+
 test('mobile locked preview initializes no graph or run; unlock preserves old runs and starts at 1', async () => {
   let options, loaded = 0, saved = 0, resumed;
   const body = { isConnected: true };
@@ -214,7 +263,7 @@ test('mobile locked preview initializes no graph or run; unlock preserves old ru
     currentPlaythrough: () => state.playthroughs[state.activePtIndex],
     currentSection: () => state.playthroughs[state.activePtIndex]?.path.at(-1),
     loadState: async () => loaded++, saveState: async () => saved++,
-    connectRunSync() {}, applyRemotePositions() {},
+    connectRunSync() {}, applyRemotePositions() {}, closeMobileItems() {},
     resumed: options => { resumed = options; },
   });
   vm.runInContext(mobile, context);
@@ -250,6 +299,7 @@ test('failed mobile unlock handoff offers visible retry without another purchase
     return nodes.get(id);
   } };
   const context = vm.createContext({ getToken: () => 'account', t: key => key, console: { warn() {} },
+    closeMobileItems() {},
     showReadingGate: async (body, bookId, options) => { hooks = options; return true; },
   });
   vm.runInContext(mobile, context);

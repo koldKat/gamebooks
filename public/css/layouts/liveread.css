@@ -5,26 +5,66 @@
 
 /* The live-reading trigger belongs to the static play button bar; charsheet.css styles it. */
 
-.liveread-panel {
+.liveread-dock {
   display: none;
   flex-direction: column;
+  gap: 0.4rem;
   position: fixed;
   /* Dock below the legend using its observed height.
      Cap panel height without anchoring both ends, leaving space for the button row. */
   right: 12px;
   top: calc(var(--legend-h, 260px) + 24px);
-  max-height: 50vh;
   width: 380px;
   max-width: calc(100vw - 24px);
+  z-index: 350;
+}
+
+.liveread-dock:has(> .liveread-panel.active) {
+  display: flex;
+}
+
+.liveread-panel,
+.liveread-source-link {
   background: #111827;
   border: 1px solid #374151;
   border-radius: 10px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-  z-index: 350;
+}
+
+.liveread-panel {
+  display: flex;
+  flex-direction: column;
+  max-height: 50vh;
   overflow: hidden;
 }
-.liveread-panel.active {
+
+.liveread-source-link {
   display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.9rem;
+  color: #fbbf24;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.liveread-source-link[hidden] {
+  display: none;
+}
+
+.liveread-source-host {
+  min-width: 0;
+  overflow: hidden;
+  color: #22d3ee;
+  font-weight: 400;
+  text-overflow: ellipsis;
+}
+
+.liveread-source-link:is(:hover, :focus-visible) {
+  background: #1f2937;
 }
 
 /* Group font controls and close button at the header's right edge. */

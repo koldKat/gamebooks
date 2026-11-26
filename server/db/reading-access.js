@@ -1,11 +1,13 @@
 'use strict';
 
 const { coinBalance } = require('./xp');
+const { createReadingRestrictions } = require('./reading-restrictions');
 
 const DEFAULT_READING_THRESHOLD = 482;
 const READING_THRESHOLD_KEY = 'reading_paid_user_threshold';
 
 function createReadingAccess(db) {
+  const restrictions = createReadingRestrictions(db);
   require('./reading-section-counts').initializeReadingSupplements(db);
   db.exec(`
     CREATE TABLE IF NOT EXISTS reading_unlocks (
@@ -102,6 +104,7 @@ function createReadingAccess(db) {
   }
 
   function getAccess(userId, bookId, includeFrontmatter = true) {
+    if (!restrictions.canRead(userId, bookId)) return null;
     const book = db.prepare(`SELECT b.id, b.name, b.total_sections, b.cover_path, b.description, b.authors,
       COALESCE(e.start_section_id, e.section_id) AS reading_start_section
       FROM books b LEFT JOIN book_reading_entries e ON e.book_id = b.id
@@ -133,6 +136,7 @@ function createReadingAccess(db) {
 
   // Frontmatter/backmatter for on-demand viewing during reading (getAccess withholds it once unlocked).
   function getReadingMatter(userId, bookId) {
+    if (!restrictions.canRead(userId, bookId)) return null;
     const book = db.prepare(`SELECT b.id FROM books b
       WHERE b.id = ? AND b.has_live_reading = 1 AND
         (b.is_public = 1 OR b.created_by = ? OR EXISTS
@@ -156,7 +160,12 @@ function createReadingAccess(db) {
     if (access.cost) db.prepare('UPDATE users SET coins_spent = coins_spent + ? WHERE id = ?').run(access.cost, userId);
     return { ok: true, alreadyUnlocked: false, cost: access.cost, newBalance: balance - access.cost };
   });
-  return { getAccess, unlock, getReadingMatter, syncActivation, setThreshold, threshold };
+  return {
+    getAccess, unlock, getReadingMatter, syncActivation, setThreshold, threshold,
+    canRead: restrictions.canRead,
+    deniedBookIds: restrictions.deniedBookIds,
+    badgeBookIds: restrictions.badgeBookIds,
+  };
 }
 
 module.exports = { createReadingAccess, DEFAULT_READING_THRESHOLD, READING_THRESHOLD_KEY };

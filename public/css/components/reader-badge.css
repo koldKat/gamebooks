@@ -1,0 +1,11 @@
+.book-livereading-badge {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  color: #34d399;
+  margin-left: 0.3rem;
+  flex-shrink: 0;
+}
+.book-livereading-badge[data-restricted='1'] {
+  color: #f87171;
+}

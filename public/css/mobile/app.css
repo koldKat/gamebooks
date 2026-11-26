@@ -107,11 +107,16 @@ input {
    title ellipsis already handles that, no extra media query needed. */
 .m-book-title {
   flex: 1;
+  color: inherit;
   text-align: center;
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.m-book-title[href] {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
 }
 
 /* ── Login screen ──────────────────────────────────────────────────────── */

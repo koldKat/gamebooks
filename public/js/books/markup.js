@@ -3,7 +3,7 @@ import { booksState } from './state.js';
 import { _patchCachedBook } from './data.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../core/util.js';
-import { publicNsfwTag } from '../covers/badges.js';
+import { liveReadingBadge, publicNsfwTag } from '../covers/badges.js';
 
 // ── Star rating helpers ───────────────────────────────────────────────────────
 export function _starsHtml(rating) {
@@ -55,7 +55,7 @@ export function _pdfBadgeHtml(pdfPath, canShow) {
 // Patch all rendered copies and the cache after PDF changes, without rebuilding the library.
 export function _syncPdfBadgeOnCards(bookId, pdfPath, pdfSize = null) {
   _patchCachedBook(bookId, { pdf_path: pdfPath, pdf_size: pdfSize });
-  const canShow = (booksState._hooks.getIsAdmin?.() ?? false) || (booksState._hooks.getHasPdfAccess?.() ?? false);
+  const canShow = booksState._hooks.getHasPdfAccess?.() ?? false;
   document.querySelectorAll(`.book-item[data-id="${bookId}"]`).forEach(card => {
     if (pdfPath) card.setAttribute('data-pdf', pdfPath); else card.removeAttribute('data-pdf');
     if (pdfSize != null) card.setAttribute('data-pdf-size', String(pdfSize)); else card.removeAttribute('data-pdf-size');
@@ -121,10 +121,10 @@ export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrSta
   const battleSimBadge = _hasBattleSim(b)
     ? `<span class="book-battlesim-badge" data-tooltip="${escapeHtml(t('covers.has_battle_sim'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/><line x1="4" y1="4" x2="8" y2="4"/><line x1="4" y1="4" x2="4" y2="8"/><line x1="20" y1="4" x2="16" y2="4"/><line x1="20" y1="4" x2="20" y2="8"/></svg></span>`
     : '';
-  const liveReadingBadge = _hasLiveReading(b)
-    ? `<span class="book-livereading-badge" data-tooltip="${escapeHtml(t('covers.has_live_reading'))}"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h7z"/></svg></span>`
-    : '';
-  const canShowFiles = isAdmin || (booksState._hooks.getHasPdfAccess?.() ?? false);
+  const restrictedBadge = b.restrictedReadingBadge || (b.is_container && (booksState._cachedBooks || [])
+    .some(child => child.parent_book_id === b.id && child.restrictedReadingBadge));
+  const readingBadge = _hasLiveReading(b) ? liveReadingBadge(restrictedBadge) : '';
+  const canShowFiles = booksState._hooks.getHasPdfAccess?.() ?? false;
   const pdfBadge = _pdfBadgeHtml(b.pdf_path, canShowFiles);
   let cardStyle      = bg;
   let pendingCoverAttr = '';
@@ -143,7 +143,7 @@ export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrSta
     `<div class="book-info">` +
       `<div class="book-name-row">` +
         `<span class="book-name-text" data-id="${b.id}" data-name="${escapeHtml(b.name)}" data-tooltip="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>` +
-        publicNsfwTag(b) + openWorldBadge + battleSimBadge + liveReadingBadge + pdfBadge +
+        publicNsfwTag(b) + openWorldBadge + battleSimBadge + readingBadge + pdfBadge +
         activeBadge +
       `</div>` +
       subtitle +

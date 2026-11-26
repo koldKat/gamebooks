@@ -9,6 +9,7 @@ import { loadFeedback } from './feedback.js';
 import { loadAnnouncements } from './announcements.js';
 import { loadInventory } from './inventory.js';
 import { loadSeasons } from './seasons.js';
+import { loadBookSources } from './book-sources.js';
 import { loadTools, loadAll, loadActiveTab, registerTabLoaders, loadLive, loadStats, loadAdminGc, loadAppSize } from './dashboard.js';
 // dashboard.js imports users-books.js for its top-level event bindings.
 
@@ -49,7 +50,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 
-registerTabLoaders({ series: loadAdminSeries, anthologies: loadAdminAnthologies, tips: loadTips, inventory: loadInventory, feedback: loadFeedback, announcements: loadAnnouncements, seasons: loadSeasons, tools: loadTools });
+registerTabLoaders({ 'book-sources': loadBookSources, series: loadAdminSeries, anthologies: loadAdminAnthologies, tips: loadTips, inventory: loadInventory, feedback: loadFeedback, announcements: loadAnnouncements, seasons: loadSeasons, tools: loadTools });
 loadAll();
 loadLive();
 loadAppSize();

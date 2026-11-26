@@ -401,6 +401,7 @@ test('migration preserves the sequence when the old series table is empty', () =
 function editRoutes(db, books, options) {
   let status, response;
   const api = { ...books, isUserAdmin: () => !!options.admin, isUserModerator: () => !!options.moderator,
+    getUserById: () => ({ pdf_access: 0 }),
     getBookCreator: id => db.prepare('SELECT created_by FROM books WHERE id=?').get(id)?.created_by ?? null,
     getBookIdentifiers: () => ({ is_public: 0 }), awardXp() {},
   };

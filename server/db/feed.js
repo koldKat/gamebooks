@@ -1019,10 +1019,6 @@ function setContributor(userId, value) {
   if (value) _insertNotif.run(userId, 'role_assigned', JSON.stringify({ role: 'contributor', label: 'Pathmaker' }));
 }
 
-function setPdfAccess(userId, value) {
-  db.prepare("UPDATE users SET pdf_access = ? WHERE id = ?").run(value ? 1 : 0, userId);
-}
-
 function setDisplayName(userId, value) {
   db.prepare("UPDATE users SET display_name = ? WHERE id = ?").run(value?.trim() || null, userId);
 }
@@ -1247,12 +1243,13 @@ function getPublicBookMeta(bookId) {
   return result;
 }
 
-function getAllPublicBooks(hasPdfAccess = false) {
+function getAllPublicBooks(hasPdfAccess = false, deniedReading = new Set(), markedReading = new Set()) {
   const rows = db.prepare(
     `WITH child_stats AS (
        SELECT parent_book_id, GROUP_CONCAT(name, '|||') AS child_names,
               GROUP_CONCAT(id) AS child_ids, SUM(total_sections) AS total_sections,
-              MAX(has_battle_sim) AS has_battle_sim, MAX(has_live_reading) AS has_live_reading,
+              MAX(has_battle_sim) AS has_battle_sim,
+              GROUP_CONCAT(CASE WHEN has_live_reading = 1 THEN id END) AS readable_child_ids,
               MAX(CASE WHEN pdf_path IS NOT NULL AND pdf_path != '' THEN 1 ELSE 0 END) AS has_pdf
        FROM books WHERE is_public = 1 AND parent_book_id IS NOT NULL GROUP BY parent_book_id
      ), library_stats AS (
@@ -1265,7 +1262,7 @@ function getAllPublicBooks(hasPdfAccess = false) {
             c.child_names, c.child_ids,
             COALESCE(c.total_sections, 0) AS children_total_sections,
             COALESCE(c.has_battle_sim, 0) AS child_has_battle_sim,
-            COALESCE(c.has_live_reading, 0) AS child_has_live_reading,
+            c.readable_child_ids,
             COALESCE(c.has_pdf, 0) AS child_has_pdf,
             COALESCE(ub.library_count, 0) AS library_count
      FROM books b
@@ -1295,9 +1292,11 @@ function getAllPublicBooks(hasPdfAccess = false) {
     childNames: r.child_names ? r.child_names.split('|||') : [],
     childIds: r.child_ids ? r.child_ids.split(',').map(Number) : [],
     hasBattleSim: !!(r.has_battle_sim || r.child_has_battle_sim),
-    hasLiveReading: !!(r.has_live_reading || r.child_has_live_reading),
-    // PDF availability is per-user metadata - only present for admins and
-    // pdf_access holders (same gating as getPublicSeriesInfo's pdfPath).
+    hasLiveReading: !!(r.has_live_reading && !deniedReading.has(r.id))
+      || !!r.readable_child_ids?.split(',').some(id => !deniedReading.has(Number(id))),
+    restrictedReadingBadge: markedReading.size && ((r.has_live_reading || r.readable_child_ids) && markedReading.has(r.id)
+      || r.readable_child_ids?.split(',').some(id => markedReading.has(Number(id)))) ? true : undefined,
+    // Only viewers with the explicit PDF permission receive attachment metadata.
     pdfPath: hasPdfAccess ? (r.pdf_path || null) : null,
     hasPdf: hasPdfAccess && !!(r.pdf_path || r.child_has_pdf),
   }));
@@ -1667,7 +1666,7 @@ function getPublicSeriesRun(seriesId, userId, runIndex) {
 module.exports = {
   getFeed,
   getFeedVersion,
-  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setSquire, setPdfAccess, setDisplayName,
+  setPublicProfile, setHideFromFeed, setAuthor, setContributor, setModerator, setSquire, setDisplayName,
   getPublicProfile, getProfileStats,
   getPublicCovers, getBooksForSitemap, getAnthologiesForSitemap, getSeriesForSitemap, getPublicProfilesForSitemap,
   getPublicCoverPaths,

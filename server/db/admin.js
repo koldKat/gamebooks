@@ -617,7 +617,7 @@ function getAllAnthologiesAdmin() {
 }
 function adminGetUser(userId) {
   const row = db.prepare(`
-    SELECT u.id, u.username, u.display_name, u.email, u.is_author, u.is_contributor, u.is_moderator, u.is_squire, u.pdf_access, u.created_at, u.last_country, u.last_city,
+    SELECT u.id, u.username, u.display_name, u.email, u.is_author, u.is_contributor, u.is_moderator, u.is_squire, u.created_at, u.last_country, u.last_city,
            u.active_country, u.active_city, u.last_domain, u.failed_login_attempts, u.locked_until, u.is_protected, u.is_admin,
            u.public_profile, u.hide_from_feed, u.xp, u.xp_boost_pct,
            u.bonus_undos, u.bonus_fast_travels, u.bonus_heartbeat_xp,

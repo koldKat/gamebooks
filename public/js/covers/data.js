@@ -79,7 +79,7 @@ export function _coversFingerprint(covers, books, series) {
       b.pdfPath || '', b.authors || '', b.seriesName || '', b.seriesNumber || '',
       !!b.hasPdf,
       b.childNames || [], b.childIds || [], b.totalSections || 0,
-      !!b.hasBattleSim, !!b.hasLiveReading,
+      !!b.hasBattleSim, !!b.hasLiveReading, !!b.restrictedReadingBadge,
     ])),
     series: sortRows((Array.isArray(series) ? series : []).map(s => [
       s.id, s.name, s.description || '', !!s.is_open_world,

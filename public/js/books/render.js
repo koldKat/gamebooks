@@ -100,7 +100,7 @@ export function renderBooksList(allOwnedBooks, allSeries = [], stashes = []) {
   const seriesIdsInLibrary = new Set(visibleSeries.map(s => s.id));
   const seriesMap = {};
   const noSeries  = [];
-  for (const b of topLevel) {
+  for (const b of booksForMain) {
     if (b.series_id && seriesIdsInLibrary.has(b.series_id)) (seriesMap[b.series_id] ??= []).push(b);
   }
   for (const b of topLevel) {

@@ -1,14 +1,14 @@
 import { definition } from './definition.js';
 
-export function createState(getContext) {
+export function createState(getContext, { id, stateKey } = definition) {
   function read() {
     const live = getContext();
-    return Number(live.currentBookId) === definition.id ? live.currentPlaythrough()?.[definition.stateKey] ?? null : null;
+    return Number(live.currentBookId) === id ? live.currentPlaythrough()?.[stateKey] ?? null : null;
   }
   function change(update) {
     const live = getContext(), run = live.currentPlaythrough();
-    if (Number(live.currentBookId) !== definition.id || !run) return false;
-    const original = run[definition.stateKey];
+    if (Number(live.currentBookId) !== id || !run) return false;
+    const original = run[stateKey];
     const next = structuredClone(original ?? { schemaVersion: 1, character: null, fight: null, history: [], log: [] });
     if (next.schemaVersion !== 1 || !Array.isArray(next.history) || !Array.isArray(next.log)) throw new RangeError('Unsupported simulator state');
     if (update(next)?.then) throw new TypeError('Synchronous updates only');
@@ -22,9 +22,9 @@ export function createState(getContext) {
     }
     next.log = next.log.slice(-160);
     const current = getContext();
-    if (Number(current.currentBookId) !== definition.id || current.currentPlaythrough() !== run
-      || run[definition.stateKey] !== original) return false;
-    run[definition.stateKey] = next;
+    if (Number(current.currentBookId) !== id || current.currentPlaythrough() !== run
+      || run[stateKey] !== original) return false;
+    run[stateKey] = next;
     current.saveState();
     return true;
   }

@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="/css/admin/editors.css">
   <link rel="stylesheet" href="/css/admin/dashboard.css">
   <link rel="stylesheet" href="/css/components/dialog-headers.css">
+  <link rel="stylesheet" href="/css/components/reader-badge.css">
 </head>
 <body>
 
@@ -120,6 +121,7 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="users">Players</button>
       <button class="tab-btn"        data-tab="books">Books</button>
+      <button class="tab-btn"        data-tab="book-sources">Book Sources</button>
       <button class="tab-btn"        data-tab="series">Series</button>
       <button class="tab-btn"        data-tab="anthologies">Anthologies</button>
       <button class="tab-btn"        data-tab="tips">Tips</button>
@@ -210,6 +212,35 @@
         </table>
       </div>
       <div class="pagination" id="books-pagination"></div>
+    </div>
+
+    <div id="tab-book-sources" class="tab-panel">
+      <div class="admin-toolbar">
+        <div class="admin-search-wrap">
+          <svg class="admin-search-icon" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.5" cy="6.5" r="4"/><line x1="9.7" y1="9.7" x2="13.5" y2="13.5"/></svg>
+          <input type="search" id="book-sources-search" class="admin-search-input" placeholder="Search books or URLs…" aria-label="Search books or URLs" autocomplete="off" spellcheck="false">
+          <button type="button" id="book-sources-search-clear" class="admin-search-clear" aria-label="Clear search">✕</button>
+        </div>
+        <select id="book-sources-filter" class="book-sources-filter" aria-label="Source availability">
+          <option value="all">All</option>
+          <option value="available">Available</option>
+          <option value="missing">Missing</option>
+        </select>
+        <select id="book-sources-kind" class="book-sources-filter" aria-label="Source type">
+          <option value="all">All types</option>
+          <option value="download">Download</option>
+          <option value="play">Play Online</option>
+          <option value="buy">Buy</option>
+        </select>
+        <div id="book-sources-meta" class="section-meta" role="status"></div>
+      </div>
+      <div class="table-wrap">
+        <table class="book-sources-table">
+          <thead><tr><th scope="col">Book</th><th scope="col">Type</th><th scope="col">Source URL</th><th scope="col">Edit</th></tr></thead>
+          <tbody id="book-sources-body"></tbody>
+        </table>
+      </div>
+      <div id="book-sources-pagination" class="pagination"></div>
     </div>
 
     <!-- ── Series tab ───────────────────────────────────────────────────── -->

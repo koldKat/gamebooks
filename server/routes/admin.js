@@ -7,7 +7,7 @@ const fs   = require('fs');
 const path = require('path');
 const db   = require('../db');
 const {
-  requireLocalhost, send, readBody, addSecurityHeaders, addAdminSecurityHeaders, authenticate,
+  requireLocalhost, send, readBody, addSecurityHeaders, addAdminSecurityHeaders, authenticate, tokenFromReq,
 } = require('../request-helpers');
 const { feedPush, userBadgePush, publicCatalogPush } = require('../sse');
 const { serveNotFoundPage, isDocumentNavigation } = require('../not-found');
@@ -115,7 +115,12 @@ async function handleAdminGetBookStats(req, res, bookId) {
   const metadataOnly = new URL(req.url, 'http://localhost').searchParams.get('metadata') === '1';
   const stats = db.adminGetBookStats(bookId, { metadataOnly });
   if (!stats) return send(res, 404, { error: 'Not found' });
-  send(res, 200, stats);
+  const token = tokenFromReq(req);
+  const session = token ? db.getSession(token) : null;
+  const hasPdfAccess = session && db.getUserById(session.user_id)?.pdf_access === 1;
+  send(res, 200, { ...stats, hasPdfAttachment: !!stats.pdf_path,
+    pdf_path: hasPdfAccess ? stats.pdf_path : null,
+    pdf_size: hasPdfAccess ? stats.pdf_size : null });
 }
 
 async function handleAdminGetUsers(req, res) {
@@ -187,13 +192,6 @@ async function handleAdminSetContributor(req, res, userId) {
   if (!requireLocalhost(req, res)) return;
   const { isContributor } = await readBody(req);
   db.setContributor(userId, !!isContributor);
-  send(res, 200, { ok: true });
-}
-
-async function handleAdminSetPdfAccess(req, res, userId) {
-  if (!requireLocalhost(req, res)) return;
-  const { pdfAccess } = await readBody(req);
-  db.setPdfAccess(userId, !!pdfAccess);
   send(res, 200, { ok: true });
 }
 
@@ -632,7 +630,6 @@ module.exports = {
   handleAdminUpdateUser,
   handleAdminSetAuthor,
   handleAdminSetContributor, handleAdminSetModerator, handleAdminSetSquire,
-  handleAdminSetPdfAccess,
   handleAdminImpersonate,
   handleImpersonateRedirect,
   handleAdminGetBooks,

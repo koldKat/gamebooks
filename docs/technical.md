@@ -168,6 +168,8 @@ Catalog invalidation refreshes affected metadata and covers. Preference updates 
 
 Static JavaScript and CSS use `Cache-Control: no-cache` with ETags, allowing revalidation without URL version suffixes. Protected reading images use private delivery rules. Public server-rendered pages have their own cache policy.
 
+Reader restrictions are stored by book ID with an explicit account allowlist. They are enforced for passages, supplemental matter, artwork, and reader purchases while preserving installed content and existing unlocks. PDF downloads require a separate account permission managed outside the app.
+
 Version-change recovery belongs to the main app lifecycle. It must not refresh the canvas or interrupt an active player. Startup failure recovery and ordinary data refreshes are separate mechanisms.
 
 ## Feed, covers, and public pages

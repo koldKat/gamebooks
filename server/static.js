@@ -6,14 +6,14 @@ const fs   = require('fs');
 const path = require('path');
 const db   = require('./db');
 const { ROOT } = require('./paths');
-const { addSecurityHeaders } = require('./request-helpers');
+const { addSecurityHeaders, authenticate, send } = require('./request-helpers');
 const { getEtagCache, MIME } = require('./runtime-state');
 const { serveFile } = require('./file-transfer');
 const { legacyBookDownload } = require('./book-files');
 const { escapeHtml } = require('./html-escape');
 const { serveNotFoundPage, isDocumentNavigation } = require('./not-found');
 
-function serveStatic(req, res) {
+async function serveStatic(req, res) {
   const _spath  = req.url.split('?')[0];
   const urlPath = _spath === '/' ? '/index.html' : _spath;
   let filePath = path.join(ROOT, urlPath);
@@ -21,6 +21,13 @@ function serveStatic(req, res) {
     res.writeHead(403); return res.end('Forbidden');
   }
   filePath = legacyBookDownload(urlPath) || filePath;
+  const bookDirectory = path.join(ROOT, 'books') + path.sep;
+  if (filePath.startsWith(bookDirectory)) {
+    const userId = await authenticate(req, res);
+    if (userId === null) return;
+    const user = db.getUserById(userId);
+    if (user?.pdf_access !== 1) return send(res, 403, { error: 'Access denied' });
+  }
   const ext = path.extname(filePath).toLowerCase();
   const mime = MIME[ext] || 'application/octet-stream';
   const cacheControl = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.svg', '.ico'].includes(ext)
@@ -29,6 +36,7 @@ function serveStatic(req, res) {
   const headers = { 'Content-Type': mime, 'Cache-Control': cacheControl };
   if (ext === '.pdf') {
     headers['Content-Disposition'] = 'inline';
+    if (filePath.startsWith(bookDirectory)) headers['Cache-Control'] = 'private, no-store';
   } else if (urlPath.startsWith('/attachments/') && ['.zip', '.7z', '.rar', '.gz', '.tar'].includes(ext)) {
     headers['Content-Disposition'] = 'attachment';
   }

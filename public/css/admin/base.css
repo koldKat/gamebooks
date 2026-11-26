@@ -671,6 +671,40 @@ body {
   min-width: 160px;
   max-width: 200px;
 }
+.table-wrap .book-sources-table td:last-child {
+  width: 1%;
+  min-width: 0;
+}
+.book-source-url {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.book-source-type {
+  width: 1%;
+  white-space: nowrap;
+}
+.book-sources-table small,
+.book-source-missing {
+  color: #9ca3af;
+}
+.book-source-owner {
+  display: block;
+}
+.book-sources-filter {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 5px;
+  color: #d1d5db;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
+  font-size: 0.8rem;
+}
+#book-sources-meta {
+  margin: 0;
+}
+.book-sources-table a {
+  color: #93c5fd;
+}
 .table-wrap #tips-body td:last-child {
   width: 1%;
   max-width: none;

@@ -60,13 +60,17 @@ test('external images preserve surrounding prose, deduplicate, and cap size', ()
 
 test('image endpoint checks authentication, unlock, and book ownership before reading files', async () => {
   let userId = null, locked = true, referenced = false, reads = 0, status, authorization;
+  let local = false, restricted = false;
   const context = vm.createContext({ __dirname: '/app/server', module: { exports: {} }, require: name => {
     if (name === 'fs') return { promises: { readFile: async file => { assert.equal(file, `/app/reading-images/107/${'a'.repeat(64)}.png`); reads++; return Buffer.from('image'); } } };
     if (name === 'path') return path;
     if (name === './reading-image-storage') return { DIRECTORY: '/app/reading-images', MAX_BYTES };
     if (name === './db/connection') return { db: { prepare: () => ({ get: () => referenced }) } };
-    if (name === './db') return { _canLiveRead: () => true, readingAccess: { getAccess: () => ({ locked }) } };
-    return { authenticate: async req => { authorization = req.headers.authorization; return userId; }, isLocalhostReal: () => false, tokenFromReq: req => req.headers.authorization,
+    if (name === './db') return { _canLiveRead: () => true, readingAccess: {
+      canRead: (viewer) => !restricted || viewer === 1,
+      getAccess: (viewer) => restricted && viewer !== 1 ? null : { locked },
+    } };
+    return { authenticate: async req => { authorization = req.headers.authorization; return userId; }, isLocalhostReal: () => local, tokenFromReq: req => req.headers.authorization,
       send: (res, code) => { status = code; } };
   } });
   vm.runInContext(fs.readFileSync(require.resolve('../server/reading-images'), 'utf8'), context);
@@ -92,6 +96,16 @@ test('image endpoint checks authentication, unlock, and book ownership before re
   await handler(request, response, 107, '../escape.png');
   assert.equal(status, 404);
   assert.equal(reads, 2);
+  local = true;
+  restricted = true;
+  userId = 2;
+  await handler(request, response, 107, filename);
+  assert.equal(status, 404, 'a local connection cannot bypass a restricted book');
+  assert.equal(reads, 2);
+  userId = 1;
+  await handler(request, response, 107, filename);
+  assert.equal(status, 200);
+  assert.equal(reads, 3);
 });
 
 test('locked books serve only their own frontmatter images; section artwork remains gated', async () => {
@@ -149,7 +163,7 @@ test('image endpoint falls back only for missing book files, not other read fail
     if (name === 'path') return path;
     if (name === './reading-image-storage') return { DIRECTORY: '/app/reading-images', MAX_BYTES };
     if (name === './db/connection') return { db: { prepare: () => ({ get: () => true }) } };
-    if (name === './db') return {};
+    if (name === './db') return { readingAccess: { canRead: () => true } };
     return { isLocalhostReal: () => true, tokenFromReq: () => 'token', send: (res, code) => { status = code; } };
   } });
   vm.runInContext(fs.readFileSync(require.resolve('../server/reading-images'), 'utf8'), context);

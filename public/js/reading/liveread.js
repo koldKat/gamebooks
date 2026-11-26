@@ -350,6 +350,25 @@ function _returnToCurrent() {
   _close();
 }
 
+function setReadingSourceLink(url, kind) {
+  const link = document.getElementById('liveread-source-link');
+  if (!link) return;
+  const label = document.getElementById('liveread-source-label');
+  const host = document.getElementById('liveread-source-host');
+  link.hidden = !url;
+  if (url) {
+    link.href = url;
+    const name = new URL(url).hostname;
+    label.textContent = t(kind === 'play' ? 'liveread.play_online' : kind === 'download' ? 'liveread.download_book' : 'liveread.get_book');
+    host.textContent = name;
+    link.dataset.tooltip = name;
+  } else {
+    link.removeAttribute('href');
+    delete link.dataset.tooltip;
+    host.textContent = '';
+  }
+}
+
 // Suppress auto-navigation while reading so every section's prose remains visible.
 async function _open() {
   const panel = document.getElementById('liveread-panel');
@@ -383,6 +402,7 @@ async function _open() {
   try {
     const locked = await showReadingGate(body, bookId, {
       isCurrent, onUnlock: () => begin(true), onCancel: _close, onStartSection: section => { entrySection = section; },
+      onAccess: access => setReadingSourceLink(access.sourceLink, access.sourceKind),
     });
     if (!isCurrent()) return;
     _accessPending = false;
@@ -398,6 +418,7 @@ async function _open() {
 }
 
 function _close() {
+  setReadingSourceLink(null);
   closeReadingGate(document.getElementById('liveread-body'));
   document.getElementById('liveread-body')?.classList?.remove('reading-gate');
   _resetMatterMenu();
@@ -491,6 +512,21 @@ function _renderedLineHeight(body) {
 }
 
 export function initLiveRead() {
+  const dock = document.createElement('div');
+  dock.className = 'liveread-dock';
+  const sourceLink = document.createElement('a');
+  sourceLink.id = 'liveread-source-link';
+  sourceLink.className = 'liveread-source-link';
+  const sourceLabel = document.createElement('span');
+  sourceLabel.id = 'liveread-source-label';
+  sourceLabel.textContent = t('liveread.get_book');
+  const sourceHost = document.createElement('span');
+  sourceHost.id = 'liveread-source-host';
+  sourceHost.className = 'liveread-source-host';
+  sourceLink.append(sourceLabel, sourceHost);
+  sourceLink.target = '_blank';
+  sourceLink.rel = 'noopener noreferrer';
+  sourceLink.hidden = true;
   const panel = document.createElement('div');
   panel.id = 'liveread-panel';
   panel.className = 'liveread-panel';
@@ -512,7 +548,8 @@ export function initLiveRead() {
       <button id="liveread-close" class="inv-close-btn" aria-label="${t('btn.close')}">✕</button>
     </div>
     <div id="liveread-body" class="liveread-body"></div>`;
-  document.body.appendChild(panel);
+  dock.append(sourceLink, panel);
+  document.body.appendChild(dock);
   _applyFontSize(panel);
   document.getElementById('liveread-font-dec').addEventListener('click', () => _stepFontSize(panel, -1));
   document.getElementById('liveread-font-inc').addEventListener('click', () => _stepFontSize(panel, 1));

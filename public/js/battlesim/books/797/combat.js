@@ -46,9 +46,9 @@ function finish(fight) {
   return fight;
 }
 
-export function startFight(section, character, options = {}) {
+export function startFight(section, character, options = {}, getEncounter = encounterFor) {
   validateCharacter(character, true);
-  const preset = encounterFor(section);
+  const preset = getEncounter(section);
   const custom = customFightingEncounter(0, options.opponents);
   if (!preset && (Number(section) !== 0 || !custom)) throw new RangeError('Invalid encounter');
   if (custom && custom.enemies.length !== 1) throw new RangeError('One opponent required');

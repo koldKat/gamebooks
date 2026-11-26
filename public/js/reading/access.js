@@ -24,7 +24,7 @@ function installBalanceEvents() {
 }
 
 // No access cache: account changes and purchases in other tabs must be authoritative.
-export async function showReadingGate(mount, bookId, { isCurrent, onUnlock, onError, onStartSection, onCancel }) {
+export async function showReadingGate(mount, bookId, { isCurrent, onUnlock, onError, onStartSection, onCancel, onAccess }) {
   const token = getToken();
   const current = () => token === getToken() && isCurrent();
   const res = await apiFetch(`/api/books/${bookId}/reading-access`);
@@ -32,6 +32,7 @@ export async function showReadingGate(mount, bookId, { isCurrent, onUnlock, onEr
   const access = await res.json();
   if (!current()) return true;
   onStartSection?.(access.startSection ?? 1);
+  onAccess?.(access);
   if (!access.locked) { gates.delete(mount); mount.classList.remove('reading-gate'); return false; }
   mount.classList.add('reading-gate');
   let purchasing = false;

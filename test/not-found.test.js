@@ -5,14 +5,14 @@ const { serveFile } = require('../server/file-transfer');
 const { renderNotFoundPage, serveNotFoundPage, isDocumentNavigation } = require('../server/not-found');
 const messages = require('../server/not-found-messages');
 
-test('direct visits to missing assets use the themed page while embedded assets and APIs do not', () => {
+test('direct visits to missing assets use the themed page while embedded assets and APIs do not', async () => {
   const fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
   const source = fs.readFileSync(require.resolve('../server/static'), 'utf8');
   let options;
   const context = vm.createContext({ROOT:path.resolve('public'), path, MIME:{'.jpg':'image/jpeg'},
     legacyBookDownload:() => null, addSecurityHeaders() {}, getEtagCache:() => new Map(),
     serveNotFoundPage, isDocumentNavigation, serveFile(req,res,file,input) {options=input;}});
-  vm.runInContext(source.slice(source.indexOf('function serveStatic('), source.indexOf('function serveRobots(')), context);
+  vm.runInContext(source.slice(source.indexOf('async function serveStatic('), source.indexOf('function serveRobots(')), context);
   for (const [url, headers, themed] of [
     ['/covers/missing.jpg', {'sec-fetch-dest':'document'}, true],
     ['/covers/missing.jpg', {'sec-fetch-dest':'iframe'}, true],
@@ -23,8 +23,38 @@ test('direct visits to missing assets use the themed page while embedded assets 
     ['/js/missing.js', {'sec-fetch-dest':'script'}, false],
     ['/api/missing.jpg', {'sec-fetch-dest':'document'}, false],
   ]) {
-    context.serveStatic({url,method:'GET',headers}, {});
+    await context.serveStatic({url,method:'GET',headers}, {});
     assert.equal(options.onNotFound === serveNotFoundPage, themed, url + JSON.stringify(headers));
+  }
+});
+
+test('direct and legacy PDF downloads require explicit permission', async () => {
+  const fs = require('node:fs'), vm = require('node:vm'), path = require('node:path');
+  const source = fs.readFileSync(require.resolve('../server/static'), 'utf8');
+  const ROOT = path.resolve('public');
+  let viewer, status, served;
+  const context = vm.createContext({
+    ROOT, path, MIME: { '.pdf': 'application/pdf' }, getEtagCache: () => new Map(),
+    legacyBookDownload: url => url === '/books/book.pdf' ? path.join(ROOT, 'books/pdfs/book.pdf') : null,
+    authenticate: async () => viewer ? 1 : (status = 401, null),
+    db: { getUserById: () => viewer }, send(_res, code) { status = code; },
+    serveFile(_req, _res, file, options) { status = 200; served = { file, options }; },
+    isDocumentNavigation: () => false, serveNotFoundPage,
+  });
+  vm.runInContext(source.slice(source.indexOf('async function serveStatic('), source.indexOf('function serveRobots(')), context);
+  for (const [role, expected] of [[null, 401], [{ is_admin: 1, pdf_access: 0 }, 403], [{ pdf_access: 1 }, 200]]) {
+    viewer = role;
+    for (const url of ['/books/book.pdf', '/books/pdfs/book.pdf']) {
+      served = null;
+      await context.serveStatic({ url, method: 'HEAD', headers: {} }, {});
+      assert.equal(status, expected);
+      if (expected === 200) {
+        assert.equal(served.file, path.join(ROOT, 'books/pdfs/book.pdf'));
+        assert.equal(served.options.headers['Cache-Control'], 'private, no-store');
+      } else {
+        assert.equal(served, null);
+      }
+    }
   }
 });
 

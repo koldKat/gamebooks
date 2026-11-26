@@ -70,7 +70,7 @@ const {
   addSecurityHeaders, addForumSecurityHeaders, addAdminSecurityHeaders,
   isAllowedImage, isAllowedAttachmentType, ATTACHMENT_MAX,
   isRateLimited, recordAuthFailure,
-  isLocalhost, isLocalhostReal, requireLocalhost,
+  isLocalhostReal, requireLocalhost,
   send, readBody, readRawBody, tokenFromReq,
   authenticate, authenticateOptional, isRequestImpersonating,
   runWithImpersonationContext,
@@ -81,6 +81,7 @@ const {
   handleRegister, handleLogin, handleLogout, handleForgotPassword, handleResetPassword,
 } = require('./server/routes/auth');
 const { handleImportComplete, handleReadingMatterUpdated } = require('./server/routes/import-completion');
+const { visibleReadingBook } = require('./server/reading-availability');
 
 const {
   handleAcceptPartyInvite,
@@ -141,7 +142,7 @@ const {
 const { handleShopPurchase, handleClaimBonusGc, handleDiamondExchange, handleRubyExchange } = require('./server/routes/shop');
 const { handleCollectibles } = require('./server/routes/collectibles');
 const { handleCompanionMarket } = require('./server/routes/companion-market');
-const { handleReadingAccess, handleReadingMatter } = require('./server/routes/reading-access');
+const { handleAdminBookSources, handleAdminSetBookSource, handleReadingAccess, handleReadingMatter } = require('./server/routes/reading-access');
 
 const {
   handleGetProfile,
@@ -169,7 +170,6 @@ const {
   handleAdminUpdateUser,
   handleAdminSetAuthor,
   handleAdminSetContributor, handleAdminSetModerator, handleAdminSetSquire,
-  handleAdminSetPdfAccess,
   handleAdminImpersonate,
   handleImpersonateRedirect,
   handleAdminGetBooks,
@@ -344,14 +344,6 @@ const _routeRequest = async (req, res) => {
 
   const urlPath    = req.url.split('?')[0];
 
-  // Expose PDF metadata only to valid admin or pdf_access tokens; strip it for other viewers.
-  const _requesterHasPdfAccess = (request) => {
-    const userId = authenticateOptional(request);
-    if (!userId) return false;
-    const u = db.getUserById(userId);
-    return !!(u && (u.pdf_access || u.is_admin));
-  };
-
   // Traffic accounting - runs for every request, including any future routes
   const _tBytesIn  = req.socket.bytesRead;
   const _tBytesOut = req.socket.bytesWritten;
@@ -409,7 +401,13 @@ const _routeRequest = async (req, res) => {
     if ((method === 'GET' || method === 'PATCH') && (m = urlPath.match(/^\/api\/books\/(\d+)\/nsfw$/))) return await handleSetBookNsfw(req, res, +m[1]);
     if ((method === 'GET' || method === 'PATCH') && (m = urlPath.match(/^\/api\/series\/(\d+)\/nsfw$/))) return await handleSetSeriesNsfw(req, res, +m[1]);
     if (method === 'GET'    && urlPath === '/api/public/covers') return send(res, 200, db.getPublicCovers());
-    if (method === 'GET'    && urlPath === '/api/public/books')       return send(res, 200, db.getAllPublicBooks(_requesterHasPdfAccess(req)));
+    if (method === 'GET' && urlPath === '/api/public/books') {
+      const userId = authenticateOptional(req);
+      const user = userId ? db.getUserById(userId) : null;
+      return send(res, 200, db.getAllPublicBooks(
+        user?.pdf_access === 1, db.readingAccess.deniedBookIds(userId), db.readingAccess.badgeBookIds(userId)
+      ));
+    }
     if (method === 'GET'    && urlPath === '/api/public/series')      return send(res, 200, db.getAllPublicSeries());
     if (method === 'GET'    && urlPath === '/api/public/anthologies') return send(res, 200, db.getAllPublicAnthologies());
     if (method === 'GET' && (m = urlPath.match(/^\/api\/public\/series\/(\d+)$/))) return await handleGetPublicSeriesInfo(req, res, +m[1]);
@@ -420,9 +418,12 @@ const _routeRequest = async (req, res) => {
       const reqUserId = authenticateOptional(req);
       const data = db.getBookActivity(+m[1], reqUserId);
       if (!data) return send(res, 404, { error: 'Not found' });
+      const denied = db.readingAccess.deniedBookIds(reqUserId);
+      const marked = db.readingAccess.badgeBookIds(reqUserId);
+      if (denied.size || marked.size) data.book = visibleReadingBook(data.book, denied, marked);
       if (reqUserId) {
         const u = db.getUserById(reqUserId);
-        if (u?.is_admin || u?.pdf_access) {
+        if (u?.pdf_access === 1) {
           const bookRow = db.getBookById(+m[1]);
           if (bookRow?.pdf_path) {
             data.book = data.book || {};
@@ -530,6 +531,8 @@ const _routeRequest = async (req, res) => {
     if (method === 'GET' && urlPath === '/api/admin/seasons/payouts') return await handleAdminSeasonPayouts(req, res);
     if (method === 'GET'  && urlPath === '/api/admin/users')  return await handleAdminGetUsers(req, res);
     if (method === 'GET'  && urlPath === '/api/admin/books')  return await handleAdminGetBooks(req, res);
+    if (method === 'GET'  && urlPath === '/api/admin/book-sources') return handleAdminBookSources(req, res);
+    if (method === 'PUT' && (m = urlPath.match(/^\/api\/admin\/books\/(\d+)\/source$/))) return await handleAdminSetBookSource(req, res, +m[1]);
     if (method === 'POST' && (m = urlPath.match(/^\/api\/admin\/books\/(\d+)\/import-complete$/))) return handleImportComplete(req, res, +m[1]);
     if (method === 'POST' && (m = urlPath.match(/^\/api\/admin\/books\/(\d+)\/reading-matter-updated$/))) return handleReadingMatterUpdated(req, res, +m[1]);
     if (method === 'PATCH' && (m = urlPath.match(/^\/api\/admin\/books\/(\d+)\/nsfw$/))) return await handleAdminSetBookNsfw(req, res, +m[1]);
@@ -545,7 +548,6 @@ const _routeRequest = async (req, res) => {
     if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/moderator$/)) && method === 'POST') return await handleAdminSetModerator(req, res, +m[1]);
     if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/squire$/)) && method === 'POST') return await handleAdminSetSquire(req, res, +m[1]);
     if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/contributor$/)) && method === 'POST') return await handleAdminSetContributor(req, res, +m[1]);
-    if ((m = urlPath.match(/^\/api\/admin\/users\/(\d+)\/pdf-access$/))  && method === 'POST') return await handleAdminSetPdfAccess(req, res, +m[1]);
     if ((m = urlPath.match(adminUserImpersonateRe)) && method === 'POST') return await handleAdminImpersonate(req, res, +m[1]);
     if ((m = urlPath.match(adminUserRefundRe))      && method === 'POST') return await handleAdminRefundShopItem(req, res, +m[1]);
     if ((m = urlPath.match(adminUserIdRe))    && method === 'GET')    return await handleAdminGetUser(req, res, +m[1]);
@@ -654,15 +656,7 @@ const _routeRequest = async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
       return fs.createReadStream(indexPath).pipe(res);
     }
-    if (method === 'GET' && urlPath.startsWith('/books/')) {
-      if (!isLocalhost(req)) {
-        const userId = await authenticate(req, res);
-        if (userId === null) return;
-        const u = db.getUserById(userId);
-        if (!u?.is_admin && !u?.pdf_access) return send(res, 403, { error: 'Access denied' });
-      }
-    }
-    serveStatic(req, res);
+    return await serveStatic(req, res);
   } catch (err) {
     if (err.code === 'PAYLOAD_TOO_LARGE') return send(res, 413, { error: 'Payload too large' });
     console.error(err);
