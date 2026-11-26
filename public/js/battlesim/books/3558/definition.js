@@ -1,7 +1,9 @@
 import { createRosterLoader } from '../../roster-data.js';
 import { TECHNIQUES } from './combat.js';
 
-export const definition = Object.freeze({ id: 3558, stateKey: 'sim3558', language: 'bg' });
+export const definition = Object.freeze({
+  id: 3558, title: 'Разрушител', family: 'razrushitel', stateKey: 'sim3558', language: 'bg',
+});
 export const roster = { encounters: [], woundTable: null };
 
 export const loadRoster = createRosterLoader(definition.id, 'ENCOUNTERS', entries => {

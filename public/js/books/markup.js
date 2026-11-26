@@ -1,5 +1,6 @@
 import { _isMobile } from './helpers.js';
 import { booksState } from './state.js';
+import { _containerIdsFor } from './groups.js';
 import { _patchCachedBook } from './data.js';
 import { t } from '../i18n.js';
 import { escapeHtml } from '../core/util.js';
@@ -41,9 +42,14 @@ export function _hasBattleSim(b) {
   return !!(b.is_container && (booksState._cachedBooks || []).some(c => c.parent_book_id === b.id && c.has_battle_sim));
 }
 
-export function _hasLiveReading(b) {
-  if (b.hasLiveReading) return true;
-  return !!(b.is_container && (booksState._cachedBooks || []).some(c => c.parent_book_id === b.id && c.hasLiveReading));
+function readingMembers(book) {
+  if (!book.is_container) return book.hasLiveReading ? [book] : [];
+  const readers = (booksState._cachedBooks || []).filter(child => child.hasLiveReading && _containerIdsFor(child).includes(book.id));
+  return readers.length ? readers : book.hasLiveReading ? [book] : [];
+}
+
+export function _hasLiveReading(book) {
+  return readingMembers(book).length > 0;
 }
 
 export function _pdfBadgeHtml(pdfPath, canShow) {
@@ -121,9 +127,8 @@ export function _bookItemHtml(b, isChild, containerExpanded, childCount, aggrSta
   const battleSimBadge = _hasBattleSim(b)
     ? `<span class="book-battlesim-badge" data-tooltip="${escapeHtml(t('covers.has_battle_sim'))}"><svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="4" x2="20" y2="20"/><line x1="20" y1="4" x2="4" y2="20"/><line x1="4" y1="4" x2="8" y2="4"/><line x1="4" y1="4" x2="4" y2="8"/><line x1="20" y1="4" x2="16" y2="4"/><line x1="20" y1="4" x2="20" y2="8"/></svg></span>`
     : '';
-  const restrictedBadge = b.restrictedReadingBadge || (b.is_container && (booksState._cachedBooks || [])
-    .some(child => child.parent_book_id === b.id && child.restrictedReadingBadge));
-  const readingBadge = _hasLiveReading(b) ? liveReadingBadge(restrictedBadge) : '';
+  const readers = readingMembers(b);
+  const readingBadge = readers.length ? liveReadingBadge(readers.every(book => book.restrictedReadingBadge)) : '';
   const canShowFiles = booksState._hooks.getHasPdfAccess?.() ?? false;
   const pdfBadge = _pdfBadgeHtml(b.pdf_path, canShowFiles);
   let cardStyle      = bg;

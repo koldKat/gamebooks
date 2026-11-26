@@ -149,6 +149,67 @@ for(const id of BOOK_IDS){
       check(field('hero').value === '2' && field('encounter').value === '19', 'completed battle restores the selected setup');
     } finally { Math.random = savedRandom; }
   }
+  if (id === 1885 && !PRESENTATION_ONLY) {
+    const field = key => document.getElementById('sim1885-' + key);
+    const select = (key, value) => {
+      field(key).value = value;
+      field(key).dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const run = app.currentPlaythrough();
+    const rollRound = values => {
+      const saved = Math.random;
+      try {
+        Math.random = () => values.shift() ?? .99;
+        field('advance').click();
+      } finally {
+        Math.random = saved;
+      }
+    };
+    check(requestedRosters.has(id) && field('encounter').options.length === 9, 'Havena loads eight printed encounters');
+    check(field('attack').value === '13' && field('life').value === '29', 'Havena uses the printed character sheet');
+    select('encounter', '27');
+    field('start').click();
+    check(field('attack').disabled && field('encounter').disabled, 'active fight keeps its setup');
+    rollRound([.99, .99]);
+    check(run.sim1885.fight.status === 'survived' && run.sim1885.history.length === 1 && field('advance').disabled,
+      'Thorwaler stops after one round');
+    select('encounter', '28');
+    field('start').click();
+    rollRound([.99, .99]);
+    check(run.sim1885.fight.round === 0 && run.sim1885.events.length === 2 && run.sim1885.events.every(event => event.opening),
+      'Rogobald openings finish before round one');
+    rollRound([.99, .99]);
+    check(run.sim1885.fight.round === 1 && run.path.join(',') === '1', 'combat leaves story navigation to the player');
+  }
+  if (id === 1886 && !PRESENTATION_ONLY) {
+    const field = key => document.getElementById('sim1886-' + key);
+    const select = (key, value) => {
+      field(key).value = value;
+      field(key).dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const run = app.currentPlaythrough();
+    const saved = Math.random;
+    try {
+      check(requestedRosters.has(id) && field('encounter').options.length === 4, 'Mages loads all three printed fights');
+      check(field('attack').value === '8' && field('life').value === '29', 'Mages uses the printed character sheet');
+      select('encounter', '39');
+      check(field('weapon').value === 'catClaws' && field('damageSides').value === '2' && field('life').value === '29',
+        'cat form uses claws and the current Salander life');
+      select('weapon', 'catBite');
+      field('wolf-paw').click();
+      check(field('damageSides').value === '3' && field('life').value === '5', 'Wolf Paw changes form life and cat bite rolls d3');
+      select('encounter', '50');
+      check(field('weapon').value === 'ratBite' && field('attack').value === '10', 'rat form uses its own attack');
+      select('encounter', '200');
+      check(field('weapon').value === 'staff' && field('life').value === '29', 'returning to the mage preserves human stats');
+      field('start').click();
+      Math.random = () => .99;
+      for (let round = 0; round < 6; round++) field('advance').click();
+      check(run.sim1886.fight.status === 'survived' && run.sim1886.history.length === 1 && field('advance').disabled,
+        'Moonhair stops after six rounds');
+      check(run.path.join(',') === '1', 'the simulator leaves story navigation to the player');
+    } finally { Math.random = saved; }
+  }
   if (id === 1651 && !PRESENTATION_ONLY) {
     const el = key => document.getElementById('sim1651-' + key);
     const select = (key, value) => {

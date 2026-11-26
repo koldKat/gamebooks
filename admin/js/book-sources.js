@@ -102,9 +102,18 @@ setSearchFields('book-sources', ['name', 'id', 'url', 'kind', 'sourceBookName'])
 wireTableSearch('book-sources', 'book-sources-search', 'book-sources-search-clear', renderBookSources);
 const filter = document.getElementById('book-sources-filter');
 const kindFilter = document.getElementById('book-sources-kind');
+const readingFilter = document.getElementById('book-sources-reading');
+
+function matchesReadingFilter(book, value) {
+  if (value === 'all') return true;
+  if (!book.hasLiveReading) return false;
+  return value === 'imported' || book.restrictedReadingBadge === (value === 'disabled');
+}
+
 setRowFilter('book-sources', book => {
   const matchesAvailability = filter.value === 'all' || Boolean(book.url) === (filter.value === 'available');
-  return matchesAvailability && (kindFilter.value === 'all' || book.kind === kindFilter.value);
+  return matchesAvailability && (kindFilter.value === 'all' || book.kind === kindFilter.value)
+    && matchesReadingFilter(book, readingFilter.value);
 });
 function applyFilters() {
   if (!_tableData['book-sources']) return;
@@ -113,3 +122,4 @@ function applyFilters() {
 }
 filter.addEventListener('change', applyFilters);
 kindFilter.addEventListener('change', applyFilters);
+readingFilter.addEventListener('change', applyFilters);

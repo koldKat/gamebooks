@@ -52,6 +52,7 @@ function setup() {
   const feed = load('feed', { './connection': connection, './xp': {}, './job-xp': { getJobTitle() {} }, './content': {}, './books': books,
     './rating-stats': { getPlayerRatingStats() {} }, './gameplay-stats': { getSimulatorBattleStats() {} },
     './nsfw': require('../server/db/nsfw'),
+    '../reading-availability': require('../server/reading-availability'),
     './profile-progress': { addBookProgress() {}, collectedCount() {} } });
   return { db, books, feed, deletedFiles };
 }

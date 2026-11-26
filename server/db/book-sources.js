@@ -1,5 +1,7 @@
 'use strict';
 
+const { readingAvailability } = require('../reading-availability');
+
 const sourceKinds = new Set(['play', 'download', 'buy']);
 const quailShopUrl = 'https://knigi-igri.bg/shop/%D0%9F%D1%8A%D1%82%D1%8F%D1%82-%D0%BD%D0%B0-%D0%9F%D1%8A%D0%B4%D0%BF%D1%8A%D0%B4%D1%8A%D0%BA%D0%B0-p290058054';
 
@@ -70,16 +72,12 @@ function createBookSources(db) {
 
   function list(restrictedIds) {
     const books = all.all();
-    const byBookId = new Map(books.map(book => {
-      book.hasLiveReading = Boolean(book.hasLiveReading);
-      book.restrictedReadingBadge = book.hasLiveReading && restrictedIds.has(book.id);
-      return [book.id, book];
-    }));
+    const readers = new Map(books.map(book => [book.id, book.hasLiveReading ? [book.id] : []]));
     for (const { anthologyId, childId } of readableChildren.all()) {
-      const anthology = byBookId.get(anthologyId);
-      anthology.hasLiveReading = true;
-      anthology.restrictedReadingBadge ||= restrictedIds.has(childId);
+      readers.get(anthologyId)?.push(childId);
     }
+    const denied = new Set();
+    for (const book of books) Object.assign(book, readingAvailability(readers.get(book.id), denied, restrictedIds));
     return books;
   }
 

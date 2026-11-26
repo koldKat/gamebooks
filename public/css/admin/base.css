@@ -671,16 +671,36 @@ body {
   min-width: 160px;
   max-width: 200px;
 }
+html:has(#tab-book-sources.active) {
+  scrollbar-gutter: stable;
+}
+.book-sources-table {
+  table-layout: fixed;
+  min-width: 33rem;
+}
+.book-sources-table th:first-child {
+  width: 19%;
+}
+@media (max-width: 800px) {
+  .book-sources-table th:first-child {
+    width: 9rem;
+  }
+}
+.book-sources-table th:nth-child(2) {
+  width: 7.5rem;
+}
+.book-sources-table th:last-child {
+  width: 4.75rem;
+}
 .table-wrap .book-sources-table td:last-child {
-  width: 1%;
   min-width: 0;
 }
+.book-sources-table td:first-child,
 .book-source-url {
   white-space: normal;
   overflow-wrap: anywhere;
 }
 .book-source-type {
-  width: 1%;
   white-space: nowrap;
 }
 .book-sources-table small,

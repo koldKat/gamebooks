@@ -5,13 +5,14 @@ import { escapeHtml } from '../core/util.js';
 import { t } from '../i18n.js';
 
 // ── Cover thumb HTML ───────────────────────────────────────────────────────────
-export function _makeCoverThumbHTML(c) {
+export function _makeCoverThumbHTML(c, { deferSeriesImages = false } = {}) {
   const cls = c.isSeries ? ' cover-thumb--series' : (c.isContainer ? ' cover-thumb--anthology' : '');
   const isFavorite = _isFavoriteCoverItem(c);
   const favBtn = (getToken())
     ? `<button class="cover-fav-btn${isFavorite ? ' is-favorite' : ''}" type="button" data-fav-type="${c.isSeries ? 'series' : 'book'}" data-fav-id="${c.isSeries ? c.entityId : c.id}" data-tooltip="${escapeHtml(isFavorite ? t('covers.remove_from_favorites') : t('covers.add_to_favorites'))}" aria-label="${isFavorite ? t('covers.remove_from_favorites') : t('covers.add_to_favorites')}">${isFavorite ? '★' : '☆'}</button>`
     : '';
   const useSingleSeriesCover = c.isSeries && c.coverSources?.length && c.coverSources.length < 4;
+  const seriesImageSource = deferSeriesImages ? 'data-src' : 'src';
   const attrs = c.isSeries
     ? ` data-series-id="${c.entityId}" data-series-name="${escapeHtml(c.name)}" data-series-book-count="${Number(c.bookCount) || 0}"${c.coverSources?.length ? ` data-series-cover-sources="${escapeHtml(JSON.stringify(c.coverSources))}"` : ''}`
     : ` data-book-id="${c.id}" data-book-name="${escapeHtml(c.name)}"${c.coverUrl ? ` data-cover-url="${escapeHtml(c.coverUrl)}"` : ''}`;
@@ -28,10 +29,10 @@ export function _makeCoverThumbHTML(c) {
         c.coverSources?.length
           ? (useSingleSeriesCover
               ? `<div class="cover-series-grid cover-series-grid--single">` +
-                  `<div class="cover-series-cell"><img src="${escapeHtml(c.coverSources[0])}" alt=""></div>` +
+                  `<div class="cover-series-cell"><img ${seriesImageSource}="${escapeHtml(c.coverSources[0])}" alt=""></div>` +
                 `</div>`
               : `<div class="cover-series-grid">` +
-                  c.coverSources.map(src => `<div class="cover-series-cell"><img src="${escapeHtml(src)}" alt=""></div>`).join('') +
+                  c.coverSources.map(src => `<div class="cover-series-cell"><img ${seriesImageSource}="${escapeHtml(src)}" alt=""></div>`).join('') +
                   Array.from({ length: Math.max(0, 4 - c.coverSources.length) }, () => `<div class="cover-series-cell"></div>`).join('') +
                 `</div>`)
           : `<div class="cover-series-empty">${escapeHtml(c.name)}</div>`

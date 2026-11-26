@@ -48,6 +48,10 @@ test('restricted books require an explicit reader even with an existing unlock',
     assert.equal(visible.hasLiveReading, true);
     assert.equal(visible.restrictedReadingBadge, true);
     assert.equal(visible.children[0].restrictedReadingBadge, true);
+    const mixed = visibleReadingBook({ ...anthology, children: [book, { id: 999, hasLiveReading: true }] },
+      access.deniedBookIds(2), access.badgeBookIds(2));
+    assert.equal(mixed.restrictedReadingBadge, undefined);
+    assert.equal(mixed.children[0].restrictedReadingBadge, true);
     assert.equal(access.getAccess(2, 263).bookId, 263);
     assert.equal(access.getReadingMatter(2, 263).rulesText, 'Rules');
     assert.equal(access.getAccess(1, 999).bookId, 999);

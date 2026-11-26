@@ -3,7 +3,7 @@ import { coversState } from './state.js';
 // Bound cached blob URLs and revoke evicted entries.
 const _coverBlobUrlCache    = new Map();
 const _coverFetchPromiseCache = new Map();
-// Keep the recent-fetch cache slightly larger than one lazy batch, not the whole scrolled catalog.
+// Keep recent fetches without retaining the whole scrolled catalog.
 const _COVER_BLOB_CACHE_MAX = 24;
 
 // Evict covers FIFO; the panel is typically scrolled linearly.
@@ -25,6 +25,17 @@ export function _ensureThumbVisibilityObserver() {
   coversState._thumbVisibilityObserver = new IntersectionObserver(entries => {
     for (const entry of entries) {
       const thumb = entry.target;
+      if (thumb.isConnected === false) continue;
+      if (thumb.dataset.seriesCoverSources) {
+        for (const img of thumb.querySelectorAll('img[data-src]')) {
+          if (entry.isIntersecting) {
+            if (!img.src) img.src = img.dataset.src;
+          } else {
+            img.removeAttribute('src');
+          }
+        }
+        continue;
+      }
       const img   = thumb.querySelector('img');
       const url   = thumb.dataset.coverUrl;
       if (!img || !url) continue;
@@ -38,7 +49,7 @@ export function _ensureThumbVisibilityObserver() {
         }
       }
     }
-  }, { root: panel, rootMargin: '1200px 0px 1200px 0px', threshold: 0 });
+  }, { root: panel, rootMargin: '100px 0px', threshold: 0 });
   return coversState._thumbVisibilityObserver;
 }
 
@@ -148,9 +159,12 @@ export function _enqueueCoverLoad(url, img, bar) {
       while (coversState._coversPanelQueue.length) {
         if (gen !== coversState._coversPanelGen) return;
         const item = coversState._coversPanelQueue.shift();
-        if (coversState._coversPanelQueue.length) _preloadCoverBlob(coversState._coversPanelQueue[0].url);
+        const next = coversState._coversPanelQueue[0];
+        if (next && next.img.isConnected !== false && next.version === next.img._coverLoadVersion) {
+          _preloadCoverBlob(next.url);
+        }
         await _loadCoverWithProgress(item.url, item.img, item.bar, () =>
-          gen === coversState._coversPanelGen && item.version === item.img._coverLoadVersion);
+          gen === coversState._coversPanelGen && item.img.isConnected !== false && item.version === item.img._coverLoadVersion);
       }
       if (gen === coversState._coversPanelGen) coversState._coversPanelRunning = false;
     })();

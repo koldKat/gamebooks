@@ -4,8 +4,10 @@ import { _makeCoverThumbHTML } from './markup.js';
 import { _landingCoverPool, _startLandingCoverRotation } from './background.js';
 import { coversState } from './state.js';
 
-const _LAZY_BATCH = 20;
+const COVER_COLUMNS = 4;
 let _randomItems = null;
+let _lazyResizeObserver = null;
+let _lazyFrame = 0;
 
 export function _syncCoverLibraryMembership() {
   if (!coversState._coversNotMineOnly) return;
@@ -34,8 +36,6 @@ export function _syncCoverLibraryMembership() {
 export function _removeFavoriteThumbInPlace(favBtn) {
   const thumb = favBtn?.closest('.cover-thumb');
   if (!thumb) return;
-  const grid = document.getElementById('covers-grid');
-  const panel = document.getElementById('covers-panel');
   if (_randomItems) {
     _randomItems = _randomItems.filter(item => favBtn.dataset.favType === 'series'
       ? !(item.isSeries && Number(item.entityId) === Number(favBtn.dataset.favId))
@@ -54,18 +54,11 @@ export function _removeFavoriteThumbInPlace(favBtn) {
       if (coversState._lazyOffset > idx) coversState._lazyOffset -= 1;
     }
   }
+  coversState._thumbVisibilityObserver?.unobserve(thumb);
   thumb.remove();
   _updateCoversCount();
-  if (coversState._lazyItems && panel && grid) {
-    requestAnimationFrame(() => {
-      if (coversState._lazyItems && coversState._lazyOffset < coversState._lazyItems.length &&
-          panel.scrollHeight <= panel.clientHeight + 50) {
-        _appendLazyBatch();
-      }
-    });
-  } else {
-    _trimCoversToFit();
-  }
+  if (coversState._lazyItems) _scheduleLazyRefill();
+  else _trimCoversToFit();
 }
 
 // ── Lazy loading ───────────────────────────────────────────────────────────────
@@ -86,6 +79,10 @@ export function _stopLazy() {
   _randomItems = null;
   const panel = document.getElementById('covers-panel');
   if (panel && coversState._lazyScrollFn) panel.removeEventListener('scroll', coversState._lazyScrollFn);
+  _lazyResizeObserver?.disconnect();
+  _lazyResizeObserver = null;
+  if (_lazyFrame) cancelAnimationFrame(_lazyFrame);
+  _lazyFrame = 0;
   coversState._lazyItems    = null;
   coversState._lazyOffset   = 0;
   coversState._lazyScrollFn = null;
@@ -97,45 +94,44 @@ export function _stopLazy() {
   coversState._thumbVisibilityObserver = null;
 }
 
-export function _appendLazyBatch() {
-  if (!coversState._lazyItems || !coversState._lazyGrid || coversState._lazyOffset >= coversState._lazyItems.length) return;
+function _appendLazyCovers(limit) {
   const start = coversState._lazyOffset;
-  const end   = Math.min(start + _LAZY_BATCH, coversState._lazyItems.length);
-  const frag  = document.createDocumentFragment();
-  for (let i = start; i < end; i++) {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = _makeCoverThumbHTML(coversState._lazyItems[i]);
-    frag.appendChild(tmp.firstChild);
-  }
-  coversState._lazyGrid.appendChild(frag);
-  const allThumbs = coversState._lazyGrid.querySelectorAll('.cover-thumb');
-  const visObserver = _ensureThumbVisibilityObserver();
-  for (let i = start; i < end; i++) {
-    const c = coversState._lazyItems[i];
-    if (!c.coverUrl) continue;
-    const thumb = allThumbs[i];
-    if (!thumb) continue;
-    _enqueueCoverLoad(c.coverUrl, thumb.querySelector('img'), thumb.querySelector('.cover-load-bar'));
-    visObserver?.observe(thumb);
+  const end = Math.min(limit, coversState._lazyItems.length);
+  if (end <= start) return;
+  const template = document.createElement('template');
+  template.innerHTML = coversState._lazyItems.slice(start, end)
+    .map(item => _makeCoverThumbHTML(item, { deferSeriesImages: true })).join('');
+  const thumbs = [...template.content.children];
+  coversState._lazyGrid.appendChild(template.content);
+  const observer = _ensureThumbVisibilityObserver();
+  for (const thumb of thumbs) {
+    if (thumb.dataset.coverUrl || thumb.dataset.seriesCoverSources) observer?.observe(thumb);
   }
   coversState._lazyOffset = end;
   _updateCoversCount();
-  requestAnimationFrame(() => {
-    const panel = document.getElementById('covers-panel');
-    if (panel && coversState._lazyItems && coversState._lazyOffset < coversState._lazyItems.length &&
-        panel.scrollHeight <= panel.clientHeight + 50) {
-      _appendLazyBatch();
-    }
+}
+
+function _scheduleLazyRefill() {
+  if (_lazyFrame || !coversState._lazyItems || coversState._lazyOffset >= coversState._lazyItems.length) return;
+  _lazyFrame = requestAnimationFrame(() => {
+    _lazyFrame = 0;
+    _refillLazyIfShort();
   });
 }
 
-// Resume filling after a hidden mobile panel is revealed; its previous clientHeight was zero.
+// Keep just one extra row beyond the viewport; previously browsed rows keep their positions.
 export function _refillLazyIfShort() {
   const panel = document.getElementById('covers-panel');
-  if (panel && coversState._lazyItems && coversState._lazyOffset < coversState._lazyItems.length &&
-      panel.scrollHeight <= panel.clientHeight + 50) {
-    _appendLazyBatch();
-  }
+  const grid = coversState._lazyGrid;
+  if (!panel?.clientHeight || !grid || coversState._lazyOffset >= coversState._lazyItems.length) return;
+  if (!coversState._lazyOffset) _appendLazyCovers(COVER_COLUMNS);
+  const rowHeight = grid.firstElementChild?.getBoundingClientRect().height;
+  if (!rowHeight) return;
+  const gap = parseFloat(getComputedStyle(grid).rowGap) || 0;
+  const gridTop = grid.getBoundingClientRect().top;
+  const viewportBottom = panel.getBoundingClientRect().top + panel.clientHeight;
+  const rows = Math.max(1, Math.ceil((viewportBottom - gridTop + gap) / (rowHeight + gap)) + 1);
+  _appendLazyCovers(rows * COVER_COLUMNS);
 }
 
 export function _startLazy(items, emptyMessage = '') {
@@ -148,6 +144,7 @@ export function _startLazy(items, emptyMessage = '') {
   coversState._lazyItems  = items;
   coversState._lazyOffset = 0;
   coversState._lazyGrid   = grid;
+  panel.scrollTop = 0;
   _updateCoversCount();
   if (!coversState._lazyItems.length) {
     if (emptyMessage) {
@@ -159,12 +156,11 @@ export function _startLazy(items, emptyMessage = '') {
     }
     return;
   }
-  _appendLazyBatch();
-  coversState._lazyScrollFn = () => {
-    if (!coversState._lazyItems || coversState._lazyOffset >= coversState._lazyItems.length) return;
-    if (panel.scrollHeight - panel.scrollTop - panel.clientHeight < 300) _appendLazyBatch();
-  };
-  panel.addEventListener('scroll', coversState._lazyScrollFn);
+  _refillLazyIfShort();
+  coversState._lazyScrollFn = _scheduleLazyRefill;
+  panel.addEventListener('scroll', _scheduleLazyRefill, { passive: true });
+  _lazyResizeObserver = new ResizeObserver(_scheduleLazyRefill);
+  _lazyResizeObserver.observe(panel);
 }
 
 // ── Covers rendering ───────────────────────────────────────────────────────────
@@ -176,7 +172,7 @@ export function _renderCovers(covers) {
   panel.classList.remove('covers-lazy');
   _randomItems = covers;
   // Measure one row before building or fetching any of the remaining cards.
-  grid.innerHTML = covers.slice(0, 4).map(c => _makeCoverThumbHTML(c)).join('');
+  grid.innerHTML = covers.slice(0, COVER_COLUMNS).map(c => _makeCoverThumbHTML(c)).join('');
 }
 
 export function _trimCoversToFit() {
@@ -204,7 +200,7 @@ export function _trimCoversToFit() {
     const cellH = thumbs[0].getBoundingClientRect().height;
     if (!cellH) return;
     const rows    = Math.max(1, Math.floor((available + cellGap) / (cellH + cellGap)));
-    const visible = Math.min(_randomItems?.length ?? thumbs.length, rows * 4);
+    const visible = Math.min(_randomItems?.length ?? thumbs.length, rows * COVER_COLUMNS);
     if (_randomItems) {
       for (let i = thumbs.length; i < visible; i++) {
         grid.insertAdjacentHTML('beforeend', _makeCoverThumbHTML(_randomItems[i]));

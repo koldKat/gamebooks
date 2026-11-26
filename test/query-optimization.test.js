@@ -17,6 +17,7 @@ function moduleWithDb(file, db, dependencies = {}) {
   const context = { module: { exports: {} }, require(name) {
     if (name === './connection') return { db, _naturalCompareByName: (a, b) => a.name.localeCompare(b.name) };
     if (name === './job-xp') return require('../server/db/job-xp');
+    if (name === '../reading-availability') return require('../server/reading-availability');
     if (name === './rating-stats') return require('../server/db/rating-stats');
     if (name === './gameplay-stats' || name === './profile-progress' || name === './nsfw') {
       return require('../server/db/' + name.slice(2));
@@ -37,6 +38,7 @@ test('catalog aggregates do not multiply children or sections by the number of r
     CREATE TABLE series (id INTEGER PRIMARY KEY, name, description, is_open_world, created_at, published_at, is_public);
     CREATE TABLE user_books (user_id, book_id, rating);
     CREATE TABLE user_series (user_id, series_id);
+    CREATE TABLE book_anthology_memberships (book_id, anthology_id);
     INSERT INTO series VALUES (1,'Public',NULL,0,10,NULL,1),(2,'Private',NULL,0,10,NULL,0);
     INSERT INTO books (id,name,is_container,total_sections,is_public,series_id) VALUES
       (10,'Anthology',1,999,1,1),(20,'Standalone',0,50,1,1),(30,'Empty',1,999,1,NULL),
@@ -70,6 +72,8 @@ test('catalog aggregates do not multiply children or sections by the number of r
   assert.equal(series[0].book_count, 2);
   assert.equal(series[0].total_sections, 250);
   assert.equal(series[0].library_count, 3);
+  db.exec(`UPDATE books SET has_live_reading=1 WHERE id=12`);
+  assert.equal(api.getAllPublicBooks(false, new Set(), new Set([11])).find(b => b.id === 10).restrictedReadingBadge, undefined);
 });
 
 test('author ratings keep exact author matching, per-vote weighting and public-book privacy in one query', t => {

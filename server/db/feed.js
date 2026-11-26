@@ -11,6 +11,7 @@ const { getPlayerRatingStats } = require('./rating-stats');
 const { getSimulatorBattleStats } = require('./gameplay-stats');
 const { addBookProgress, collectedCount } = require('./profile-progress');
 const { markNsfwFeedEntries } = require('./nsfw');
+const { readingAvailability } = require('../reading-availability');
 
 // ── Activity feed ─────────────────────────────────────────────────────────────
 
@@ -1245,11 +1246,18 @@ function getPublicBookMeta(bookId) {
 
 function getAllPublicBooks(hasPdfAccess = false, deniedReading = new Set(), markedReading = new Set()) {
   const rows = db.prepare(
-    `WITH child_stats AS (
+    `WITH readable_members AS (
+       SELECT parent_book_id AS anthology_id, id FROM books
+         WHERE is_public = 1 AND has_live_reading = 1 AND parent_book_id IS NOT NULL
+       UNION
+       SELECT m.anthology_id, b.id FROM book_anthology_memberships m
+         JOIN books b ON b.id = m.book_id WHERE b.is_public = 1 AND b.has_live_reading = 1
+     ), reader_stats AS (
+       SELECT anthology_id, GROUP_CONCAT(id) AS ids FROM readable_members GROUP BY anthology_id
+     ), child_stats AS (
        SELECT parent_book_id, GROUP_CONCAT(name, '|||') AS child_names,
               GROUP_CONCAT(id) AS child_ids, SUM(total_sections) AS total_sections,
               MAX(has_battle_sim) AS has_battle_sim,
-              GROUP_CONCAT(CASE WHEN has_live_reading = 1 THEN id END) AS readable_child_ids,
               MAX(CASE WHEN pdf_path IS NOT NULL AND pdf_path != '' THEN 1 ELSE 0 END) AS has_pdf
        FROM books WHERE is_public = 1 AND parent_book_id IS NOT NULL GROUP BY parent_book_id
      ), library_stats AS (
@@ -1262,44 +1270,48 @@ function getAllPublicBooks(hasPdfAccess = false, deniedReading = new Set(), mark
             c.child_names, c.child_ids,
             COALESCE(c.total_sections, 0) AS children_total_sections,
             COALESCE(c.has_battle_sim, 0) AS child_has_battle_sim,
-            c.readable_child_ids,
+            readers.ids AS readable_child_ids,
             COALESCE(c.has_pdf, 0) AS child_has_pdf,
             COALESCE(ub.library_count, 0) AS library_count
      FROM books b
      LEFT JOIN child_stats c ON c.parent_book_id = b.id
+     LEFT JOIN reader_stats readers ON readers.anthology_id = b.id
      LEFT JOIN series s ON s.id = b.series_id AND s.is_public = 1
      LEFT JOIN library_stats ub ON ub.book_id = b.id
      WHERE (b.parent_book_id IS NULL OR b.parent_book_id = 0)
        AND b.is_public = 1`
   ).all();
-  return rows.map(r => ({
-    id: r.id, name: r.name,
-    coverUrl: r.cover_path ? `/covers/${r.cover_path}` : null,
-    createdAt: ((r.published_at || r.created_at || 0) * 1000),
-    authors: r.authors || null,
-    isContainer: r.is_container ? true : false,
-    maxSectionNumber: r.max_section_number ?? null,
-    totalSections: r.is_container ? (r.children_total_sections || 0) : (r.total_sections || 0),
-    libraryCount: r.library_count || 0,
-    description: r.description || null,
-    isbn: r.isbn || null,
-    issn: r.issn || null,
-    asin: r.asin || null,
-    pages: r.pages || null,
-    seriesId: r.series_id || null,
-    seriesName: r.series_name || null,
-    seriesNumber: r.series_number || null,
-    childNames: r.child_names ? r.child_names.split('|||') : [],
-    childIds: r.child_ids ? r.child_ids.split(',').map(Number) : [],
-    hasBattleSim: !!(r.has_battle_sim || r.child_has_battle_sim),
-    hasLiveReading: !!(r.has_live_reading && !deniedReading.has(r.id))
-      || !!r.readable_child_ids?.split(',').some(id => !deniedReading.has(Number(id))),
-    restrictedReadingBadge: markedReading.size && ((r.has_live_reading || r.readable_child_ids) && markedReading.has(r.id)
-      || r.readable_child_ids?.split(',').some(id => markedReading.has(Number(id)))) ? true : undefined,
-    // Only viewers with the explicit PDF permission receive attachment metadata.
-    pdfPath: hasPdfAccess ? (r.pdf_path || null) : null,
-    hasPdf: hasPdfAccess && !!(r.pdf_path || r.child_has_pdf),
-  }));
+  return rows.map(r => {
+    const readerIds = r.readable_child_ids?.split(',').map(Number) ?? [];
+    if (r.has_live_reading) readerIds.push(r.id);
+    const reading = readingAvailability(readerIds, deniedReading, markedReading);
+    return {
+      id: r.id, name: r.name,
+      coverUrl: r.cover_path ? `/covers/${r.cover_path}` : null,
+      createdAt: ((r.published_at || r.created_at || 0) * 1000),
+      authors: r.authors || null,
+      isContainer: r.is_container ? true : false,
+      maxSectionNumber: r.max_section_number ?? null,
+      totalSections: r.is_container ? (r.children_total_sections || 0) : (r.total_sections || 0),
+      libraryCount: r.library_count || 0,
+      description: r.description || null,
+      isbn: r.isbn || null,
+      issn: r.issn || null,
+      asin: r.asin || null,
+      pages: r.pages || null,
+      seriesId: r.series_id || null,
+      seriesName: r.series_name || null,
+      seriesNumber: r.series_number || null,
+      childNames: r.child_names ? r.child_names.split('|||') : [],
+      childIds: r.child_ids ? r.child_ids.split(',').map(Number) : [],
+      hasBattleSim: !!(r.has_battle_sim || r.child_has_battle_sim),
+      hasLiveReading: reading.hasLiveReading,
+      restrictedReadingBadge: reading.restrictedReadingBadge || undefined,
+      // Only viewers with the explicit PDF permission receive attachment metadata.
+      pdfPath: hasPdfAccess ? (r.pdf_path || null) : null,
+      hasPdf: hasPdfAccess && !!(r.pdf_path || r.child_has_pdf),
+    };
+  });
 }
 
 function getPublicBooksInSeries(seriesId) {

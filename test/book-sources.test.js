@@ -44,12 +44,13 @@ test('admin lists all books as soon as they are created and anthology children s
     assert.deepEqual(listed.get(22), { id: 22, name: 'New book', url: null, kind: null, sourceBookId: 22, sourceBookName: 'New book',
       hasLiveReading: false, restrictedReadingBadge: false });
     for (const [id, imported, restricted] of [
-      [10, true, true], [11, true, false], [12, true, true], [13, false, false],
+      [10, true, false], [11, true, false], [12, true, true], [13, false, false],
       [20, true, false], [21, false, false], [30, true, false],
     ]) {
       assert.equal(listed.get(id).hasLiveReading, imported, `reader availability for #${id}`);
       assert.equal(listed.get(id).restrictedReadingBadge, restricted, `reader badge for #${id}`);
     }
+    assert.equal(sources.list(new Set([11, 12])).find(row => row.id === 10).restrictedReadingBadge, true);
     assert.deepEqual(sources.save(22, childOnly), childOnly);
     assert.deepEqual(sources.get(22), childOnly);
 
