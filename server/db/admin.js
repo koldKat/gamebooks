@@ -992,7 +992,7 @@ function getSiteStats() {
     // Ratings
     ...ratingStats,
     // Misc
-    feedbackThreads, feedbackUnread: base.feedbackUnread, notifCount, dbSize: base.dbSize,
+    feedbackThreads, feedbackUnread: base.feedbackUnread, notifCount,
   };
 }
 

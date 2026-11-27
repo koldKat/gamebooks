@@ -352,6 +352,20 @@ body {
   color: #6b7280;
   font-weight: 400;
 }
+.server-diagnostics {
+  margin: 0.35rem 0;
+}
+.server-diagnostics summary {
+  color: #cbd5e1;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.server-diagnostics dl {
+  margin-top: 0.25rem;
+}
+.server-diagnostics-child dt {
+  padding-left: 0.65rem;
+}
 .val-blue {
   color: #60a5fa;
 }

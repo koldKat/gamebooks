@@ -35,11 +35,14 @@ function fixture(t) {
   const source = fs.readFileSync(require.resolve('../server/db/admin'), 'utf8');
   const xp = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
   const keys = vm.runInNewContext(xp.slice(xp.indexOf('const SIM_HISTORY_KEYS ='), xp.indexOf('function processStateXp(')) + '\n({SIM_HISTORY_KEYS,RETIRED_SIM_HISTORY_KEYS})');
+  const levelStart = xp.indexOf('function computeLevel(');
+  const levelEnd = xp.indexOf('\n}\n', levelStart) + 3;
+  const computeLevel = vm.runInNewContext(xp.slice(levelStart, levelEnd) + '\ncomputeLevel;');
   const stats = vm.runInNewContext(source.slice(source.indexOf('function adminGetStats('), source.indexOf('function getSiteStats()')) + '\nadminGetStats;', {
     db, ...keys, adminSimHistoryKeys: new Set([...keys.SIM_HISTORY_KEYS, ...keys.RETIRED_SIM_HISTORY_KEYS]),
     collectDashboardStats: require('../server/db/gameplay-stats').collectDashboardStats,
     getShopPurchaseTotals: require('../server/db/shop-purchases').getShopPurchaseTotals,
-    computeLevel: vm.runInNewContext(xp.slice(xp.indexOf('function computeLevel('), xp.indexOf('// Dynamic level cap')) + '\ncomputeLevel;'),
+    computeLevel,
   });
   const put = (book, state) => db.prepare('INSERT INTO user_books VALUES (?,?)').run(book, JSON.stringify(state));
   put(1, { graph: { 1: { choices: [2, 0, -1] }, 2: { choices: [3] } }, playthroughs: [

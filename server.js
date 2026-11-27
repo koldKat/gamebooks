@@ -61,7 +61,7 @@ const {
   recordTraffic, flushTraffic, getTrafficStats, getEtagCache,
   sampleCpuPercent, getResourceAverages,
   getUptimeStart, getSessionStartAt, getAppBirthAt, getActiveTagline,
-  APP_LAUNCH_EPOCH, getCodeStats, startInformationalStats, _serverHardwareInfo,
+  APP_LAUNCH_EPOCH, startInformationalStats,
   MIME,
 } = require('./server/runtime-state');
 
@@ -353,10 +353,14 @@ const _routeRequest = async (req, res) => {
 
   try {
     let m;
+    const isAdminPath = urlPath === '/admin' || urlPath.startsWith('/admin/')
+      || urlPath === '/api/admin' || urlPath.startsWith('/api/admin/');
+    if (isAdminPath && !isLocalhostReal(req)) {
+      return send(res, 403, { error: 'Forbidden' });
+    }
 
     // Maintenance mode - block all non-localhost traffic except the admin panel itself
     if (getMaintenanceMode() && !isLocalhostReal(req)) {
-      const isAdminPath = urlPath.startsWith('/admin') || urlPath.startsWith('/api/admin');
       const isMaintenanceExempt = urlPath === '/api/ping' || urlPath === '/api/maintenance-message';
       if (!isAdminPath && !isMaintenanceExempt) {
         res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'unsafe-inline'; style-src 'unsafe-inline'");

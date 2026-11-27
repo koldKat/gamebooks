@@ -13,7 +13,7 @@ const { feedPush, userBadgePush, publicCatalogPush } = require('../sse');
 const { serveNotFoundPage, isDocumentNavigation } = require('../not-found');
 const { reinitTransporter, getTransporter, logEmailEvent, sendLoggedMail } = require('../email');
 const {
-  setMaintenanceMode, getTrafficStats, getAppBirthAt,
+  setMaintenanceMode, getTrafficStats, getAppBirthAt, getCodeStats,
 } = require('../runtime-state');
 
 // This module lives at server/routes/admin.js - the project root is two levels up.
@@ -81,6 +81,7 @@ function _buildAdminStatsPayload() {
   const { trafficIn, trafficOut } = getTrafficStats();
   return {
     ...db.adminGetStats(),
+    codeStats: getCodeStats(),
     trafficIn,
     trafficOut,
     sessionUptime:  now - parseInt(db.getAdminSetting('server_session_start_at') || String(now)),

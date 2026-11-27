@@ -106,8 +106,8 @@ Click **Stats** in the header (visible to everyone) to see live numbers for the 
 | **Gold Coins & Shop** | Coins earned, spent, and in circulation; upgrades purchased by type |
 | **Ratings** | Total votes; separate book, anthology and series vote counts and averages; exact half-star breakdowns from 0.5 to 5, with subtle bars showing each score's share |
 | **Forum** | Categories, threads, pinned threads, posts |
-| **Server** | CPU model/cores/age/clock/architecture, total RAM |
-| **The App** | App age, server uptime and uptime %, total downtime, lines of code grouped into frontend, backend and battle simulators, code/database size, JS module count with those groups plus tests, network traffic, live session averages (CPU, heap, RSS) |
+| **Hardware** | Processor model, logical core count, clock, architecture, age, and total RAM |
+| **The App** | App age, uptime, downtime, and session averages for CPU, heap, and process RAM |
 | **Open World** | Open world series (public split), books in them, portal nodes, series runs (completed/public), pre-series runs |
 
 Hover or tap the registered-player total to see the country breakdown, with flags and country names in alphabetical order.

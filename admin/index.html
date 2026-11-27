@@ -114,6 +114,21 @@
           <div class="stat-metric"><dt>Uptime / downtime</dt><dd class="stat-pair"><span class="val-green" id="s-uptime-pct">-</span><span id="s-downtime">-</span></dd></div>
           <div class="stat-metric"><dt>App age</dt><dd><span id="s-app-age">-</span></dd></div>
         </dl>
+        <details class="server-diagnostics">
+          <summary>Source code</summary>
+          <dl>
+            <div class="stat-metric"><dt>Code size</dt><dd id="s-code-size">-</dd></div>
+            <div class="stat-metric"><dt>Total lines of code</dt><dd id="s-code-lines">-</dd></div>
+            <div class="stat-metric server-diagnostics-child"><dt>Frontend</dt><dd id="s-lines-frontend">-</dd></div>
+            <div class="stat-metric server-diagnostics-child"><dt>Backend</dt><dd id="s-lines-backend">-</dd></div>
+            <div class="stat-metric server-diagnostics-child"><dt>Battle simulators</dt><dd id="s-lines-sims">-</dd></div>
+            <div class="stat-metric"><dt>JS modules</dt><dd id="s-js-modules">-</dd></div>
+            <div class="stat-metric server-diagnostics-child"><dt>Frontend</dt><dd id="s-modules-frontend">-</dd></div>
+            <div class="stat-metric server-diagnostics-child"><dt>Backend</dt><dd id="s-modules-backend">-</dd></div>
+            <div class="stat-metric server-diagnostics-child"><dt>Battle simulators</dt><dd id="s-modules-sims">-</dd></div>
+            <div class="stat-metric server-diagnostics-child"><dt>Tests</dt><dd id="s-modules-tests">-</dd></div>
+          </dl>
+        </details>
         <button id="vacuum-btn" class="vacuum-btn">Vacuum Database</button>
       </section>
     </div>

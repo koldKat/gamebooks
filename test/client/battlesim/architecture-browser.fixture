@@ -210,6 +210,70 @@ for(const id of BOOK_IDS){
       check(run.path.join(',') === '1', 'the simulator leaves story navigation to the player');
     } finally { Math.random = saved; }
   }
+  if (id === 1926 && !PRESENTATION_ONLY) {
+    const field = key => overlay.querySelector(`[data-field="${key}"]`);
+    const roll = (first, second) => {
+      field('first').value = first;
+      field('second').value = second;
+      overlay.querySelector('[data-action="roll"]').click();
+    };
+    const select = section => {
+      field('encounter').value = section;
+      field('encounter').dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const run = app.currentPlaythrough();
+    check(requestedRosters.has(id) && field('encounter').options.length === 10, 'Rebel’s Gamble loads nine printed encounters');
+    check(field('strength').value === '8' && field('dexterity').value === '8', 'printed Doctor attributes');
+    select('166');
+    check(field('modifier').closest('label').hidden, 'printed encounter locks its modifier');
+    field('strength').value = field('dexterity').value = '7';
+    roll(1, 1);
+    check(run.sim1926.fight.round === 2 && field('encounter').disabled, 'first neutral roll locks the struggle');
+    roll(5, 5);
+    check(run.sim1926.fight.round === 3 && run.sim1926.history.length === 0, 'second neutral roll starts the third round');
+    roll(1, 1);
+    check(run.sim1926.fight.destination === 178 && run.sim1926.history.length === 1, 'third round records exactly one loss');
+    check(right.textContent.includes('section 178') && right.querySelector('[data-bsim-outcome-icon]'), 'printed result appears with its semantic icon');
+    select('344');
+    field('strength').value = '11';
+    field('dexterity').value = '8';
+    roll(3, 3);
+    check(run.sim1926.fight.destination === 360 && run.sim1926.history.length === 2, 'disarm applies the printed Strength bonus');
+    select('');
+    check(!field('modifier').closest('label').hidden, 'custom encounter can edit its modifier');
+    roll(1, 1);
+    check(run.sim1926.fight.status === 'win' && run.sim1926.fight.destination === null, 'custom combat has no story destination');
+    check(run.path.join(',') === '1', 'combat never moves the run');
+  }
+  if (id === 1927 && !PRESENTATION_ONLY) {
+    const field = key => overlay.querySelector(`[data-field="${key}"]`);
+    const choose = value => {
+      field('encounter').value = value;
+      field('encounter').dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const roll = (first, second = '') => {
+      field('first').value = first;
+      field('second').value = second;
+      overlay.querySelector('[data-action="roll"]').click();
+    };
+    const run = app.currentPlaythrough();
+    check(requestedRosters.has(id) && field('encounter').options.length === 20, 'Vortex Crystal loads all nineteen printed presets');
+    choose('289-spanner');
+    roll(1,1); roll(1); roll(1,1);
+    check(run.sim1927.fight.phase === 'pickup' && run.sim1927.history.length === 0, 'disarming does not finish the encounter');
+    roll(1,1); roll(1); roll(1,1);
+    check(run.sim1927.fight.destinations[0] === '312' && run.sim1927.history.length === 1, 'spanner win gives one outcome and the printed destination');
+    choose('270');
+    roll(1,1); roll(1); roll(4,5);
+    check(run.sim1927.fight.status === 'tie' && run.sim1927.history.length === 1, 'strict equality produces no win or loss');
+    choose('504');
+    roll(6,6); roll(6,6); roll(1,1);
+    check(run.sim1927.fight.destinations[0] === '519' && field('mentality').value === '2' && field('endurance').value === '2',
+      'mental battle applies opening and loss reductions');
+    check(right.querySelector('[data-bsim-outcome-icon]') && run.path.join(',') === '1', 'outcome is themed and never moves the run');
+    choose('');
+    check(!field('opponentModifier').closest('label').hidden, 'custom opposed rolls can edit their modifier');
+  }
   if (id === 1651 && !PRESENTATION_ONLY) {
     const el = key => document.getElementById('sim1651-' + key);
     const select = (key, value) => {

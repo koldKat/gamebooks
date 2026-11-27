@@ -20,6 +20,23 @@ export function loadAll() { return Promise.all([loadStats(), loadAdminGc(), load
 
 const fmtN = formatStatCount;
 
+function applyCodeStats(d) {
+  const count = value => value == null ? '-' : fmtN(value);
+  const values = {
+    's-code-size': d.codeBytes == null ? '-' : fmtBytes(d.codeBytes),
+    's-code-lines': count(d.linesOfCode),
+    's-lines-frontend': count(d.linesOfCodeBreakdown?.frontend),
+    's-lines-backend': count(d.linesOfCodeBreakdown?.backend),
+    's-lines-sims': count(d.linesOfCodeBreakdown?.battleSims),
+    's-js-modules': count(d.jsModules),
+    's-modules-frontend': count(d.jsModulesBreakdown?.frontend),
+    's-modules-backend': count(d.jsModulesBreakdown?.backend),
+    's-modules-sims': count(d.jsModulesBreakdown?.battleSims),
+    's-modules-tests': count(d.jsModulesBreakdown?.tests),
+  };
+  for (const [id, value] of Object.entries(values)) document.getElementById(id).textContent = value;
+}
+
 function applyStats(d) {
   document.getElementById('s-users').textContent      = fmtN(d.users);
   document.getElementById('s-books').textContent       = fmtN(d.books);
@@ -60,6 +77,7 @@ function applyStats(d) {
   document.getElementById('s-battle-win-rate').textContent = fmtN(d.battleWinRate) + '%';
   document.getElementById('s-uptime-pct').textContent    = d.uptimePct != null ? d.uptimePct.toFixed(2) + '%' : '-';
   document.getElementById('s-downtime').textContent      = fmtDuration(d.totalDowntimeS);
+  applyCodeStats(d.codeStats || {});
   const badge = document.getElementById('feedback-unread-badge');
   badge.textContent   = d.feedbackUnread > 0 ? String(d.feedbackUnread) : '';
   badge.style.display = d.feedbackUnread > 0 ? '' : 'none';

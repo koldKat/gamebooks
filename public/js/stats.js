@@ -34,25 +34,18 @@ export async function openStatsModal() {
     const res  = await fetchPublic('/api/site-stats');
     if (!res.ok) throw new Error('Failed to load stats');
     const s    = await res.json();
-    const fmtAvgLevel = n => Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
     const fmt = formatStatCount;
     const pct  = (n, d) => d > 0 ? ` <span class="stats-pct">(${n >= d ? 100 : Math.min(99, Math.floor(n / d * 100))}%)</span>` : '';
-    const kb   = b => b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : `${(b / 1024).toFixed(0)} KB`;
-    const fmtBytes = n => {
-      if (!n) return '0 B';
-      const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-      let i = 0; let v = n;
-      while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
-      return `${i <= 1 ? Math.round(v) : v.toFixed(Math.max(0, i - 1))} ${units[i]}`;
-    };
+    const fmtMiB = bytes => `${(bytes / 1024 ** 2).toFixed(1)} MB`;
     const sessionUptime = s.uptimeSec || 0;
-    const fmtUptime = (secs, { showMinutes = true } = {}) => {
-      const s = Math.floor(secs);
-      const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
+    const fmtUptime = (secs, showMinutes = true) => {
+      const days = Math.floor(secs / 86400);
+      const hours = Math.floor(secs / 3600) % 24;
+      const minutes = Math.floor(secs / 60) % 60;
       const parts = [];
-      if (d) parts.push(`${d}d`);
-      if (d || h) parts.push(`${h}h`);
-      if (showMinutes) parts.push(`${m}m`);
+      if (days) parts.push(`${days}d`);
+      if (days || hours) parts.push(`${hours}h`);
+      if (showMinutes) parts.push(`${minutes}m`);
       return parts.join(' ') || '0h';
     };
     const fmtDuration = mins => {
@@ -219,47 +212,27 @@ export async function openStatsModal() {
       {
         cls: 'server', label: t('stats.sec.server'),
         rows: [
-          [t('stats.cpu_model'), `<span class="stats-cpu-model">${escapeHtml(s.cpuModel || na)}</span>`],
+          [t('stats.cpu_model'), escapeHtml(s.cpuModel || na)],
           [t('stats.cpu_cores'), s.cpuCores != null ? fmt(s.cpuCores) : na],
           [t('stats.cpu_age'), s.cpuAgeYears != null ? `${s.cpuAgeYears}y` : na],
           [t('stats.cpu_clock'), s.cpuGhz != null ? `${s.cpuGhz} GHz` : na],
           [t('stats.cpu_arch'), escapeHtml(s.cpuArch || na)],
-          [t('stats.total_ram'), fmtBytes(s.totalRamBytes || 0)],
+          [t('stats.total_ram'), s.totalRamBytes != null ? `${(s.totalRamBytes / 1024 ** 3).toFixed(1)} GB` : na],
         ],
       },
       {
         cls: 'the-app', label: t('stats.sec.app'),
         rows: [
           [t('stats.age'), (() => { const d = Math.floor(s.appAgeDays || 0); const y = Math.floor(d / 365); return y > 0 ? `${y}y ${d - y * 365}d` : `${d}d`; })()],
-          [t('stats.server_uptime_session'), fmtUptime(sessionUptime, { showMinutes: sessionUptime < 3600 })],
+          [t('stats.server_uptime_session'), fmtUptime(sessionUptime, sessionUptime < 3600)],
           [t('stats.total_uptime'), s.totalDowntimeS != null
-            ? fmtUptime(Math.max(0, (s.appAgeDays || 0) * 86400 - s.totalDowntimeS), { showMinutes: false }) : na],
+            ? fmtUptime(Math.max(0, (s.appAgeDays || 0) * 86400 - s.totalDowntimeS), false) : na],
           [t('stats.uptime_pct'), s.uptimePct != null ? `${Number(s.uptimePct).toFixed(2)}%` : na],
           [t('stats.total_downtime'), s.totalDowntimeS != null ? fmtUptime(s.totalDowntimeS) : na],
-          [t('stats.lines_of_code'), s.linesOfCode ? fmt(s.linesOfCode) : na],
-          ...[
-            ['frontend', 'stats.code_frontend'],
-            ['backend', 'stats.code_backend'],
-            ['battleSims', 'stats.code_battle_sims'],
-          ].map(([area, key]) => [t(key), s.linesOfCodeBreakdown?.[area] != null
-            ? fmt(s.linesOfCodeBreakdown[area]) : na, null, true]),
-          [t('stats.code_size'), kb(s.codeBytes || 0)],
-          [t('stats.db_size'), kb(s.dbSize || 0)],
-          [t('stats.js_modules'), fmt(s.jsModules)],
-          ...[
-            ['frontend', 'stats.code_frontend'],
-            ['backend', 'stats.code_backend'],
-            ['battleSims', 'stats.code_battle_sims'],
-            ['tests', 'stats.code_tests'],
-          ].map(([area, key]) => [t(key), s.jsModulesBreakdown?.[area] != null
-            ? fmt(s.jsModulesBreakdown[area]) : na, null, true]),
-          [t('stats.traffic_in'), fmtBytes(s.trafficIn || 0)],
-          [t('stats.traffic_out'), fmtBytes(s.trafficOut || 0)],
           ...(s.avgSamples > 0 ? [
             [t('stats.avg_cpu_session'), `${s.avgCpu.toFixed(1)}%`],
-            [t('stats.avg_heap_used_session'), fmtBytes(s.avgHeapUsed)],
-            [t('stats.avg_heap_total_session'), fmtBytes(s.avgHeapTotal)],
-            [t('stats.avg_rss_session'), fmtBytes(s.avgRss)],
+            [t('stats.avg_heap_session'), `${fmtMiB(s.avgHeapUsed)} / ${fmtMiB(s.avgHeapTotal)}`],
+            [t('stats.avg_rss_session'), fmtMiB(s.avgRss)],
           ] : []),
         ],
       },
@@ -290,15 +263,15 @@ export async function openStatsModal() {
       <div class="stats-section stats-section--${sec.cls}">
         <div class="stats-section-label">${escapeHtml(sec.label)}</div>
         <table class="stats-table">
-          ${sec.rows.map(([k, v, tone, child]) => `<tr${child ? ' class="stats-row--child"' : ''}><td class="stats-key">${escapeHtml(k)}</td><td class="stats-val${tone ? ` stats-val--${tone}` : ''}">${v}</td></tr>`).join('')}
+          ${sec.rows.map(([k, v]) => `<tr><td class="stats-key">${escapeHtml(k)}</td><td class="stats-val">${v}</td></tr>`).join('')}
         </table>
         ${sec.html || ''}
       </div>`;
     const byClass = new Map(sections.map(sec => [sec.cls, sec]));
     const columns = [
-      ['players', 'xp-progression', 'the-app', 'server'],
-      ['ratings', 'gameplay', 'battle-sims', 'open-world', 'forum'],
-      ['books', 'gold-coins-shop', 'parties', 'crystals'],
+      ['players', 'xp-progression', 'parties', 'crystals', 'gold-coins-shop'],
+      ['ratings', 'gameplay', 'battle-sims', 'open-world'],
+      ['books', 'forum', 'the-app', 'server'],
     ];
     body.innerHTML = `<div class="stats-layout">${columns.map(column => `<div class="stats-column">${column.map(cls =>
       renderSection(byClass.get(cls))).join('')}</div>`).join('')}</div>`;

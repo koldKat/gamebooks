@@ -26,7 +26,7 @@ Editors support Save, Cancel, and Escape. Escape dismisses autocomplete before t
 | Gold coins | Earned, available, and spent balances; upgrades; admin pool; lucky-coin activity; book-sale proceeds |
 | Rubies | Earned and held rubies, trades, and shared market supply |
 | Diamonds | Completion rewards, balances, trades, and shared market supply |
-| Server | Application/database size, memory, CPU, traffic, uptime, and downtime |
+| Server | Application and database size, memory, CPU, traffic, and uptime. Expand **Source code** for source size, line counts, and JavaScript modules. |
 
 A player can have several sessions. Catalog node totals use the most-mapped player copy of each book; playthrough and simulator totals count activity across players. Expand **Stats for Nerds** for the detailed breakdown.
 

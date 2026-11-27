@@ -13,7 +13,7 @@ const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, value =>
 const group = (star, n) => ({ count: n, average: star,
   distribution: Array.from({ length: 10 }, (_, index) => ({ star: (index + 1) / 2, n: (index + 1) / 2 === star ? n : 0 })) });
 
-test('stats renders all ten half-star bins for all categories in balanced column stacks', async () => {
+test('stats preserves community, hardware and runtime metrics without code or storage details', async () => {
   const body = { innerHTML: '' }, overlay = { classList: { add() {} } };
   const context = vm.createContext({ document: { getElementById: id => id === 'stats-modal-body' ? body : overlay },
     escapeHtml, bindCountryTooltip() {}, t: key => messages[key] || key,
@@ -24,28 +24,37 @@ test('stats renders all ten half-star bins for all categories in balanced column
       linesOfCode: 1001, linesOfCodeBreakdown: { frontend: 401, backend: 300, battleSims: 300 },
       jsModules: 1500, jsModulesBreakdown: { frontend: 400, backend: 300, battleSims: 200, tests: 600 },
       ratingBreakdown: { books: group(4.5, 5), anthologies: group(3.5, 2), series: group(2, 3) },
-      cpuModel: '<script>bad</script>', appTitle: 'Title', avgTitle: 'Title' }) }),
+      cpuModel: 'Example <CPU>', totalRamBytes: 8 * 1024 ** 3, uptimeSec: 1500, appAgeDays: 417,
+      totalDowntimeS: 300, uptimePct: 99.97, avgSamples: 2, avgCpu: 1.2,
+      avgHeapUsed: 64 * 1024 ** 2, avgHeapTotal: 128 * 1024 ** 2, avgRss: 200 * 1024 ** 2,
+      dbSize: 12345, trafficIn: 12345, trafficOut: 12345, appTitle: 'Title', avgTitle: 'Title' }) }),
   });
   vm.runInContext(source, context);
   await context.openStatsModal();
   assert.ok(!body.innerHTML.includes('Failed to load'));
   assert.match(body.innerHTML, /id="stats-registered-users" class="country-count-tooltip"/);
   assert.doesNotMatch(body.innerHTML, /stats-val--players/);
-  assert.match(body.innerHTML, /JS modules<\/td><td class="stats-val">1,500<\/td>/);
-  assert.match(body.innerHTML, /class="stats-row--child"><td class="stats-key">Tests<\/td><td class="stats-val">600<\/td>/);
+  assert.doesNotMatch(body.innerHTML, /JS modules|Total lines of code|DB size|Traffic in|Traffic out/);
+  assert.match(body.innerHTML, /Average CPU<\/td><td class="stats-val">1\.2%/);
+  assert.match(body.innerHTML, /Average heap used \/ allocated<\/td><td class="stats-val">64\.0 MB \/ 128\.0 MB/);
+  assert.match(body.innerHTML, /Average process RAM<\/td><td class="stats-val">200\.0 MB/);
+  assert.match(body.innerHTML, /Example &lt;CPU&gt;/);
+  assert.match(body.innerHTML, /Total RAM<\/td><td class="stats-val">8\.0 GB/);
+  assert.match(body.innerHTML, /Server uptime \(session\)<\/td><td class="stats-val">25m/);
+  assert.match(body.innerHTML, /Total downtime<\/td><td class="stats-val">5m/);
+  assert.match(body.innerHTML, /Uptime %<\/td><td class="stats-val">99.97%/);
   assert.equal((body.innerHTML.match(/class="stats-column"/g) || []).length, 3);
   const columns = body.innerHTML.split('<div class="stats-column">').slice(1);
-  assert.ok(columns[1].includes('stats-section--battle-sims'));
-  assert.ok(!columns[2].includes('stats-section--battle-sims'));
+  const columnSections = columns.map(column => [...column.matchAll(/stats-section--([\w-]+)/g)].map(match => match[1]));
+  assert.deepEqual(columnSections, [
+    ['players', 'xp-progression', 'parties', 'crystals', 'gold-coins-shop'],
+    ['ratings', 'gameplay', 'battle-sims', 'open-world'],
+    ['books', 'forum', 'the-app', 'server'],
+  ]);
   assert.equal((body.innerHTML.match(/class="stats-section stats-section--/g) || []).length, 13);
-  assert.ok(!columns[0].includes('stats-section--crystals'));
-  assert.ok(columns[2].lastIndexOf('stats-section--crystals') > columns[2].lastIndexOf('stats-section--parties'));
-  assert.match(columns[2], /Rubies mined<\/td><td class="stats-val"><span class="stats-diamonds">123<\/span>/);
-  assert.match(columns[2], /Diamonds mined<\/td><td class="stats-val"><span class="stats-rubies">7<\/span>/);
-  assert.match(columns[0], /Total lines of code<\/td><td class="stats-val">1,001<\/td>/);
-  assert.match(columns[0], /class="stats-row--child"><td class="stats-key">Frontend<\/td><td class="stats-val">401<\/td>/);
-  assert.match(columns[0], /class="stats-row--child"><td class="stats-key">Backend<\/td><td class="stats-val">300<\/td>/);
-  assert.match(columns[0], /class="stats-row--child"><td class="stats-key">Battle simulators<\/td><td class="stats-val">300<\/td>/);
+  assert.match(columns[0], /Rubies mined<\/td><td class="stats-val"><span class="stats-diamonds">123<\/span>/);
+  assert.match(columns[0], /Diamonds mined<\/td><td class="stats-val"><span class="stats-rubies">7<\/span>/);
+  assert.match(body.innerHTML, /Age<\/td><td class="stats-val">1y 52d<\/td>/);
   assert.match(body.innerHTML,/App Job Level<\/td><td class="stats-val">2 - &lt;Sifter&gt;/);
   assert.doesNotMatch(body.innerHTML,/Total Job EV/);
   assert.ok(body.innerHTML.includes('4.5 / 5'));
@@ -54,7 +63,6 @@ test('stats renders all ten half-star bins for all categories in balanced column
   assert.ok(body.innerHTML.includes('3.50'));
   assert.ok(body.innerHTML.includes('Anthologies'));
   assert.ok(body.innerHTML.includes('Series'));
-  assert.ok(!body.innerHTML.includes('<script>bad'));
   const ratingTable = body.innerHTML.match(/<table class="stats-rating-table">([\s\S]*?)<\/table>/)[1];
   assert.ok(ratingTable.includes('Anths'));
   assert.ok(!ratingTable.includes('Anthologies'));
