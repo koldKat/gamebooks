@@ -109,7 +109,8 @@ function fixture(t) {
     CREATE TABLE level_up_templates(id INTEGER,active INTEGER);
     CREATE TABLE user_job_xp(user_id INTEGER PRIMARY KEY,xp INTEGER DEFAULT 0);
     CREATE TABLE job_xp_policy(id INTEGER PRIMARY KEY,user_count INTEGER);
-    INSERT INTO job_xp_policy VALUES(1,1);`);
+    INSERT INTO job_xp_policy VALUES(1,1);
+    CREATE VIEW job_xp_limits AS SELECT 999 AS max_xp;`);
   initializeSeasonParticipation(db, new Date('2026-02-01T12:00:00Z'));
   let date = new Date('2026-10-31T12:00:00Z'), impersonating = false;
   const context = vm.createContext({db, Math, require:require('node:module').createRequire(require.resolve('../server/db/xp')),

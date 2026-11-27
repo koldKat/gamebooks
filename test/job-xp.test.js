@@ -22,11 +22,12 @@ function fixture(t, users = 20) {
   })();
   return { db, add, init: () => initializeJobXp(db),
     xp: () => db.prepare('SELECT xp FROM user_job_xp WHERE user_id=1').get()?.xp,
-    cap: () => Math.floor(db.prepare('SELECT user_count FROM job_xp_policy').get().user_count / 10) };
+    cap: () => db.prepare('SELECT level_cap FROM job_xp_limits').get().level_cap };
 }
 
 test('New Year doubles job XP prospectively while preserving caps, deduplication and gem event counts',t=>{
   const h=fixture(t);let date=new Date('2026-12-31T12:00:00Z');
+  h.db.exec('UPDATE users SET xp=3000');
   initializeJobXp(h.db,{xpMultiplier:()=>seasonalXpMultiplier('job_xp',date)});
   h.add('visit_node',1);assert.equal(h.xp(),2);
   h.add('visit_node',1);assert.equal(h.xp(),2);
@@ -39,12 +40,12 @@ test('New Year doubles job XP prospectively while preserving caps, deduplication
 test('Job XP backfills genuine event counts once, independently of main XP and gem balances', t => {
   const h = fixture(t);
   h.add('visit_node', 4500); h.add('idle_heartbeat', 5000);
-  h.db.exec('UPDATE users SET xp=999999 WHERE id=1');
+  h.db.exec('UPDATE users SET xp=60000 WHERE id=1');
   const wallet = h.db.prepare('SELECT * FROM user_diamonds WHERE user_id=1').get();
   h.init(); assert.equal(h.xp(), 4500); assert.equal(h.cap(), 2);
   h.init(); assert.equal(h.xp(), 4500);
   assert.deepEqual(h.db.prepare('SELECT * FROM user_diamonds WHERE user_id=1').get(), wallet);
-  assert.equal(h.db.prepare('SELECT xp FROM users WHERE id=1').get().xp, 999999);
+  assert.equal(h.db.prepare('SELECT xp FROM users WHERE id=1').get().xp, 60000);
   h.add('add_note', 1); assert.equal(h.xp(), 4501);
   h.add('add_note', 1); h.add('idle_heartbeat', 1000, 'later-');
   assert.equal(h.xp(), 4501, 'duplicates and heartbeats never contribute');
@@ -52,24 +53,29 @@ test('Job XP backfills genuine event counts once, independently of main XP and g
 
 test('cap buffers to one below next level; discarded events are not banked behind the cap', t => {
   const h = fixture(t);
+  h.db.exec('UPDATE users SET xp=4500');
   h.add('visit_node', 8000); h.init();
   assert.equal(h.xp(), 5999, 'level 2 may buffer only to 5999');
   h.add('add_note', 100); assert.equal(h.xp(), 5999);
   for (let id = 21; id <= 29; id++) h.db.prepare('INSERT INTO users(id) VALUES(?)').run(id);
   assert.equal(h.cap(), 2); h.add('set_color', 1); assert.equal(h.xp(), 5999);
-  h.db.prepare('INSERT INTO users(id) VALUES(30)').run(); assert.equal(h.cap(), 3);
-  assert.equal(h.xp(), 5999, 'new users do not release discarded events');
+  h.db.prepare('INSERT INTO users(id) VALUES(30)').run(); assert.equal(h.cap(), 2);
+  h.db.exec('UPDATE users SET xp=6000'); assert.equal(h.cap(), 3);
+  assert.equal(h.xp(), 5999, 'a higher App Level does not release discarded events');
   h.add('set_priority', 1); assert.equal(h.xp(), 6000, 'a new event reaches level 3');
   h.init(); assert.equal(h.xp(), 6000, 'restart does not backfill discarded events again');
 });
 
-test('falling user count does not remove existing levels; buffer follows the retained level', t => {
+test('falling App Level preserves existing levels and freezes further Job XP', t => {
   const h = fixture(t, 30);
+  h.db.exec('UPDATE users SET xp=6000');
   h.add('visit_node', 6000); h.init();
-  h.db.exec('DELETE FROM users WHERE id>20'); assert.equal(h.cap(), 2);
+  h.db.exec('INSERT INTO users(id,xp) VALUES(31,0)'); assert.equal(h.cap(), 2);
   assert.equal(h.xp(), 6000);
-  h.add('add_note', 5000); assert.equal(h.xp(), 9999);
-  h.init(); assert.equal(h.xp(), 9999);
+  h.add('add_note', 5000); assert.equal(h.xp(), 6000);
+  h.init(); assert.equal(h.xp(), 6000);
+  h.db.exec('DELETE FROM users WHERE id=31'); assert.equal(h.cap(), 3);
+  h.add('set_color', 1); assert.equal(h.xp(), 6001);
 });
 
 test('new-account first event, failed transactions, cleanup and account deletion preserve counter semantics', t => {
@@ -83,19 +89,23 @@ test('new-account first event, failed transactions, cleanup and account deletion
   assert.equal(h.xp(), 10, 'book log cleanup never revokes Job XP');
   h.db.exec('DELETE FROM users WHERE id=21');
   assert.equal(h.db.prepare('SELECT xp FROM user_job_xp WHERE user_id=21').get(), undefined);
-  assert.equal(h.cap(), 2);
+  assert.equal(h.cap(), 0);
 });
 
-test('fewer than ten users allows the level-zero buffer and unlocks level one at ten users', t => {
+test('App Level zero allows the level-zero buffer and opens level one as collective XP grows', t => {
   const h = fixture(t, 9); h.add('visit_node', 1000); h.init();
   assert.equal(h.cap(), 0); assert.equal(h.xp(), 999);
   h.db.prepare('INSERT INTO users(id) VALUES(10)').run();
+  assert.equal(h.cap(), 0);
+  h.db.exec('UPDATE users SET xp=10000 WHERE id=1');
   h.add('add_note', 1); assert.equal(h.cap(), 1); assert.equal(h.xp(), 1000);
 });
 
 
 test('Job promotions persist once at real thresholds without creating XP events or replaying history', t => {
-  const h = fixture(t); h.add('visit_node', 999); h.init();
+  const h = fixture(t);
+  h.db.exec('UPDATE users SET xp=3000');
+  h.add('visit_node', 999); h.init();
   const events = () => h.db.prepare('SELECT level FROM job_level_events WHERE user_id=1 ORDER BY level').all().map(r => r.level);
   assert.deepEqual(events(), [], 'initial backfill does not invent dated promotions');
   const wallet = h.db.prepare('SELECT * FROM user_diamonds WHERE user_id=1').get();

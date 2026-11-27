@@ -41,6 +41,12 @@ function _subscribeLive(channel, options) {
     _sharedLiveToken = token;
     _sharedLiveSource = connectEventStream(`/api/feed/stream?combined=1${token ? '&token=' + encodeURIComponent(token) : ''}`, {
       enabled: () => _isLiveLeader,
+      onOpen: () => {
+        // A new leader's first connection can miss events during the handoff.
+        if (!token || getToken() !== token) return;
+        _refreshVisibleLibrary();
+        _broadcastLiveEvent('library_changed');
+      },
       onReconnect: () => {
         for (const sub of _liveSubscriptions.values()) if (sub.enabled()) sub.onReconnect?.();
       },
@@ -410,11 +416,7 @@ export function _connectUserBadgeSSE() {
     };
     _userBadgeSource = _subscribeLive('badges', {
       enabled: () => _isLiveLeader && !!getToken(), onMessage: refresh,
-      onReconnect: () => {
-        refresh();
-        _refreshVisibleLibrary();
-        _broadcastLiveEvent('library_changed');
-      },
+      onReconnect: () => refresh(),
     });
   } catch (_) {}
 }

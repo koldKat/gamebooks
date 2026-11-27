@@ -370,7 +370,7 @@ const _awardXpTx = db.transaction((userId, event, ref, amount, seasonalEligible 
   const before      = db.prepare(`SELECT xp, xp_boost_pct, xp_boost_carry, coins_spent,
     bonus_coins, pending_bonus_gc, bonus_gc_chance_purchased, bonus_gc_mint_purchased,
     COALESCE((SELECT xp FROM user_job_xp WHERE user_id=users.id),0) AS job_xp,
-    COALESCE((SELECT user_count FROM job_xp_policy WHERE id=1),0) AS user_count
+    COALESCE((SELECT max_xp FROM job_xp_limits),0) AS job_xp_max
     FROM users WHERE id = ?`).get(userId);
   if (!before) return false;
   const beforeXp    = before?.xp ?? 0;
@@ -384,8 +384,7 @@ const _awardXpTx = db.transaction((userId, event, ref, amount, seasonalEligible 
   const userCount   = _liveUserCount();
   const frozen      = userCount <= level;
   const normalRoom  = Math.max(0, xpForLevel(Math.max(level, userCount) + 1) - 1 - beforeXp);
-  const jobLevel    = computeLevel(before.job_xp);
-  const jobRoom     = Math.max(0, xpForLevel(Math.max(jobLevel, Math.floor(before.user_count / 10)) + 1) - 1 - before.job_xp);
+  const jobRoom     = Math.max(0, before.job_xp_max - before.job_xp);
   if (!(normalRoom > 0 && (amount > 0 || event === 'idle_heartbeat'))
     && !(event !== 'idle_heartbeat' && jobRoom > 0)) {
     recordCappedActivityGems(db, userId, event, ref);
@@ -540,7 +539,7 @@ function getUserXpInfo(userId) {
     bonus_diamond_dig_purchased, bonus_diamond_exchange_purchased,
     COALESCE((SELECT qualifying_events FROM user_diamonds WHERE user_id = users.id), 0) AS event_xp,
     COALESCE((SELECT xp FROM user_job_xp WHERE user_id = users.id), 0) AS job_xp,
-    COALESCE((SELECT user_count/10 FROM job_xp_policy WHERE id=1), 0) AS job_level_cap,
+    COALESCE((SELECT level_cap FROM job_xp_limits), 0) AS job_level_cap,
     COALESCE((SELECT diamonds_earned FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_earned,
     COALESCE((SELECT diamonds_spent FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_spent,
     COALESCE((SELECT diamonds_bought FROM user_diamonds WHERE user_id = users.id), 0) AS diamonds_bought,
@@ -566,7 +565,7 @@ function getAllUsersXpInfo() {
     bonus_fast_travels, bonus_heartbeat_xp, bonus_coins, admin_gifted_coins,
     xp_from_boost, bonus_gc_chance_purchased, bonus_gc_mint_purchased, pending_bonus_gc,
     COALESCE((SELECT xp FROM user_job_xp WHERE user_id=users.id),0) AS job_xp,
-    COALESCE((SELECT user_count/10 FROM job_xp_policy WHERE id=1),0) AS job_level_cap
+    COALESCE((SELECT level_cap FROM job_xp_limits),0) AS job_level_cap
     FROM users`).all().map(row => [row.id, userXpInfoFromRow(row, claims.get(row.id) || 0)]));
 }
 

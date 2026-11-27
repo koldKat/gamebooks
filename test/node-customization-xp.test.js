@@ -21,7 +21,8 @@ test('node color and shape each award matching XP once per player/book/node, inc
     CREATE TABLE level_up_templates(id INTEGER,active INTEGER);
     CREATE TABLE user_job_xp(user_id INTEGER PRIMARY KEY,xp INTEGER DEFAULT 0);
     CREATE TABLE job_xp_policy(id INTEGER PRIMARY KEY,user_count INTEGER);
-    INSERT INTO job_xp_policy VALUES(1,2);`);
+    INSERT INTO job_xp_policy VALUES(1,2);
+    CREATE VIEW job_xp_limits AS SELECT 999 AS max_xp;`);
   const source=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');
   const defaults=vm.runInNewContext(source.slice(source.indexOf('const _xpDefaults ='),source.indexOf('db.transaction(() => {'))+'\n_xpDefaults;');
   assert.equal(defaults.set_color,2);assert.equal(defaults.set_shape,defaults.set_color);

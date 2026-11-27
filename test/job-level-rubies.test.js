@@ -19,7 +19,7 @@ function fixture(t) {
     CREATE TABLE xp_events(user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
       event TEXT,ref TEXT,UNIQUE(user_id,event,ref));
     CREATE TABLE notifications(id INTEGER PRIMARY KEY,user_id INTEGER,type TEXT,payload TEXT);
-    INSERT INTO users(id) VALUES(1),(2),(3);`);
+    INSERT INTO users(id,xp) VALUES(1,1000),(2,1000),(3,1000);`);
   initializeDiamondBalances(db);
   initializeJobXp(db);
   initializeRubies(db);
@@ -84,7 +84,7 @@ test('new promotions award exactly once, including multi-level jumps, with ruby 
 
 test('real event threshold and newly inserted attained progress use the same reward path', t => {
   const h = fixture(t), { db } = h;
-  for (let id=4;id<=20;id++) db.prepare('INSERT INTO users(id) VALUES(?)').run(id);
+  for (let id=4;id<=20;id++) db.prepare('INSERT INTO users(id,xp) VALUES(?,1000)').run(id);
   h.init();
   db.exec('UPDATE user_job_xp SET xp=999 WHERE user_id=1');
   db.prepare('INSERT INTO xp_events VALUES(?,?,?)').run(1,'visit_node','one');
@@ -100,7 +100,7 @@ test('real event threshold and newly inserted attained progress use the same rew
 
 test('normal XP awards report the promotion ruby through the existing live reward hook', t => {
   const h = fixture(t), { db } = h;
-  for (let id=4;id<=20;id++) db.prepare('INSERT INTO users(id) VALUES(?)').run(id);
+  for (let id=4;id<=20;id++) db.prepare('INSERT INTO users(id,xp) VALUES(?,1000)').run(id);
   h.init();
   db.exec('UPDATE user_job_xp SET xp=999 WHERE user_id=1');
   const gems=[], feed=[], insert=db.prepare('INSERT OR IGNORE INTO xp_events VALUES(?,?,?)');

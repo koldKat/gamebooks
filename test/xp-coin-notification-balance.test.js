@@ -21,7 +21,8 @@ function fixture({ xp = 495999, purchased = 16, bonus = 393, spent = 899 } = {})
     CREATE TABLE level_up_templates (id INTEGER PRIMARY KEY, active INTEGER);`);
   db.exec(`CREATE TABLE user_job_xp(user_id INTEGER PRIMARY KEY,xp INTEGER DEFAULT 0);
     CREATE TABLE job_xp_policy(id INTEGER PRIMARY KEY,user_count INTEGER);
-    INSERT INTO job_xp_policy VALUES(1,1);`);
+    INSERT INTO job_xp_policy VALUES(1,1);
+    CREATE VIEW job_xp_limits AS SELECT 999 AS max_xp;`);
   db.exec(`CREATE TABLE user_rubies(user_id INTEGER PRIMARY KEY,rubies_earned INTEGER DEFAULT 0,
     rubies_bought INTEGER DEFAULT 0,rubies_spent INTEGER DEFAULT 0);`);
   db.prepare('INSERT INTO users(id,xp,bonus_gc_mint_purchased,bonus_coins,coins_spent) VALUES(1,?,?,?,?)')
@@ -156,7 +157,7 @@ test('notification failure rolls back XP and all same-tick level rewards', t => 
 });
 
 test('admin hooks report committed mining and Job EV changes, never duplicate or failed awards',t=>{
- const f=fixture();t.after(()=>f.db.close());require('../server/db/diamonds').initializeDiamondBalances(f.db);
+ const f=fixture({xp:0});t.after(()=>f.db.close());require('../server/db/diamonds').initializeDiamondBalances(f.db);
  f.db.exec('INSERT INTO user_diamonds(user_id,dig_progress) VALUES(1,999999)');require('../server/db/job-xp').initializeJobXp(f.db);
  const events=[];f.context._appXpHook=event=>events.push(JSON.parse(JSON.stringify(event)));
  const code=fs.readFileSync(require.resolve('../server/db/xp'),'utf8');vm.runInContext(code.slice(code.indexOf('function awardXp('),code.indexOf('function awardIdleHeartbeatXp(')),f.context);
@@ -192,8 +193,9 @@ test('full buffers stop XP events and hooks; each stream resumes independently w
   t.after(() => f.db.close());
   require('../server/db/diamonds').initializeDiamondBalances(f.db);
   require('../server/db/job-xp').initializeJobXp(f.db);
-  f.db.exec('UPDATE user_job_xp SET xp=998 WHERE user_id=1');
-  f.context._liveUserCount = () => f.db.prepare('SELECT user_count FROM job_xp_policy').get().user_count;
+  f.db.exec('INSERT INTO users(id,xp) VALUES(2,0),(3,0),(4,0); UPDATE user_job_xp SET xp=998 WHERE user_id=1');
+  let playerCap = 1;
+  f.context._liveUserCount = () => playerCap;
   const hooks = [];
   f.context._appXpHook = event => hooks.push(JSON.parse(JSON.stringify(event)));
   const source = fs.readFileSync(require.resolve('../server/db/xp'), 'utf8');
@@ -208,14 +210,14 @@ test('full buffers stop XP events and hooks; each stream resumes independently w
   assert.equal(f.db.prepare("SELECT COUNT(*) n FROM xp_events WHERE ref='both-full'").get().n, 0);
   assert.deepEqual(f.db.prepare('SELECT * FROM user_diamonds WHERE user_id=1').get(), mining);
   assert.equal(hooks.length, 1);
-  f.db.exec('INSERT INTO users(id,xp) VALUES(2,0)');
+  playerCap = 2;
   assert.equal(award('normal-resumes'), true);
   assert.equal(f.db.prepare('SELECT xp FROM users WHERE id=1').get().xp, 3009);
   assert.equal(f.db.prepare('SELECT xp FROM user_job_xp WHERE user_id=1').get().xp, 999);
   assert.deepEqual(hooks.find(event => event.xpDelta), { userId: 1, xpDelta: 10 });
   assert.equal(hooks.filter(event => 'jobXpDelta' in event).length, 1, 'normal XP does not emit a capped Job XP update');
   assert.deepEqual(f.db.prepare('SELECT * FROM user_diamonds WHERE user_id=1').get(), mining);
-  for (let id=3; id<=10; id++) f.db.prepare('INSERT INTO users(id,xp) VALUES(?,0)').run(id);
+  f.db.exec('UPDATE users SET xp=1000 WHERE id=2');
   assert.equal(award('job-resumes'), true);
   assert.equal(f.db.prepare('SELECT xp FROM user_job_xp WHERE user_id=1').get().xp, 1000);
   assert.equal(f.db.prepare("SELECT COUNT(*) n FROM xp_events WHERE ref='both-full'").get().n, 0, 'discarded activity is not replayed on cap changes');
@@ -244,7 +246,8 @@ test('fully capped players still earn other activity crystals without XP records
   t.after(()=>f.db.close());
   require('../server/db/diamonds').initializeDiamondBalances(f.db);
   require('../server/db/job-xp').initializeJobXp(f.db);
-  f.db.exec(`UPDATE user_job_xp SET xp=999 WHERE user_id=1;
+  f.db.exec(`INSERT INTO users(id,xp) VALUES(2,0),(3,0),(4,0);
+    UPDATE user_job_xp SET xp=999 WHERE user_id=1;
     ALTER TABLE xp_events ADD COLUMN created_at INTEGER DEFAULT 0;
     CREATE TABLE books(id INTEGER PRIMARY KEY,series_id INTEGER,parent_book_id INTEGER);
     CREATE TABLE user_books(user_id INTEGER,book_id INTEGER,state_data TEXT,rating REAL);
