@@ -271,7 +271,7 @@ Encounter options also support Skill loss on wounds, ally damage and item costs 
 
 Pending actions validate account, book, run identity, and state revision before saving. Combat resources belong to that encounter or its explicit continuation. Campaign travel, narrative choices, and story inventory stay outside the combat engine.
 
-The d20 engine reads encounter-specific rules and combatant profiles from the database. A profile can define turn order, action limits, attack schedules, item-based spellcasting, and printed encounter transitions. The simulator records those effects on the active run and offers manual controls for tactical rulings from the source rules.
+The d20 engine reads encounter-specific rules and combatant profiles from the database. The data can define turn order, action limits, attack schedules, item-based spellcasting, starting conditions, and reinforcements. The simulator records combat state on the active run and offers manual controls for tactical rulings from the source rules.
 
 The Dark Eye solo engine resolves threshold rolls for attack and defense, then applies damage after protection. Encounter presets can set opening attacks, defense restrictions, transformed combat profiles, damage thresholds, and round limits.
 

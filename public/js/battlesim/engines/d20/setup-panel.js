@@ -28,6 +28,7 @@ export function createD20Setup(parent, ui, {id, t, getEncounters, getOpponents, 
     addAlly(profile, Boolean(profile));
   });
   const preset = ui.field(parent, 'preset', {entries:[['',ui.tr('custom')], ...getEncounters().map(row => [row.key,row.name])]});
+  const pendingAllies = getRules()?.showPresetCompanions ? ui.text(parent, '') : null;
   const custom = createD20ActorForm(parent, ui, {name:ui.tr('opponent'), title:'customStats', open:false, hideBasics:true});
   const editable = row => ({...structuredClone(row), displayName:row.name, bonus:row.attacks?.[0]?.bonus ?? 0, count:row.count ?? 1});
   const editor = createOpponentEditor({document:ui.document, id, t, presets:getOpponents().map(editable), fields:[
@@ -42,6 +43,11 @@ export function createD20Setup(parent, ui, {id, t, getEncounters, getOpponents, 
     const entry = getEncounters().find(row => row.key === preset.value);
     player.root.hidden = Boolean(entry?.playerProfile);
     allyArea.hidden = Boolean(entry?.options?.noCompanions || entry?.playerProfile);
+    if (pendingAllies) {
+      const names = entry?.companions?.map(actor => actor.name) ?? [];
+      pendingAllies.hidden = !names.length;
+      pendingAllies.textContent = names.length ? ui.tr('starterCompanions') + ': ' + names.join(', ') : '';
+    }
     if (allyPreset) {
       for (const option of allyPreset.options) option.disabled = entry?.options?.excludeAllies?.includes(option.value) ?? false;
       if (allyPreset.selectedOptions[0]?.disabled) allyPreset.value = '';
@@ -76,6 +82,9 @@ export function createD20Setup(parent, ui, {id, t, getEncounters, getOpponents, 
     const opponent = {...template, name:template?.name ?? profiles.map(row => row.name).join(' / '), profiles,
       contextRules:getRules(), options:template?.options ?? {}};
     const fighters = allyArea.hidden ? [] : allies.map(item => item.form.read({}, {preserveAttacks:item.printed}));
+    for (const companion of template?.companions ?? []) {
+      if (!fighters.some(actor => actor.key === companion.key)) fighters.push(companion);
+    }
     return startD20Fight(template?.playerProfile ?? player.read(), opponent, fighters,
       {failedDexteritySave:failedSave.checked, readiedAttack:ready.checked, protagonistSurprised:surprised?.checked,
         priorEnemyDamage:ui.number(priorDamage), corrosionAlreadyResolved:priorCorrosion.checked});

@@ -55,6 +55,7 @@ ALL_PANEL_OVERLAY_IDS.push('sim1539-overlay', 'sim1540-overlay', 'sim1541-overla
 ALL_PANEL_OVERLAY_IDS.push('sim1473-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim1621-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim1751-overlay');
+ALL_PANEL_OVERLAY_IDS.push('sim1982-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim1622-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim388-overlay', 'sim390-overlay', 'sim391-overlay', 'sim409-overlay', 'sim410-overlay');
 ALL_PANEL_OVERLAY_IDS.push('sim1649-overlay');

@@ -1,6 +1,6 @@
 // Resolve printed environmental damage, shifting darkness, and weapon corrosion.
 import {combatNumber, rollDamage, rollDie} from './dice.js';
-import {mitigateDamage} from './damage.js';
+import {healDamage, mitigateDamage, reduceMaximumHp} from './damage.js';
 import {addCondition, cannotAct, resolveDamageFeatures} from './effects.js';
 import {combatSkillCheck} from './attack-context.js';
 
@@ -51,6 +51,17 @@ export function sourceAttackEffects(fight, action, attack, event, access, random
   if (attacker.features?.ignition) {
     access.setActor(action.target, ignite(target, attacker.features.ignition));
     event.effects.push({kind:'ignited', condition:'burning'});
+  }
+  if (attack.drainDamageType) {
+    target = access.getActor(action.target);
+    const drained = event.damage.filter(part => part.type === attack.drainDamageType).reduce((sum, part) => sum + part.amount, 0);
+    if (drained) {
+      const reduced = reduceMaximumHp(target, drained);
+      if (!reduced.maxHp) reduced.dead = true;
+      access.setActor(action.target, reduced);
+      access.setActor(action.actor, healDamage(attacker, drained));
+      event.effects.push({kind:'vitalityDrain', amount:drained, target:action.target, current:reduced.maxHp});
+    }
   }
   if (target.features?.firstSuccessfulHitCorrosion && !fight.sourceCorrosionResolved) {
     fight.sourceCorrosionResolved = true;

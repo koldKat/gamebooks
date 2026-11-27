@@ -11,6 +11,7 @@ export function renderD20Report(parent, ui, state) {
   const name=key=>{const actor=actors.find(([id])=>id===key)?.[1];return actor?actor.name+(key==='player'?'':' '+(Number(key.match(/\d+/)[0])+1)):key??'';};
   if (fight.openingAttacks.length) ui.text(parent,ui.tr('opening')+': '+fight.openingAttacks.map(name).join(', '));
   for(const [key,actor]of actors){
+    if(actor.awaitingReinforcement)continue;
     const ac=actor.ac+actor.conditions.reduce((sum,item)=>sum+(item.acBonus??0),0);
     ui.text(parent,name(key)+' · '+ui.tr('hp')+' '+actor.hp+'/'+actor.maxHp+' · AC '+ac);
     if(actor.encounterAdvantageCharges)ui.text(parent,ui.tr('boonRemaining')+': '+actor.encounterAdvantageCharges);

@@ -37,10 +37,18 @@ export function startActorTurn(source, {roll, random = Math.random} = {}) {
     events.push({kind:'invisibilityRoll', roll:value, invisible:hasCondition(actor, 'invisible')});
   }
   const fury = actor.features?.martialFury;
-  if (actor.hp && !cannotAct(actor) && fury?.firstTurn && actor.turn === 1) {
-    actor.martialFuryActive = true; actor.furyUsedTurn = actor.turn;
-    actor.bonusAttacksPending = combatNumber(fury.bonusAttacks, 1, 10);
-    events.push({kind:'martialFury', firstTurn:true});
+  if (actor.hp && !cannotAct(actor) && fury) {
+    const firstTurn = fury.firstTurn && actor.turn === 1;
+    if (firstTurn || fury.rechargeAtTurnStart) {
+      const rolled = firstTurn ? null : die(fury.selection.die, roll, random);
+      actor.martialFuryActive = firstTurn || rolled >= fury.selection.minimum;
+      if (actor.martialFuryActive) {
+        actor.furyUsedTurn = actor.turn;
+        actor.bonusAttacksPending = combatNumber(fury.bonusAttacks, 1, 10);
+      }
+      events.push(rolled === null ? {kind:'martialFury', firstTurn:true}
+        : {kind:'martialFuryRoll', roll:rolled, active:actor.martialFuryActive});
+    }
   }
   return {actor, events};
 }
@@ -72,10 +80,10 @@ export function selectActorAttack(actor, target, {distance, roll, rayRoll, rando
   return {attackIndex:0};
 }
 
-export function beforeActorAttack(source, target, attack) {
+export function beforeActorAttack(source, target, attack, {opportunity = false} = {}) {
   if (source.sourceMergedUntilRound != null || target.sourceMergedUntilRound != null) throw new RangeError('Combatant is absent');
   if (source.pendingCast) throw new RangeError('Resolve the pending spell first');
-  if (source.features?.martialFury && source.normalAttacksRemaining === 0 && !source.bonusAttacksPending) throw new RangeError('No attacks remain this turn');
+  if (!opportunity && source.features?.martialFury && source.normalAttacksRemaining === 0 && !source.bonusAttacksPending) throw new RangeError('No attacks remain this turn');
   const web = source.features?.webSelection;
   if (web && attack.effects?.some(effect => effect.condition?.web)) {
     const turn = source.turn ?? 0;
@@ -84,13 +92,14 @@ export function beforeActorAttack(source, target, attack) {
   }
 }
 
-export function afterActorAttack(source, attack, {roll, random = Math.random} = {}) {
+export function afterActorAttack(source, attack, {roll, opportunity = false, random = Math.random} = {}) {
   const actor = structuredClone(source), events = [], turn = actor.turn ?? 0;
   if (attack.effects?.some(effect => effect.condition?.web)) actor.lastWebTurn = turn;
+  if (opportunity && actor.features?.martialFury?.rechargeAtTurnStart) return {actor, events};
   if ((actor.normalAttacksRemaining ?? 1) > 0) actor.normalAttacksRemaining = (actor.normalAttacksRemaining ?? 1) - 1;
   else if (actor.bonusAttacksPending) actor.bonusAttacksPending--;
   const fury = actor.features?.martialFury;
-  if (fury && actor.furyUsedTurn !== turn) {
+  if (fury && !fury.rechargeAtTurnStart && actor.furyUsedTurn !== turn) {
     const value = die(fury.selection.die, roll, random);
     if (value >= fury.selection.minimum) {
       actor.martialFuryActive = true; actor.furyUsedTurn = turn;

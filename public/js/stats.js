@@ -269,9 +269,9 @@ export async function openStatsModal() {
       </div>`;
     const byClass = new Map(sections.map(sec => [sec.cls, sec]));
     const columns = [
-      ['players', 'xp-progression', 'parties', 'crystals', 'gold-coins-shop'],
-      ['ratings', 'gameplay', 'battle-sims', 'open-world'],
-      ['books', 'forum', 'the-app', 'server'],
+      ['players', 'xp-progression', 'parties', 'crystals', 'open-world'],
+      ['books', 'ratings', 'battle-sims'],
+      ['gameplay', 'gold-coins-shop', 'forum', 'the-app', 'server'],
     ];
     body.innerHTML = `<div class="stats-layout">${columns.map(column => `<div class="stats-column">${column.map(cls =>
       renderSection(byClass.get(cls))).join('')}</div>`).join('')}</div>`;

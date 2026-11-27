@@ -71,7 +71,7 @@
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 0.6rem 0.9rem 0.65rem;
+  padding: 0.5rem 0.9rem 0.55rem;
 }
 #stats-modal-body::-webkit-scrollbar {
   width: 8px;
@@ -98,11 +98,11 @@
 }
 .stats-section {
   min-width: 0;
-  line-height: 1.25;
+  line-height: 1.15;
 }
 .stats-layout {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr) minmax(0, 1fr);
   align-items: start;
   gap: 0.85rem;
 }
@@ -124,8 +124,8 @@
   border-collapse: collapse;
   width: 100%;
 }
-.stats-table tr + tr td {
-  padding-top: 0.04rem;
+.stats-table td {
+  padding-block: 0.025rem;
 }
 .stats-key,
 .stats-rating-table th {
@@ -173,7 +173,7 @@
 }
 .stats-rating-table th,
 .stats-rating-table td {
-  padding: 0.075rem 0.15rem;
+  padding: 0.04rem 0.15rem;
   text-align: right;
   overflow-wrap: anywhere;
 }
@@ -216,10 +216,24 @@
   --rating-color: 245, 166, 35;
 }
 
+@media (min-width: 1024px) {
+  #stats-modal {
+    width: min(1120px, 100%);
+  }
+  .stats-layout {
+    column-count: 4;
+  }
+}
+
 @media (min-width: 561px) and (max-width: 740px) {
   .stats-layout {
-    display: block;
     column-count: 2;
+  }
+}
+
+@media (min-width: 561px) and (max-width: 740px), (min-width: 1024px) {
+  .stats-layout {
+    display: block;
     column-gap: 0.85rem;
   }
   .stats-column {

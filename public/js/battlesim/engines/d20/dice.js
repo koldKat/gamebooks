@@ -57,8 +57,8 @@ export function rollCheck(bonus, {advantage = false, disadvantage = false, rando
 export function rollAttack(bonus, armourClass, options = {}) {
   combatNumber(armourClass, 0, 1000);
   const result = rollCheck(bonus, options);
-  return {...result, critical:result.natural === 20,
-    hit:result.natural === 20 || result.natural !== 1 && result.total >= armourClass};
+  const critical = result.natural >= combatNumber(options.criticalThreshold ?? 20, 2, 20);
+  return {...result, critical, hit:critical || result.natural !== 1 && result.total >= armourClass};
 }
 
 export function rollSave(bonus, difficulty, options = {}) {

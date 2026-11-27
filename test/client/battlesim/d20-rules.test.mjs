@@ -98,6 +98,69 @@ test('group presets expand into independent opponents and victory waits for all 
   assert.throws(() => act(next, {kind:'round'}));
 });
 
+test('the summoned opponent joins only when its summoner begins a turn', () => {
+  const summoner = combatant('Summoner', {key:'summoner'});
+  const titan = combatant('Titan', {key:'titan'});
+  const preset = {...encounter([summoner, titan]), options:{reinforcement:{summoner:'summoner', arrives:'titan'}}};
+  const fight = startD20Fight(combatant('Player'), preset);
+  assert.equal(fight.groups[1].awaitingReinforcement, true);
+  const initiative = act(fight, {kind:'initiative', dice:[[10], [8]]});
+  assert.deepEqual(initiative.events.at(-1).order.map(value => value.key), ['player', 'enemy0']);
+  assert.throws(() => act(fight, {kind:'startTurn', actor:'enemy1'}));
+  const next = act(fight, {kind:'startTurn', actor:'enemy0'});
+  assert.equal(next.groups[1].withdrawn, undefined);
+  assert.equal(next.groups[1].hp, 20);
+  assert.deepEqual(next.events.at(-1).effects, [{kind:'reinforcement', actor:'enemy1'}]);
+  const earlyWin = act(fight, {kind:'damage', target:'enemy0', amount:20, type:'force', reason:'Resolved spell'});
+  assert.equal(earlyWin.status, 'win');
+});
+
+test('a grapple opening enables a drain that uses only resisted necrotic damage', () => {
+  const combatantWithDrain = combatant('Drainer', {hp:12, attacks:[
+    {name:'Tentacle', bonus:5, damage:[{formula:'3', type:'bludgeoning'}]},
+    {name:'Drain', bonus:5, requiredTargetConditions:['grappled'], drainDamageType:'necrotic',
+      damage:[{formula:'3', type:'piercing'}, {formula:'2d6', type:'necrotic'}]},
+  ]});
+  const preset = {...encounter([combatantWithDrain]), options:{
+    enemyOpeningAttack:true, openingAttackIndex:0, openingPlayerCondition:{name:'grappled'},
+  }};
+  const hero = combatant('Player', {defenses:{resistances:['necrotic']}});
+  const drain = {kind:'attack', actor:'enemy0', target:'player', attackIndex:1, dice:[12], damageDice:[[], [4,4]]};
+  assert.throws(() => act(startD20Fight(hero, encounter([combatantWithDrain])), drain));
+  const fight = startD20Fight(hero, preset);
+  assert.deepEqual(fight.openingAttacks, ['enemy0']);
+  assert.throws(() => act(fight, drain));
+  const opened = act(fight, {...drain, attackIndex:0, damageDice:[[]]});
+  const next = act(opened, drain);
+  assert.equal(next.player.hp, 10);
+  assert.equal(next.player.maxHp, 16);
+  assert.equal(next.groups[0].hp, 16);
+});
+
+test('first-turn whirlwind has six rolls, recharges once on 4–6, and grants attack advantage', () => {
+  const claw = {name:'Claw', bonus:5, damage:[{formula:'1d4+3', type:'slashing'}]};
+  const enemy = combatant('Slasher', {attacks:[claw], features:{multiattack:{count:2},
+    martialFury:{firstTurn:true, rechargeAtTurnStart:true, attackAdvantage:true,
+      bonusAttacks:4, selection:{die:6, minimum:4}}}});
+  const hero = combatant('Player', {hp:100, maxHp:100});
+  let fight = startD20Fight(hero, encounter([enemy]));
+  fight = act(fight, {kind:'startTurn', actor:'enemy0'});
+  const attack = {kind:'attack', actor:'enemy0', target:'player', attackIndex:0, dice:[9,15], damageDice:[[1]]};
+  for (let index = 0; index < 6; index++) {
+    fight = act(fight, attack);
+    assert.equal(fight.events.at(-1).check.mode, 'advantage');
+  }
+  assert.throws(() => act(fight, attack));
+  assert.throws(() => act(fight, {kind:'startTurn', actor:'enemy0'}));
+  fight = act(fight, {kind:'round'});
+  fight = act(fight, {kind:'startTurn', actor:'enemy0', roll:3});
+  assert.equal(fight.groups[0].bonusAttacksPending, 0);
+  fight = act(fight, {kind:'round'});
+  fight = act(fight, {kind:'startTurn', actor:'enemy0', roll:4});
+  assert.equal(fight.groups[0].bonusAttacksPending, 4);
+  assert.equal(rollAttack(4, 100, {criticalThreshold:19, dice:[19]}).critical, true);
+});
+
 test('companions remain valid targets and one fallen player does not end a party encounter', () => {
   let fight = startD20Fight(combatant('Player'), encounter([combatant('Enemy')]), [combatant('Companion')]);
   fight = act(fight, {kind:'damage', target:'player', amount:100, type:'force', reason:'Resolved spell'});

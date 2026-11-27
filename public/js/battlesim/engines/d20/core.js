@@ -7,7 +7,7 @@ import {normalizeSpellcasting, validatePendingCast, beginCast, finishCast, norma
 import {spendCombatAction, restoreCombatAction} from './action-allowance.js';
 import {startActorTurn, selectActorAttack, beforeActorAttack, afterActorAttack, attemptEscape, damageWeb} from './tactics.js';
 import {ADJUSTMENTS, applyCombatAdjustment} from './adjustments.js';
-import {prepareD20Encounter, encounterHazard, consumeLife} from './encounters.js';
+import {prepareD20Encounter, summonReinforcements, encounterHazard, consumeLife} from './encounters.js';
 import {sourceAttackContext} from './attack-context.js';
 import {SOURCE_ACTIONS, sourceTurnEffects, sourceAttackEffects, sourceDamageTransitions, sourceEnvironmentalAction,
   beginAttackedForm, endSourceTurn, useEncounterAsset} from './source-effects.js';
@@ -30,6 +30,7 @@ export function normalizeD20Actor(source) {
   actor.baseMaxHp = combatNumber(source.baseMaxHp ?? actor.maxHp, actor.maxHp);
   actor.ac = combatNumber(source.ac, 0, 1000);
   if (actor.level != null) combatNumber(actor.level, 1, 100);
+  if (actor.criticalThreshold != null) combatNumber(actor.criticalThreshold, 2, 20);
   if (actor.actionRound != null) combatNumber(actor.actionRound);
   if (actor.actionsSpent != null) combatNumber(actor.actionsSpent, 0, 100);
   validateVitality(actor);
@@ -49,6 +50,15 @@ export function normalizeD20Actor(source) {
       combatNumber(attack.save.dc, 0, 1000);
     } else combatNumber(attack.bonus, -1000, 1000);
     if (!Array.isArray(attack.damage) || attack.damage.length > 10) throw new RangeError('Invalid attack damage');
+    if (attack.drainDamageType != null && !attack.damage.some(part => part.type === attack.drainDamageType)) {
+      throw new RangeError('Invalid vitality drain');
+    }
+    if (attack.requiredTargetConditions != null) {
+      if (!Array.isArray(attack.requiredTargetConditions) || !attack.requiredTargetConditions.length) {
+        throw new RangeError('Invalid attack target conditions');
+      }
+      attack.requiredTargetConditions.forEach(name => validateCondition({name}));
+    }
     for (const part of attack.damage) {
       damageExpression(part.formula);
       if (!DAMAGE_TYPES.includes(part.type)) throw new RangeError('Invalid damage type');
@@ -182,9 +192,15 @@ export function d20Action(source, action, random = Math.random) {
     if (!attacker.hp || isDefeated(attacker) || isDefeated(target) || attacker === target) throw new RangeError('Unavailable combatant');
     if (action.actor.startsWith('enemy') === action.target.startsWith('enemy')) throw new RangeError('Choose an opposing target');
     const attack = attacker.attacks[combatNumber(action.attackIndex, 0, attacker.attacks.length - 1)];
+    const requiredOpeningAttack = fight.opponent.options?.openingAttackIndex;
+    if (fight.openingAttacks[0] === action.actor && requiredOpeningAttack != null
+        && action.attackIndex !== requiredOpeningAttack) throw new RangeError('Choose the printed opening attack');
     if (cannotAct(attacker)) throw new RangeError('Combatant cannot act');
+    if (attack.requiredTargetConditions && !attack.requiredTargetConditions.some(name => hasCondition(target, name))) {
+      throw new RangeError('Target lacks the required condition');
+    }
     if (!action.opportunity) spendCombatAction(fight, action.actor, attacker, action.attackIndex);
-    beforeActorAttack(attacker, target, attack);
+    beforeActorAttack(attacker, target, attack, {opportunity:action.opportunity});
     const formChange = beginAttackedForm(target);
     if (action.useAdvantageCharge && (!attacker.encounterAdvantageCharges || attack.kind === 'save')) throw new RangeError('No applicable advantage charge');
     if (attack.range != null || attack.reach != null) {
@@ -205,7 +221,9 @@ export function d20Action(source, action, random = Math.random) {
     } else {
       const modifiers = attackConditions(attacker, target, action);
       const ac = target.ac + target.conditions.reduce((sum, condition) => sum + (condition.acBonus ?? 0), 0);
-      hit = rollAttack(attack.bonus + printed.bonusAdjustment, ac, {advantage:Boolean(action.advantage || printed.advantage || modifiers.advantage || target.martialFuryActive || action.useAdvantageCharge
+      hit = rollAttack(attack.bonus + printed.bonusAdjustment, ac, {criticalThreshold:attacker.criticalThreshold,
+        advantage:Boolean(action.advantage || printed.advantage || modifiers.advantage || target.martialFuryActive || action.useAdvantageCharge
+        || attacker.martialFuryActive && attacker.features?.martialFury?.attackAdvantage && !action.opportunity
         || fight.openingAttacks[0] === action.actor && fight.opponent.options?.openingAttackAdvantage),
         disadvantage:Boolean(action.disadvantage || printed.disadvantage || modifiers.disadvantage || attack.range != null
           && (action.distance > attack.range || action.distance <= 5 && !cannotAct(target))
@@ -256,7 +274,7 @@ export function d20Action(source, action, random = Math.random) {
     delete attacker.openingActionDisadvantage;
     if (action.useAdvantageCharge) attacker.encounterAdvantageCharges--;
     if (fight.openingAttacks[0] === action.actor) fight.openingAttacks.shift();
-    const aftermath = afterActorAttack(attacker, attack, {roll:action.tacticsRoll, random});
+    const aftermath = afterActorAttack(attacker, attack, {roll:action.tacticsRoll, opportunity:action.opportunity, random});
     replaceActor(fight, action.actor, aftermath.actor); event.effects = [...(event.effects ?? []), ...aftermath.events];
   } else if (action.kind === 'save' || action.kind === 'check') {
     const actor = actorAt(fight, action.actor);
@@ -319,13 +337,15 @@ export function d20Action(source, action, random = Math.random) {
     }
   } else if (action.kind === 'startTurn') {
     const actor = actorAt(fight, action.actor);
-    if (fight.opponent.contextRules?.actionAllowance) {
+    if (actor.awaitingReinforcement) throw new RangeError('Combatant has not joined the encounter');
+    if (fight.opponent.contextRules?.actionAllowance || actor.features?.martialFury?.rechargeAtTurnStart) {
       if (actor.sourceStartRound === fight.round) throw new RangeError('This turn already started');
       actor.sourceStartRound = fight.round;
     }
     const result = startActorTurn(actor, {roll:action.roll, random});
     const printed = sourceTurnEffects(fight, action.actor, result.actor, action, random);
     replaceActor(fight, action.actor, printed.actor); event.actor = action.actor; event.effects = [...result.events, ...printed.events];
+    event.effects.push(...summonReinforcements(fight, action.actor, printed.actor));
   } else if (SOURCE_ACTIONS.includes(action.kind)) {
     Object.assign(event, {actor:action.actor, target:action.target}, sourceEnvironmentalAction(fight, action, adjustments, random));
   } else if (SOURCE_SPELL_ACTIONS.includes(action.kind)) {
@@ -361,9 +381,9 @@ export function d20Action(source, action, random = Math.random) {
     const enemies = fight.groups.map((actor, i) => ['enemy'+i, actor]);
     if (fight.opponent.contextRules?.initiative === 'party-first') {
       const order = fight.protagonistSurprised && fight.round === 0 ? [...enemies, ...allies] : [...allies, ...enemies];
-      event.order = order.filter(([, actor]) => actor.hp).map(([key]) => ({key}));
+      event.order = order.filter(([, actor]) => actor.hp && !actor.withdrawn).map(([key]) => ({key}));
     } else {
-      event.order = [...allies, ...enemies].filter(([, actor]) => actor.hp).map(([key, actor], i) => ({key,
+      event.order = [...allies, ...enemies].filter(([, actor]) => actor.hp && !actor.withdrawn).map(([key, actor], i) => ({key,
         check:rollCheck(actor.abilities.dex, {random, dice:action.dice?.[i]})})).sort((a, b) => b.check.total - a.check.total);
     }
   } else if (action.kind === 'round') {

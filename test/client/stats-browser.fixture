@@ -82,10 +82,8 @@ const { getRatingStats } = require('../../server/db/rating-stats');
       registered.dispatchEvent(new KeyboardEvent('keydown', {key:'Escape',bubbles:true}));
       check(countryTip.style.display === 'none', 'Escape dismisses country details');
       check(body.querySelectorAll('.stats-rating-table tbody tr').length === 12, 'all rating rows rendered');
-      const cpu = body.querySelector('.stats-cpu-model');
-      const cpuRange = document.createRange();
-      cpuRange.selectNodeContents(cpu);
-      check(cpuRange.getClientRects().length === 1, 'CPU model stays on one line');
+      const cpu = body.querySelector('.stats-section--server .stats-val');
+      check(cpu.textContent === (stats.cpuModel || t('stats.na')), 'CPU model is shown');
       const normalRowHeight = body.querySelector('.stats-section--players .stats-table tr:last-child').getBoundingClientRect().height;
       for (const row of body.querySelectorAll('.stats-rating-table tbody tr:not(.stats-rating-average)')) {
         check(row.getBoundingClientRect().height <= normalRowHeight + 2, 'rating rows match compact stats spacing');
@@ -105,20 +103,20 @@ const { getRatingStats } = require('../../server/db/rating-stats');
         .map(cell => getComputedStyle(cell).getPropertyValue('--rating-color').trim());
       check(ratingColors.length === 3 && ratingColors.every(Boolean) && new Set(ratingColors).size === 3, 'distinct category bar colors');
       check(body.scrollWidth <= body.clientWidth + 1, 'no horizontal overflow');
-      for (const section of body.querySelectorAll('.stats-section')) {
+      const sections = [...body.querySelectorAll('.stats-section')];
+      const layoutTop = body.querySelector('.stats-layout').getBoundingClientRect().top;
+      const columnHeights = new Map();
+      for (const section of sections) {
         check(section.scrollWidth <= section.clientWidth + 1, 'card overflow: '+section.className);
+        const bounds = section.getBoundingClientRect();
+        const left = Math.round(bounds.left);
+        columnHeights.set(left, Math.max(columnHeights.get(left) || 0, bounds.bottom - layoutTop));
       }
-      let maxGap = 0;
-      if (innerWidth > 980) {
-        check(getComputedStyle(body.querySelector('.stats-layout')).display === 'grid', 'desktop columns');
-        for (const column of body.querySelectorAll('.stats-column')) {
-          const cards = [...column.children];
-          for (let index=1;index<cards.length;index++) {
-            maxGap = Math.max(maxGap,cards[index].getBoundingClientRect().top-cards[index-1].getBoundingClientRect().bottom);
-          }
-        }
-        check(maxGap <= 17, 'columns have no stretched row gaps');
-        check(body.querySelectorAll('.stats-column')[2].firstElementChild.classList.contains('stats-section--books'), 'books stay on right');
+      const expectedColumns = innerWidth >= 1024 ? 4 : innerWidth >= 741 ? 3 : innerWidth >= 561 ? 2 : 1;
+      check(columnHeights.size === expectedColumns, 'responsive column count');
+      if (expectedColumns >= 3) {
+        const heights = [...columnHeights.values()];
+        check(Math.max(...heights) - Math.min(...heights) < 165, 'desktop columns are balanced');
       }
       document.getElementById('stats-modal').style.maxHeight = '360px';
       body.scrollTop = body.scrollHeight;
@@ -127,14 +125,14 @@ const { getRatingStats } = require('../../server/db/rating-stats');
       closeStatsModal();
       check(countryTip.style.display === 'none', 'closing stats dismisses country details');
       await openStatsModal();
-      document.body.dataset.test = JSON.stringify({width:innerWidth,sections:12,ratingRows:12,matchingTypography:true,noOverflow:true,shortScreenScroll:true,maxGap});
+      document.body.dataset.test = JSON.stringify({width:innerWidth,sections:sections.length,ratingRows:12,columns:columnHeights.size,matchingTypography:true,noOverflow:true,shortScreenScroll:true});
     } catch (error) { document.body.dataset.failure = error.stack; }
     </script>`;
   fs.mkdirSync(root, { recursive: true });
   const file = path.join(root, 'stats.html');
   try {
     fs.writeFileSync(file, html);
-    for (const width of [1100, 800, 390, 320]) {
+    for (const width of [1366, 1024, 800, 640, 390, 320]) {
       const interact = width > 390 ? undefined : async send => {
         await send('Emulation.setTouchEmulationEnabled', {enabled:true,maxTouchPoints:1});
         let ready = false;

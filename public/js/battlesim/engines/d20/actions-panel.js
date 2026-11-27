@@ -52,8 +52,9 @@ export function renderD20Actions(parent, ui, fight, {send, memory, onError}) {
   const target = ui.field(parent, 'target', {entries:targets,value:memory.target});
   const last = fight.events.at(-1);
   if (last?.kind === 'selectAttack' && last.actor === memory.actor) memory.attack = last.selection.attackIndex;
+  const openingIndex = opening === memory.actor ? fight.opponent.options?.openingAttackIndex : undefined;
   const listedAttacks = actor.attacks.flatMap((value,i) =>
-    attackAvailable(fight, memory.actor, actor, i) ? [[String(i),value.name]] : []);
+    (openingIndex == null || openingIndex === i) && attackAvailable(fight, memory.actor, actor, i) ? [[String(i),value.name]] : []);
   const attackValue = listedAttacks.find(([index]) => Number(index) === memory.attack)?.[0] ?? listedAttacks[0]?.[0];
   const attack = ui.field(parent, 'attack', {entries:listedAttacks,value:attackValue});
   const distance = ui.field(parent, 'distance', {type:'number',value:memory.distance ?? 5});
@@ -61,7 +62,7 @@ export function renderD20Actions(parent, ui, fight, {send, memory, onError}) {
   const advantage = ui.checkbox(parent, 'advantage'), disadvantage = ui.checkbox(parent, 'disadvantage');
   const charge = actor.encounterAdvantageCharges ? ui.checkbox(parent, 'useBoon') : null;
   const selectedTarget = actors.find(([key]) => key === memory.target)?.[1];
-  const opportunity = selectedTarget?.features?.retreatOpportunityDisadvantage || selectedTarget?.features?.camouflage
+  const opportunity = rules?.showOpportunityAttack || selectedTarget?.features?.retreatOpportunityDisadvantage || selectedTarget?.features?.camouflage
     ? ui.checkbox(parent, 'opportunityAttack') : null;
   const stationary = selectedTarget?.features?.camouflage ? ui.checkbox(parent, 'stationaryTarget') : null;
   const wildShot = selectedTarget?.features?.targetLocation?.wildShot ? ui.checkbox(parent, 'attemptWildShot') : null;

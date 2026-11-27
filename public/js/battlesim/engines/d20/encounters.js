@@ -1,6 +1,6 @@
 // Apply database-defined encounter openings, hazards, and limited combat boons.
 import {combatNumber, rollDie, rollCheck} from './dice.js';
-import {healDamage, mitigateDamage} from './damage.js';
+import {healDamage, isDefeated, mitigateDamage} from './damage.js';
 import {addCondition, actorSave, cannotAct, hasCondition, resolveDamageFeatures} from './effects.js';
 
 export function prepareD20Encounter(fight, setup = {}) {
@@ -21,6 +21,20 @@ export function prepareD20Encounter(fight, setup = {}) {
     fight.openingAttacks = fight.groups.map((_, index) => 'enemy'+index);
   }
   if (options.readyAttack && setup.readiedAttack !== false) fight.openingAttacks.push('player');
+  if (options.openingPlayerCondition) {
+    Object.assign(fight.player, addCondition(fight.player, options.openingPlayerCondition).actor);
+  }
+  if (options.reinforcement) {
+    const {summoner, arrives} = options.reinforcement;
+    const pending = fight.groups.filter(actor => actor.key === arrives);
+    if (summoner === arrives || !fight.groups.some(actor => actor.key === summoner) || !pending.length) {
+      throw new RangeError('Invalid encounter reinforcement');
+    }
+    for (const actor of pending) {
+      actor.awaitingReinforcement = true;
+      actor.withdrawn = true;
+    }
+  }
   if (options.advantagedAttacks != null) fight.player.encounterAdvantageCharges = combatNumber(options.advantagedAttacks, 0, 100);
   fight.arenaGoreRound = null;
   if (options.initialPoisonTurns) Object.assign(fight.player,
@@ -31,6 +45,18 @@ export function prepareD20Encounter(fight, setup = {}) {
   }
   if (setup.corrosionAlreadyResolved === true) fight.sourceCorrosionResolved = true;
   return fight;
+}
+
+export function summonReinforcements(fight, key, actor) {
+  const source = fight.opponent.options?.reinforcement;
+  if (!source || !key.startsWith('enemy') || source.summoner !== actor.key || actor.turn !== 1
+      || isDefeated(actor) || cannotAct(actor)) return [];
+  return fight.groups.flatMap((enemy, index) => {
+    if (!enemy.awaitingReinforcement) return [];
+    delete enemy.awaitingReinforcement;
+    delete enemy.withdrawn;
+    return [{kind:'reinforcement', actor:'enemy'+index}];
+  });
 }
 
 export function encounterHazard(fight, actor, kind, {roll, dice, random = Math.random} = {}) {
