@@ -25,6 +25,7 @@ function getAdminCrystalRewardSources(db, userId) {
     row('Completed-run milestones', Math.floor((runs + 50) / 100)),
     row('Simulator battle milestones', Math.floor((battles + 50) / 100)),
     row('Public-share milestones', Math.floor((shares + 50) / 100)),
+    row('Player XP milestones', count('player_xp_gem_rewards', "AND currency='rubies'")),
     row('Lucky Coins', ruby.lucky_diamonds_earned || 0),
   ];
   const diamonds = [
@@ -35,6 +36,7 @@ function getAdminCrystalRewardSources(db, userId) {
     row('Completed-run milestones', Math.floor(runs / 100)),
     row('Simulator battle milestones', Math.floor(battles / 100)),
     row('Public-share milestones', Math.floor(shares / 100)),
+    row('Player XP milestones', count('player_xp_gem_rewards', "AND currency='diamonds'")),
     row('Lucky Coins', diamond.rubies_lucky_coins || 0),
     row('Companions', diamond.rubies_collectibles || 0),
   ];
@@ -48,6 +50,7 @@ function getAdminCrystalRewardSources(db, userId) {
 
 function getAdminCrystalRewardHistory(db, userId) {
   const rows = db.prepare(`
+    SELECT * FROM (
     SELECT 'diamonds' AS currency, 'Book mapping' AS source,
       COALESCE(b.name,'Deleted book #' || r.book_id) AS name, r.created_at * 1000 AS timestamp
       FROM ruby_rewards r LEFT JOIN books b ON b.id=r.book_id WHERE r.user_id=@userId AND r.kind='book'
@@ -74,7 +77,13 @@ function getAdminCrystalRewardHistory(db, userId) {
     UNION ALL
     SELECT currency,'Public-share milestone',milestone || ' shared runs',created_at * 1000
       FROM shared_run_gem_rewards WHERE user_id=@userId
-    ORDER BY timestamp DESC,source,name
+    UNION ALL
+    SELECT currency,'Player XP milestone',printf('%,d XP',milestone),created_at * 1000
+      FROM player_xp_gem_rewards WHERE user_id=@userId
+    )
+    ORDER BY timestamp DESC,source,
+      CASE WHEN source='Player XP milestone' THEN CAST(REPLACE(name,',','') AS INTEGER) END DESC,
+      name
   `).all({ userId });
   const result = { rubies: [], diamonds: [] };
   for (const reward of rows) {

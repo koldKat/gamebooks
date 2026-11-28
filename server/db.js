@@ -1043,6 +1043,7 @@ require('./db/completed-run-gems').initializeCompletedRunGems(db);
 require('./db/sim-battle-gems').initializeSimBattleGems(db);
 require('./db/shared-run-gems').initializeSharedRunGems(db);
 require('./db/admin-crystal-gold').initializeAdminCrystalGold(db);
+require('./db/player-xp-gems').initializePlayerXpGems(db);
 require('./db/player-level-market-gems').initializePlayerLevelMarketGems(db);
 require('./db/not-found-templates').initializeNotFoundTemplates(db);
 require('./db/book-discovery-rubies').initializeBookDiscoveryRubies(db);

@@ -18,6 +18,7 @@ test('lifetime sources reconcile both wallets, including silent rewards and dele
     CREATE TABLE vote_gem_totals(user_id INTEGER,votes INTEGER);
     CREATE TABLE sim_battle_gem_totals(user_id INTEGER,battles INTEGER);
     CREATE TABLE shared_run_gem_totals(user_id INTEGER,runs INTEGER);
+    CREATE TABLE player_xp_gem_rewards(user_id INTEGER,currency TEXT);
     INSERT INTO user_diamonds VALUES(1,25,2),(2,999,999);
     INSERT INTO user_rubies VALUES(1,15,2,3),(2,999,999,0);
     INSERT INTO book_discovery_ruby_rewards VALUES(1),(2);
@@ -63,6 +64,7 @@ test('identified history includes latest companion clicks with exact millisecond
     CREATE TABLE job_level_ruby_rewards(user_id INTEGER,level INTEGER,created_at INTEGER);
     CREATE TABLE user_collectibles(user_id INTEGER,item_id TEXT,claimed_at INTEGER,claims INTEGER);
     CREATE TABLE shared_run_gem_rewards(user_id INTEGER,milestone INTEGER,currency TEXT,created_at INTEGER);
+    CREATE TABLE player_xp_gem_rewards(user_id INTEGER,milestone INTEGER,currency TEXT,created_at INTEGER);
     INSERT INTO books VALUES(1,'Book'),(2,'Anthology');
     INSERT INTO series VALUES(3,'Series');
     INSERT INTO ruby_rewards VALUES(1,1,'book',100),(1,2,'anthology',110);

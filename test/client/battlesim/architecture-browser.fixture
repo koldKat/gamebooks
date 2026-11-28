@@ -9034,6 +9034,36 @@ for(const id of BOOK_IDS){
         'What Lies Beneath free battle records a failed Hit check');
     }finally{Math.random=originalRandom;}
   }
+  if (id === 1526 && !PRESENTATION_ONLY) {
+    const field = key => document.getElementById('sim1526-' + key);
+    const run = app.currentPlaythrough();
+    check(requestedRosters.has(id) && field('encounter').options.length === 149,
+      'Bastard Elf loads all 148 encounter presets from the catalog');
+    field('encounter').value = '187';
+    field('encounter').dispatchEvent(new Event('change', { bubbles: true }));
+    check(overlay.querySelectorAll('.bsim-opponent-row').length === 2, 'Both sets of thugs appear');
+    field('start').click();
+    check(field('encounter').disabled && field('target').options.length === 2, 'Encounter locks while both foes can be targeted');
+    field('target').value = '1';
+    field('commit').value = '6';
+    const savedRandom = Math.random;
+    try {
+      const dice = [6, 5, 3, 1, 6];
+      Math.random = () => (dice.shift() - .5) / 6;
+      field('roll').click();
+      check(run.sim1526.fight.pending.dice[0].result === 5 && field('die').options.length === 2,
+        'A large Fist roll rerolls once and the player sees both dice');
+      field('die').value = '0';
+      field('resolve').click();
+      check(run.sim1526.fight.enemies.map(enemy => enemy.toughness).join(',') === '2,1',
+        'An attempt only damages the selected enemy');
+      check(field('log').querySelector('.bsim-log-success') && field('log').querySelector('.bsim-log-danger'),
+        'The combat log records different results against both enemies');
+      field('concede').click();
+      check(run.sim1526.history.length === 1 && run.sim1526.history[0].outcome === 'loss',
+        'One battle outcome is saved after conceding');
+    } finally { Math.random = savedRandom; }
+  }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   await Promise.resolve();
   for(const wrapper of overlay.querySelectorAll('.bsim-number-control'))

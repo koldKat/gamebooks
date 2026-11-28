@@ -106,7 +106,7 @@ assert.ok(feed.innerHTML.includes('feed.tmpl.all_visited'));
 assert.ok(feed.innerHTML.includes('feed.tmpl.rated'));
 await snapshot(Array.from({ length: 5 }, (_, i) => ({ ...base, type: 'user_joined', username: `Player${i}` })));
 assert.ok(feed.innerHTML.includes('feed.joined_today|n=5'));
-await snapshot([{ ...base, type: 'series_created' }, ...Array.from({ length: 3 }, (_, i) => ({ ...base, type: 'book_created', bookId: 10 + i }))]);
+await snapshot([{ ...base, type: 'series_created' }, ...Array.from({ length: 3 }, (_, i) => ({ ...base, type: 'book_created', bookId: 10 + i, parentBookId: null, parentBookName: null }))]);
 assert.ok(feed.innerHTML.includes('feed.books_in_batch|n=3'));
 await snapshot(Array.from({ length: 3 }, (_, i) => ({ ...base, type: 'book_created', bookId: 10 + i })));
 assert.ok(feed.innerHTML.includes('feed.books_in_batch|n=3'));
@@ -130,6 +130,17 @@ if (!baseline) {
   assert.ok(multipleAnthologies.includes('|noun=feed.noun.anthologies|series=') && multipleAnthologies.includes('feed.anthologies_in_batch|n=2'));
   const freshAnthologySeries = anthologyDay([{ ...base, type: 'series_created' }, anthology, child], 'fresh-anthology-series');
   assert.ok(!freshAnthologySeries.includes('|noun=feed.noun.anthology|series='), 'a same-day series is not labeled as an older series');
+  const issues = [anthology, ...Array.from({ length: 16 }, (_, i) => ({ ...anthology, bookId: 402 + i }))];
+  const freshMagazine = anthologyDay([child, { ...base, type: 'series_created' }, ...issues], 'magazine-series');
+  assert.ok(!freshMagazine.includes('feed.anthologies_created_today'), 'magazine issues stay inside the series');
+  const count = freshMagazine.indexOf('feed.anthologies_in_batch|n=17');
+  const issue = freshMagazine.indexOf('data-book-id="400"');
+  const issueCount = freshMagazine.indexOf('feed.book_in_batch|n=1');
+  const story = freshMagazine.indexOf('data-book-id="401"');
+  assert.ok(count >= 0 && count < issue && issue < issueCount && issueCount < story, 'the series counts only direct issues, and the story belongs to its issue');
+  assert.equal((freshMagazine.match(/data-book-id="401"/g) || []).length, 1);
+  const mixed = anthologyDay([{ ...base, type: 'series_created' }, anthology, { ...child, parentBookId: null }], 'mixed-series');
+  assert.ok(mixed.includes('feed.items_in_batch|n=2'));
   }
   for (const type of [...types, 'series_books_created', 'series_anthologies_created', 'anthology_books_created']) {
     const flagged = renderEntry({...base,type,isNsfw:true,creationBookCount:2}).html;
@@ -274,7 +285,7 @@ if (!baseline) {
   assert.deepEqual(groupAttrs(render([{ ...base, type: 'book_created', bookId: 20 }, ...batch], null, '').html),
     groupAttrs(render(batch, null, '').html), 'new batch head must retain the container expansion key');
   const seriesCreated = { ...base, type: 'series_created', completedAt: '2026-10-01T09:00:00Z' };
-  const oldBook = { ...base, type: 'book_created', bookId: 40, bookName: 'Older volume', completedAt: '2026-10-01T10:00:00Z' };
+  const oldBook = { ...base, type: 'book_created', bookId: 40, bookName: 'Older volume', parentBookId: null, parentBookName: null, completedAt: '2026-10-01T10:00:00Z' };
   const newBook = { ...base, type: 'book_created', bookId: 41, bookName: 'New volume', parentBookId: null, parentBookName: null };
   const entries = [newBook, oldBook, seriesCreated];
   const untouched = JSON.stringify(entries);
@@ -306,10 +317,10 @@ if (!baseline) {
   const standalone = render([{ ...newBook, seriesId: null, parentBookId: null }], null, '').html;
   assert.ok(!standalone.includes('feed-group-toggle'), 'books without containers remain standalone');
   const anthologyChild = { ...newBook, parentBookId: 2, parentBookName: 'Anthology' };
-  const anthology = render([{ ...base, type: 'book_created', isContainer: true, bookId: 2 }, anthologyChild], null, '').html;
+  const anthology = render([{ ...base, type: 'book_created', isContainer: true, bookId: 2, parentBookId: null }, anthologyChild], null, '').html;
   assert.equal((anthology.match(/feed.tmpl.created_in_series/g) || []).length, 1, 'new anthology gets one older-series heading while claiming its child once');
   assert.equal((anthology.match(/data-book-id="41"/g) || []).length, 1);
-  const oldAnthology = { ...base, type: 'book_created', isContainer: true, bookId: 2, completedAt: '2026-10-01T09:00:00Z' };
+  const oldAnthology = { ...base, type: 'book_created', isContainer: true, bookId: 2, parentBookId: null, completedAt: '2026-10-01T09:00:00Z' };
   const anthologyDays = render([anthologyChild, { ...oldBook, parentBookId: 2 }, oldAnthology], null, '');
   const anthologyToday = anthologyDays.blocks.find(b => b.key === 'day:Fri Oct 02 2026').html;
   const anthologyYesterday = anthologyDays.blocks.find(b => b.key === 'day:Thu Oct 01 2026').html;

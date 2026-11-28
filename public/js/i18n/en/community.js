@@ -97,6 +97,7 @@ export default {
     'feed.book_in_batch':    '{n} book',
     'feed.anthology_in_batch': '{n} anthology',
     'feed.anthologies_in_batch': '{n} anthologies',
+    'feed.items_in_batch': '{n} items',
     'feed.more_books_in_batch': '+{n} more',
     'feed.hover_level':      'Lvl {n}',
 };
