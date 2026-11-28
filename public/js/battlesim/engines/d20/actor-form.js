@@ -4,7 +4,7 @@ import {DAMAGE_TYPES} from './damage.js';
 import {createD20SpellSetup, createItemSpellSetup} from './spell-setup.js';
 
 export function createD20ActorForm(parent, ui, {name = '', title = 'player', open = true, hideBasics = false,
-  itemSpells = false, showLevel = false} = {}) {
+  itemSpells = false, showLevel = false, showAbilityScores = false} = {}) {
   const root = ui.group(parent, title, open), fields = {}, checks = {};
   fields.name = ui.field(root, 'name', {value:name});
   if (showLevel) fields.level = ui.field(root, 'combatLevel', {type:'number', min:1, max:100, value:1});
@@ -20,6 +20,10 @@ export function createD20ActorForm(parent, ui, {name = '', title = 'player', ope
     fields['save-'+key] = ui.field(advanced, 'save.'+key, {type:'number', min:-1000, max:1000, value:0});
   }
   fields.strength = ui.field(advanced, 'strengthScore', {type:'number', min:1, max:1000, optional:true});
+  const scoreFields = {str:fields.strength};
+  if (showAbilityScores) for (const key of ABILITIES.slice(1)) {
+    scoreFields[key] = ui.field(advanced, 'abilityScore.'+key, {type:'number', min:1, max:1000, optional:true});
+  }
   const skills = ['athletics', 'acrobatics', 'perception', 'survival'];
   for (const skill of skills) fields[skill] = ui.field(advanced, skill, {type:'number', min:-1000, max:1000, optional:true});
   for (const key of ['immunities','resistances','vulnerabilities','conditionImmunities']) fields[key] = ui.field(advanced, key, {optional:true});
@@ -27,6 +31,10 @@ export function createD20ActorForm(parent, ui, {name = '', title = 'player', ope
   checks.aquatic = ui.checkbox(advanced, 'aquatic');
   checks.magicResistance = ui.checkbox(advanced, 'magicResistance');
   checks.nonmagicalPhysicalResistance = ui.checkbox(advanced, 'physicalResistance');
+  const sizes = ['medium','tiny','small','large','huge','gargantuan'];
+  const size = showAbilityScores ? ui.field(advanced,'creatureSize',{
+    entries:sizes.map(key => [key,ui.tr('size.'+key)]),value:'medium',
+  }) : null;
   const spells = itemSpells ? createItemSpellSetup(advanced, ui) : createD20SpellSetup(advanced, ui);
   if (hideBasics) for (const key of ['name','hp','maxHp','ac','bonus']) fields[key].closest('label').hidden = true;
   let original = null;
@@ -34,7 +42,12 @@ export function createD20ActorForm(parent, ui, {name = '', title = 'player', ope
   function read(overrides = {}, {preserveAttacks = false} = {}) {
     const abilities = {}, saves = {};
     for (const key of ABILITIES) { abilities[key] = ui.number(fields['ability-'+key]); saves[key] = ui.number(fields['save-'+key]); }
-    const strength = ui.number(fields.strength, true), skillBonuses = {};
+    const abilityScores = {...original?.abilityScores}, skillBonuses = {};
+    for (const [key, field] of Object.entries(scoreFields)) {
+      const score = ui.number(field, true);
+      if (score == null) delete abilityScores[key];
+      else abilityScores[key] = score;
+    }
     for (const skill of skills) {
       const bonus = ui.number(fields[skill], true);
       if (bonus != null) skillBonuses[skill] = bonus;
@@ -49,8 +62,9 @@ export function createD20ActorForm(parent, ui, {name = '', title = 'player', ope
       dead:hp > 0 ? false : original?.dead ?? false,
       baseMaxHp:Math.max(maxHp, original?.baseMaxHp ?? 0), ac:overrides.ac ?? ui.number(fields.ac), abilities, saves,
       attacks:preserveAttacks && attacks ? attacks : [attack],
-      abilityScores:strength == null ? {} : {str:strength}, skillBonuses,
-      tags:[...(tags ?? []).filter(tag => !['elf','undead','aquatic'].includes(tag)), ...(checks.elf.checked ? ['elf'] : []),
+      abilityScores, skillBonuses,
+      tags:[...(tags ?? []).filter(tag => !['elf','undead','aquatic'].includes(tag) && !(size && sizes.includes(tag))),
+        ...(size ? [size.value] : []), ...(checks.elf.checked ? ['elf'] : []),
         ...(checks.undead.checked ? ['undead'] : []), ...(checks.aquatic.checked ? ['aquatic'] : [])],
       defenses:{...defenses, immunities:csv(fields.immunities.value), resistances:csv(fields.resistances.value), vulnerabilities:csv(fields.vulnerabilities.value),
         nonmagicalPhysicalResistance:checks.nonmagicalPhysicalResistance.checked}, conditionImmunities:csv(fields.conditionImmunities.value),
@@ -65,13 +79,14 @@ export function createD20ActorForm(parent, ui, {name = '', title = 'player', ope
     fields.bonus.value = attack?.bonus ?? 0; fields.formula.value = attack?.damage?.[0]?.formula ?? '';
     fields.type.value = attack?.damage?.[0]?.type ?? 'slashing'; fields.ability.value = attack?.ability ?? '';
     for (const key of ABILITIES) { fields['ability-'+key].value = actor?.abilities?.[key] ?? 0; fields['save-'+key].value = actor?.saves?.[key] ?? 0; }
-    fields.strength.value = actor?.abilityScores?.str || '';
+    for (const [key, field] of Object.entries(scoreFields)) field.value = actor?.abilityScores?.[key] || '';
     for (const skill of skills) fields[skill].value = actor?.skillBonuses?.[skill] ?? '';
     for (const key of ['immunities','resistances','vulnerabilities']) fields[key].value = (actor?.defenses?.[key] ?? []).join(', ');
     fields.conditionImmunities.value = (actor?.conditionImmunities ?? []).join(', ');
     checks.magical.checked = attack?.magical ?? false; checks.silvered.checked = attack?.silvered ?? false;
     checks.elf.checked = actor?.tags?.includes('elf') ?? false; checks.undead.checked = actor?.tags?.includes('undead') ?? false;
     checks.aquatic.checked = actor?.tags?.includes('aquatic') ?? false;
+    if (size) size.value = sizes.find(value => actor?.tags?.includes(value)) ?? 'medium';
     checks.magicResistance.checked = actor?.magicResistance ?? false;
     checks.nonmagicalPhysicalResistance.checked = actor?.defenses?.nonmagicalPhysicalResistance ?? false;
   }

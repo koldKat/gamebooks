@@ -1,5 +1,6 @@
 // Display encounter totals, original combat notes, and a bounded readable log.
 import {decorateOutcome} from '../../outcome.js';
+import {armorClass} from './effects.js';
 export function renderD20Report(parent, ui, state) {
   const open = new Set([...parent.querySelectorAll('details[open][data-notes]')].map(node=>node.dataset.notes));
   parent.replaceChildren(); const fight=state.fight;
@@ -12,12 +13,20 @@ export function renderD20Report(parent, ui, state) {
   if (fight.openingAttacks.length) ui.text(parent,ui.tr('opening')+': '+fight.openingAttacks.map(name).join(', '));
   for(const [key,actor]of actors){
     if(actor.awaitingReinforcement)continue;
-    const ac=actor.ac+actor.conditions.reduce((sum,item)=>sum+(item.acBonus??0),0);
-    ui.text(parent,name(key)+' · '+ui.tr('hp')+' '+actor.hp+'/'+actor.maxHp+' · AC '+ac);
+    const ac=armorClass(actor);
+    ui.text(parent,actor.untrackedStoryAlly ? name(key)+' · '+ui.tr('storyAlly')
+      : name(key)+' · '+ui.tr('hp')+' '+actor.hp+'/'+actor.maxHp+' · AC '+ac);
     if(actor.encounterAdvantageCharges)ui.text(parent,ui.tr('boonRemaining')+': '+actor.encounterAdvantageCharges);
     if(actor.bonusAttacksPending)ui.text(parent,ui.tr('bonusAttacks')+': '+actor.bonusAttacksPending);
+    if(actor.encounterAttackPenalty)ui.text(parent,ui.tr('encounterAttackPenalty')+' −'+actor.encounterAttackPenalty.amount);
+    if(actor.temporaryHp)ui.text(parent,ui.tr('temporaryHp')+' · '+actor.temporaryHp);
+    if(actor.features?.layOnHands)ui.text(parent,ui.tr('layOnHands')+' · '+(actor.layOnHandsRemaining??actor.features.layOnHands.pool));
+    if(actor.features?.meleeSmite)ui.text(parent,ui.tr('usePrintedSmite')+' · '+(actor.printedSmiteRemaining??actor.features.meleeSmite.charges));
+    if(actor.zeroRecoveryTurn != null)ui.text(parent,ui.tr('zeroHpRecoveryPending'));
     if(actor.movementLostThisTurn)ui.text(parent,ui.tr('movementLost')+': '+actor.movementLostThisTurn);
     if(actor.dead)ui.text(parent,ui.tr('dead'));
+    else if(actor.deathSaves)ui.text(parent,actor.deathSaves.successes === 3 ? ui.tr('stable')
+      : ui.tr('deathSave')+' · '+actor.deathSaves.successes+'/3 · '+actor.deathSaves.failures+'/3');
     if(actor.sourceMergedUntilRound != null)ui.text(parent,ui.tr('mergedUntilRound')+' '+(actor.sourceMergedUntilRound+1));
     if(actor.sourceTurnDisadvantage)ui.text(parent,ui.tr('darknessDisadvantage'));
     for(const attack of actor.attacks)if(attack.damagePenalty)ui.text(parent,attack.name+' · '+ui.tr('weaponDamagePenalty')+' '+attack.damagePenalty);
@@ -25,6 +34,10 @@ export function renderD20Report(parent, ui, state) {
     if(actor.spellSlots)ui.text(parent,ui.tr('availableSlots')+': '+Object.entries(actor.spellSlots).map(([level,count])=>level+': '+count).join(' · '));
   }
   ui.text(parent,ui.tr('manualStory'));
+  if (fight.opponent.printedNotes?.length) {
+    const notes = ui.group(parent,'sourceNotes');
+    for (const note of fight.opponent.printedNotes) ui.text(notes,note);
+  }
   for(const [index,profile]of fight.opponent.profiles.entries())if(profile.sourceBlocks?.length){
     const notes=ui.group(parent,'sourceNotes',open.has(String(index)));notes.dataset.notes=String(index);ui.text(notes,profile.name,'h4');
     for(const block of profile.sourceBlocks){
@@ -44,10 +57,13 @@ export function renderD20Report(parent, ui, state) {
     if(event.attack)value+=' · '+event.attack;if(event.spell)value+=' · '+event.spell;
     if(event.note||event.reason)value+=' · '+(event.note??event.reason);
     if(event.amount!=null)value+=' · '+event.amount;
+    if(event.kind==='abilityDrain')value+=' · '+ui.tr('abilityScore.'+event.ability)+' → '+event.current;
     if(event.check||event.save)value+=' · '+check(event.save??event.check);
     if(event.selection)value+=' · '+actors.find(([key])=>key===event.actor)?.[1].attacks[event.selection.attackIndex].name;
     if(event.order)value+=' · '+event.order.map(item=>item.check ? name(item.key)+' '+item.check.total : name(item.key)).join(', ');
     if(event.roll!=null)value+=' · '+event.roll;
+    if(event.originalRoll!=null)value+=' ('+ui.tr('rerolledFrom')+' '+event.originalRoll+')';
+    if(event.condition)value+=' · '+ui.tr('condition.'+event.condition);
     if(event.movement)value+=' · '+ui.tr('movementFeet')+' '+event.movement;
     if(event.droppedWeapon)value+=' · '+ui.tr('droppedWeaponHelp');
     if(event.itemLost)value+=' · '+ui.tr('retreatItemLost');
@@ -57,8 +73,12 @@ export function renderD20Report(parent, ui, state) {
     ui.text(log,value).className='bsim-log-'+(result?.hit===false||result?.success===false?'muted'
       : event.kind==='damage'&&event.target?allied(event.target)?'danger':'success'
         : result&&(result.hit||result.success)?allied(event.actor)?'success':'danger':'accent');
+    if (Array.isArray(event.damage)) for (const part of event.damage) {
+      if (part.save) ui.text(log, ui.tr('damage.' + part.type) + ' · ' + check(part.save) + ' · ' + part.amount).className = 'bsim-log-accent';
+    }
     for(const effect of event.effects??[]){
       let detail=ui.tr('event.'+effect.kind);if(effect.condition)detail+=' · '+ui.tr('condition.'+effect.condition);
+      if(effect.label)detail+=' · '+effect.label;
       if(effect.actor)detail+=' · '+name(effect.actor);if(effect.target)detail+=' → '+name(effect.target);
       if(effect.amount!=null)detail+=' · '+effect.amount;if(effect.current!=null)detail+=' → '+effect.current;
       if(effect.roll!=null)detail+=' · '+(typeof effect.roll==='number'?effect.roll:effect.roll.rolls?.join(', '));

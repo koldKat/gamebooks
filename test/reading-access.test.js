@@ -69,7 +69,8 @@ test('future reader imports by restricted authors inherit the policy and badge',
         (1001, 'Future import', 99, 0, 'Another Author, ЕЛЕНА   ПАВЛОВА'),
         (1002, 'English edition', 99, 1, 'Allen Sharp'),
         (1003, 'Different author', 99, 1, 'Luke Sharp'),
-        (1004, 'Older spelling', 99, 1, 'Алан Шарп');
+        (1004, 'Older spelling', 99, 1, 'Алан Шарп'),
+        (1005, 'Restored access', 99, 1, 'Георги Караджов');
       INSERT INTO reading_unlocks (user_id, book_id, cost_gc) VALUES (1, 1001, 0);`);
     assert.equal(access.deniedBookIds(null).has(1001), false);
     db.exec('UPDATE books SET has_live_reading = 1 WHERE id = 1001');
@@ -89,6 +90,7 @@ test('future reader imports by restricted authors inherit the policy and badge',
     assert.equal(access.deniedBookIds(2).size, 0);
     assert.deepEqual([...access.badgeBookIds(2)], expected);
     assert.equal(access.getAccess(1, 1003).bookId, 1003);
+    assert.equal(access.getAccess(1, 1005).bookId, 1005);
   } finally {
     db.close();
   }

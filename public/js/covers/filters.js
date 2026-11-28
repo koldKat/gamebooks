@@ -41,10 +41,8 @@ export function _hasBattleSim(item) {
   return !!item.hasBattleSim;
 }
 
-// Same shape as _hasBattleSim above - a series covers multiple books and
-// doesn't map to one book's live-reading availability.
+// Anthology and series covers carry aggregated reader availability.
 export function _hasLiveReading(item) {
-  if (item.isSeries) return false;
   return !!item.hasLiveReading;
 }
 

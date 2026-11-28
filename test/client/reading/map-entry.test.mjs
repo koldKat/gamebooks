@@ -41,6 +41,17 @@ test('malformed printed-marker lists never fall through to numeric navigation', 
   assert.deepEqual(visits, []);
 });
 
+test('a printed codeword opens only its configured named entry', () => {
+  const f = fixture(), visits = [];
+  f.form.dataset = { readingMarkerList: '["MOSSYBRANCH"]' };
+  bindReadingMapEntry(f.container, { canNavigate: () => true, onNavigate: value => visits.push(value) });
+  for (const value of ['NOTTHATWORD', '12', ' mossybranch ']) {
+    f.input.value = value;
+    f.submit();
+  }
+  assert.deepEqual(visits, ['MOSSYBRANCH']);
+});
+
 test('only explicit valid marker submissions navigate', () => {
   const f = fixture();
   const visits = [];

@@ -6,6 +6,16 @@ import {addCondition, actorSave, cannotAct, hasCondition, resolveDamageFeatures}
 export function prepareD20Encounter(fight, setup = {}) {
   const options = fight.opponent.options ?? {}, rules = fight.opponent.contextRules ?? {};
   fight.openingAttacks = [];
+  for (const actor of fight.groups) if (actor.features?.focusedRecovery) {
+    actor.conditions = addCondition(actor,{name:'focusedRecovery',concentrationMinimum:10}).actor.conditions;
+  }
+  const openingDamage = options.startingPlayerDamage;
+  if (openingDamage) {
+    const damage = mitigateDamage(openingDamage.amount, openingDamage.type, fight.player.defenses, {attack:false});
+    const wounded = resolveDamageFeatures(fight.player, damage.amount, {damageTypes:[openingDamage.type]});
+    Object.assign(fight.player, wounded.actor);
+    fight.events.push({kind:'damage', target:'player', amount:damage.amount, effects:wounded.events});
+  }
   if (rules.initiative === 'party-first') {
     fight.protagonistSurprised = options.protagonistSurprised === true || setup.protagonistSurprised === true;
   }

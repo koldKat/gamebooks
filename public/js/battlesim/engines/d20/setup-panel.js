@@ -7,6 +7,7 @@ export function createD20Setup(parent, ui, {id, t, getEncounters, getOpponents, 
   const itemSpells = getRules()?.spellSource === 'items';
   const player = createD20ActorForm(parent, ui, {
     name:ui.tr('player'), title:'player', itemSpells, showLevel:Boolean(getRules()?.actionAllowance),
+    showAbilityScores:Boolean(getRules()?.showAbilityScores),
   });
   const allies = [], allyArea = ui.group(parent, 'companions');
   const allyKeys = getRules()?.companionKeys ?? [];
@@ -16,7 +17,8 @@ export function createD20Setup(parent, ui, {id, t, getEncounters, getOpponents, 
   }) : null;
   function addAlly(actor, printed = false) {
     if (allies.length >= 5) throw new RangeError(ui.tr('invalid'));
-    const form = createD20ActorForm(allyArea, ui, {name:ui.tr('companion'), title:'companion', open:false,itemSpells});
+    const form = createD20ActorForm(allyArea, ui, {name:ui.tr('companion'), title:'companion', open:false,itemSpells,
+      showAbilityScores:Boolean(getRules()?.showAbilityScores)});
     const item = {form, printed}; allies.push(item);
     ui.button(form.root, 'remove', () => { allies.splice(allies.indexOf(item), 1); form.root.remove(); add.disabled = false; });
     if (actor) form.fill(actor);
@@ -28,6 +30,8 @@ export function createD20Setup(parent, ui, {id, t, getEncounters, getOpponents, 
     addAlly(profile, Boolean(profile));
   });
   const preset = ui.field(parent, 'preset', {entries:[['',ui.tr('custom')], ...getEncounters().map(row => [row.key,row.name])]});
+  const encounterNotes = getEncounters().some(row => row.combatNotes) ? ui.text(parent, '') : null;
+  const secondPlayer = getRules()?.secondPlayerSetup ? ui.checkbox(parent, 'secondPlayer') : null;
   const pendingAllies = getRules()?.showPresetCompanions ? ui.text(parent, '') : null;
   const custom = createD20ActorForm(parent, ui, {name:ui.tr('opponent'), title:'customStats', open:false, hideBasics:true});
   const editable = row => ({...structuredClone(row), displayName:row.name, bonus:row.attacks?.[0]?.bonus ?? 0, count:row.count ?? 1});
@@ -41,6 +45,10 @@ export function createD20Setup(parent, ui, {id, t, getEncounters, getOpponents, 
   const priorCorrosion = ui.checkbox(parent, 'corrosionAlreadyResolved');
   function choose() {
     const entry = getEncounters().find(row => row.key === preset.value);
+    if (encounterNotes) {
+      encounterNotes.textContent = entry?.combatNotes ?? '';
+      encounterNotes.hidden = !entry?.combatNotes;
+    }
     player.root.hidden = Boolean(entry?.playerProfile);
     allyArea.hidden = Boolean(entry?.options?.noCompanions || entry?.playerProfile);
     if (pendingAllies) {
@@ -87,7 +95,8 @@ export function createD20Setup(parent, ui, {id, t, getEncounters, getOpponents, 
     }
     return startD20Fight(template?.playerProfile ?? player.read(), opponent, fighters,
       {failedDexteritySave:failedSave.checked, readiedAttack:ready.checked, protagonistSurprised:surprised?.checked,
-        priorEnemyDamage:ui.number(priorDamage), corrosionAlreadyResolved:priorCorrosion.checked});
+        secondPlayer:secondPlayer?.checked, priorEnemyDamage:ui.number(priorDamage),
+        corrosionAlreadyResolved:priorCorrosion.checked});
   }
   function fill(state) {
     player.fill(state.opponent?.playerProfile ? null : state.player);
@@ -95,6 +104,7 @@ export function createD20Setup(parent, ui, {id, t, getEncounters, getOpponents, 
     for (const actor of state.fight?.companions ?? []) addAlly(actor, allyKeys.includes(actor.key));
     preset.value = getEncounters().find(row => row.key === state.opponent?.key)?.key ?? ''; choose();
     if (surprised && state.fight) surprised.checked = state.fight.protagonistSurprised === true;
+    if (secondPlayer) secondPlayer.checked = state.fight?.secondPlayer === true;
     if (state.opponent?.profiles) editor.set(state.opponent.profiles.map(editable));
     if (!preset.value) custom.fill(state.opponent?.profiles?.[0]);
   }
@@ -102,6 +112,7 @@ export function createD20Setup(parent, ui, {id, t, getEncounters, getOpponents, 
     player.lock(value); custom.lock(value); for (const item of allies) item.form.lock(value);
     preset.disabled = failedSave.disabled = ready.disabled = value; add.disabled = value || allies.length >= 5;
     if (allyPreset) allyPreset.disabled = value;
+    if (secondPlayer) secondPlayer.disabled = value;
     if (surprised) {
       const presetSurprise = getEncounters().find(row => row.key === preset.value)?.options?.protagonistSurprised === true;
       surprised.disabled = value || presetSurprise;

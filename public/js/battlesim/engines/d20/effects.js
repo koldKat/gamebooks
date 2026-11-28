@@ -5,12 +5,24 @@ import {applyDamage, reduceMaximumHp, DAMAGE_TYPES} from './damage.js';
 const abilities = new Set(['str', 'dex', 'con', 'int', 'wis', 'cha']);
 const conditions = new Set(['blinded', 'charmed', 'deafened', 'exhaustion', 'frightened', 'grappled',
   'incapacitated', 'invisible', 'paralyzed', 'petrified', 'poisoned', 'prone', 'restrained',
-  'stunned', 'unconscious', 'confused', 'blurred', 'quicksand', 'shielded', 'burning', 'displaced', 'hindered']);
+  'stunned', 'unconscious', 'confused', 'blurred', 'quicksand', 'shielded', 'burning', 'displaced', 'hindered', 'cursed', 'demoralized',
+  'focusedRecovery', 'diseased', 'blessed', 'barkskin']);
 const disabling = ['incapacitated', 'paralyzed', 'petrified', 'stunned', 'unconscious'];
 const automaticFailure = ['paralyzed', 'petrified', 'stunned', 'unconscious'];
 
 export const hasCondition = (actor, condition) => actor.conditions?.some(item => item.name === condition) ?? false;
 export const cannotAct = actor => disabling.some(key => hasCondition(actor, key));
+
+export function armorClass(actor) {
+  const conditions = actor.conditions ?? [];
+  const total = actor.ac + conditions.reduce((sum, condition) => sum + (condition.acBonus ?? 0), 0);
+  const floor = Math.max(total, ...conditions.map(condition => condition.acFloor ?? 0));
+  return Math.min(floor, ...conditions.map(condition => condition.acCap ?? Infinity));
+}
+
+export function blessingBonus(actor, random, value) {
+  return hasCondition(actor,'blessed') ? value == null ? rollDamage('1d4',{random}).amount : combatNumber(value,1,4) : 0;
+}
 
 export function validateCondition(source) {
   if (!source || !conditions.has(source.name)) throw new RangeError('Invalid combat condition');
@@ -23,8 +35,10 @@ export function validateCondition(source) {
   if (value.repeatSave && !value.save) throw new RangeError('Missing repeated save');
   if (value.concentrationMinimum != null) combatNumber(value.concentrationMinimum, 0, 1000);
   if (value.acBonus != null) combatNumber(value.acBonus, -100, 100);
+  if (value.acCap != null) combatNumber(value.acCap, 0, 1000);
+  if (value.acFloor != null) combatNumber(value.acFloor, 0, 1000);
   if (value.expiresAtStart != null && typeof value.expiresAtStart !== 'boolean') throw new RangeError('Invalid condition timing');
-  for (const key of ['endsOnDamage','endsIfIncapacitated']) if (value[key] != null && typeof value[key] !== 'boolean') throw new RangeError('Invalid condition ending');
+  for (const key of ['endsOnDamage','endsIfIncapacitated','blocksHealing']) if (value[key] != null && typeof value[key] !== 'boolean') throw new RangeError('Invalid condition rule');
   if (value.startTurnDamage) {
     damageExpression(value.startTurnDamage.formula);
     if (!DAMAGE_TYPES.includes(value.startTurnDamage.type)) throw new RangeError('Invalid ongoing damage type');
@@ -73,8 +87,9 @@ export function actorSave(actor, ability, dc, options = {}) {
   if (['str', 'dex'].includes(ability) && automaticFailure.some(key => hasCondition(actor, key))) {
     return {rolls:[], automaticFailure:true, success:false, bonus:actor.saves[ability], total:null};
   }
-  return rollSave(actor.saves[ability], dc, {...options,
-    advantage:Boolean(options.advantage || options.magical && actor.magicResistance),
+  return rollSave(actor.saves[ability]+blessingBonus(actor,options.random,options.blessDie), dc, {...options,
+    advantage:Boolean(options.advantage || options.magical && actor.magicResistance
+      || actor.features?.saveAdvantageAgainst?.includes(options.condition)),
     disadvantage:Boolean(options.disadvantage || hasCondition(actor, 'confused') || hasCondition(actor, 'hindered')
       || ability === 'dex' && hasCondition(actor, 'restrained'))});
 }
@@ -92,6 +107,20 @@ export function addCondition(actor, source) {
 export function resolveDamageFeatures(before, amount, {critical = false, radiant = false, damageTypes = [], dice = {}, random = Math.random} = {}) {
   combatNumber(amount);
   let actor = applyDamage(before, amount); const events = [];
+  if (actor.temporaryHp !== before.temporaryHp) {
+    events.push({kind:'temporaryHpAbsorbed', amount:before.temporaryHp-actor.temporaryHp, current:actor.temporaryHp});
+  }
+  const delayedRecovery = before.features?.zeroHpRecovery;
+  if (amount > 0 && actor.hp === 0 && delayedRecovery && actor.maxHp && !actor.dead) {
+    if (delayedRecovery.blockedBy.some(type => damageTypes.includes(type))) {
+      delete actor.zeroRecoveryTurn;
+      actor.dead = true;
+      events.push({kind:'regenerationBlocked'});
+    } else if (before.hp > 0) {
+      actor.zeroRecoveryTurn = (actor.turn ?? 0)+1;
+      events.push({kind:'zeroHpRecoveryPending'});
+    }
+  }
   if (amount > 0 && before.features?.regeneration?.blockedBy?.some(type => damageTypes.includes(type))) {
     actor.regenerationBlocked = true;
   }
@@ -117,6 +146,26 @@ export function resolveDamageFeatures(before, amount, {critical = false, radiant
   return {actor, events};
 }
 
+export function drainAbilityScore(actor, ability, amount) {
+  const previous = combatNumber(actor.abilityScores?.[ability], 1, 1000);
+  const current = Math.max(0, previous-amount);
+  const difference = Math.floor(current/2)-Math.floor(previous/2);
+  actor.abilityScores[ability] = current;
+  actor.abilities[ability] += difference;
+  actor.saves[ability] += difference;
+  if (ability === 'dex' && actor.initiativeBonus != null) actor.initiativeBonus += difference;
+  for (const attack of actor.attacks) {
+    if (attack.ability === ability) attack.bonus += difference;
+    for (const part of attack.damage) if (part.ability === ability) {
+      const parsed = damageExpression(part.formula), modifier = parsed.modifier + difference;
+      part.formula = parsed.count ? `${parsed.count}d${parsed.sides}${modifier < 0 ? '' : '+'}${modifier}` : String(Math.max(0, modifier));
+      if (part.fixed != null) part.fixed = Math.max(0, part.fixed + difference);
+    }
+  }
+  if (!current) { actor.hp = 0; actor.dead = true; }
+  return current;
+}
+
 export function resolveHitEffects(target, attack, amount, {dice = [], initialSaveResolved = false, random = Math.random} = {}) {
   combatNumber(amount);
   let actor = structuredClone(target); const events = [];
@@ -125,26 +174,14 @@ export function resolveHitEffects(target, attack, amount, {dice = [], initialSav
       events.push({kind:effect.kind, exception:true}); continue;
     }
     const check = effect.save && !(effect.initialSaveAlreadyResolved && initialSaveResolved) ? actorSave(actor, effect.save.ability, effect.save.dc,
-      {dice:dice[index]?.save, magical:effect.magical, random}) : null;
+      {dice:dice[index]?.save, magical:effect.magical, condition:effect.condition?.name, random}) : null;
     if (check?.success) { events.push({kind:effect.kind, check, applied:false}); continue; }
     if (effect.kind === 'maximumHpDrain') {
       actor = reduceMaximumHp(actor, amount); events.push({kind:effect.kind, amount, check, applied:true});
     } else if (effect.kind === 'strengthDrain') {
       if (actor.abilityScores?.str == null) throw new RangeError('Enter current Strength');
-      const previous = combatNumber(actor.abilityScores.str, 1, 1000);
       const roll = rollDamage(effect.formula, {dice:dice[index]?.damage, random});
-      const current = Math.max(0, previous - roll.amount);
-      const difference = Math.floor(current / 2) - Math.floor(previous / 2);
-      actor.abilityScores.str = current;
-      actor.abilities.str += difference; actor.saves.str += difference;
-      for (const item of actor.attacks) {
-        if (item.ability === 'str') item.bonus += difference;
-        for (const part of item.damage) if (part.ability === 'str') {
-          const parsed = damageExpression(part.formula), modifier = parsed.modifier + difference;
-          part.formula = parsed.count ? `${parsed.count}d${parsed.sides}${modifier < 0 ? '' : '+'}${modifier}` : String(Math.max(0, modifier));
-        }
-      }
-      if (current === 0) { actor.hp = 0; actor.dead = true; }
+      const current = drainAbilityScore(actor, 'str', roll.amount);
       events.push({kind:effect.kind, amount:roll.amount, current, roll, applied:true});
     } else if (effect.kind === 'nextAttackDisadvantage') {
       actor.nextAttackDisadvantage = true;

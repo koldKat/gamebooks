@@ -76,6 +76,76 @@ const encounter = profiles => ({name:'Encounter', section:'4', profiles});
 const begin = () => startD20Fight(combatant('Player'), encounter([combatant('Enemy')]));
 const act = (fight, action) => d20Action(fight, {expectedRevision:fight.revision, ...action});
 
+test('printed initiative bonuses and shared enemy rolls survive optional group doubling', () => {
+  const source = {...encounter([combatant('Warrior', {count:2, initiativeBonus:1}), combatant('Mage')]),
+    contextRules:{secondPlayerSetup:true}, options:{sharedEnemyInitiative:true, doubleEnemiesWithSecondPlayer:true}};
+  const fight = startD20Fight(combatant('Player'), source, [combatant('Second player')], {secondPlayer:true});
+  assert.equal(fight.groups.length, 6);
+  const next = act(fight, {kind:'initiative', dice:[[17], [15], [8]]});
+  assert.deepEqual(next.events.at(-1).order.map(({check}) => check.total), [19, 17, 9, 9, 9, 9, 9, 9]);
+});
+
+test('an on-hit poison save halves its own dice and is independent of a critical hit', () => {
+  const attacker = combatant('Spider', {attacks:[{name:'Bite', bonus:3, damage:[
+    {formula:'1d6+1', type:'piercing'},
+    {formula:'2d6', type:'poison', save:{ability:'con', dc:11, halfOnSuccess:true}},
+  ]}]});
+  const fight = startD20Fight(combatant('Player'), encounter([attacker]));
+  const result = act(fight, {kind:'attack', actor:'enemy0', target:'player', attackIndex:0,
+    dice:[20], damageDice:[[3, 3], [5, 4]], damageSaveDice:[undefined, [8]]});
+  assert.equal(result.player.hp, 9);
+  assert.equal(result.events.at(-1).damage[1].save.success, true);
+});
+
+test('a limited attack spends a use on a miss and uses its printed advantage', () => {
+  const attacker = combatant('Knight', {attacks:[{name:'Rage strike', bonus:5, maxUses:2, advantage:true,
+    damage:[{formula:'1d8+4', type:'slashing'}]}]});
+  let fight = startD20Fight(combatant('Player'), encounter([attacker]));
+  const action = {kind:'attack', actor:'enemy0', target:'player', attackIndex:0, dice:[1, 2]};
+  fight = act(fight, action);
+  fight = act(fight, action);
+  assert.equal(fight.player.hp, 20);
+  assert.equal(fight.groups[0].attackUses[0], 2);
+  assert.throws(() => act(fight, action), /No uses/);
+});
+
+test('printed opening damage can end a fight before initiative', () => {
+  const source = {...encounter([combatant('Bat')]), options:{startingPlayerDamage:{amount:1, type:'piercing'}}};
+  const fight = startD20Fight(combatant('Player', {hp:1}), source);
+  assert.equal(fight.player.hp, 0);
+  assert.equal(fight.status, 'loss');
+  assert.equal(fight.events[0].amount, 1);
+});
+
+test('fear aura applies a flat attack penalty and skips the next turn before a retry', () => {
+  const source = {...encounter([combatant('Knight')]),
+    options:{attackPenaltySave:{ability:'wis', dc:13, amount:1}}};
+  let fight = startD20Fight(combatant('Player'), source);
+  fight = act(fight, {kind:'encounterAttackPenaltySave', dice:[4]});
+  fight = act(fight, {kind:'attack', actor:'player', target:'enemy0', attackIndex:0, dice:[9]});
+  assert.equal(fight.events.at(-1).check.hit, false);
+  fight = act(fight, {kind:'startTurn', actor:'player'});
+  assert.throws(() => act(fight, {kind:'encounterAttackPenaltySave', dice:[13]}), /unavailable/);
+  fight = act(fight, {kind:'round'});
+  fight = act(fight, {kind:'startTurn', actor:'player'});
+  fight = act(fight, {kind:'encounterAttackPenaltySave', dice:[13]});
+  assert.equal(fight.player.encounterAttackPenalty, undefined);
+});
+
+test('only the two-player rule allows a downed character to roll a death save', () => {
+  const source = {...encounter([combatant('Enemy')]), contextRules:{secondPlayerSetup:true}};
+  const player = combatant('Player', {hp:1});
+  const companions = [combatant('Second player')];
+  const attack = {kind:'attack', actor:'enemy0', target:'player', attackIndex:0, dice:[18], damageDice:[[3]]};
+  const save = {kind:'deathSave', actor:'player', dice:[20]};
+  const solo = act(startD20Fight(player, source, companions), attack);
+  assert.throws(() => act(solo, save), /unavailable/);
+  const paired = act(startD20Fight(player, source, companions, {secondPlayer:true}), attack);
+  const failed = act(paired, {...save,dice:[1]});
+  assert.equal(failed.player.deathSaves.failures, 2);
+  assert.equal(act(failed, save).player.hp, 1);
+});
+
 test('a failed or stale action cannot mutate an active fight or its presets', () => {
   const player = combatant('Player'), opponent = encounter([combatant('Enemy')]);
   const fight = startD20Fight(player, opponent), before = structuredClone(fight);

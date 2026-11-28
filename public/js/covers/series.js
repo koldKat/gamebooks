@@ -13,6 +13,7 @@ export function _buildSeriesCoverEntries(seriesList = [], booksList = []) {
       const seriesBooks = bySeries.get(series.id) || [];
       const withCovers = seriesBooks.filter(b => b.coverUrl);
       const coverBooks = _shuffle(withCovers).slice(0, 4);
+      const readers = seriesBooks.filter(book => book.hasLiveReading);
       return {
         id: `series_${series.id}`,
         entityId: series.id,
@@ -20,6 +21,8 @@ export function _buildSeriesCoverEntries(seriesList = [], booksList = []) {
         isSeries: true,
         isContainer: false,
         isOpenWorld: !!series.is_open_world,
+        hasLiveReading: readers.length > 0,
+        restrictedReadingBadge: readers.length > 0 && readers.every(book => book.restrictedReadingBadge),
         name: series.name,
         description: series.description || null,
         createdAt: Math.max(series.createdAt || 0, ...seriesBooks.map(b => b.createdAt || 0)),

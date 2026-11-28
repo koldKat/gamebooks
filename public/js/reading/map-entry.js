@@ -47,7 +47,7 @@ export function bindReadingMapEntry(container, { canNavigate, onNavigate }) {
         try {
           const markers = JSON.parse(encodedMarkers);
           const target = raw.toUpperCase();
-          const markerPattern = /^(?:[A-Z]{1,8}[1-9]\d{0,5}|[1-9]\d{0,5}[A-Z]{1,8})$/;
+          const markerPattern = /^(?:[A-Z]{3,40}|[A-Z]{1,8}[1-9]\d{0,5}|[1-9]\d{0,5}[A-Z]{1,8})$/;
           if (!Array.isArray(markers) || !markers.length
               || !markers.every(marker => typeof marker === 'string' && markerPattern.test(marker))) return;
           if (!markers.includes(target)) {

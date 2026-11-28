@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {startD20Fight,d20Action} from '../../../public/js/battlesim/engines/d20/core.js';
+import {armorClass} from '../../../public/js/battlesim/engines/d20/effects.js';
 
 const actor = extra => ({name:'Combatant',hp:100,maxHp:100,ac:12,
   abilities:{str:0,dex:0,con:0,int:0,wis:0,cha:0},saves:{str:0,dex:0,con:0,int:0,wis:0,cha:0},
@@ -13,6 +14,222 @@ const fire = extra => actor({name:'Elemental',hp:55,maxHp:55,
     mergeIntoFire:{damageAbove:20,absentRounds:1,reappearPerceptionDc:12,failedCheckSurpriseAttack:true,spawnDistanceDie:6}},...extra});
 const fight = (enemy,player=actor(),options={},setup={}) => startD20Fight(player,{name:'Encounter',profiles:[enemy],options},[],setup);
 const act = (f,kind,extra={}) => d20Action(f,{kind,expectedRevision:f.revision,actor:'player',target:'enemy0',...extra});
+
+test('an ability drain replaces the opening attack and updates the chosen score, save and weapon after recharge',()=>{
+  const player = actor({abilityScores:{str:12,dex:10}, abilities:{str:1,dex:0,con:0,int:0,wis:0,cha:0},
+    saves:{str:3,dex:0,con:0,int:0,wis:0,cha:0},
+    attacks:[{name:'Sword',bonus:5,ability:'str',damage:[{formula:'5',type:'slashing',ability:'str'}]}]});
+  const opponent = actor({features:{abilityDrain:{dc:12,range:30,recharge:5}}});
+  let f = startD20Fight(player,{name:'Bogey',profiles:[opponent],contextRules:{actionAllowance:{base:1}}});
+  const enemy = {actor:'enemy0',target:'player',distance:20};
+  assert.throws(()=>act(f,'attack',{...enemy,attackIndex:0}),/ability drain/);
+  assert.throws(()=>act(f,'abilityDrain',{...enemy,distance:31,ability:'str'}),/unavailable/);
+  f = act(f,'abilityDrain',{...enemy,ability:'str',dice:[1]});
+  assert.equal(f.player.abilityScores.str,10);
+  assert.equal(f.player.saves.str,2);
+  assert.equal(f.player.attacks[0].bonus,4);
+  f = act(f,'attack',{attackIndex:0,distance:5,dice:[15]});
+  assert.equal(f.groups[0].hp,96);
+  f = act(f,'round');
+  f = act(f,'startTurn',{actor:'enemy0',roll:4});
+  assert.equal(f.groups[0].abilityDrainReady,false);
+  assert.throws(()=>act(f,'startTurn',{actor:'enemy0',roll:6}),/already started/);
+  f = act(f,'round');
+  f = act(f,'startTurn',{actor:'enemy0',roll:5});
+  f = act(f,'abilityDrain',{...enemy,ability:'dex',dice:[20]});
+  assert.equal(f.player.abilityScores.dex,9);
+  assert.equal(f.player.abilities.dex,-1);
+});
+
+test('an attack can leave the attacker exposed even when it misses',()=>{
+  const opponent = actor({attacks:[{name:'Slash',bonus:5,exposesAttacker:true,damage:[{formula:'1',type:'slashing'}]}]});
+  let f = fight(opponent);
+  f = act(f,'attack',{actor:'enemy0',target:'player',attackIndex:0,dice:[1]});
+  f = act(f,'attack',{attackIndex:0,distance:5,dice:[1,19]});
+  assert.equal(f.groups[0].hp,95);
+  f = act(f,'startTurn',{actor:'enemy0'});
+  assert.equal(f.groups[0].exposedByAttack,undefined);
+});
+
+test('Bloodlust replaces temporary hit points and damage uses them before health',()=>{
+  const opponent = actor({features:{temporaryHpOnMeleeHit:{first:2,repeated:4}}});
+  const strike = {actor:'enemy0',target:'player',attackIndex:0,distance:5,dice:[15]};
+  let f = fight(opponent);
+  f = act(f,'attack',strike); assert.equal(f.groups[0].temporaryHp,2);
+  f = act(f,'attack',strike); assert.equal(f.groups[0].temporaryHp,4);
+  f = act(f,'attack',strike); assert.equal(f.groups[0].temporaryHp,4);
+  f = act(f,'attack',{attackIndex:0,distance:5,dice:[15]});
+  assert.equal(f.groups[0].temporaryHp,0);
+  assert.equal(f.groups[0].hp,99);
+});
+
+test('the Gate Beast fights at zero HP until its next turn ends unless radiant damage prevents recovery',()=>{
+  const opponent = actor({hp:5,features:{zeroHpRecovery:{amount:1,blockedBy:['fire','radiant']}}});
+  const player = actor({attacks:[...actor().attacks,{name:'Light',bonus:5,damage:[{formula:'1',type:'radiant'}]}]});
+  const strike = {attackIndex:0,distance:5,dice:[15]};
+  const downed = act(fight(opponent,player),'attack',strike);
+  assert.equal(downed.groups[0].hp,0);
+  assert.equal(downed.status,'fighting');
+  assert.equal(act(downed,'attack',{...strike,attackIndex:1}).status,'win');
+  let f = act(downed,'endTurn',{actor:'enemy0'});
+  assert.equal(f.groups[0].hp,0);
+  f = act(f,'startTurn',{actor:'enemy0'});
+  f = act(f,'attack',{...strike,actor:'enemy0',target:'player'});
+  assert.equal(f.player.hp,95);
+  f = act(f,'endTurn',{actor:'enemy0'});
+  assert.equal(f.groups[0].hp,1);
+  assert.equal(f.groups[0].zeroRecoveryTurn,undefined);
+});
+
+test('demoralizing laughter caps armor and smother requires both attacks to hit in one turn',()=>{
+  const attacks = actor().attacks;
+  const bear = actor({attacks:[...attacks,...attacks],features:{
+    smother:{attackIndices:[0,1],dc:12,range:5},demoralizingLaugh:{dc:13,range:30,acCap:15},
+  }});
+  const enemy = {actor:'enemy0',target:'player',distance:5};
+  let f = fight(bear,actor({ac:17}));
+  f = act(f,'demoralizingLaugh',{...enemy,dice:[3]});
+  assert.equal(armorClass(f.player),15);
+  f = act(f,'endTurn');
+  assert.equal(armorClass(f.player),17);
+  f = act(f,'round');
+  f = act(f,'attack',{...enemy,attackIndex:0,dice:[15]});
+  assert.throws(()=>act(f,'smother',{...enemy,ability:'dex',dice:[3]}),/Both attacks/);
+  f = act(f,'attack',{...enemy,attackIndex:1,dice:[15]});
+  f = act(f,'smother',{...enemy,ability:'str',dice:[3]});
+  assert.deepEqual(f.player.conditions.map(condition=>condition.name),['grappled','blinded']);
+  assert.throws(()=>act(f,'attack',{...enemy,attackIndex:0,dice:[15]}),/while smothering/);
+  f = act(f,'escapeSmother',{ability:'dex',dice:[20]});
+  assert.equal(f.player.conditions.length,0);
+  assert.equal(f.groups[0].smothering,undefined);
+});
+
+test('Fey Trickery expires on an attack and needs to recharge before reuse',()=>{
+  const warden = actor({features:{turnInvisibility:{recharge:5}}});
+  let f = fight(warden);
+  f = act(f,'turnInvisibility',{actor:'enemy0'});
+  assert.equal(f.groups[0].conditions[0].name,'invisible');
+  f = act(f,'attack',{actor:'enemy0',target:'player',attackIndex:0,distance:5,dice:[1,19]});
+  assert.equal(f.player.hp,95);
+  assert.equal(f.groups[0].conditions.length,0);
+  f = act(f,'round');
+  f = act(f,'startTurn',{actor:'enemy0',invisibilityRoll:4});
+  assert.throws(()=>act(f,'turnInvisibility',{actor:'enemy0'}),/unavailable/);
+  f = act(f,'round');
+  f = act(f,'startTurn',{actor:'enemy0',invisibilityRoll:5});
+  f = act(f,'turnInvisibility',{actor:'enemy0'});
+  f = act(f,'round');
+  f = act(f,'startTurn',{actor:'enemy0',invisibilityRoll:4});
+  assert.equal(f.groups[0].conditions.length,0);
+});
+
+test('Warding Gust only changes a qualifying ranged hit and is spent for the round',()=>{
+  const beast = actor({key:'beast'}), warden = actor({key:'warden',features:{armorReaction:{
+    name:'Warding Gust',amount:2,range:60,rangedOnly:true,targetKeys:['beast','warden'],
+  }}});
+  const ranged = actor({attacks:[{...actor().attacks[0],reach:undefined,range:80}]});
+  const encounter = {name:'Gate',profiles:[beast,warden]};
+  const strike = {attackIndex:0,distance:20,reactionDistance:30,dice:[8],useArmorReaction:true};
+  let f = startD20Fight(ranged,encounter);
+  f = act(f,'attack',{...strike,reactionDistance:61});
+  assert.equal(f.groups[0].hp,95);
+  f = act(f,'attack',strike);
+  assert.equal(f.groups[0].hp,95);
+  assert.equal(f.events.at(-1).check.hit,false);
+  f = act(f,'attack',strike);
+  assert.equal(f.groups[0].hp,90);
+});
+
+test('the boss follows its printed action, rerolls healing at full health and heals only once',()=>{
+  const boss = actor({attacks:[...actor().attacks,...actor().attacks],features:{printedTurn:{
+    table:[0,0,0,'heal','heal',1],healingName:'Cure Wounds',healingFormula:'2d8+2',
+  }}});
+  const enemy = {actor:'enemy0',target:'player'};
+  let f = fight(boss);
+  assert.throws(()=>act(f,'attack',{...enemy,attackIndex:0,distance:5}),/printed combat action/);
+  f = d20Action(f,{...enemy,kind:'selectAttack',expectedRevision:f.revision,roll:4},()=>0.99);
+  assert.equal(f.events.at(-1).selection.attackIndex,1);
+  assert.equal(f.events.at(-1).originalRoll,4);
+  f = act(f,'attack',{...enemy,attackIndex:1,distance:5,dice:[15]});
+  f = act(f,'attack',{attackIndex:0,distance:5,dice:[15]});
+  f = act(f,'round');
+  f = act(f,'selectAttack',{...enemy,roll:5});
+  f = act(f,'resolvePrintedHealing',{...enemy,dice:[1,1]});
+  assert.equal(f.groups[0].hp,99);
+  assert.throws(()=>act(f,'resolvePrintedHealing',enemy),/No healing action/);
+});
+
+test('Bram heals only on natural terrain while concentrating and renews it the following round',()=>{
+  const boss = actor({hp:60,maxHp:100,features:{focusedRecovery:{amount:8}}});
+  const enemy = {actor:'enemy0',target:'player'};
+  let f = fight(boss);
+  f = act(f,'startTurn',{...enemy,naturalTerrain:false});
+  assert.equal(f.groups[0].hp,60);
+  f = act(f,'round');
+  f = act(f,'startTurn',enemy);
+  assert.equal(f.groups[0].hp,68);
+  f = act(f,'attack',{attackIndex:0,distance:5,dice:[15],featureDice:{concentration:[[1]]}});
+  assert.equal(f.groups[0].conditions.length,0);
+  assert.throws(()=>act(f,'renewRecovery',enemy),/cannot be renewed yet/);
+  f = act(f,'round');
+  f = act(f,'renewRecovery',enemy);
+  f = act(f,'startTurn',enemy);
+  assert.equal(f.groups[0].hp,71);
+});
+
+test('the healing pool gates necrotic resistance and smite charges are spent only on hits',()=>{
+  const boss = actor({hp:40,maxHp:100,features:{layOnHands:{pool:30},meleeSmite:{charges:2}}});
+  const weapon = {...actor().attacks[0],damage:[{formula:'10',type:'necrotic'}]};
+  const player = actor({attacks:[weapon],tags:['fiend']});
+  let f = fight(boss,player);
+  f = act(f,'attack',{attackIndex:0,distance:5,dice:[15]});
+  assert.equal(f.groups[0].hp,35);
+  f = act(f,'layOnHands',{actor:'enemy0',target:'enemy0',amount:30});
+  assert.equal(f.groups[0].layOnHandsRemaining,0);
+  f = act(f,'attack',{attackIndex:0,distance:5,dice:[15]});
+  assert.equal(f.groups[0].hp,55);
+  const smite = {actor:'enemy0',target:'player',attackIndex:0,distance:5,usePrintedSmite:true};
+  f = act(f,'attack',{...smite,dice:[1]});
+  assert.equal(f.groups[0].printedSmiteRemaining,undefined);
+  f = act(f,'attack',{...smite,dice:[15]});
+  assert.equal(f.player.hp,82);
+  assert.equal(f.groups[0].printedSmiteRemaining,1);
+});
+
+test('a story ally gets two independent support actions and does not prevent a player loss',()=>{
+  const support = actor({name:'Iacob',features:{multiattack:{count:2},
+    storySupport:{boon:'blessed',boonName:'Bless',healingName:'Cure Wounds'}}});
+  const encounter = {name:'Gate',profiles:[actor()],contextRules:{actionAllowance:{base:1}},options:{untrackedAlly:support}};
+  let f = startD20Fight(actor({hp:5,maxHp:20}),encounter);
+  f = act(f,'allyHealing',{actor:'ally0',dice:[1,1]});
+  assert.equal(f.player.hp,9);
+  f = act(f,'allyBoon',{actor:'ally0'});
+  assert.equal(f.player.conditions[0].name,'blessed');
+  assert.throws(()=>act(f,'allyHealing',{actor:'ally0',dice:[1,1]}),/unavailable/);
+  const enemy = {actor:'enemy0',target:'player',attackIndex:0,distance:5,dice:[15]};
+  f = act(f,'attack',{...enemy,coinToss:'tails'});
+  assert.equal(f.player.hp,9);
+  assert.equal(f.events.at(-1).target,'ally0');
+  f = act(f,'round');
+  f = act(f,'attack',{...enemy,coinToss:'heads'});
+  assert.equal(f.player.hp,4);
+  f = act(f,'round');
+  f = act(f,'attack',{...enemy,coinToss:'heads'});
+  assert.equal(f.status,'loss');
+  assert.equal(f.companions[0].hp,100);
+});
+
+test('the bear dispel requires a successful weapon attack in the same round',()=>{
+  const bear = actor({features:{defeatedByDispel:true}});
+  let f = fight(bear);
+  assert.throws(()=>act(f,'dispelOpponent'),/successful attack/);
+  f = act(f,'attack',{attackIndex:0,distance:5,dice:[1]});
+  assert.throws(()=>act(f,'dispelOpponent'),/successful attack/);
+  f = act(f,'attack',{attackIndex:0,distance:5,dice:[15]});
+  const next = act(f,'round');
+  assert.throws(()=>act(next,'dispelOpponent'),/successful attack/);
+  assert.equal(act(f,'dispelOpponent').status,'win');
+});
 
 test('touch ignites once, burns at turn start, and dousing ends the ongoing damage',()=>{
   let f=fight(fire());

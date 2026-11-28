@@ -1,6 +1,6 @@
 // Apply explicitly resolved combat effects to encounter actors only.
 import {combatNumber} from './dice.js';
-import {mitigateDamage, healDamage, reduceMaximumHp} from './damage.js';
+import {activeDefenses, mitigateDamage, healDamage, reduceMaximumHp} from './damage.js';
 import {addCondition, resolveDamageFeatures} from './effects.js';
 
 export const ADJUSTMENTS = Object.freeze(['damage', 'heal', 'maximumHp', 'condition', 'removeCondition']);
@@ -19,7 +19,7 @@ export function applyCombatAdjustment(context, action, random = Math.random) {
   } else {
     const amount = combatNumber(action.amount); event.amount = amount;
     if (action.kind === 'damage') {
-      event.damage = mitigateDamage(amount, action.type, target.defenses,
+      event.damage = mitigateDamage(amount, action.type, activeDefenses(target),
         {magical:action.magical ?? false, silvered:action.silvered ?? false, attack:action.isAttack ?? false, ranged:action.ranged ?? false});
       event.amount = event.damage.amount;
       const result = resolveDamageFeatures(target, event.amount, {critical:action.critical ?? false,

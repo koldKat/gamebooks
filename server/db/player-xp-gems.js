@@ -1,6 +1,6 @@
 'use strict';
 
-const RUBY_INTERVAL = 100000;
+const RUBY_INTERVAL = 500000;
 const DIAMOND_INTERVAL = 1000000;
 
 // Wallet table names predate the crystal rename. Keep each threshold permanently
@@ -38,11 +38,25 @@ function initializePlayerXpGems(db) {
       currency TEXT NOT NULL CHECK(currency=CASE WHEN milestone%${DIAMOND_INTERVAL}=0 THEN 'diamonds' ELSE 'rubies' END),
       created_at INTEGER NOT NULL DEFAULT (unixepoch()),
       PRIMARY KEY(user_id,milestone));
-      CREATE TRIGGER IF NOT EXISTS reward_player_xp_gems AFTER UPDATE OF xp ON users
+      DROP TRIGGER IF EXISTS reward_player_xp_gems;
+      DROP TRIGGER IF EXISTS reward_initial_player_xp_gems;
+
+      UPDATE user_diamonds
+      SET diamonds_earned=diamonds_earned-revoked.amount
+      FROM (
+        SELECT user_id, COUNT(*) AS amount FROM player_xp_gem_rewards
+        WHERE currency='rubies' AND milestone%${RUBY_INTERVAL}!=0
+        GROUP BY user_id
+      ) AS revoked
+      WHERE user_diamonds.user_id=revoked.user_id;
+      DELETE FROM player_xp_gem_rewards
+      WHERE currency='rubies' AND milestone%${RUBY_INTERVAL}!=0;
+
+      CREATE TRIGGER reward_player_xp_gems AFTER UPDATE OF xp ON users
         WHEN CAST(NEW.xp/${RUBY_INTERVAL} AS INTEGER)>CAST(OLD.xp/${RUBY_INTERVAL} AS INTEGER) BEGIN
         ${rewardStatements('NEW.id', 'NEW.xp').join('\n')}
       END;
-      CREATE TRIGGER IF NOT EXISTS reward_initial_player_xp_gems AFTER INSERT ON users
+      CREATE TRIGGER reward_initial_player_xp_gems AFTER INSERT ON users
         WHEN NEW.xp>=${RUBY_INTERVAL} BEGIN
         ${rewardStatements('NEW.id', 'NEW.xp').join('\n')}
       END;`);

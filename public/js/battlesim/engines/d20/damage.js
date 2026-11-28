@@ -21,6 +21,11 @@ export function validateDefenses(defenses = {}) {
     if (typeof defenses.rangedPiercingResistance !== 'boolean') throw new RangeError('Invalid resistance');
     result.rangedPiercingResistance = defenses.rangedPiercingResistance;
   }
+  if (defenses.nonmagicalTypeResistance != null) {
+    if (!Array.isArray(defenses.nonmagicalTypeResistance)
+        || defenses.nonmagicalTypeResistance.some(type => !DAMAGE_TYPES.includes(type))) throw new RangeError('Invalid resistance');
+    result.nonmagicalTypeResistance = [...new Set(defenses.nonmagicalTypeResistance)];
+  }
   return result;
 }
 
@@ -31,7 +36,7 @@ export function mitigateDamage(amount, type, defenses = {}, {magical = false, si
   const traits = validateDefenses(defenses);
   if (traits.immunities.includes(type)) return {amount:0, immune:true, resisted:false, vulnerable:false};
   const resisted = traits.resistances.includes(type) || attack && ranged && type === 'piercing' && traits.rangedPiercingResistance
-    || attack && !magical && (traits.nonmagicalAttackResistance
+    || attack && !magical && (traits.nonmagicalAttackResistance || traits.nonmagicalTypeResistance?.includes(type)
     || traits.nonmagicalPhysicalResistance && physical.has(type) && !(silvered && traits.silverBypassesPhysicalResistance));
   const vulnerable = traits.vulnerabilities.includes(type);
   // Multiple applicable resistances never stack; round the halved damage down.
@@ -39,27 +44,40 @@ export function mitigateDamage(amount, type, defenses = {}, {magical = false, si
     immune:false, resisted:Boolean(resisted), vulnerable};
 }
 
+export function activeDefenses(actor) {
+  const pool = actor.features?.layOnHands?.pool;
+  if (pool == null || (actor.layOnHandsRemaining ?? pool) === 0) return actor.defenses;
+  return {...actor.defenses,resistances:[...actor.defenses.resistances,'necrotic']};
+}
+
 export function validateVitality(actor) {
   if (!actor || typeof actor !== 'object') throw new RangeError('Invalid combatant');
   combatNumber(actor.maxHp);
   combatNumber(actor.hp, 0, actor.maxHp);
   combatNumber(actor.baseMaxHp ?? actor.maxHp, Math.max(1, actor.maxHp));
+  if (actor.temporaryHp != null) combatNumber(actor.temporaryHp);
   return actor;
 }
 
 export function isDefeated(actor) {
   return actor.withdrawn === true ||
-    actor.hp === 0 && (actor.dead || !actor.maxHp || !actor.features?.regeneration?.canRecoverFromZero);
+    actor.hp === 0 && (actor.dead || !actor.maxHp || (actor.zeroRecoveryTurn == null && !actor.features?.regeneration?.canRecoverFromZero));
 }
 
 export function applyDamage(actor, amount) {
   validateVitality(actor); combatNumber(amount);
-  return {...actor, hp:Math.max(0, actor.hp - amount)};
+  const absorbed = Math.min(amount, actor.temporaryHp ?? 0);
+  const result = {...actor, hp:Math.max(0, actor.hp - amount + absorbed)};
+  if (absorbed) result.temporaryHp -= absorbed;
+  return result;
 }
 
 export function healDamage(actor, amount) {
   validateVitality(actor); combatNumber(amount);
-  return {...actor, hp:Math.min(actor.maxHp, actor.hp + amount)};
+  const result = {...actor};
+  if (!actor.conditions?.some(condition => condition.blocksHealing)) result.hp = Math.min(actor.maxHp, actor.hp + amount);
+  if (result.hp > 0) delete result.zeroRecoveryTurn;
+  return result;
 }
 
 export function reduceMaximumHp(actor, amount) {

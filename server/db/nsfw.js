@@ -7,7 +7,7 @@ const INITIAL_BOOKS = new Map([
   [2358, 'Futa Nightclub : A Date with Claire'], [2384, 'Choose Your Shot'],
   [2457, "My Lady's Choosing"], [2462, 'Take Me There'],
   [2532, 'Pick Your Pleasure'], [2533, 'Pick Your Pleasure 2'],
-  [2665, 'Sextrap Dungeon'], [2666, 'Critical Ass'], [2667, 'Clock Tease'],
+  [2666, 'Critical Ass'], [2667, 'Clock Tease'],
   [2803, 'Becca, Reporting for Duty'], [2804, 'Lauren, Riding Off Trail'],
   [2805, 'Charlotte, Prowling for Enchantment'], [3187, 'A Girl Walks Into a Bar'],
   [3188, 'A Girl Walks Into a Wedding'], [3189, 'Soapy Bimbo Car Wash Fantasy'],

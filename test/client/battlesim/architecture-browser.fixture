@@ -9064,6 +9064,39 @@ for(const id of BOOK_IDS){
         'One battle outcome is saved after conceding');
     } finally { Math.random = savedRandom; }
   }
+  if(id===2109&&!PRESENTATION_ONLY){
+    const field=key=>overlay.querySelector('[data-field="'+key+'"]');
+    const action=key=>overlay.querySelector('[data-action="'+key+'"]');
+    for(const [key,value] of Object.entries({hp:25,maxHp:25,ac:14,formula:'1d6+2'}))field(key).value=value;
+    const preset=field('preset');
+    check(preset.options.length===11,'Death Knight offers ten encounters and custom setup');
+    preset.value='kobolds';preset.dispatchEvent(new Event('change'));
+    action('start').click();
+    const fight=app.currentPlaythrough().sim2109?.fight;
+    check(fight?.groups.map(actor=>actor.key).join(',')==='kobold,kobold,kobold-mage','Kobold fight includes both warriors and the mage');
+    check(preset.disabled,'Death Knight setup locks after starting a fight');
+    action('initiative').click();
+    const initiative=app.currentPlaythrough().sim2109.fight.events.at(-1).order;
+    const opponents=initiative.filter(row=>row.key.startsWith('enemy'));
+    check(opponents.length===3&&new Set(opponents.map(row=>row.check.total)).size===1,'Kobolds roll one shared initiative');
+  }
+  if(id===2112&&!PRESENTATION_ONLY){
+    const field=key=>overlay.querySelector('[data-field="'+key+'"]');
+    const action=key=>overlay.querySelector('[data-action="'+key+'"]');
+    for(const [key,value] of Object.entries({hp:30,maxHp:30,ac:15,formula:'1d6+2'}))field(key).value=value;
+    const preset=field('preset');
+    check(preset.options.length===8,'Witchhaven offers seven encounters and free setup');
+    preset.value='entry-180';preset.dispatchEvent(new Event('change'));
+    action('start').click();
+    const fight=app.currentPlaythrough().sim2112?.fight;
+    check(fight?.groups.map(actor=>actor.key).join(',')==='gate-beast,faerie-warden','Both Witchhaven enemies load correctly');
+    check(fight.companions[0]?.untrackedStoryAlly&&fight.companions[0].attacks.length===2,'Iacob support offers sword and crossbow with no tracked health');
+    check(preset.disabled,'Witchhaven setup locks after starting a fight');
+    const actor=field('combatant');
+    actor.value='ally0';actor.dispatchEvent(new Event('change'));
+    action('blessed').click();
+    check(app.currentPlaythrough().sim2112.fight.player.conditions.some(item=>item.name==='blessed'),'Iacob can bless the player from the normal panel');
+  }
   const before=JSON.stringify(app.currentPlaythrough());module.render();
   await Promise.resolve();
   for(const wrapper of overlay.querySelectorAll('.bsim-number-control'))

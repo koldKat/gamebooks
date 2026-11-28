@@ -12,7 +12,6 @@ const restrictedAuthors = new Set([
   'Алан Шарп',
   'Allen Sharp',
   'Върджил Дриймънд',
-  'Георги Караджов',
 ].map(normalizeAuthor));
 
 function createReadingRestrictions(db) {

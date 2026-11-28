@@ -1,6 +1,6 @@
 // Resolve printed illusion tactics and reflected attack spells without changing story state.
 import {combatNumber, rollAttack, rollDamage, rollDie} from './dice.js';
-import {mitigateDamage, DAMAGE_TYPES} from './damage.js';
+import {activeDefenses, mitigateDamage, DAMAGE_TYPES} from './damage.js';
 import {addCondition, actorSave, cannotAct, hasCondition, resolveDamageFeatures} from './effects.js';
 import {beginCast, finishCast} from './spells.js';
 
@@ -33,7 +33,7 @@ export function reflectedSpell(reactor, caster, parts, options = {}, random = Ma
       advantage:options.advantage, disadvantage:options.disadvantage, random});
     if (event.check.hit) for (const part of parts) {
       const amount = Math.floor(combatNumber(part.amount) * rule.damageFraction);
-      const dealt = mitigateDamage(amount, part.type, target.defenses, {magical:true,attack:true});
+      const dealt = mitigateDamage(amount, part.type, activeDefenses(target), {magical:true,attack:true});
       const result = resolveDamageFeatures(target, dealt.amount, {random});
       target = result.actor; event.amount += dealt.amount;
       (event.effects ??= []).push(...result.events);
@@ -86,7 +86,7 @@ export function sourceSpellAction(fight, action, access, random = Math.random) {
     let amount = 0;
     if (!check.success) {
       const roll = rollDamage(rule.damage.formula, {dice:action.damageDice,random});
-      amount = mitigateDamage(roll.amount, rule.damage.type, target.defenses, {magical:true,attack:false}).amount;
+      amount = mitigateDamage(roll.amount, rule.damage.type, activeDefenses(target), {magical:true,attack:false}).amount;
       access.setActor(action.target, resolveDamageFeatures(target, amount, {random}).actor);
     }
     access.setActor(action.actor, actor);
